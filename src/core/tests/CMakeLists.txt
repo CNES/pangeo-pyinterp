@@ -5,6 +5,7 @@ macro (add_testcase testname)
     add_test(NAME test_${testname} COMMAND ${EXECUTABLE_OUTPUT_PATH}/test_${testname})
 endmacro()
 
-add_testcase(axis_container)
 add_testcase(axis)
+add_testcase(axis_container)
+add_testcase(geodetic_system)
 add_testcase(math)
