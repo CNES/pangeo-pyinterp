@@ -38,30 +38,30 @@ class Interpolate1D {
   inline std::string name() const noexcept { return gsl_interp_name(*this); }
 
   /// Return the minimum number of points required by the interpolation
-  size_t min_size() const noexcept { return gsl_interp_min_size(*this); }
+  inline size_t min_size() const noexcept { return gsl_interp_min_size(*this); }
 
   /// Return the interpolated value of y for a given point x
-  double interpolate(const double x) const {
+  inline double interpolate(const double x) const {
     return gsl_interp_eval(static_cast<const gsl_interp*>(*this), xa_.data(),
                            ya_.data(), x, acc_);
   }
 
   /// Return the derivative d of an interpolated function for a given point x
-  double derivative(const double x) const {
+  inline double derivative(const double x) const {
     return gsl_interp_eval_deriv(static_cast<const gsl_interp*>(*this),
                                  xa_.data(), ya_.data(), x, acc_);
   }
 
   /// Return the second derivative d of an interpolated function for a given
   /// point x
-  double second_derivative(const double x) const {
+  inline double second_derivative(const double x) const {
     return gsl_interp_eval_deriv2(static_cast<const gsl_interp*>(*this),
                                   xa_.data(), ya_.data(), x, acc_);
   }
 
   /// Return the numerical integral result of an interpolated function over the
   /// range [a, b],
-  double integral(const double a, const double b) const {
+  inline double integral(const double a, const double b) const {
     return gsl_interp_eval_integ(static_cast<const gsl_interp*>(*this),
                                  xa_.data(), ya_.data(), a, b, acc_);
   }
