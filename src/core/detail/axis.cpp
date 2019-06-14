@@ -80,7 +80,7 @@ Axis::Axis(std::vector<double> values, const double epsilon,
     : circle_(Axis::set_circle(is_circle, is_radian)) {
   // Axis size control
   if (values.size() >
-      static_cast<ssize_t>(std::numeric_limits<int64_t>::max())) {
+      static_cast<size_t>(std::numeric_limits<int64_t>::max())) {
     throw std::invalid_argument(
         "The size of the axis must not contain more than " +
         std::to_string(std::numeric_limits<int64_t>::max()) + "elements.");
