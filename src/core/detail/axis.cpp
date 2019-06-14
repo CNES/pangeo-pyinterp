@@ -145,5 +145,74 @@ std::optional<std::tuple<int64_t, int64_t>> Axis::find_indexes(
   return std::optional<std::tuple<int64_t, int64_t>>{};
 }
 
+std::vector<int64_t> Axis::find_indexes(double coordinate, uint32_t size,
+                                        Boundary boundary) const {
+  if (size == 0) {
+    throw std::invalid_argument("The size must not be zero.");
+  }
+
+  // Axis size
+  auto len = this->size();
+
+  // Searches the initial indexes and populate the result
+  auto indexes = find_indexes(coordinate);
+  if (!indexes) {
+    return {};
+  }
+  auto result = std::vector<int64_t>(size << 1U);
+  std::tie(result[size - 1], result[size]) = *indexes;
+
+  // Offset in relation to the first indexes found
+  uint32_t shift = 1;
+
+  // Construction of window indexes based on the initial indexes found
+  while (shift < size) {
+    int64_t before = std::get<0>(*indexes) - shift;
+    if (before < 0) {
+      if (!is_circle_) {
+        switch (boundary) {
+          case kPad:
+            before = -1;
+            break;
+          case kWrap:
+            before = math::remainder(len + before, len);
+            break;
+          case kSym:
+            before = math::remainder(-before, len);
+            break;
+          default:
+            return {};
+        }
+      } else {
+        before = math::remainder(before, len);
+      }
+    }
+    int64_t after = std::get<1>(*indexes) + shift;
+    if (after >= len) {
+      if (!is_circle_) {
+        switch (boundary) {
+          case kPad:
+            after = -1;
+            break;
+          case kWrap:
+            after = math::remainder(after, len);
+            break;
+          case kSym:
+            after = len - 2 - math::remainder(after - len, len);
+            break;
+          default:
+            return {};
+        }
+      } else {
+        after = math::remainder(after, len);
+      }
+    }
+    result[size - shift - 1] = before;
+    result[size + shift] = after;
+    ++shift;
+  }
+  return result;
+}
+
 }  // namespace detail
 }  // namespace pyinterp

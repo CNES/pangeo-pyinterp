@@ -429,3 +429,162 @@ TEST(axis, search_indexes) {
   EXPECT_FALSE(axis.find_indexes(20.01).has_value());
   EXPECT_FALSE(axis.find_indexes(9.9).has_value());
 }
+
+TEST(axis, search_window) {
+  // search for indexes that frame a value around a window
+  std::vector<int64_t> indexes;
+  detail::Axis axis(-180, 179, 360, 1e-6, true);
+
+  indexes = axis.find_indexes(0, 1);
+  ASSERT_TRUE(indexes.size() == 2);
+  EXPECT_EQ(indexes[0], 180);
+  EXPECT_EQ(indexes[1], 181);
+
+  indexes = axis.find_indexes(0, 5);
+  ASSERT_TRUE(indexes.size() == 10);
+  EXPECT_EQ(indexes[0], 176);
+  EXPECT_EQ(indexes[1], 177);
+  EXPECT_EQ(indexes[2], 178);
+  EXPECT_EQ(indexes[3], 179);
+  EXPECT_EQ(indexes[4], 180);
+  EXPECT_EQ(indexes[5], 181);
+  EXPECT_EQ(indexes[6], 182);
+  EXPECT_EQ(indexes[7], 183);
+  EXPECT_EQ(indexes[8], 184);
+  EXPECT_EQ(indexes[9], 185);
+
+  indexes = axis.find_indexes(-180, 5);
+  ASSERT_TRUE(indexes.size() == 10);
+  EXPECT_EQ(indexes[0], 356);
+  EXPECT_EQ(indexes[1], 357);
+  EXPECT_EQ(indexes[2], 358);
+  EXPECT_EQ(indexes[3], 359);
+  EXPECT_EQ(indexes[4], 0);
+  EXPECT_EQ(indexes[5], 1);
+  EXPECT_EQ(indexes[6], 2);
+  EXPECT_EQ(indexes[7], 3);
+  EXPECT_EQ(indexes[8], 4);
+  EXPECT_EQ(indexes[9], 5);
+
+  indexes = axis.find_indexes(179, 5);
+  ASSERT_TRUE(indexes.size() == 10);
+  EXPECT_EQ(indexes[0], 354);
+  EXPECT_EQ(indexes[1], 355);
+  EXPECT_EQ(indexes[2], 356);
+  EXPECT_EQ(indexes[3], 357);
+  EXPECT_EQ(indexes[4], 358);
+  EXPECT_EQ(indexes[5], 359);
+  EXPECT_EQ(indexes[6], 0);
+  EXPECT_EQ(indexes[7], 1);
+  EXPECT_EQ(indexes[8], 2);
+  EXPECT_EQ(indexes[9], 3);
+
+  indexes = axis.find_indexes(179.4, 5);
+  ASSERT_TRUE(indexes.size() == 10);
+  EXPECT_EQ(indexes[0], 355);
+  EXPECT_EQ(indexes[1], 356);
+  EXPECT_EQ(indexes[2], 357);
+  EXPECT_EQ(indexes[3], 358);
+  EXPECT_EQ(indexes[4], 359);
+  EXPECT_EQ(indexes[5], 0);
+  EXPECT_EQ(indexes[6], 1);
+  EXPECT_EQ(indexes[7], 2);
+  EXPECT_EQ(indexes[8], 3);
+  EXPECT_EQ(indexes[9], 4);
+
+  indexes = axis.find_indexes(179.6, 5);
+  ASSERT_TRUE(indexes.size() == 10);
+  EXPECT_EQ(indexes[0], 355);
+  EXPECT_EQ(indexes[1], 356);
+  EXPECT_EQ(indexes[2], 357);
+  EXPECT_EQ(indexes[3], 358);
+  EXPECT_EQ(indexes[4], 359);
+  EXPECT_EQ(indexes[5], 0);
+  EXPECT_EQ(indexes[6], 1);
+  EXPECT_EQ(indexes[7], 2);
+  EXPECT_EQ(indexes[8], 3);
+  EXPECT_EQ(indexes[9], 4);
+
+  axis = detail::Axis(0, 9, 10);
+  indexes = axis.find_indexes(5, 4);
+  ASSERT_TRUE(indexes.size() == 8);
+  EXPECT_EQ(indexes[0], 2);
+  EXPECT_EQ(indexes[1], 3);
+  EXPECT_EQ(indexes[2], 4);
+  EXPECT_EQ(indexes[3], 5);
+  EXPECT_EQ(indexes[4], 6);
+  EXPECT_EQ(indexes[5], 7);
+  EXPECT_EQ(indexes[6], 8);
+  EXPECT_EQ(indexes[7], 9);
+
+  indexes = axis.find_indexes(-1, 4);
+  EXPECT_EQ(indexes.empty(), true);
+  indexes = axis.find_indexes(10, 4);
+  EXPECT_EQ(indexes.empty(), true);
+
+  indexes = axis.find_indexes(1, 4, detail::Axis::kSym);
+  ASSERT_TRUE(indexes.size() == 8);
+  EXPECT_EQ(indexes[0], 2);
+  EXPECT_EQ(indexes[1], 1);
+  EXPECT_EQ(indexes[2], 0);
+  EXPECT_EQ(indexes[3], 1);
+  EXPECT_EQ(indexes[4], 2);
+  EXPECT_EQ(indexes[5], 3);
+  EXPECT_EQ(indexes[6], 4);
+  EXPECT_EQ(indexes[7], 5);
+
+  indexes = axis.find_indexes(9, 4, detail::Axis::kSym);
+  ASSERT_TRUE(indexes.size() == 8);
+  EXPECT_EQ(indexes[0], 5);
+  EXPECT_EQ(indexes[1], 6);
+  EXPECT_EQ(indexes[2], 7);
+  EXPECT_EQ(indexes[3], 8);
+  EXPECT_EQ(indexes[4], 9);
+  EXPECT_EQ(indexes[5], 8);
+  EXPECT_EQ(indexes[6], 7);
+  EXPECT_EQ(indexes[7], 6);
+
+  indexes = axis.find_indexes(1, 4, detail::Axis::kWrap);
+  ASSERT_TRUE(indexes.size() == 8);
+  EXPECT_EQ(indexes[0], 8);
+  EXPECT_EQ(indexes[1], 9);
+  EXPECT_EQ(indexes[2], 0);
+  EXPECT_EQ(indexes[3], 1);
+  EXPECT_EQ(indexes[4], 2);
+  EXPECT_EQ(indexes[5], 3);
+  EXPECT_EQ(indexes[6], 4);
+  EXPECT_EQ(indexes[7], 5);
+
+  indexes = axis.find_indexes(9, 4, detail::Axis::kWrap);
+  ASSERT_TRUE(indexes.size() == 8);
+  EXPECT_EQ(indexes[0], 5);
+  EXPECT_EQ(indexes[1], 6);
+  EXPECT_EQ(indexes[2], 7);
+  EXPECT_EQ(indexes[3], 8);
+  EXPECT_EQ(indexes[4], 9);
+  EXPECT_EQ(indexes[5], 0);
+  EXPECT_EQ(indexes[6], 1);
+  EXPECT_EQ(indexes[7], 2);
+
+  indexes = axis.find_indexes(1, 4, detail::Axis::kPad);
+  ASSERT_TRUE(indexes.size() == 8);
+  EXPECT_EQ(indexes[0], -1);
+  EXPECT_EQ(indexes[1], -1);
+  EXPECT_EQ(indexes[2], 0);
+  EXPECT_EQ(indexes[3], 1);
+  EXPECT_EQ(indexes[4], 2);
+  EXPECT_EQ(indexes[5], 3);
+  EXPECT_EQ(indexes[6], 4);
+  EXPECT_EQ(indexes[7], 5);
+
+  indexes = axis.find_indexes(9, 4, detail::Axis::kPad);
+  ASSERT_TRUE(indexes.size() == 8);
+  EXPECT_EQ(indexes[0], 5);
+  EXPECT_EQ(indexes[1], 6);
+  EXPECT_EQ(indexes[2], 7);
+  EXPECT_EQ(indexes[3], 8);
+  EXPECT_EQ(indexes[4], 9);
+  EXPECT_EQ(indexes[5], -1);
+  EXPECT_EQ(indexes[6], -1);
+  EXPECT_EQ(indexes[7], -1);
+}

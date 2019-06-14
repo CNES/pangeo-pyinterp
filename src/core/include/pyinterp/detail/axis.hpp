@@ -20,6 +20,13 @@ namespace detail {
 /// of a variable's values.
 class Axis {
  public:
+  /// Type of boundary handling.
+  enum Boundary : uint8_t {
+    kPad,   //!< Pad with a fill value.
+    kWrap,  //!< Circular boundary conditions.
+    kSym    //!< Symmetrical boundary conditions.
+  };
+
   /// Default constructor
   Axis() = default;
 
@@ -44,12 +51,12 @@ class Axis {
 
   /// Create a coordinate axis from values.
   ///
-  /// @param points axis values
+  /// @param values Axis values
   /// @param epsilon Maximum allowed difference between two real numbers in
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle.
   /// @param is_radian True, if the coordinate system is radian.
-  explicit Axis(std::vector<double> points, double epsilon = 1e-6,
+  explicit Axis(std::vector<double> values, double epsilon = 1e-6,
                 bool is_circle = false, bool is_radians = false);
 
   /// Destructor
@@ -192,6 +199,19 @@ class Axis {
   /// the tuple (i0, i1)
   std::optional<std::tuple<int64_t, int64_t>> find_indexes(
       double coordinate) const;
+
+  /// Create a table of "size" indices located on either side of the required
+  /// position.
+  ///
+  /// @param coordinate Position in this coordinate system
+  /// @param size Size of the half window to be built.
+  /// @param boundary How to handle boundaries (this parameter is not used if
+  /// the manipulated axis is a circle.)
+  /// @return A table of size "2*size" containing the indices of the axis
+  /// framing the value provided or an empty table if the value is located
+  /// outside the axis definition domain.
+  std::vector<int64_t> find_indexes(double coordinate, uint32_t size,
+                                    Boundary boundary = kPad) const;
 
   /// Get a character string representing this instance.
   operator std::string() const {
