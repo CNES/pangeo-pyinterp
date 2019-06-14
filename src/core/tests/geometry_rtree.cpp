@@ -1,6 +1,5 @@
 #include "pyinterp/detail/geometry/rtree.hpp"
 #include <gtest/gtest.h>
-#include <random>
 
 namespace geometry = pyinterp::detail::geometry;
 
