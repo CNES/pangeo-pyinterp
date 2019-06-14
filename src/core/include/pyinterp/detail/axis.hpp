@@ -216,7 +216,7 @@ class Axis {
   /// Get a string representing this instance.
   ///
   /// @return a string holding the converted instance.
-  operator std::string() const {
+  explicit operator std::string() const {
     auto ss = std::stringstream();
     ss << std::boolalpha << "Axis([" << front() << ", ..., " << back()
        << "], is_circle=" << is_angle()
