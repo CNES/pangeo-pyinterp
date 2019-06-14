@@ -7,5 +7,6 @@ endmacro()
 
 add_testcase(axis)
 add_testcase(axis_container)
+add_testcase(geodetic_coordinates)
 add_testcase(geodetic_system)
 add_testcase(math)
