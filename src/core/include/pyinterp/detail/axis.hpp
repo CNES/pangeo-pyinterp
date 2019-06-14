@@ -213,7 +213,9 @@ class Axis {
   std::vector<int64_t> find_indexes(double coordinate, uint32_t size,
                                     Boundary boundary = kPad) const;
 
-  /// Get a character string representing this instance.
+  /// Get a string representing this instance.
+  ///
+  /// @return a string holding the converted instance.
   operator std::string() const {
     auto ss = std::stringstream();
     ss << std::boolalpha << "Axis([" << front() << ", ..., " << back()
