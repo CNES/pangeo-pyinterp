@@ -15,7 +15,10 @@ TEST(gsl, interpolate) {
   auto test_dy = std::vector<double>{1.0, 1.0, 1.0, 1.0};
   auto test_iy = std::vector<double>{0.0, 0.125, 0.5, 2.0};
 
-  auto interpolator = gsl::Interpolate1D(gsl_interp_cspline, data_x, data_y);
+  auto interpolator = gsl::Interpolate1D(
+      gsl_interp_cspline,
+      Eigen::Map<Eigen::VectorXd>(data_x.data(), data_x.size()),
+      Eigen::Map<Eigen::VectorXd>(data_y.data(), data_y.size()));
 
   for (auto ix = 0; ix < 4; ix++) {
     auto x = test_x[ix];
@@ -31,6 +34,9 @@ TEST(gsl, exception) {
   auto data_x = std::vector<double>{0.0};
   auto data_y = std::vector<double>{0.0};
 
-  EXPECT_THROW(gsl::Interpolate1D(gsl_interp_cspline, data_x, data_y),
+  EXPECT_THROW(gsl::Interpolate1D(
+                   gsl_interp_cspline,
+                   Eigen::Map<Eigen::VectorXd>(data_x.data(), data_x.size()),
+                   Eigen::Map<Eigen::VectorXd>(data_y.data(), data_y.size())),
                std::runtime_error);
 }

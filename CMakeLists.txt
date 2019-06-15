@@ -129,6 +129,10 @@ if (WIN32)
   add_compile_definitions(GSL_DLL)
 endif()
 
+# Eigen3
+find_package(Eigen3 3.3.1 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
 # Googletest
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 set(INSTALL_GTEST OFF)

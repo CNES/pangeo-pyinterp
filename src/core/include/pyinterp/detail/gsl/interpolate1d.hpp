@@ -1,9 +1,9 @@
 #pragma once
 #include "pyinterp/detail/gsl/accelerator.hpp"
 #include "pyinterp/detail/broadcast.hpp"
+#include <Eigen/Core>
 #include <gsl/gsl_interp.h>
 #include <memory>
-#include <vector>
 
 namespace pyinterp {
 namespace detail {
@@ -19,8 +19,10 @@ class Interpolate1D {
   /// @param ya 1-D array of real values. The length of ya along the
   /// interpolation axis must be equal to the length of xa.
   /// @param acc
-  Interpolate1D(const gsl_interp_type* type, const std::vector<double>& xa,
-                const std::vector<double>& ya, Accelerator acc = Accelerator())
+  Interpolate1D(const gsl_interp_type* type,
+                const Eigen::Ref<const Eigen::VectorXd>& xa,
+                const Eigen::Ref<const Eigen::VectorXd>& ya,
+                Accelerator acc = Accelerator())
       : xa_(xa),
         ya_(ya),
         workspace_(std::shared_ptr<gsl_interp>(
@@ -69,8 +71,8 @@ class Interpolate1D {
   }
 
  private:
-  const std::vector<double>& xa_;
-  const std::vector<double>& ya_;
+  const Eigen::Ref<const Eigen::VectorXd> xa_;
+  const Eigen::Ref<const Eigen::VectorXd> ya_;
   std::shared_ptr<gsl_interp> workspace_;
   Accelerator acc_;
 
