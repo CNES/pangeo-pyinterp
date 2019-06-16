@@ -7,6 +7,6 @@ target_link_libraries(pyinterp PUBLIC)
 
 file(GLOB_RECURSE SOURCES "module/*.cpp")
 pybind11_add_module(core ${SOURCES})
-target_link_libraries(core PRIVATE pyinterp)
+target_link_libraries(core PRIVATE pyinterp GSL::gsl GSL::gslcblas)
 
 add_subdirectory(tests)
