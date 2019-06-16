@@ -42,5 +42,37 @@ void check_container_size(const std::string& name1, const Vector1& v1,
   check_container_size(name1, v1, args...);
 }
 
+/// Automation of the control of the number of dimensions of a tensor.
+///
+/// @param name name of the variable containing the first array
+/// @param ndim number of dimensions expected
+/// @param a array to check
+/// @throw std::invalid_argument if the number of dimensions of the table is
+/// different from the expected one.
+template <typename Array>
+void check_array_ndim(const std::string& name, const int64_t ndim,
+                      const Array& a) {
+  if (a.ndim() != ndim) {
+    throw std::invalid_argument(name + " must be a " + std::to_string(ndim) +
+                                "-dimensional array");
+  }
+}
+
+/// Control of the number of dimensions of a tensor.
+///
+/// @param name name of the variable containing the first array
+/// @param ndim number of dimensions expected
+/// @param a array to check
+/// @throw std::invalid_argument if the number of dimensions of the table is
+/// different from the expected one.
+template <typename Array, typename... Args>
+void check_array_ndim(const std::string& name, const int64_t ndim,
+                      const Array& a, Args... args) {
+  static_assert(sizeof...(Args) % 3 == 0,
+                "number of parameters is expected to be a multiple of 3");
+  check_array_ndim(name, ndim, a);
+  check_array_ndim(args...);
+}
+
 }  // namespace detail
 }  // namespace pyinterp

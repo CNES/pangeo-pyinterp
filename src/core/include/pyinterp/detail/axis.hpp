@@ -183,7 +183,7 @@ class Axis {
   /// is located before, or the value of the last element of this container if
   /// the requested value is located after.
   /// @return index of the grid point containing it or -1 if outside grid area
-  inline int64_t find_index(double coordinate,
+  inline int64_t find_index(const double coordinate,
                             const bool bounded = false) const {
     return axis_->find_index(normalize_coordinate(coordinate), bounded);
   }
@@ -224,6 +224,17 @@ class Axis {
     return ss.str();
   }
 
+ protected:
+  /// Does the axis represent an angle?
+  ///
+  /// @return true if the axis represent an angle
+  inline bool is_angle() const noexcept { return !std::isnan(circle_); }
+
+  /// Specifies if this instance handles a radian angle.
+  ///
+  /// @return true if this instance handles a radian angle.
+  inline double is_radians() const { return circle_ == math::pi<double>(); }
+
  private:
   /// True, if the axis represents a circle.
   bool is_circle_{false};
@@ -242,11 +253,6 @@ class Axis {
     return is_circle ? (is_radian ? math::pi<double>() : 360)
                      : std::numeric_limits<double>::quiet_NaN();
   }
-
-  /// Does the axis represent an angle?
-  ///
-  /// @return true if the axis represent an angle
-  inline bool is_angle() const noexcept { return !std::isnan(circle_); }
 
   /// Normalize angle
   inline double normalize_coordinate(const double coordinate,
