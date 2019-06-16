@@ -41,22 +41,22 @@ TEST(geometry_rtree, query) {
   rtree.packing(coordinates);
   auto nearest = rtree.query({3, 4}, 1);
   ASSERT_EQ(nearest.size(), 1);
-  EXPECT_EQ(std::get<1>(nearest[0]), 0);
+  EXPECT_EQ(nearest[0].second, 0);
   nearest = rtree.query({3, 4}, 3);
   ASSERT_EQ(nearest.size(), 3);
-  EXPECT_EQ(std::get<1>(nearest[0]), 0);
-  EXPECT_EQ(std::get<1>(nearest[1]), 1);
-  EXPECT_EQ(std::get<1>(nearest[2]), 3);
+  EXPECT_EQ(nearest[0].second, 0);
+  EXPECT_EQ(nearest[1].second, 1);
+  EXPECT_EQ(nearest[2].second, 3);
 
   nearest = rtree.query_ball({4, 4}, 1);
   ASSERT_EQ(nearest.size(), 1);
-  EXPECT_EQ(std::get<1>(nearest[0]), 1);
+  EXPECT_EQ(nearest[0].second, 1);
 
   nearest = rtree.query_ball({4, 4}, 3);
   ASSERT_EQ(nearest.size(), 3);
-  EXPECT_EQ(std::get<1>(nearest[0]), 0);
-  EXPECT_EQ(std::get<1>(nearest[1]), 1);
-  EXPECT_EQ(std::get<1>(nearest[2]), 3);
+  EXPECT_EQ(nearest[0].second, 0);
+  EXPECT_EQ(nearest[1].second, 1);
+  EXPECT_EQ(nearest[2].second, 3);
 
   nearest = rtree.query_within({4, 4}, 3);
   EXPECT_EQ(nearest.size(), 3);

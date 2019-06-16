@@ -11,12 +11,18 @@ namespace geometry {
 
 /// Index points in the Cartesian space at N dimensions.
 ///
-/// @tparam Coordinate The class of storage of the coordinates of a point.
+/// @tparam Coordinate The class of storage for a point's coordinates.
 /// @tparam Type The type of data stored in the tree.
 /// @tparam N Number of dimensions in the Cartesian space handled.
 template <typename Coordinate, typename Type, size_t N>
 class RTree {
  public:
+  /// Type of query results.
+  using result_t = std::pair<typename boost::geometry::default_distance_result<
+                                 geometry::EquatorialPoint3D<Coordinate>,
+                                 geometry::EquatorialPoint3D<Coordinate>>::type,
+                             Type>;
+
   /// Value handled by this object
   using value_t = std::pair<geometry::PointND<Coordinate, N>, Type>;
 
@@ -84,13 +90,13 @@ class RTree {
   /// @param point Point of interest
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors
-  std::vector<std::tuple<Coordinate, Type>> query(
-      const geometry::PointND<Coordinate, N> &point, const uint32_t k) const {
-    auto result = std::vector<std::tuple<Coordinate, Type>>();
+  std::vector<result_t> query(const geometry::PointND<Coordinate, N> &point,
+                              const uint32_t k) const {
+    auto result = std::vector<result_t>();
     std::for_each(
         tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
         [&point, &result](const auto &item) {
-          result.emplace_back(std::make_tuple(
+          result.emplace_back(std::make_pair(
               boost::geometry::distance(point, item.first), item.second));
         });
     return result;
@@ -101,16 +107,16 @@ class RTree {
   /// @param point Point of interest
   /// @param radius distance within which neighbors are returned
   /// @return the k nearest neighbors
-  std::vector<std::tuple<Coordinate, Type>> query_ball(
+  std::vector<result_t> query_ball(
       const geometry::PointND<Coordinate, N> &point,
       const double radius) const {
-    auto result = std::vector<std::tuple<Coordinate, Type>>();
+    auto result = std::vector<result_t>();
     std::for_each(
         tree_->qbegin(boost::geometry::index::satisfies([&](const auto &item) {
           return boost::geometry::distance(item.first, point) <= radius;
         })),
         tree_->qend(), [&point, &result](const auto &item) {
-          result.emplace_back(std::make_tuple(
+          result.emplace_back(std::make_pair(
               boost::geometry::distance(point, item.first), item.second));
         });
     return result;
@@ -122,9 +128,9 @@ class RTree {
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors if the point is within by its
   /// neighbors.
-  std::vector<std::tuple<Coordinate, Type>> query_within(
+  std::vector<result_t> query_within(
       const geometry::PointND<Coordinate, N> &point, const uint32_t k) const {
-    auto result = std::vector<std::tuple<Coordinate, Type>>();
+    auto result = std::vector<result_t>();
     auto points =
         boost::geometry::model::multi_point<geometry::PointND<Coordinate, N>>();
     points.reserve(k);
@@ -133,7 +139,7 @@ class RTree {
         tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
         [&points, &point, &result](const auto &item) {
           points.emplace_back(item.first);
-          result.emplace_back(std::make_tuple(
+          result.emplace_back(std::make_pair(
               boost::geometry::distance(point, item.first), item.second));
         });
 
