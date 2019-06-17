@@ -5,10 +5,9 @@
 #include <limits>
 #include <memory>
 #include <optional>
-#include <set>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sstream>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -57,7 +56,7 @@ class Axis {
   /// @param is_circle True, if the axis can represent a circle.
   /// @param is_radian True, if the coordinate system is radian.
   explicit Axis(std::vector<double> values, double epsilon = 1e-6,
-                bool is_circle = false, bool is_radians = false);
+                bool is_circle = false, bool is_radian = false);
 
   /// Destructor
   ~Axis() = default;
@@ -233,7 +232,29 @@ class Axis {
   /// Specifies if this instance handles a radian angle.
   ///
   /// @return true if this instance handles a radian angle.
-  inline double is_radians() const { return circle_ == math::pi<double>(); }
+  inline bool is_radian() const noexcept {
+    return circle_ == math::pi<double>();
+  }
+
+  /// Gets the axis handler
+  ///
+  /// @return the axis handler
+  inline const std::shared_ptr<axis::container::Abstract>& handler() const
+      noexcept {
+    return axis_;
+  }
+
+  /// Construction of a serialized instance.
+  ///
+  /// @param axis Axis handler
+  /// @param is_circle True, if the axis can represent a circle.
+  /// @param is_radian True, if the coordinate system is radian.
+  Axis(std::shared_ptr<axis::container::Abstract> axis, const bool is_circle,
+       const bool is_radian)
+      : is_circle_(is_circle),
+        circle_(is_circle_ ? (is_radian ? math::pi<double>() : 360)
+                           : std::numeric_limits<double>::quiet_NaN()),
+        axis_(std::move(axis)) {}
 
  private:
   /// True, if the axis represents a circle.

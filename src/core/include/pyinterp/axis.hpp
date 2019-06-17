@@ -13,12 +13,14 @@ class Axis : public detail::Axis {
   /// Create a coordinate axis from values.
   ///
   /// @param points axis values
+  /// @param epsilon Maximum allowed difference between two real numbers in
+  /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle. Be careful,
   /// the angle shown must be expressed in degrees.
   /// @param is_radian True, if the coordinate system is radian.
   explicit Axis(
       const pybind11::array_t<double, pybind11::array::c_style>& points,
-      bool is_circle, bool is_radians);
+      double epsilon, bool is_circle, bool is_radian);
 
   /// Get coordinate values.
   ///
@@ -40,21 +42,11 @@ class Axis : public detail::Axis {
       const pybind11::array_t<double>& coordinates, bool bounded) const;
 
   /// Get a tuple that fully encodes the state of this instance
-  pybind11::tuple getstate() const {
-    return pybind11::make_tuple(
-        coordinate_values(pybind11::slice(0, size(), 1)), is_angle(),
-        is_radians());
-  }
+  pybind11::tuple getstate() const;
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static Axis setstate(const pybind11::tuple& state) {
-    if (state.size() != 3) {
-      throw std::invalid_argument("invalid state");
-    }
-    return Axis(state[0].cast<pybind11::array_t<double>>(),
-                state[1].cast<bool>(), state[2].cast<bool>());
-  }
+  static Axis setstate(const pybind11::tuple& state);
 };
 
 }  // namespace pyinterp

@@ -6,6 +6,11 @@ namespace py = pybind11;
 
 namespace pyinterp {
 
+// Opaque identification objects
+#define UNDEFINED 0x618d86f8334b6c93
+#define REGULAR 0x22d06666a82610a3
+#define IRREGULAR 0x3ab687f709def680
+
 template <typename T>
 inline std::vector<T> vector_from_numpy(
     const std::string& name,
@@ -15,8 +20,9 @@ inline std::vector<T> vector_from_numpy(
 }
 
 Axis::Axis(const py::array_t<double, py::array::c_style>& points,
-           const bool is_circle, const bool is_radian)
-    : Axis(vector_from_numpy<double>("points", points), is_circle, is_radian) {}
+           const double epsilon, const bool is_circle, const bool is_radian)
+    : Axis(vector_from_numpy<double>("points", points), epsilon, is_circle,
+           is_radian) {}
 
 py::array_t<double> Axis::coordinate_values(const py::slice& slice) const {
   size_t start, stop, step, slicelength;
@@ -54,6 +60,62 @@ pybind11::array_t<int64_t> Axis::find_index(
   return result;
 }
 
+pybind11::tuple Axis::getstate() const {
+  // Regular
+  {
+    auto ptr = dynamic_cast<detail::axis::container::Regular*>(handler().get());
+    if (ptr != nullptr) {
+      return pybind11::make_tuple(REGULAR, ptr->front(), ptr->back(),
+                                  ptr->size(), is_circle(), is_radian());
+    }
+  }
+  // Irregular
+  {
+    auto ptr =
+        dynamic_cast<detail::axis::container::Irregular*>(handler().get());
+    if (ptr != nullptr) {
+      auto values = py::array_t<double>(ptr->size());
+      auto _values = values.mutable_unchecked<1>();
+      for (auto ix = 0LL; ix < ptr->size(); ++ix) {
+        _values[ix] = ptr->coordinate_value(ix);
+      }
+      return pybind11::make_tuple(IRREGULAR, values, is_circle(), is_radian());
+    }
+  }
+  // Undefined
+  auto ptr = dynamic_cast<detail::axis::container::Undefined*>(handler().get());
+  if (ptr != nullptr) {
+    return pybind11::make_tuple(UNDEFINED);
+  }
+  throw std::runtime_error("unknown axis handler");
+}
+
+Axis Axis::setstate(const pybind11::tuple& state) {
+  if (state.size() < 1) {
+    throw std::invalid_argument("invalid state");
+  }
+  auto identification = state[0].cast<int64_t>();
+  switch (identification) {
+    case UNDEFINED:
+      return Axis();
+      break;
+    case IRREGULAR:
+      return Axis(
+          std::shared_ptr<detail::axis::container::Abstract>(
+              new detail::axis::container::Irregular(vector_from_numpy<double>(
+                  "state[1]", state[1].cast<py::array_t<double>>()))),
+          state[2].cast<bool>(), state[3].cast<bool>());
+    case REGULAR:
+      return Axis(std::shared_ptr<detail::axis::container::Abstract>(
+                      new detail::axis::container::Regular(
+                          state[1].cast<double>(), state[2].cast<double>(),
+                          state[3].cast<size_t>())),
+                  state[4].cast<bool>(), state[5].cast<bool>());
+    default:
+      throw std::invalid_argument("invalid state");
+  }
+}
+
 }  // namespace pyinterp
 
 void init_axis(py::module& m) {
@@ -61,19 +123,23 @@ void init_axis(py::module& m) {
 A coordinate axis is a Variable that specifies one of the coordinates
 of a variable's values.
 )__doc__")
-      .def(py::init<const py::array_t<double>&, const bool, const bool>(),
-           py::arg("values"), py::arg("is_circle") = false,
-           py::arg("is_radian") = false, R"__doc__(
+      .def(py::init<const py::array_t<double>&, double, bool, bool>(),
+           py::arg("values"), py::arg("epsilon") = 1e-6,
+           py::arg("is_circle") = false, py::arg("is_radian") = false,
+           R"__doc__(
 Create a coordinate axis from values.
 Args:
     values (numpy.ndarray): Axis values.
+    epsilon (float, optional): Maximum allowed difference between two real
+        numbers in order to consider them equal.
     is_circle (bool, optional): True, if the axis can represent a
         circle. Defaults to ``false``.
     is_radian (bool, optional): True, if the coordinate system is radian.
         Defaults to ``false``.
 )__doc__")
-      .def(py::init<double, double, double, bool, bool>(), py::arg("start"),
-           py::arg("stop"), py::arg("step"), py::arg("is_circle") = false,
+      .def(py::init<double, double, double, double, bool, bool>(),
+           py::arg("start"), py::arg("stop"), py::arg("step"),
+           py::arg("epsilon") = 1e-6, py::arg("is_circle") = false,
            py::arg("is_radian") = false,
            R"__doc__(
 Create a coordinate axis from evenly spaced numbers over a specified
@@ -82,6 +148,8 @@ Args:
     start (float): The first value of the axis.
     stop (float): The last value of the axis.
     num (int): Number of samples in the axis.
+    epsilon (float, optional): Maximum allowed difference between two real
+        numbers in order to consider them equal.
     is_circle (bool, optional): True, if the axis can represent a circle.
         Defaults to ``false``.
     is_radian (bool, optional): True, if the coordinate system is radian.
@@ -104,7 +172,8 @@ Get the maximum coordinate value.
 Return:
     float: The maximum coordinate value.
 )__doc__")
-      .def("is_regular", &pyinterp::Axis::is_regular,
+      .def("is_regular",
+           [](const pyinterp::Axis& self) -> bool { return self.is_regular(); },
            R"__doc__(
 Check if this axis values are spaced regularly
 Return:
