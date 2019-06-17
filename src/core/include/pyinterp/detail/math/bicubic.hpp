@@ -104,7 +104,7 @@ class XArray {
 
   /// Normalizes the angle with respect to the first value of the X axis of this
   /// array.
-  inline constexpr double normalize_angle(const double xi) const {
+  inline double normalize_angle(const double xi) const {
     return math::normalize_angle(xi, x(0));
   }
 
@@ -158,7 +158,7 @@ class Bicubic {
     Eigen::VectorXd fy(xr.nx());
 
     // Spline interpolation as function of Y-coordinate
-    for (auto ix = 0; ix < xr.nx(); ++ix) {
+    for (auto ix = 0ULL; ix < xr.nx(); ++ix) {
       // The block containing the processed row must be copied into a new
       // memory block.
       Eigen::VectorXd row = xr.q().row(ix);
