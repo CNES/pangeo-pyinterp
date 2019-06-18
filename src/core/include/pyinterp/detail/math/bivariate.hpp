@@ -13,8 +13,8 @@ struct Bivariate {
   /// Performs the interpolation
   ///
   /// @param p Query point
-  /// @param p00 Point of coordinate (x0, y0)
-  /// @param p01 Point of coordinate (x1, y1)
+  /// @param p0 Point of coordinate (x0, y0)
+  /// @param p1 Point of coordinate (x1, y1)
   /// @param q00 Point value for the coordinate (x0, y0)
   /// @param q01 Point value for the coordinate (x0, y1)
   /// @param q10 Point value for the coordinate (x1, y0)
@@ -22,7 +22,7 @@ struct Bivariate {
   /// @return interpolated value at coordinate (x, y)
   virtual T evaluate(const Point& p, const Point& p0, const Point& p1,
                      const T& q00, const T& q01, const T& q10,
-                     const T& q11) = 0;
+                     const T& q11) const = 0;
 };
 
 /// Bilinear interpolation
@@ -31,7 +31,7 @@ struct Bilinear : public Bivariate<Point, T> {
   /// Performs the bilinear interpolation
   inline T evaluate(const Point& p, const Point& p0, const Point& p1,
                     const T& q00, const T& q01, const T& q10,
-                    const T& q11) final {
+                    const T& q11) const final {
     auto dx = boost::geometry::get<0>(p1) - boost::geometry::get<0>(p0);
     auto dy = boost::geometry::get<1>(p1) - boost::geometry::get<1>(p0);
     auto t = (boost::geometry::get<0>(p) - boost::geometry::get<0>(p0)) / dx;
@@ -56,7 +56,7 @@ struct InverseDistanceWeigthing : public Bivariate<Point, T> {
   /// Performs the interpolation
   inline T evaluate(const Point& p, const Point& p0, const Point& p1,
                     const T& q00, const T& q01, const T& q10,
-                    const T& q11) final {
+                    const T& q11) const final {
     auto distance = boost::geometry::distance(
         p, Point{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)});
     if (distance <= std::numeric_limits<T>::epsilon()) {
@@ -112,7 +112,7 @@ struct Nearest : public Bivariate<Point, T> {
   /// Performs the interpolation
   inline T evaluate(const Point& p, const Point& p0, const Point& p1,
                     const T& q00, const T& q01, const T& q10,
-                    const T& q11) final {
+                    const T& q11) const final {
     auto distance = boost::geometry::comparable_distance(
         p, Point{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)});
     auto result = std::make_tuple(distance, q00);
