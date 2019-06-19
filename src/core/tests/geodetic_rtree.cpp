@@ -68,4 +68,11 @@ TEST(geodetic, rtree) {
                                 coordinates.rows(), 0, coordinates.rows() - 1));
   ASSERT_EQ(rtree.size(), coordinates.rows());
   EXPECT_FALSE(rtree.empty());
+
+  auto nearests = rtree.query(coordinates, 4, false, 0);
+  for (auto ix = 0ULL; ix < coordinates.rows(); ++ix) {
+    for (auto jx = 0ULL; jx < 4; ++jx) {
+      // EXPECT_EQ(std::get<0>(nearests)(ix, jx), 0);
+    }
+  }
 }

@@ -1,7 +1,8 @@
 #pragma once
-#include "pyinterp/detail/geometry/rtree.hpp"
 #include "pyinterp/detail/geodetic/coordinates.hpp"
-#include "Eigen/Core"
+#include "pyinterp/detail/geometry/rtree.hpp"
+#include "pyinterp/detail/thread.hpp"
+#include <Eigen/Core>
 #include <optional>
 
 namespace pyinterp {
@@ -19,8 +20,13 @@ namespace geodetic {
 template <typename Coordinate, typename Type>
 class RTree : public geometry::RTree<Coordinate, Type, 3> {
  public:
+  /// Type of distance
+  using distance_t = typename boost::geometry::default_distance_result<
+      geometry::EquatorialPoint3D<Coordinate>,
+      geometry::EquatorialPoint3D<Coordinate>>::type;
+
   /// Type of query results.
-  using result_t = typename geometry::RTree<Coordinate, Type, 3>::result_t;
+  using result_t = std::pair<distance_t, Type>;
 
   /// Default constructor
   explicit RTree(const std::optional<System> &wgs)
@@ -129,6 +135,32 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
       case 3:
         insert<3>(coordinates, values);
         break;
+      default:
+        throw std::invalid_argument(
+            "coordinates must be a matrix (n, 2) to add points defined by "
+            "their longitudes and latitudes or a matrix (n, 3) to add points "
+            "defined by their longitudes, latitudes and altitudes.");
+    }
+  }
+
+  /// Search for the nearest K nearest neighbors of a given point.
+  ///
+  /// @param coordinates Matrix describing the coordinates of the points to be
+  /// searched.
+  /// @param k The maximum number of neighbors to search for.
+  /// @param within If true, the method ensures that the neighbors found are
+  ///   located within the point of interest
+  /// @param num_threads The number of threads to use for the computation
+  std::tuple<Eigen::Matrix<distance_t, Eigen::Dynamic, Eigen::Dynamic>,
+             Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>
+  query(const Eigen::Ref<const Eigen::Matrix<Coordinate, Eigen::Dynamic,
+                                             Eigen::Dynamic>> &coordinates,
+        const uint32_t k, const bool within, const size_t num_threads) {
+    switch (coordinates.cols()) {
+      case 2:
+        return query<2>(coordinates, k, within, num_threads);
+      case 3:
+        return query<3>(coordinates, k, within, num_threads);
       default:
         throw std::invalid_argument(
             "coordinates must be a matrix (n, 2) to add points defined by "
@@ -282,6 +314,82 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
       geometry::RTree<Coordinate, Type, 3>::insert(
           coordinates_.lla_to_ecef(point));
     }
+  }
+
+  /// Search for the nearest K nearest neighbors of a given point.
+  ///
+  /// @param coordinates Matrix describing the coordinates of the points to be
+  /// searched.
+  /// @param k The maximum number of neighbors to search for.
+  /// @param within If true, the method ensures that the neighbors found are
+  ///   located within the point of interest
+  /// @param num_threads The number of threads to use for the computation
+  template <size_t Dimensions>
+  std::tuple<Eigen::Matrix<distance_t, Eigen::Dynamic, Eigen::Dynamic>,
+             Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>
+  query(const Eigen::Ref<const Eigen::Matrix<Coordinate, Eigen::Dynamic,
+                                             Eigen::Dynamic>> &coordinates,
+        const uint32_t k, const bool within, const size_t num_threads) {
+    // Signature of the function of the base class to be called.
+    using query_t = std::vector<result_t> (RTree::*)(
+        const geometry::EquatorialPoint3D<Coordinate> &, uint32_t) const;
+
+    // Selection of the method performing the calculation.
+    const std::function<std::vector<result_t>(
+        const RTree &, const geometry::EquatorialPoint3D<Coordinate> &,
+        uint32_t)>
+        method =
+            within ? &RTree::query_within : static_cast<query_t>(&RTree::query);
+
+    auto size = coordinates.rows();
+    auto distance =
+        Eigen::Matrix<distance_t, Eigen::Dynamic, Eigen::Dynamic>(size, k);
+    auto value = Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>(size, k);
+
+    // Captures the detected exceptions in the calculation function
+    // (only the last exception captured is kept)
+    auto except = std::exception_ptr(nullptr);
+
+    // Dispatch calculation on defined cores
+    dispatch(
+        [&](const size_t start, const size_t stop) {
+          auto point = geometry::EquatorialPoint3D<Coordinate>();
+          try {
+            for (auto ix = start; ix < stop; ++ix) {
+              auto dim = 0ULL;
+
+              for (; dim < Dimensions; ++dim) {
+                geometry::point::set(point, coordinates(ix, dim), dim);
+              }
+              for (; dim < 3ULL; ++dim) {
+                geometry::point::set(point, Coordinate(0), dim);
+              }
+
+              auto nearest = method(*this, point, k);
+              auto jx = 0ULL;
+
+              // Fill in the calculation result for all neighbors found
+              for (; jx < nearest.size(); ++jx) {
+                distance(ix, jx) = std::get<0>(nearest[jx]);
+                value(ix, jx) = std::get<1>(nearest[jx]);
+              }
+
+              // The rest of the result is filled with invalid values
+              for (; jx < k; ++jx) {
+                distance(ix, jx) = -1;
+                value(ix, jx) = -1;
+              }
+            }
+          } catch (...) {
+            except = std::current_exception();
+          }
+        },
+        size, num_threads);
+
+    if (except != nullptr) {
+      std::rethrow_exception(except);
+    }
+    return std::make_tuple(distance, value);
   }
 };
 

@@ -17,11 +17,12 @@ namespace geometry {
 template <typename Coordinate, typename Type, size_t N>
 class RTree {
  public:
+  /// Type of
+  using distance_t = typename boost::geometry::default_distance_result<
+      geometry::PointND<Coordinate, N>, geometry::PointND<Coordinate, N>>::type;
+
   /// Type of query results.
-  using result_t = std::pair<typename boost::geometry::default_distance_result<
-                                 geometry::EquatorialPoint3D<Coordinate>,
-                                 geometry::EquatorialPoint3D<Coordinate>>::type,
-                             Type>;
+  using result_t = std::pair<distance_t, Type>;
 
   /// Value handled by this object
   using value_t = std::pair<geometry::PointND<Coordinate, N>, Type>;
