@@ -6,15 +6,15 @@
 namespace pyinterp {
 
 /// Cartesian Grid 2D
-template <ssize_t Dimension = 2>
+template <typename T, ssize_t Dimension = 2>
 class Grid2D {
  public:
   /// Default constructor
-  Grid2D(Axis x, Axis y, pybind11::array_t<double> z)
+  Grid2D(Axis x, Axis y, pybind11::array_t<T> z)
       : x_(std::move(x)),
         y_(std::move(y)),
         array_(std::move(z)),
-        ptr_(array_.unchecked<Dimension>()) {
+        ptr_(array_.template unchecked<Dimension>()) {
     check_shape(0, x_, "x", "z", y_, "y", "z");
   }
 
@@ -25,9 +25,7 @@ class Grid2D {
   inline const Axis& y() const noexcept { return y_; }
 
   /// Gets values of the array to interpolate
-  inline const pybind11::array_t<double>& array() const noexcept {
-    return array_;
-  }
+  inline const pybind11::array_t<T>& array() const noexcept { return array_; }
 
   /// Pickle support: get state of this instance
   virtual pybind11::tuple getstate() const {
@@ -41,14 +39,14 @@ class Grid2D {
     }
     return Grid2D(Axis::setstate(tuple[0].cast<pybind11::tuple>()),
                   Axis::setstate(tuple[1].cast<pybind11::tuple>()),
-                  tuple[2].cast<pybind11::array_t<double>>());
+                  tuple[2].cast<pybind11::array_t<T>>());
   }
 
  protected:
   Axis x_;
   Axis y_;
-  pybind11::array_t<double> array_;
-  pybind11::detail::unchecked_reference<double, Dimension> ptr_;
+  pybind11::array_t<T> array_;
+  pybind11::detail::unchecked_reference<T, Dimension> ptr_;
 
   /// End of the recursive call of the function "check_shape"
   void check_shape(const size_t idx) {}
@@ -67,12 +65,13 @@ class Grid2D {
 };
 
 /// Cartesian Grid 3D
-class Grid3D : public Grid2D<3> {
+template <typename T>
+class Grid3D : public Grid2D<T, 3> {
  public:
   /// Default constructor
-  Grid3D(Axis x, Axis y, Axis z, pybind11::array_t<double> u)
-      : Grid2D(std::move(x), std::move(y), std::move(u)), z_(std::move(z)) {
-    check_shape(2, z_, "z", "u");
+  Grid3D(Axis x, Axis y, Axis z, pybind11::array_t<T> u)
+      : Grid2D<T>(std::move(x), std::move(y), std::move(u)), z_(std::move(z)) {
+    this->check_shape(2, z_, "z", "u");
   }
 
   /// Gets the Y-Axis
@@ -80,8 +79,8 @@ class Grid3D : public Grid2D<3> {
 
   /// Pickle support: get state of this instance
   pybind11::tuple getstate() const final {
-    return pybind11::make_tuple(x_.getstate(), y_.getstate(), z_.getstate(),
-                                array_);
+    return pybind11::make_tuple(this->x_.getstate(), this->y_.getstate(),
+                                z_.getstate(), this->array_);
   }
 
   /// Pickle support: set state of this instance
@@ -92,7 +91,7 @@ class Grid3D : public Grid2D<3> {
     return Grid3D(Axis::setstate(tuple[0].cast<pybind11::tuple>()),
                   Axis::setstate(tuple[1].cast<pybind11::tuple>()),
                   Axis::setstate(tuple[2].cast<pybind11::tuple>()),
-                  tuple[3].cast<pybind11::array_t<double>>());
+                  tuple[3].cast<pybind11::array_t<T>>());
   }
 
  protected:

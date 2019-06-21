@@ -51,9 +51,9 @@ class InverseDistanceWeighting
 
 /// Interpolation of bivariate function.
 template <template <class> class Point, typename T>
-class Bivariate : public Grid2D<> {
+class Bivariate : public Grid2D<T> {
  public:
-  using Grid2D::Grid2D;
+  using Grid2D<T>::Grid2D;
 
   /// Interpolates data using the defined interpolation function.
   pybind11::array_t<T> evaluate(const pybind11::array_t<T>& x,
@@ -77,24 +77,26 @@ class Bivariate : public Grid2D<> {
           [&](size_t start, size_t end) {
             try {
               for (size_t ix = start; ix < end; ++ix) {
-                auto x_indexes = x_.find_indexes(_x(ix));
-                auto y_indexes = y_.find_indexes(_y(ix));
+                auto x_indexes = this->x_.find_indexes(_x(ix));
+                auto y_indexes = this->y_.find_indexes(_y(ix));
 
                 if (x_indexes.has_value() && y_indexes.has_value()) {
                   int64_t ix0, ix1, iy0, iy1;
                   std::tie(ix0, ix1) = *x_indexes;
                   std::tie(iy0, iy1) = *y_indexes;
 
-                  auto x0 = x_(ix0);
+                  auto x0 = this->x_(ix0);
 
                   _result(ix) = interpolator->evaluate(
-                      Point<T>(x_.is_angle()
-                                   ? detail::math::normalize_angle(_x(ix), x0)
-                                   : _x(ix),
-                               _y(ix)),
-                      Point<T>(x_(ix0), y_(iy0)), Point<T>(x_(ix1), y_(iy1)),
-                      ptr_(ix0, iy0), ptr_(ix0, iy1), ptr_(ix1, iy0),
-                      ptr_(ix1, iy1));
+                      Point<T>(
+                          this->x_.is_angle()
+                              ? detail::math::normalize_angle(_x(ix), x0)
+                              : _x(ix),
+                          _y(ix)),
+                      Point<T>(this->x_(ix0), this->y_(iy0)),
+                      Point<T>(this->x_(ix1), this->y_(iy1)),
+                      this->ptr_(ix0, iy0), this->ptr_(ix0, iy1),
+                      this->ptr_(ix1, iy0), this->ptr_(ix1, iy1));
 
                 } else {
                   _result(ix) = std::numeric_limits<T>::quiet_NaN();
@@ -115,12 +117,12 @@ class Bivariate : public Grid2D<> {
 
   /// Pickle support: set state
   static Bivariate setstate(const pybind11::tuple& tuple) {
-    return Bivariate(Grid2D<>::setstate(tuple));
+    return Bivariate(Grid2D<T>::setstate(tuple));
   }
 
  private:
   /// Construct a new instance from a serialized instance
-  Bivariate(Grid2D<>&& grid) : Grid2D(grid) {}
+  Bivariate(Grid2D<T>&& grid) : Grid2D<T>(grid) {}
 };
 
 template <template <class> class Point, typename T>
