@@ -59,13 +59,14 @@ class TestBivariate(TestCase):
             plot(x, y, z0.reshape((len(lon), len(lat))), filename)
 
     def test_nearest(self):
-        self._test(core.geodetic.Nearest(), "mss_geodetic_nearest")
+        self._test(core.geodetic.Nearest2D(), "mss_geodetic_nearest")
 
     def test_bilinear(self):
-        self._test(core.geodetic.Nearest(), "mss_geodetic_bilinear")
+        self._test(core.geodetic.Bilinear2D(), "mss_geodetic_bilinear")
 
     def test_idw(self):
-        self._test(core.geodetic.Nearest(), "mss_geodetic_idw")
+        self._test(core.geodetic.InverseDistanceWeighting2D(),
+                   "mss_geodetic_idw")
 
 
 if __name__ == "__main__":

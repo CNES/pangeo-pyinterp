@@ -70,7 +70,7 @@ class Grid3D : public Grid2D<T, 3> {
  public:
   /// Default constructor
   Grid3D(Axis x, Axis y, Axis z, pybind11::array_t<T> u)
-      : Grid2D<T>(std::move(x), std::move(y), std::move(u)), z_(std::move(z)) {
+      : Grid2D<T, 3>(std::move(x), std::move(y), std::move(u)), z_(std::move(z)) {
     this->check_shape(2, z_, "z", "u");
   }
 

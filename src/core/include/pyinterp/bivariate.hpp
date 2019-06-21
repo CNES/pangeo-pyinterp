@@ -8,9 +8,9 @@
 
 namespace pyinterp {
 
-/// Interpolator implemented
+/// BivariateInterpolator implemented
 template <template <class> class Point, typename T>
-using Interpolator = detail::math::Bivariate<Point, T>;
+using BivariateInterpolator = detail::math::Bivariate<Point, T>;
 
 /// Bilinear interpolation
 template <template <class> class Point, typename T>
@@ -56,10 +56,10 @@ class Bivariate : public Grid2D<T> {
   using Grid2D<T>::Grid2D;
 
   /// Interpolates data using the defined interpolation function.
-  pybind11::array_t<T> evaluate(const pybind11::array_t<T>& x,
-                                const pybind11::array_t<T>& y,
-                                const Interpolator<Point, T>* interpolator,
-                                const size_t num_threads) {
+  pybind11::array_t<T> evaluate(
+      const pybind11::array_t<T>& x, const pybind11::array_t<T>& y,
+      const BivariateInterpolator<Point, T>* interpolator,
+      const size_t num_threads) {
     auto size = x.size();
     auto result = pybind11::array_t<T>(pybind11::array::ShapeContainer{size});
     auto _x = x.template unchecked<1>();
@@ -88,11 +88,10 @@ class Bivariate : public Grid2D<T> {
                   auto x0 = this->x_(ix0);
 
                   _result(ix) = interpolator->evaluate(
-                      Point<T>(
-                          this->x_.is_angle()
-                              ? detail::math::normalize_angle(_x(ix), x0)
-                              : _x(ix),
-                          _y(ix)),
+                      Point<T>(this->x_.is_angle()
+                                   ? detail::math::normalize_angle(_x(ix), x0)
+                                   : _x(ix),
+                               _y(ix)),
                       Point<T>(this->x_(ix0), this->y_(iy0)),
                       Point<T>(this->x_(ix1), this->y_(iy1)),
                       this->ptr_(ix0, iy0), this->ptr_(ix0, iy1),
@@ -126,27 +125,29 @@ class Bivariate : public Grid2D<T> {
 };
 
 template <template <class> class Point, typename T>
-void init_bivariate(pybind11::module& m) {
-  using CoordinateSystem = Interpolator<Point, T>;
+void init_bivariate_interpolator(pybind11::module& m,
+                                 const std::string& suffix) {
+  using CoordinateSystem = BivariateInterpolator<Point, T>;
 
   /// Redirects virtual calls to Python
   class PyInterpolator : public CoordinateSystem {
    public:
     using CoordinateSystem::CoordinateSystem;
 
-    double evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
-                    const T& q00, const T& q01, const T& q10,
-                    const T& q11) const override {
+    T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
+               const T& q00, const T& q01, const T& q10,
+               const T& q11) const override {
       PYBIND11_OVERLOAD_PURE(T, CoordinateSystem, "evaluate", p, p0, p1, q00,
                              q01, q10, q11);
     }
   };
 
-  /// Interpolator implemented here
-  auto interpolator =
-      pybind11::class_<CoordinateSystem, PyInterpolator>(m, "Interpolator");
+  /// BivariateInterpolator implemented here
+  auto interpolator = pybind11::class_<CoordinateSystem, PyInterpolator>(
+      m, ("BivariateInterpolator" + suffix).c_str());
 
-  pybind11::class_<Bilinear<Point, T>>(m, "Bilinear", interpolator)
+  pybind11::class_<Bilinear<Point, T>>(m, ("Bilinear" + suffix).c_str(),
+                                       interpolator)
       .def(pybind11::init<>())
       .def(pybind11::pickle(
           [](const Bilinear<Point, T>& self) { return self.getstate(); },
@@ -154,7 +155,8 @@ void init_bivariate(pybind11::module& m) {
             return Bilinear<Point, T>::setstate(state);
           }));
 
-  pybind11::class_<Nearest<Point, T>>(m, "Nearest", interpolator)
+  pybind11::class_<Nearest<Point, T>>(m, ("Nearest" + suffix).c_str(),
+                                      interpolator)
       .def(pybind11::init<>())
       .def(pybind11::pickle(
           [](const Nearest<Point, T>& self) { return self.getstate(); },
@@ -163,7 +165,7 @@ void init_bivariate(pybind11::module& m) {
           }));
 
   pybind11::class_<InverseDistanceWeighting<Point, T>>(
-      m, "InverseDistanceWeighting", interpolator)
+      m, ("InverseDistanceWeighting" + suffix).c_str(), interpolator)
       .def(pybind11::init<int>(), pybind11::arg("p") = 2)
       .def(pybind11::pickle(
           [](const InverseDistanceWeighting<Point, T>& self) {
@@ -172,6 +174,11 @@ void init_bivariate(pybind11::module& m) {
           [](const pybind11::tuple& state) {
             return InverseDistanceWeighting<Point, T>::setstate(state);
           }));
+}
+
+template <template <class> class Point, typename T>
+void init_bivariate(pybind11::module& m) {
+  init_bivariate_interpolator<Point, T>(m, "2D");
 
   pybind11::class_<Bivariate<Point, T>>(m, "Bivariate")
       .def(pybind11::init<Axis, Axis, pybind11::array_t<T>>(),
