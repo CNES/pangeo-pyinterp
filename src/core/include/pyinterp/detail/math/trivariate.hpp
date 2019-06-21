@@ -7,7 +7,7 @@ namespace detail {
 namespace math {
 
 /// Abstract class for trivariate interpolation
-template <typename Point, typename T>
+template <template <class> class Point, typename T>
 struct Trivariate {
   /// Performs the interpolation
   ///
@@ -23,7 +23,7 @@ struct Trivariate {
   /// @param q101 Point value for the coordinate (x1, y0, z1)
   /// @param q111 Point value for the coordinate (x1, y1, z1)
   /// @return interpolated value at coordinate (x, y, z)
-  inline T evaluate(const Point& p, const Point& p0, const Point& p1,
+  inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
                     const T& q000, const T& q010, const T& q100, const T& q110,
                     const T& q001, const T& q011, const T& q101, const T& q111,
                     const Bivariate<Point, T>* bivariate) const {

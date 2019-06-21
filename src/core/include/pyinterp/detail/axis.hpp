@@ -116,6 +116,11 @@ class Axis {
   /// Returns true if this axis represents a circle.
   inline constexpr bool is_circle() const noexcept { return is_circle_; }
 
+  /// Does the axis represent an angle?
+  ///
+  /// @return true if the axis represent an angle
+  inline bool is_angle() const noexcept { return !std::isnan(circle_); }
+
   /// Get the first value of this axis
   ///
   /// @return the first value
@@ -224,10 +229,6 @@ class Axis {
   }
 
  protected:
-  /// Does the axis represent an angle?
-  ///
-  /// @return true if the axis represent an angle
-  inline bool is_angle() const noexcept { return !std::isnan(circle_); }
 
   /// Specifies if this instance handles a radian angle.
   ///

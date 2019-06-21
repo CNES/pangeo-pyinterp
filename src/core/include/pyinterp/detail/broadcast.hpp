@@ -6,13 +6,27 @@
 namespace pyinterp {
 namespace detail {
 
-/// Get a string representing the shape of a tensor.
+/// Get a string representing the shape of a Eigen matrix.
 ///
 /// @param array tensor to process
 template <typename Array>
 std::string eigen_shape(const Array& array) {
   std::stringstream ss;
   ss << "(" << array.rows() << ", " << array.cols() << ")";
+  return ss.str();
+}
+
+/// Get a string representing the shape of a tensor.
+///
+/// @param array tensor to process
+template <typename Array>
+std::string ndarray_shape(const Array& array) {
+  std::stringstream ss;
+  ss << "(";
+  for (auto ix = 0; ix < array.ndim(); ++ix) {
+    ss << array.shape(ix) << ", ";
+  }
+  ss << ")";
   return ss.str();
 }
 
@@ -119,6 +133,50 @@ void check_array_ndim(const std::string& name, const int64_t ndim,
                 "number of parameters is expected to be a multiple of 3");
   check_array_ndim(name, ndim, a);
   check_array_ndim(args...);
+}
+
+/// Automation of array shape control to ensure that all tensors have the same
+/// shape.
+///
+/// @param name1 name of the variable containing the first array
+/// @param a1 first array
+/// @param name2 name of the variable containing the second array
+/// @param a2 second array
+/// @throw std::invalid_argument if the shape of the two arrays is different
+template <typename Array1, typename Array2>
+void check_ndarray_shape(const std::string& name1, const Array1& a1,
+                         const std::string& name2, const Array2& a2) {
+  auto match = a1.ndim() == a2.ndim();
+  if (match) {
+    for (auto ix = 0; ix < a1.ndim(); ++ix) {
+      if (a1.shape(ix) != a2.shape(ix)) {
+        match = false;
+        break;
+      }
+    }
+  }
+  if (!match) {
+    throw std::invalid_argument(name1 + ", " + name2 +
+                                " could not be broadcast together with shape " +
+                                ndarray_shape(a1) + "  " + ndarray_shape(a2));
+  }
+}
+
+/// Array shape check function pattern.
+///
+/// @param name1 name of the variable containing the first array
+/// @param a1 first array
+/// @param name2 name of the variable containing the second array
+/// @param a2 second array
+/// @throw std::invalid_argument if the shape of the two arrays is different
+template <typename Array1, typename Array2, typename... Args>
+void check_ndarray_shape(const std::string& name1, const Array1& a1,
+                         const std::string& name2, const Array2& a2,
+                         Args... args) {
+  static_assert(sizeof...(Args) % 2 == 0,
+                "an even number of parameters is expected");
+  check_ndarray_shape(name1, a1, name2, a2);
+  check_ndarray_shape(name1, a1, args...);
 }
 
 }  // namespace detail

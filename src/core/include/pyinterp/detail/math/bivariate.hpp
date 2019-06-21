@@ -8,8 +8,11 @@ namespace detail {
 namespace math {
 
 /// Abstract class for bivariate interpolation
-template <typename Point, typename T>
+template <template <class> class Point, typename T>
 struct Bivariate {
+  /// Destructor
+  virtual ~Bivariate() = default;
+
   /// Performs the interpolation
   ///
   /// @param p Query point
@@ -20,16 +23,19 @@ struct Bivariate {
   /// @param q10 Point value for the coordinate (x1, y0)
   /// @param q11 Point value for the coordinate (x1, y1)
   /// @return interpolated value at coordinate (x, y)
-  virtual T evaluate(const Point& p, const Point& p0, const Point& p1,
+  virtual T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
                      const T& q00, const T& q01, const T& q10,
                      const T& q11) const = 0;
 };
 
 /// Bilinear interpolation
-template <typename Point, typename T>
+template <template <class> class Point, typename T>
 struct Bilinear : public Bivariate<Point, T> {
+  /// Destructor
+  virtual ~Bilinear() = default;
+
   /// Performs the bilinear interpolation
-  inline T evaluate(const Point& p, const Point& p0, const Point& p1,
+  inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
                     const T& q00, const T& q01, const T& q10,
                     const T& q11) const final {
     auto dx = boost::geometry::get<0>(p1) - boost::geometry::get<0>(p0);
@@ -45,20 +51,26 @@ struct Bilinear : public Bivariate<Point, T> {
 ///
 /// @see https://en.wikipedia.org/wiki/Inverse_distance_weighting
 ///
-template <typename Point, typename T>
-struct InverseDistanceWeigthing : public Bivariate<Point, T> {
+template <template <class> class Point, typename T>
+struct InverseDistanceWeighting : public Bivariate<Point, T> {
   /// Default constructor (p=2)
-  InverseDistanceWeigthing() = default;
+  InverseDistanceWeighting() = default;
 
   /// Explicit definition of the parameter p.
-  explicit InverseDistanceWeigthing(const int exp) : exp_(exp) {}
+  explicit InverseDistanceWeighting(const int exp) : exp_(exp) {}
+
+  /// Return the exponent used by this instance
+  inline int exp() const noexcept { return exp_; }
+
+  /// Destructor
+  virtual ~InverseDistanceWeighting() = default;
 
   /// Performs the interpolation
-  inline T evaluate(const Point& p, const Point& p0, const Point& p1,
+  inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
                     const T& q00, const T& q01, const T& q10,
                     const T& q11) const final {
     auto distance = boost::geometry::distance(
-        p, Point{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)});
+        p, Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)});
     if (distance <= std::numeric_limits<T>::epsilon()) {
       return q00;
     }
@@ -67,7 +79,7 @@ struct InverseDistanceWeigthing : public Bivariate<Point, T> {
     auto wu = q00 * w;
 
     distance = boost::geometry::distance(
-        p, Point{boost::geometry::get<0>(p0), boost::geometry::get<1>(p1)});
+        p, Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p1)});
 
     if (distance <= std::numeric_limits<T>::epsilon()) {
       return q01;
@@ -78,7 +90,7 @@ struct InverseDistanceWeigthing : public Bivariate<Point, T> {
     wu += q01 * wi;
 
     distance = boost::geometry::distance(
-        p, Point{boost::geometry::get<0>(p1), boost::geometry::get<1>(p0)});
+        p, Point<T>{boost::geometry::get<0>(p1), boost::geometry::get<1>(p0)});
 
     if (distance <= std::numeric_limits<T>::epsilon()) {
       return q10;
@@ -89,7 +101,7 @@ struct InverseDistanceWeigthing : public Bivariate<Point, T> {
     wu += q10 * wi;
 
     distance = boost::geometry::distance(
-        p, Point{boost::geometry::get<0>(p1), boost::geometry::get<1>(p1)});
+        p, Point<T>{boost::geometry::get<0>(p1), boost::geometry::get<1>(p1)});
 
     if (distance <= std::numeric_limits<T>::epsilon()) {
       return q11;
@@ -107,30 +119,30 @@ struct InverseDistanceWeigthing : public Bivariate<Point, T> {
 };
 
 /// Nearest interpolation
-template <typename Point, typename T>
+template <template <class> class Point, typename T>
 struct Nearest : public Bivariate<Point, T> {
   /// Performs the interpolation
-  inline T evaluate(const Point& p, const Point& p0, const Point& p1,
+  inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
                     const T& q00, const T& q01, const T& q10,
                     const T& q11) const final {
     auto distance = boost::geometry::comparable_distance(
-        p, Point{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)});
+        p, Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)});
     auto result = std::make_tuple(distance, q00);
 
     distance = boost::geometry::comparable_distance(
-        p, Point{boost::geometry::get<0>(p0), boost::geometry::get<1>(p1)});
+        p, Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p1)});
     if (std::get<0>(result) > distance) {
       result = std::make_tuple(distance, q01);
     }
 
     distance = boost::geometry::comparable_distance(
-        p, Point{boost::geometry::get<0>(p1), boost::geometry::get<1>(p0)});
+        p, Point<T>{boost::geometry::get<0>(p1), boost::geometry::get<1>(p0)});
     if (std::get<0>(result) > distance) {
       result = std::make_tuple(distance, q10);
     }
 
     distance = boost::geometry::comparable_distance(
-        p, Point{boost::geometry::get<0>(p1), boost::geometry::get<1>(p1)});
+        p, Point<T>{boost::geometry::get<0>(p1), boost::geometry::get<1>(p1)});
     if (std::get<0>(result) > distance) {
       result = std::make_tuple(distance, q11);
     }

@@ -84,6 +84,13 @@ void set(Point &point, const typename coordinate_t<Point>::type &value,
 
 }  // namespace point
 
+/// Points of a 2-dimensional Cartesian space.
+///
+/// @tparam T Storage class of the coordinates of the point.
+template <typename T>
+using Point2D =
+    boost::geometry::model::point<T, 2, boost::geometry::cs::cartesian>;
+
 /// Points of a 3-dimensional Cartesian space.
 ///
 /// @tparam T Storage class of the coordinates of the point.
@@ -98,6 +105,13 @@ using Point3D =
 template <typename T, size_t N>
 using PointND =
     boost::geometry::model::point<T, N, boost::geometry::cs::cartesian>;
+
+/// Points of a 2-dimensional spherical equatorial space.
+///
+/// @tparam T Storage class of the coordinates of the point.
+template <typename T>
+using EquatorialPoint2D = boost::geometry::model::point<
+    T, 2, boost::geometry::cs::spherical_equatorial<boost::geometry::degree>>;
 
 /// Points of a 3-dimensional spherical equatorial space.
 ///
