@@ -99,13 +99,73 @@ template <template <class> class Point, typename T>
 void init_trivariate(pybind11::module& m) {
   init_bivariate_interpolator<Point, T>(m, "3D");
 
-  pybind11::class_<Trivariate<Point, T>>(m, "Trivariate")
+  pybind11::class_<Trivariate<Point, T>>(m, "Trivariate", R"__doc__(
+Interpolation of trivariate functions
+)__doc__")
       .def(pybind11::init<Axis, Axis, Axis, pybind11::array_t<T>>(),
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
-           pybind11::arg("u"))
+           pybind11::arg("array"),
+           R"__doc__(
+Default constructor
+
+Args:
+    x (pyinterp.core.Axis): X-Axis
+    y (pyinterp.core.Axis): Y-Axis
+    z (pyinterp.core.Axis): Z-Axis
+    array (numpy.ndarray): Trivariate function
+)__doc__")
+      .def_property_readonly(
+          "x", [](const Trivariate<Point, T>& self) { return self.x(); },
+          R"__doc__(
+Gets the X-Axis handled by this instance
+
+Returns:
+    pyinterp.core.Axis: X-Axis
+)__doc__")
+      .def_property_readonly(
+          "y", [](const Trivariate<Point, T>& self) { return self.y(); },
+          R"__doc__(
+Gets the Y-Axis handled by this instance
+
+Returns:
+    pyinterp.core.Axis: Y-Axis
+)__doc__")
+      .def_property_readonly(
+          "z", [](const Trivariate<Point, T>& self) { return self.z(); },
+          R"__doc__(
+Gets the Z-Axis handled by this instance
+
+Returns:
+    pyinterp.core.Axis: Z-Axis
+)__doc__")
+      .def_property_readonly(
+          "array",
+          [](const Trivariate<Point, T>& self) { return self.array(); },
+          R"__doc__(
+Gets the values handled by this instance
+
+Returns:
+    numpy.ndarray: values
+)__doc__")
       .def("evaluate", &Trivariate<Point, T>::evaluate, pybind11::arg("x"),
            pybind11::arg("y"), pybind11::arg("z"),
-           pybind11::arg("interpolator"), pybind11::arg("num_threads") = 0)
+           pybind11::arg("interpolator"), pybind11::arg("num_threads") = 0,
+           R"__doc__(
+Interpolate the values provided on the defined trivariate function.
+
+Args:
+    x (numpy.ndarray): X-values
+    y (numpy.ndarray): Y-values
+    z (numpy.ndarray): Z-values
+    interpolator (pyinterp.core.BivariateInterpolator3D): 3D interpolator
+        used to interpolate values on the surface (x, y).
+    num_threads (int, optional): The number of threads to use for the
+        computation. If 0 all CPUs are used. If 1 is given, no parallel
+        computing code is used at all, which is useful for debugging.
+        Defaults to ``0``.
+Return:
+    numpy.ndarray: Values interpolated
+)__doc__")
       .def(pybind11::pickle(
           [](const Trivariate<Point, T>& self) { return self.getstate(); },
           [](const pybind11::tuple& state) {
