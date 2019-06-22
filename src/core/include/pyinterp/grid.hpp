@@ -18,6 +18,9 @@ class Grid2D {
     check_shape(0, x_, "x", "z", y_, "y", "z");
   }
 
+  /// Destructor
+  virtual ~Grid2D() = default;  
+
   /// Gets the X-Axis
   inline const Axis& x() const noexcept { return x_; }
 

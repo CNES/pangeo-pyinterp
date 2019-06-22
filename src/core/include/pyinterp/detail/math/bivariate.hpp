@@ -121,6 +121,9 @@ struct InverseDistanceWeighting : public Bivariate<Point, T> {
 /// Nearest interpolation
 template <template <class> class Point, typename T>
 struct Nearest : public Bivariate<Point, T> {
+  /// Destructor
+  virtual ~Nearest() = default;
+
   /// Performs the interpolation
   inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
                     const T& q00, const T& q01, const T& q10,
