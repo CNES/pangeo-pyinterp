@@ -55,20 +55,18 @@ class Trivariate : public Grid3D<T> {
 
                   auto x0 = this->x_(ix0);
 
-                  _result(ix) =
-                      pyinterp::detail::math::Trivariate<Point, T>::evaluate(
-                          Point<T>(
-                              this->x_.is_angle()
-                                  ? detail::math::normalize_angle(_x(ix), x0)
-                                  : _x(ix),
-                              _y(ix), _z(ix)),
-                          Point<T>(this->x_(ix0), this->y_(iy0), this->z_(iz0)),
-                          Point<T>(this->x_(ix1), this->y_(iy1), this->z_(iz1)),
-                          this->ptr_(ix0, iy0, iz0), this->ptr_(ix0, iy1, iz0),
-                          this->ptr_(ix1, iy0, iz0), this->ptr_(ix1, iy1, iz0),
-                          this->ptr_(ix0, iy0, iz1), this->ptr_(ix0, iy1, iz1),
-                          this->ptr_(ix1, iy0, iz1), this->ptr_(ix1, iy1, iz1),
-                          interpolator);
+                  _result(ix) = pyinterp::detail::math::trivariate<Point, T>(
+                      Point<T>(this->x_.is_angle()
+                                   ? detail::math::normalize_angle(_x(ix), x0)
+                                   : _x(ix),
+                               _y(ix), _z(ix)),
+                      Point<T>(this->x_(ix0), this->y_(iy0), this->z_(iz0)),
+                      Point<T>(this->x_(ix1), this->y_(iy1), this->z_(iz1)),
+                      this->ptr_(ix0, iy0, iz0), this->ptr_(ix0, iy1, iz0),
+                      this->ptr_(ix1, iy0, iz0), this->ptr_(ix1, iy1, iz0),
+                      this->ptr_(ix0, iy0, iz1), this->ptr_(ix0, iy1, iz1),
+                      this->ptr_(ix1, iy0, iz1), this->ptr_(ix1, iy1, iz1),
+                      interpolator);
 
                 } else {
                   _result(ix) = std::numeric_limits<T>::quiet_NaN();
