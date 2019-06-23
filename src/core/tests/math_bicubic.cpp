@@ -6,8 +6,8 @@ namespace gsl = pyinterp::detail::gsl;
 
 TEST(math_bicubic, xarray) {
   auto xr = math::XArray(3, 4);
-  ASSERT_EQ(xr.nx(), 6);
-  ASSERT_EQ(xr.ny(), 8);
+  ASSERT_EQ(xr.nx(), 3);
+  ASSERT_EQ(xr.ny(), 4);
 
   for (auto ix = 0; ix < 6; ++ix) {
     xr.x(ix) = ix * 2;
@@ -42,8 +42,8 @@ TEST(math_bicubic, xarray) {
 
 TEST(math_bicubic, bicubic) {
   auto xr = math::XArray(3, 3);
-  ASSERT_EQ(xr.nx(), 6);
-  ASSERT_EQ(xr.ny(), 6);
+  ASSERT_EQ(xr.nx(), 3);
+  ASSERT_EQ(xr.ny(), 3);
 
   for (auto ix = 0; ix < 6; ++ix) {
     xr.x(ix) = xr.y(ix) = ix * 0.1;

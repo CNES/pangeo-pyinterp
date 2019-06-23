@@ -61,10 +61,14 @@ class XArray {
   XArray &operator=(XArray &&rhs) noexcept = default;
 
   /// Get the half size of the window in abscissa.
-  inline size_t nx() const noexcept { return x_.size(); }
+  inline size_t nx() const noexcept {
+    return static_cast<size_t>(x_.size()) >> 1U;
+  }
 
   /// Get the half size of the window in ordinate.
-  inline size_t ny() const noexcept { return y_.size(); }
+  inline size_t ny() const noexcept {
+    return static_cast<size_t>(y_.size()) >> 1U;
+  }
 
   /// Get x-coordinates
   inline Eigen::VectorXd &x() noexcept { return x_; }
@@ -107,6 +111,10 @@ class XArray {
   inline double normalize_angle(const double xi) const {
     return math::normalize_angle(xi, x(0));
   }
+
+  /// Returns true if this instance does not contains at least one Not A Number
+  /// (NaN).
+  inline bool is_valid() const { return !q_.hasNaN(); }
 
  private:
   Eigen::VectorXd x_{};
@@ -155,10 +163,10 @@ class Bicubic {
       const std::function<double(const gsl::Interpolate1D &, double)> &function,
       const double x, const double y, const XArray &xr,
       gsl::Accelerator &&acc) const {
-    Eigen::VectorXd fy(xr.nx());
+    Eigen::VectorXd fy(xr.x().size());
 
     // Spline interpolation as function of Y-coordinate
-    for (auto ix = 0ULL; ix < xr.nx(); ++ix) {
+    for (auto ix = 0ULL; ix < xr.x().size(); ++ix) {
       // The block containing the processed row must be copied into a new
       // memory block.
       Eigen::VectorXd row = xr.q().row(ix);
