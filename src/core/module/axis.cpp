@@ -119,11 +119,22 @@ Axis Axis::setstate(const pybind11::tuple& state) {
 }  // namespace pyinterp
 
 void init_axis(py::module& m) {
-  py::class_<pyinterp::Axis>(m, "Axis", R"__doc__(
+  auto axis = py::class_<pyinterp::Axis>(m, "Axis", R"__doc__(
 A coordinate axis is a Variable that specifies one of the coordinates
 of a variable's values.
+)__doc__");
+
+  py::enum_<pyinterp::Axis::Boundary>(axis, "Boundary", R"__doc__(
+Type of boundary handling.
 )__doc__")
-      .def(py::init<const py::array_t<double>&, double, bool, bool>(),
+      .value("kExpand", pyinterp::Axis::kExpand,
+             "*Expand the boundary as a constant*.")
+      .value("kWrap", pyinterp::Axis::kWrap, "*Circular boundary conditions*.")
+      .value("kSym", pyinterp::Axis::kSym, "*Symmetrical boundary conditions*.")
+      .value("kUndef", pyinterp::Axis::kUndef,
+             "*Boundary violation is not defined*.");
+
+  axis.def(py::init<const py::array_t<double>&, double, bool, bool>(),
            py::arg("values"), py::arg("epsilon") = 1e-6,
            py::arg("is_circle") = false, py::arg("is_radian") = false,
            R"__doc__(
