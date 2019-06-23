@@ -169,8 +169,7 @@ TEST(axis, radians) {
   // axis representing a circle
   int64_t i1;
   auto inc = detail::math::pi<double>() / 360.0;
-  detail::Axis a1(0, detail::math::pi<double>() - inc, 360,
-                  1e-6, true, true);
+  detail::Axis a1(0, detail::math::pi<double>() - inc, 360, 1e-6, true, true);
 
   EXPECT_EQ(a1.front(), 0);
   EXPECT_EQ(a1.increment(), detail::math::pi<double>() / 360.0);
@@ -566,10 +565,10 @@ TEST(axis, search_window) {
   EXPECT_EQ(indexes[6], 1);
   EXPECT_EQ(indexes[7], 2);
 
-  indexes = axis.find_indexes(1, 4, detail::Axis::kPad);
+  indexes = axis.find_indexes(1, 4, detail::Axis::kExpand);
   ASSERT_TRUE(indexes.size() == 8);
-  EXPECT_EQ(indexes[0], -1);
-  EXPECT_EQ(indexes[1], -1);
+  EXPECT_EQ(indexes[0], 0);
+  EXPECT_EQ(indexes[1], 0);
   EXPECT_EQ(indexes[2], 0);
   EXPECT_EQ(indexes[3], 1);
   EXPECT_EQ(indexes[4], 2);
@@ -577,14 +576,19 @@ TEST(axis, search_window) {
   EXPECT_EQ(indexes[6], 4);
   EXPECT_EQ(indexes[7], 5);
 
-  indexes = axis.find_indexes(9, 4, detail::Axis::kPad);
+  indexes = axis.find_indexes(9, 4, detail::Axis::kExpand);
   ASSERT_TRUE(indexes.size() == 8);
   EXPECT_EQ(indexes[0], 5);
   EXPECT_EQ(indexes[1], 6);
   EXPECT_EQ(indexes[2], 7);
   EXPECT_EQ(indexes[3], 8);
   EXPECT_EQ(indexes[4], 9);
-  EXPECT_EQ(indexes[5], -1);
-  EXPECT_EQ(indexes[6], -1);
-  EXPECT_EQ(indexes[7], -1);
+  EXPECT_EQ(indexes[5], 9);
+  EXPECT_EQ(indexes[6], 9);
+  EXPECT_EQ(indexes[7], 9);
+
+  indexes = axis.find_indexes(1, 4, detail::Axis::kUndef);
+  ASSERT_TRUE(indexes.empty());
+  indexes = axis.find_indexes(9, 4, detail::Axis::kUndef);
+  ASSERT_TRUE(indexes.empty());
 }

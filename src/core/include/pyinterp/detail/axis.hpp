@@ -21,9 +21,10 @@ class Axis {
  public:
   /// Type of boundary handling.
   enum Boundary : uint8_t {
-    kPad,   //!< Pad with a fill value.
-    kWrap,  //!< Circular boundary conditions.
-    kSym    //!< Symmetrical boundary conditions.
+    kExpand,  //!< Expand the boundary as a constant.
+    kWrap,    //!< Circular boundary conditions.
+    kSym,     //!< Symmetrical boundary conditions.
+    kUndef,   //!< Boundary violation is not defined.
   };
 
   /// Default constructor
@@ -215,7 +216,7 @@ class Axis {
   /// framing the value provided or an empty table if the value is located
   /// outside the axis definition domain.
   std::vector<int64_t> find_indexes(double coordinate, uint32_t size,
-                                    Boundary boundary = kPad) const;
+                                    Boundary boundary = kUndef) const;
 
   /// Get a string representing this instance.
   ///
@@ -229,7 +230,6 @@ class Axis {
   }
 
  protected:
-
   /// Specifies if this instance handles a radian angle.
   ///
   /// @return true if this instance handles a radian angle.

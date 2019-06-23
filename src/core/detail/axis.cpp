@@ -171,8 +171,8 @@ std::vector<int64_t> Axis::find_indexes(double coordinate, uint32_t size,
     if (before < 0) {
       if (!is_circle_) {
         switch (boundary) {
-          case kPad:
-            before = -1;
+          case kExpand:
+            before = 0;
             break;
           case kWrap:
             before = math::remainder(len + before, len);
@@ -191,8 +191,8 @@ std::vector<int64_t> Axis::find_indexes(double coordinate, uint32_t size,
     if (after >= len) {
       if (!is_circle_) {
         switch (boundary) {
-          case kPad:
-            after = -1;
+          case kExpand:
+            after = len - 1;
             break;
           case kWrap:
             after = math::remainder(after, len);
