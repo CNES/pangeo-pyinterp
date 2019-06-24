@@ -44,7 +44,7 @@ void check_eigen_shape(const std::string& name1, const Matrix1& m1,
   if (m1.cols() != m2.cols() && m1.rows() != m2.rows()) {
     throw std::invalid_argument(name1 + ", " + name2 +
                                 " could not be broadcast together with shape " +
-                                eigen_shape(m1) + ", " / eigen_shape(m2));
+                                eigen_shape(m1) + ", " + eigen_shape(m2));
   }
 }
 

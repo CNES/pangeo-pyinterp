@@ -166,7 +166,7 @@ class Bicubic {
     Eigen::VectorXd fy(xr.x().size());
 
     // Spline interpolation as function of Y-coordinate
-    for (auto ix = 0ULL; ix < xr.x().size(); ++ix) {
+    for (auto ix = 0; ix < xr.x().size(); ++ix) {
       // The block containing the processed row must be copied into a new
       // memory block.
       Eigen::VectorXd row = xr.q().row(ix);

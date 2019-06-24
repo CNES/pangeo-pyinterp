@@ -17,7 +17,7 @@ namespace geometry {
 template <typename Coordinate, typename Type, size_t N>
 class RTree {
  public:
-  /// Type of
+  /// Type of distances between two points.
   using distance_t = typename boost::geometry::default_distance_result<
       geometry::PointND<Coordinate, N>, geometry::PointND<Coordinate, N>>::type;
 
@@ -82,9 +82,7 @@ class RTree {
   /// Insert new data into the search tree
   ///
   /// @param point
-  void insert(const geometry::PointND<Coordinate, N> &point) {
-    tree_->insert(std::make_pair(point, size()));
-  }
+  void insert(const value_t &value) { tree_->insert(value); }
 
   /// Search for the K nearest neighbors of a given point.
   ///
