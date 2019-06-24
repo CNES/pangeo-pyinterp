@@ -26,7 +26,8 @@ def plot(x, y, z, filename):
 
 
 class TestCase(unittest.TestCase):
-    GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tcw.nc")
+    GRID = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "dataset", "tcw.nc")
 
     @classmethod
     def load_data(cls):

@@ -26,7 +26,8 @@ def plot(x, y, z, filename):
 
 
 class TestRTree(unittest.TestCase):
-    GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mss.nc")
+    GRID = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "dataset", "mss.nc")
 
     @classmethod
     def load_data(cls):
