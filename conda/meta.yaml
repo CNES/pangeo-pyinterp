@@ -1,0 +1,25 @@
+package:
+  name: pyinterp
+  version: 0.0.1
+
+source:
+    git_url: https://github.com/fbriol/pyinterp.git
+    git_rev: HEAD
+
+requirements:
+  build:
+    - {{ compiler('cxx') }}
+  host:
+    - eigen
+    - gsl
+    - libboost
+    - numpy
+    - python {{ python }}
+    - setuptools
+  run:
+    - numpy
+    - python {{ python }}
+
+test:
+  imports:
+    - pyinterp.core
