@@ -116,7 +116,7 @@ Return:
 
   py::class_<geodetic::Coordinates>(m, "Coordinates",
                                     "World Geodetic Coordinates System.")
-      .def(py::init<geodetic::System>(), py::arg("system"),
+      .def(py::init<std::optional<geodetic::System>>(), py::arg("system"),
            R"__doc__(
 Default constructor
 

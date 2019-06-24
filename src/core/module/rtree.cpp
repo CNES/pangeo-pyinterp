@@ -11,7 +11,8 @@ static void implement_rtree(py::module& m) {
   py::class_<pyinterp::RTree<Coordinate, Type>>(m, "RTree", R"__doc__(
 RTree spatial index for geodetic scalar values
 )__doc__")
-      .def(py::init<pyinterp::RTree<Coordinate, Type>>(), py::arg("system"),
+      .def(py::init<std::optional<pyinterp::geodetic::System>>(),
+           py::arg("system"),
            R"__doc__(
 Default constructor
 
