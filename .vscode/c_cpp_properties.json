@@ -1,0 +1,49 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include/eigen3",
+                "~/anaconda3/include/python3.7m",
+                "${workspaceFolder}/third_party/pybind11/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        },
+        {
+            "name": "OSX",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/local/include/eigen3",
+                "/opt/local/include",
+                "~/anaconda3/include/python3.7m",
+                "${workspaceFolder}/third_party/pybind11/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        },
+        {
+            "name": "Windows",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "~\\Anaconda3\\include",
+                "~\\Anaconda3\\Library\\include",
+                "~\\Anaconda3\\Library\\include\\eigen3",
+                "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.16.27023\\include",
+                "${workspaceFolder}/third_party/pybind11/include"
+            ],
+            "defines": [],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "msvc-x64"
+        }
+    ],
+    "version": 4
+}
