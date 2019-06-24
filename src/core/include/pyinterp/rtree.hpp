@@ -4,6 +4,7 @@
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/detail/geodetic/rtree.hpp"
 #include "pyinterp/detail/geodetic/system.hpp"
+#include "pyinterp/geodetic/system.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
@@ -15,6 +16,9 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
   /// Type of distances between two points
   using distance_t =
       typename detail::geodetic::RTree<Coordinate, Type>::distance_t;
+
+  /// Inherit constructors
+  using detail::geodetic::RTree<Coordinate, Type>::RTree;
 
   /// Populates the RTree with coordinates using the packaging algorithm
   ///
@@ -139,8 +143,43 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
                     _u(ix) = item.second;
                     ++ix;
                   });
-    auto system = System(this->coordinates_.system());
+    auto system = geodetic::System(this->coordinates_.system());
     return pybind11::make_tuple(system.getstate(), x, y, z, u);
+  }
+
+  /// Create a new instance from a registered state of an instance of this
+  /// object.
+  static RTree<Coordinate, Type> setstate(const pybind11::tuple &state) {
+    if (state.size() != 5) {
+      throw std::runtime_error("invalid state");
+    }
+    auto system = geodetic::System::setstate(state[0].cast<pybind11::tuple>());
+    auto x = state[1].cast<pybind11::array_t<Coordinate>>();
+    auto y = state[2].cast<pybind11::array_t<Coordinate>>();
+    auto z = state[3].cast<pybind11::array_t<Coordinate>>();
+    auto u = state[4].cast<pybind11::array_t<Type>>();
+
+    if (x.size() != y.size() || x.size() != z.size() || x.size() != u.size()) {
+      throw std::runtime_error("invalid state");
+    }
+
+    auto _x = x.template mutable_unchecked<1>();
+    auto _y = y.template mutable_unchecked<1>();
+    auto _z = z.template mutable_unchecked<1>();
+    auto _u = u.template mutable_unchecked<1>();
+
+    auto vector = std::vector<typename RTree<Coordinate, Type>::value_t>();
+    vector.reserve(x.size());
+
+    for (auto ix = 0; ix < x.size(); ++ix) {
+      vector.emplace_back(std::make_pair(
+          detail::geometry::Point3D<Coordinate>{_x(ix), _y(ix), _z(ix)},
+          _u(ix)));
+    }
+    auto result = RTree<Coordinate, Type>(system);
+    static_cast<detail::geodetic::RTree<Coordinate, Type>>(result).packing(
+        vector);
+    return result;
   }
 
  private:

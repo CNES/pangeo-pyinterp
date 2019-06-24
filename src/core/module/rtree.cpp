@@ -135,7 +135,14 @@ Args:
 Return:
     tuple: The interpolated value and the number of neighbors used in the
     calculation.
-)__doc__");
+)__doc__")
+      .def(py::pickle(
+          [](const pyinterp::RTree<Coordinate, Type>& self) {
+            return self.getstate();
+          },
+          [](const py::tuple& state) {
+            return pyinterp::RTree<Coordinate, Type>::setstate(state);
+          }));
 }
 
 void init_rtree(py::module& m) { implement_rtree<double, int64_t>(m); }
