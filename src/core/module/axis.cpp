@@ -139,6 +139,7 @@ Type of boundary handling.
            py::arg("is_circle") = false, py::arg("is_radian") = false,
            R"__doc__(
 Create a coordinate axis from values.
+
 Args:
     values (numpy.ndarray): Axis values.
     epsilon (float, optional): Maximum allowed difference between two real
@@ -155,6 +156,7 @@ Args:
            R"__doc__(
 Create a coordinate axis from evenly spaced numbers over a specified
 interval.
+
 Args:
     start (float): The first value of the axis.
     stop (float): The last value of the axis.
@@ -175,11 +177,13 @@ Args:
       .def("__getitem__", &pyinterp::Axis::coordinate_values)
       .def("min_value", &pyinterp::Axis::min_value, R"__doc__(
 Get the minimum coordinate value.
+
 Return:
     float: The minimum coordinate value.
 )__doc__")
       .def("max_value", &pyinterp::Axis::max_value, R"__doc__(
 Get the maximum coordinate value.
+
 Return:
     float: The maximum coordinate value.
 )__doc__")
@@ -187,6 +191,7 @@ Return:
            [](const pyinterp::Axis& self) -> bool { return self.is_regular(); },
            R"__doc__(
 Check if this axis values are spaced regularly
+
 Return:
   bool: True if this axis values are spaced regularly
 )__doc__")
@@ -199,6 +204,7 @@ Return:
           py::arg("coordinates"), py::arg("bounded") = false, R"__doc__(
 Given coordinate positions, find what grid elements contains them, or is
 closest to them.
+
 Args:
     coordinates (numpy.ndarray): Positions in this coordinate system
     bounded (bool, optional): True if you want to obtain the closest value to
@@ -211,21 +217,25 @@ Return:
 )__doc__")
       .def("front", &pyinterp::Axis::front, R"__doc__(
 Get the first value of this axis
+
 Return:
     float: The first value
 )__doc__")
       .def("back", &pyinterp::Axis::back, R"__doc__(
 Get the last value of this axis
+
 Return:
     float: The last value
 )__doc__")
       .def("is_ascending", &pyinterp::Axis::is_ascending, R"__doc__(
 Test if the data is sorted in ascending order.
+
 Return:
     bool: True if the data is sorted in ascending order.
 )__doc__")
       .def("increment", &pyinterp::Axis::increment, R"__doc__(
 Get increment value if is_regular()
+
 Raises:
     RuntimeError: if this instance does not represent a regular axis
 Return:
@@ -233,6 +243,7 @@ Return:
 )__doc__")
       .def_property_readonly("is_circle", &pyinterp::Axis::is_circle, R"__doc__(
 Test if this axis represents a circle.
+
 Return:
     bool: True if this axis represents a circle
 )__doc__")

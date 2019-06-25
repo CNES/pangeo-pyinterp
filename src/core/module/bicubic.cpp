@@ -126,6 +126,7 @@ Bicubic fitting model
            py::arg("x"), py::arg("y"), py::arg("array"),
            R"__doc__(
 Default constructor
+
 Args:
     x (pyinterp.core.Axis): X-Axis
     y (pyinterp.core.Axis): Y-Axis
@@ -161,6 +162,7 @@ Returns:
            py::arg("boundary") = pyinterp::Axis::kUndef,
            py::arg("num_threads") = 0, R"__doc__(
 Evaluate the interpolation.
+
 Args:
     x (numpy.ndarray): X-values
     y (numpy.ndarray): Y-values
