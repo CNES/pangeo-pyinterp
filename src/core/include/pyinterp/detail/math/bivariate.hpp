@@ -10,8 +10,31 @@ namespace math {
 /// Abstract class for bivariate interpolation
 template <template <class> class Point, typename T>
 struct Bivariate {
-  /// Destructor
+  /// Default constructor
+  Bivariate() = default;
+
+  /// Default destructor
   virtual ~Bivariate() = default;
+
+  /// Copy constructor
+  ///
+  /// @param rhs right value
+  Bivariate(const Bivariate& rhs) = default;
+
+  /// Move constructor
+  ///
+  /// @param rhs right value
+  Bivariate(Bivariate&& rhs) noexcept = default;
+
+  /// Copy assignment operator
+  ///
+  /// @param rhs right value
+  Bivariate& operator=(const Bivariate& rhs) = default;
+
+  /// Move assignment operator
+  ///
+  /// @param rhs right value
+  Bivariate& operator=(Bivariate&& rhs) noexcept = default;
 
   /// Performs the interpolation
   ///
@@ -31,8 +54,31 @@ struct Bivariate {
 /// Bilinear interpolation
 template <template <class> class Point, typename T>
 struct Bilinear : public Bivariate<Point, T> {
-  /// Destructor
+  /// Default constructor
+  Bilinear() = default;
+
+  /// Default destructor
   virtual ~Bilinear() = default;
+
+  /// Copy constructor
+  ///
+  /// @param rhs right value
+  Bilinear(const Bilinear& rhs) = default;
+
+  /// Move constructor
+  ///
+  /// @param rhs right value
+  Bilinear(Bilinear&& rhs) noexcept = default;
+
+  /// Copy assignment operator
+  ///
+  /// @param rhs right value
+  Bilinear& operator=(const Bilinear& rhs) = default;
+
+  /// Move assignment operator
+  ///
+  /// @param rhs right value
+  Bilinear& operator=(Bilinear&& rhs) noexcept = default;
 
   /// Performs the bilinear interpolation
   inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
@@ -62,8 +108,30 @@ struct InverseDistanceWeighting : public Bivariate<Point, T> {
   /// Return the exponent used by this instance
   inline int exp() const noexcept { return exp_; }
 
-  /// Destructor
+  /// Default destructor
   virtual ~InverseDistanceWeighting() = default;
+
+  /// Copy constructor
+  ///
+  /// @param rhs right value
+  InverseDistanceWeighting(const InverseDistanceWeighting& rhs) = default;
+
+  /// Move constructor
+  ///
+  /// @param rhs right value
+  InverseDistanceWeighting(InverseDistanceWeighting&& rhs) noexcept = default;
+
+  /// Copy assignment operator
+  ///
+  /// @param rhs right value
+  InverseDistanceWeighting& operator=(const InverseDistanceWeighting& rhs) =
+      default;
+
+  /// Move assignment operator
+  ///
+  /// @param rhs right value
+  InverseDistanceWeighting& operator=(InverseDistanceWeighting&& rhs) noexcept =
+      default;
 
   /// Performs the interpolation
   inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
@@ -121,8 +189,31 @@ struct InverseDistanceWeighting : public Bivariate<Point, T> {
 /// Nearest interpolation
 template <template <class> class Point, typename T>
 struct Nearest : public Bivariate<Point, T> {
-  /// Destructor
+  /// Default constructor
+  Nearest() = default;
+
+  /// Default destructor
   virtual ~Nearest() = default;
+
+  /// Copy constructor
+  ///
+  /// @param rhs right value
+  Nearest(const Nearest& rhs) = default;
+
+  /// Move constructor
+  ///
+  /// @param rhs right value
+  Nearest(Nearest&& rhs) noexcept = default;
+
+  /// Copy assignment operator
+  ///
+  /// @param rhs right value
+  Nearest& operator=(const Nearest& rhs) = default;
+
+  /// Move assignment operator
+  ///
+  /// @param rhs right value
+  Nearest& operator=(Nearest&& rhs) noexcept = default;
 
   /// Performs the interpolation
   inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
