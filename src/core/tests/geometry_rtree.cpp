@@ -8,12 +8,12 @@ using RTree = geometry::RTree<double, int64_t, 2>;
 TEST(geometry_rtree, constructor) {
   auto rtree = RTree();
   EXPECT_TRUE(rtree.empty());
-  rtree.insert(geometry::PointND<double, 2>(2, 3));
-  rtree.insert(geometry::PointND<double, 2>(5, 4));
-  rtree.insert(geometry::PointND<double, 2>(9, 6));
-  rtree.insert(geometry::PointND<double, 2>(4, 7));
-  rtree.insert(geometry::PointND<double, 2>(8, 1));
-  rtree.insert(geometry::PointND<double, 2>(7, 2));
+  rtree.insert(std::make_pair(geometry::PointND<double, 2>(2, 3), 0));
+  rtree.insert(std::make_pair(geometry::PointND<double, 2>(5, 4), 1));
+  rtree.insert(std::make_pair(geometry::PointND<double, 2>(9, 6), 2));
+  rtree.insert(std::make_pair(geometry::PointND<double, 2>(4, 7), 3));
+  rtree.insert(std::make_pair(geometry::PointND<double, 2>(8, 1), 4));
+  rtree.insert(std::make_pair(geometry::PointND<double, 2>(7, 2), 5));
   ASSERT_FALSE(rtree.empty());
   EXPECT_EQ(rtree.size(), 6);
   auto bounds = rtree.bounds();

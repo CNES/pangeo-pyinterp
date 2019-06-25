@@ -31,7 +31,7 @@ TEST(geodetic, rtree) {
   //               Eigen::RowVectorXi::LinSpaced(coordinates.rows(), 0,
   //                                             coordinates.rows() - 1));
   ASSERT_EQ(rtree.size(), 0);
-  rtree.interpolate(pyinterp::detail::geometry::EquatorialPoint3D<double>{0, 0, 0});
+  // rtree.interpolate(pyinterp::detail::geometry::EquatorialPoint3D<double>{0, 0, 0});
   // EXPECT_FALSE(rtree.empty());
 
   // auto bounds = rtree.equatorial_bounds();
