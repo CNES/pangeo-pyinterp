@@ -18,8 +18,31 @@ class Grid2D {
     check_shape(0, x_, "x", "z", y_, "y", "z");
   }
 
-  /// Destructor
-  virtual ~Grid2D() = default;  
+  /// Default constructor
+  Grid2D() = default;
+
+  /// Default destructor
+  virtual ~Grid2D() = default;
+
+  /// Copy constructor
+  ///
+  /// @param rhs right value
+  Grid2D(const Grid2D& rhs) = default;
+
+  /// Move constructor
+  ///
+  /// @param rhs right value
+  Grid2D(Grid2D&& rhs) noexcept = default;
+
+  /// Copy assignment operator
+  ///
+  /// @param rhs right value
+  Grid2D& operator=(const Grid2D& rhs) = default;
+
+  /// Move assignment operator
+  ///
+  /// @param rhs right value
+  Grid2D& operator=(Grid2D&& rhs) noexcept = default;
 
   /// Gets the X-Axis
   inline const Axis& x() const noexcept { return x_; }
@@ -73,7 +96,8 @@ class Grid3D : public Grid2D<T, 3> {
  public:
   /// Default constructor
   Grid3D(Axis x, Axis y, Axis z, pybind11::array_t<T> u)
-      : Grid2D<T, 3>(std::move(x), std::move(y), std::move(u)), z_(std::move(z)) {
+      : Grid2D<T, 3>(std::move(x), std::move(y), std::move(u)),
+        z_(std::move(z)) {
     this->check_shape(2, z_, "z", "u");
   }
 

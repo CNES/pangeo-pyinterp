@@ -1,7 +1,7 @@
 #pragma once
 #include "pyinterp/detail/broadcast.hpp"
-#include "pyinterp/detail/thread.hpp"
 #include "pyinterp/detail/geodetic/coordinates.hpp"
+#include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/system.hpp"
 #include <Eigen/Core>
 #include <pybind11/pybind11.h>

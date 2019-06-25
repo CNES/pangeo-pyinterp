@@ -1,7 +1,8 @@
 #pragma once
+#include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/trivariate.hpp"
 #include "pyinterp/detail/thread.hpp"
-#include "pyinterp/detail/geometry/point.hpp"
+#include "pyinterp/bivariate.hpp"
 #include "pyinterp/grid.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -92,7 +93,7 @@ class Trivariate : public Grid3D<T> {
 
  private:
   /// Construct a new instance from a serialized instance
-  Trivariate(Grid3D<T>&& grid) : Grid3D<T>(grid) {}
+  explicit Trivariate(Grid3D<T>&& grid) : Grid3D<T>(grid) {}
 };
 
 template <template <class> class Point, typename T>

@@ -44,8 +44,7 @@ class Bicubic : public Grid2D<double> {
 
  private:
   /// Loads the interpolation frame into memory
-  bool load_frame(double x, double y,
-                  Axis::Boundary boundary,
+  bool load_frame(double x, double y, Axis::Boundary boundary,
                   detail::math::XArray& frame) const;
 
   /// Returns the GSL interp type
@@ -72,6 +71,6 @@ class Bicubic : public Grid2D<double> {
   }
 
   /// Pickle support: derived class construction from the base class.
-  Bicubic(Grid2D<double>&& grid) : Grid2D<double>(grid) {}
+  explicit Bicubic(Grid2D<double>&& grid) : Grid2D<double>(grid) {}
 };
 }  // namespace pyinterp

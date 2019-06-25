@@ -1,9 +1,9 @@
 
 #pragma once
 #include "pyinterp/detail/broadcast.hpp"
-#include "pyinterp/detail/thread.hpp"
 #include "pyinterp/detail/geodetic/rtree.hpp"
 #include "pyinterp/detail/geodetic/system.hpp"
+#include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/system.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>

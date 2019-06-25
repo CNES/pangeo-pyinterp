@@ -1,7 +1,7 @@
 #pragma once
+#include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/bivariate.hpp"
 #include "pyinterp/detail/thread.hpp"
-#include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/grid.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -18,7 +18,9 @@ class Bilinear : public detail::math::Bilinear<Point, T> {
  public:
   pybind11::tuple getstate() const { return pybind11::make_tuple(); }
 
-  static Bilinear setstate(const pybind11::tuple& tuple) { return Bilinear(); }
+  static Bilinear setstate(const pybind11::tuple& /*tuple*/) {
+    return Bilinear();
+  }
 };
 
 /// Nearest interpolation
@@ -27,7 +29,7 @@ class Nearest : public detail::math::Nearest<Point, T> {
  public:
   pybind11::tuple getstate() const { return pybind11::make_tuple(); }
 
-  static Nearest setstate(const pybind11::tuple& tuple) { return Nearest(); }
+  static Nearest setstate(const pybind11::tuple& /*tuple*/) { return Nearest(); }
 };
 
 /// InverseDistanceWeighting
@@ -121,7 +123,7 @@ class Bivariate : public Grid2D<T> {
 
  private:
   /// Construct a new instance from a serialized instance
-  Bivariate(Grid2D<T>&& grid) : Grid2D<T>(grid) {}
+  explicit Bivariate(Grid2D<T>&& grid) : Grid2D<T>(grid) {}
 };
 
 template <template <class> class Point, typename T>
