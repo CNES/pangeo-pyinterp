@@ -12,7 +12,8 @@ void init_geodetic(py::module& m) {
   py::class_<pyinterp::detail::geodetic::System>(
       m, "_System", "C++ implementation of the WGS system.");
 
-  py::class_<geodetic::System, pyinterp::detail::geodetic::System>(m, "System", "World Geodetic System (WGS).")
+  py::class_<geodetic::System, pyinterp::detail::geodetic::System>(
+      m, "System", "World Geodetic System (WGS).")
       .def(py::init<>())
       .def(py::init<double, double>(), py::arg("semi_major_axis"),
            py::arg("flattening"), R"__doc__(

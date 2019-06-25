@@ -32,7 +32,7 @@ class RTree {
       boost::geometry::index::rtree<value_t, boost::geometry::index::rstar<16>>;
 
   /// Default constructor
-  explicit RTree() : tree_(new rtree_t{}) {}
+  RTree() : tree_(new rtree_t{}) {}
 
   /// Default destructor
   virtual ~RTree() = default;
