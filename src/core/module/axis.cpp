@@ -127,11 +127,11 @@ of a variable's values.
   py::enum_<pyinterp::Axis::Boundary>(axis, "Boundary", R"__doc__(
 Type of boundary handling.
 )__doc__")
-      .value("kExpand", pyinterp::Axis::kExpand,
+      .value("Expand", pyinterp::Axis::kExpand,
              "*Expand the boundary as a constant*.")
-      .value("kWrap", pyinterp::Axis::kWrap, "*Circular boundary conditions*.")
-      .value("kSym", pyinterp::Axis::kSym, "*Symmetrical boundary conditions*.")
-      .value("kUndef", pyinterp::Axis::kUndef,
+      .value("Wrap", pyinterp::Axis::kWrap, "*Circular boundary conditions*.")
+      .value("Sym", pyinterp::Axis::kSym, "*Symmetrical boundary conditions*.")
+      .value("Undef", pyinterp::Axis::kUndef,
              "*Boundary violation is not defined*.");
 
   axis.def(py::init<const py::array_t<double>&, double, bool, bool>(),
