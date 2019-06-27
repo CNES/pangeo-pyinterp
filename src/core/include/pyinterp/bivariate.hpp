@@ -29,7 +29,9 @@ class Nearest : public detail::math::Nearest<Point, T> {
  public:
   pybind11::tuple getstate() const { return pybind11::make_tuple(); }
 
-  static Nearest setstate(const pybind11::tuple& /*tuple*/) { return Nearest(); }
+  static Nearest setstate(const pybind11::tuple& /*tuple*/) {
+    return Nearest();
+  }
 };
 
 /// InverseDistanceWeighting
@@ -52,18 +54,23 @@ class InverseDistanceWeighting
 };
 
 /// Interpolation of bivariate function.
-template <template <class> class Point, typename T>
-class Bivariate : public Grid2D<T> {
+///
+/// @tparam Coordinate The type of data used by the interpolators.
+/// @tparam Type The type of data used by the numerical grid.
+template <template <class> class Point, typename Coordinate, typename Type>
+class Bivariate : public Grid2D<Type> {
  public:
-  using Grid2D<T>::Grid2D;
+  using Grid2D<Type>::Grid2D;
 
   /// Interpolates data using the defined interpolation function.
-  pybind11::array_t<T> evaluate(
-      const pybind11::array_t<T>& x, const pybind11::array_t<T>& y,
-      const BivariateInterpolator<Point, T>* interpolator,
+  pybind11::array_t<Coordinate> evaluate(
+      const pybind11::array_t<Coordinate>& x,
+      const pybind11::array_t<Coordinate>& y,
+      const BivariateInterpolator<Point, Coordinate>* interpolator,
       const size_t num_threads) {
     auto size = x.size();
-    auto result = pybind11::array_t<T>(pybind11::array::ShapeContainer{size});
+    auto result =
+        pybind11::array_t<Coordinate>(pybind11::array::ShapeContainer{size});
     auto _x = x.template unchecked<1>();
     auto _y = y.template unchecked<1>();
     auto _result = result.template mutable_unchecked<1>();
@@ -90,17 +97,20 @@ class Bivariate : public Grid2D<T> {
                   auto x0 = this->x_(ix0);
 
                   _result(ix) = interpolator->evaluate(
-                      Point<T>(this->x_.is_angle()
-                                   ? detail::math::normalize_angle(_x(ix), x0)
-                                   : _x(ix),
-                               _y(ix)),
-                      Point<T>(this->x_(ix0), this->y_(iy0)),
-                      Point<T>(this->x_(ix1), this->y_(iy1)),
-                      this->ptr_(ix0, iy0), this->ptr_(ix0, iy1),
-                      this->ptr_(ix1, iy0), this->ptr_(ix1, iy1));
+                      Point<Coordinate>(
+                          this->x_.is_angle()
+                              ? detail::math::normalize_angle(_x(ix), x0)
+                              : _x(ix),
+                          _y(ix)),
+                      Point<Coordinate>(this->x_(ix0), this->y_(iy0)),
+                      Point<Coordinate>(this->x_(ix1), this->y_(iy1)),
+                      static_cast<Coordinate>(this->ptr_(ix0, iy0)),
+                      static_cast<Coordinate>(this->ptr_(ix0, iy1)),
+                      static_cast<Coordinate>(this->ptr_(ix1, iy0)),
+                      static_cast<Coordinate>(this->ptr_(ix1, iy1)));
 
                 } else {
-                  _result(ix) = std::numeric_limits<T>::quiet_NaN();
+                  _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
                 }
               }
             } catch (...) {
@@ -118,12 +128,12 @@ class Bivariate : public Grid2D<T> {
 
   /// Pickle support: set state
   static Bivariate setstate(const pybind11::tuple& tuple) {
-    return Bivariate(Grid2D<T>::setstate(tuple));
+    return Bivariate(Grid2D<Type>::setstate(tuple));
   }
 
  private:
   /// Construct a new instance from a serialized instance
-  explicit Bivariate(Grid2D<T>&& grid) : Grid2D<T>(grid) {}
+  explicit Bivariate(Grid2D<Type>&& grid) : Grid2D<Type>(grid) {}
 };
 
 template <template <class> class Point, typename T>
@@ -183,14 +193,13 @@ void init_bivariate_interpolator(pybind11::module& m,
           }));
 }
 
-template <template <class> class Point, typename T>
-void init_bivariate(pybind11::module& m) {
-  init_bivariate_interpolator<Point, T>(m, "2D");
-
-  pybind11::class_<Bivariate<Point, T>>(m, "Bivariate", R"__doc__(
+template <template <class> class Point, typename Coordinate, typename Type>
+void init_bivariate(pybind11::module& m, const char* class_name) {
+  pybind11::class_<Bivariate<Point, Coordinate, Type>>(m, class_name,
+                                                       R"__doc__(
 Interpolation of bivariate functions
 )__doc__")
-      .def(pybind11::init<Axis, Axis, pybind11::array_t<T>>(),
+      .def(pybind11::init<Axis, Axis, pybind11::array_t<Type>>(),
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
            R"__doc__(
 Default constructor
@@ -201,7 +210,10 @@ Args:
     array (numpy.ndarray): Bivariate function
 )__doc__")
       .def_property_readonly(
-          "x", [](const Bivariate<Point, T>& self) { return self.x(); },
+          "x",
+          [](const Bivariate<Point, Coordinate, Type>& self) {
+            return self.x();
+          },
           R"__doc__(
 Gets the X-Axis handled by this instance
 
@@ -209,7 +221,10 @@ Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
       .def_property_readonly(
-          "y", [](const Bivariate<Point, T>& self) { return self.y(); },
+          "y",
+          [](const Bivariate<Point, Coordinate, Type>& self) {
+            return self.y();
+          },
           R"__doc__(
 Gets the Y-Axis handled by this instance
 
@@ -217,16 +232,20 @@ Returns:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
       .def_property_readonly(
-          "array", [](const Bivariate<Point, T>& self) { return self.array(); },
+          "array",
+          [](const Bivariate<Point, Coordinate, Type>& self) {
+            return self.array();
+          },
           R"__doc__(
 Gets the values handled by this instance
 
 Returns:
     numpy.ndarray: values
 )__doc__")
-      .def("evaluate", &Bivariate<Point, T>::evaluate, pybind11::arg("x"),
-           pybind11::arg("y"), pybind11::arg("interpolator"),
-           pybind11::arg("num_threads") = 0, R"__doc__(
+      .def("evaluate", &Bivariate<Point, Coordinate, Type>::evaluate,
+           pybind11::arg("x"), pybind11::arg("y"),
+           pybind11::arg("interpolator"), pybind11::arg("num_threads") = 0,
+           R"__doc__(
 Interpolate the values provided on the defined bivariate function.
 
 Args:
@@ -242,9 +261,11 @@ Return:
     numpy.ndarray: Values interpolated
 )__doc__")
       .def(pybind11::pickle(
-          [](const Bivariate<Point, T>& self) { return self.getstate(); },
+          [](const Bivariate<Point, Coordinate, Type>& self) {
+            return self.getstate();
+          },
           [](const pybind11::tuple& state) {
-            return Bivariate<Point, T>::setstate(state);
+            return Bivariate<Point, Coordinate, Type>::setstate(state);
           }));
 }
 

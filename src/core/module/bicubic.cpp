@@ -6,25 +6,26 @@ namespace py = pybind11;
 namespace pyinterp {
 
 /// Loads the interpolation frame into memory
-bool Bicubic::load_frame(const double x, const double y,
-                         const Axis::Boundary boundary,
-                         detail::math::XArray& frame) const {
-  auto y_indexes = y_.find_indexes(y, frame.ny(), boundary);
-  auto x_indexes = x_.find_indexes(x, frame.nx(), boundary);
+template <typename Type>
+bool Bicubic<Type>::load_frame(const double x, const double y,
+                               const Axis::Boundary boundary,
+                               detail::math::XArray& frame) const {
+  auto y_indexes = this->y_.find_indexes(y, frame.ny(), boundary);
+  auto x_indexes = this->x_.find_indexes(x, frame.nx(), boundary);
 
   if (x_indexes.empty() || y_indexes.empty()) {
     return false;
   }
 
-  auto x0 = x_(x_indexes[0]);
+  auto x0 = this->x_(x_indexes[0]);
 
   for (auto jx = 0; jx < frame.y().size(); ++jx) {
-    frame.y(jx) = y_(y_indexes[jx]);
+    frame.y(jx) = this->y_(y_indexes[jx]);
   }
 
   for (auto ix = 0; ix < frame.x().size(); ++ix) {
     auto index = x_indexes[ix];
-    auto value = x_(index);
+    auto value = this->x_(index);
 
     if (this->x_.is_angle()) {
       value = detail::math::normalize_angle(value, x0);
@@ -32,18 +33,20 @@ bool Bicubic::load_frame(const double x, const double y,
     frame.x(ix) = value;
 
     for (auto jx = 0; jx < frame.y().size(); ++jx) {
-      frame.z(ix, jx) = ptr_(index, y_indexes[jx]);
+      frame.z(ix, jx) = static_cast<double>(this->ptr_(index, y_indexes[jx]));
     }
   }
   return frame.is_valid();
 }
 
 /// Evaluate the interpolation.
-py::array_t<double> Bicubic::evaluate(const py::array_t<double>& x,
-                                      const py::array_t<double>& y, size_t nx,
-                                      size_t ny, Type type,
-                                      const Axis::Boundary boundary,
-                                      size_t num_threads) const {
+template <typename Type>
+py::array_t<double> Bicubic<Type>::evaluate(const py::array_t<double>& x,
+                                            const py::array_t<double>& y,
+                                            size_t nx, size_t ny,
+                                            FittingModel fitting_model,
+                                            const Axis::Boundary boundary,
+                                            size_t num_threads) const {
   detail::check_array_ndim("x", 1, x, "y", 1, y);
   detail::check_ndarray_shape("x", x, "y", y);
 
@@ -53,7 +56,8 @@ py::array_t<double> Bicubic::evaluate(const py::array_t<double>& x,
   auto _x = x.template unchecked<1>();
   auto _y = y.template unchecked<1>();
   auto _result = result.template mutable_unchecked<1>();
-  auto interpolator = detail::math::Bicubic(Bicubic::interp_type(type));
+  auto interpolator =
+      detail::math::Bicubic(Bicubic::interp_type(fitting_model));
   {
     py::gil_scoped_release release;
 
@@ -72,9 +76,10 @@ py::array_t<double> Bicubic::evaluate(const py::array_t<double>& x,
               auto yi = _y(ix);
               _result(ix) =
                   load_frame(xi, yi, boundary, frame)
-                      ? interpolator.interpolate(
-                            x_.is_angle() ? frame.normalize_angle(xi) : xi, yi,
-                            frame, acc)
+                      ? interpolator.interpolate(this->x_.is_angle()
+                                                     ? frame.normalize_angle(xi)
+                                                     : xi,
+                                                 yi, frame, acc)
                       : std::numeric_limits<double>::quiet_NaN();
             }
           } catch (...) {
@@ -92,37 +97,36 @@ py::array_t<double> Bicubic::evaluate(const py::array_t<double>& x,
 
 }  // namespace pyinterp
 
-void init_bicubic(py::module& m) {
-  auto bicubic = py::class_<pyinterp::Bicubic>(m, "Bicubic",
-                                               R"__doc__(
+template <typename Type>
+void implement_bicubic(py::module& m, const char* const class_name) {
+  py::enum_<pyinterp::FittingModel>(m, "FittingModel", R"__doc__(
+Bicubic fitting model
+)__doc__")
+      .value("Linear", pyinterp::FittingModel::kLinear,
+             "*Linear interpolation*.")
+      .value("Polynomial", pyinterp::FittingModel::kPolynomial,
+             "*Polynomial interpolation*.")
+      .value("CSpline", pyinterp::FittingModel::kCSpline,
+             "*Cubic spline with natural boundary conditions*.")
+      .value("CSplinePeriodic", pyinterp::FittingModel::kCSplinePeriodic,
+             "*Cubic spline with periodic boundary conditions*.")
+      .value("Akima", pyinterp::FittingModel::kAkima,
+             "*Non-rounded Akima spline with natural boundary conditions*.")
+      .value("AkimaPeriodic", pyinterp::FittingModel::kAkimaPeriodic,
+             "*Non-rounded Akima spline with periodic boundary conditions*.")
+      .value(
+          "Steffen", pyinterp::FittingModel::kSteffen,
+          "*Steffen’s method guarantees the monotonicity of data points. the "
+          "interpolating function between the given*.");
+
+  py::class_<pyinterp::Bicubic<Type>>(m, class_name,
+                                      R"__doc__(
 Extension of cubic interpolation for interpolating data points on a
 two-dimensional regular grid. The interpolated surface is smoother than
 corresponding surfaces obtained by bilinear interpolation or
 nearest-neighbor interpolation.
-)__doc__");
-
-  py::enum_<pyinterp::Bicubic::Type>(bicubic, "Type", R"__doc__(
-Bicubic fitting model
 )__doc__")
-      .value("kLinear", pyinterp::Bicubic::kLinear, "*Linear interpolation*.")
-      .value("kPolynomial", pyinterp::Bicubic::kPolynomial,
-             "*Polynomial interpolation*.")
-      .value("kCSpline", pyinterp::Bicubic::kCSpline,
-             "*Cubic spline with natural boundary conditions*.")
-      .value("kCSplinePeriodic", pyinterp::Bicubic::kCSplinePeriodic,
-             "*Cubic spline with periodic boundary conditions*.")
-      .value("kAkima", pyinterp::Bicubic::kAkima,
-             "*Non-rounded Akima spline with natural boundary conditions*.")
-      .value("kAkimaPeriodic", pyinterp::Bicubic::kAkimaPeriodic,
-             "*Non-rounded Akima spline with periodic boundary conditions*.")
-      .value(
-          "kSteffen", pyinterp::Bicubic::kSteffen,
-          "*Steffen’s method guarantees the monotonicity of data points. the "
-          "interpolating function between the given*.");
-
-  bicubic
-      .def(py::init<pyinterp::Axis, pyinterp::Axis,
-                    const py::array_t<double>&>(),
+      .def(py::init<pyinterp::Axis, pyinterp::Axis, const py::array_t<Type>&>(),
            py::arg("x"), py::arg("y"), py::arg("array"),
            R"__doc__(
 Default constructor
@@ -133,7 +137,7 @@ Args:
     array (numpy.ndarray): Bivariate function
   )__doc__")
       .def_property_readonly(
-          "x", [](const pyinterp::Bicubic& self) { return self.x(); },
+          "x", [](const pyinterp::Bicubic<Type>& self) { return self.x(); },
           R"__doc__(
 Gets the X-Axis handled by this instance
 
@@ -141,7 +145,7 @@ Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
       .def_property_readonly(
-          "y", [](const pyinterp::Bicubic& self) { return self.y(); },
+          "y", [](const pyinterp::Bicubic<Type>& self) { return self.y(); },
           R"__doc__(
 Gets the Y-Axis handled by this instance
 
@@ -149,16 +153,17 @@ Returns:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
       .def_property_readonly(
-          "array", [](const pyinterp::Bicubic& self) { return self.array(); },
+          "array",
+          [](const pyinterp::Bicubic<Type>& self) { return self.array(); },
           R"__doc__(
 Gets the values handled by this instance
 
 Returns:
     numpy.ndarray: values
 )__doc__")
-      .def("evaluate", &pyinterp::Bicubic::evaluate, py::arg("x"), py::arg("y"),
-           py::arg("nx") = 3, py::arg("ny") = 3,
-           py::arg("type") = pyinterp::Bicubic::kCSpline,
+      .def("evaluate", &pyinterp::Bicubic<Type>::evaluate, py::arg("x"),
+           py::arg("y"), py::arg("nx") = 3, py::arg("ny") = 3,
+           py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
            py::arg("boundary") = pyinterp::Axis::kUndef,
            py::arg("num_threads") = 0, R"__doc__(
 Evaluate the interpolation.
@@ -170,9 +175,9 @@ Args:
         the interpolation. Defaults to ``3``.
     ny (int, optional): The number of Y coordinate values required to perform
         the interpolation. Defaults to ``3``.
-    type (pyinterp.core.Bicubic.Type, optional): Type of interpolation
+    fitting_model (pyinterp.core.FittingModel, optional): Type of interpolation
         to be performed. Defaults to
-        :py:data:`pyinterp.core.Bicubic.Type.kCSpline`
+        :py:data:`pyinterp.core.FittingModel.CSpline`
     boundary (pyinterp.core.Axis.Boundary, optional): Type of axis boundary
         management. Defaults to
         :py:data:`pyinterp.core.Axis.Boundary.kUndef`
@@ -184,8 +189,22 @@ Return:
     numpy.ndarray: Values interpolated
   )__doc__")
       .def(py::pickle(
-          [](const pyinterp::Bicubic& self) { return self.getstate(); },
+          [](const pyinterp::Bicubic<Type>& self) { return self.getstate(); },
           [](const py::tuple& tuple) {
-            return new pyinterp::Bicubic(pyinterp::Bicubic::setstate(tuple));
+            return new pyinterp::Bicubic(
+                pyinterp::Bicubic<Type>::setstate(tuple));
           }));
+}
+
+void init_bicubic(py::module& m) {
+  implement_bicubic<double>(m, "BicubicFloat64");
+  implement_bicubic<float>(m, "BicubicFloat32");
+  implement_bicubic<int64_t>(m, "BicubicInt64");
+  implement_bicubic<uint64_t>(m, "BicubicUInt64");
+  implement_bicubic<int32_t>(m, "BicubicInt32");
+  implement_bicubic<uint32_t>(m, "BicubicUInt32");
+  implement_bicubic<int16_t>(m, "BicubicInt16");
+  implement_bicubic<uint16_t>(m, "BicubicUInt16");
+  implement_bicubic<int8_t>(m, "BicubicInt8");
+  implement_bicubic<uint8_t>(m, "BicubicUInt8");
 }

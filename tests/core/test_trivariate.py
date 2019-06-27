@@ -34,7 +34,7 @@ class TestCase(unittest.TestCase):
         with netCDF4.Dataset(cls.GRID) as ds:
             z = ds.variables['tcw'][:].T
             z[z.mask] = float("nan")
-            return core.Trivariate(
+            return core.TrivariateFloat64(
                 core.Axis(ds.variables['longitude'][:], is_circle=True),
                 core.Axis(ds.variables['latitude'][:]),
                 core.Axis(ds.variables['time'][:]), z.data)

@@ -30,7 +30,7 @@ class TestCase(unittest.TestCase):
         os.path.dirname(os.path.abspath(__file__)), "..", "dataset", "mss.nc")
 
     @classmethod
-    def load_data(cls, name='Bivariate'):
+    def load_data(cls, name='BivariateFloat64'):
         with netCDF4.Dataset(cls.GRID) as ds:
             z = ds.variables['mss'][:].T
             z[z.mask] = float("nan")
@@ -78,19 +78,19 @@ class TestBivariate(TestCase):
 
 class TestBicubic(TestCase):
     def test_multi_threads(self):
-        interpolator = self.load_data('Bicubic')
+        interpolator = self.load_data('BicubicFloat64')
         lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
         lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
         x, y = np.meshgrid(lon, lat, indexing="ij")
         z0 = interpolator.evaluate(
             x.flatten(),
             y.flatten(),
-            type=core.Bicubic.Type.kAkima,
+            fitting_model=core.FittingModel.Akima,
             num_threads=0)
         z1 = interpolator.evaluate(
             x.flatten(),
             y.flatten(),
-            type=core.Bicubic.Type.kAkima,
+            fitting_model=core.FittingModel.Akima,
             num_threads=1)
         z0 = np.ma.fix_invalid(z0)
         z1 = np.ma.fix_invalid(z1)
@@ -105,7 +105,7 @@ class TestBicubic(TestCase):
             plot(x, y, z0.reshape((len(lon), len(lat))), "mss_cspline.png")
 
     def test_pickle(self):
-        interpolator = self.load_data('Bicubic')
+        interpolator = self.load_data('BicubicFloat64')
         other = pickle.loads(pickle.dumps(interpolator))
         self.assertEqual(interpolator.x, other.x)
         self.assertEqual(interpolator.y, other.y)
