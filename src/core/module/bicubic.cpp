@@ -14,8 +14,10 @@ template <typename Type>
 bool Bicubic<Type>::load_frame(const double x, const double y,
                                const Axis::Boundary boundary,
                                detail::math::XArray& frame) const {
-  auto y_indexes = this->y_.find_indexes(y, frame.ny(), boundary);
-  auto x_indexes = this->x_.find_indexes(x, frame.nx(), boundary);
+  auto y_indexes =
+      this->y_.find_indexes(y, static_cast<uint32_t>(frame.ny()), boundary);
+  auto x_indexes =
+      this->x_.find_indexes(x, static_cast<uint32_t>(frame.nx()), boundary);
 
   if (x_indexes.empty() || y_indexes.empty()) {
     return false;

@@ -113,7 +113,7 @@ Axis Axis::setstate(const pybind11::tuple& state) {
       return Axis(std::shared_ptr<detail::axis::container::Abstract>(
                       new detail::axis::container::Regular(
                           state[1].cast<double>(), state[2].cast<double>(),
-                          state[3].cast<size_t>())),
+                          state[3].cast<double>())),
                   state[4].cast<bool>(), state[5].cast<bool>());
     default:
       throw std::invalid_argument("invalid state");
