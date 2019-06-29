@@ -1,3 +1,7 @@
+// Copyright (c) 2019 CNES
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/rtree.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>

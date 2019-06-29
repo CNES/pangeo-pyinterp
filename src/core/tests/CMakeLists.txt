@@ -1,3 +1,7 @@
+# Copyright (c) 2019 CNES
+#
+# All rights reserved. Use of this source code is governed by a
+# BSD-style license that can be found in the LICENSE file.
 macro (add_testcase testname)
     set(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${testname}.cpp")
     add_executable(test_${testname} ${FILES})

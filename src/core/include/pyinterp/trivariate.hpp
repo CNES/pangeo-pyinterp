@@ -1,3 +1,7 @@
+// Copyright (c) 2019 CNES
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/trivariate.hpp"

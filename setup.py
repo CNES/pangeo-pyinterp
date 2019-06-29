@@ -1,3 +1,7 @@
+# Copyright (c) 2019 CNES
+#
+# All rights reserved. Use of this source code is governed by a
+# BSD-style license that can be found in the LICENSE file.
 import distutils.command.build
 import pathlib
 import platform
@@ -127,13 +131,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         if platform.system() != 'Windows':
             build_args += ['--', '-j%d' % os.cpu_count()]
-            cmake_args += [
-                '-DCMAKE_BUILD_TYPE=' + cfg
-            ]
+            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             if platform.system() == 'Darwin':
-                cmake_args += [
-                    '-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14'
-                ]
+                cmake_args += ['-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14']
         else:
             cmake_args += [
                 '-DCMAKE_GENERATOR_PLATFORM=x64',
