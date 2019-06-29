@@ -109,7 +109,7 @@ class Trivariate : public Grid3D<Type> {
 };
 
 template <template <class> class Point, typename Coordinate, typename Type>
-void init_trivariate(pybind11::module& m, const char* const class_name) {
+void implement_trivariate(pybind11::module& m, const char* const class_name) {
   pybind11::class_<Trivariate<Point, Coordinate, Type>>(m, class_name,
                                                         R"__doc__(
 Interpolation of trivariate functions

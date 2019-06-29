@@ -99,26 +99,6 @@ py::array_t<double> Bicubic<Type>::evaluate(const py::array_t<double>& x,
 
 template <typename Type>
 void implement_bicubic(py::module& m, const char* const class_name) {
-  py::enum_<pyinterp::FittingModel>(m, "FittingModel", R"__doc__(
-Bicubic fitting model
-)__doc__")
-      .value("Linear", pyinterp::FittingModel::kLinear,
-             "*Linear interpolation*.")
-      .value("Polynomial", pyinterp::FittingModel::kPolynomial,
-             "*Polynomial interpolation*.")
-      .value("CSpline", pyinterp::FittingModel::kCSpline,
-             "*Cubic spline with natural boundary conditions*.")
-      .value("CSplinePeriodic", pyinterp::FittingModel::kCSplinePeriodic,
-             "*Cubic spline with periodic boundary conditions*.")
-      .value("Akima", pyinterp::FittingModel::kAkima,
-             "*Non-rounded Akima spline with natural boundary conditions*.")
-      .value("AkimaPeriodic", pyinterp::FittingModel::kAkimaPeriodic,
-             "*Non-rounded Akima spline with periodic boundary conditions*.")
-      .value(
-          "Steffen", pyinterp::FittingModel::kSteffen,
-          "*Steffen’s method guarantees the monotonicity of data points. the "
-          "interpolating function between the given*.");
-
   py::class_<pyinterp::Bicubic<Type>>(m, class_name,
                                       R"__doc__(
 Extension of cubic interpolation for interpolating data points on a
@@ -197,6 +177,26 @@ Return:
 }
 
 void init_bicubic(py::module& m) {
+  py::enum_<pyinterp::FittingModel>(m, "FittingModel", R"__doc__(
+Bicubic fitting model
+)__doc__")
+      .value("Linear", pyinterp::FittingModel::kLinear,
+             "*Linear interpolation*.")
+      .value("Polynomial", pyinterp::FittingModel::kPolynomial,
+             "*Polynomial interpolation*.")
+      .value("CSpline", pyinterp::FittingModel::kCSpline,
+             "*Cubic spline with natural boundary conditions*.")
+      .value("CSplinePeriodic", pyinterp::FittingModel::kCSplinePeriodic,
+             "*Cubic spline with periodic boundary conditions*.")
+      .value("Akima", pyinterp::FittingModel::kAkima,
+             "*Non-rounded Akima spline with natural boundary conditions*.")
+      .value("AkimaPeriodic", pyinterp::FittingModel::kAkimaPeriodic,
+             "*Non-rounded Akima spline with periodic boundary conditions*.")
+      .value(
+          "Steffen", pyinterp::FittingModel::kSteffen,
+          "*Steffen’s method guarantees the monotonicity of data points. the "
+          "interpolating function between the given*.");
+
   implement_bicubic<double>(m, "BicubicFloat64");
   implement_bicubic<float>(m, "BicubicFloat32");
   implement_bicubic<int64_t>(m, "BicubicInt64");

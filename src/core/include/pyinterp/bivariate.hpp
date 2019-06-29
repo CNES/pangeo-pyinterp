@@ -137,8 +137,8 @@ class Bivariate : public Grid2D<Type> {
 };
 
 template <template <class> class Point, typename T>
-void init_bivariate_interpolator(pybind11::module& m,
-                                 const std::string& suffix) {
+void implement_bivariate_interpolator(pybind11::module& m,
+                                      const std::string& suffix) {
   using CoordinateSystem = BivariateInterpolator<Point, T>;
 
   /// Redirects virtual calls to Python
@@ -194,7 +194,7 @@ void init_bivariate_interpolator(pybind11::module& m,
 }
 
 template <template <class> class Point, typename Coordinate, typename Type>
-void init_bivariate(pybind11::module& m, const char* class_name) {
+void implement_bivariate(pybind11::module& m, const char* class_name) {
   pybind11::class_<Bivariate<Point, Coordinate, Type>>(m, class_name,
                                                        R"__doc__(
 Interpolation of bivariate functions

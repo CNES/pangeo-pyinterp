@@ -36,10 +36,10 @@ class TestRTree(unittest.TestCase):
             z[z.mask] = float("nan")
             x, y = np.meshgrid(
                 ds.variables['lon'][:], ds.variables['lat'][:], indexing='ij')
-            mesh = core.RTree(core.geodetic.System())
+            mesh = core.RTreeFloat32(core.geodetic.System())
             mesh.packing(
                 np.vstack((x.flatten(), y.flatten())).T,
-                z.data.flatten().astype("int64"))
+                z.data.flatten())
             return mesh
 
     def test_interpolate(self):
@@ -68,7 +68,7 @@ class TestRTree(unittest.TestCase):
     def test_pickle(self):
         interpolator = self.load_data()
         other = pickle.loads(pickle.dumps(interpolator))
-        self.assertTrue(isinstance(other, core.RTree))
+        self.assertTrue(isinstance(other, core.RTreeFloat32))
 
 
 if __name__ == "__main__":

@@ -7,8 +7,8 @@
 namespace py = pybind11;
 
 template <typename Coordinate, typename Type>
-static void implement_rtree(py::module& m) {
-  py::class_<pyinterp::RTree<Coordinate, Type>>(m, "RTree", R"__doc__(
+static void implement_rtree(py::module& m, const char* const class_name) {
+  py::class_<pyinterp::RTree<Coordinate, Type>>(m, class_name, R"__doc__(
 RTree spatial index for geodetic scalar values
 )__doc__")
       .def(py::init<std::optional<pyinterp::geodetic::System>>(),
@@ -146,4 +146,7 @@ Return:
           }));
 }
 
-void init_rtree(py::module& m) { implement_rtree<double, int64_t>(m); }
+void init_rtree(py::module& m) {
+  implement_rtree<double, double>(m, "RTreeFloat64");
+  implement_rtree<float, float>(m, "RTreeFloat32");
+}

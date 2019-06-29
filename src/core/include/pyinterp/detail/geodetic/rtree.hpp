@@ -205,7 +205,8 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
     // Finally the interpolated value is returned if there are selected points
     // otherwise one returns an undefined value.
     return total_weight != 0
-               ? std::make_pair(result / total_weight, neighbors)
+               ? std::make_pair(static_cast<Type>(result / total_weight),
+                                neighbors)
                : std::make_pair(std::numeric_limits<Type>::quiet_NaN(),
                                 static_cast<uint32_t>(0));
   }
