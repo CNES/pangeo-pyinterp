@@ -85,7 +85,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         """Detect if the Python interpreter is part of a conda distribution."""
         result = os.path.exists(os.path.join(sys.prefix, 'conda-meta'))
         if not result:
-            return 'conda-bld' in sysconfig.get_config_var("abs_srcdir")
+            try:
+                import conda
+            except:
+                result = False
+            else:
+                result = True
         return result
 
     def build_cmake(self, ext):
