@@ -1,2 +1,2 @@
-# pyinterp
-Interpolation of geo-referenced numerical grids for Python.
+# pangeo-pyinterp
+Python library for optimized interpolation.
