@@ -145,7 +145,7 @@ Returns:
 Gets the values handled by this instance
 
 Returns:
-    numpy.ndarray: values
+    numpy.ndarray: values to interpolate
 )__doc__")
       .def("evaluate", &pyinterp::Bicubic<Type>::evaluate, py::arg("x"),
            py::arg("y"), py::arg("nx") = 3, py::arg("ny") = 3,

@@ -172,7 +172,7 @@ Returns:
 Gets the values handled by this instance
 
 Returns:
-    numpy.ndarray: values
+    numpy.ndarray: values to interpolate
 )__doc__")
       .def("evaluate", &Trivariate<Point, Coordinate, Type>::evaluate,
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
