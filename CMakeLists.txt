@@ -152,4 +152,4 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11)
-add_subdirectory(src/core)
+add_subdirectory(src/pyinterp/core)

@@ -195,8 +195,9 @@ def main():
                      author='CLS',
                      license="Proprietary",
                      ext_modules=[CMakeExtension(name="pyinterp.core")],
+                     package_dir={'': 'src'},
                      packages=setuptools.find_namespace_packages(
-                         include=['pyinterp*'], exclude=['*core*']),
+                         where='src', exclude=['*core*']),
                      cmdclass={
                          'build': Build,
                          'build_ext': BuildExt
