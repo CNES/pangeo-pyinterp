@@ -3,7 +3,7 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 """
-Bivariate interpolation
+Trivariate interpolation
 =======================
 """
 from typing import Optional
@@ -11,76 +11,49 @@ import numpy as np
 import xarray as xr
 from . import core
 from . import interface
+from . import bivariate
 
 
-class Bivariate:
-    """Interpolation of bivariate functions
+class Trivariate(bivariate.Bivariate):
+    """Interpolation of trivariate functions
 
     Args:
         x (pyinterp.core.Axis): X-Axis
         y (pyinterp.core.Axis): Y-Axis
-        array (numpy.ndarray): Bivariate function
+        z (pyinterp.core.Axis): Z-Axis
+        array (numpy.ndarray): Trivariate function
     """
-    _CLASS = "Bivariate"
-    _INTEROLATOR = "2D"
+    _CLASS = "Trivariate"
+    _INTEROLATOR = "3D"
 
-    def __init__(self, x: core.Axis, y: core.Axis, values: np.ndarray):
+    def __init__(self, x: core.Axis, y: core.Axis, z: core.Axis,
+                 values: np.ndarray):
         _class = getattr(core, self._CLASS + interface._core_suffix(values))
-        self._instance = _class(x, y, values)
-
-    @classmethod
-    def _interpolator(cls, interpolator: str, **kwargs):
-        if interpolator == "bilinear":
-            return getattr(core, "Bilinear" + cls._INTEROLATOR)(**kwargs)
-        elif interpolator == "nearest":
-            return getattr(core, "Nearest" + cls._INTEROLATOR)(**kwargs)
-        elif interpolator == "inverse_distance_weighting":
-            return getattr(core, "InverseDistanceWeighting" +
-                           cls._INTEROLATOR)(**kwargs)
-
-        raise ValueError(f"interpolator {interpolator!r} is not defined")
+        self._instance = _class(x, y, z, values)
 
     @property
-    def x(self):
+    def z(self):
         """
-        Gets the X-Axis handled by this instance
+        Gets the Z-Axis handled by this instance
 
         Returns:
-            pyinterp.core.Axis: X-Axis
+            pyinterp.core.Axis: Z-Axis
         """
-        return self._instance.x
-
-    @property
-    def y(self):
-        """
-        Gets the Y-Axis handled by this instance
-
-        Returns:
-            pyinterp.core.Axis: Y-Axis
-        """
-        return self._instance.y
-
-    @property
-    def array(self):
-        """
-        Gets the values handled by this instance
-
-        Returns:
-            numpy.ndarray: values
-        """
-        return self._instance.array
+        return self._instance.z
 
     def evaluate(self,
                  x: np.ndarray,
                  y: np.ndarray,
+                 z: np.ndarray,
                  interpolator: Optional[str] = "bilinear",
                  num_threads: Optional[int] = 0,
                  **kwargs):
-        """Interpolate the values provided on the defined bivariate function.
+        """Interpolate the values provided on the defined trivariate function.
 
         Args:
             x (numpy.ndarray): X-values
             y (numpy.ndarray): Y-values
+            z (numpy.ndarray): Z-values
             interpolator (str, optional): The method of interpolation to
                 perform. Supported are ``bilinear`` and ``nearest``, and
                 ``inverse_distance_weighting``. Default to ``bilinear``.
@@ -94,7 +67,7 @@ class Bivariate:
             numpy.ndarray: Values interpolated
         """
         return self._instance.evaluate(
-            np.asarray(x), np.asarray(y),
+            np.asarray(x), np.asarray(y), np.asarray(z),
             self._interpolator(interpolator, **kwargs), num_threads)
 
 
@@ -106,9 +79,22 @@ def from_dataset(dataset: xr.Dataset, variable: str):
         name (str): Variable to interpolate
 
     Returns:
-        Bivariate: the interpolator
+        Trivariate: the interpolator
     """
-    lon, lat = interface._lon_lat_from_dataset(dataset, variable)
-    return Bivariate(core.Axis(dataset.variables[lon].values, is_circle=True),
-                     core.Axis(dataset.variables[lat].values),
-                     dataset.variables[variable].transpose(lon, lat).values)
+    ident = interface.AxisIdentifier(dataset)
+    lon = ident.longitude()
+    if lon is None:
+        raise ValueError("The dataset doesn't define a longitude axis")
+    lat = ident.latitude()
+    if lat is None:
+        raise ValueError("The dataset doesn't define a longitude axis")
+    size = len(dataset.variables[variable].shape)
+    if size != 3:
+        raise ValueError("The number of dimensions of the variable "
+                         f"{variable} is incorrect. Expected 3, found {size}.")
+    z = (set(dataset.coords) - {lon, lat}).pop()
+    return Trivariate(
+        core.Axis(dataset.variables[lon].values, is_circle=True),
+        core.Axis(dataset.variables[lat].values),
+        core.Axis(dataset.variables[z].values),
+        dataset.variables[variable].transpose(lon, lat, z).values)
