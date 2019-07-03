@@ -7,9 +7,9 @@
 #include "pyinterp/detail/geodetic/coordinates.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/system.hpp"
-#include <Eigen/Core>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <Eigen/Core>
 
 namespace pyinterp {
 namespace geodetic {

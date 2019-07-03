@@ -3,10 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include "pyinterp/bivariate.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/trivariate.hpp"
 #include "pyinterp/detail/thread.hpp"
-#include "pyinterp/bivariate.hpp"
 #include "pyinterp/grid.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
