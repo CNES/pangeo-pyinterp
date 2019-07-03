@@ -7,14 +7,14 @@
 
         .. automethod:: __init__
 
-    .. autoclass:: Bicubic
+    .. autoclass:: BicubicFloat64
         :show-inheritance:
         :members:
         :inherited-members:
 
         .. automethod:: __init__
 
-    .. autoclass:: Bivariate
+    .. autoclass:: BivariateFloat64
         :show-inheritance:
         :members:
         :inherited-members:
@@ -77,14 +77,14 @@
 
         .. automethod:: __init__
 
-    .. autoclass:: RTree
+    .. autoclass:: RTreeFloat64
         :show-inheritance:
         :members:
         :inherited-members:
 
         .. automethod:: __init__
 
-    .. autoclass:: Trivariate
+    .. autoclass:: TrivariateFloat64
         :show-inheritance:
         :members:
         :inherited-members:
