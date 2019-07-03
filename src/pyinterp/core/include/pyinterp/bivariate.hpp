@@ -73,6 +73,9 @@ class Bivariate : public Grid2D<Type> {
       const pybind11::array_t<Coordinate>& y,
       const BivariateInterpolator<Point, Coordinate>* interpolator,
       const size_t num_threads) {
+    pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
+    pyinterp::detail::check_ndarray_shape("x", x, "y", y);
+
     auto size = x.size();
     auto result =
         pybind11::array_t<Coordinate>(pybind11::array::ShapeContainer{size});
