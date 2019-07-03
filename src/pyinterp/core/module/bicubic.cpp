@@ -4,6 +4,8 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/bicubic.hpp"
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -15,25 +17,25 @@ bool Bicubic<Type>::load_frame(const double x, const double y,
                                const Axis::Boundary boundary,
                                detail::math::XArray& frame) const {
   auto y_indexes =
-      this->y_.find_indexes(y, static_cast<uint32_t>(frame.ny()), boundary);
+      this->y_->find_indexes(y, static_cast<uint32_t>(frame.ny()), boundary);
   auto x_indexes =
-      this->x_.find_indexes(x, static_cast<uint32_t>(frame.nx()), boundary);
+      this->x_->find_indexes(x, static_cast<uint32_t>(frame.nx()), boundary);
 
   if (x_indexes.empty() || y_indexes.empty()) {
     return false;
   }
 
-  auto x0 = this->x_(x_indexes[0]);
+  auto x0 = (*this->x_)(x_indexes[0]);
 
   for (auto jx = 0; jx < frame.y().size(); ++jx) {
-    frame.y(jx) = this->y_(y_indexes[jx]);
+    frame.y(jx) = (*this->y_)(y_indexes[jx]);
   }
 
   for (auto ix = 0; ix < frame.x().size(); ++ix) {
     auto index = x_indexes[ix];
-    auto value = this->x_(index);
+    auto value = (*this->x_)(index);
 
-    if (this->x_.is_angle()) {
+    if (this->x_->is_angle()) {
       value = detail::math::normalize_angle(value, x0);
     }
     frame.x(ix) = value;
@@ -82,7 +84,7 @@ py::array_t<double> Bicubic<Type>::evaluate(const py::array_t<double>& x,
               auto yi = _y(ix);
               _result(ix) =
                   load_frame(xi, yi, boundary, frame)
-                      ? interpolator.interpolate(this->x_.is_angle()
+                      ? interpolator.interpolate(this->x_->is_angle()
                                                      ? frame.normalize_angle(xi)
                                                      : xi,
                                                  yi, frame, acc)
@@ -112,9 +114,11 @@ two-dimensional regular grid. The interpolated surface is smoother than
 corresponding surfaces obtained by bilinear interpolation or
 nearest-neighbor interpolation.
 )__doc__")
-      .def(py::init<pyinterp::Axis, pyinterp::Axis, const py::array_t<Type>&>(),
-           py::arg("x"), py::arg("y"), py::arg("array"),
-           R"__doc__(
+      .def(
+          py::init<std::shared_ptr<pyinterp::Axis>,
+                   std::shared_ptr<pyinterp::Axis>, const py::array_t<Type>&>(),
+          py::arg("x"), py::arg("y"), py::arg("array"),
+          R"__doc__(
 Default constructor
 
 Args:
