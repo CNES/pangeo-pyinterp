@@ -81,13 +81,7 @@ def from_dataset(dataset: xr.Dataset, variable: str):
     Returns:
         Trivariate: the interpolator
     """
-    ident = interface.AxisIdentifier(dataset)
-    lon = ident.longitude()
-    if lon is None:
-        raise ValueError("The dataset doesn't define a longitude axis")
-    lat = ident.latitude()
-    if lat is None:
-        raise ValueError("The dataset doesn't define a longitude axis")
+    lon,  lat = interface._lon_lat_from_dataset(dataset)
     size = len(dataset.variables[variable].shape)
     if size != 3:
         raise ValueError("The number of dimensions of the variable "
