@@ -28,8 +28,7 @@ class Trivariate(bivariate.Bivariate):
 
     def __init__(self, x: core.Axis, y: core.Axis, z: core.Axis,
                  values: np.ndarray):
-        _class = getattr(core, self._CLASS + interface._core_suffix(values))
-        self._instance = _class(x, y, z, values)
+        bivariate.GridInterpolator.__init__(self, x, y, z, values)
 
     @property
     def z(self):
@@ -68,7 +67,7 @@ class Trivariate(bivariate.Bivariate):
         """
         return self._instance.evaluate(
             np.asarray(x), np.asarray(y), np.asarray(z),
-            self._interpolator(interpolator, **kwargs), num_threads)
+            self._n_variate_interpolator(interpolator, **kwargs), num_threads)
 
 
 def from_dataset(dataset: xr.Dataset, variable: str):
@@ -81,7 +80,7 @@ def from_dataset(dataset: xr.Dataset, variable: str):
     Returns:
         Trivariate: the interpolator
     """
-    lon,  lat = interface._lon_lat_from_dataset(dataset)
+    lon,  lat = interface._lon_lat_from_dataset(dataset, variable, 3)
     size = len(dataset.variables[variable].shape)
     if size != 3:
         raise ValueError("The number of dimensions of the variable "

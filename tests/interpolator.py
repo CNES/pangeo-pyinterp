@@ -4,6 +4,7 @@
 # BSD-style license that can be found in the LICENSE file.
 import os
 import unittest
+import pickle
 import numpy as np
 import xarray as xr
 import pyinterp.core
@@ -19,6 +20,11 @@ class Bivariate(unittest.TestCase):
     def test_biavariate(self):
         interpolator = pyinterp.bivariate.from_dataset(
             xr.open_dataset(self.GRID), "mss")
+
+        self.assertIsInstance(interpolator, pyinterp.bivariate.Bivariate)
+        other = pickle.loads(pickle.dumps(interpolator))
+        self.assertIsInstance(other, pyinterp.bivariate.Bivariate)
+
         self.assertIsInstance(interpolator.x, pyinterp.core.Axis)
         self.assertIsInstance(interpolator.y, pyinterp.core.Axis)
         self.assertIsInstance(interpolator.array, np.ndarray)
@@ -33,6 +39,11 @@ class Bivariate(unittest.TestCase):
     def test_bicubic(self):
         interpolator = pyinterp.bicubic.from_dataset(
             xr.open_dataset(self.GRID), "mss")
+
+        self.assertIsInstance(interpolator, pyinterp.bicubic.Bicubic)
+        other = pickle.loads(pickle.dumps(interpolator))
+        self.assertIsInstance(other, pyinterp.bicubic.Bicubic)
+
         self.assertIsInstance(interpolator.x, pyinterp.core.Axis)
         self.assertIsInstance(interpolator.y, pyinterp.core.Axis)
         self.assertIsInstance(interpolator.array, np.ndarray)
@@ -52,6 +63,11 @@ class Trivariate(unittest.TestCase):
     def test(self):
         interpolator = pyinterp.trivariate.from_dataset(
             xr.open_dataset(self.GRID), "tcw")
+
+        self.assertIsInstance(interpolator, pyinterp.trivariate.Trivariate)
+        other = pickle.loads(pickle.dumps(interpolator))
+        self.assertIsInstance(other, pyinterp.trivariate.Trivariate)
+
         self.assertIsInstance(interpolator.x, pyinterp.core.Axis)
         self.assertIsInstance(interpolator.y, pyinterp.core.Axis)
         self.assertIsInstance(interpolator.array, np.ndarray)

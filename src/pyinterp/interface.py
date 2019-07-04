@@ -141,7 +141,8 @@ class AxisIdentifier:
 
 
 def _lon_lat_from_dataset(dataset: xr.Dataset,
-                          variable: str) -> Tuple[str, str]:
+                          variable: str,
+                          ndims: Optional[int] = 2) -> Tuple[str, str]:
     """
     Gets the name of the dimensions that define the longitudes and latitudes
     of the dataset.
@@ -149,6 +150,7 @@ def _lon_lat_from_dataset(dataset: xr.Dataset,
     Args:
         dataset (xarray.Dataset): Provided dataset
         name (str): Variable to interpolate
+        ndims (int, optional): Number of dimension expected for the variable
 
     Returns:
         tuple: longitude and latitude names
@@ -161,7 +163,8 @@ def _lon_lat_from_dataset(dataset: xr.Dataset,
     if lat is None:
         raise ValueError("The dataset doesn't define a longitude axis")
     size = len(dataset.variables[variable].shape)
-    if size != 2:
-        raise ValueError("The number of dimensions of the variable "
-                         f"{variable} is incorrect. Expected 2, found {size}.")
+    if size != ndims:
+        raise ValueError(
+            "The number of dimensions of the variable "
+            f"{variable} is incorrect. Expected {ndims}, found {size}.")
     return lon, lat

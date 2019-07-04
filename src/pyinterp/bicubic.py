@@ -10,10 +10,11 @@ from typing import Optional
 import numpy as np
 import xarray as xr
 from . import core
+from . import bivariate
 from . import interface
 
 
-class Bicubic:
+class Bicubic(bivariate.GridInterpolator):
     """Extension of cubic interpolation for interpolating data points on a
     two-dimensional regular grid. The interpolated surface is smoother than
     corresponding surfaces obtained by bilinear interpolation or
@@ -24,40 +25,10 @@ class Bicubic:
         y (pyinterp.core.Axis): Y-Axis
         array (numpy.ndarray): Bivariate function
     """
+    _CLASS = "Bicubic"
 
     def __init__(self, x: core.Axis, y: core.Axis, values: np.ndarray):
-        _class = getattr(core, "Bicubic" + interface._core_suffix(values))
-        self._instance = _class(x, y, values)
-
-    @property
-    def x(self):
-        """
-        Gets the X-Axis handled by this instance
-
-        Returns:
-            pyinterp.core.Axis: X-Axis
-        """
-        return self._instance.x
-
-    @property
-    def y(self):
-        """
-        Gets the Y-Axis handled by this instance
-
-        Returns:
-            pyinterp.core.Axis: Y-Axis
-        """
-        return self._instance.y
-
-    @property
-    def array(self):
-        """
-        Gets the values handled by this instance
-
-        Returns:
-            numpy.ndarray: values
-        """
-        return self._instance.array
+        super(Bicubic, self).__init__(x, y, values)
 
     def evaluate(self,
                  x: np.ndarray,

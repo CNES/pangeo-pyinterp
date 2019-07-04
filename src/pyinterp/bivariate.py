@@ -13,23 +13,17 @@ from . import core
 from . import interface
 
 
-class Bivariate:
-    """Interpolation of bivariate functions
+class GridInterpolator:
+    """"""
+    _CLASS = None
+    _INTEROLATOR = None
 
-    Args:
-        x (pyinterp.core.Axis): X-Axis
-        y (pyinterp.core.Axis): Y-Axis
-        array (numpy.ndarray): Bivariate function
-    """
-    _CLASS = "Bivariate"
-    _INTEROLATOR = "2D"
-
-    def __init__(self, x: core.Axis, y: core.Axis, values: np.ndarray):
-        _class = getattr(core, self._CLASS + interface._core_suffix(values))
-        self._instance = _class(x, y, values)
+    def __init__(self, *args):
+        self._class = self._CLASS + interface._core_suffix(args[-1])
+        self._instance = getattr(core, self._class)(*args)
 
     @classmethod
-    def _interpolator(cls, interpolator: str, **kwargs):
+    def _n_variate_interpolator(cls, interpolator: str, **kwargs):
         if interpolator == "bilinear":
             return getattr(core, "Bilinear" + cls._INTEROLATOR)(**kwargs)
         elif interpolator == "nearest":
@@ -70,6 +64,29 @@ class Bivariate:
         """
         return self._instance.array
 
+    def __getstate__(self):
+        return (self._class, self._instance.__getstate__())
+
+    def __setstate__(self, state):
+        self._class = state[0]
+        self._instance = getattr(getattr(core, self._class),
+                                 "_setstate")(state[1])
+
+
+class Bivariate(GridInterpolator):
+    """Interpolation of bivariate functions
+
+    Args:
+        x (pyinterp.core.Axis): X-Axis
+        y (pyinterp.core.Axis): Y-Axis
+        array (numpy.ndarray): Bivariate function
+    """
+    _CLASS = "Bivariate"
+    _INTEROLATOR = "2D"
+
+    def __init__(self, x: core.Axis, y: core.Axis, values: np.ndarray):
+        super(Bivariate, self).__init__(x, y, values)
+
     def evaluate(self,
                  x: np.ndarray,
                  y: np.ndarray,
@@ -95,7 +112,7 @@ class Bivariate:
         """
         return self._instance.evaluate(
             np.asarray(x), np.asarray(y),
-            self._interpolator(interpolator, **kwargs), num_threads)
+            self._n_variate_interpolator(interpolator, **kwargs), num_threads)
 
 
 def from_dataset(dataset: xr.Dataset, variable: str):
