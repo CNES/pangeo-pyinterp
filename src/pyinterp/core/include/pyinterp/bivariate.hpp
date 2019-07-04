@@ -269,6 +269,13 @@ Args:
 Return:
     numpy.ndarray: Values interpolated
 )__doc__")
+      .def_static("_setstate", &Bivariate<Point, Coordinate, Type>::setstate,
+                  pybind11::arg("state"), R"__doc__(
+Rebuild an instance from a registered state of this object.
+
+Args:
+  state: Registred state of this object
+)__doc__")
       .def(pybind11::pickle(
           [](const Bivariate<Point, Coordinate, Type>& self) {
             return self.getstate();

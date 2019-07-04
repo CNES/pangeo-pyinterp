@@ -178,6 +178,13 @@ Args:
 Return:
     numpy.ndarray: Values interpolated
   )__doc__")
+      .def_static("_setstate", &pyinterp::Bicubic<Type>::setstate,
+                  py::arg("state"), R"__doc__(
+Rebuild an instance from a registered state of this object.
+
+Args:
+  state: Registred state of this object
+)__doc__")
       .def(py::pickle(
           [](const pyinterp::Bicubic<Type>& self) { return self.getstate(); },
           [](const py::tuple& tuple) {
