@@ -1,3 +1,11 @@
+# Copyright (c) 2019 CNES
+#
+# All rights reserved. Use of this source code is governed by a
+# BSD-style license that can be found in the LICENSE file.
+"""
+RTree spatial index
+-------------------
+"""
 from typing import Optional, Tuple
 import sys
 import numpy as np
@@ -60,8 +68,8 @@ class RTree:
                 defined by their longitudes and latitudes or a matrix
                 ``(n, 3)`` to add points defined by their longitudes, latitudes
                 and altitudes.
-            values (numpy.ndarray): An array of size ``(n)`` containing the values
-                associated with the coordinates provided
+            values (numpy.ndarray): An array of size ``(n)`` containing the
+                values associated with the coordinates provided
         """
         self._instance.packing(coordinates, values)
 
@@ -73,8 +81,8 @@ class RTree:
                 defined by their longitudes and latitudes or a matrix
                 ``(n, 3)`` to add points defined by their longitudes, latitudes
                 and altitudes.
-            values (numpy.ndarray): An array of size ``(n)`` containing the values
-                associated with the coordinates provided
+            values (numpy.ndarray): An array of size ``(n)`` containing the
+                values associated with the coordinates provided
         """
         self._instance.insert(coordinates, values)
 
@@ -88,23 +96,24 @@ class RTree:
         Search for the nearest K nearest neighbors of a given point.
 
         Args:
-            coordinates (numpy.ndarray): A matrix ``(n, 2)`` to search points defined
-                by their longitudes and latitudes or a matrix ``(n, 3)`` to search
-                points defined by their longitudes, latitudes and altitudes.
+            coordinates (numpy.ndarray): A matrix ``(n, 2)`` to search points
+                defined by their longitudes and latitudes or a matrix
+                ``(n, 3)`` to search points defined by their longitudes,
+                latitudes and altitudes.
             k (int, optional): The number of nearest neighbors to be used for
                 calculating the interpolated value. Defaults to ``4``.
-            within (bool, optional): If true, the method ensures that the neighbors
-                found are located within the point of interest. Defaults to
-                ``false``.
+            within (bool, optional): If true, the method ensures that the
+                neighbors found are located within the point of interest.
+                Defaults to ``false``.
             num_threads (int, optional): The number of threads to use for the
                 computation. If 0 all CPUs are used. If 1 is given, no parallel
                 computing code is used at all, which is useful for debugging.
                 Defaults to ``0``.
         Return:
-            tuple: A tuple containing a matrix describing for each provided position,
-            the distance, in meters, between the provided position and the found
-            neighbors and a matrix containing the value of the different neighbors
-            found for all provided positions.
+            tuple: A tuple containing a matrix describing for each provided
+            position, the distance, in meters, between the provided position
+            and the found neighbors and a matrix containing the value of the
+            different neighbors found for all provided positions.
         """
         self._instance.query(coordinates, k, within, num_threads)
 
@@ -116,31 +125,31 @@ class RTree:
             p: Optional[int] = 2,
             within: Optional[bool] = True,
             num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
-        """Interpolation of the value at the requested position by inverse distance
-weighting method.
+        """Interpolation of the value at the requested position by inverse
+        distance weighting method.
 
-Args:
-    coordinates (numpy.ndarray): A matrix ``(n, 2)`` to interpolate points
-        defined by their longitudes and latitudes or a matrix ``(n, 3)`` to
-        interpolate points defined by their longitudes, latitudes and
-        altitudes.
-    radius (float, optional): The maximum radius of the search (m).
-        Defaults The maximum distance between two points.
-    k (int, optional): The number of nearest neighbors to be used for
-        calculating the interpolated value. Defaults to ``4``.
-    p (float, optional): The power parameters. Defaults to ``2``.
-    within (bool, optional): If true, the method ensures that the neighbors
-        found are located around the point of interest. In other words, this
-        parameter ensures that the calculated values will not be extrapolated.
-        Defaults to ``true``.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
-Return:
-    tuple: The interpolated value and the number of neighbors used in the
-    calculation.
-"""
+        Args:
+            coordinates (numpy.ndarray): A matrix ``(n, 2)`` to interpolate
+                points defined by their longitudes and latitudes or a matrix
+                ``(n, 3)`` to interpolate points defined by their longitudes,
+                latitudes and altitudes.
+            radius (float, optional): The maximum radius of the search (m).
+                Defaults The maximum distance between two points.
+            k (int, optional): The number of nearest neighbors to be used for
+                calculating the interpolated value. Defaults to ``4``.
+            p (float, optional): The power parameters. Defaults to ``2``.
+            within (bool, optional): If true, the method ensures that the
+                neighbors found are located around the point of interest. In
+                other words, this parameter ensures that the calculated values
+                will not be extrapolated. Defaults to ``true``.
+            num_threads (int, optional): The number of threads to use for the
+                computation. If 0 all CPUs are used. If 1 is given, no parallel
+                computing code is used at all, which is useful for debugging.
+                Defaults to ``0``.
+        Return:
+            tuple: The interpolated value and the number of neighbors used in
+            the calculation.
+        """
 
     def __getstate__(self) -> Tuple:
         return (self.dtype, self._instance.__getstate__())

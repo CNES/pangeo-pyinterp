@@ -31,7 +31,7 @@ class Trivariate(bivariate.Bivariate):
         bivariate.GridInterpolator.__init__(self, x, y, z, values)
 
     @property
-    def z(self):
+    def z(self) -> core.Axis:
         """
         Gets the Z-Axis handled by this instance
 
@@ -46,7 +46,7 @@ class Trivariate(bivariate.Bivariate):
                  z: np.ndarray,
                  interpolator: Optional[str] = "bilinear",
                  num_threads: Optional[int] = 0,
-                 **kwargs):
+                 **kwargs) -> np.ndarray:
         """Interpolate the values provided on the defined trivariate function.
 
         Args:
@@ -70,7 +70,7 @@ class Trivariate(bivariate.Bivariate):
             self._n_variate_interpolator(interpolator, **kwargs), num_threads)
 
 
-def from_dataset(dataset: xr.Dataset, variable: str):
+def from_dataset(dataset: xr.Dataset, variable: str) -> Trivariate:
     """Builds the interpolator from the provided dataset.
 
     Args:
@@ -80,7 +80,7 @@ def from_dataset(dataset: xr.Dataset, variable: str):
     Returns:
         Trivariate: the interpolator
     """
-    lon,  lat = interface._lon_lat_from_dataset(dataset, variable, 3)
+    lon, lat = interface._lon_lat_from_dataset(dataset, variable, 3)
     size = len(dataset.variables[variable].shape)
     if size != 3:
         raise ValueError("The number of dimensions of the variable "

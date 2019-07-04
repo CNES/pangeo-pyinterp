@@ -9,68 +9,9 @@ Bivariate interpolation
 from typing import Optional
 import numpy as np
 import xarray as xr
+from . import GridInterpolator
 from . import core
 from . import interface
-
-
-class GridInterpolator:
-    """"""
-    _CLASS = None
-    _INTEROLATOR = None
-
-    def __init__(self, *args):
-        self._class = self._CLASS + interface._core_suffix(args[-1])
-        self._instance = getattr(core, self._class)(*args)
-
-    @classmethod
-    def _n_variate_interpolator(cls, interpolator: str, **kwargs):
-        if interpolator == "bilinear":
-            return getattr(core, "Bilinear" + cls._INTEROLATOR)(**kwargs)
-        elif interpolator == "nearest":
-            return getattr(core, "Nearest" + cls._INTEROLATOR)(**kwargs)
-        elif interpolator == "inverse_distance_weighting":
-            return getattr(core, "InverseDistanceWeighting" +
-                           cls._INTEROLATOR)(**kwargs)
-
-        raise ValueError(f"interpolator {interpolator!r} is not defined")
-
-    @property
-    def x(self):
-        """
-        Gets the X-Axis handled by this instance
-
-        Returns:
-            pyinterp.core.Axis: X-Axis
-        """
-        return self._instance.x
-
-    @property
-    def y(self):
-        """
-        Gets the Y-Axis handled by this instance
-
-        Returns:
-            pyinterp.core.Axis: Y-Axis
-        """
-        return self._instance.y
-
-    @property
-    def array(self):
-        """
-        Gets the values handled by this instance
-
-        Returns:
-            numpy.ndarray: values
-        """
-        return self._instance.array
-
-    def __getstate__(self):
-        return (self._class, self._instance.__getstate__())
-
-    def __setstate__(self, state):
-        self._class = state[0]
-        self._instance = getattr(getattr(core, self._class),
-                                 "_setstate")(state[1])
 
 
 class Bivariate(GridInterpolator):
@@ -92,7 +33,7 @@ class Bivariate(GridInterpolator):
                  y: np.ndarray,
                  interpolator: Optional[str] = "bilinear",
                  num_threads: Optional[int] = 0,
-                 **kwargs):
+                 **kwargs) -> np.ndarray:
         """Interpolate the values provided on the defined bivariate function.
 
         Args:
@@ -115,7 +56,7 @@ class Bivariate(GridInterpolator):
             self._n_variate_interpolator(interpolator, **kwargs), num_threads)
 
 
-def from_dataset(dataset: xr.Dataset, variable: str):
+def from_dataset(dataset: xr.Dataset, variable: str) -> Bivariate:
     """Builds the interpolator from the provided dataset.
 
     Args:

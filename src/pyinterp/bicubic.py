@@ -10,11 +10,11 @@ from typing import Optional
 import numpy as np
 import xarray as xr
 from . import core
-from . import bivariate
+from . import GridInterpolator
 from . import interface
 
 
-class Bicubic(bivariate.GridInterpolator):
+class Bicubic(GridInterpolator):
     """Extension of cubic interpolation for interpolating data points on a
     two-dimensional regular grid. The interpolated surface is smoother than
     corresponding surfaces obtained by bilinear interpolation or
@@ -37,7 +37,7 @@ class Bicubic(bivariate.GridInterpolator):
                  ny: Optional[int] = 3,
                  fitting_model: Optional[str] = "c_spline",
                  boundary: Optional[str] = "undef",
-                 num_threads: Optional[int] = 0):
+                 num_threads: Optional[int] = 0) -> np.ndarray:
         """Evaluate the interpolation.
 
         Args:
@@ -88,7 +88,7 @@ class Bicubic(bivariate.GridInterpolator):
             getattr(core.Axis.Boundary, boundary), num_threads)
 
 
-def from_dataset(dataset: xr.Dataset, variable: str):
+def from_dataset(dataset: xr.Dataset, variable: str) -> Bicubic:
     """Builds the interpolator from the provided dataset.
 
     Args:
