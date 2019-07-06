@@ -81,6 +81,25 @@ def revision():
     with open(meta, "w") as stream:
         stream.write("".join(lines))
 
+    # Updating the version number description for sphinx
+    conf = os.path.join(cwd, 'docs', 'source', 'conf.py')
+    with open(conf, "r") as stream:
+        lines = stream.readlines()
+    pattern = re.compile(r'(\w+)\s+=\s+(.*)')
+
+    for idx, line in enumerate(lines):
+        match = pattern.search(line)
+        if match is not None:
+            if match.group(1) == 'version':
+                lines[idx] = "version = %r\n" % version
+            elif match.group(1) == 'release':
+                lines[idx] = "release = %r\n" % version
+            elif match.group(1) == 'copyright':
+                lines[idx] = "copyright = '(%s, CNES/CLS)'\n" % date.year
+
+    with open(conf, "w") as stream:
+        stream.write("".join(lines))
+
     # Finally, write the file containing the version number.
     with open(module, 'w') as handler:
         handler.write('''"""

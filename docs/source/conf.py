@@ -13,13 +13,13 @@ import os
 # -- Project information -----------------------------------------------------
 
 project = 'pyinterp'
-copyright = '2019, CLS'
-author = 'CLS'
+copyright = '(2019, CNES/CLS)'
+author = 'CNES/CLS'
 
 # The short X.Y version
-version = ''
+version = '0.0'
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '0.0'
 
 # -- General configuration ---------------------------------------------------
 
