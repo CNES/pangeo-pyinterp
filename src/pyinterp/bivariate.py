@@ -8,10 +8,8 @@ Bivariate interpolation
 """
 from typing import Optional
 import numpy as np
-import xarray as xr
 from . import GridInterpolator
 from . import core
-from . import interface
 
 
 class Bivariate(GridInterpolator):
@@ -54,19 +52,3 @@ class Bivariate(GridInterpolator):
         return self._instance.evaluate(
             np.asarray(x), np.asarray(y),
             self._n_variate_interpolator(interpolator, **kwargs), num_threads)
-
-
-def from_dataset(dataset: xr.Dataset, variable: str) -> Bivariate:
-    """Builds the interpolator from the provided dataset.
-
-    Args:
-        dataset (xarray.Dataset): Provided dataset
-        name (str): Variable to interpolate
-
-    Returns:
-        Bivariate: the interpolator
-    """
-    lon, lat = interface._lon_lat_from_dataset(dataset, variable)
-    return Bivariate(core.Axis(dataset.variables[lon].values, is_circle=True),
-                     core.Axis(dataset.variables[lat].values),
-                     dataset.variables[variable].transpose(lon, lat).values)

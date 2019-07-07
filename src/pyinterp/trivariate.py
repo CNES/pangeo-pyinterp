@@ -8,9 +8,7 @@ Trivariate interpolation
 """
 from typing import Optional
 import numpy as np
-import xarray as xr
 from . import core
-from . import interface
 from . import bivariate
 
 
@@ -68,26 +66,3 @@ class Trivariate(bivariate.Bivariate):
         return self._instance.evaluate(
             np.asarray(x), np.asarray(y), np.asarray(z),
             self._n_variate_interpolator(interpolator, **kwargs), num_threads)
-
-
-def from_dataset(dataset: xr.Dataset, variable: str) -> Trivariate:
-    """Builds the interpolator from the provided dataset.
-
-    Args:
-        dataset (xarray.Dataset): Provided dataset
-        name (str): Variable to interpolate
-
-    Returns:
-        Trivariate: the interpolator
-    """
-    lon, lat = interface._lon_lat_from_dataset(dataset, variable, 3)
-    size = len(dataset.variables[variable].shape)
-    if size != 3:
-        raise ValueError("The number of dimensions of the variable "
-                         f"{variable} is incorrect. Expected 3, found {size}.")
-    z = (set(dataset.coords) - {lon, lat}).pop()
-    return Trivariate(
-        core.Axis(dataset.variables[lon].values, is_circle=True),
-        core.Axis(dataset.variables[lat].values),
-        core.Axis(dataset.variables[z].values),
-        dataset.variables[variable].transpose(lon, lat, z).values)

@@ -75,6 +75,6 @@ class GridInterpolator:
         return (self._class, self._instance.__getstate__())
 
     def __setstate__(self, state) -> None:
-        self._class = state[0]
+        self._class, state = state
         self._instance = getattr(getattr(core, self._class),
-                                 "_setstate")(state[1])
+                                 "_setstate")(state)
