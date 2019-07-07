@@ -4,8 +4,7 @@ XArray
 
 Build interpolation objects from XArray Dataset instances
 """
-from typing import Optional, Tuple
-import collections
+from typing import Iterable, Optional, Tuple
 import xarray as xr
 from .. import cf
 from .. import core
@@ -99,13 +98,13 @@ def _lon_lat_from_dataset(dataset: xr.Dataset,
     return lon, lat
 
 
-def _coords(coords, dims):
+def _coords(coords: dict, dims: Iterable):
     """
     Get the list of arguments to provide to the grid interpolation
     functions.
 
     Args:
-        coords (collections.OrderedDict): Mapping from dimension names to the
+        coords (dict): Mapping from dimension names to the
             new coordinates. New coordinate can be an scalar, array-like.
         dims (iterable): List of dimensions handled by the grid
 
@@ -113,14 +112,13 @@ def _coords(coords, dims):
         The list of arguments decoded.
 
     Raises:
-        TypeError if coords is not on instance of ``collections.OrderedDict``
+        TypeError if coords is not on instance of ``dict``
         IndexError if the number of coordinates is different from the
             number of grid dimensions
         IndexError if one of the coordinates is not used by this grid.
     """
-    if not isinstance(coords, collections.OrderedDict):
-        raise TypeError(
-            "coords must be an instance of collections.OrderedDict")
+    if not isinstance(coords, dict):
+        raise TypeError("coords must be an instance of dict")
     if len(coords) != len(dims):
         raise IndexError("too many indices for array")
     unknown = set(coords) - set(dims)
@@ -145,11 +143,11 @@ class Bivariate(bivariate.Bivariate):
             core.Axis(dataset.variables[self._dims[1]].values),
             dataset.variables[variable].transpose(*self._dims).values)
 
-    def evaluate(self, coords: collections.OrderedDict, *args, **kwargs):
+    def evaluate(self, coords: dict, *args, **kwargs):
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
-            coords (collections.OrderedDict): Mapping from dimension names to the
+            coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
                 method :py:meth:`pyinterp.bivariate.Bivariate.evaluate`
@@ -185,11 +183,11 @@ class Bicubic(bicubic.Bicubic):
             core.Axis(dataset.variables[self._dims[1]].values),
             dataset.variables[variable].transpose(*self._dims).values)
 
-    def evaluate(self, coords: collections.OrderedDict, *args, **kwargs):
+    def evaluate(self, coords: dict, *args, **kwargs):
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
-            coords (collections.OrderedDict): Mapping from dimension names to the
+            coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
                 method :py:meth:`pyinterp.bicubic.Bicubic.evaluate`
@@ -228,11 +226,11 @@ class Trivariate(trivariate.Trivariate):
             core.Axis(dataset.variables[z].values),
             dataset.variables[variable].transpose(x, y, z).values)
 
-    def evaluate(self, coords: collections.OrderedDict, *args, **kwargs):
+    def evaluate(self, coords: dict, *args, **kwargs):
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
-            coords (collections.OrderedDict): Mapping from dimension names to the
+            coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
                 method :py:meth:`pyinterp.trivariate.Trivariate.evaluate`
