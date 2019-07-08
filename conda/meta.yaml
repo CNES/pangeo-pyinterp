@@ -16,9 +16,11 @@ requirements:
     - numpy
     - python {{ python }}
     - setuptools
+    - xarray
   run:
     - numpy
     - python {{ python }}
+    - xarray
 
 test:
   imports:

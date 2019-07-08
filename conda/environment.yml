@@ -1,0 +1,8 @@
+name: RTD
+dependencies:
+  - numpy
+  - xarray
+  - pyinterp
+
+channels:
+  - fbriol
