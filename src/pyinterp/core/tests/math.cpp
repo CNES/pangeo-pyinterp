@@ -104,3 +104,17 @@ TEST(math, is_same) {
   EXPECT_TRUE(math::is_same<double>(M_PI, math::pi<float>(), 1e-6));
   EXPECT_FALSE(math::is_same<double>(M_PI, math::pi<float>(), 1e-12));
 }
+
+TEST(math, fill_value) {
+  auto float_ = math::Fill<float>();
+  EXPECT_TRUE(std::isnan(float_.value()));
+  EXPECT_FALSE(float_.is_not(float_.value()));
+  EXPECT_FALSE(float_.is_not(std::numeric_limits<float>::quiet_NaN()));
+  EXPECT_TRUE(float_.is_not(1));
+
+  auto int_ = math::Fill<int>();
+  EXPECT_EQ(int_.value(), std::numeric_limits<int>::max());
+  EXPECT_FALSE(int_.is_not(int_.value()));
+  EXPECT_FALSE(int_.is_not(std::numeric_limits<int>::max()));
+  EXPECT_TRUE(int_.is_not(1));
+}

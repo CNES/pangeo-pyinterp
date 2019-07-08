@@ -60,7 +60,7 @@ inline constexpr T normalize_angle(const T& x, const T& min = T(-180),
 /// Computes the remainder of the operation x/y
 ///
 /// @return a result with the same sign as its second operand
-template <typename T, typename = std::enable_if_t<std::is_integral<T>::value> >
+template <typename T, typename = std::enable_if_t<std::is_integral<T>::value>>
 inline constexpr T remainder(const T& x, const T& y) noexcept {
   auto result = x % y;
   return result != 0 && (result ^ y) < 0 ? result + y : result;
@@ -197,6 +197,32 @@ inline constexpr bool is_same(const T& a, const T& b,
                               const T& epsilon) noexcept {
   return std::fabs(a - b) <= epsilon;
 }
+
+/// Represents a filling value
+template <typename T, class Enable = void>
+struct Fill;
+
+/// Represents a filling value for floating point number
+template <class T>
+struct Fill<T, std::enable_if_t<std::is_floating_point<T>::value>> {
+  static inline constexpr T value() noexcept {
+    return std::numeric_limits<T>::quiet_NaN();
+  }
+  static inline constexpr T is_not(const T& x) noexcept {
+    return !std::isnan(x);
+  }
+};
+
+/// Represents a filling value for integer number
+template <class T>
+struct Fill<T, std::enable_if_t<std::is_integral<T>::value>> {
+  static inline constexpr T value() noexcept {
+    return std::numeric_limits<T>::max();
+  }
+  static inline constexpr T is_not(const T& x) noexcept {
+    return Fill::value() != x;
+  }
+};
 
 }  // namespace math
 }  // namespace detail

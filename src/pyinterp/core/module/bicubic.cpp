@@ -216,12 +216,4 @@ Bicubic fitting model
 
   implement_bicubic<double>(m, "BicubicFloat64");
   implement_bicubic<float>(m, "BicubicFloat32");
-  implement_bicubic<int64_t>(m, "BicubicInt64");
-  implement_bicubic<uint64_t>(m, "BicubicUInt64");
-  implement_bicubic<int32_t>(m, "BicubicInt32");
-  implement_bicubic<uint32_t>(m, "BicubicUInt32");
-  implement_bicubic<int16_t>(m, "BicubicInt16");
-  implement_bicubic<uint16_t>(m, "BicubicUInt16");
-  implement_bicubic<int8_t>(m, "BicubicInt8");
-  implement_bicubic<uint8_t>(m, "BicubicUInt8");
 }
