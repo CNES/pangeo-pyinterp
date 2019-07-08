@@ -97,7 +97,7 @@ struct Bilinear : public Bivariate<Point, T> {
   }
 };
 
-/// Inverse distance weigthing interpolation
+/// Inverse distance weighting interpolation
 ///
 /// @see https://en.wikipedia.org/wiki/Inverse_distance_weighting
 ///
