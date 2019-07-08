@@ -9,6 +9,7 @@
 #include "pyinterp/grid.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 namespace pyinterp {
 
@@ -72,6 +73,9 @@ class Bivariate : public Grid2D<Type> {
       const pybind11::array_t<Coordinate>& y,
       const BivariateInterpolator<Point, Coordinate>* interpolator,
       const size_t num_threads) {
+    pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
+    pyinterp::detail::check_ndarray_shape("x", x, "y", y);
+
     auto size = x.size();
     auto result =
         pybind11::array_t<Coordinate>(pybind11::array::ShapeContainer{size});
@@ -90,24 +94,24 @@ class Bivariate : public Grid2D<Type> {
           [&](size_t start, size_t end) {
             try {
               for (size_t ix = start; ix < end; ++ix) {
-                auto x_indexes = this->x_.find_indexes(_x(ix));
-                auto y_indexes = this->y_.find_indexes(_y(ix));
+                auto x_indexes = this->x_->find_indexes(_x(ix));
+                auto y_indexes = this->y_->find_indexes(_y(ix));
 
                 if (x_indexes.has_value() && y_indexes.has_value()) {
                   int64_t ix0, ix1, iy0, iy1;
                   std::tie(ix0, ix1) = *x_indexes;
                   std::tie(iy0, iy1) = *y_indexes;
 
-                  auto x0 = this->x_(ix0);
+                  auto x0 = (*this->x_)(ix0);
 
                   _result(ix) = interpolator->evaluate(
                       Point<Coordinate>(
-                          this->x_.is_angle()
+                          this->x_->is_angle()
                               ? detail::math::normalize_angle(_x(ix), x0)
                               : _x(ix),
                           _y(ix)),
-                      Point<Coordinate>(this->x_(ix0), this->y_(iy0)),
-                      Point<Coordinate>(this->x_(ix1), this->y_(iy1)),
+                      Point<Coordinate>((*this->x_)(ix0), (*this->y_)(iy0)),
+                      Point<Coordinate>((*this->x_)(ix1), (*this->y_)(iy1)),
                       static_cast<Coordinate>(this->ptr_(ix0, iy0)),
                       static_cast<Coordinate>(this->ptr_(ix0, iy1)),
                       static_cast<Coordinate>(this->ptr_(ix1, iy0)),
@@ -203,7 +207,8 @@ void implement_bivariate(pybind11::module& m, const char* class_name) {
                                                        R"__doc__(
 Interpolation of bivariate functions
 )__doc__")
-      .def(pybind11::init<Axis, Axis, pybind11::array_t<Type>>(),
+      .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
+                          pybind11::array_t<Type>>(),
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
            R"__doc__(
 Default constructor
@@ -263,6 +268,13 @@ Args:
         Defaults to ``0``.
 Return:
     numpy.ndarray: Values interpolated
+)__doc__")
+      .def_static("_setstate", &Bivariate<Point, Coordinate, Type>::setstate,
+                  pybind11::arg("state"), R"__doc__(
+Rebuild an instance from a registered state of this object.
+
+Args:
+  state: Registred state of this object
 )__doc__")
       .def(pybind11::pickle(
           [](const Bivariate<Point, Coordinate, Type>& self) {

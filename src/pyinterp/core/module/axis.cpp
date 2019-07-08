@@ -123,7 +123,8 @@ Axis Axis::setstate(const pybind11::tuple& state) {
 }  // namespace pyinterp
 
 void init_axis(py::module& m) {
-  auto axis = py::class_<pyinterp::Axis>(m, "Axis", R"__doc__(
+  auto axis = py::class_<pyinterp::Axis, std::shared_ptr<pyinterp::Axis>>(
+      m, "Axis", R"__doc__(
 A coordinate axis is a Variable that specifies one of the coordinates
 of a variable's values.
 )__doc__");

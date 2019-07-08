@@ -57,6 +57,7 @@ Return:
       .def("clear", &pyinterp::RTree<Coordinate, Type>::clear,
            "Removes all values stored in the container.")
       .def("packing", &pyinterp::RTree<Coordinate, Type>::packing,
+           py::arg("coordinates"), py::arg("values"),
            R"__doc__(
 The tree is created using packing algorithm (The old data is erased
 before construction.)
@@ -69,6 +70,7 @@ Args:
         associated with the coordinates provided
 )__doc__")
       .def("insert", &pyinterp::RTree<Coordinate, Type>::insert,
+           py::arg("coordinates"), py::arg("values"),
            R"__doc__(
 Insert new data into the search tree.
 

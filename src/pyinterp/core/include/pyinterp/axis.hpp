@@ -5,12 +5,14 @@
 #pragma once
 #include "pyinterp/detail/axis.hpp"
 #include "pyinterp/detail/math.hpp"
+#include <memory>
 #include <pybind11/numpy.h>
 
 namespace pyinterp {
 
 /// Implementation of the Python wrapper
-class Axis : public detail::Axis {
+class Axis;
+class Axis : public detail::Axis, public std::enable_shared_from_this<Axis> {
  public:
   using detail::Axis::Axis;
 

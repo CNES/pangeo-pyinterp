@@ -365,7 +365,7 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
 
                 auto result = detail::geodetic::RTree<
                     Coordinate, Type>::inverse_distance_weighting(point, radius,
-                                                                  k, within);
+                                                                  k, p, within);
                 _data(ix) = result.first;
                 _neighbors(ix) = result.second;
               }

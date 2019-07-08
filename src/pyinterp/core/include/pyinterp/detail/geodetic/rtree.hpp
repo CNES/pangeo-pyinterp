@@ -170,15 +170,16 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
   /// @param radius The maximum radius of the search (m).
   /// @param k The number of nearest neighbors to be used for calculating the
   /// interpolated value.
-  /// @return a tuple containing the interpolated value and the number of
-  /// neighbors used in the calculation.
+  /// @param p the power parameter.
   /// @param within If true, the method ensures that the neighbors found are
   /// located around the point of interest. In other words, this parameter
   /// ensures that the calculated values will not be extrapolated.
+  /// @return a tuple containing the interpolated value and the number of
+  /// neighbors used in the calculation.
   std::pair<Type, uint32_t> inverse_distance_weighting(
       const geometry::EquatorialPoint3D<Coordinate> &point,
       distance_t radius = std::numeric_limits<distance_t>::max(),
-      uint32_t k = 4, bool within = true) const {
+      uint32_t k = 4, uint32_t p = 2, bool within = true) const {
     Type result = 0;
     Type total_weight = 0;
 
@@ -199,7 +200,7 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
       if (distance <= radius) {
         // If the neighbor found is within an acceptable radius it can be taken
         // into account in the calculation.
-        auto wk = 1 / math::sqr(distance);
+        auto wk = 1 / std::pow(distance, static_cast<Type>(p));
         total_weight += wk;
         result += item.second * wk;
         ++neighbors;

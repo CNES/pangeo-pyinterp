@@ -3,42 +3,56 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 """
-Bivariate interpolation
-=======================
+Trivariate interpolation
+========================
 """
 from typing import Optional
 import numpy as np
-from . import GridInterpolator
 from . import core
+from . import bivariate
 
 
-class Bivariate(GridInterpolator):
-    """Interpolation of bivariate functions
+class Trivariate(bivariate.Bivariate):
+    """Interpolation of trivariate functions
 
     Args:
         x (pyinterp.core.Axis): X-Axis
         y (pyinterp.core.Axis): Y-Axis
-        array (numpy.ndarray): Bivariate function
+        z (pyinterp.core.Axis): Z-Axis
+        array (numpy.ndarray): Trivariate function
     """
-    _CLASS = "Bivariate"
-    _INTEROLATOR = "2D"
+    _CLASS = "Trivariate"
+    _INTEROLATOR = "3D"
 
-    def __init__(self, x: core.Axis, y: core.Axis, values: np.ndarray):
-        super(Bivariate, self).__init__(x, y, values)
+    def __init__(self, x: core.Axis, y: core.Axis, z: core.Axis,
+                 values: np.ndarray):
+        bivariate.GridInterpolator.__init__(self, x, y, z, values)
+
+    @property
+    def z(self) -> core.Axis:
+        """
+        Gets the Z-Axis handled by this instance
+
+        Returns:
+            pyinterp.core.Axis: Z-Axis
+        """
+        return self._instance.z
 
     def evaluate(self,
                  x: np.ndarray,
                  y: np.ndarray,
+                 z: np.ndarray,
                  interpolator: Optional[str] = "bilinear",
                  num_threads: Optional[int] = 0,
                  **kwargs) -> np.ndarray:
-        """Interpolate the values provided on the defined bivariate function.
+        """Interpolate the values provided on the defined trivariate function.
 
         Args:
             x (numpy.ndarray): X-values
             y (numpy.ndarray): Y-values
+            z (numpy.ndarray): Z-values
             interpolator (str, optional): The method of interpolation to
-                perform. Supported are ``bilinear``, ``nearest``, and
+                perform. Supported are ``bilinear`` and ``nearest``, and
                 ``inverse_distance_weighting``. Default to ``bilinear``.
             num_threads (int, optional): The number of threads to use for the
                 computation. If 0 all CPUs are used. If 1 is given, no parallel
@@ -50,5 +64,5 @@ class Bivariate(GridInterpolator):
             numpy.ndarray: Values interpolated
         """
         return self._instance.evaluate(
-            np.asarray(x), np.asarray(y),
+            np.asarray(x), np.asarray(y), np.asarray(z),
             self._n_variate_interpolator(interpolator, **kwargs), num_threads)

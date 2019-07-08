@@ -3,13 +3,14 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include "pyinterp/bivariate.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/trivariate.hpp"
 #include "pyinterp/detail/thread.hpp"
-#include "pyinterp/bivariate.hpp"
 #include "pyinterp/grid.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 namespace pyinterp {
 
@@ -33,8 +34,12 @@ class Trivariate : public Grid3D<Type> {
       const pybind11::array_t<Coordinate>& z,
       const Bivariate3D<Point, Coordinate>* interpolator,
       const size_t num_threads) {
+    pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
+    pyinterp::detail::check_ndarray_shape("x", x, "y", y);
+
     auto size = x.size();
-    auto result = pybind11::array_t<Coordinate>(pybind11::array::ShapeContainer{size});
+    auto result =
+        pybind11::array_t<Coordinate>(pybind11::array::ShapeContainer{size});
     auto _x = x.template unchecked<1>();
     auto _y = y.template unchecked<1>();
     auto _z = z.template unchecked<1>();
@@ -51,9 +56,9 @@ class Trivariate : public Grid3D<Type> {
           [&](size_t start, size_t end) {
             try {
               for (size_t ix = start; ix < end; ++ix) {
-                auto x_indexes = this->x_.find_indexes(_x(ix));
-                auto y_indexes = this->y_.find_indexes(_y(ix));
-                auto z_indexes = this->z_.find_indexes(_z(ix));
+                auto x_indexes = this->x_->find_indexes(_x(ix));
+                auto y_indexes = this->y_->find_indexes(_y(ix));
+                auto z_indexes = this->z_->find_indexes(_z(ix));
 
                 if (x_indexes.has_value() && y_indexes.has_value() &&
                     z_indexes.has_value()) {
@@ -62,19 +67,19 @@ class Trivariate : public Grid3D<Type> {
                   std::tie(iy0, iy1) = *y_indexes;
                   std::tie(iz0, iz1) = *z_indexes;
 
-                  auto x0 = this->x_(ix0);
+                  auto x0 = (*this->x_)(ix0);
 
                   _result(ix) =
                       pyinterp::detail::math::trivariate<Point, Coordinate>(
                           Point<Coordinate>(
-                              this->x_.is_angle()
+                              this->x_->is_angle()
                                   ? detail::math::normalize_angle(_x(ix), x0)
                                   : _x(ix),
                               _y(ix), _z(ix)),
-                          Point<Coordinate>(this->x_(ix0), this->y_(iy0),
-                                            this->z_(iz0)),
-                          Point<Coordinate>(this->x_(ix1), this->y_(iy1),
-                                            this->z_(iz1)),
+                          Point<Coordinate>((*this->x_)(ix0), (*this->y_)(iy0),
+                                            (*this->z_)(iz0)),
+                          Point<Coordinate>((*this->x_)(ix1), (*this->y_)(iy1),
+                                            (*this->z_)(iz1)),
                           static_cast<Coordinate>(this->ptr_(ix0, iy0, iz0)),
                           static_cast<Coordinate>(this->ptr_(ix0, iy1, iz0)),
                           static_cast<Coordinate>(this->ptr_(ix1, iy0, iz0)),
@@ -118,7 +123,8 @@ void implement_trivariate(pybind11::module& m, const char* const class_name) {
                                                         R"__doc__(
 Interpolation of trivariate functions
 )__doc__")
-      .def(pybind11::init<Axis, Axis, Axis, pybind11::array_t<Type>>(),
+      .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
+                          std::shared_ptr<Axis>, pybind11::array_t<Type>>(),
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
            pybind11::arg("array"),
            R"__doc__(
@@ -192,6 +198,13 @@ Args:
         Defaults to ``0``.
 Return:
     numpy.ndarray: Values interpolated
+)__doc__")
+      .def_static("_setstate", &Trivariate<Point, Coordinate, Type>::setstate,
+                  pybind11::arg("state"), R"__doc__(
+Rebuild an instance from a registered state of this object.
+
+Args:
+  state: Registred state of this object
 )__doc__")
       .def(pybind11::pickle(
           [](const Trivariate<Point, Coordinate, Type>& self) {
