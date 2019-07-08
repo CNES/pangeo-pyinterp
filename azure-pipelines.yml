@@ -1,0 +1,97 @@
+trigger:
+ - master
+ - develop
+jobs:
+- job:
+  displayName: Ubuntu-16.04
+  pool:
+    vmImage: 'ubuntu-16.04'
+  strategy:
+    matrix:
+      Python37:
+        python.version: '3.7'
+  steps:
+  - checkout: self
+    fetchDepth: 1
+  - bash: git submodule update --init --recursive
+    displayName: Initialize the submodules
+  - script: |
+      sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+      sudo apt-get update
+      sudo apt-get install -y libc++-dev libc++abi-dev libc++abi1 libstdc++-7-dev gcc-7 g++-7
+    displayName: Install GCC
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+  - bash: conda create --yes --quiet --name Build
+    displayName: Create Anaconda environment
+  - bash: |
+      source activate Build
+      conda install --yes --quiet --name Build python=$PYTHON_VERSION cmake eigen gsl libboost numpy setuptools netCDF4
+  - bash: |
+      source activate Build
+      python setup.py build -x g++-7
+    displayName: Build package
+  - bash: |
+      source activate Build
+      python setup.py test
+    displayName: Test cases
+- job:
+  displayName: macOS-10.14
+  pool:
+    vmImage: 'macOS-10.14'
+  strategy:
+    matrix:
+      Python37:
+        python.version: '3.7'
+  steps:
+  - checkout: self
+    fetchDepth: 1
+  - bash: git submodule update --init --recursive
+    displayName: Initialize the submodules
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+  - bash: conda create --yes --quiet --name Build
+    displayName: Create Anaconda environment
+  - bash: |
+      source activate Build
+      conda install --yes --quiet --name Build python=$PYTHON_VERSION cmake eigen gsl libboost numpy setuptools netCDF4
+    displayName: Install build requirements
+  - bash: |
+      source activate Build
+      python setup.py build
+    displayName: Build package
+  - bash: |
+      source activate Build
+      python setup.py test
+    displayName: Test cases
+- job:
+  displayName: vs2017-win2016
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python37:
+        python.version: '3.7'
+  steps:
+  - checkout: self
+    fetchDepth: 1
+  - script: git submodule update --init --recursive
+    displayName: Initialize the submodules
+  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: Add conda to PATH
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+  - script: conda create --yes --quiet --name Build
+    displayName: Create Anaconda environment
+  - script: |
+      call activate Build
+      conda install --yes --quiet --name Build python=%PYTHON_VERSION% cmake eigen gsl libboost numpy setuptools netCDF4
+    displayName: Install build requirements
+  - script: |
+      call activate Build
+      python setup.py build
+    displayName: Build package
+  - script: |
+      call activate Build
+      python setup.py test
+    displayName: Test cases
