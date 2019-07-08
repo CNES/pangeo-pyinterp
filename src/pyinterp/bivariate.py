@@ -38,7 +38,7 @@ class Bivariate(GridInterpolator):
             x (numpy.ndarray): X-values
             y (numpy.ndarray): Y-values
             interpolator (str, optional): The method of interpolation to
-                perform. Supported are ``bilinear`` and ``nearest``, and
+                perform. Supported are ``bilinear``, ``nearest``, and
                 ``inverse_distance_weighting``. Default to ``bilinear``.
             num_threads (int, optional): The number of threads to use for the
                 computation. If 0 all CPUs are used. If 1 is given, no parallel

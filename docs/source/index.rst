@@ -6,15 +6,28 @@
 Welcome to pyinterp's documentation!
 ====================================
 
+.. only: not latex
+
+    Contents:
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
 
+   about
+   changelog
 
+.. toctree::
+   :caption: The Basics
+   :maxdepth: 1
 
-Indices and tables
-==================
+   axis
+   setup
+   conda
+   examples
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :caption: API Documentation
+   :maxdepth: 1
+
+   api
+

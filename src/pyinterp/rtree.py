@@ -115,7 +115,7 @@ class RTree:
             and the found neighbors and a matrix containing the value of the
             different neighbors found for all provided positions.
         """
-        self._instance.query(coordinates, k, within, num_threads)
+        return self._instance.query(coordinates, k, within, num_threads)
 
     def inverse_distance_weighting(
             self,
@@ -150,6 +150,8 @@ class RTree:
             tuple: The interpolated value and the number of neighbors used in
             the calculation.
         """
+        return self._instance.inverse_distance_weighting(
+            coordinates, radius, k, p, within, num_threads)
 
     def __getstate__(self) -> Tuple:
         return (self.dtype, self._instance.__getstate__())

@@ -158,7 +158,7 @@ class Bivariate(bivariate.Bivariate):
             The interpolated values
         """
         return super(Bivariate, self).evaluate(*_coords(coords, self._dims),
-                                               **kwargs)
+                                               *args, **kwargs)
 
     def __getstate__(self) -> Tuple:
         return (self._dims, super(Bivariate, self).__getstate__())
@@ -198,7 +198,7 @@ class Bicubic(bicubic.Bicubic):
             The interpolated values
         """
         return super(Bicubic, self).evaluate(*_coords(coords, self._dims),
-                                             **kwargs)
+                                             *args, **kwargs)
 
     def __getstate__(self) -> Tuple:
         return (self._dims, super(Bicubic, self).__getstate__())
@@ -241,7 +241,7 @@ class Trivariate(trivariate.Trivariate):
             The interpolated values
         """
         return super(Trivariate, self).evaluate(*_coords(coords, self._dims),
-                                                **kwargs)
+                                                *args, **kwargs)
 
     def __getstate__(self) -> Tuple:
         return (self._dims, super(Trivariate, self).__getstate__())
