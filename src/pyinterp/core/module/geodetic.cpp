@@ -19,14 +19,14 @@ void init_point2d(py::module& m) {
   py::class_<geodetic::Point2D<T>>(m, "Point2D", R"__doc__(
     Handle a point in a equatorial spherical coordinates system in degrees.
 )__doc__")
-      .def(py::init<>(), "Default constructor")
+      .def(py::init<>())
       .def(py::init<T, T>(), py::arg("lon"), py::arg("lat"),
            R"__doc__(
-    Build a new point with the coordinates provided.
+Build a new point with the coordinates provided.
 
-    Args:
-        lon (float): Longitude in degrees
-        lat (float): Latitude in degrees
+Args:
+    lon (float): Longitude in degrees
+    lat (float): Latitude in degrees
 )__doc__")
       .def_property("lon",
                     static_cast<const T& (geodetic::Point2D<T>::*)() const>(
@@ -53,16 +53,17 @@ void init_box2d(py::module& m) {
   py::class_<geodetic::Box2D<T>>(m, "Box2D", R"__doc__(
     Defines a box made of two describing points.
 )__doc__")
-      .def(py::init<>(), "Default constructor")
+      .def(py::init<>())
       .def(py::init<geodetic::Point2D<T>, geodetic::Point2D<T>>(),
            py::arg("min_corner"), py::arg("max_corner"),
            R"__doc__(
 Constructor taking the minimum corner point and the maximum corner point.
-    Args:
-        min_corner (pyinterp.core.geodetic.Point2D): the minimum corner point
-            (lower left) of the box
-        max_corner (pyinterp.core.geodetic.Point2D): the minimum corner point
-            (upper right) of the box
+
+Args:
+    min_corner (pyinterp.core.geodetic.Point2D): the minimum corner point
+        (lower left) of the box
+    max_corner (pyinterp.core.geodetic.Point2D): the maximum corner point
+        (upper right) of the box
 )__doc__")
       .def_property(
           "min_corner",
