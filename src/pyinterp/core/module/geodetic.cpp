@@ -3,6 +3,8 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/geodetic/coordinates.hpp"
+#include "pyinterp/geodetic/box.hpp"
+#include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/system.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
@@ -11,6 +13,118 @@
 
 namespace geodetic = pyinterp::geodetic;
 namespace py = pybind11;
+
+template <typename T>
+void init_point2d(py::module& m) {
+  py::class_<geodetic::Point2D<T>>(m, "Point2D", R"__doc__(
+    Handle a point in a equatorial spherical coordinates system in degrees.
+)__doc__")
+      .def(py::init<>(), "Default constructor")
+      .def(py::init<T, T>(), py::arg("lon"), py::arg("lat"),
+           R"__doc__(
+    Build a new point with the coordinates provided.
+
+    Args:
+        lon (float): Longitude in degrees
+        lat (float): Latitude in degrees
+)__doc__")
+      .def_property("lon",
+                    static_cast<const T& (geodetic::Point2D<T>::*)() const>(
+                        &geodetic::Point2D<T>::lon),
+                    static_cast<void (geodetic::Point2D<T>::*)(const T&)>(
+                        &geodetic::Point2D<T>::lon),
+                    "Longitude coordinate in degrees")
+      .def_property("lat",
+                    static_cast<const T& (geodetic::Point2D<T>::*)() const>(
+                        &geodetic::Point2D<T>::lat),
+                    static_cast<void (geodetic::Point2D<T>::*)(const T&)>(
+                        &geodetic::Point2D<T>::lat),
+                    "Latitude coordinate in degrees")
+      .def("__repr__", &geodetic::Point2D<T>::to_string)
+      .def(py::pickle(
+          [](const geodetic::Point2D<T>& self) { return self.getstate(); },
+          [](const py::tuple& state) {
+            return geodetic::Point2D<T>::setstate(state);
+          }));
+}
+
+template <typename T>
+void init_box2d(py::module& m) {
+  py::class_<geodetic::Box2D<T>>(m, "Box2D", R"__doc__(
+    Defines a box made of two describing points.
+)__doc__")
+      .def(py::init<>(), "Default constructor")
+      .def(py::init<geodetic::Point2D<T>, geodetic::Point2D<T>>(),
+           py::arg("min_corner"), py::arg("max_corner"),
+           R"__doc__(
+Constructor taking the minimum corner point and the maximum corner point.
+    Args:
+        min_corner (pyinterp.core.geodetic.Point2D): the minimum corner point
+            (lower left) of the box
+        max_corner (pyinterp.core.geodetic.Point2D): the minimum corner point
+            (upper right) of the box
+)__doc__")
+      .def_property(
+          "min_corner",
+          [](const geodetic::Box2D<T>& self) { return self.min_corner(); },
+          [](geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
+              -> void { self.min_corner() = point; },
+          "The minimal corner (lower left) of the box")
+      .def_property(
+          "max_corner",
+          [](const geodetic::Box2D<T>& self) { return self.max_corner(); },
+          [](geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
+              -> void { self.max_corner() = point; },
+          "The maximal corner (upper right) of the box")
+      .def_static("entire_earth", &geodetic::Box2D<T>::entire_earth,
+                  R"__doc__(
+Get a box that covers the entire Earth. In other words, a box that covers all
+positions, whatever they may be.
+
+Returns:
+    pyinterp.core.geodetic.Box2D: a box that covers the entire Earth
+)__doc__")
+      .def("covered_by",
+           [](const geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
+               -> bool { return self.covered_by(point); },
+           py::arg("point"), R"__doc__(
+Test if the given point is inside or on border of this box
+
+Args:
+    point (pyinterp.geodectic.Point2D): point to test
+
+Returns:
+    bool: True if the given point is inside or on border of this Box
+)__doc__")
+      .def("covered_by",
+           [](const geodetic::Box2D<T>& self,
+              const Eigen::Ref<const Eigen::VectorXd>& lon,
+              const Eigen::Ref<const Eigen::VectorXd>& lat,
+              const size_t num_threads = 0) -> py::array_t<int8_t> {
+             return self.covered_by(lon, lat);
+           },
+           py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
+Test if the coordinates of the points provided are located inside or at the
+edge of this box.
+
+Args:
+    lon (numpy.ndarray): Longitudes coordinates in degrees to check
+    lat (numpy.ndarray): Latitude coordinates in degrees to check
+    num_threads (int, optional): The number of threads to use for the
+        computation. If 0 all CPUs are used. If 1 is given, no parallel
+        computing code is used at all, which is useful for debugging.
+        Default to 1.
+Returns:
+    (numpy.ndarray): a vector containing a flag equal to 1 if the coordinate
+    is located in the box or at the edge otherwise 0.
+)__doc__")
+      .def("__repr__", &geodetic::Box2D<T>::to_string)
+      .def(py::pickle(
+          [](const geodetic::Box2D<T>& self) { return self.getstate(); },
+          [](const py::tuple& state) {
+            return geodetic::Box2D<T>::setstate(state);
+          }));
+}
 
 void init_geodetic(py::module& m) {
   auto _system = py::class_<pyinterp::detail::geodetic::System>(
@@ -200,4 +314,7 @@ Return:
           [](const py::tuple& state) {
             return geodetic::Coordinates::setstate(state);
           }));
+
+  init_point2d<double>(m);
+  init_box2d<double>(m);
 }

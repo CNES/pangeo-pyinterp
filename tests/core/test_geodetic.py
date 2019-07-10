@@ -19,32 +19,35 @@ class TextSystem(unittest.TestCase):
         self.assertAlmostEqual(wgs84.flattening, 1 / 298.257223563)
         self.assertAlmostEqual(wgs84.semi_minor_axis(),
                                6356752.314245179497563967)
-        self.assertAlmostEqual(
-            math.sqrt(wgs84.first_eccentricity_squared()),
-            0.081819190842622,
-            delta=1e-15)
-        self.assertAlmostEqual(
-            math.sqrt(wgs84.second_eccentricity_squared()),
-            8.2094437949696 * 1e-2,
-            delta=1e-15)
-        self.assertAlmostEqual(
-            wgs84.equatorial_circumference() * 1e-3, 40075.017, delta=1e-3)
-        self.assertAlmostEqual(
-            wgs84.equatorial_circumference(False) * 1e-3,
-            39940.652,
-            delta=1e-3)
-        self.assertAlmostEqual(
-            wgs84.polar_radius_of_curvature(), 6399593.6258, delta=1e-4)
-        self.assertAlmostEqual(
-            wgs84.equatorial_radius_of_curvature(), 6335439.3272, delta=1e-4)
+        self.assertAlmostEqual(math.sqrt(wgs84.first_eccentricity_squared()),
+                               0.081819190842622,
+                               delta=1e-15)
+        self.assertAlmostEqual(math.sqrt(wgs84.second_eccentricity_squared()),
+                               8.2094437949696 * 1e-2,
+                               delta=1e-15)
+        self.assertAlmostEqual(wgs84.equatorial_circumference() * 1e-3,
+                               40075.017,
+                               delta=1e-3)
+        self.assertAlmostEqual(wgs84.equatorial_circumference(False) * 1e-3,
+                               39940.652,
+                               delta=1e-3)
+        self.assertAlmostEqual(wgs84.polar_radius_of_curvature(),
+                               6399593.6258,
+                               delta=1e-4)
+        self.assertAlmostEqual(wgs84.equatorial_radius_of_curvature(),
+                               6335439.3272,
+                               delta=1e-4)
         self.assertAlmostEqual(wgs84.axis_ratio(), 0.996647189335, delta=1e-12)
-        self.assertAlmostEqual(
-            wgs84.linear_eccentricity(), 5.2185400842339 * 1E5, delta=1e-6)
+        self.assertAlmostEqual(wgs84.linear_eccentricity(),
+                               5.2185400842339 * 1E5,
+                               delta=1e-6)
         self.assertAlmostEqual(wgs84.mean_radius(), 6371008.7714, delta=1e-4)
-        self.assertAlmostEqual(
-            wgs84.authalic_radius(), 6371007.1809, delta=1e-4)
-        self.assertAlmostEqual(
-            wgs84.volumetric_radius(), 6371000.7900, delta=1e-4)
+        self.assertAlmostEqual(wgs84.authalic_radius(),
+                               6371007.1809,
+                               delta=1e-4)
+        self.assertAlmostEqual(wgs84.volumetric_radius(),
+                               6371000.7900,
+                               delta=1e-4)
 
     def test_operator(self):
         wgs84 = core.geodetic.System()
@@ -69,8 +72,9 @@ class TestCoordinates(unittest.TestCase):
         self.assertAlmostEqual(168.0, alt[0], delta=1e-8)
 
     def test_lla_to_ecef(self):
-        x, y, z = core.geodetic.Coordinates(None).lla_to_ecef(
-            [78.042068], [27.173891], [168.0])
+        x, y, z = core.geodetic.Coordinates(None).lla_to_ecef([78.042068],
+                                                              [27.173891],
+                                                              [168.0])
         self.assertAlmostEqual(1176498.769459714, x[0], delta=1e-8)
         self.assertAlmostEqual(5555043.905503586, y[0], delta=1e-8)
         self.assertAlmostEqual(2895446.8901510699, z[0], delta=1e-8)
@@ -93,6 +97,62 @@ class TestCoordinates(unittest.TestCase):
         a = core.geodetic.Coordinates(None)
         b = pickle.loads(pickle.dumps(a))
         self.assertTrue(np.all(a.__getstate__() == b.__getstate__()))
+
+
+class TestPoint2D(unittest.TestCase):
+    def test_init(self):
+        pt = core.geodetic.Point2D(12, 24)
+        self.assertEqual(pt.lon, 12)
+        self.assertEqual(pt.lat, 24)
+        self.assertEqual(str(pt), "(12, 24)")
+        pt.lon = 55
+        self.assertEqual(pt.lon, 55)
+        pt.lat = 33
+        self.assertEqual(pt.lat, 33)
+
+    def test_pickle(self):
+        a = core.geodetic.Point2D(1, 2)
+        b = pickle.loads(pickle.dumps(a))
+        self.assertEqual(a.lon, b.lon)
+        self.assertEqual(a.lat, b.lat)
+        self.assertNotEqual(id(a), id(b))
+
+
+class TestBox2D(unittest.TestCase):
+    def test_init(self):
+        min_corner = core.geodetic.Point2D(0, 1)
+        max_corner = core.geodetic.Point2D(2, 3)
+
+        box = core.geodetic.Box2D(min_corner, max_corner)
+        self.assertEqual(str(box), "((0, 1), (2, 3))")
+        self.assertEqual(box.min_corner.lon, 0)
+        self.assertEqual(box.min_corner.lat, 1)
+        self.assertEqual(box.max_corner.lon, 2)
+        self.assertEqual(box.max_corner.lat, 3)
+
+        self.assertTrue(box.covered_by(min_corner))
+        self.assertTrue(box.covered_by(max_corner))
+        self.assertTrue(box.covered_by(core.geodetic.Point2D(1, 2)))
+        self.assertFalse(box.covered_by(core.geodetic.Point2D(0, 0)))
+
+        flags = box.covered_by([1, 0], [2, 0])
+        self.assertTrue(np.all(flags == [1, 0]))
+
+        box.min_corner, box.max_corner = max_corner, min_corner
+        self.assertEqual(box.min_corner.lon, 2)
+        self.assertEqual(box.min_corner.lat, 3)
+        self.assertEqual(box.max_corner.lon, 0)
+        self.assertEqual(box.max_corner.lat, 1)
+
+    def test_pickle(self):
+        min_corner = core.geodetic.Point2D(0, 1)
+        max_corner = core.geodetic.Point2D(2, 3)
+        a = core.geodetic.Box2D(min_corner, max_corner)
+        b = pickle.loads(pickle.dumps(a))
+        self.assertEqual(a.min_corner.lon, b.min_corner.lon)
+        self.assertEqual(a.min_corner.lat, b.min_corner.lat)
+        self.assertEqual(a.max_corner.lon, b.max_corner.lon)
+        self.assertEqual(a.max_corner.lat, b.max_corner.lat)
 
 
 if __name__ == "__main__":
