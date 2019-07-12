@@ -6,8 +6,8 @@ Get software version information
 
 def release(full: bool = False) -> str:
     """Returns the software version number"""
-    # 66148b7562ad646aab3d03d525e5191df0525184
-    result = "0.0.1"
+    # c133d9af2aee7c2bd37212fc8cd757a695b3cc5e
+    result = "0.0.2"
     if full:
-        result += " (08 July 2019)"
+        result += " (12 July 2019)"
     return result
