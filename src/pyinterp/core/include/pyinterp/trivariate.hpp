@@ -33,7 +33,7 @@ class Trivariate : public Grid3D<Type> {
       const pybind11::array_t<Coordinate>& y,
       const pybind11::array_t<Coordinate>& z,
       const Bivariate3D<Point, Coordinate>* interpolator,
-      const size_t num_threads) {
+      const bool bounds_error, const size_t num_threads) {
     pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
     pyinterp::detail::check_ndarray_shape("x", x, "y", y);
 
@@ -91,6 +91,15 @@ class Trivariate : public Grid3D<Type> {
                           interpolator);
 
                 } else {
+                  if (bounds_error) {
+                    if (!x_indexes.has_value()) {
+                      Trivariate::index_error(*this->x_, _x(ix), "x");
+                    }
+                    if (!y_indexes.has_value()) {
+                      Trivariate::index_error(*this->y_, _y(ix), "y");
+                    }
+                    Trivariate::index_error(*this->z_, _z(ix), "z");
+                  }
                   _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
                 }
               }
@@ -182,7 +191,8 @@ Returns:
 )__doc__")
       .def("evaluate", &Trivariate<Point, Coordinate, Type>::evaluate,
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
-           pybind11::arg("interpolator"), pybind11::arg("num_threads") = 0,
+           pybind11::arg("interpolator"), pybind11::arg("bounds_error") = false,
+           pybind11::arg("num_threads") = 0,
            R"__doc__(
 Interpolate the values provided on the defined trivariate function.
 
@@ -192,6 +202,9 @@ Args:
     z (numpy.ndarray): Z-values
     interpolator (pyinterp.core.BivariateInterpolator3D): 3D interpolator
         used to interpolate values on the surface (x, y).
+    bounds_error (bool, optional): If True, when interpolated values are
+      requested outside of the domain of the input axes (x,y,z), a ValueError
+      is raised. If False, then value is set to Nan.
     num_threads (int, optional): The number of threads to use for the
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.

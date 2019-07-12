@@ -19,19 +19,19 @@ def plot(x, y, z, filename):
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
     value = z.mean()
     std = z.std()
-    normalize = matplotlib.colors.Normalize(
-        vmin=value - 3 * std, vmax=value + 3 * std)
+    normalize = matplotlib.colors.Normalize(vmin=value - 3 * std,
+                                            vmax=value + 3 * std)
     axe = figure.add_subplot(2, 1, 1)
     axe.pcolormesh(x, y, z, cmap='jet', norm=normalize)
-    figure.savefig(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), filename),
-        bbox_inches='tight',
-        pad_inches=0.4)
+    figure.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                filename),
+                   bbox_inches='tight',
+                   pad_inches=0.4)
 
 
 class TestCase(unittest.TestCase):
-    GRID = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "..", "dataset", "tcw.nc")
+    GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+                        "dataset", "tcw.nc")
 
     @classmethod
     def load_data(cls):
@@ -49,19 +49,44 @@ class TestCase(unittest.TestCase):
         lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
         time = 898500 + 3
         x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
-        z0 = trivariate.evaluate(
-            x.flatten(), y.flatten(), t.flatten(), interpolator, num_threads=0)
-        z1 = trivariate.evaluate(
-            x.flatten(), y.flatten(), t.flatten(), interpolator, num_threads=1)
+        z0 = trivariate.evaluate(x.flatten(),
+                                 y.flatten(),
+                                 t.flatten(),
+                                 interpolator,
+                                 num_threads=0)
+        z1 = trivariate.evaluate(x.flatten(),
+                                 y.flatten(),
+                                 t.flatten(),
+                                 interpolator,
+                                 num_threads=1)
         shape = (len(lon), len(lat))
         z0 = np.ma.fix_invalid(z0)
         z1 = np.ma.fix_invalid(z1)
         self.assertTrue(np.all(z1 == z0))
         if HAVE_PLT:
-            plot(
-                x.reshape(shape), y.reshape(shape), z0.reshape(shape),
-                filename)
+            plot(x.reshape(shape), y.reshape(shape), z0.reshape(shape),
+                 filename)
         return z0
+
+    def test_bounds_error(self):
+        trivariate = self.load_data()
+        interpolator = core.Bilinear3D()
+        lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
+        lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
+        time = 898500 + 3
+        x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+        trivariate.evaluate(x.flatten(),
+                            y.flatten(),
+                            t.flatten(),
+                            interpolator,
+                            num_threads=0)
+        with self.assertRaises(ValueError):
+            trivariate.evaluate(x.flatten(),
+                                y.flatten(),
+                                t.flatten(),
+                                interpolator,
+                                bounds_error=True,
+                                num_threads=0)
 
     def test_interpolator(self):
         a = self._test(core.Nearest3D(), "mss_trivariate_nearest")

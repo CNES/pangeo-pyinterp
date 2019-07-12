@@ -15,6 +15,7 @@ namespace pyinterp {
 template <typename Type>
 bool Bicubic<Type>::load_frame(const double x, const double y,
                                const Axis::Boundary boundary,
+                               const bool bounds_error,
                                detail::math::XArray& frame) const {
   auto y_indexes =
       this->y_->find_indexes(y, static_cast<uint32_t>(frame.ny()), boundary);
@@ -22,6 +23,12 @@ bool Bicubic<Type>::load_frame(const double x, const double y,
       this->x_->find_indexes(x, static_cast<uint32_t>(frame.nx()), boundary);
 
   if (x_indexes.empty() || y_indexes.empty()) {
+    if (bounds_error) {
+      if (x_indexes.empty()) {
+        Bicubic::index_error(*this->x_, x, "x");
+      }
+      Bicubic::index_error(*this->y_, y, "y");
+    }
     return false;
   }
 
@@ -49,12 +56,10 @@ bool Bicubic<Type>::load_frame(const double x, const double y,
 
 /// Evaluate the interpolation.
 template <typename Type>
-py::array_t<double> Bicubic<Type>::evaluate(const py::array_t<double>& x,
-                                            const py::array_t<double>& y,
-                                            size_t nx, size_t ny,
-                                            FittingModel fitting_model,
-                                            const Axis::Boundary boundary,
-                                            size_t num_threads) const {
+py::array_t<double> Bicubic<Type>::evaluate(
+    const py::array_t<double>& x, const py::array_t<double>& y, size_t nx,
+    size_t ny, FittingModel fitting_model, const Axis::Boundary boundary,
+    const bool bounds_error, size_t num_threads) const {
   detail::check_array_ndim("x", 1, x, "y", 1, y);
   detail::check_ndarray_shape("x", x, "y", y);
 
@@ -83,7 +88,7 @@ py::array_t<double> Bicubic<Type>::evaluate(const py::array_t<double>& x,
               auto xi = _x(ix);
               auto yi = _y(ix);
               _result(ix) =
-                  load_frame(xi, yi, boundary, frame)
+                  load_frame(xi, yi, boundary, bounds_error, frame)
                       ? interpolator.interpolate(this->x_->is_angle()
                                                      ? frame.normalize_angle(xi)
                                                      : xi,
@@ -155,7 +160,8 @@ Returns:
            py::arg("y"), py::arg("nx") = 3, py::arg("ny") = 3,
            py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
            py::arg("boundary") = pyinterp::Axis::kUndef,
-           py::arg("num_threads") = 0, R"__doc__(
+           py::arg("bounds_error") = false, py::arg("num_threads") = 0,
+           R"__doc__(
 Evaluate the interpolation.
 
 Args:
@@ -171,6 +177,9 @@ Args:
     boundary (pyinterp.core.Axis.Boundary, optional): Type of axis boundary
         management. Defaults to
         :py:data:`pyinterp.core.Axis.Boundary.kUndef`
+    bounds_error (bool, optional): If True, when interpolated values are
+        requested outside of the domain of the input axes (x,y), a ValueError
+        is raised. If False, then value is set to Nan.
     num_threads (int, optional): The number of threads to use for the
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.

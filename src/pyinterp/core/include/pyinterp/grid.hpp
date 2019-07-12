@@ -81,6 +81,19 @@ class Grid2D {
   pybind11::array_t<T> array_;
   pybind11::detail::unchecked_reference<T, Dimension> ptr_;
 
+  /// Throws an exception indicating that the value searched on the axis is
+  /// outside the domain axis.
+  ///
+  /// @param axis Axis involved.
+  /// @param value The value outside the axis domain.
+  /// @param axis_label The name of the axis
+  static void index_error(const Axis& axis, const T& value,
+                          const std::string& axis_label) {
+    throw std::invalid_argument(std::to_string(value) +
+                                " is out ouf bounds for axis " + axis_label +
+                                " (" + static_cast<std::string>(axis) + ")");
+  }
+
   /// End of the recursive call of the function "check_shape"
   void check_shape(const size_t idx) {}
 

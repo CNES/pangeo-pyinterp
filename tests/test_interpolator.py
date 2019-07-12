@@ -41,6 +41,11 @@ class Bivariate(unittest.TestCase):
             collections.OrderedDict(lon=x.flatten(), lat=y.flatten()))
         self.assertIsInstance(z, np.ndarray)
 
+        with self.assertRaises(ValueError):
+            interpolator.evaluate(collections.OrderedDict(lon=x.flatten(),
+                                                          lat=y.flatten()),
+                                  bounds_error=True)
+
     def test_bicubic(self):
         interpolator = pyinterp.backends.xarray.Bicubic(
             xr.open_dataset(self.GRID), "mss")
@@ -62,6 +67,17 @@ class Bivariate(unittest.TestCase):
         z = interpolator.evaluate(
             collections.OrderedDict(lon=x.flatten(), lat=y.flatten()))
         self.assertIsInstance(z, np.ndarray)
+
+        with self.assertRaises(ValueError):
+            interpolator.evaluate(collections.OrderedDict(lon=x.flatten(),
+                                                          lat=y.flatten()),
+                                  bounds_error=True)
+
+        with self.assertRaises(ValueError):
+            interpolator.evaluate(collections.OrderedDict(lon=x.flatten(),
+                                                          lat=y.flatten()),
+                                  bounds_error=True,
+                                  boundary="sym")
 
 
 class Trivariate(unittest.TestCase):
@@ -94,6 +110,11 @@ class Trivariate(unittest.TestCase):
                                     latitude=y.flatten(),
                                     time=t.flatten()))
         self.assertIsInstance(z, np.ndarray)
+
+        with self.assertRaises(ValueError):
+            interpolator.evaluate(collections.OrderedDict(
+                longitude=x.flatten(), latitude=y.flatten(), time=t.flatten()),
+                                  bounds_error=True)
 
 
 if __name__ == "__main__":

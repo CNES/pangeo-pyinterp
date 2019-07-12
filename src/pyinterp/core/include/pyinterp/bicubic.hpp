@@ -47,13 +47,13 @@ class Bicubic : public Grid2D<Type> {
                                      const pybind11::array_t<double>& y,
                                      size_t nx, size_t ny,
                                      FittingModel fitting_model,
-                                     Axis::Boundary boundary,
+                                     Axis::Boundary boundary, bool bounds_error,
                                      size_t num_threads) const;
 
  private:
   /// Loads the interpolation frame into memory
   bool load_frame(double x, double y, Axis::Boundary boundary,
-                  detail::math::XArray& frame) const;
+                  bool bounds_error, detail::math::XArray& frame) const;
 
   /// Returns the GSL interp type
   static const gsl_interp_type* interp_type(const FittingModel kind) {

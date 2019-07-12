@@ -72,7 +72,7 @@ class Bivariate : public Grid2D<Type> {
       const pybind11::array_t<Coordinate>& x,
       const pybind11::array_t<Coordinate>& y,
       const BivariateInterpolator<Point, Coordinate>* interpolator,
-      const size_t num_threads) {
+      const bool bounds_error, const size_t num_threads) {
     pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
     pyinterp::detail::check_ndarray_shape("x", x, "y", y);
 
@@ -118,6 +118,12 @@ class Bivariate : public Grid2D<Type> {
                       static_cast<Coordinate>(this->ptr_(ix1, iy1)));
 
                 } else {
+                  if (bounds_error) {
+                    if (!x_indexes.has_value()) {
+                      Bivariate::index_error(*this->x_, _x(ix), "x");
+                    }
+                    Bivariate::index_error(*this->y_, _y(ix), "y");
+                  }
                   _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
                 }
               }
@@ -253,7 +259,8 @@ Returns:
 )__doc__")
       .def("evaluate", &Bivariate<Point, Coordinate, Type>::evaluate,
            pybind11::arg("x"), pybind11::arg("y"),
-           pybind11::arg("interpolator"), pybind11::arg("num_threads") = 0,
+           pybind11::arg("interpolator"), pybind11::arg("bounds_error") = false,
+           pybind11::arg("num_threads") = 0,
            R"__doc__(
 Interpolate the values provided on the defined bivariate function.
 
@@ -261,7 +268,10 @@ Args:
     x (numpy.ndarray): X-values
     y (numpy.ndarray): Y-values
     interpolator (pyinterp.core.BivariateInterpolator2D): 2D interpolator
-        used to interpolate.
+      used to interpolate.
+    bounds_error (bool, optional): If True, when interpolated values are
+      requested outside of the domain of the input axes (x,y), a ValueError
+      is raised. If False, then value is set to Nan.
     num_threads (int, optional): The number of threads to use for the
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.

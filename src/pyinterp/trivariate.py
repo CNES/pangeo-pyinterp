@@ -43,6 +43,7 @@ class Trivariate(bivariate.Bivariate):
                  y: np.ndarray,
                  z: np.ndarray,
                  interpolator: Optional[str] = "bilinear",
+                 bounds_error: Optional[bool] = False,
                  num_threads: Optional[int] = 0,
                  **kwargs) -> np.ndarray:
         """Interpolate the values provided on the defined trivariate function.
@@ -54,6 +55,10 @@ class Trivariate(bivariate.Bivariate):
             interpolator (str, optional): The method of interpolation to
                 perform. Supported are ``bilinear`` and ``nearest``, and
                 ``inverse_distance_weighting``. Default to ``bilinear``.
+            bounds_error (bool, optional): If True, when interpolated values
+                are requested outside of the domain of the input axes (x,y), a
+                :py:class:`ValueError` is raised. If False, then value is set
+                to Nan. Default to ``False``
             num_threads (int, optional): The number of threads to use for the
                 computation. If 0 all CPUs are used. If 1 is given, no parallel
                 computing code is used at all, which is useful for debugging.
@@ -65,4 +70,5 @@ class Trivariate(bivariate.Bivariate):
         """
         return self._instance.evaluate(
             np.asarray(x), np.asarray(y), np.asarray(z),
-            self._n_variate_interpolator(interpolator, **kwargs), num_threads)
+            self._n_variate_interpolator(interpolator, **kwargs), bounds_error,
+            num_threads)
