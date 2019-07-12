@@ -25,9 +25,9 @@ bool Bicubic<Type>::load_frame(const double x, const double y,
   if (x_indexes.empty() || y_indexes.empty()) {
     if (bounds_error) {
       if (x_indexes.empty()) {
-        Bicubic::index_error(*this->x_, x, "x");
+        Bicubic::index_error(*this->x_, static_cast<Type>(x), "x");
       }
-      Bicubic::index_error(*this->y_, y, "y");
+      Bicubic::index_error(*this->y_, static_cast<Type>(y), "y");
     }
     return false;
   }
