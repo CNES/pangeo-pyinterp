@@ -271,11 +271,10 @@ class Regular : public Abstract {
     if (num == 0) {
       throw std::invalid_argument("unable to create an empty container.");
     }
-    if (num == 1) {
-      step_ = stop - start;
-    } else {
-      step_ = (stop - start) / (num - 1);
-    }
+    step_ = num == 1 ? stop - start : (stop - start) / (num - 1);
+    // The inverse step of this axis is stored in order to optimize the search
+    // for an index for a given value by avoiding a division.
+    inv_step_ = 1.0 / step_;
     is_ascending_ = calculate_is_ascending();
   }
 
@@ -315,7 +314,7 @@ class Regular : public Abstract {
   /// @copydoc Abstract::find_index(double,bool) const
   int64_t find_index(double coordinate, bool bounded) const noexcept override {
     auto index =
-        static_cast<int64_t>(std::round((coordinate - start_) / step_));
+        static_cast<int64_t>(std::round((coordinate - start_) * inv_step_));
 
     if (index < 0) {
       return bounded ? 0 : -1;
@@ -358,9 +357,14 @@ class Regular : public Abstract {
   }
 
  private:
+  /// Container size.
   int64_t size_{};
+  /// Value of the first item in the container.
   double start_{};
+  /// The step between two succeeding values.
   double step_{};
+  /// The inverse of the step (to avoid a division between real numbers).
+  double inv_step_{};
 };
 
 }  // namespace container
