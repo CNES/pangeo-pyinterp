@@ -89,9 +89,9 @@ class TestCase(unittest.TestCase):
                                 num_threads=0)
 
     def test_interpolator(self):
-        a = self._test(core.Nearest3D(), "mss_trivariate_nearest")
-        b = self._test(core.Bilinear3D(), "mss_trivariate_bilinear")
-        c = self._test(core.InverseDistanceWeighting3D(), "mss_trivariate_idw")
+        a = self._test(core.Nearest3D(), "tcw_trivariate_nearest")
+        b = self._test(core.Bilinear3D(), "tcw_trivariate_bilinear")
+        c = self._test(core.InverseDistanceWeighting3D(), "tcw_trivariate_idw")
         self.assertTrue((a - b).std() != 0)
         self.assertTrue((a - c).std() != 0)
         self.assertTrue((b - c).std() != 0)
