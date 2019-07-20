@@ -69,8 +69,6 @@ py::array_t<double> Bicubic<Type>::evaluate(
   auto _x = x.template unchecked<1>();
   auto _y = y.template unchecked<1>();
   auto _result = result.template mutable_unchecked<1>();
-  auto interpolator =
-      detail::math::Bicubic(Bicubic::interp_type(fitting_model));
   {
     py::gil_scoped_release release;
 
@@ -80,10 +78,11 @@ py::array_t<double> Bicubic<Type>::evaluate(
 
     detail::dispatch(
         [&](const size_t start, const size_t end) {
-          auto frame = detail::math::XArray(nx, ny);
-          auto acc = detail::gsl::Accelerator();
-
           try {
+            auto frame = detail::math::XArray(nx, ny);
+            auto interpolator = detail::math::Bicubic(
+                frame, Bicubic::interp_type(fitting_model));
+
             for (size_t ix = start; ix < end; ++ix) {
               auto xi = _x(ix);
               auto yi = _y(ix);
@@ -92,7 +91,7 @@ py::array_t<double> Bicubic<Type>::evaluate(
                       ? interpolator.interpolate(this->x_->is_angle()
                                                      ? frame.normalize_angle(xi)
                                                      : xi,
-                                                 yi, frame, acc)
+                                                 yi, frame)
                       : std::numeric_limits<double>::quiet_NaN();
             }
           } catch (...) {

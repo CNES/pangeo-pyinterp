@@ -17,7 +17,8 @@ class Accelerator {
  public:
   /// Default constructor
   Accelerator()
-      : acc_(std::shared_ptr<gsl_interp_accel>(
+      : acc_(std::unique_ptr<gsl_interp_accel,
+                             std::function<void(gsl_interp_accel*)>>(
             gsl_interp_accel_alloc(),
             [](gsl_interp_accel* ptr) { gsl_interp_accel_free(ptr); })) {}
 
@@ -26,8 +27,14 @@ class Accelerator {
     return acc_.get();
   }
 
+  /// Reinitializes the accelerator object. It should be used when the cached
+  /// information is no longer applicable—for example, when switching to a new
+  /// dataset.
+  inline void reset() { gsl_interp_accel_reset(acc_.get()); }
+
  private:
-  std::shared_ptr<gsl_interp_accel> acc_;
+  std::unique_ptr<gsl_interp_accel, std::function<void(gsl_interp_accel*)>>
+      acc_;
 };
 
 }  // namespace gsl

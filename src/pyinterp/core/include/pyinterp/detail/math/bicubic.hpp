@@ -134,51 +134,52 @@ class Bicubic {
  public:
   /// Default constructor
   ///
+  /// @param xr Calculation window.
   /// @param type method of calculation
-  explicit Bicubic(const gsl_interp_type *type = gsl_interp_cspline)
-      : type_(type) {}
+  explicit Bicubic(const XArray &xr,
+                   const gsl_interp_type *type = gsl_interp_cspline)
+      : column_(xr.x().size()),
+        interpolator_(std::max(xr.x().size(), xr.y().size()), type) {}
 
   /// Return the interpolated value of y for a given point x
-  double interpolate(const double x, const double y, const XArray &xr,
-                     gsl::Accelerator acc = gsl::Accelerator()) const {
-    return evaluate(&gsl::Interpolate1D::interpolate, x, y, xr, std::move(acc));
+  double interpolate(const double x, const double y, const XArray &xr) {
+    return evaluate(&gsl::Interpolate1D::interpolate, x, y, xr);
   }
 
   /// Return the derivative for a given point x
-  double derivative(const double x, const double y, const XArray &xr,
-                    gsl::Accelerator acc = gsl::Accelerator()) const {
-    return evaluate(&gsl::Interpolate1D::derivative, x, y, xr, std::move(acc));
+  double derivative(const double x, const double y, const XArray &xr) {
+    return evaluate(&gsl::Interpolate1D::derivative, x, y, xr);
   }
 
   /// Return the second derivative for a given point x
-  double second_derivative(const double x, const double y, const XArray &xr,
-                           gsl::Accelerator acc = gsl::Accelerator()) const {
-    return evaluate(&gsl::Interpolate1D::second_derivative, x, y, xr,
-                    std::move(acc));
+  double second_derivative(const double x, const double y, const XArray &xr) {
+    return evaluate(&gsl::Interpolate1D::second_derivative, x, y, xr);
   }
 
  private:
-  using InterpolateFunction =
-      double (gsl::Interpolate1D::*)(const double) const;
+  using InterpolateFunction = double (gsl::Interpolate1D::*)(
+      const Eigen::Ref<const Eigen::VectorXd> &,
+      const Eigen::Ref<const Eigen::VectorXd> &, const double);
+  /// GSL interpolation type
   const gsl_interp_type *type_;
+  /// Column of the interpolation window (interpolation according to Y
+  /// coordinates)
+  Eigen::VectorXd column_;
+  /// GSL interpolator
+  gsl::Interpolate1D interpolator_;
 
   /// Evaluation of the GSL function performing the calculation.
   double evaluate(
-      const std::function<double(const gsl::Interpolate1D &, double)> &function,
-      const double x, const double y, const XArray &xr,
-      gsl::Accelerator &&acc) const {
-    Eigen::VectorXd fy(xr.x().size());
+      const std::function<double(
+          gsl::Interpolate1D &, const Eigen::Ref<const Eigen::VectorXd> &,
+          const Eigen::Ref<const Eigen::VectorXd> &, const double)> &function,
+      const double x, const double y, const XArray &xr) {
 
     // Spline interpolation as function of Y-coordinate
-    for (auto ix = 0; ix < xr.x().size(); ++ix) {
-      // The block containing the processed row must be copied into a new
-      // memory block.
-      Eigen::VectorXd row = xr.q().row(ix);
-      auto interpolator = gsl::Interpolate1D(type_, xr.y(), row, acc);
-      fy(ix) = function(interpolator, y);
+    for (auto ix = 0; ix < xr.x().size(); ix) {
+      column_(ix) = function(interpolator_, xr.y(), xr.q().row(ix), y);
     }
-    auto interpolator = gsl::Interpolate1D(type_, xr.x(), fy, acc);
-    return function(interpolator, x);
+    return function(interpolator_, xr.x(), column_, x);
   }
 };
 
