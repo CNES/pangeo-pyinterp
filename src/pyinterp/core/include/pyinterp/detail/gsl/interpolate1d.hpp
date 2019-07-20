@@ -6,6 +6,7 @@
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/gsl/accelerator.hpp"
 #include <Eigen/Core>
+#include <functional>
 #include <gsl/gsl_interp.h>
 #include <memory>
 
@@ -83,12 +84,12 @@ class Interpolate1D {
   /// Initializes the interpolation object
   void init(const Eigen::Ref<const Eigen::VectorXd>& xa,
             const Eigen::Ref<const Eigen::VectorXd>& ya) {
-    auto size = std::max(xa.size(), ya.size());
+    auto size = static_cast<size_t>(std::max(xa.size(), ya.size()));
     if (size != workspace_->size) {
-      workspace_ = std::move(
+      workspace_ =
           std::unique_ptr<gsl_interp, std::function<void(gsl_interp*)>>(
               gsl_interp_alloc(workspace_->type, size),
-              [](gsl_interp* ptr) { gsl_interp_free(ptr); }));
+              [](gsl_interp* ptr) { gsl_interp_free(ptr); });
     }
     acc_.reset();
     gsl_interp_init(workspace_.get(), xa.data(), ya.data(), xa.size());

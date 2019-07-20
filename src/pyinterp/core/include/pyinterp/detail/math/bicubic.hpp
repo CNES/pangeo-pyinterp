@@ -160,8 +160,6 @@ class Bicubic {
   using InterpolateFunction = double (gsl::Interpolate1D::*)(
       const Eigen::Ref<const Eigen::VectorXd> &,
       const Eigen::Ref<const Eigen::VectorXd> &, const double);
-  /// GSL interpolation type
-  const gsl_interp_type *type_;
   /// Column of the interpolation window (interpolation according to Y
   /// coordinates)
   Eigen::VectorXd column_;
@@ -176,7 +174,7 @@ class Bicubic {
       const double x, const double y, const XArray &xr) {
 
     // Spline interpolation as function of Y-coordinate
-    for (auto ix = 0; ix < xr.x().size(); ix) {
+    for (auto ix = 0; ix < xr.x().size(); ++ix) {
       column_(ix) = function(interpolator_, xr.y(), xr.q().row(ix), y);
     }
     return function(interpolator_, xr.x(), column_, x);
