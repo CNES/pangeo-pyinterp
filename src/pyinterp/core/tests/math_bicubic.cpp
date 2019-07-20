@@ -56,11 +56,11 @@ TEST(math_bicubic, bicubic) {
     }
   }
 
-  auto interpolator = math::Bicubic();
+  auto interpolator = math::Bicubic(xr);
   auto acc = gsl::Accelerator();
   for (auto ix = 0; ix < 6; ++ix) {
     for (auto iy = 0; iy < 6; ++iy) {
-      EXPECT_EQ(interpolator.interpolate(ix * 0.1, iy * 0.1, xr, acc),
+      EXPECT_EQ(interpolator.interpolate(ix * 0.1, iy * 0.1, xr),
                 std::sin(ix * 0.1));
     }
   }
