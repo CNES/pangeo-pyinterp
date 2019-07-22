@@ -31,7 +31,7 @@ class Accelerator {
   /// Reinitializes the accelerator object. It should be used when the cached
   /// information is no longer applicable—for example, when switching to a new
   /// dataset.
-  inline void reset() { gsl_interp_accel_reset(acc_.get()); }
+  inline void reset() noexcept { gsl_interp_accel_reset(acc_.get()); }
 
  private:
   std::unique_ptr<gsl_interp_accel, std::function<void(gsl_interp_accel*)>>

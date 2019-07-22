@@ -41,16 +41,14 @@ class Interpolate1D {
   }
 
   /// Return the interpolated value of y for a given point x
-  inline double interpolate(const Eigen::Ref<const Eigen::VectorXd>& xa,
-                            const Eigen::Ref<const Eigen::VectorXd>& ya,
-                            const double x) {
+  inline double interpolate(const Eigen::VectorXd& xa,
+                            const Eigen::VectorXd& ya, const double x) {
     init(xa, ya);
     return gsl_interp_eval(workspace_.get(), xa.data(), ya.data(), x, acc_);
   }
 
   /// Return the derivative d of an interpolated function for a given point x
-  inline double derivative(const Eigen::Ref<const Eigen::VectorXd>& xa,
-                           const Eigen::Ref<const Eigen::VectorXd>& ya,
+  inline double derivative(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya,
                            const double x) {
     init(xa, ya);
     return gsl_interp_eval_deriv(workspace_.get(), xa.data(), ya.data(), x,
@@ -59,9 +57,8 @@ class Interpolate1D {
 
   /// Return the second derivative d of an interpolated function for a given
   /// point x
-  inline double second_derivative(const Eigen::Ref<const Eigen::VectorXd>& xa,
-                                  const Eigen::Ref<const Eigen::VectorXd>& ya,
-                                  const double x) {
+  inline double second_derivative(const Eigen::VectorXd& xa,
+                                  const Eigen::VectorXd& ya, const double x) {
     init(xa, ya);
     return gsl_interp_eval_deriv2(workspace_.get(), xa.data(), ya.data(), x,
                                   acc_);
@@ -69,8 +66,7 @@ class Interpolate1D {
 
   /// Return the numerical integral result of an interpolated function over the
   /// range [a, b],
-  inline double integral(const Eigen::Ref<const Eigen::VectorXd>& xa,
-                         const Eigen::Ref<const Eigen::VectorXd>& ya,
+  inline double integral(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya,
                          const double a, const double b) {
     init(xa, ya);
     return gsl_interp_eval_integ(workspace_.get(), xa.data(), ya.data(), a, b,
@@ -82,15 +78,7 @@ class Interpolate1D {
   Accelerator acc_;
 
   /// Initializes the interpolation object
-  void init(const Eigen::Ref<const Eigen::VectorXd>& xa,
-            const Eigen::Ref<const Eigen::VectorXd>& ya) {
-    auto size = static_cast<size_t>(std::max(xa.size(), ya.size()));
-    if (size != workspace_->size) {
-      workspace_ =
-          std::unique_ptr<gsl_interp, std::function<void(gsl_interp*)>>(
-              gsl_interp_alloc(workspace_->type, size),
-              [](gsl_interp* ptr) { gsl_interp_free(ptr); });
-    }
+  void init(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya) {
     acc_.reset();
     gsl_interp_init(workspace_.get(), xa.data(), ya.data(), xa.size());
   }

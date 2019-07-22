@@ -65,12 +65,6 @@ class Bicubic(GridInterpolator):
                 :py:class:`ValueError` is raised. If False, then value is set
                 to Nan. Default to ``False``
 
-                .. note::
-
-                    If the ``bounds_error`` parameter is true, then the
-                    ``boundary`` parameter must be set to ``undef``, otherwise
-                    an exception cannot be thrown.
-
             num_threads (int, optional): The number of threads to use for the
                 computation. If 0 all CPUs are used. If 1 is given, no parallel
                 computing code is used at all, which is useful for debugging.
@@ -78,11 +72,6 @@ class Bicubic(GridInterpolator):
         Return:
             numpy.ndarray: Values interpolated
         """
-        if bounds_error and boundary != "undef":
-            raise ValueError(
-                "If the 'bounds_error' parameter is true, then the 'boundary' "
-                "parameter must be set to 'undef', otherwise an exception "
-                "cannot be thrown.")
         if fitting_model not in [
                 'c_spline', 'c_spline_periodic', 'akima', 'akima_periodic',
                 'steffen'
