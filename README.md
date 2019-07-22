@@ -55,7 +55,7 @@ be used when handling longitudes.
 
 ### Unstructured Grids
 
-In the case of unstructured grids, the index used is a *R*Tree*. These trees
+In the case of unstructured grids, the index used is a *R\*Tree*. These trees
 have better performance than the *KDTree* generally found in Python library
 implementations.
 
