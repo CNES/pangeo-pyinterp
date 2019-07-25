@@ -149,4 +149,69 @@ class Grid3D : public Grid2D<T, 3> {
   std::shared_ptr<Axis> z_;
 };
 
+template <typename Type>
+void implement_grid(pybind11::module& m, const std::string& suffix) {
+  pybind11::class_<Grid2D<Type>>(m, ("Grid2D" + suffix).c_str(),
+                                 "Cartesian Grid 2D")
+      .def_property_readonly("x",
+                             [](const Grid2D<Type>& self) { return self.x(); },
+                             R"__doc__(
+Gets the X-Axis handled by this instance
+
+Returns:
+    pyinterp.core.Axis: X-Axis
+)__doc__")
+      .def_property_readonly("y",
+                             [](const Grid2D<Type>& self) { return self.y(); },
+                             R"__doc__(
+Gets the Y-Axis handled by this instance
+
+Returns:
+    pyinterp.core.Axis: Y-Axis
+)__doc__")
+      .def_property_readonly(
+          "array", [](const Grid2D<Type>& self) { return self.array(); },
+          R"__doc__(
+Gets the values handled by this instance
+
+Returns:
+    numpy.ndarray: values
+)__doc__");
+
+  pybind11::class_<Grid3D<Type>>(m, ("Grid3D" + suffix).c_str(),
+                                 "Cartesian Grid 3D")
+      .def_property_readonly("x",
+                             [](const Grid3D<Type>& self) { return self.x(); },
+                             R"__doc__(
+Gets the X-Axis handled by this instance
+
+Returns:
+    pyinterp.core.Axis: X-Axis
+)__doc__")
+      .def_property_readonly("y",
+                             [](const Grid3D<Type>& self) { return self.y(); },
+                             R"__doc__(
+Gets the Y-Axis handled by this instance
+
+Returns:
+    pyinterp.core.Axis: Y-Axis
+)__doc__")
+      .def_property_readonly("z",
+                             [](const Grid3D<Type>& self) { return self.z(); },
+                             R"__doc__(
+Gets the Z-Axis handled by this instance
+
+Returns:
+    pyinterp.core.Axis: Z-Axis
+)__doc__")
+      .def_property_readonly(
+          "array", [](const Grid3D<Type>& self) { return self.array(); },
+          R"__doc__(
+Gets the values handled by this instance
+
+Returns:
+    numpy.ndarray: values
+)__doc__");
+}
+
 }  // namespace pyinterp

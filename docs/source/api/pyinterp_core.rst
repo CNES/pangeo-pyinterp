@@ -35,6 +35,16 @@
 
         .. automethod:: __init__
 
+    .. autoclass:: Grid2DFloat64
+        :show-inheritance:
+        :members:
+        :inherited-members:
+
+    .. autoclass:: Grid3DFloat64
+        :show-inheritance:
+        :members:
+        :inherited-members:
+
     .. autoclass:: InverseDistanceWeighting2D
         :show-inheritance:
         :members:

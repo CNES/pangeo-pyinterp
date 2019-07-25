@@ -209,7 +209,7 @@ void implement_bivariate_interpolator(pybind11::module& m,
 
 template <template <class> class Point, typename Coordinate, typename Type>
 void implement_bivariate(pybind11::module& m, const char* class_name) {
-  pybind11::class_<Bivariate<Point, Coordinate, Type>>(m, class_name,
+  pybind11::class_<Bivariate<Point, Coordinate, Type>, Grid2D<Type>>(m, class_name,
                                                        R"__doc__(
 Interpolation of bivariate functions
 )__doc__")
@@ -223,39 +223,6 @@ Args:
     x (pyinterp.core.Axis): X-Axis
     y (pyinterp.core.Axis): Y-Axis
     array (numpy.ndarray): Bivariate function
-)__doc__")
-      .def_property_readonly(
-          "x",
-          [](const Bivariate<Point, Coordinate, Type>& self) {
-            return self.x();
-          },
-          R"__doc__(
-Gets the X-Axis handled by this instance
-
-Returns:
-    pyinterp.core.Axis: X-Axis
-)__doc__")
-      .def_property_readonly(
-          "y",
-          [](const Bivariate<Point, Coordinate, Type>& self) {
-            return self.y();
-          },
-          R"__doc__(
-Gets the Y-Axis handled by this instance
-
-Returns:
-    pyinterp.core.Axis: Y-Axis
-)__doc__")
-      .def_property_readonly(
-          "array",
-          [](const Bivariate<Point, Coordinate, Type>& self) {
-            return self.array();
-          },
-          R"__doc__(
-Gets the values handled by this instance
-
-Returns:
-    numpy.ndarray: values
 )__doc__")
       .def("evaluate", &Bivariate<Point, Coordinate, Type>::evaluate,
            pybind11::arg("x"), pybind11::arg("y"),

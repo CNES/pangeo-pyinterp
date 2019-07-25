@@ -111,8 +111,8 @@ py::array_t<double> Bicubic<Type>::evaluate(
 
 template <typename Type>
 void implement_bicubic(py::module& m, const char* const class_name) {
-  py::class_<pyinterp::Bicubic<Type>>(m, class_name,
-                                      R"__doc__(
+  py::class_<pyinterp::Bicubic<Type>, pyinterp::Grid2D<Type>>(m, class_name,
+                                                              R"__doc__(
 Extension of cubic interpolation for interpolating data points on a
 two-dimensional regular grid. The interpolated surface is smoother than
 corresponding surfaces obtained by bilinear interpolation or
@@ -130,31 +130,6 @@ Args:
     y (pyinterp.core.Axis): Y-Axis
     array (numpy.ndarray): Bivariate function
   )__doc__")
-      .def_property_readonly(
-          "x", [](const pyinterp::Bicubic<Type>& self) { return self.x(); },
-          R"__doc__(
-Gets the X-Axis handled by this instance
-
-Returns:
-    pyinterp.core.Axis: X-Axis
-)__doc__")
-      .def_property_readonly(
-          "y", [](const pyinterp::Bicubic<Type>& self) { return self.y(); },
-          R"__doc__(
-Gets the Y-Axis handled by this instance
-
-Returns:
-    pyinterp.core.Axis: Y-Axis
-)__doc__")
-      .def_property_readonly(
-          "array",
-          [](const pyinterp::Bicubic<Type>& self) { return self.array(); },
-          R"__doc__(
-Gets the values handled by this instance
-
-Returns:
-    numpy.ndarray: values to interpolate
-)__doc__")
       .def("evaluate", &pyinterp::Bicubic<Type>::evaluate, py::arg("x"),
            py::arg("y"), py::arg("nx") = 3, py::arg("ny") = 3,
            py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,

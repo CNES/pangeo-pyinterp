@@ -15,6 +15,9 @@ void init_grid(py::module& m) {
   pyinterp::implement_bivariate_interpolator<geometry::EquatorialPoint3D,
                                              double>(m, "3D");
 
+  pyinterp::implement_grid<double>(m, "Float64");
+  pyinterp::implement_grid<float>(m, "Float32");
+
   pyinterp::implement_bivariate<geometry::EquatorialPoint2D, double, double>(
       m, "BivariateFloat64");
   pyinterp::implement_bivariate<geometry::EquatorialPoint2D, double, float>(
