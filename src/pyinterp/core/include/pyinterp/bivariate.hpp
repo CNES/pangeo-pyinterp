@@ -7,6 +7,7 @@
 #include "pyinterp/detail/math/bivariate.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/grid.hpp"
+#include <cctype>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
