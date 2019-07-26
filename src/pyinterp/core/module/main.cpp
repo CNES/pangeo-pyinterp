@@ -11,6 +11,7 @@ extern void init_axis(py::module&);
 extern void init_bicubic(py::module&);
 extern void init_geodetic(py::module&);
 extern void init_grid(py::module&);
+extern void init_fill(py::module&);
 extern void init_rtree(py::module&);
 
 PYBIND11_MODULE(core, m) {
@@ -24,11 +25,17 @@ Geographic coordinate system
 ----------------------------
 )__doc__");
 
+  auto fill = m.def_submodule("fill", R"__doc__(
+Replace undefined values
+------------------------
+)__doc__");
+
   pyinterp::detail::gsl::set_error_handler();
 
   init_axis(m);
   init_grid(m);
   init_bicubic(m);
   init_geodetic(geodetic);
+  init_fill(fill);
   init_rtree(m);
 }
