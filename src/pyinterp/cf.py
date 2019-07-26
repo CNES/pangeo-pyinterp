@@ -6,7 +6,7 @@
 CF (Climate and Forecast)
 -------------------------
 """
-from typing import List, Optional
+from typing import List
 
 
 class AxisUnit(list):
@@ -55,4 +55,3 @@ class AxisTimeUnit(AxisUnit):
         super(AxisTimeUnit, self).__init__()
         self.append("days")
         self.append("seconds")
-

@@ -63,92 +63,77 @@ class InverseDistanceWeighting
 /// @tparam Coordinate The type of data used by the interpolators.
 /// @tparam Type The type of data used by the numerical grid.
 template <template <class> class Point, typename Coordinate, typename Type>
-class Bivariate : public Grid2D<Type> {
- public:
-  using Grid2D<Type>::Grid2D;
+pybind11::array_t<Coordinate> bivariate(
+    const Grid2D<Type>& grid, const pybind11::array_t<Coordinate>& x,
+    const pybind11::array_t<Coordinate>& y,
+    const BivariateInterpolator<Point, Coordinate>* interpolator,
+    const bool bounds_error, const size_t num_threads) {
+  pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
+  pyinterp::detail::check_ndarray_shape("x", x, "y", y);
 
-  /// Interpolates data using the defined interpolation function.
-  pybind11::array_t<Coordinate> evaluate(
-      const pybind11::array_t<Coordinate>& x,
-      const pybind11::array_t<Coordinate>& y,
-      const BivariateInterpolator<Point, Coordinate>* interpolator,
-      const bool bounds_error, const size_t num_threads) {
-    pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
-    pyinterp::detail::check_ndarray_shape("x", x, "y", y);
+  auto size = x.size();
+  auto result =
+      pybind11::array_t<Coordinate>(pybind11::array::ShapeContainer{size});
+  auto _x = x.template unchecked<1>();
+  auto _y = y.template unchecked<1>();
+  auto _result = result.template mutable_unchecked<1>();
 
-    auto size = x.size();
-    auto result =
-        pybind11::array_t<Coordinate>(pybind11::array::ShapeContainer{size});
-    auto _x = x.template unchecked<1>();
-    auto _y = y.template unchecked<1>();
-    auto _result = result.template mutable_unchecked<1>();
+  {
+    pybind11::gil_scoped_release release;
 
-    {
-      pybind11::gil_scoped_release release;
+    // Captures the detected exceptions in the calculation function
+    // (only the last exception captured is kept)
+    auto except = std::exception_ptr(nullptr);
 
-      // Captures the detected exceptions in the calculation function
-      // (only the last exception captured is kept)
-      auto except = std::exception_ptr(nullptr);
+    detail::dispatch(
+        [&](size_t start, size_t end) {
+          try {
+            for (size_t ix = start; ix < end; ++ix) {
+              auto x_indexes = grid.x()->find_indexes(_x(ix));
+              auto y_indexes = grid.y()->find_indexes(_y(ix));
 
-      detail::dispatch(
-          [&](size_t start, size_t end) {
-            try {
-              for (size_t ix = start; ix < end; ++ix) {
-                auto x_indexes = this->x_->find_indexes(_x(ix));
-                auto y_indexes = this->y_->find_indexes(_y(ix));
+              if (x_indexes.has_value() && y_indexes.has_value()) {
+                int64_t ix0, ix1, iy0, iy1;
+                std::tie(ix0, ix1) = *x_indexes;
+                std::tie(iy0, iy1) = *y_indexes;
 
-                if (x_indexes.has_value() && y_indexes.has_value()) {
-                  int64_t ix0, ix1, iy0, iy1;
-                  std::tie(ix0, ix1) = *x_indexes;
-                  std::tie(iy0, iy1) = *y_indexes;
+                auto x0 = (*grid.x())(ix0);
 
-                  auto x0 = (*this->x_)(ix0);
+                _result(ix) = interpolator->evaluate(
+                    Point<Coordinate>(
+                        grid.x()->is_angle()
+                            ? detail::math::normalize_angle(_x(ix), x0)
+                            : _x(ix),
+                        _y(ix)),
+                    Point<Coordinate>((*grid.x())(ix0), (*grid.y())(iy0)),
+                    Point<Coordinate>((*grid.x())(ix1), (*grid.y())(iy1)),
+                    static_cast<Coordinate>(grid.value(ix0, iy0)),
+                    static_cast<Coordinate>(grid.value(ix0, iy1)),
+                    static_cast<Coordinate>(grid.value(ix1, iy0)),
+                    static_cast<Coordinate>(grid.value(ix1, iy1)));
 
-                  _result(ix) = interpolator->evaluate(
-                      Point<Coordinate>(
-                          this->x_->is_angle()
-                              ? detail::math::normalize_angle(_x(ix), x0)
-                              : _x(ix),
-                          _y(ix)),
-                      Point<Coordinate>((*this->x_)(ix0), (*this->y_)(iy0)),
-                      Point<Coordinate>((*this->x_)(ix1), (*this->y_)(iy1)),
-                      static_cast<Coordinate>(this->ptr_(ix0, iy0)),
-                      static_cast<Coordinate>(this->ptr_(ix0, iy1)),
-                      static_cast<Coordinate>(this->ptr_(ix1, iy0)),
-                      static_cast<Coordinate>(this->ptr_(ix1, iy1)));
-
-                } else {
-                  if (bounds_error) {
-                    if (!x_indexes.has_value()) {
-                      Bivariate::index_error(*this->x_, _x(ix), "x");
-                    }
-                    Bivariate::index_error(*this->y_, _y(ix), "y");
+              } else {
+                if (bounds_error) {
+                  if (!x_indexes.has_value()) {
+                    Grid2D<Type>::index_error(*grid.x(), _x(ix), "x");
                   }
-                  _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
+                  Grid2D<Type>::index_error(*grid.y(), _y(ix), "y");
                 }
+                _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
               }
-            } catch (...) {
-              except = std::current_exception();
             }
-          },
-          size, num_threads);
+          } catch (...) {
+            except = std::current_exception();
+          }
+        },
+        size, num_threads);
 
-      if (except != nullptr) {
-        std::rethrow_exception(except);
-      }
+    if (except != nullptr) {
+      std::rethrow_exception(except);
     }
-    return result;
   }
-
-  /// Pickle support: set state
-  static Bivariate setstate(const pybind11::tuple& tuple) {
-    return Bivariate(Grid2D<Type>::setstate(tuple));
-  }
-
- private:
-  /// Construct a new instance from a serialized instance
-  explicit Bivariate(Grid2D<Type>&& grid) : Grid2D<Type>(grid) {}
-};
+  return result;
+}
 
 template <template <class> class Point, typename T>
 void implement_bivariate_interpolator(pybind11::module& m,
@@ -208,30 +193,20 @@ void implement_bivariate_interpolator(pybind11::module& m,
 }
 
 template <template <class> class Point, typename Coordinate, typename Type>
-void implement_bivariate(pybind11::module& m, const char* class_name) {
-  pybind11::class_<Bivariate<Point, Coordinate, Type>, Grid2D<Type>>(m, class_name,
-                                                       R"__doc__(
-Interpolation of bivariate functions
-)__doc__")
-      .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
-                          pybind11::array_t<Type>>(),
-           pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
-           R"__doc__(
-Default constructor
-
-Args:
-    x (pyinterp.core.Axis): X-Axis
-    y (pyinterp.core.Axis): Y-Axis
-    array (numpy.ndarray): Bivariate function
-)__doc__")
-      .def("evaluate", &Bivariate<Point, Coordinate, Type>::evaluate,
-           pybind11::arg("x"), pybind11::arg("y"),
-           pybind11::arg("interpolator"), pybind11::arg("bounds_error") = false,
-           pybind11::arg("num_threads") = 0,
-           R"__doc__(
+void implement_bivariate(pybind11::module& m, const std::string& suffix) {
+  auto function_suffix = suffix;
+  function_suffix[0] = std::tolower(function_suffix[0]);
+  m.def(("bivariate_" + function_suffix).c_str(),
+        &bivariate<Point, Coordinate, Type>, pybind11::arg("grid"),
+        pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("interpolator"),
+        pybind11::arg("bounds_error") = false, pybind11::arg("num_threads") = 0,
+        (R"__doc__(
 Interpolate the values provided on the defined bivariate function.
 
 Args:
+    grid (pyinterp.core.Grid2D)__doc__" +
+         suffix +
+         R"__doc__(): Grid containing the values to be interpolated.
     x (numpy.ndarray): X-values
     y (numpy.ndarray): Y-values
     interpolator (pyinterp.core.BivariateInterpolator2D): 2D interpolator
@@ -246,20 +221,7 @@ Args:
 Return:
     numpy.ndarray: Values interpolated
 )__doc__")
-      .def_static("_setstate", &Bivariate<Point, Coordinate, Type>::setstate,
-                  pybind11::arg("state"), R"__doc__(
-Rebuild an instance from a registered state of this object.
-
-Args:
-  state: Registred state of this object
-)__doc__")
-      .def(pybind11::pickle(
-          [](const Bivariate<Point, Coordinate, Type>& self) {
-            return self.getstate();
-          },
-          [](const pybind11::tuple& state) {
-            return Bivariate<Point, Coordinate, Type>::setstate(state);
-          }));
+            .c_str());
 }
 
 }  // namespace pyinterp

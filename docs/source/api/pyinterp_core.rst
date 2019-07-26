@@ -7,19 +7,9 @@
 
         .. automethod:: __init__
 
-    .. autoclass:: BicubicFloat64
-        :show-inheritance:
-        :members:
-        :inherited-members:
+    .. autofunction:: bicubic_float64
 
-        .. automethod:: __init__
-
-    .. autoclass:: BivariateFloat64
-        :show-inheritance:
-        :members:
-        :inherited-members:
-
-        .. automethod:: __init__
+    .. autofunction:: bivariate_float64
 
     .. autoclass:: BivariateInterpolator2D
         :show-inheritance:
@@ -34,6 +24,11 @@
         :inherited-members:
 
         .. automethod:: __init__
+
+    .. autoclass:: FittingModel
+        :show-inheritance:
+        :members:
+        :inherited-members:
 
     .. autoclass:: Grid2DFloat64
         :show-inheritance:
@@ -94,9 +89,4 @@
 
         .. automethod:: __init__
 
-    .. autoclass:: TrivariateFloat64
-        :show-inheritance:
-        :members:
-        :inherited-members:
-
-        .. automethod:: __init__
+    .. autofunction:: trivariate_float64

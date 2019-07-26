@@ -19,31 +19,31 @@ def plot(x, y, z, filename):
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
     value = z.mean()
     std = z.std()
-    normalize = matplotlib.colors.Normalize(
-        vmin=value - 3 * std, vmax=value + 3 * std)
+    normalize = matplotlib.colors.Normalize(vmin=value - 3 * std,
+                                            vmax=value + 3 * std)
     axe = figure.add_subplot(2, 1, 1)
     axe.pcolormesh(x, y, z, cmap='jet', norm=normalize)
-    figure.savefig(
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), filename),
-        bbox_inches='tight',
-        pad_inches=0.4)
+    figure.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                filename),
+                   bbox_inches='tight',
+                   pad_inches=0.4)
 
 
 class TestRTree(unittest.TestCase):
-    GRID = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "..", "dataset", "mss.nc")
+    GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+                        "dataset", "mss.nc")
 
     @classmethod
     def load_data(cls):
         with netCDF4.Dataset(cls.GRID) as ds:
             z = ds.variables['mss'][:].T
             z[z.mask] = float("nan")
-            x, y = np.meshgrid(
-                ds.variables['lon'][:], ds.variables['lat'][:], indexing='ij')
+            x, y = np.meshgrid(ds.variables['lon'][:],
+                               ds.variables['lat'][:],
+                               indexing='ij')
             mesh = core.RTreeFloat32(core.geodetic.System())
             mesh.packing(
-                np.vstack((x.flatten(), y.flatten())).T,
-                z.data.flatten())
+                np.vstack((x.flatten(), y.flatten())).T, z.data.flatten())
             return mesh
 
     def test_interpolate(self):
@@ -51,18 +51,18 @@ class TestRTree(unittest.TestCase):
         lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
         lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
         x, y = np.meshgrid(lon, lat, indexing="ij")
-        z0, _ = mesh.inverse_distance_weighting(
-            np.vstack((x.flatten(), y.flatten())).T,
-            within=False,
-            radius=35434,
-            k=8,
-            num_threads=0)
-        z1, _ = mesh.inverse_distance_weighting(
-            np.vstack((x.flatten(), y.flatten())).T,
-            within=False,
-            radius=35434,
-            k=8,
-            num_threads=1)
+        z0, _ = mesh.inverse_distance_weighting(np.vstack(
+            (x.flatten(), y.flatten())).T,
+                                                within=False,
+                                                radius=35434,
+                                                k=8,
+                                                num_threads=0)
+        z1, _ = mesh.inverse_distance_weighting(np.vstack(
+            (x.flatten(), y.flatten())).T,
+                                                within=False,
+                                                radius=35434,
+                                                k=8,
+                                                num_threads=1)
         z0 = np.ma.fix_invalid(z0)
         z1 = np.ma.fix_invalid(z1)
         self.assertTrue(np.all(z1 == z0))

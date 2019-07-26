@@ -11,44 +11,66 @@ namespace py = pybind11;
 
 namespace pyinterp {
 
+/// Returns the GSL interp type
+inline const gsl_interp_type* interp_type(const FittingModel kind) {
+  switch (kind) {
+    case kLinear:
+      return gsl_interp_linear;
+    case kPolynomial:
+      return gsl_interp_polynomial;
+    case kCSpline:
+      return gsl_interp_cspline;
+    case kCSplinePeriodic:
+      return gsl_interp_cspline_periodic;
+    case kAkima:
+      return gsl_interp_akima;
+    case kAkimaPeriodic:
+      return gsl_interp_akima_periodic;
+    case kSteffen:
+      return gsl_interp_steffen;
+    default:
+      throw std::invalid_argument("Invalid interpolation type: " +
+                                  std::to_string(kind));
+  }
+}
+
 /// Loads the interpolation frame into memory
 template <typename Type>
-bool Bicubic<Type>::load_frame(const double x, const double y,
-                               const Axis::Boundary boundary,
-                               const bool bounds_error,
-                               detail::math::XArray& frame) const {
+bool load_frame(const Grid2D<Type>& grid, const double x, const double y,
+                const Axis::Boundary boundary, const bool bounds_error,
+                detail::math::XArray& frame) {
   auto y_indexes =
-      this->y_->find_indexes(y, static_cast<uint32_t>(frame.ny()), boundary);
+      grid.y()->find_indexes(y, static_cast<uint32_t>(frame.ny()), boundary);
   auto x_indexes =
-      this->x_->find_indexes(x, static_cast<uint32_t>(frame.nx()), boundary);
+      grid.x()->find_indexes(x, static_cast<uint32_t>(frame.nx()), boundary);
 
   if (x_indexes.empty() || y_indexes.empty()) {
     if (bounds_error) {
       if (x_indexes.empty()) {
-        Bicubic::index_error(*this->x_, static_cast<Type>(x), "x");
+        Grid2D<Type>::index_error(*grid.x(), static_cast<Type>(x), "x");
       }
-      Bicubic::index_error(*this->y_, static_cast<Type>(y), "y");
+      Grid2D<Type>::index_error(*grid.y(), static_cast<Type>(y), "y");
     }
     return false;
   }
 
-  auto x0 = (*this->x_)(x_indexes[0]);
+  auto x0 = (*grid.x())(x_indexes[0]);
 
   for (auto jx = 0; jx < frame.y().size(); ++jx) {
-    frame.y(jx) = (*this->y_)(y_indexes[jx]);
+    frame.y(jx) = (*grid.y())(y_indexes[jx]);
   }
 
   for (auto ix = 0; ix < frame.x().size(); ++ix) {
     auto index = x_indexes[ix];
-    auto value = (*this->x_)(index);
+    auto value = (*grid.x())(index);
 
-    if (this->x_->is_angle()) {
+    if (grid.x()->is_angle()) {
       value = detail::math::normalize_angle(value, x0);
     }
     frame.x(ix) = value;
 
     for (auto jx = 0; jx < frame.y().size(); ++jx) {
-      frame.z(ix, jx) = static_cast<double>(this->ptr_(index, y_indexes[jx]));
+      frame.z(ix, jx) = static_cast<double>(grid.value(index, y_indexes[jx]));
     }
   }
   return frame.is_valid();
@@ -56,10 +78,12 @@ bool Bicubic<Type>::load_frame(const double x, const double y,
 
 /// Evaluate the interpolation.
 template <typename Type>
-py::array_t<double> Bicubic<Type>::evaluate(
-    const py::array_t<double>& x, const py::array_t<double>& y, size_t nx,
-    size_t ny, FittingModel fitting_model, const Axis::Boundary boundary,
-    const bool bounds_error, size_t num_threads) const {
+py::array_t<double> bicubic(const Grid2D<Type>& grid,
+                            const py::array_t<double>& x,
+                            const py::array_t<double>& y, size_t nx, size_t ny,
+                            FittingModel fitting_model,
+                            const Axis::Boundary boundary,
+                            const bool bounds_error, size_t num_threads) {
   detail::check_array_ndim("x", 1, x, "y", 1, y);
   detail::check_ndarray_shape("x", x, "y", y);
 
@@ -80,15 +104,15 @@ py::array_t<double> Bicubic<Type>::evaluate(
         [&](const size_t start, const size_t end) {
           try {
             auto frame = detail::math::XArray(nx, ny);
-            auto interpolator = detail::math::Bicubic(
-                frame, Bicubic::interp_type(fitting_model));
+            auto interpolator =
+                detail::math::Bicubic(frame, interp_type(fitting_model));
 
             for (size_t ix = start; ix < end; ++ix) {
               auto xi = _x(ix);
               auto yi = _y(ix);
               _result(ix) =
-                  load_frame(xi, yi, boundary, bounds_error, frame)
-                      ? interpolator.interpolate(this->x_->is_angle()
+                  load_frame(grid, xi, yi, boundary, bounds_error, frame)
+                      ? interpolator.interpolate(grid.x()->is_angle()
                                                      ? frame.normalize_angle(xi)
                                                      : xi,
                                                  yi, frame)
@@ -110,35 +134,26 @@ py::array_t<double> Bicubic<Type>::evaluate(
 }  // namespace pyinterp
 
 template <typename Type>
-void implement_bicubic(py::module& m, const char* const class_name) {
-  py::class_<pyinterp::Bicubic<Type>, pyinterp::Grid2D<Type>>(m, class_name,
-                                                              R"__doc__(
+void implement_bicubic(py::module& m, const std::string& suffix) {
+  auto function_suffix = suffix;
+  function_suffix[0] = std::tolower(function_suffix[0]);
+
+  m.def(("bicubic_" + function_suffix).c_str(), &pyinterp::bicubic<Type>,
+        py::arg("grid"), py::arg("x"), py::arg("y"), py::arg("nx") = 3,
+        py::arg("ny") = 3,
+        py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
+        py::arg("boundary") = pyinterp::Axis::kUndef,
+        py::arg("bounds_error") = false, py::arg("num_threads") = 0,
+        (R"__doc__(
 Extension of cubic interpolation for interpolating data points on a
 two-dimensional regular grid. The interpolated surface is smoother than
 corresponding surfaces obtained by bilinear interpolation or
 nearest-neighbor interpolation.
-)__doc__")
-      .def(
-          py::init<std::shared_ptr<pyinterp::Axis>,
-                   std::shared_ptr<pyinterp::Axis>, const py::array_t<Type>&>(),
-          py::arg("x"), py::arg("y"), py::arg("array"),
-          R"__doc__(
-Default constructor
 
 Args:
-    x (pyinterp.core.Axis): X-Axis
-    y (pyinterp.core.Axis): Y-Axis
-    array (numpy.ndarray): Bivariate function
-  )__doc__")
-      .def("evaluate", &pyinterp::Bicubic<Type>::evaluate, py::arg("x"),
-           py::arg("y"), py::arg("nx") = 3, py::arg("ny") = 3,
-           py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
-           py::arg("boundary") = pyinterp::Axis::kUndef,
-           py::arg("bounds_error") = false, py::arg("num_threads") = 0,
-           R"__doc__(
-Evaluate the interpolation.
-
-Args:
+    grid (pyinterp.core.Grid2D)__doc__" +
+         suffix +
+         R"__doc__(): Grid containing the values to be interpolated.
     x (numpy.ndarray): X-values
     y (numpy.ndarray): Y-values
     nx (int, optional): The number of X coordinate values required to perform
@@ -161,19 +176,7 @@ Args:
 Return:
     numpy.ndarray: Values interpolated
   )__doc__")
-      .def_static("_setstate", &pyinterp::Bicubic<Type>::setstate,
-                  py::arg("state"), R"__doc__(
-Rebuild an instance from a registered state of this object.
-
-Args:
-  state: Registred state of this object
-)__doc__")
-      .def(py::pickle(
-          [](const pyinterp::Bicubic<Type>& self) { return self.getstate(); },
-          [](const py::tuple& tuple) {
-            return new pyinterp::Bicubic(
-                pyinterp::Bicubic<Type>::setstate(tuple));
-          }));
+            .c_str());
 }
 
 void init_bicubic(py::module& m) {
@@ -197,6 +200,6 @@ Bicubic fitting model
           "*Steffen’s method guarantees the monotonicity of data points. the "
           "interpolating function between the given*.");
 
-  implement_bicubic<double>(m, "BicubicFloat64");
-  implement_bicubic<float>(m, "BicubicFloat32");
+  implement_bicubic<double>(m, "Float64");
+  implement_bicubic<float>(m, "Float32");
 }

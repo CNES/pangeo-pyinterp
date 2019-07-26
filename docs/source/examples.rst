@@ -40,8 +40,8 @@ grid:
     x_axis = pyinterp.core.Axis(ds.variables["lon"][:], is_circle=True)
     y_axis = pyinterp.core.Axis(ds.variables["lat"][:])
 
-Finally, we can construct the interpolation :py:class:`object
-<pyinterp.bivariate.Bivariate>`:
+Finally, we can build the object defining the :py:class:`grid
+<pyinterp.grid.Grid2D>` to interpolate:
 
 .. code:: python
 
@@ -49,7 +49,7 @@ Finally, we can construct the interpolation :py:class:`object
     mss = ds.variables["mss"][:].T
     # The undefined values must be set to nan.
     mss[mss.mask] = float("nan")
-    interpolator = pyinterp.bivariate.Bivariate(x_axis, y_axis, mss.data)
+    grid = pyinterp.grid.Grid2D(x_axis, y_axis, mss.data)
 
 We will then build the coordinates on which we want to interpolate our grid:
 
@@ -63,12 +63,13 @@ We will then build the coordinates on which we want to interpolate our grid:
                          np.arange(-89, 89, 1) + 1 / 3.0,
                          indexing='ij')
 
-The grid is :py:meth:`interpolated <pyinterp.bivariate.Bivariate.evaluate>` to
+The grid is :py:meth:`interpolated <pyinterp.bivariate.bivariate>` to
 the desired coordinates:
 
 .. code:: python
 
-    mss = interpolator.evaluate(mx.flatten(), my.flatten()).reshape(mx.shape)
+    mss = pyinterp.bivariate.bivariate(
+        grid, mx.flatten(), my.flatten()).reshape(mx.shape)
 
 Values can be interpolated with several methods: *bilinear*, *nearest*, and
 *inverse distance weighting*. Distance calculations, if necessary, are
@@ -85,8 +86,8 @@ implements all the other interpolators of the regular grids presented below.
     import xarray as xr
 
     ds = xr.open_dataset("tests/dataset/mss.nc")
-    interpolator = pyinterp.backends.xarray.Bivariate(ds, "mss")
-    mss = interpolator.evaluate(dict(lon=mx.flatten(), lat=my.flatten()))
+    interpolator = pyinterp.backends.xarray.Grid2D(ds, "mss")
+    mss = interpolator.bivariate(dict(lon=mx.flatten(), lat=my.flatten()))
 
 Bicubic
 #######
@@ -96,51 +97,24 @@ surface is smoother than the corresponding surfaces obtained by bilinear
 interpolation. Bicubic interpolation is achieved by spline functions provided
 by `GSL <https://www.gnu.org/software/gsl/>`_.
 
-The initialization procedure is similar to :ref:`bivariate` interpolation,
-except that the :py:class:`object <pyinterp.bicubic.Bicubic>` that controls
-the interpolation is different:
+The interpolation :py:meth:`pyinterp.bicubic.bicubic` function has more
+parameters in order to define the data frame used by the spline functions and
+how to process the edges of the regional grids:
 
 .. code:: python
 
-    import netCDF4
     import pyinterp.bicubic
-    import pyinterp.core
 
-    ds = netCDF4.Dataset("tests/dataset/mss.nc")
-    x_axis = pyinterp.core.Axis(ds.variables["lon"][:], is_circle=True)
-    y_axis = pyinterp.core.Axis(ds.variables["lat"][:])
-    mss = ds.variables["mss"][:].T
-    mss[mss.mask] = float("nan")
-    interpolator = pyinterp.bicubic.Bicubic(x_axis, y_axis, mss.data)
+    mss = pyinterp.bicubic.bicubic(
+        grid, mx.flatten(), my.flatten(), nx=3, ny=3).reshape(mx.shape)
 
-The interpolation :py:meth:`pyinterp.bicubic.Bicubic.evaluating` function has
-more parameters in order to define the data frame used by the spline functions
-and how to process the edges of the regional grids:
-
-.. code:: python
-
-    import numpy as np
-
-    # The coordinates used for interpolation are shifted to avoid using the
-    # points of the bivariate function.
-    mx, my = np.meshgrid(np.arange(-180, 180, 1) + 1 / 3.0,
-                         np.arange(-89, 89, 1) + 1 / 3.0,
-                         indexing='ij')
-    mss = interpolator.evaluate(
-        mx.flatten(), my.flatten(), nx=3, ny=3).reshape(mx.shape)
 
 It is also possible to simplify the interpolation of the dataset by using
 xarray:
 
 .. code:: python
 
-    import pyinterp.backends.xarray
-    import xarray as xr
-
-    ds = xr.open_dataset("tests/dataset/mss.nc")
-    interpolator = pyinterp.backends.xarray.Bicubic(ds, "mss")
-    mss = interpolator.evaluate(
-        dict(lon=mx.flatten(), lat=my.flatten()), nx=3, ny=3)
+    mss = interpolator.bicubic(dict(lon=mx.flatten(), lat=my.flatten()))
 
 3D interpolation
 ================
@@ -165,9 +139,6 @@ axis which is handled by this object.
 
 .. code:: python
 
-    import netCDF4
-    import numpy as np
-    import pyinterp.core
     import pyinterp.trivariate
 
     ds = netCDF4.Dataset("tests/dataset/tcw.nc")
@@ -179,28 +150,25 @@ axis which is handled by this object.
     tcw = ds.variables['tcw'][:].T
     # The undefined values must be set to nan.
     tcw[tcw.mask] = float("nan")
-    interpolator = pyinterp.trivariate.Trivariate(
+    grid = pyinterp.grid.Grid3D(
         x_axis, y_axis, z_axis, tcw.data)
     # The coordinates used for interpolation are shifted to avoid using the
     # points of the bivariate function.
     mx, my, mz = np.meshgrid(np.arange(-180, 180, 1) + 1 / 3.0,
-                             np.arange(-89, 89, 1) + 1 / 3.0,
-                             898500 + 3,
-                             indexing='ij')
-    tcw = interpolator.evaluate(
-        mx.flatten(), my.flatten(), mz.flatten()).reshape(mx.shape)
+                            np.arange(-89, 89, 1) + 1 / 3.0,
+                            898500 + 3,
+                            indexing='ij')
+    tcw = pyinterp.trivariate.trivariate(
+        grid, mx.flatten(), my.flatten(), mz.flatten()).reshape(mx.shape)
 
 It is also possible to simplify the interpolation of the dataset by using
 xarray:
 
 .. code:: python
 
-    import pyinterp.backends.xarray
-    import xarray as xr
-
     ds = xr.open_dataset("tests/dataset/tcw.nc")
-    interpolator = pyinterp.backends.xarray.Trivariate(ds, "tcw")
-    tcw = interpolator.evaluate(
+    interpolator = pyinterp.backends.xarray.Grid3D(ds, "tcw")
+    tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
 Unstructured grid
@@ -214,8 +182,6 @@ But you can define another one using class :py:class:`System
 
 .. code:: python
 
-    import netCDF4
-    import numpy as np
     import pyinterp.rtree
 
     mesh = pyinterp.rtree.RTree()

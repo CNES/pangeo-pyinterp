@@ -58,6 +58,25 @@ class Grid2D {
   /// Gets values of the array to interpolate
   inline const pybind11::array_t<T>& array() const noexcept { return array_; }
 
+  /// Gets the grid value for the coordinate pixel (ix, iy, ...).
+  template <typename... Index>
+  inline const T& value(Index&&... index) const noexcept {
+    return ptr_(std::forward<Index>(index)...);
+  }
+
+  /// Throws an exception indicating that the value searched on the axis is
+  /// outside the domain axis.
+  ///
+  /// @param axis Axis involved.
+  /// @param value The value outside the axis domain.
+  /// @param axis_label The name of the axis
+  static void index_error(const Axis& axis, const T& value,
+                          const std::string& axis_label) {
+    throw std::invalid_argument(std::to_string(value) +
+                                " is out ouf bounds for axis " + axis_label +
+                                " (" + static_cast<std::string>(axis) + ")");
+  }
+
   /// Pickle support: get state of this instance
   virtual pybind11::tuple getstate() const {
     return pybind11::make_tuple(x_->getstate(), y_->getstate(), array_);
@@ -80,19 +99,6 @@ class Grid2D {
   std::shared_ptr<Axis> y_;
   pybind11::array_t<T> array_;
   pybind11::detail::unchecked_reference<T, Dimension> ptr_;
-
-  /// Throws an exception indicating that the value searched on the axis is
-  /// outside the domain axis.
-  ///
-  /// @param axis Axis involved.
-  /// @param value The value outside the axis domain.
-  /// @param axis_label The name of the axis
-  static void index_error(const Axis& axis, const T& value,
-                          const std::string& axis_label) {
-    throw std::invalid_argument(std::to_string(value) +
-                                " is out ouf bounds for axis " + axis_label +
-                                " (" + static_cast<std::string>(axis) + ")");
-  }
 
   /// End of the recursive call of the function "check_shape"
   void check_shape(const size_t idx) {}
@@ -153,6 +159,17 @@ template <typename Type>
 void implement_grid(pybind11::module& m, const std::string& suffix) {
   pybind11::class_<Grid2D<Type>>(m, ("Grid2D" + suffix).c_str(),
                                  "Cartesian Grid 2D")
+      .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
+                          pybind11::array_t<Type>>(),
+           pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
+           R"__doc__(
+Default constructor
+
+Args:
+    x (pyinterp.core.Axis): X-Axis
+    y (pyinterp.core.Axis): Y-Axis
+    array (numpy.ndarray): Bivariate function
+)__doc__")
       .def_property_readonly("x",
                              [](const Grid2D<Type>& self) { return self.x(); },
                              R"__doc__(
@@ -176,10 +193,28 @@ Gets the values handled by this instance
 
 Returns:
     numpy.ndarray: values
-)__doc__");
+)__doc__")
+      .def(pybind11::pickle(
+          [](const Grid2D<Type>& self) { return self.getstate(); },
+          [](const pybind11::tuple& state) {
+            return Grid2D<Type>::setstate(state);
+          }));
 
   pybind11::class_<Grid3D<Type>>(m, ("Grid3D" + suffix).c_str(),
                                  "Cartesian Grid 3D")
+      .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
+                          std::shared_ptr<Axis>, pybind11::array_t<Type>>(),
+           pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
+           pybind11::arg("array"),
+           R"__doc__(
+Default constructor
+
+Args:
+    x (pyinterp.core.Axis): X-Axis
+    y (pyinterp.core.Axis): Y-Axis
+    z (pyinterp.core.Axis): Z-Axis
+    array (numpy.ndarray): Trivariate function
+)__doc__")
       .def_property_readonly("x",
                              [](const Grid3D<Type>& self) { return self.x(); },
                              R"__doc__(
@@ -211,7 +246,13 @@ Gets the values handled by this instance
 
 Returns:
     numpy.ndarray: values
-)__doc__");
+)__doc__")
+      .def(pybind11::pickle(
+          [](const Grid3D<Type>& self) { return self.getstate(); },
+          [](const pybind11::tuple& state) {
+            return Grid3D<Type>::setstate(state);
+          }));
+  ;
 }
 
 }  // namespace pyinterp

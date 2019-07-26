@@ -19,12 +19,12 @@ void init_grid(py::module& m) {
   pyinterp::implement_grid<float>(m, "Float32");
 
   pyinterp::implement_bivariate<geometry::EquatorialPoint2D, double, double>(
-      m, "BivariateFloat64");
+      m, "Float64");
   pyinterp::implement_bivariate<geometry::EquatorialPoint2D, double, float>(
-      m, "BivariateFloat32");
+      m, "Float32");
 
   pyinterp::implement_trivariate<geometry::EquatorialPoint3D, double, double>(
-      m, "TrivariateFloat64");
+      m, "Float64");
   pyinterp::implement_trivariate<geometry::EquatorialPoint3D, double, float>(
-      m, "TrivariateFloat32");
+      m, "Float32");
 }

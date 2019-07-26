@@ -34,30 +34,49 @@ class TestCase(unittest.TestCase):
                         "dataset", "mss.nc")
 
     @classmethod
-    def load_data(cls, name='BivariateFloat64'):
+    def load_data(cls):
         with netCDF4.Dataset(cls.GRID) as ds:
             z = ds.variables['mss'][:].T
             z[z.mask] = float("nan")
-            return getattr(core, name)(core.Axis(ds.variables['lon'][:],
-                                                 is_circle=True),
-                                       core.Axis(ds.variables['lat'][:]),
-                                       z.data)
+            return core.Grid2DFloat64(
+                core.Axis(ds.variables['lon'][:], is_circle=True),
+                core.Axis(ds.variables['lat'][:]), z.data)
+
+
+class TestGrid2D(TestCase):
+    def test_init(self):
+        grid = self.load_data()
+        self.assertIsInstance(grid.x, core.Axis)
+        self.assertIsInstance(grid.y, core.Axis)
+        self.assertIsInstance(grid.array, np.ndarray)
+
+    def test_pickle(self):
+        grid = self.load_data()
+        other = pickle.loads(pickle.dumps(grid))
+        self.assertEqual(grid.x, other.x)
+        self.assertEqual(grid.y, other.y)
+        self.assertTrue(
+            np.all(
+                np.ma.fix_invalid(grid.array) == np.ma.fix_invalid(
+                    other.array)))
 
 
 class TestBivariate(TestCase):
     def _test(self, interpolator, filename):
-        bivariate = self.load_data()
+        grid = self.load_data()
         lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
         lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
         x, y = np.meshgrid(lon, lat, indexing="ij")
-        z0 = bivariate.evaluate(x.flatten(),
-                                y.flatten(),
-                                interpolator,
-                                num_threads=0)
-        z1 = bivariate.evaluate(x.flatten(),
-                                y.flatten(),
-                                interpolator,
-                                num_threads=1)
+        z0 = core.bivariate_float64(grid,
+                                    x.flatten(),
+                                    y.flatten(),
+                                    interpolator,
+                                    num_threads=0)
+        z1 = core.bivariate_float64(grid,
+                                    x.flatten(),
+                                    y.flatten(),
+                                    interpolator,
+                                    num_threads=1)
         z0 = np.ma.fix_invalid(z0)
         z1 = np.ma.fix_invalid(z1)
         self.assertTrue(np.all(z1 == z0))
@@ -65,11 +84,12 @@ class TestBivariate(TestCase):
             plot(x, y, z0.reshape((len(lon), len(lat))), filename)
 
         with self.assertRaises(ValueError):
-            bivariate.evaluate(x.flatten(),
-                               y.flatten(),
-                               interpolator,
-                               bounds_error=True,
-                               num_threads=0)
+            core.bivariate_float64(grid,
+                                   x.flatten(),
+                                   y.flatten(),
+                                   interpolator,
+                                   bounds_error=True,
+                                   num_threads=0)
 
         return z0
 
@@ -81,59 +101,42 @@ class TestBivariate(TestCase):
         self.assertTrue((a - c).std() != 0)
         self.assertTrue((b - c).std() != 0)
 
-    def test_pickle(self):
-        interpolator = self.load_data()
-        other = pickle.loads(pickle.dumps(interpolator))
-        self.assertEqual(interpolator.x, other.x)
-        self.assertEqual(interpolator.y, other.y)
-        self.assertTrue(
-            np.all(
-                np.ma.fix_invalid(interpolator.array) == np.ma.fix_invalid(
-                    other.array)))
-
 
 class TestBicubic(TestCase):
     def test_multi_threads(self):
-        interpolator = self.load_data('BicubicFloat64')
+        grid = self.load_data()
         lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
         lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
         x, y = np.meshgrid(lon, lat, indexing="ij")
-        z0 = interpolator.evaluate(x.flatten(),
-                                   y.flatten(),
-                                   fitting_model=core.FittingModel.Akima,
-                                   num_threads=0)
-        z1 = interpolator.evaluate(x.flatten(),
-                                   y.flatten(),
-                                   fitting_model=core.FittingModel.Akima,
-                                   num_threads=1)
+        z0 = core.bicubic_float64(grid,
+                                  x.flatten(),
+                                  y.flatten(),
+                                  fitting_model=core.FittingModel.Akima,
+                                  num_threads=0)
+        z1 = core.bicubic_float64(grid,
+                                  x.flatten(),
+                                  y.flatten(),
+                                  fitting_model=core.FittingModel.Akima,
+                                  num_threads=1)
         z0 = np.ma.fix_invalid(z0)
         z1 = np.ma.fix_invalid(z1)
         self.assertTrue(np.all(z1 == z0))
         if HAVE_PLT:
             plot(x, y, z0.reshape((len(lon), len(lat))), "mss_akima.png")
 
-        z0 = interpolator.evaluate(x.flatten(), y.flatten())
+        z0 = core.bicubic_float64(grid, x.flatten(), y.flatten())
         z0 = np.ma.fix_invalid(z0)
         self.assertFalse(np.all(z1 == z0))
         if HAVE_PLT:
             plot(x, y, z0.reshape((len(lon), len(lat))), "mss_cspline.png")
 
         with self.assertRaises(ValueError):
-            interpolator.evaluate(x.flatten(),
-                                  y.flatten(),
-                                  fitting_model=core.FittingModel.Akima,
-                                  bounds_error=True,
-                                  num_threads=0)
-
-    def test_pickle(self):
-        interpolator = self.load_data('BicubicFloat64')
-        other = pickle.loads(pickle.dumps(interpolator))
-        self.assertEqual(interpolator.x, other.x)
-        self.assertEqual(interpolator.y, other.y)
-        self.assertTrue(
-            np.all(
-                np.ma.fix_invalid(interpolator.array) == np.ma.fix_invalid(
-                    other.array)))
+            core.bicubic_float64(grid,
+                                 x.flatten(),
+                                 y.flatten(),
+                                 fitting_model=core.FittingModel.Akima,
+                                 bounds_error=True,
+                                 num_threads=0)
 
 
 if __name__ == "__main__":

@@ -8,10 +8,10 @@ Interface with the library core
 """
 from typing import List, Tuple, Optional
 import numpy as np
-import xarray as xr
+from . import core
 
 
-def _core_suffix(x: np.ndarray):
+def _core_class_suffix(x: np.ndarray):
     """Get the suffix of the class handling the numpy data type.
 
     Args:
@@ -41,3 +41,20 @@ def _core_suffix(x: np.ndarray):
     if dtype == np.uint8:
         return 'Float32'
     raise ValueError("Unhandled dtype: " + str(dtype))
+
+
+def _core_function_suffix(instance: object):
+    """Get the suffix of the function handling the grid instance.
+
+    Args:
+        instance (object): grid instance
+    Returns:
+        str: the class suffix
+    """
+    if not isinstance(instance, (core.Grid2DFloat64, core.Grid2DFloat32,
+                                 core.Grid3DFloat64, core.Grid3DFloat32)):
+        raise TypeError("instance is not an object handling a grid.")
+    name = instance.__class__.__name__
+    if name.endswith("Float64"):
+        return "float64"
+    return "float32"

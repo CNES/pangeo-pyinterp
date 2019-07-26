@@ -38,27 +38,51 @@ class TestCase(unittest.TestCase):
         with netCDF4.Dataset(cls.GRID) as ds:
             z = ds.variables['tcw'][:].T
             z[z.mask] = float("nan")
-            return core.TrivariateFloat64(
+            return core.Grid3DFloat64(
                 core.Axis(ds.variables['longitude'][:], is_circle=True),
                 core.Axis(ds.variables['latitude'][:]),
                 core.Axis(ds.variables['time'][:]), z.data)
 
+
+class TestGrid3D(TestCase):
+    def test_init(self):
+        grid = self.load_data()
+        self.assertIsInstance(grid.x, core.Axis)
+        self.assertIsInstance(grid.y, core.Axis)
+        self.assertIsInstance(grid.z, core.Axis)
+        self.assertIsInstance(grid.array, np.ndarray)
+
+    def test_pickle(self):
+        grid = self.load_data()
+        other = pickle.loads(pickle.dumps(grid))
+        self.assertEqual(grid.x, other.x)
+        self.assertEqual(grid.y, other.y)
+        self.assertEqual(grid.z, other.z)
+        self.assertTrue(
+            np.all(
+                np.ma.fix_invalid(grid.array) == np.ma.fix_invalid(
+                    other.array)))
+
+
+class Trivariate(TestCase):
     def _test(self, interpolator, filename):
-        trivariate = self.load_data()
+        grid = self.load_data()
         lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
         lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
         time = 898500 + 3
         x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
-        z0 = trivariate.evaluate(x.flatten(),
-                                 y.flatten(),
-                                 t.flatten(),
-                                 interpolator,
-                                 num_threads=0)
-        z1 = trivariate.evaluate(x.flatten(),
-                                 y.flatten(),
-                                 t.flatten(),
-                                 interpolator,
-                                 num_threads=1)
+        z0 = core.trivariate_float64(grid,
+                                     x.flatten(),
+                                     y.flatten(),
+                                     t.flatten(),
+                                     interpolator,
+                                     num_threads=0)
+        z1 = core.trivariate_float64(grid,
+                                     x.flatten(),
+                                     y.flatten(),
+                                     t.flatten(),
+                                     interpolator,
+                                     num_threads=1)
         shape = (len(lon), len(lat))
         z0 = np.ma.fix_invalid(z0)
         z1 = np.ma.fix_invalid(z1)
@@ -69,24 +93,26 @@ class TestCase(unittest.TestCase):
         return z0
 
     def test_bounds_error(self):
-        trivariate = self.load_data()
+        grid = self.load_data()
         interpolator = core.Bilinear3D()
         lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
         lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
         time = 898500 + 3
         x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
-        trivariate.evaluate(x.flatten(),
-                            y.flatten(),
-                            t.flatten(),
-                            interpolator,
-                            num_threads=0)
-        with self.assertRaises(ValueError):
-            trivariate.evaluate(x.flatten(),
+        core.trivariate_float64(grid,
+                                x.flatten(),
                                 y.flatten(),
                                 t.flatten(),
                                 interpolator,
-                                bounds_error=True,
                                 num_threads=0)
+        with self.assertRaises(ValueError):
+            core.trivariate_float64(grid,
+                                    x.flatten(),
+                                    y.flatten(),
+                                    t.flatten(),
+                                    interpolator,
+                                    bounds_error=True,
+                                    num_threads=0)
 
     def test_interpolator(self):
         a = self._test(core.Nearest3D(), "tcw_trivariate_nearest")
@@ -95,17 +121,6 @@ class TestCase(unittest.TestCase):
         self.assertTrue((a - b).std() != 0)
         self.assertTrue((a - c).std() != 0)
         self.assertTrue((b - c).std() != 0)
-
-    def test_pickle(self):
-        interpolator = self.load_data()
-        other = pickle.loads(pickle.dumps(interpolator))
-        self.assertEqual(interpolator.x, other.x)
-        self.assertEqual(interpolator.y, other.y)
-        self.assertEqual(interpolator.z, other.z)
-        self.assertTrue(
-            np.all(
-                np.ma.fix_invalid(interpolator.array) == np.ma.fix_invalid(
-                    other.array)))
 
 
 if __name__ == "__main__":
