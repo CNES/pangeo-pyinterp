@@ -246,7 +246,10 @@ Raises:
 Return:
     float: Increment value
 )__doc__")
-      .def_property_readonly("is_circle", &pyinterp::Axis::is_circle, R"__doc__(
+      .def_property_readonly(
+          "is_circle",
+          [](const pyinterp::Axis& self) -> bool { return self.is_circle(); },
+          R"__doc__(
 Test if this axis represents a circle.
 
 Return:
