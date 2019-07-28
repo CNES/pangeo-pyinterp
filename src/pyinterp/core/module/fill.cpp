@@ -41,14 +41,15 @@ Return:
 )__doc__")
             .c_str());
 
-  m.def(("poisson_" + function_suffix).c_str(), &pyinterp::fill::poisson<Type>,
-        py::arg("grid"), py::arg("first_guess") = pyinterp::fill::kZonalAverage,
-        py::arg("is_circle") = true, py::arg("max_iterations") = 200,
-        py::arg("epsilon") = 1e-4, py::arg("relaxation") = 0.6,
+  m.def(("gauss_seidel_" + function_suffix).c_str(),
+        &pyinterp::fill::gauss_seidel<Type>, py::arg("grid"),
+        py::arg("first_guess") = pyinterp::fill::kZonalAverage,
+        py::arg("is_circle") = true, py::arg("max_iterations") = 2000,
+        py::arg("epsilon") = 1e-4, py::arg("relaxation") = 1.0,
         py::arg("num_thread") = 0,
         R"__doc__(
-Replaces all undefined values (NaN) in a grid with values derived from solving
-Poisson's equation via relaxation.
+Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
+method by relaxation.
 
 Args:
     grid (numpy.ndarray): Grid function on a uniform 2-dimensional grid to be
@@ -56,11 +57,10 @@ Args:
     is_circle (bool, optional): True if the X axis of the grid defines a
         circle. Defaults to ``True``.
     max_iterations (int, optional): Maximum number of iterations to be used by
-        relaxation. Defaults to ``200``.
+        relaxation. Defaults to ``2000``.
     epsilon (float, optional): Tolerance for ending relaxation before the
         maximum number of iterations limit. Defaults to ``1e-4``.
-    relaxation (float, opional): Relaxation constant.
-        Usually, ``0.45 <= relaxation <= 0.6``. Defaults to ``0.6``.
+    relaxation (float, opional): Relaxation constant. Defaults to ``1``.
     num_threads (int, optional): The number of threads to use for the
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
@@ -68,12 +68,6 @@ Args:
 
 Return:
     tuple: the number of iterations performed and the maximum residual value.
-
-.. note::
-
-    The code was written from the routine code `fish_grid_fill
-    <https://www.ncl.ucar.edu/Document/Functions/Built-in/poisson_grid_fill.shtml>`_
-    available in NCAR Common Language.
 )__doc__",
         py::call_guard<py::gil_scoped_release>());
 }

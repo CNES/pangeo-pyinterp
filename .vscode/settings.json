@@ -78,6 +78,7 @@
         "unordered_map": "cpp",
         "unordered_set": "cpp",
         "thread": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "future": "cpp"
     }
 }

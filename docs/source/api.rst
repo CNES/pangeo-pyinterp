@@ -8,6 +8,7 @@ API Documentation
     pyinterp.bicubic <api/pyinterp.bicubic>
     pyinterp.bivariate <api/pyinterp.bivariate>
     pyinterp.cf <api/pyinterp.cf>
+    pyinterp.fill <api/pyinterp.fill>
     pyinterp.geodetic <api/pyinterp.geodetic>
     pyinterp.grid <api/pyinterp.grid>
     pyinterp.rtree <api/pyinterp.rtree>

@@ -74,15 +74,15 @@ void set_zonal_average(
   }
 }
 
-/// Replaces all missing values in a grid with values derived from solving
-/// Poisson's equation.
+///  Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
+///  method by relaxation.
 ///
 /// @param grid The grid to be processed
 /// @param is_circle True if the X axis of the grid defines a circle.
 /// @param relaxation Relaxation constant
 /// @return maximum residual value
 template <typename Type>
-Type poisson_grid_fill(
+Type gauss_seidel(
     pybind11::EigenDRef<Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>&
         grid,
     Eigen::Matrix<bool, -1, -1>& mask, const bool is_circle,
@@ -98,10 +98,23 @@ Type poisson_grid_fill(
   // (only the last exception captured is kept)
   auto except = std::exception_ptr(nullptr);
 
-  // Thread worker responsible for processing several strips along the y-axis of
-  // the grid.
-  auto worker = [&](int64_t y_start, int64_t y_end,
-                    Type* max_residual) -> void {
+  // Gets the index of the pixel (ix, iy) in the matrix.
+  auto coordinates = [](const int64_t ix, const int64_t iy,
+                        const int64_t size) -> int64_t {
+    return iy * size + ix;
+  };
+
+  // Thread worker responsible for processing several strips along the y-axis
+  // of the grid.
+  //
+  // @param y_start First index y of the band to be processed.
+  // @param y_end Last index y, excluded, of the band to be processed.
+  // @param max_residual Maximum residual of this strip.
+  // @param pipe_out Last index to be processed on in this band.
+  // @param pipe_in Last index processed in the previous band.
+  auto worker = [&](int64_t y_start, int64_t y_end, Type* max_residual,
+                    std::atomic<int64_t>* pipe_out,
+                    std::atomic<int64_t>* pipe_in) -> void {
     // Modifies the value of a masked pixel.
     auto cell_fill = [&grid, &relaxation, &max_residual](
                          int64_t ix0, int64_t ix, int64_t ix1, int64_t iy0,
@@ -119,28 +132,32 @@ Type poisson_grid_fill(
     *max_residual = Type(0);
 
     try {
-      for (auto iy = y_start; iy < y_end; ++iy) {
-        // Previous (iy0) and next (iy1) pixel indices on the Y axis. On the
-        // edge we consider the mirror value.
-        auto iy0 = iy == 0 ? 1 : iy - 1;
-        auto iy1 = iy == y_size - 1 ? y_size - 2 : iy + 1;
+      for (auto ix = 0; ix < x_size; ++ix) {
+        //
+        auto ix0 = ix == 0 ? (is_circle ? x_size - 1 : 1) : ix - 1;
+        auto ix1 = ix == x_size - 1 ? (is_circle ? 0 : x_size - 2) : ix + 1;
 
-        // Processing of the strips along the X axis, ignoring the edges.
-        for (auto ix = 1; ix < x_size - 1; ++ix) {
-          if (mask(ix, iy)) {
-            cell_fill(ix - 1, ix, ix + 1, iy0, iy, iy1);
+        // If necessary, check that the last index required for this block has
+        // been processed in the previous band.
+        if (pipe_in) {
+          auto next_coordinates = coordinates(ix, y_start, y_size);
+          while (*pipe_in < next_coordinates) {
+            std::this_thread::sleep_for(std::chrono::nanoseconds(5));
           }
         }
 
-        // Edge handling along the X axis of the grid. We consider the mirror
-        // value if the X axis does not define a circle, otherwise the previous
-        // or next value of the circle.
-        if (mask(0, iy)) {
-          cell_fill(is_circle ? x_size - 1 : 1, 0, 1, iy0, iy, iy1);
+        for (auto iy = y_start; iy < y_end; ++iy) {
+          auto iy0 = iy == 0 ? 1 : iy - 1;
+          auto iy1 = iy == y_size - 1 ? y_size - 2 : iy + 1;
+          if (mask(ix, iy)) {
+            cell_fill(ix0, ix, ix1, iy0, iy, iy1);
+          }
         }
-        if (mask(x_size - 1, iy)) {
-          cell_fill(x_size - 2, x_size - 1, is_circle ? 0 : x_size - 2, iy0, iy,
-                    iy1);
+
+        // If necessary, the other thread responsible for processing the next
+        // band is notified.
+        if (pipe_out) {
+          *pipe_out = coordinates(ix, y_end, y_size);
         }
       }
     } catch (...) {
@@ -149,18 +166,27 @@ Type poisson_grid_fill(
   };
 
   if (num_threads == 1) {
-    worker(0, y_size, &max_residuals[0]);
+    worker(0, y_size, &max_residuals[0], nullptr, nullptr);
   } else {
-    std::vector<std::thread> threads(num_threads);
-    int64_t start = 0, shift = y_size / num_threads, index = 0;
+    assert(num_threads >= 2);
+    std::vector<std::atomic<int64_t>> pipeline(num_threads);
+    std::vector<std::thread> threads;
 
-    // Launch and join threads
-    for (auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {
-      *it = std::thread(worker, start, start + shift, &max_residuals[index++]);
+    int64_t start = 0, shift = y_size / num_threads;
+
+    for (auto& item : pipeline) {
+      item = std::numeric_limits<int>::min();
+    }
+
+    for (auto index = 0; index < num_threads - 1; ++index) {
+      threads.emplace_back(std::thread(
+          worker, start, start + shift, &max_residuals[index], &pipeline[index],
+          index == 0 ? nullptr : &pipeline[index - 1]));
       start += shift;
     }
-    threads.back() =
-        std::thread(worker, start, y_size - 1, &max_residuals[index]);
+    threads.emplace_back(std::thread(worker, start, y_size,
+                                     &max_residuals[num_threads - 1], nullptr,
+                                     &pipeline[num_threads - 2]));
     for (auto&& item : threads) {
       item.join();
     }
@@ -181,8 +207,8 @@ enum FirstGuess {
   kZonalAverage,  //!< Use zonal average in x direction
 };
 
-/// Replaces all NaN values in a grid with values derived from solving Poisson's
-/// equation via relaxation.
+/// Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
+/// method by relaxation.
 ///
 /// @param grid The grid to be processed
 /// @param is_circle True if the X axis of the grid defines a circle.
@@ -196,7 +222,7 @@ enum FirstGuess {
 /// @return A tuple containing the number of iterations performed and the
 /// maximum residual value.
 template <typename Type>
-std::tuple<size_t, Type> poisson(
+std::tuple<size_t, Type> gauss_seidel(
     pybind11::EigenDRef<Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>&
         grid,
     const FirstGuess first_guess, const bool is_circle,
@@ -236,8 +262,8 @@ std::tuple<size_t, Type> poisson(
 
   for (size_t it = 0; it < max_iterations; ++it) {
     ++iteration;
-    max_residual = detail::poisson_grid_fill<Type>(grid, mask, is_circle,
-                                                   relaxation, num_threads);
+    max_residual = detail::gauss_seidel<Type>(grid, mask, is_circle, relaxation,
+                                              num_threads);
     if (max_residual < epsilon) {
       break;
     }
