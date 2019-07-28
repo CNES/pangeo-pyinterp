@@ -6,6 +6,7 @@
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/grid.hpp"
+#include <atomic>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
@@ -46,7 +47,7 @@ void set_zonal_average(
                 Type,
                 boost::accumulators::stats<boost::accumulators::tag::count,
                                            boost::accumulators::tag::mean>>();
-            for (size_t ix = 0; ix < grid.rows(); ++ix) {
+            for (int64_t ix = 0; ix < grid.rows(); ++ix) {
               if (!mask(ix, iy)) {
                 acc(grid(ix, iy));
               }
@@ -57,7 +58,7 @@ void set_zonal_average(
             auto first_guess = boost::accumulators::count(acc)
                                    ? boost::accumulators::mean(acc)
                                    : Type(0);
-            for (size_t ix = 0; ix < grid.rows(); ++ix) {
+            for (int64_t ix = 0; ix < grid.rows(); ++ix) {
               if (mask(ix, iy)) {
                 grid(ix, iy) = first_guess;
               }
@@ -178,7 +179,7 @@ Type gauss_seidel(
       item = std::numeric_limits<int>::min();
     }
 
-    for (auto index = 0; index < num_threads - 1; ++index) {
+    for (size_t index = 0; index < num_threads - 1; ++index) {
       threads.emplace_back(std::thread(
           worker, start, start + shift, &max_residuals[index], &pipeline[index],
           index == 0 ? nullptr : &pipeline[index - 1]));
@@ -300,7 +301,7 @@ pybind11::array_t<Type> loess(const Grid2D<Type>& grid, const size_t nx,
       for (size_t ix = start; ix < end; ++ix) {
         auto x = (*grid.x())(ix);
 
-        for (size_t iy = 0; iy < grid.y()->size(); ++iy) {
+        for (int64_t iy = 0; iy < grid.y()->size(); ++iy) {
           auto z = grid.value(ix, iy);
 
           // If the current value is masked.
@@ -357,3 +358,4 @@ pybind11::array_t<Type> loess(const Grid2D<Type>& grid, const size_t nx,
 
 }  // namespace fill
 }  // namespace pyinterp
+
