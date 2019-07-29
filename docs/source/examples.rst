@@ -223,3 +223,53 @@ When the tree is created, you can :py:meth:`interpolate
         radius=35434,
         k=8,
         num_threads=0)
+
+Fill NaN values
+===============
+
+The undefined values in the grids do not allow interpolation of values located
+in the neighborhood. This behavior is a concern when you need to interpolate
+values near the land/sea mask of some maps. The library provides two functions
+to fill the undefined values.
+
+LOESS
+#####
+
+The :py:func:`first <pyinterp.fill.loess>` method applies a weighted local
+regression to extrapolate the boundary between defined and undefined values. The
+user must indicate the number of pixels on the X and Y axes to be considered in
+the calculation. For example:
+
+.. code:: python
+
+    # Module that handles the filling of undefined values.
+    import pyinterp.fill
+
+    ds = netCDF4.Dataset("tests/dataset/mss.nc")
+    x_axis = pyinterp.core.Axis(ds.variables["lon"][:], is_circle=True)
+    y_axis = pyinterp.core.Axis(ds.variables["lat"][:])
+    mss = ds.variables["mss"][:].T
+    mss[mss.mask] = float("nan")
+    grid = pyinterp.grid.Grid2D(x_axis, y_axis, mss.data)
+    filled = pyinterp.fill.loess(grid, nx=3, ny=3, num_threads=4)
+
+The image below illustrates the result:
+
+.. image:: pictures/loess.png
+
+Gauss-Seidel
+############
+
+The :py:func:`second <pyinterp.fill.gauss_seidel>` method consists of replacing
+all undefined values (Nan) in a grid using the Gauss-Seidel method by
+relaxation. This `link
+<https://math.berkeley.edu/~wilken/228A.F07/chr_lecture.pdf>`_ contains more
+information on the method used.
+
+.. code:: python
+
+    has_converged, filled = pyinterp.fill.gauss_seidel(grid)
+
+The image below illustrates the result:
+
+.. image:: pictures/gauss_seidel.png
