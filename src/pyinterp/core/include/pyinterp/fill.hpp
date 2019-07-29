@@ -227,7 +227,7 @@ std::tuple<size_t, Type> gauss_seidel(
     pybind11::EigenDRef<Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>&
         grid,
     const FirstGuess first_guess, const bool is_circle,
-    const size_t max_iterations, const double epsilon, const double relaxation,
+    const size_t max_iterations, const Type epsilon, const Type relaxation,
     size_t num_threads) {
   /// If the grid doesn't have an undefined value, this routine has nothing more
   /// to do.
@@ -286,8 +286,8 @@ std::tuple<size_t, Type> gauss_seidel(
 /// which is useful for debugging.
 /// @return The grid will have all the NaN filled with extrapolated values.
 template <typename Type>
-pybind11::array_t<Type> loess(const Grid2D<Type>& grid, const size_t nx,
-                              const size_t ny, const size_t num_threads) {
+pybind11::array_t<Type> loess(const Grid2D<Type>& grid, const uint32_t nx,
+                              const uint32_t ny, const size_t num_threads) {
   auto result = pybind11::array_t<Type>(
       pybind11::array::ShapeContainer{grid.x()->size(), grid.y()->size()});
   auto _result = result.template mutable_unchecked<2>();
@@ -329,8 +329,8 @@ pybind11::array_t<Type> loess(const Grid2D<Type>& grid, const size_t nx,
                                 detail::math::sqr((((*grid.y())(wy)-y)) / ny));
                   auto wi =
                       d <= 1 ? std::pow((1.0 - std::pow(d, 3.0)), 3.0) : 0.0;
-                  value += wi * zi;
-                  weight += wi;
+                  value += static_cast<Type>(wi * zi);
+                  weight += static_cast<Type>(wi);
                 }
               }
             }
