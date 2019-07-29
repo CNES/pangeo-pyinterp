@@ -2,4 +2,4 @@
 
     .. autofunction:: loess_float64
 
-    .. autofunction:: poisson_float64
+    .. autofunction:: gauss_seidel_float64

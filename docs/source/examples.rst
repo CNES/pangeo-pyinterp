@@ -273,3 +273,189 @@ information on the method used.
 The image below illustrates the result:
 
 .. image:: pictures/gauss_seidel.png
+
+Interpolation of a time series
+==============================
+
+This example shows how to interpolate a time series using the library.
+
+In this example, we consider the time series of MSLA maps distributed by
+AVISO/CMEMS. This series consists of a grid stored in netCDF format for each
+weekly date distributed. The weekly file nomenclature is as follows:
+``dt_global_allsat_phy_l4_YYYYYYMMDD_YYYYYMMDD.nc``. The first date defines the
+date of the map snapshot and the second date defines the production date. To
+manage this series of grids, we create the following object:
+
+.. code:: python
+
+    import datetime
+    import re
+    import os
+    import dask.distributed
+    import numpy as np
+    import netCDF4
+    import pandas as pd
+    import pyinterp.core
+    import pyinterp.trivariate
+
+
+    class GridSeries:
+        """Handling of MSLA AVISO maps.
+
+        Args:
+            dirname (str): Map storage directory.
+        """
+
+        def __init__(self, dirname):
+            self.dirname = dirname
+            self.df, self.dt = self._load_ts()
+
+        def _load_ts(self):
+            """Loading the time series into memory."""
+            pattern = re.compile(
+                r"dt_global_allsat_phy_l4_(\d{4})(\d{2})(\d{2})_\d{8}\.nc").search
+            times = []
+            files = []
+            for root, dirs, items in os.walk(self.dirname):
+                for item in items:
+                    match = pattern(item)
+                    if match is None:
+                        continue
+                    times.append(
+                        datetime.datetime(int(match.group(1)), int(match.group(2)),
+                                        int(match.group(3))))
+                    files.append(os.path.join(root, item))
+            times = np.array(times)
+            files = np.array(files)
+            indices = np.argsort(times)
+
+            df = pd.DataFrame(data=dict(path=files[indices]), index=times[indices])
+            frequency = set(pd.Series(np.diff(df.index)).dt.total_seconds())
+            if len(frequency) != 1:
+                raise RuntimeError(
+                    "Time series does not have a constant step between two "
+                    f"grids: {frequency}")
+            return df, datetime.timedelta(seconds=frequency.pop())
+
+        def load_dataset(self, varname, start, end):
+            """Loading the time series into memory for the defined period.
+            
+            Args:
+                varname (str): Name of the variable to be loaded into memory.
+                start (datetime.datetime): Date of the first map to be loaded.
+                end (datetime.datetime): Date of the last map to be loaded.
+
+            Return:
+                pyinterp.trivariate.Trivariate: The interpolator handling the
+                interpolation of the grid series.
+            """
+            if start < self.df.index[0] or end > self.df.index[-1]:
+                raise IndexError(
+                    f"period [{start}, {end}] out of range [{self.df.index[0]}, "
+                    f"{self.df.index[-1]}]")
+            first = start - self.dt
+            last = end + self.dt
+
+            selected = self.df[(self.df.index >= first) & (self.df.index < last)]
+
+            x_axis = y_axis = None
+            t_axis = pyinterp.core.Axis(selected.index)
+
+            var = []
+
+            for item in selected["path"]:
+                with netCDF4.Dataset(item) as ds:
+                    if x_axis is None:
+                        x_axis = pyinterp.core.Axis(ds.variables["longitude"][:])
+                        y_axis = pyinterp.core.Axis(ds.variables["latitude"][:])
+
+                    def _load(grid):
+                        grid[grid.mask] = np.nan
+                        return grid[0, :]
+
+                    var.append(_load(ds.variables[varname][:]))
+
+            var = np.stack(var).transpose(2, 1, 0)
+
+            return pyinterp.trivariate.Trivariate(x_axis, y_axis, t_axis, var)
+
+This object allows you to manage the time series of AVISO products, check the
+continuity of the current time series and load a user-defined period.
+
+Finally, an object is created that manages an ASCII file containing a time
+series of floats. This file contains several columns defining the float
+identifier, the date of the measurement, the longitude and the latitude of the
+measurement.
+
+.. code:: python
+
+    def cnes_jd_to_datetime(seconds):
+        """Convert a date expressed in seconds since 1950 into a calendar
+        date."""
+        return datetime.datetime.utcfromtimestamp(
+            ((seconds / 86400.0) - 7305.0) * 86400.0)
+
+
+    class DataFrame:
+        """To handle a dataset to be interpolated from a time series.
+        
+        Args:
+            path (str): Path to the file to be loaded into memory.
+        """
+
+        def __init__(self, path):
+            df = pd.read_csv(path,
+                            header=None,
+                            sep=r"\s+",
+                            usecols=[0, 1, 2, 3],
+                            names=["id", "time", "lon", "lat"],
+                            dtype=dict(id=np.uint32,
+                                        time=np.float64,
+                                        lon=np.float64,
+                                        lat=np.float64))
+            df.mask(df == 1.8446744073709552e+19, np.nan, inplace=True)
+            df["time"] = df["time"].apply(cnes_jd_to_datetime)
+            df.set_index('time', inplace=True)
+            df["sla"] = np.nan
+            self.df = df.sort_index()
+
+        def periods(self, grid_series, frequency='D'):
+            """Return the list of periods covering the time series loaded in
+            memory."""
+            period_start = self.df.groupby(
+                self.df.index.to_period(frequency))["sla"].count().index
+
+            for start, end in zip(period_start, period_start[1:]):
+                start = start.to_timestamp()
+                if start < grid_series.df.index[0]:
+                    start = grid_series.df.index[0]
+                end = end.to_timestamp()
+                yield start, end
+            yield end, self.df.index[-1] + grid_series.dt
+
+        def interpolate(self, grid_series, varname, start, end):
+            """Interpolate the time series over the defined period."""
+            interpolator = grid_series.load_dataset(varname, start, end)
+            mask = (self.df.index >= start) & (self.df.index < end)
+            selected = self.df.loc[mask, ["lon", "lat"]]
+            self.df.loc[mask, ["sla"]] = interpolator.evaluate(
+                selected["lon"].values,
+                selected["lat"].values,
+                selected.index.values,
+                interpolator="inverse_distance_weighting",
+                num_threads=0)
+
+This defined object, an interpolation function. This function performs the
+following steps: selection of the 3D cube managing the time period to be
+interpolated, interpolation of the values in the cable for all positions within
+the processed interval.
+
+Finally, we create the two objects to interpolate the time series composed by
+the floats loaded in memory
+
+.. code:: python
+
+    grid_series = GridSeries("/work/ALT/odatis/AVISO")
+    data = DataFrame("Dump_SVP_forEKValid_Stress.ascii")
+    for start, end in data.periods(grid_series, frequency="M"):
+        data.interpolate(grid_series, "sla", start, end)
