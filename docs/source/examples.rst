@@ -261,7 +261,7 @@ Gauss-Seidel
 ############
 
 The :py:func:`second <pyinterp.fill.gauss_seidel>` method consists of replacing
-all undefined values (Nan) in a grid using the Gauss-Seidel method by
+all undefined values (NaN) in a grid using the Gauss-Seidel method by
 relaxation. This `link
 <https://math.berkeley.edu/~wilken/228A.F07/chr_lecture.pdf>`_ contains more
 information on the method used.

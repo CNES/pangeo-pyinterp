@@ -53,7 +53,7 @@ def bicubic(grid2d: grid.Grid2D,
         bounds_error (bool, optional): If True, when interpolated values
             are requested outside of the domain of the input axes (x,y), a
             :py:class:`ValueError` is raised. If False, then value is set
-            to Nan. Default to ``False``
+            to NaN. Default to ``False``
 
         num_threads (int, optional): The number of threads to use for the
             computation. If 0 all CPUs are used. If 1 is given, no parallel

@@ -27,6 +27,18 @@ This software also uses [CMake](https://cmake.org/) to configure the project
 and [Googletest](https://github.com/google/googletest) to perform unit testing
 of the library kernel.
 
+## Fill undefined values
+
+The undefined values in the grids do not allow interpolation of values located
+in the neighborhood. This behavior is a concern when you need to interpolate
+values near the mask of some fields. The library provides utilities to fill the
+undefined values:
+
+* `loess` to fill the undefined values on the boundary between the defined/undefined
+  values using local regression.
+* `gauss_seidel` to fill all undefined values in a grid using the Gauss-Seidel
+  method by relaxation.
+
 ## Geographic indexers
 
 ### N-Dimensional Grids

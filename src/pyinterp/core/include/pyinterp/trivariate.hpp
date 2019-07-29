@@ -135,7 +135,7 @@ Args:
         used to interpolate values on the surface (x, y).
     bounds_error (bool, optional): If True, when interpolated values are
       requested outside of the domain of the input axes (x,y,z), a ValueError
-      is raised. If False, then value is set to Nan.
+      is raised. If False, then value is set to NaN.
     num_threads (int, optional): The number of threads to use for the
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
