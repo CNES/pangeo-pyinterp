@@ -2,14 +2,15 @@
 Replace undefined values
 ------------------------
 """
-from typing import Optional
+from typing import Optional, Union
 import numpy as np
+import concurrent.futures
 from . import core
 from . import grid
 from . import interface
 
 
-def loess(grid2d: grid.Grid2D,
+def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
           nx: Optional[int] = 3,
           ny: Optional[int] = 3,
           num_threads: Optional[int] = 0):
@@ -18,8 +19,8 @@ def loess(grid2d: grid.Grid2D,
     :math:`w(x)=(1-|d|^3)^3`
 
     Args:
-        grid2d (pyinterp.grid.Grid2D): Grid function on a uniform 2-dimensional
-            grid to be filled.
+        mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D): Grid function on
+            a uniform 2-dimensional grid to be filled.
         nx (int, optional): Number of points of the half-window to be taken
             into account along the X-axis. Defaults to ``3``.
         ny (int, optional): Number of points of the half-window to be taken
@@ -32,12 +33,29 @@ def loess(grid2d: grid.Grid2D,
     Return:
         numpy.ndarray: the grid will have NaN filled with extrapolated values.
     """
-    instance = grid2d._instance
+    instance = mesh._instance
     function = f"loess_{interface._core_function_suffix(instance)}"
-    return getattr(core.fill, function)(instance, nx, ny, num_threads)
+    nz = len(mesh.z) if isinstance(mesh, grid.Grid3D) else 0
+
+    if nz == 0:
+        return getattr(core.fill, function)(instance, nx, ny, num_threads)
+
+    with concurrent.futures.ThreadPoolExecutor(
+            max_workers=num_threads if num_threads else None) as executor:
+        futures = dict()
+        result = np.empty_like(mesh.array)
+        for iz in range(nz):
+            grid2d = grid.Grid2D(mesh.x, mesh.y, mesh.array[:, :, iz])
+            futures[executor.submit(getattr(core.fill,
+                                            function), grid2d._instance, nx,
+                                    ny, num_threads)] = iz
+        for future in concurrent.futures.as_completed(futures):
+            iz = futures[future]
+            result[:, :, iz] = future.result()
+        return result
 
 
-def gauss_seidel(grid2d: grid.Grid2D,
+def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
                  first_guess: Optional[str] = "zonal_average",
                  max_iteration: Optional[int] = None,
                  epsilon: Optional[float] = 1e-4,
@@ -48,8 +66,8 @@ def gauss_seidel(grid2d: grid.Grid2D,
     method by relaxation.
 
     Args:
-        grid2d (pyinterp.grid.Grid2D): Grid function on a uniform
-            2-dimensional grid to be filled.
+        mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D): Grid function on
+            a uniform 2/3-dimensional grid to be filled.
         first_guess (str, optional): Specifies the type of first guess grid.
             Supported values are:
 
@@ -90,8 +108,9 @@ def gauss_seidel(grid2d: grid.Grid2D,
     if first_guess not in ['zero', 'zonal_average']:
         raise ValueError(f"first_guess type {first_guess!r} is not defined")
 
-    ny = len(grid2d.y)
-    nx = len(grid2d.x)
+    ny = len(mesh.y)
+    nx = len(mesh.x)
+    nz = len(mesh.z) if isinstance(mesh, grid.Grid3D) else 0
 
     if relaxation is None:
         if nx == ny:
@@ -107,11 +126,26 @@ def gauss_seidel(grid2d: grid.Grid2D,
         getattr(core.fill, "FirstGuess"),
         "".join(item.capitalize() for item in first_guess.split("_")))
 
-    instance = grid2d._instance
+    instance = mesh._instance
     function = f"gauss_seidel_{interface._core_function_suffix(instance)}"
-    filled = np.copy(grid2d.array)
-    iterations, residual = getattr(core.fill,
-                                   function)(filled, first_guess,
-                                             grid2d.x.is_circle, max_iteration,
-                                             epsilon, relaxation, num_threads)
+    filled = np.copy(mesh.array)
+    if nz == 0:
+        iterations, residual = getattr(core.fill,
+                                       function)(filled, first_guess,
+                                                 mesh.x.is_circle,
+                                                 max_iteration, epsilon,
+                                                 relaxation, num_threads)
+    else:
+        with concurrent.futures.ThreadPoolExecutor(
+                max_workers=num_threads if num_threads else None) as executor:
+            futures = [
+                executor.submit(getattr(core.fill, function), filled[:, :, iz],
+                                first_guess, mesh.x.is_circle, max_iteration,
+                                epsilon, relaxation, 1) for iz in range(nz)
+            ]
+            residuals = []
+            for future in concurrent.futures.as_completed(futures):
+                _, residual = future.result()
+                residuals.append(residual)
+            residual = max(residuals)
     return residual <= epsilon, filled
