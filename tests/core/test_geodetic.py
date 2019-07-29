@@ -91,7 +91,7 @@ class TestCoordinates(unittest.TestCase):
 
         self.assertAlmostEqual((lon1 - lon2).mean(), 0, delta=1e-12)
         self.assertAlmostEqual((lat1 - lat2).mean(), 0, delta=1e-12)
-        self.assertAlmostEqual((alt1 - alt2).mean(), 0, delta=1e-11)
+        self.assertAlmostEqual((alt1 - alt2).mean(), 0, delta=1e-10)
 
     def test_pickle(self):
         a = core.geodetic.Coordinates(None)
