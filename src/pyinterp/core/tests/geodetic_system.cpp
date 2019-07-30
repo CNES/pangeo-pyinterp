@@ -2,9 +2,9 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/detail/geodetic/system.hpp"
 #include <gtest/gtest.h>
 #include <random>
+#include "pyinterp/detail/geodetic/system.hpp"
 
 namespace geodetic = pyinterp::detail::geodetic;
 

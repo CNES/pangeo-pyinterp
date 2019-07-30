@@ -2,10 +2,10 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/detail/math/bivariate.hpp"
-#include "pyinterp/detail/geometry/point.hpp"
-#include <boost/geometry.hpp>
 #include <gtest/gtest.h>
+#include <boost/geometry.hpp>
+#include "pyinterp/detail/geometry/point.hpp"
+#include "pyinterp/detail/math/bivariate.hpp"
 
 namespace math = pyinterp::detail::math;
 namespace geometry = pyinterp::detail::geometry;
@@ -62,7 +62,8 @@ TEST(math_bivariate, nearest) {
 }
 
 TEST(math_bivariate, idw) {
-  auto interpolator = math::InverseDistanceWeighting<geometry::Point2D, double>();
+  auto interpolator =
+      math::InverseDistanceWeighting<geometry::Point2D, double>();
 
   EXPECT_DOUBLE_EQ(
       interpolator.evaluate(geometry::Point2D<double>{0, 0},

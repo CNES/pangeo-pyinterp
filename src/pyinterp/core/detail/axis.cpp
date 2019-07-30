@@ -111,7 +111,7 @@ std::optional<std::tuple<int64_t, int64_t>> Axis::find_indexes(
     double coordinate) const {
   coordinate = normalize_coordinate(coordinate);
   auto length = size();
-  auto i0 = find_index(coordinate);
+  auto i0 = find_index(coordinate, false);
 
   /// If the value is outside the circle, then the value is between the last and
   /// first index.

@@ -14,15 +14,16 @@ TEST(axis, default_constructor) {
   EXPECT_TRUE(std::isnan(axis.back()));
   EXPECT_TRUE(std::isnan(axis.min_value()));
   EXPECT_TRUE(std::isnan(axis.max_value()));
-  EXPECT_THROW(axis.increment(), std::logic_error);
+  double inc;
+  EXPECT_THROW(inc = axis.increment(), std::logic_error);
   EXPECT_FALSE(axis.is_circle());
   EXPECT_TRUE(axis.is_ascending());
   EXPECT_TRUE(std::isnan(axis.front()));
   EXPECT_TRUE(std::isnan(axis.back()));
-  EXPECT_THROW(axis.increment(), std::logic_error);
+  EXPECT_THROW(inc = axis.increment(), std::logic_error);
   EXPECT_EQ(axis.is_regular(), false);
   EXPECT_EQ(axis.size(), 0);
-  EXPECT_THROW(axis.coordinate_value(0), std::out_of_range);
+  EXPECT_THROW(inc = axis.coordinate_value(0), std::out_of_range);
   EXPECT_EQ(axis.find_index(360, true), -1);
   EXPECT_EQ(axis.find_index(360, false), -1);
   auto indexes = axis.find_indexes(360);
@@ -33,7 +34,7 @@ TEST(axis, default_constructor) {
 
 TEST(axis, singleton) {
   // axis with one value
-  detail::Axis axis(0, 1, 1);
+  detail::Axis axis(0, 1, 1, 1e-6, false, false);
   EXPECT_EQ(axis.find_index(0, false), 0);
   EXPECT_EQ(axis.find_index(1, false), -1);
   EXPECT_EQ(axis.find_index(1, true), 0);
@@ -49,14 +50,15 @@ TEST(axis, singleton) {
   EXPECT_EQ(axis.is_regular(), true);
   EXPECT_EQ(axis.size(), 1);
   EXPECT_EQ(axis.coordinate_value(0), 0);
-  EXPECT_THROW(axis.coordinate_value(1), std::exception);
+  double value;
+  EXPECT_THROW(value = axis.coordinate_value(1), std::exception);
   EXPECT_EQ(static_cast<std::string>(axis),
             "Axis([0, ..., 0], is_circle=false, is_radian=false)");
 }
 
 TEST(axis, binary) {
   // axis with two values
-  detail::Axis axis(0, 1, 2);
+  detail::Axis axis(0, 1, 2, 1e-6, false, false);
   auto indexes = axis.find_indexes(0);
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 0);
@@ -84,9 +86,11 @@ TEST(axis, binary) {
   EXPECT_TRUE(axis.is_ascending());
   EXPECT_EQ(axis.is_regular(), true);
   EXPECT_EQ(axis.size(), 2);
-  EXPECT_EQ(axis.coordinate_value(0), 0);
-  EXPECT_EQ(axis.coordinate_value(1), 1);
-  EXPECT_THROW(axis.coordinate_value(2), std::exception);
+  auto value = axis.coordinate_value(0);
+  EXPECT_EQ(value, 0);
+  value = axis.coordinate_value(1);
+  EXPECT_EQ(value, 1);
+  EXPECT_THROW(value = axis.coordinate_value(2), std::exception);
   EXPECT_EQ(static_cast<std::string>(axis),
             "Axis([0, ..., 1], is_circle=false, is_radian=false)");
 }
@@ -94,7 +98,7 @@ TEST(axis, binary) {
 TEST(axis, wrap_longitude) {
   // axis representing a circle
   int64_t i1;
-  detail::Axis a1(0, 359, 360, 1e-6, true);
+  detail::Axis a1(0, 359, 360, 1e-6, true, false);
 
   EXPECT_EQ(a1.front(), 0);
   EXPECT_EQ(a1.increment(), 1);
@@ -108,12 +112,13 @@ TEST(axis, wrap_longitude) {
   EXPECT_EQ(a1.size(), 360);
   EXPECT_EQ(a1.coordinate_value(0), 0);
   EXPECT_EQ(a1.coordinate_value(180), 180);
-  EXPECT_THROW(a1.coordinate_value(520), std::exception);
-  i1 = a1.find_index(0);
+  double value;
+  EXPECT_THROW(value = a1.coordinate_value(520), std::exception);
+  i1 = a1.find_index(0, false);
   EXPECT_EQ(i1, 0);
   i1 = a1.find_index(360, true);
   EXPECT_EQ(i1, 0);
-  i1 = a1.find_index(360);
+  i1 = a1.find_index(360, false);
   EXPECT_EQ(i1, 0);
   auto indexes = a1.find_indexes(360);
   ASSERT_TRUE(indexes);
@@ -130,7 +135,7 @@ TEST(axis, wrap_longitude) {
   EXPECT_EQ(static_cast<std::string>(a1),
             "Axis([0, ..., 359], is_circle=true, is_radian=false)");
 
-  detail::Axis a2(-180, 179, 360, 1e-6, true);
+  detail::Axis a2(-180, 179, 360, 1e-6, true, false);
   EXPECT_EQ(a2.front(), -180);
   EXPECT_EQ(a2.increment(), 1);
   EXPECT_TRUE(a2.is_circle());
@@ -149,7 +154,7 @@ TEST(axis, wrap_longitude) {
   EXPECT_EQ(a2.coordinate_value(180), 0);
   EXPECT_NE(a1, a2);
 
-  a2 = detail::Axis(180, -179, 360, 1e-6, true);
+  a2 = detail::Axis(180, -179, 360, 1e-6, true, false);
   EXPECT_EQ(a2.front(), 180);
   EXPECT_EQ(a2.increment(), -1);
   EXPECT_TRUE(a2.is_circle());
@@ -187,12 +192,13 @@ TEST(axis, radians) {
   EXPECT_EQ(a1.size(), 360);
   EXPECT_EQ(a1.coordinate_value(0), 0);
   EXPECT_EQ(a1.coordinate_value(180), detail::math::pi<double>() * 0.5);
-  EXPECT_THROW(a1.coordinate_value(520), std::exception);
-  i1 = a1.find_index(0);
+  double value;
+  EXPECT_THROW(value = a1.coordinate_value(520), std::exception);
+  i1 = a1.find_index(0, false);
   EXPECT_EQ(i1, 0);
   i1 = a1.find_index(detail::math::pi<double>(), true);
   EXPECT_EQ(i1, 0);
-  i1 = a1.find_index(detail::math::pi<double>());
+  i1 = a1.find_index(detail::math::pi<double>(), false);
   EXPECT_EQ(i1, 0);
   auto indexes = a1.find_indexes(detail::math::pi<double>());
   ASSERT_TRUE(indexes);
@@ -326,9 +332,10 @@ TEST(axis, irregular) {
   values.push_back(88.843755);
   values.push_back(88.940374);
 
-  detail::Axis axis(values, 1e-6, false);
+  detail::Axis axis(values, 1e-6, false, false);
   EXPECT_EQ(axis.front(), -89);
-  EXPECT_THROW(axis.increment(), std::logic_error);
+  double inc;
+  EXPECT_THROW(inc = axis.increment(), std::logic_error);
   EXPECT_FALSE(axis.is_circle());
   EXPECT_TRUE(axis.is_ascending());
   EXPECT_EQ(axis.is_regular(), false);
@@ -339,20 +346,21 @@ TEST(axis, irregular) {
   EXPECT_EQ(axis.size(), values.size());
   EXPECT_EQ(axis.coordinate_value(0), -89);
   EXPECT_EQ(axis.coordinate_value(108), 88.940374);
-  EXPECT_THROW(axis.coordinate_value(360), std::exception);
-  i1 = axis.find_index(-1.659041);
+  double value;
+  EXPECT_THROW(value = axis.coordinate_value(360), std::exception);
+  i1 = axis.find_index(-1.659041, false);
   EXPECT_EQ(i1, 54);
-  i1 = axis.find_index(-88.700757);
+  i1 = axis.find_index(-88.700757, false);
   EXPECT_EQ(i1, 3);
-  i1 = axis.find_index(88.497766);
+  i1 = axis.find_index(88.497766, false);
   EXPECT_EQ(i1, 104);
-  i1 = axis.find_index(0);
+  i1 = axis.find_index(0, false);
   EXPECT_EQ(i1, 54);
-  i1 = axis.find_index(-90);
+  i1 = axis.find_index(-90, false);
   EXPECT_EQ(i1, -1);
   i1 = axis.find_index(-90, true);
   EXPECT_EQ(i1, 0);
-  i1 = axis.find_index(90);
+  i1 = axis.find_index(90, false);
   EXPECT_EQ(i1, -1);
   i1 = axis.find_index(90, true);
   EXPECT_EQ(i1, 108);
@@ -362,28 +370,28 @@ TEST(axis, irregular) {
   EXPECT_EQ(std::get<1>(*indexes), 70);
 
   std::reverse(values.begin(), values.end());
-  axis = detail::Axis(values, false);
+  axis = detail::Axis(values, 1e-6, false, false);
   EXPECT_EQ(axis.front(), 88.940374);
-  EXPECT_THROW(axis.increment(), std::logic_error);
+  EXPECT_THROW(inc = axis.increment(), std::logic_error);
   EXPECT_FALSE(axis.is_circle());
   EXPECT_EQ(axis.is_regular(), false);
   EXPECT_EQ(axis.min_value(), -89);
   EXPECT_EQ(axis.max_value(), 88.940374);
   EXPECT_EQ(axis.size(), values.size());
 
-  i1 = axis.find_index(-1.659041);
+  i1 = axis.find_index(-1.659041, false);
   EXPECT_EQ(i1, 54);
-  i1 = axis.find_index(-88.700757);
+  i1 = axis.find_index(-88.700757, false);
   EXPECT_EQ(i1, 105);
-  i1 = axis.find_index(88.497766);
+  i1 = axis.find_index(88.497766, false);
   EXPECT_EQ(i1, 4);
-  i1 = axis.find_index(0);
+  i1 = axis.find_index(0, false);
   EXPECT_EQ(i1, 54);
-  i1 = axis.find_index(-90);
+  i1 = axis.find_index(-90, false);
   EXPECT_EQ(i1, -1);
   i1 = axis.find_index(-90, true);
   EXPECT_EQ(i1, 108);
-  i1 = axis.find_index(90);
+  i1 = axis.find_index(90, false);
   EXPECT_EQ(i1, -1);
   i1 = axis.find_index(90, true);
   EXPECT_EQ(i1, 0);
@@ -396,7 +404,7 @@ TEST(axis, irregular) {
 
 TEST(axis, search_indexes) {
   // search for indexes around a value on an axis
-  detail::Axis axis(0, 359, 360, 1e-6, true);
+  detail::Axis axis(0, 359, 360, 1e-6, true, false);
   auto indexes = axis.find_indexes(359.4);
 
   ASSERT_TRUE(indexes.has_value());
@@ -428,7 +436,7 @@ TEST(axis, search_indexes) {
   EXPECT_EQ(std::get<0>(*indexes), 358);
   EXPECT_EQ(std::get<1>(*indexes), 359);
 
-  axis = detail::Axis(10, 20, 1, 1e-6, true);
+  axis = detail::Axis(10, 20, 1, 1e-6, true, false);
   EXPECT_FALSE(axis.find_indexes(20.01).has_value());
   EXPECT_FALSE(axis.find_indexes(9.9).has_value());
 }
@@ -436,14 +444,14 @@ TEST(axis, search_indexes) {
 TEST(axis, search_window) {
   // search for indexes that frame a value around a window
   std::vector<int64_t> indexes;
-  detail::Axis axis(-180, 179, 360, 1e-6, true);
+  detail::Axis axis(-180, 179, 360, 1e-6, true, false);
 
-  indexes = axis.find_indexes(0, 1);
+  indexes = axis.find_indexes(0, 1, detail::Axis::kUndef);
   ASSERT_EQ(indexes.size(), 2);
   EXPECT_EQ(indexes[0], 180);
   EXPECT_EQ(indexes[1], 181);
 
-  indexes = axis.find_indexes(0, 5);
+  indexes = axis.find_indexes(0, 5, detail::Axis::kUndef);
   ASSERT_EQ(indexes.size(), 10);
   EXPECT_EQ(indexes[0], 176);
   EXPECT_EQ(indexes[1], 177);
@@ -456,7 +464,7 @@ TEST(axis, search_window) {
   EXPECT_EQ(indexes[8], 184);
   EXPECT_EQ(indexes[9], 185);
 
-  indexes = axis.find_indexes(-180, 5);
+  indexes = axis.find_indexes(-180, 5, detail::Axis::kUndef);
   ASSERT_EQ(indexes.size(), 10);
   EXPECT_EQ(indexes[0], 356);
   EXPECT_EQ(indexes[1], 357);
@@ -469,7 +477,7 @@ TEST(axis, search_window) {
   EXPECT_EQ(indexes[8], 4);
   EXPECT_EQ(indexes[9], 5);
 
-  indexes = axis.find_indexes(179, 5);
+  indexes = axis.find_indexes(179, 5, detail::Axis::kUndef);
   ASSERT_EQ(indexes.size(), 10);
   EXPECT_EQ(indexes[0], 354);
   EXPECT_EQ(indexes[1], 355);
@@ -482,7 +490,7 @@ TEST(axis, search_window) {
   EXPECT_EQ(indexes[8], 2);
   EXPECT_EQ(indexes[9], 3);
 
-  indexes = axis.find_indexes(179.4, 5);
+  indexes = axis.find_indexes(179.4, 5, detail::Axis::kUndef);
   ASSERT_EQ(indexes.size(), 10);
   EXPECT_EQ(indexes[0], 355);
   EXPECT_EQ(indexes[1], 356);
@@ -495,7 +503,7 @@ TEST(axis, search_window) {
   EXPECT_EQ(indexes[8], 3);
   EXPECT_EQ(indexes[9], 4);
 
-  indexes = axis.find_indexes(179.6, 5);
+  indexes = axis.find_indexes(179.6, 5, detail::Axis::kUndef);
   ASSERT_EQ(indexes.size(), 10);
   EXPECT_EQ(indexes[0], 355);
   EXPECT_EQ(indexes[1], 356);
@@ -508,8 +516,8 @@ TEST(axis, search_window) {
   EXPECT_EQ(indexes[8], 3);
   EXPECT_EQ(indexes[9], 4);
 
-  axis = detail::Axis(0, 9, 10);
-  indexes = axis.find_indexes(5, 4);
+  axis = detail::Axis(0, 9, 10, 1e-6, false, false);
+  indexes = axis.find_indexes(5, 4, detail::Axis::kUndef);
   ASSERT_EQ(indexes.size(), 8);
   EXPECT_EQ(indexes[0], 2);
   EXPECT_EQ(indexes[1], 3);
@@ -520,9 +528,9 @@ TEST(axis, search_window) {
   EXPECT_EQ(indexes[6], 8);
   EXPECT_EQ(indexes[7], 9);
 
-  indexes = axis.find_indexes(-1, 4);
+  indexes = axis.find_indexes(-1, 4, detail::Axis::kUndef);
   EXPECT_EQ(indexes.empty(), true);
-  indexes = axis.find_indexes(10, 4);
+  indexes = axis.find_indexes(10, 4, detail::Axis::kUndef);
   EXPECT_EQ(indexes.empty(), true);
 
   indexes = axis.find_indexes(1, 4, detail::Axis::kSym);

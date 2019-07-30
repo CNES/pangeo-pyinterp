@@ -3,20 +3,18 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <optional>
 #include "pyinterp/detail/geodetic/system.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math.hpp"
-#include <optional>
 
-namespace pyinterp {
-namespace detail {
-namespace geodetic {
+namespace pyinterp::detail::geodetic {
 
 /// World Geodetic Coordinates System
 class Coordinates {
  public:
-  /// The constructor defaults the ellipsoid parameters to WGS84.
-  explicit Coordinates(const std::optional<System>& system = {}) {
+  /// Default constructor.
+  explicit Coordinates(const std::optional<System>& system) {
     auto _system = system.value_or(System());
     // semi-major axis
     a_ = _system.semi_major_axis();
@@ -54,7 +52,7 @@ class Coordinates {
   Coordinates& operator=(Coordinates&&) noexcept = default;
 
   /// Gets the WGS used by this instance
-  inline System system() const noexcept { return System(a_, f_); }
+  [[nodiscard]] inline System system() const noexcept { return System(a_, f_); }
 
   /// Converts Cartesian coordinates to Geographic latitude, longitude, and
   /// altitude. Cartesian coordinates should be in meters. The returned latitude
@@ -75,7 +73,9 @@ class Coordinates {
 
     double u = a2_ * inv_r;
     double v = a3_ - a4_ * inv_r;
-    double s, c, ss;
+    double s;
+    double c;
+    double ss;
     double lat;
 
     if (c2 > 0.3) {
@@ -111,7 +111,11 @@ class Coordinates {
   template <typename T>
   inline geometry::Point3D<T> lla_to_ecef(
       const geometry::EquatorialPoint3D<T>& lla) const noexcept {
-    double siny, cosy, sinx, cosx;
+    double siny;
+    double cosy;
+    double sinx;
+    double cosx;
+
     std::tie(sinx, cosx) = math::sincosd(boost::geometry::get<0>(lla));
     std::tie(siny, cosy) = math::sincosd(boost::geometry::get<1>(lla));
     auto n = a_ / std::sqrt(1.0 - e2_ * math::sqr(siny));
@@ -133,6 +137,4 @@ class Coordinates {
   double a_, f_, e2_, a1_, a2_, a3_, a4_, a5_, a6_;
 };
 
-}  // namespace geodetic
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::geodetic

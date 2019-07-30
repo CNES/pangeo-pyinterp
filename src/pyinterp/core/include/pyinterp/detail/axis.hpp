@@ -3,8 +3,6 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/axis/container.hpp"
-#include "pyinterp/detail/math.hpp"
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -15,9 +13,10 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include "pyinterp/detail/axis/container.hpp"
+#include "pyinterp/detail/math.hpp"
 
-namespace pyinterp {
-namespace detail {
+namespace pyinterp::detail {
 
 /// A coordinate axis is a Variable that specifies one of the coordinates
 /// of a variable's values.
@@ -45,8 +44,7 @@ class Axis {
   /// @param is_circle True, if the axis can represent a circle.
   /// @param is_radian True, if the coordinate system is radian.
   Axis(const double start, const double stop, const double num,
-       const double epsilon = 1e-6, const bool is_circle = false,
-       const bool is_radian = false)
+       const double epsilon, const bool is_circle, const bool is_radian)
       : circle_(Axis::set_circle(is_circle, is_radian)),
         axis_(std::make_shared<axis::container::Regular>(
             axis::container::Regular(start, stop, num))) {
@@ -60,8 +58,8 @@ class Axis {
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle.
   /// @param is_radian True, if the coordinate system is radian.
-  explicit Axis(std::vector<double> values, double epsilon = 1e-6,
-                bool is_circle = false, bool is_radian = false);
+  explicit Axis(std::vector<double> values, double epsilon, bool is_circle,
+                bool is_radian);
 
   /// Destructor
   ~Axis() = default;
@@ -91,7 +89,7 @@ class Axis {
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
   /// @throw std::out_of_range if !(index < size()).
-  inline double coordinate_value(const size_t index) const {
+  [[nodiscard]] inline double coordinate_value(const size_t index) const {
     if (static_cast<int64_t>(index) >= size()) {
       throw std::out_of_range("axis index out of range");
     }
@@ -101,51 +99,57 @@ class Axis {
   /// Get the minimum coordinate value.
   ///
   /// @return minimum coordinate value
-  inline double min_value() const { return axis_->min_value(); }
+  [[nodiscard]] inline double min_value() const { return axis_->min_value(); }
 
   /// Get the maximum coordinate value.
   ///
   /// @return maximum coordinate value
-  inline double max_value() const { return axis_->max_value(); }
+  [[nodiscard]] inline double max_value() const { return axis_->max_value(); }
 
   /// Get the number of values for this axis
   ///
   /// @return the number of values
-  inline int64_t size() const noexcept { return axis_->size(); }
+  [[nodiscard]] inline int64_t size() const noexcept { return axis_->size(); }
 
   /// Check if this axis values are spaced regularly
-  inline bool is_regular() const noexcept {
+  [[nodiscard]] inline bool is_regular() const noexcept {
     return dynamic_cast<axis::container::Regular*>(axis_.get()) != nullptr;
   }
 
   /// Returns true if this axis represents a circle.
-  inline constexpr bool is_circle() const noexcept { return is_circle_; }
+  [[nodiscard]] inline constexpr bool is_circle() const noexcept {
+    return is_circle_;
+  }
 
   /// Does the axis represent an angle?
   ///
   /// @return true if the axis represent an angle
-  inline bool is_angle() const noexcept { return !std::isnan(circle_); }
+  [[nodiscard]] inline bool is_angle() const noexcept {
+    return !std::isnan(circle_);
+  }
 
   /// Get the first value of this axis
   ///
   /// @return the first value
-  inline double front() const { return axis_->front(); }
+  [[nodiscard]] inline double front() const { return axis_->front(); }
 
   /// Get the last value of this axis
   ///
   /// @return the last value
-  inline double back() const { return axis_->back(); }
+  [[nodiscard]] inline double back() const { return axis_->back(); }
 
   /// Test if the data is sorted in ascending order.
   ///
   /// @return True if the data is sorted in ascending order.
-  inline bool is_ascending() const { return axis_->is_ascending(); }
+  [[nodiscard]] inline bool is_ascending() const {
+    return axis_->is_ascending();
+  }
 
   /// Get increment value if is_regular()
   ///
   /// @return increment value if is_regular()
   /// @throw std::logic_error if this instance does not represent a regular axis
-  inline double increment() const {
+  [[nodiscard]] inline double increment() const {
     auto ptr = dynamic_cast<axis::container::Regular*>(axis_.get());
     if (ptr == nullptr) {
       throw std::logic_error("this axis is not regular.");
@@ -180,7 +184,8 @@ class Axis {
   /// Returns the normalized value with respect to the axis definition. This
   /// means if the axis defines a circle, this method returns a value within the
   /// interval [font(), back()] otherwise it returns the value supplied.
-  inline double normalize_coordinate(const double coordinate) const noexcept {
+  [[nodiscard]] inline double normalize_coordinate(
+      const double coordinate) const noexcept {
     return normalize_coordinate(coordinate, axis_->min_value());
   }
 
@@ -192,8 +197,8 @@ class Axis {
   /// is located before, or the value of the last element of this container if
   /// the requested value is located after.
   /// @return index of the grid point containing it or -1 if outside grid area
-  inline int64_t find_index(const double coordinate,
-                            const bool bounded = false) const {
+  [[nodiscard]] inline int64_t find_index(const double coordinate,
+                                          const bool bounded) const {
     return axis_->find_index(normalize_coordinate(coordinate), bounded);
   }
 
@@ -206,7 +211,7 @@ class Axis {
   /// @param coordinate position in this coordinate system
   /// @return None if coordinate is outside the axis definition domain otherwise
   /// the tuple (i0, i1)
-  std::optional<std::tuple<int64_t, int64_t>> find_indexes(
+  [[nodiscard]] std::optional<std::tuple<int64_t, int64_t>> find_indexes(
       double coordinate) const;
 
   /// Create a table of "size" indices located on either side of the required
@@ -219,8 +224,9 @@ class Axis {
   /// @return A table of size "2*size" containing the indices of the axis
   /// framing the value provided or an empty table if the value is located
   /// outside the axis definition domain.
-  std::vector<int64_t> find_indexes(double coordinate, uint32_t size,
-                                    Boundary boundary = kUndef) const;
+  [[nodiscard]] std::vector<int64_t> find_indexes(double coordinate,
+                                                  uint32_t size,
+                                                  Boundary boundary) const;
 
   /// Get a string representing this instance.
   ///
@@ -237,15 +243,15 @@ class Axis {
   /// Specifies if this instance handles a radian angle.
   ///
   /// @return true if this instance handles a radian angle.
-  inline bool is_radian() const noexcept {
+  [[nodiscard]] inline bool is_radian() const noexcept {
     return circle_ == math::pi<double>();
   }
 
   /// Gets the axis handler
   ///
   /// @return the axis handler
-  inline const std::shared_ptr<axis::container::Abstract>& handler() const
-      noexcept {
+  [[nodiscard]] inline const std::shared_ptr<axis::container::Abstract>&
+  handler() const noexcept {
     return axis_;
   }
 
@@ -281,8 +287,9 @@ class Axis {
   }
 
   /// Normalize angle
-  inline double normalize_coordinate(const double coordinate,
-                                     const double min) const noexcept {
+  [[nodiscard]] inline double normalize_coordinate(const double coordinate,
+                                                   const double min) const
+      noexcept {
     if (is_angle() && (coordinate >= min + circle_ || coordinate < min)) {
       return math::normalize_angle(coordinate, min, circle_);
     }
@@ -296,5 +303,4 @@ class Axis {
   void normalize_longitude(std::vector<double>& points);  // NOLINT
 };
 
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail

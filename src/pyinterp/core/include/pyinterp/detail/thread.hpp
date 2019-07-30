@@ -6,8 +6,7 @@
 #include <thread>
 #include <vector>
 
-namespace pyinterp {
-namespace detail {
+namespace pyinterp::detail {
 
 /// Automates the cutting of vectors to be processed in thread.
 ///
@@ -18,7 +17,7 @@ namespace detail {
 /// which is useful for debugging.
 /// @tparam Lambda Lambda function
 template <typename Lambda>
-void dispatch(Lambda worker, size_t size, size_t num_threads = 0) {
+void dispatch(Lambda worker, size_t size, size_t num_threads) {
   if (num_threads == 1) {
     worker(0, size);
     return;
@@ -32,7 +31,8 @@ void dispatch(Lambda worker, size_t size, size_t num_threads = 0) {
   std::vector<std::thread> threads(num_threads);
 
   // Access index to the vectors required for calculation
-  size_t start = 0, shift = size / num_threads;
+  size_t start = 0;
+  size_t shift = size / num_threads;
 
   // Launch and join threads
   for (auto it = std::begin(threads); it != std::end(threads) - 1; ++it) {
@@ -46,5 +46,4 @@ void dispatch(Lambda worker, size_t size, size_t num_threads = 0) {
   }
 }
 
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail

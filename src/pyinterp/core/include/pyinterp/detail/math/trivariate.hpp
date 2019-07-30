@@ -6,9 +6,7 @@
 #include "pyinterp/detail/math/bivariate.hpp"
 #include "pyinterp/detail/math/linear.hpp"
 
-namespace pyinterp {
-namespace detail {
-namespace math {
+namespace pyinterp::detail::math {
 
 /// Performs the interpolation
 ///
@@ -35,6 +33,4 @@ inline T trivariate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
                 boost::geometry::get<2>(p1), z0, z1);
 }
 
-}  // namespace math
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::math

@@ -3,9 +3,9 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/rtree.hpp"
-#include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
@@ -81,15 +81,16 @@ Args:
     values (numpy.ndarray): An array of size ``(n)`` containing the values
         associated with the coordinates provided
 )__doc__")
-      .def("query",
-           [](const pyinterp::RTree<Coordinate, Type>& self,
-              const py::array_t<double>& coordinates, const uint32_t k,
-              const bool within, const size_t num_threads) -> py::tuple {
-             return self.query(coordinates, k, within, num_threads);
-           },
-           py::arg("coordinates"), py::arg("k") = 4, py::arg("within") = false,
-           py::arg("num_threads") = 0,
-           R"__doc__(
+      .def(
+          "query",
+          [](const pyinterp::RTree<Coordinate, Type>& self,
+             const py::array_t<double>& coordinates, const uint32_t k,
+             const bool within, const size_t num_threads) -> py::tuple {
+            return self.query(coordinates, k, within, num_threads);
+          },
+          py::arg("coordinates"), py::arg("k") = 4, py::arg("within") = false,
+          py::arg("num_threads") = 0,
+          R"__doc__(
 Search for the nearest K nearest neighbors of a given point.
 
 Args:

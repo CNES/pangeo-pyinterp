@@ -7,9 +7,7 @@
 #include <cmath>
 #include <tuple>
 
-namespace pyinterp {
-namespace detail {
-namespace math {
+namespace pyinterp::detail::math {
 
 /// Abstract class for bivariate interpolation
 template <template <class> class Point, typename T>
@@ -110,7 +108,7 @@ struct InverseDistanceWeighting : public Bivariate<Point, T> {
   explicit InverseDistanceWeighting(const int exp) : exp_(exp) {}
 
   /// Return the exponent used by this instance
-  inline int exp() const noexcept { return exp_; }
+  [[nodiscard]] inline int exp() const noexcept { return exp_; }
 
   /// Default destructor
   virtual ~InverseDistanceWeighting() = default;
@@ -248,6 +246,4 @@ struct Nearest : public Bivariate<Point, T> {
   }
 };
 
-}  // namespace math
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::math

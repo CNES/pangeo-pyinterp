@@ -3,11 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/geometry/point.hpp"
 #include <pybind11/pybind11.h>
+#include "pyinterp/detail/geometry/point.hpp"
 
-namespace pyinterp {
-namespace geodetic {
+namespace pyinterp::geodetic {
 
 // Handle a point in a equatorial spherical coordinates system in degrees.
 template <typename T>
@@ -33,7 +32,7 @@ class Point2D : public detail::geometry::EquatorialPoint2D<T> {
   inline void lat(T const& v) { this->template set<1>(v); }
 
   /// Get a tuple that fully encodes the state of this instance
-  pybind11::tuple getstate() const {
+  [[nodiscard]] pybind11::tuple getstate() const {
     return pybind11::make_tuple(lon(), lat());
   }
 
@@ -48,21 +47,18 @@ class Point2D : public detail::geometry::EquatorialPoint2D<T> {
 
   /// Converts a Point2D into a string with the same meaning as that of this
   /// instance.
-  std::string to_string() const {
+  [[nodiscard]] std::string to_string() const {
     std::stringstream ss;
     ss << boost::geometry::dsv(*this);
     return ss.str();
   }
 };
 
-}  // namespace geodetic
-}  // namespace pyinterp
+}  // namespace pyinterp::geodetic
 
 // BOOST specialization to accept pyinterp::geodectic::Point2D as a geometry
 // entity
-namespace boost {
-namespace geometry {
-namespace traits {
+namespace boost::geometry::traits {
 
 namespace pg = pyinterp::geodetic;
 
@@ -102,6 +98,4 @@ struct access<pg::Point2D<T>, I> {
   }
 };
 
-}  // namespace traits
-}  // namespace geometry
-}  // namespace boost
+}  // namespace boost::geometry::traits

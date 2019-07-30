@@ -3,13 +3,11 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <Eigen/Core>
 #include "pyinterp/detail/gsl/interpolate1d.hpp"
 #include "pyinterp/detail/math.hpp"
-#include <Eigen/Core>
 
-namespace pyinterp {
-namespace detail {
-namespace math {
+namespace pyinterp::detail::math {
 
 /// Set of coordinates/values used for interpolation
 ///  * q11 = (x1, y1)
@@ -65,12 +63,12 @@ class XArray {
   XArray &operator=(XArray &&rhs) noexcept = default;
 
   /// Get the half size of the window in abscissa.
-  inline size_t nx() const noexcept {
+  [[nodiscard]] inline size_t nx() const noexcept {
     return static_cast<size_t>(x_.size()) >> 1U;
   }
 
   /// Get the half size of the window in ordinate.
-  inline size_t ny() const noexcept {
+  [[nodiscard]] inline size_t ny() const noexcept {
     return static_cast<size_t>(y_.size()) >> 1U;
   }
 
@@ -78,28 +76,30 @@ class XArray {
   inline Eigen::VectorXd &x() noexcept { return x_; }
 
   /// Get x-coordinates
-  inline const Eigen::VectorXd &x() const noexcept { return x_; }
+  [[nodiscard]] inline const Eigen::VectorXd &x() const noexcept { return x_; }
 
   /// Get y-coordinates
   inline Eigen::VectorXd &y() noexcept { return y_; }
 
   /// Get y-coordinates
-  inline const Eigen::VectorXd &y() const noexcept { return y_; }
+  [[nodiscard]] inline const Eigen::VectorXd &y() const noexcept { return y_; }
 
   /// Get the values from the array for all x and y coordinates.
   inline Eigen::MatrixXd &q() noexcept { return q_; }
 
   /// Get the values from the array for all x and y coordinates.
-  inline const Eigen::MatrixXd &q() const noexcept { return q_; }
+  [[nodiscard]] inline const Eigen::MatrixXd &q() const noexcept { return q_; }
 
   /// Get the ith x-axis.
-  inline double x(const size_t ix) const { return x_(ix); }
+  [[nodiscard]] inline double x(const size_t ix) const { return x_(ix); }
 
   /// Get the ith y-axis.
-  inline double y(const size_t jx) const { return y_(jx); }
+  [[nodiscard]] inline double y(const size_t jx) const { return y_(jx); }
 
   /// Get the value at coordinate (ix, jx).
-  inline double z(const size_t ix, const size_t jx) const { return q_(ix, jx); }
+  [[nodiscard]] inline double z(const size_t ix, const size_t jx) const {
+    return q_(ix, jx);
+  }
 
   /// Set the ith x-axis.
   inline double &x(const size_t ix) { return x_(ix); }
@@ -112,13 +112,13 @@ class XArray {
 
   /// Normalizes the angle with respect to the first value of the X axis of this
   /// array.
-  inline double normalize_angle(const double xi) const {
-    return math::normalize_angle(xi, x(0));
+  [[nodiscard]] inline double normalize_angle(const double xi) const {
+    return math::normalize_angle(xi, x(0), 360.0);
   }
 
   /// Returns true if this instance does not contains at least one Not A Number
   /// (NaN).
-  inline bool is_valid() const { return !q_.hasNaN(); }
+  [[nodiscard]] inline bool is_valid() const { return !q_.hasNaN(); }
 
  private:
   Eigen::VectorXd x_{};
@@ -136,10 +136,10 @@ class Bicubic {
   ///
   /// @param xr Calculation window.
   /// @param type method of calculation
-  explicit Bicubic(const XArray &xr,
-                   const gsl_interp_type *type = gsl_interp_cspline)
+  explicit Bicubic(const XArray &xr, const gsl_interp_type *type)
       : column_(xr.x().size()),
-        interpolator_(std::max(xr.x().size(), xr.y().size()), type) {}
+        interpolator_(std::max(xr.x().size(), xr.y().size()), type,
+                      gsl::Accelerator()) {}
 
   /// Return the interpolated value of y for a given point x
   double interpolate(const double x, const double y, const XArray &xr) {
@@ -158,8 +158,7 @@ class Bicubic {
 
  private:
   using InterpolateFunction = double (gsl::Interpolate1D::*)(
-      const Eigen::VectorXd &,
-      const Eigen::VectorXd &, const double);
+      const Eigen::VectorXd &, const Eigen::VectorXd &, const double);
   /// Column of the interpolation window (interpolation according to Y
   /// coordinates)
   Eigen::VectorXd column_;
@@ -180,6 +179,4 @@ class Bicubic {
   }
 };
 
-}  // namespace math
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::math

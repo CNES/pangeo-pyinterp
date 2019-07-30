@@ -2,8 +2,8 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/detail/geodetic/rtree.hpp"
 #include <gtest/gtest.h>
+#include "pyinterp/detail/geodetic/rtree.hpp"
 
 namespace geodetic = pyinterp::detail::geodetic;
 
@@ -35,8 +35,8 @@ TEST(geodetic, rtree) {
   //               Eigen::RowVectorXi::LinSpaced(coordinates.rows(), 0,
   //                                             coordinates.rows() - 1));
   ASSERT_EQ(rtree.size(), 0);
-  // rtree.interpolate(pyinterp::detail::geometry::EquatorialPoint3D<double>{0, 0, 0});
-  // EXPECT_FALSE(rtree.empty());
+  // rtree.interpolate(pyinterp::detail::geometry::EquatorialPoint3D<double>{0,
+  // 0, 0}); EXPECT_FALSE(rtree.empty());
 
   // auto bounds = rtree.equatorial_bounds();
   // ASSERT_TRUE(bounds);
@@ -70,7 +70,8 @@ TEST(geodetic, rtree) {
   // EXPECT_TRUE(rtree.empty());
 
   // rtree.insert(coordinates, Eigen::RowVectorXi::LinSpaced(
-  //                               coordinates.rows(), 0, coordinates.rows() - 1));
+  //                               coordinates.rows(), 0, coordinates.rows() -
+  //                               1));
   // ASSERT_EQ(rtree.size(), coordinates.rows());
   // EXPECT_FALSE(rtree.empty());
 

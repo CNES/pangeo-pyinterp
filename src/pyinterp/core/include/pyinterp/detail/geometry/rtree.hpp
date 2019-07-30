@@ -3,15 +3,13 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/geometry/box.hpp"
-#include "pyinterp/detail/geometry/point.hpp"
 #include <algorithm>
 #include <boost/geometry.hpp>
 #include <optional>
+#include "pyinterp/detail/geometry/box.hpp"
+#include "pyinterp/detail/geometry/point.hpp"
 
-namespace pyinterp {
-namespace detail {
-namespace geometry {
+namespace pyinterp::detail::geometry {
 
 /// Index points in the Cartesian space at N dimensions.
 ///
@@ -67,12 +65,12 @@ class RTree {
   /// Returns the number of points of this mesh
   ///
   /// @return the number of points
-  inline size_t size() const { return tree_->size(); }
+  [[nodiscard]] inline size_t size() const { return tree_->size(); }
 
   /// Query if the container is empty.
   ///
   /// @return true if the container is empty.
-  inline bool empty() const { return tree_->empty(); }
+  [[nodiscard]] inline bool empty() const { return tree_->empty(); }
 
   /// Removes all values stored in the container.
   inline void clear() { tree_->clear(); }
@@ -162,6 +160,4 @@ class RTree {
   std::shared_ptr<rtree_t> tree_;
 };
 
-}  // namespace geometry
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::geometry

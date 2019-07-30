@@ -6,9 +6,7 @@
 #include <cmath>
 #include <tuple>
 
-namespace pyinterp {
-namespace detail {
-namespace math {
+namespace pyinterp::detail::math {
 
 /// π
 template <typename T>
@@ -47,8 +45,8 @@ inline constexpr T degrees(const T& x) noexcept {
 /// @param circle Circle value
 /// @return the angle reduced to the range [min, circle + min[
 template <typename T>
-inline constexpr T normalize_angle(const T& x, const T& min = T(-180),
-                                   const T& circle = T(360)) noexcept {
+inline constexpr T normalize_angle(const T& x, const T& min,
+                                   const T& circle) noexcept {
   T result = std::remainder(x - min, circle);
   if (result < T(0)) {
     result += circle;
@@ -131,7 +129,9 @@ inline constexpr std::tuple<T, T> sincosd(const T& x) noexcept {
 /// @return tan(x).
 template <typename T>
 inline constexpr T tand(const T& x) noexcept {
-  T sinx{}, cosx{};
+  T sinx{};
+  T cosx{};
+
   std::tie(sinx, cosx) = sincosd(x);
   return cosx != 0 ? sinx / cosx : (sinx < 0 ? -HUGE_VAL : HUGE_VAL);
 }
@@ -224,6 +224,4 @@ struct Fill<T, std::enable_if_t<std::is_integral<T>::value>> {
   }
 };
 
-}  // namespace math
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::math

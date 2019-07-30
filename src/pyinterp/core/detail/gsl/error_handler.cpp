@@ -5,9 +5,7 @@
 #include "pyinterp/detail/gsl/error_handler.hpp"
 #include <sstream>
 
-namespace pyinterp {
-namespace detail {
-namespace gsl {
+namespace pyinterp::detail::gsl {
 
 void error_handler(const char* reason, const char* /*unused*/, int /*unused*/,
                    int code) {
@@ -18,6 +16,4 @@ void error_handler(const char* reason, const char* /*unused*/, int /*unused*/,
 
 void set_error_handler() { gsl_set_error_handler(error_handler); }
 
-}  // namespace gsl
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::gsl

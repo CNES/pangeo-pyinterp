@@ -3,10 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/bicubic.hpp"
-#include <cctype>
-#include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <cctype>
 
 namespace py = pybind11;
 
@@ -66,7 +66,7 @@ bool load_frame(const Grid2D<Type>& grid, const double x, const double y,
     auto value = (*grid.x())(index);
 
     if (grid.x()->is_angle()) {
-      value = detail::math::normalize_angle(value, x0);
+      value = detail::math::normalize_angle(value, x0, 360.0);
     }
     frame.x(ix) = value;
 

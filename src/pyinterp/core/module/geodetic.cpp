@@ -2,14 +2,14 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/geodetic/coordinates.hpp"
-#include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/point.hpp"
-#include "pyinterp/geodetic/system.hpp"
-#include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include "pyinterp/geodetic/box.hpp"
+#include "pyinterp/geodetic/coordinates.hpp"
+#include "pyinterp/geodetic/point.hpp"
+#include "pyinterp/geodetic/system.hpp"
 
 namespace geodetic = pyinterp::geodetic;
 namespace py = pybind11;
@@ -85,10 +85,11 @@ positions, whatever they may be.
 Returns:
     pyinterp.core.geodetic.Box2D: a box that covers the entire Earth
 )__doc__")
-      .def("covered_by",
-           [](const geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
-               -> bool { return self.covered_by(point); },
-           py::arg("point"), R"__doc__(
+      .def(
+          "covered_by",
+          [](const geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
+              -> bool { return self.covered_by(point); },
+          py::arg("point"), R"__doc__(
 Test if the given point is inside or on border of this box
 
 Args:
@@ -97,14 +98,15 @@ Args:
 Returns:
     bool: True if the given point is inside or on border of this Box
 )__doc__")
-      .def("covered_by",
-           [](const geodetic::Box2D<T>& self,
-              const Eigen::Ref<const Eigen::VectorXd>& lon,
-              const Eigen::Ref<const Eigen::VectorXd>& lat,
-              const size_t num_threads = 0) -> py::array_t<int8_t> {
-             return self.covered_by(lon, lat);
-           },
-           py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
+      .def(
+          "covered_by",
+          [](const geodetic::Box2D<T>& self,
+             const Eigen::Ref<const Eigen::VectorXd>& lon,
+             const Eigen::Ref<const Eigen::VectorXd>& lat,
+             const size_t num_threads) -> py::array_t<int8_t> {
+            return self.covered_by(lon, lat, num_threads);
+          },
+          py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
 Test if the coordinates of the points provided are located inside or at the
 edge of this box.
 

@@ -3,8 +3,8 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/fill.hpp"
-#include <cctype>
 #include <pybind11/pybind11.h>
+#include <cctype>
 
 namespace py = pybind11;
 

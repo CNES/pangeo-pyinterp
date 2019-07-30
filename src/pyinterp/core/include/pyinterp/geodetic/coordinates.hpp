@@ -3,26 +3,25 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <Eigen/Core>
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geodetic/coordinates.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/system.hpp"
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
-#include <Eigen/Core>
 
-namespace pyinterp {
-namespace geodetic {
+namespace pyinterp::geodetic {
 
 /// Wrapper
 class Coordinates : public detail::geodetic::Coordinates {
  public:
   /// The constructor defaults the ellipsoid parameters to WGS84.
-  explicit Coordinates(const std::optional<System>& system = {})
+  explicit Coordinates(const std::optional<System>& system)
       : detail::geodetic::Coordinates(system) {}
 
   /// Gets the WGS used by this instance
-  inline System system() const noexcept {
+  [[nodiscard]] inline System system() const noexcept {
     return System(detail::geodetic::Coordinates::system());
   }
 
@@ -34,7 +33,7 @@ class Coordinates : public detail::geodetic::Coordinates {
       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& x,
       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& y,
       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& z,
-      const size_t num_threads = 0) const {
+      const size_t num_threads) const {
     detail::check_eigen_shape("x", x, "y", y, "z", z);
     auto size = x.size();
     auto lon = pybind11::array_t<T>(pybind11::array::ShapeContainer{{size}});
@@ -82,7 +81,7 @@ class Coordinates : public detail::geodetic::Coordinates {
       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& lon,
       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& lat,
       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& alt,
-      const size_t num_threads = 0) const {
+      const size_t num_threads) const {
     detail::check_eigen_shape("lon", lon, "lat", lat, "alt", alt);
     auto size = lon.size();
     auto x = pybind11::array_t<T>(pybind11::array::ShapeContainer{{size}});
@@ -131,7 +130,7 @@ class Coordinates : public detail::geodetic::Coordinates {
       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& lon1,
       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& lat1,
       const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& alt1,
-      const size_t num_threads = 0) const {
+      const size_t num_threads) const {
     detail::check_eigen_shape("lon1", lon1, "lat1", lat1, "alt1", alt1);
     auto size = lon1.size();
     auto lon2 = pybind11::array_t<T>(pybind11::array::ShapeContainer{{size}});
@@ -173,7 +172,7 @@ class Coordinates : public detail::geodetic::Coordinates {
   }
 
   /// Get a tuple that fully encodes the state of this instance
-  pybind11::tuple getstate() const { return system().getstate(); }
+  [[nodiscard]] pybind11::tuple getstate() const { return system().getstate(); }
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
@@ -182,5 +181,4 @@ class Coordinates : public detail::geodetic::Coordinates {
   }
 };
 
-}  // namespace geodetic
-}  // namespace pyinterp
+}  // namespace pyinterp::geodetic

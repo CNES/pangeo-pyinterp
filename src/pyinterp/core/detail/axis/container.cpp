@@ -4,10 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/detail/axis/container.hpp"
 
-namespace pyinterp {
-namespace detail {
-namespace axis {
-namespace container {
+namespace pyinterp::detail::axis::container {
 
 void Irregular::make_edges() {
   auto n = points_.size();
@@ -75,7 +72,4 @@ int64_t Irregular::find_index(double coordinate, bool bounded) const {
   return low;
 }
 
-}  // namespace container
-}  // namespace axis
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::axis::container

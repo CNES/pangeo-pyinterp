@@ -3,10 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/numpy.h>
+#include <memory>
 #include "pyinterp/detail/axis.hpp"
 #include "pyinterp/detail/math.hpp"
-#include <memory>
-#include <pybind11/numpy.h>
 
 namespace pyinterp {
 

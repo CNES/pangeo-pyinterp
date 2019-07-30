@@ -3,18 +3,18 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/thread.hpp"
-#include "pyinterp/detail/math.hpp"
-#include "pyinterp/grid.hpp"
-#include <atomic>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <Eigen/Core>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <Eigen/Core>
+#include <atomic>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include "pyinterp/detail/math.hpp"
+#include "pyinterp/detail/thread.hpp"
+#include "pyinterp/grid.hpp"
 
 namespace pyinterp {
 namespace detail {
@@ -173,7 +173,8 @@ Type gauss_seidel(
     std::vector<std::atomic<int64_t>> pipeline(num_threads);
     std::vector<std::thread> threads;
 
-    int64_t start = 0, shift = y_size / num_threads;
+    int64_t start = 0;
+    int64_t shift = y_size / num_threads;
 
     for (auto& item : pipeline) {
       item = std::numeric_limits<int>::min();
@@ -324,11 +325,12 @@ pybind11::array_t<Type> loess(const Grid2D<Type>& grid, const uint32_t nx,
                 // If the value is not masked, its weight is calculated from the
                 // tri-cube weight function
                 if (!std::isnan(zi)) {
+                  const auto power = 3.0;
                   auto d =
                       std::sqrt(detail::math::sqr((((*grid.x())(wx)-x)) / nx) +
                                 detail::math::sqr((((*grid.y())(wy)-y)) / ny));
-                  auto wi =
-                      d <= 1 ? std::pow((1.0 - std::pow(d, 3.0)), 3.0) : 0.0;
+                  auto wi = d <= 1 ? std::pow((1.0 - std::pow(d, power)), power)
+                                   : 0.0;
                   value += static_cast<Type>(wi * zi);
                   weight += static_cast<Type>(wi);
                 }
@@ -358,4 +360,3 @@ pybind11::array_t<Type> loess(const Grid2D<Type>& grid, const uint32_t nx,
 
 }  // namespace fill
 }  // namespace pyinterp
-

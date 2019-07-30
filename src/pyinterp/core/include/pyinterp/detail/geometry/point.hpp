@@ -5,9 +5,7 @@
 #pragma once
 #include <boost/geometry.hpp>
 
-namespace pyinterp {
-namespace detail {
-namespace geometry {
+namespace pyinterp::detail::geometry {
 
 /// Coordinate type
 template <typename Point>
@@ -124,6 +122,4 @@ template <typename T>
 using EquatorialPoint3D = boost::geometry::model::point<
     T, 3, boost::geometry::cs::spherical_equatorial<boost::geometry::degree>>;
 
-}  // namespace geometry
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::geometry

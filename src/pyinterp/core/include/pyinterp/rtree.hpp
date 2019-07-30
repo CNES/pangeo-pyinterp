@@ -3,13 +3,13 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geodetic/rtree.hpp"
 #include "pyinterp/detail/geodetic/system.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/system.hpp"
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
 
 namespace pyinterp {
 
@@ -101,10 +101,8 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
 
   /// TODO
   pybind11::tuple inverse_distance_weighting(
-      const pybind11::array_t<Type> &coordinates,
-      distance_t radius = std::numeric_limits<distance_t>::max(),
-      uint32_t k = 4, uint32_t p = 2, bool within = true,
-      size_t num_threads = 0) const {
+      const pybind11::array_t<Type> &coordinates, distance_t radius, uint32_t k,
+      uint32_t p, bool within, size_t num_threads) const {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case 2:
@@ -124,7 +122,7 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
   }
 
   /// Get a tuple that fully encodes the state of this instance
-  pybind11::tuple getstate() const {
+  [[nodiscard]] pybind11::tuple getstate() const {
     auto x = pybind11::array_t<Coordinate>(
         pybind11::array::ShapeContainer{{this->size()}});
     auto y = pybind11::array_t<Coordinate>(

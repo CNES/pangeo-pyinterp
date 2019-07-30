@@ -3,9 +3,9 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/numpy.h>
 #include "pyinterp/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"
-#include <pybind11/numpy.h>
 
 namespace pyinterp {
 
@@ -50,10 +50,10 @@ class Grid2D {
   Grid2D& operator=(Grid2D&& rhs) noexcept = default;
 
   /// Gets the X-Axis
-  inline const std::shared_ptr<Axis> x() const noexcept { return x_; }
+  [[nodiscard]] inline std::shared_ptr<Axis> x() const noexcept { return x_; }
 
   /// Gets the Y-Axis
-  inline const std::shared_ptr<Axis> y() const noexcept { return y_; }
+  [[nodiscard]] inline std::shared_ptr<Axis> y() const noexcept { return y_; }
 
   /// Gets values of the array to interpolate
   inline const pybind11::array_t<T>& array() const noexcept { return array_; }
@@ -78,7 +78,7 @@ class Grid2D {
   }
 
   /// Pickle support: get state of this instance
-  virtual pybind11::tuple getstate() const {
+  [[nodiscard]] virtual pybind11::tuple getstate() const {
     return pybind11::make_tuple(x_->getstate(), y_->getstate(), array_);
   }
 
@@ -122,17 +122,17 @@ template <typename T>
 class Grid3D : public Grid2D<T, 3> {
  public:
   /// Default constructor
-  Grid3D(std::shared_ptr<Axis> x, std::shared_ptr<Axis> y,
+  Grid3D(const std::shared_ptr<Axis>& x, const std::shared_ptr<Axis>& y,
          std::shared_ptr<Axis> z, pybind11::array_t<T> u)
       : Grid2D<T, 3>(x, y, std::move(u)), z_(std::move(z)) {
     this->check_shape(2, z_.get(), "z", "u");
   }
 
   /// Gets the Y-Axis
-  inline const std::shared_ptr<Axis> z() const noexcept { return z_; }
+  [[nodiscard]] inline std::shared_ptr<Axis> z() const noexcept { return z_; }
 
   /// Pickle support: get state of this instance
-  pybind11::tuple getstate() const final {
+  [[nodiscard]] pybind11::tuple getstate() const final {
     return pybind11::make_tuple(this->x_->getstate(), this->y_->getstate(),
                                 z_->getstate(), this->array_);
   }
@@ -170,17 +170,17 @@ Args:
     y (pyinterp.core.Axis): Y-Axis
     array (numpy.ndarray): Bivariate function
 )__doc__")
-      .def_property_readonly("x",
-                             [](const Grid2D<Type>& self) { return self.x(); },
-                             R"__doc__(
+      .def_property_readonly(
+          "x", [](const Grid2D<Type>& self) { return self.x(); },
+          R"__doc__(
 Gets the X-Axis handled by this instance
 
 Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
-      .def_property_readonly("y",
-                             [](const Grid2D<Type>& self) { return self.y(); },
-                             R"__doc__(
+      .def_property_readonly(
+          "y", [](const Grid2D<Type>& self) { return self.y(); },
+          R"__doc__(
 Gets the Y-Axis handled by this instance
 
 Returns:
@@ -215,25 +215,25 @@ Args:
     z (pyinterp.core.Axis): Z-Axis
     array (numpy.ndarray): Trivariate function
 )__doc__")
-      .def_property_readonly("x",
-                             [](const Grid3D<Type>& self) { return self.x(); },
-                             R"__doc__(
+      .def_property_readonly(
+          "x", [](const Grid3D<Type>& self) { return self.x(); },
+          R"__doc__(
 Gets the X-Axis handled by this instance
 
 Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
-      .def_property_readonly("y",
-                             [](const Grid3D<Type>& self) { return self.y(); },
-                             R"__doc__(
+      .def_property_readonly(
+          "y", [](const Grid3D<Type>& self) { return self.y(); },
+          R"__doc__(
 Gets the Y-Axis handled by this instance
 
 Returns:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
-      .def_property_readonly("z",
-                             [](const Grid3D<Type>& self) { return self.z(); },
-                             R"__doc__(
+      .def_property_readonly(
+          "z", [](const Grid3D<Type>& self) { return self.z(); },
+          R"__doc__(
 Gets the Z-Axis handled by this instance
 
 Returns:

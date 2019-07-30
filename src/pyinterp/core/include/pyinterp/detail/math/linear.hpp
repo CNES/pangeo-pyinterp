@@ -4,9 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 
-namespace pyinterp {
-namespace detail {
-namespace math {
+namespace pyinterp::detail::math {
 
 /// Linear interpolation
 ///
@@ -25,6 +23,4 @@ inline constexpr T linear(const T& x, const T& x0, const T& x1, const T& y0,
   return t * y0 + u * y1 / (t + u);
 }
 
-}  // namespace math
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::math

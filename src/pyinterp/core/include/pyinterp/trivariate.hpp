@@ -3,15 +3,15 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <cctype>
 #include "pyinterp/bivariate.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/trivariate.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/grid.hpp"
-#include <cctype>
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
-#include <pybind11/stl.h>
 
 namespace pyinterp {
 
@@ -58,7 +58,13 @@ pybind11::array_t<Coordinate> trivariate(
 
               if (x_indexes.has_value() && y_indexes.has_value() &&
                   z_indexes.has_value()) {
-                int64_t ix0, ix1, iy0, iy1, iz0, iz1;
+                int64_t ix0;
+                int64_t ix1;
+                int64_t iy0;
+                int64_t iy1;
+                int64_t iz0;
+                int64_t iz1;
+
                 std::tie(ix0, ix1) = *x_indexes;
                 std::tie(iy0, iy1) = *y_indexes;
                 std::tie(iz0, iz1) = *z_indexes;
@@ -67,11 +73,11 @@ pybind11::array_t<Coordinate> trivariate(
 
                 _result(ix) =
                     pyinterp::detail::math::trivariate<Point, Coordinate>(
-                        Point<Coordinate>(
-                            grid.x()->is_angle()
-                                ? detail::math::normalize_angle(_x(ix), x0)
-                                : _x(ix),
-                            _y(ix), _z(ix)),
+                        Point<Coordinate>(grid.x()->is_angle()
+                                              ? detail::math::normalize_angle(
+                                                    _x(ix), x0, 360.0)
+                                              : _x(ix),
+                                          _y(ix), _z(ix)),
                         Point<Coordinate>((*grid.x())(ix0), (*grid.y())(iy0),
                                           (*grid.z())(iz0)),
                         Point<Coordinate>((*grid.x())(ix1), (*grid.y())(iy1),

@@ -35,8 +35,8 @@ TEST(math, sqr) {
 
 TEST(math, normalize_angle) {
   // normalize_angle(x + kπ) == x
-  EXPECT_NEAR(math::normalize_angle(720.001), 0.001, 1e-12);
-  EXPECT_DOUBLE_EQ(math::normalize_angle(180.0), -180.0);
+  EXPECT_NEAR(math::normalize_angle(720.001, -180.0, 360.0), 0.001, 1e-12);
+  EXPECT_DOUBLE_EQ(math::normalize_angle(180.0, -180.0, 360.0), -180.0);
   EXPECT_DOUBLE_EQ(math::normalize_angle(2.5 * M_PI, -M_PI, 2 * M_PI),
                    M_PI * 0.5);
 }

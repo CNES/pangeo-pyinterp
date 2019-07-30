@@ -3,16 +3,15 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <Eigen/Core>
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/point.hpp"
-#include <Eigen/Core>
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
 
-namespace pyinterp {
-namespace geodetic {
+namespace pyinterp::geodetic {
 
 // Defines a box made of two describing points.
 template <typename T>
@@ -49,10 +48,10 @@ class Box2D : public boost::geometry::model::box<Point2D<T>> {
   /// @param lat Latitude coordinates in degrees to check
   /// @return Returns a vector containing a flag equal to 1 if the coordinate is
   /// located in the box or at the edge otherwise 0.
-  pybind11::array_t<int8_t> covered_by(
+  [[nodiscard]] pybind11::array_t<int8_t> covered_by(
       const Eigen::Ref<const Eigen::VectorXd>& lon,
       const Eigen::Ref<const Eigen::VectorXd>& lat,
-      const size_t num_threads = 0) const {
+      const size_t num_threads) const {
     detail::check_eigen_shape("lon", lon, "lat", lat);
     auto size = lon.size();
     auto result =
@@ -88,14 +87,14 @@ class Box2D : public boost::geometry::model::box<Point2D<T>> {
 
   /// Converts a Box2D into a string with the same meaning as that of this
   /// instance.
-  std::string to_string() const {
+  [[nodiscard]] std::string to_string() const {
     std::stringstream ss;
     ss << boost::geometry::dsv(*this);
     return ss.str();
   }
 
   /// Get a tuple that fully encodes the state of this instance
-  pybind11::tuple getstate() const {
+  [[nodiscard]] pybind11::tuple getstate() const {
     return pybind11::make_tuple(this->min_corner().getstate(),
                                 this->max_corner().getstate());
   }
@@ -111,14 +110,11 @@ class Box2D : public boost::geometry::model::box<Point2D<T>> {
   }
 };
 
-}  // namespace geodetic
-}  // namespace pyinterp
+}  // namespace pyinterp::geodetic
 
 // BOOST specialization to accept pyinterp::geodectic::Box2D as a geometry
 // entity
-namespace boost {
-namespace geometry {
-namespace traits {
+namespace boost::geometry::traits {
 
 namespace pg = pyinterp::geodetic;
 
@@ -162,6 +158,4 @@ struct indexed_access<pg::Box2D<T>, max_corner, Dimension> {
   }
 };
 
-}  // namespace traits
-}  // namespace geometry
-}  // namespace boost
+}  // namespace boost::geometry::traits

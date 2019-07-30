@@ -3,14 +3,14 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <cctype>
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/bivariate.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/grid.hpp"
-#include <cctype>
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
-#include <pybind11/stl.h>
 
 namespace pyinterp {
 
@@ -22,7 +22,9 @@ using BivariateInterpolator = detail::math::Bivariate<Point, T>;
 template <template <class> class Point, typename T>
 class Bilinear : public detail::math::Bilinear<Point, T> {
  public:
-  pybind11::tuple getstate() const { return pybind11::make_tuple(); }
+  [[nodiscard]] pybind11::tuple getstate() const {
+    return pybind11::make_tuple();
+  }
 
   static Bilinear setstate(const pybind11::tuple& /*tuple*/) {
     return Bilinear();
@@ -33,7 +35,9 @@ class Bilinear : public detail::math::Bilinear<Point, T> {
 template <template <class> class Point, typename T>
 class Nearest : public detail::math::Nearest<Point, T> {
  public:
-  pybind11::tuple getstate() const { return pybind11::make_tuple(); }
+  [[nodiscard]] pybind11::tuple getstate() const {
+    return pybind11::make_tuple();
+  }
 
   static Nearest setstate(const pybind11::tuple& /*tuple*/) {
     return Nearest();
@@ -48,7 +52,9 @@ class InverseDistanceWeighting
   using detail::math::InverseDistanceWeighting<Point,
                                                T>::InverseDistanceWeighting;
 
-  pybind11::tuple getstate() const { return pybind11::make_tuple(this->exp()); }
+  [[nodiscard]] pybind11::tuple getstate() const {
+    return pybind11::make_tuple(this->exp());
+  }
 
   static InverseDistanceWeighting setstate(const pybind11::tuple& tuple) {
     if (tuple.size() != 1) {
@@ -94,7 +100,11 @@ pybind11::array_t<Coordinate> bivariate(
               auto y_indexes = grid.y()->find_indexes(_y(ix));
 
               if (x_indexes.has_value() && y_indexes.has_value()) {
-                int64_t ix0, ix1, iy0, iy1;
+                int64_t ix0;
+                int64_t ix1;
+                int64_t iy0;
+                int64_t iy1;
+
                 std::tie(ix0, ix1) = *x_indexes;
                 std::tie(iy0, iy1) = *y_indexes;
 
@@ -103,7 +113,7 @@ pybind11::array_t<Coordinate> bivariate(
                 _result(ix) = interpolator->evaluate(
                     Point<Coordinate>(
                         grid.x()->is_angle()
-                            ? detail::math::normalize_angle(_x(ix), x0)
+                            ? detail::math::normalize_angle(_x(ix), x0, 360.0)
                             : _x(ix),
                         _y(ix)),
                     Point<Coordinate>((*grid.x())(ix0), (*grid.y())(iy0)),

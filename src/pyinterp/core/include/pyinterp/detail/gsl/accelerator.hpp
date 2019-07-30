@@ -3,13 +3,11 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include <functional>
 #include <gsl/gsl_interp.h>
+#include <functional>
 #include <memory>
 
-namespace pyinterp {
-namespace detail {
-namespace gsl {
+namespace pyinterp::detail::gsl {
 
 /// Kind of iterator for interpolation lookups. It caches the previous value of
 /// an index lookup. When the subsequent interpolation point falls in the same
@@ -38,6 +36,4 @@ class Accelerator {
       acc_;
 };
 
-}  // namespace gsl
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::gsl

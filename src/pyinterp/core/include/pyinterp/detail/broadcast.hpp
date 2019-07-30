@@ -7,8 +7,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace pyinterp {
-namespace detail {
+namespace pyinterp::detail {
 
 /// Get a string representing the shape of a Eigen matrix.
 ///
@@ -183,5 +182,4 @@ void check_ndarray_shape(const std::string& name1, const Array1& a1,
   check_ndarray_shape(name1, a1, args...);
 }
 
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail

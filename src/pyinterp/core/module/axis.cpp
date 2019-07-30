@@ -3,8 +3,8 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/axis.hpp"
-#include "pyinterp/detail/broadcast.hpp"
 #include <pybind11/pybind11.h>
+#include "pyinterp/detail/broadcast.hpp"
 
 namespace py = pybind11;
 
@@ -29,7 +29,11 @@ Axis::Axis(const py::array_t<double, py::array::c_style>& points,
            is_radian) {}
 
 py::array_t<double> Axis::coordinate_values(const py::slice& slice) const {
-  size_t start, stop, step, slicelength;
+  size_t start;
+  size_t stop;
+  size_t step;
+  size_t slicelength;
+
   if (!slice.compute(size(), &start, &stop, &step, &slicelength)) {
     throw py::error_already_set();
   }
@@ -192,9 +196,10 @@ Get the maximum coordinate value.
 Return:
     float: The maximum coordinate value.
 )__doc__")
-      .def("is_regular",
-           [](const pyinterp::Axis& self) -> bool { return self.is_regular(); },
-           R"__doc__(
+      .def(
+          "is_regular",
+          [](const pyinterp::Axis& self) -> bool { return self.is_regular(); },
+          R"__doc__(
 Check if this axis values are spaced regularly
 
 Return:

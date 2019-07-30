@@ -9,10 +9,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace pyinterp {
-namespace detail {
-namespace axis {
-namespace container {
+namespace pyinterp::detail::axis::container {
 
 /// Abstraction of a container of values representing a mathematical axis.
 class Abstract {
@@ -44,41 +41,41 @@ class Abstract {
   Abstract& operator=(Abstract&& rhs) = default;
 
   /// Returns true if the data is arranged in ascending order.
-  inline bool is_ascending() const { return is_ascending_; }
+  [[nodiscard]] inline bool is_ascending() const { return is_ascending_; }
 
   /// Checks thats axis is monotonic
-  virtual bool is_monotonic() const { return true; }
+  [[nodiscard]] virtual bool is_monotonic() const { return true; }
 
   /// Get the ith coordinate value.
   ///
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
-  virtual double coordinate_value(size_t index) const = 0;
+  [[nodiscard]] virtual double coordinate_value(size_t index) const = 0;
 
   /// Get the minimum coordinate value.
   ///
   /// @return minimum coordinate value
-  virtual double min_value() const = 0;
+  [[nodiscard]] virtual double min_value() const = 0;
 
   /// Get the maximum coordinate value.
   ///
   /// @return maximum coordinate value
-  virtual double max_value() const = 0;
+  [[nodiscard]] virtual double max_value() const = 0;
 
   /// Get the number of values for this axis
   ///
   /// @return the number of values
-  virtual int64_t size() const = 0;
+  [[nodiscard]] virtual int64_t size() const = 0;
 
   /// Gets the first element in the container
   ///
   /// @return the first element
-  virtual double front() const = 0;
+  [[nodiscard]] virtual double front() const = 0;
 
   /// Gets the last element in the container
   ///
   /// @return the last element
-  virtual double back() const = 0;
+  [[nodiscard]] virtual double back() const = 0;
 
   /// Search for the index corresponding to the requested value.
   ///
@@ -89,7 +86,8 @@ class Abstract {
   /// the requested value is located after.
   /// @return index of the requested value it or -1 if outside this coordinate
   /// system area.
-  virtual int64_t find_index(double coordinate, bool bounded) const = 0;
+  [[nodiscard]] virtual int64_t find_index(double coordinate,
+                                           bool bounded) const = 0;
 
   /// compare two variables instances
   ///
@@ -102,7 +100,7 @@ class Abstract {
   bool is_ascending_{true};
 
   /// Calculate if the data is arranged in ascending order.
-  inline bool calculate_is_ascending() const {
+  [[nodiscard]] inline bool calculate_is_ascending() const {
     return size() < 2 ? true : coordinate_value(0) < coordinate_value(1);
   }
 };
@@ -137,29 +135,33 @@ class Undefined : public Abstract {
   Undefined& operator=(Undefined&& rhs) = default;
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
-  inline double coordinate_value(const size_t /* index */) const
+  [[nodiscard]] inline double coordinate_value(const size_t /* index */) const
       noexcept override {
     return std::numeric_limits<double>::quiet_NaN();
   }
 
   /// @copydoc Abstract::min_value() const
-  inline double min_value() const noexcept override {
+  [[nodiscard]] inline double min_value() const noexcept override {
     return coordinate_value(0);
   }
 
   /// @copydoc Abstract::max_value() const
-  inline double max_value() const noexcept override {
+  [[nodiscard]] inline double max_value() const noexcept override {
     return coordinate_value(0);
   }
 
   /// @copydoc Abstract::size() const
-  inline int64_t size() const noexcept override { return 0; }
+  [[nodiscard]] inline int64_t size() const noexcept override { return 0; }
 
   /// @copydoc Abstract::front() const
-  inline double front() const noexcept override { return coordinate_value(0); }
+  [[nodiscard]] inline double front() const noexcept override {
+    return coordinate_value(0);
+  }
 
   /// @copydoc Abstract::back() const
-  inline double back() const noexcept override { return coordinate_value(0); }
+  [[nodiscard]] inline double back() const noexcept override {
+    return coordinate_value(0);
+  }
 
   /// @copydoc Abstract::find_index(double,bool) const
   inline int64_t find_index(double coordinate, bool bounded) const  /// NOLINT
@@ -206,7 +208,7 @@ class Irregular : public Abstract {
   Irregular& operator=(Irregular&& rhs) = default;
 
   /// @copydoc Abstract::is_monotonic() const
-  inline bool is_monotonic() const noexcept override {
+  [[nodiscard]] inline bool is_monotonic() const noexcept override {
     if (is_ascending_) {
       return std::is_sorted(points_.begin(), points_.end());
     }
@@ -214,31 +216,35 @@ class Irregular : public Abstract {
   };
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
-  inline double coordinate_value(const size_t index) const override {
+  [[nodiscard]] inline double coordinate_value(
+      const size_t index) const override {
     return points_[index];
   }
 
   /// @copydoc Abstract::min_value() const
-  inline double min_value() const override {
+  [[nodiscard]] inline double min_value() const override {
     return is_ascending_ ? front() : back();
   }
 
   /// @copydoc Abstract::max_value() const
-  inline double max_value() const override {
+  [[nodiscard]] inline double max_value() const override {
     return is_ascending_ ? back() : front();
   }
 
   /// @copydoc Abstract::size() const
-  inline int64_t size() const noexcept override { return points_.size(); }
+  [[nodiscard]] inline int64_t size() const noexcept override {
+    return points_.size();
+  }
 
   /// @copydoc Abstract::front() const
-  inline double front() const override { return points_.front(); }
+  [[nodiscard]] inline double front() const override { return points_.front(); }
 
   /// @copydoc Abstract::back() const
-  inline double back() const override { return points_.back(); }
+  [[nodiscard]] inline double back() const override { return points_.back(); }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  int64_t find_index(double coordinate, bool bounded) const override;
+  [[nodiscard]] int64_t find_index(double coordinate,
+                                   bool bounded) const override;
 
   /// @copydoc Abstract::operator==(const Abstract&) const
   bool operator==(const Abstract& rhs) const noexcept override {
@@ -304,15 +310,17 @@ class Regular : public Abstract {
   /// Get the step between two successive values.
   ///
   /// @return increment value
-  double step() const { return step_; }
+  [[nodiscard]] double step() const { return step_; }
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
-  inline double coordinate_value(const size_t index) const noexcept override {
+  [[nodiscard]] inline double coordinate_value(const size_t index) const
+      noexcept override {
     return start_ + index * step_;
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  int64_t find_index(double coordinate, bool bounded) const noexcept override {
+  [[nodiscard]] int64_t find_index(double coordinate, bool bounded) const
+      noexcept override {
     auto index =
         static_cast<int64_t>(std::round((coordinate - start_) * inv_step_));
 
@@ -326,25 +334,25 @@ class Regular : public Abstract {
   }
 
   /// @copydoc Abstract::min_value() const
-  inline double min_value() const noexcept override {
+  [[nodiscard]] inline double min_value() const noexcept override {
     return coordinate_value(is_ascending_ ? 0 : size_ - 1);
   }
 
   /// @copydoc Abstract::max_value() const
-  inline double max_value() const noexcept override {
+  [[nodiscard]] inline double max_value() const noexcept override {
     return coordinate_value(is_ascending_ ? size_ - 1 : 0);
   }
 
   /// @copydoc Abstract::front() const
-  inline double front() const noexcept override { return start_; }
+  [[nodiscard]] inline double front() const noexcept override { return start_; }
 
   /// @copydoc Abstract::back() const
-  inline double back() const noexcept override {
+  [[nodiscard]] inline double back() const noexcept override {
     return coordinate_value(size_ - 1);
   }
 
   /// @copydoc Abstract::size() const
-  inline int64_t size() const noexcept override { return size_; }
+  [[nodiscard]] inline int64_t size() const noexcept override { return size_; }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
   bool operator==(const Abstract& rhs) const noexcept override {
@@ -367,7 +375,4 @@ class Regular : public Abstract {
   double inv_step_{};
 };
 
-}  // namespace container
-}  // namespace axis
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::axis::container

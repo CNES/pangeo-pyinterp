@@ -3,11 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/geodetic/system.hpp"
 #include <pybind11/pybind11.h>
+#include "pyinterp/detail/geodetic/system.hpp"
 
-namespace pyinterp {
-namespace geodetic {
+namespace pyinterp::geodetic {
 
 /// Wrapper
 class System : public detail::geodetic::System {
@@ -19,7 +18,7 @@ class System : public detail::geodetic::System {
       : detail::geodetic::System(base){};
 
   /// Get a tuple that fully encodes the state of this instance
-  pybind11::tuple getstate() const {
+  [[nodiscard]] pybind11::tuple getstate() const {
     return pybind11::make_tuple(semi_major_axis(), flattening());
   }
 
@@ -33,5 +32,4 @@ class System : public detail::geodetic::System {
   }
 };
 
-}  // namespace geodetic
-}  // namespace pyinterp
+}  // namespace pyinterp::geodetic

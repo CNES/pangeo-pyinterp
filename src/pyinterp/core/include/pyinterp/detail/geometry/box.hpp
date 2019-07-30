@@ -3,12 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/geometry/point.hpp"
 #include <boost/geometry.hpp>
+#include "pyinterp/detail/geometry/point.hpp"
 
-namespace pyinterp {
-namespace detail {
-namespace geometry {
+namespace pyinterp::detail::geometry {
 
 /// Defines a box made of two describing points.
 ///
@@ -30,6 +28,4 @@ using EquatorialBox2D = boost::geometry::model::box<EquatorialPoint2D<T>>;
 template <typename T>
 using EquatorialBox3D = boost::geometry::model::box<EquatorialPoint3D<T>>;
 
-}  // namespace geometry
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::geometry

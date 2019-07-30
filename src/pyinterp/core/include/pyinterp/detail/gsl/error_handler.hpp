@@ -5,9 +5,7 @@
 #pragma once
 #include <gsl/gsl_errno.h>
 
-namespace pyinterp {
-namespace detail {
-namespace gsl {
+namespace pyinterp::detail::gsl {
 
 /// GSL Error handler
 ///
@@ -19,6 +17,4 @@ void error_handler(const char* reason, const char* /*unused*/, int /*unused*/,
 /// Sets the error handler for the GSL library routines.
 void set_error_handler();
 
-}  // namespace gsl
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::gsl

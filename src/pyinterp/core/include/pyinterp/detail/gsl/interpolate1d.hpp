@@ -3,16 +3,14 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/broadcast.hpp"
-#include "pyinterp/detail/gsl/accelerator.hpp"
+#include <gsl/gsl_interp.h>
 #include <Eigen/Core>
 #include <functional>
-#include <gsl/gsl_interp.h>
 #include <memory>
+#include "pyinterp/detail/broadcast.hpp"
+#include "pyinterp/detail/gsl/accelerator.hpp"
 
-namespace pyinterp {
-namespace detail {
-namespace gsl {
+namespace pyinterp::detail::gsl {
 
 /// Interpolate a 1-D function
 class Interpolate1D {
@@ -22,8 +20,7 @@ class Interpolate1D {
   /// @param size Size of workspace
   /// @param type fitting model
   /// @param acc Accelerator
-  Interpolate1D(const size_t size, const gsl_interp_type* type,
-                Accelerator acc = Accelerator())
+  Interpolate1D(const size_t size, const gsl_interp_type* type, Accelerator acc)
       : workspace_(
             std::unique_ptr<gsl_interp, std::function<void(gsl_interp*)>>(
                 gsl_interp_alloc(type, size),
@@ -31,12 +28,12 @@ class Interpolate1D {
         acc_(std::move(acc)) {}
 
   /// Returns the name of the interpolation type used
-  inline std::string name() const noexcept {
+  [[nodiscard]] inline std::string name() const noexcept {
     return gsl_interp_name(workspace_.get());
   }
 
   /// Return the minimum number of points required by the interpolation
-  inline size_t min_size() const noexcept {
+  [[nodiscard]] inline size_t min_size() const noexcept {
     return gsl_interp_min_size(workspace_.get());
   }
 
@@ -84,6 +81,4 @@ class Interpolate1D {
   }
 };
 
-}  // namespace gsl
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::gsl

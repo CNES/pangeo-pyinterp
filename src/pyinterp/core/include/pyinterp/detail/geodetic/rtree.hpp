@@ -3,15 +3,13 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <Eigen/Core>
+#include <optional>
 #include "pyinterp/detail/geodetic/coordinates.hpp"
 #include "pyinterp/detail/geometry/rtree.hpp"
 #include "pyinterp/detail/thread.hpp"
-#include <Eigen/Core>
-#include <optional>
 
-namespace pyinterp {
-namespace detail {
-namespace geodetic {
+namespace pyinterp::detail::geodetic {
 
 /// RTree spatial index for geodetic point
 ///
@@ -177,9 +175,8 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
   /// @return a tuple containing the interpolated value and the number of
   /// neighbors used in the calculation.
   std::pair<Type, uint32_t> inverse_distance_weighting(
-      const geometry::EquatorialPoint3D<Coordinate> &point,
-      distance_t radius = std::numeric_limits<distance_t>::max(),
-      uint32_t k = 4, uint32_t p = 2, bool within = true) const {
+      const geometry::EquatorialPoint3D<Coordinate> &point, distance_t radius,
+      uint32_t k, uint32_t p, bool within) const {
     Type result = 0;
     Type total_weight = 0;
 
@@ -224,6 +221,4 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
   boost::geometry::strategy::distance::haversine<Coordinate> strategy_;
 };
 
-}  // namespace geodetic
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail::geodetic

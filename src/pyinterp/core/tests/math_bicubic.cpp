@@ -2,8 +2,8 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/detail/math/bicubic.hpp"
 #include <gtest/gtest.h>
+#include "pyinterp/detail/math/bicubic.hpp"
 
 namespace math = pyinterp::detail::math;
 namespace gsl = pyinterp::detail::gsl;
@@ -56,7 +56,7 @@ TEST(math_bicubic, bicubic) {
     }
   }
 
-  auto interpolator = math::Bicubic(xr);
+  auto interpolator = math::Bicubic(xr, gsl_interp_cspline);
   auto acc = gsl::Accelerator();
   for (auto ix = 0; ix < 6; ++ix) {
     for (auto iy = 0; iy < 6; ++iy) {

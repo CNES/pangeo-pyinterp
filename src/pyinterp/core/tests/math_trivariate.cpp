@@ -2,10 +2,10 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+#include <gtest/gtest.h>
+#include <boost/geometry.hpp>
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/trivariate.hpp"
-#include <boost/geometry.hpp>
-#include <gtest/gtest.h>
 
 namespace math = pyinterp::detail::math;
 namespace geometry = pyinterp::detail::geometry;
