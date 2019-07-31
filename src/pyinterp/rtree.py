@@ -98,8 +98,8 @@ class RTree:
                 defined by their longitudes and latitudes or a matrix
                 ``(n, 3)`` to search points defined by their longitudes,
                 latitudes and altitudes.
-            k (int, optional): The number of nearest neighbors to be used for
-                calculating the interpolated value. Defaults to ``4``.
+            k (int, optional): The number of nearest neighbors to be searched.
+                Defaults to ``4``.
             within (bool, optional): If true, the method ensures that the
                 neighbors found are located within the point of interest.
                 Defaults to ``false``.
