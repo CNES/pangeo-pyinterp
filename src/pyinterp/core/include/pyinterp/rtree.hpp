@@ -178,7 +178,7 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
           _u(ix)));
     }
     auto result = RTree<Coordinate, Type>(system);
-    static_cast<detail::geodetic::RTree<Coordinate, Type>>(result).packing(
+    static_cast<detail::geometry::RTree<Coordinate, Type, 3>>(result).packing(
         vector);
     return result;
   }
@@ -209,7 +209,7 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
       vector.emplace_back(
           std::make_pair(this->coordinates_.lla_to_ecef(point), _values(ix)));
     }
-    detail::geodetic::RTree<Coordinate, Type>::packing(vector);
+    detail::geometry::RTree<Coordinate, Type, 3>::packing(vector);
   }
 
   /// Insert coordinates

@@ -112,7 +112,7 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
   std::vector<result_t> query_ball(
       const geometry::EquatorialPoint3D<Coordinate> &point,
       const double radius) const {
-    std::vector<result_t> result;
+    auto result = std::vector<result_t>();
     std::for_each(
         this->tree_->qbegin(
             boost::geometry::index::satisfies([&](const auto &item) {
