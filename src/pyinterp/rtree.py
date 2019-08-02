@@ -91,17 +91,15 @@ class RTree:
               k: Optional[int] = 4,
               within: Optional[bool] = True,
               num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
-        """Insert new data into the search tree.
-
-        Search for the nearest K nearest neighbors of a given point.
+        """Search for the nearest K nearest neighbors of a given point.
 
         Args:
             coordinates (numpy.ndarray): A matrix ``(n, 2)`` to search points
                 defined by their longitudes and latitudes or a matrix
                 ``(n, 3)`` to search points defined by their longitudes,
                 latitudes and altitudes.
-            k (int, optional): The number of nearest neighbors to be used for
-                calculating the interpolated value. Defaults to ``4``.
+            k (int, optional): The number of nearest neighbors to be searched.
+                Defaults to ``4``.
             within (bool, optional): If true, the method ensures that the
                 neighbors found are located within the point of interest.
                 Defaults to ``false``.
