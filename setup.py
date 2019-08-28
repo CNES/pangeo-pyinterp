@@ -314,6 +314,7 @@ def main():
         description='Interpolation of geo-referenced data for Python.',
         url='https://github.com/CNES/pangeo-pyinterp',
         author='CNES/CLS',
+        author_email='fbriol@groupcls.fr',
         license="BSD License",
         ext_modules=[CMakeExtension(name="pyinterp.core")],
         package_dir={'': 'src'},
