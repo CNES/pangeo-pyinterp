@@ -247,6 +247,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                 cmake_args += ['-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14']
         else:
             cmake_args += [
+                '-G', 'Visual Studio 15 2017',
                 '-DCMAKE_GENERATOR_PLATFORM=x64',
                 '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(
                     cfg.upper(), extdir)
