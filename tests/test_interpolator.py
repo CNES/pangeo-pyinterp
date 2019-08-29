@@ -20,8 +20,8 @@ class Grid2D(unittest.TestCase):
                         "mss.nc")
 
     def test_biavariate(self):
-        grid = pyinterp.backends.xarray.Grid2D(xr.open_dataset(self.GRID),
-                                               "mss")
+        grid = pyinterp.backends.xarray.Grid2D(
+            xr.open_dataset(self.GRID).data_vars["mss"])
 
         self.assertIsInstance(grid, pyinterp.backends.xarray.Grid2D)
         self.assertIsInstance(grid, pyinterp.grid.Grid2D)
@@ -47,8 +47,8 @@ class Grid2D(unittest.TestCase):
                            bounds_error=True)
 
     def test_bicubic(self):
-        grid = pyinterp.backends.xarray.Grid2D(xr.open_dataset(self.GRID),
-                                               "mss")
+        grid = pyinterp.backends.xarray.Grid2D(
+            xr.open_dataset(self.GRID).data_vars["mss"])
 
         lon = np.arange(-180, 180, 1) + 1 / 3.0
         lat = np.arange(-90, 90, 1) + 1 / 3.0
@@ -75,8 +75,8 @@ class Trivariate(unittest.TestCase):
                         "tcw.nc")
 
     def test(self):
-        grid = pyinterp.backends.xarray.Grid3D(xr.open_dataset(self.GRID),
-                                               "tcw")
+        grid = pyinterp.backends.xarray.Grid3D(
+            xr.open_dataset(self.GRID).data_vars["tcw"])
 
         self.assertIsInstance(grid, pyinterp.backends.xarray.Grid3D)
         self.assertIsInstance(grid, pyinterp.grid.Grid3D)

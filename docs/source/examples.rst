@@ -86,7 +86,7 @@ implements all the other interpolators of the regular grids presented below.
     import xarray as xr
 
     ds = xr.open_dataset("tests/dataset/mss.nc")
-    interpolator = pyinterp.backends.xarray.Grid2D(ds, "mss")
+    interpolator = pyinterp.backends.xarray.Grid2D(ds.data_vars["mss"])
     mss = interpolator.bivariate(dict(lon=mx.flatten(), lat=my.flatten()))
 
 Bicubic
@@ -167,7 +167,7 @@ xarray:
 .. code:: python
 
     ds = xr.open_dataset("tests/dataset/tcw.nc")
-    interpolator = pyinterp.backends.xarray.Grid3D(ds, "tcw")
+    interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars["tcw"])
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
@@ -339,7 +339,7 @@ manage this series of grids, we create the following object:
 
         def load_dataset(self, varname, start, end):
             """Loading the time series into memory for the defined period.
-            
+
             Args:
                 varname (str): Name of the variable to be loaded into memory.
                 start (datetime.datetime): Date of the first map to be loaded.
@@ -398,7 +398,7 @@ measurement.
 
     class DataFrame:
         """To handle a dataset to be interpolated from a time series.
-        
+
         Args:
             path (str): Path to the file to be loaded into memory.
         """

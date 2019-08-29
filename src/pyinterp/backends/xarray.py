@@ -15,8 +15,8 @@ from .. import trivariate
 
 
 class AxisIdentifier:
-    def __init__(self, dataset: xr.Dataset):
-        self.dataset = dataset
+    def __init__(self, data_array: xr.DataArray):
+        self.data_array = data_array
 
     def _axis(self, units: cf.AxisUnit) -> Optional[str]:
         """Returns the name of the dimension that defines an axis.
@@ -29,7 +29,7 @@ class AxisIdentifier:
             str, optional:
                 The name of the coordinate
         """
-        for name, coord in self.dataset.coords.items():
+        for name, coord in self.data_array.coords.items():
             if hasattr(coord, 'units') and coord.units in units:
                 return name
         return None
@@ -63,39 +63,37 @@ class AxisIdentifier:
         return self._axis(cf.AxisLatitudeUnit())
 
 
-def _lon_lat_from_dataset(dataset: xr.Dataset,
-                          variable: str,
-                          ndims: Optional[int] = 2) -> Tuple[str, str]:
+def _lon_lat_from_data_array(data_array: xr.DataArray,
+                             ndims: Optional[int] = 2) -> Tuple[str, str]:
     """
     Gets the name of the dimensions that define the longitudes and latitudes
-    of the dataset.
+    of the data array.
 
     Args:
-        dataset (xarray.Dataset): Provided dataset
-        name (str): Variable to interpolate
+        data_array (xarray.DataArray): Provided data array
         ndims (int, optional): Number of dimension expected for the variable
 
     Returns:
         tuple: longitude and latitude names
 
     Raises:
-        ValueError if the provided dataset doesn't define a
+        ValueError if the provided data array doesn't define a
             longitude/latitude axis
         ValueError if the number of dimensions is different from the number of
             dimensions of the grid provided.
     """
-    ident = AxisIdentifier(dataset)
+    ident = AxisIdentifier(data_array)
     lon = ident.longitude()
     if lon is None:
         raise ValueError("The dataset doesn't define a longitude axis")
     lat = ident.latitude()
     if lat is None:
         raise ValueError("The dataset doesn't define a longitude axis")
-    size = len(dataset.variables[variable].shape)
+    size = len(data_array.shape)
     if size != ndims:
         raise ValueError(
-            "The number of dimensions of the variable "
-            f"{variable} is incorrect. Expected {ndims}, found {size}.")
+            "The number of dimensions of the variable is incorrect. Expected "
+            f"{ndims}, found {size}.")
     return lon, lat
 
 
@@ -130,19 +128,19 @@ def _coords(coords: dict, dims: Iterable):
 
 
 class Grid2D(grid.Grid2D):
-    """Builds a Grid2D from the Xarray dataset provided.
+    """Builds a Grid2D from the Xarray data provided.
 
     Args:
-        dataset (xarray.Dataset): Provided dataset
-        name (str): Variable to interpolate
+        data_array (xarray.DataArray): Provided data
     """
 
-    def __init__(self, dataset: xr.Dataset, variable: str):
-        self._dims = _lon_lat_from_dataset(dataset, variable)
+    def __init__(self, data_array: xr.DataArray):
+        self._dims = _lon_lat_from_data_array(data_array)
         super(Grid2D, self).__init__(
-            core.Axis(dataset.variables[self._dims[0]].values, is_circle=True),
-            core.Axis(dataset.variables[self._dims[1]].values),
-            dataset.variables[variable].transpose(*self._dims).values)
+            core.Axis(data_array.coords[self._dims[0]].values,
+                      is_circle=True),
+            core.Axis(data_array.coords[self._dims[1]].values),
+            data_array.transpose(*self._dims).values)
 
     def bivariate(self, coords: dict, *args, **kwargs):
         """Evaluate the interpolation defined for the given coordinates
@@ -180,22 +178,21 @@ class Grid2D(grid.Grid2D):
 
 
 class Grid3D(grid.Grid3D):
-    """Builds a Grid3D from the Xarray dataset provided.
+    """Builds a Grid3D from the Xarray data provided.
 
     Args:
-        dataset (xarray.Dataset): Provided dataset
-        name (str): Variable to interpolate
+        data_array (xarray.DataArray): Provided data array
     """
 
-    def __init__(self, dataset: xr.Dataset, variable: str):
-        x, y = _lon_lat_from_dataset(dataset, variable, ndims=3)
-        z = (set(dataset.coords) - {x, y}).pop()
+    def __init__(self, data_array: xr.DataArray):
+        x, y = _lon_lat_from_data_array(data_array, ndims=3)
+        z = (set(data_array.coords) - {x, y}).pop()
         self._dims = (x, y, z)
         super(Grid3D, self).__init__(
-            core.Axis(dataset.variables[x].values, is_circle=True),
-            core.Axis(dataset.variables[y].values),
-            core.Axis(dataset.variables[z].values),
-            dataset.variables[variable].transpose(x, y, z).values)
+            core.Axis(data_array.coords[x].values, is_circle=True),
+            core.Axis(data_array.coords[y].values),
+            core.Axis(data_array.coords[z].values),
+            data_array.transpose(x, y, z).values)
 
     def trivariate(self, coords: dict, *args, **kwargs):
         """Evaluate the interpolation defined for the given coordinates
