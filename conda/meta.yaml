@@ -1,27 +1,53 @@
+{% set name = "pyinterp" %}
+{% set version = "0.0.3" %}
+
 package:
-  name: pyinterp
-  version: 0.0.3
+  name: {{ name|lower }}
+  version: {{ version }}
 
 source:
     git_url: https://github.com/CNES/pangeo-pyinterp
     git_rev: HEAD
 
+build:
+  number: 0
+  skip: true  # [linux32 or win32 or py<36]
+
 requirements:
   build:
-    - {{ compiler('cxx') }}
+    - {{ compiler('cxx') }}  # [linux]
+    - cmake
   host:
     - eigen
     - gsl
     - libboost
-    - numpy
-    - python {{ python }}
+    - numpy >=1.11
+    - python
     - setuptools
     - xarray
   run:
-    - numpy
-    - python {{ python }}
+    - {{ pin_compatible('numpy') }}
+    - python
     - xarray
 
 test:
   imports:
     - pyinterp.core
+
+about:
+  home: https://github.com/CNES/pangeo-pyinterp
+  license: BSD
+  license_family: BSD
+  license_file: LICENSE
+  summary: 'Python library for optimized geo-referenced interpolation'
+  description: |
+    Tools for interpolating geo-referenced data used in the field of
+    geosciences. There are other libraries that cover this problem, but written
+    entirely in Python, the performance of these projects was not quite
+    sufficient for our needs. That is why this project was created.
+  doc_url: https://pangeo-pyinterp.readthedocs.io/
+  dev_url: https://github.com/CNES/pangeo-pyinterp
+
+extra:
+  recipe-maintainers:
+    - fbriol@gmail.com

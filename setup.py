@@ -71,12 +71,12 @@ def revision():
     meta = os.path.join(cwd, 'conda', 'meta.yaml')
     with open(meta, "r") as stream:
         lines = stream.readlines()
-    pattern = re.compile(r'\s+version:\s+(.*)')
+    pattern = re.compile(r'{% set version = ".*" %}')
 
     for idx, line in enumerate(lines):
         match = pattern.search(line)
         if match is not None:
-            lines[idx] = '  version: %s\n' % version
+            lines[idx] = '{%% set version = "%s" %%}\n' % version
 
     with open(meta, "w") as stream:
         stream.write("".join(lines))
@@ -179,7 +179,10 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         eigen_include_dir = os.path.join(sys.prefix, "include", "eigen3")
         if os.path.exists(eigen_include_dir):
             return "-DEIGEN3_INCLUDE_DIR=" + eigen_include_dir
-        eigen_include_dir = os.path.join(sys.prefix, "Library", "include")
+        eigen_include_dir = os.path.join(sys.prefix, "Library", "include",
+                                         "eigen3")
+        if not os.path.exists(eigen_include_dir):
+            eigen_include_dir = os.path.dirname(eigen_include_dir)
         if not os.path.exists(eigen_include_dir):
             raise RuntimeError(
                 "Unable to find the Eigen3 library in the conda distribution "
@@ -193,7 +196,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if not result:
             try:
                 import conda
-            except:
+            except ImportError:
                 result = False
             else:
                 result = True
