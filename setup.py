@@ -121,7 +121,6 @@ def release(full: bool = False) -> str:
 
 class CMakeExtension(setuptools.Extension):
     """Python extension to build"""
-
     def __init__(self, name):
         super(CMakeExtension, self).__init__(name, sources=[])
 
@@ -301,10 +300,16 @@ class Build(distutils.command.build.build):
         super().run()
 
 
+def long_description():
+    """Reads the README file"""
+    with open("README.md") as stream:
+        return stream.read()
+
+
 def main():
     setuptools.setup(
-        name='pyinterp',
-        version=revision(),
+        author='CNES/CLS',
+        author_email='fbriol@gmail.com',
         classifiers=[
             "Development Status :: 3 - Alpha",
             "Topic :: Scientific/Engineering :: Physics",
@@ -315,22 +320,27 @@ def main():
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7"
         ],
-        description='Interpolation of geo-referenced data for Python.',
-        url='https://github.com/CNES/pangeo-pyinterp',
-        author='CNES/CLS',
-        author_email='fbriol@groupcls.fr',
-        license="BSD License",
-        ext_modules=[CMakeExtension(name="pyinterp.core")],
-        package_dir={'': 'src'},
-        packages=setuptools.find_namespace_packages(where='src',
-                                                    exclude=['*core*']),
-        install_requires=["numpy", "xarray"],
-        tests_require=["netCDF4", "numpy", "xarray"],
         cmdclass={
             'build': Build,
             'build_ext': BuildExt
         },
-        zip_safe=False)
+        description='Interpolation of geo-referenced data for Python.',
+        ext_modules=[CMakeExtension(name="pyinterp.core")],
+        install_requires=["numpy", "xarray"],
+        license="BSD License",
+        long_description=long_description(),
+        long_description_content_type='text/markdown',
+        name='pyinterp',
+        package_dir={'': 'src'},
+        packages=setuptools.find_namespace_packages(where='src',
+                                                    exclude=['*core*']),
+        platforms=['POSIX', 'MacOS', 'Windows'],
+        python_requires='>=3.6',
+        tests_require=["netCDF4", "numpy", "xarray"],
+        url='https://github.com/CNES/pangeo-pyinterp',
+        version=revision(),
+        zip_safe=False,
+    )
 
 
 if __name__ == "__main__":
