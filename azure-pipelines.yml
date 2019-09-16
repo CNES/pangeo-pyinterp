@@ -50,6 +50,8 @@ jobs:
     displayName: Initialize the submodules
   - bash: echo "##vso[task.prependpath]$CONDA/bin"
     displayName: Add conda to PATH
+  - bash: sudo chown -R $USER $CONDA
+    displayName: Take ownership of conda installation
   - bash: conda create --yes --quiet --name Build
     displayName: Create Anaconda environment
   - bash: |
