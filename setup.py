@@ -65,7 +65,6 @@ def revision():
     stdout = execute("git log  %s -1 --format=\"%%H %%at\"" % sha1)
     stdout = stdout.strip().split()
     date = datetime.datetime.utcfromtimestamp(int(stdout[1]))
-    sha1 = stdout[0]
 
     # Updating the version number description in "meta.yaml"
     meta = os.path.join(cwd, 'conda', 'meta.yaml')
@@ -110,12 +109,11 @@ Get software version information
 
 def release(full: bool = False) -> str:
     """Returns the software version number"""
-    # {sha1}
     result = "{version}"
     if full:
         result += " ({date})"
     return result
-'''.format(sha1=sha1, version=version, date=date.strftime("%d %B %Y")))
+'''.format(version=version, date=date.strftime("%d %B %Y")))
     return version
 
 
