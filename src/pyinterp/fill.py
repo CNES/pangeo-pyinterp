@@ -3,8 +3,8 @@ Replace undefined values
 ------------------------
 """
 from typing import Optional, Union
-import numpy as np
 import concurrent.futures
+import numpy as np
 from . import core
 from . import grid
 from . import interface
@@ -130,11 +130,11 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
     function = f"gauss_seidel_{interface._core_function_suffix(instance)}"
     filled = np.copy(mesh.array)
     if nz == 0:
-        iterations, residual = getattr(core.fill,
-                                       function)(filled, first_guess,
-                                                 mesh.x.is_circle,
-                                                 max_iteration, epsilon,
-                                                 relaxation, num_threads)
+        _iterations, residual = getattr(core.fill,
+                                        function)(filled, first_guess,
+                                                  mesh.x.is_circle,
+                                                  max_iteration, epsilon,
+                                                  relaxation, num_threads)
     else:
         with concurrent.futures.ThreadPoolExecutor(
                 max_workers=num_threads if num_threads else None) as executor:

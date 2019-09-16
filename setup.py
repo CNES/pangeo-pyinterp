@@ -2,18 +2,19 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""This script is the entry point for building, distributing and installing
+this module using distutils/setuptools."""
 import datetime
 import distutils.command.build
 import pathlib
 import platform
 import re
-import setuptools
-import setuptools.command.build_ext
-import setuptools.command.install
 import subprocess
 import os
 import sys
-import sysconfig
+import setuptools
+import setuptools.command.build_ext
+import setuptools.command.install
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -117,10 +118,13 @@ def release(full: bool = False) -> str:
     return version
 
 
+# pylint: disable=too-few-public-methods
 class CMakeExtension(setuptools.Extension):
     """Python extension to build"""
     def __init__(self, name):
         super(CMakeExtension, self).__init__(name, sources=[])
+
+    # pylint: enable=too-few-public-methods
 
 
 class BuildExt(setuptools.command.build_ext.build_ext):
@@ -192,11 +196,38 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         result = os.path.exists(os.path.join(sys.prefix, 'conda-meta'))
         if not result:
             try:
+                # pylint: disable=unused-import
                 import conda
+                # pylint: enable=unused-import
             except ImportError:
                 result = False
             else:
                 result = True
+        return result
+
+    def set_cmake_user_options(self):
+        """Sets the options defined by the user."""
+        is_conda = self.is_conda()
+        result = []
+
+        if self.CXX_COMPILER is not None:
+            result.append("-DCMAKE_CXX_COMPILER=" + self.CXX_COMPILER)
+
+        if self.BOOST_ROOT is not None:
+            result.append("-DBOOST_ROOT=" + self.BOOST_ROOT)
+        elif is_conda:
+            result.append(self.boost())
+
+        if self.GSL_ROOT is not None:
+            result.append("-DGSL_ROOT_DIR=" + self.GSL_ROOT)
+        elif is_conda:
+            result.append(self.gsl())
+
+        if self.EIGEN3_INCLUDE_DIR is not None:
+            result.append("-DEIGEN3_INCLUDE_DIR=" + self.EIGEN3_INCLUDE_DIR)
+        elif is_conda:
+            result.append(self.eigen())
+
         return result
 
     def build_cmake(self, ext):
@@ -215,28 +246,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         cmake_args = [
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + str(extdir),
             "-DPYTHON_EXECUTABLE=" + sys.executable
-        ]
-
-        if self.CXX_COMPILER is not None:
-            cmake_args.append("-DCMAKE_CXX_COMPILER=" + self.CXX_COMPILER)
-
-        is_conda = self.is_conda()
-
-        if self.BOOST_ROOT is not None:
-            cmake_args.append("-DBOOST_ROOT=" + self.BOOST_ROOT)
-        elif is_conda:
-            cmake_args.append(self.boost())
-
-        if self.GSL_ROOT is not None:
-            cmake_args.append("-DGSL_ROOT_DIR=" + self.GSL_ROOT)
-        elif is_conda:
-            cmake_args.append(self.gsl())
-
-        if self.EIGEN3_INCLUDE_DIR is not None:
-            cmake_args.append("-DEIGEN3_INCLUDE_DIR=" +
-                              self.EIGEN3_INCLUDE_DIR)
-        elif is_conda:
-            cmake_args.append(self.eigen())
+        ] + self.set_cmake_user_options()
 
         build_args = ['--config', cfg]
 
@@ -305,6 +315,7 @@ def long_description():
 
 
 def main():
+    """Main function"""
     setuptools.setup(
         author='CNES/CLS',
         author_email='fbriol@gmail.com',

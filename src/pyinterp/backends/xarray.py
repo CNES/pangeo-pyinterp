@@ -1,4 +1,3 @@
-
 # Copyright (c) 2019 CNES
 #
 # All rights reserved. Use of this source code is governed by a
@@ -20,6 +19,8 @@ from .. import trivariate
 
 
 class AxisIdentifier:
+    """Identification of the axes defining longitudes, latitudes in a
+    CF file."""
     def __init__(self, data_array: xr.DataArray):
         self.data_array = data_array
 
@@ -138,12 +139,10 @@ class Grid2D(grid.Grid2D):
     Args:
         data_array (xarray.DataArray): Provided data
     """
-
     def __init__(self, data_array: xr.DataArray):
         self._dims = _lon_lat_from_data_array(data_array)
         super(Grid2D, self).__init__(
-            core.Axis(data_array.coords[self._dims[0]].values,
-                      is_circle=True),
+            core.Axis(data_array.coords[self._dims[0]].values, is_circle=True),
             core.Axis(data_array.coords[self._dims[1]].values),
             data_array.transpose(*self._dims).values)
 
@@ -188,7 +187,6 @@ class Grid3D(grid.Grid3D):
     Args:
         data_array (xarray.DataArray): Provided data array
     """
-
     def __init__(self, data_array: xr.DataArray):
         x, y = _lon_lat_from_data_array(data_array, ndims=3)
         z = (set(data_array.coords) - {x, y}).pop()

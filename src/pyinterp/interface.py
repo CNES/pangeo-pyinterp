@@ -6,12 +6,11 @@
 Interface with the library core
 ===============================
 """
-from typing import List, Tuple, Optional
 import numpy as np
 from . import core
 
 
-def _core_class_suffix(x: np.ndarray):
+def _core_class_suffix(x: np.ndarray) -> str:
     """Get the suffix of the class handling the numpy data type.
 
     Args:
@@ -43,7 +42,7 @@ def _core_class_suffix(x: np.ndarray):
     raise ValueError("Unhandled dtype: " + str(dtype))
 
 
-def _core_function_suffix(instance: object):
+def _core_function_suffix(instance: object) -> str:
     """Get the suffix of the function handling the grid instance.
 
     Args:

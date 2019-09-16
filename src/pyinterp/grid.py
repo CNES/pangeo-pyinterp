@@ -70,9 +70,6 @@ class Grid3D(Grid2D):
     """
     _DIMENSIONS = 3
 
-    def __init__(self, *args):
-        super(Grid3D, self).__init__(*args)
-
     @property
     def z(self) -> core.Axis:
         """
