@@ -79,6 +79,11 @@
         "unordered_set": "cpp",
         "thread": "cpp",
         "variant": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "clocale": "cpp",
+        "*.tcc": "cpp",
+        "fstream": "cpp",
+        "cinttypes": "cpp",
+        "condition_variable": "cpp"
     }
 }
