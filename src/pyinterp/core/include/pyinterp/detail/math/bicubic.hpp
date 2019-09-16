@@ -172,7 +172,7 @@ class Bicubic {
           &function,
       const double x, const double y, const XArray &xr) {
     // Spline interpolation as function of Y-coordinate
-    for (auto ix = 0; ix < xr.x().size(); ++ix) {
+    for (Eigen::Index ix = 0; ix < xr.x().size(); ++ix) {
       column_(ix) = function(interpolator_, xr.y(), xr.q().row(ix), y);
     }
     return function(interpolator_, xr.x(), column_, x);
