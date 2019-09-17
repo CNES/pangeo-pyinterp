@@ -1,8 +1,8 @@
 [![Build Status](https://dev.azure.com/fbriol/pangeo-pyinterp/_apis/build/status/CNES.pangeo-pyinterp?branchName=master)](https://dev.azure.com/fbriol/pangeo-pyinterp/_build/latest?definitionId=2&branchName=master)
-[![conda](https://anaconda.org/fbriol/pyinterp/badges/installer/conda.svg?service=github)](https://www.anaconda.com/distribution/)
-[![platforms](https://anaconda.org/fbriol/pyinterp/badges/platforms.svg?service=github)](https://anaconda.org/fbriol/pyinterp)
-[![latest-release-date](https://anaconda.org/fbriol/pyinterp/badges/latest_release_date.svg?service=github)](https://github.com/CNES/pangeo-pyinterp/commits/master)
-[![license](https://anaconda.org/fbriol/pyinterp/badges/license.svg?service=github)](https://opensource.org/licenses/BSD-3-Clause)
+[![conda](https://anaconda.org/conda-forge/pyinterp/badges/installer/conda.svg?service=github)](https://www.anaconda.com/distribution/)
+[![platforms](https://anaconda.org/conda-forge/pyinterp/badges/platforms.svg?service=github)](https://anaconda.org/conda-forge/pyinterp)
+[![latest-release-date](https://anaconda.org/conda-forge/pyinterp/badges/latest_release_date.svg?service=github)](https://github.com/CNES/pangeo-pyinterp/commits/master)
+[![license](https://anaconda.org/conda-forge/pyinterp/badges/license.svg?service=github)](https://opensource.org/licenses/BSD-3-Clause)
 
 
 # pangeo-pyinterp

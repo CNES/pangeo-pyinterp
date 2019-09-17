@@ -11,7 +11,7 @@ for this software is detailed `here <https://docs.anaconda.com/anaconda/install/
 
 To install the software using `conda` simply execute the following command: ::
 
-    conda install pyinterp -c fbriol
+    conda install pyinterp -c conda-forge
 
 This command will install the software and the necessary dependencies. More
 information is available on the syntax of this command on the `related

@@ -5,4 +5,4 @@ dependencies:
   - pyinterp
 
 channels:
-  - fbriol
+  - conda-forge
