@@ -34,6 +34,21 @@ def execute(cmd):
     return process.stdout.read().decode()
 
 
+def update_meta(path, version):
+    """Updating the version number description in conda/meta.yaml."""
+    with open(path, "r") as stream:
+        lines = stream.readlines()
+    pattern = re.compile(r'{% set version = ".*" %}')
+
+    for idx, line in enumerate(lines):
+        match = pattern.search(line)
+        if match is not None:
+            lines[idx] = '{%% set version = "%s" %%}\n' % version
+
+    with open(path, "w") as stream:
+        stream.write("".join(lines))
+
+
 def revision():
     """Returns the software version"""
     cwd = pathlib.Path().absolute()
@@ -67,19 +82,11 @@ def revision():
     stdout = stdout.strip().split()
     date = datetime.datetime.utcfromtimestamp(int(stdout[1]))
 
-    # Updating the version number description in "meta.yaml"
+    # This file is not present in the distribution, but only in the GIT
+    # repository of the source code.
     meta = os.path.join(cwd, 'conda', 'meta.yaml')
-    with open(meta, "r") as stream:
-        lines = stream.readlines()
-    pattern = re.compile(r'{% set version = ".*" %}')
-
-    for idx, line in enumerate(lines):
-        match = pattern.search(line)
-        if match is not None:
-            lines[idx] = '{%% set version = "%s" %%}\n' % version
-
-    with open(meta, "w") as stream:
-        stream.write("".join(lines))
+    if os.path.exists(meta):
+        update_meta(meta, version)
 
     # Updating the version number description for sphinx
     conf = os.path.join(cwd, 'docs', 'source', 'conf.py')
