@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.0.5 (19 September 2019)
+-------------------------
+* Use of the conda-forge channel
+
 0.0.4 (16 September 2019)
 -------------------------
 * Simplification of the Xarray backend
