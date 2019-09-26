@@ -11,6 +11,7 @@ source:
 
 build:
   number: 0
+  script: {{ PYTHON }} -m pip install . -vv
   skip: true  # [linux32 or win32 or py<36]
 
 requirements:
@@ -23,6 +24,7 @@ requirements:
     - gsl
     - boost-cpp
     - numpy
+    - pip
     - python
     - setuptools
     - xarray
@@ -51,4 +53,4 @@ about:
 
 extra:
   recipe-maintainers:
-    - fbriol@gmail.com
+    - fbriol

@@ -1,0 +1,12 @@
+name: pyinterp
+channels:
+  - conda-forge
+dependencies:
+  - jupyter
+  - netCDF4
+  - cartopy
+  - pandas
+  - pyinterp
+  - intake
+  - intake-xarray
+  - gcsfs

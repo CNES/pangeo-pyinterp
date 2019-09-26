@@ -3,6 +3,7 @@
 [![platforms](https://anaconda.org/conda-forge/pyinterp/badges/platforms.svg?service=github)](https://anaconda.org/conda-forge/pyinterp)
 [![latest-release-date](https://anaconda.org/conda-forge/pyinterp/badges/latest_release_date.svg?service=github)](https://github.com/CNES/pangeo-pyinterp/commits/master)
 [![license](https://anaconda.org/conda-forge/pyinterp/badges/license.svg?service=github)](https://opensource.org/licenses/BSD-3-Clause)
+[![Binder](https://binder.pangeo.io/badge_logo.svg)](https://binder.pangeo.io/v2/gh/CNES/pangeo-pyinterp/master?filepath=notebooks)
 
 
 # pangeo-pyinterp
