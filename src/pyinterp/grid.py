@@ -27,6 +27,19 @@ class Grid2D:
             args[-1])
         self._instance = getattr(core, _class)(*args)
 
+    def __repr__(self):
+        result = [
+            "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
+        ]
+        result.append("Axis:")
+        for item in dir(self):
+            attr = getattr(self, item)
+            if isinstance(attr, core.Axis):
+                result.append("  %s: %s" % (item, attr))
+        result.append("Data:")
+        result += ["  %s" % line for line in str(self.array).split("\n")]
+        return "\n".join(result)
+
     @property
     def x(self) -> core.Axis:
         """
