@@ -189,7 +189,7 @@ class Grid3D(grid.Grid3D):
     """
     def __init__(self, data_array: xr.DataArray):
         x, y = _lon_lat_from_data_array(data_array, ndims=3)
-        z = (set(data_array.coords) - {x, y}).pop()
+        z = (set(data_array.dims) - {x, y}).pop()
         self._dims = (x, y, z)
         super(Grid3D, self).__init__(
             core.Axis(data_array.coords[x].values, is_circle=True),
