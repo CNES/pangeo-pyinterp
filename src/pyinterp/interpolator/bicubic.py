@@ -8,9 +8,9 @@ Bicubic interpolation
 """
 from typing import Optional
 import numpy as np
-from . import core
-from . import grid
-from . import interface
+from .. import core
+from .. import grid
+from .. import interface
 
 
 def bicubic(grid2d: grid.Grid2D,

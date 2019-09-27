@@ -6,16 +6,16 @@
 XArray
 ------
 
-Build interpolation objects from XArray Dataset instances
+Build interpolation objects from xarray.DataArray instances
 """
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple, Union
 import xarray as xr
 from .. import cf
 from .. import core
 from .. import grid
-from .. import bivariate
-from .. import bicubic
-from .. import trivariate
+from .. import interpolator
+
+__all__ = ['init_interpolator', 'Grid2D', 'Grid3D']
 
 
 class AxisIdentifier:
@@ -153,15 +153,17 @@ class Grid2D(grid.Grid2D):
             coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
-                method :py:meth:`pyinterp.bivariate.bivariate`
+                method :py:meth:`pyinterp.bivariate
+                <pyinterp.interpolator.bivariate.bivariate>`
             **kwargs: List of keywords arguments provided to the interpolation
-                method :py:meth:`pyinterp.bivariate.bivariate`
+                method :py:meth:`pyinterp.bivariate
+                <pyinterp.interpolator.bivariate.bivariate>`
 
         Returns:
             The interpolated values
         """
-        return bivariate.bivariate(self, *_coords(coords, self._dims), *args,
-                                   **kwargs)
+        return interpolator.bivariate(self, *_coords(coords, self._dims),
+                                      *args, **kwargs)
 
     def bicubic(self, coords: dict, *args, **kwargs):
         """Evaluate the interpolation defined for the given coordinates
@@ -170,15 +172,17 @@ class Grid2D(grid.Grid2D):
             coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic.bicubic`
+                method :py:meth:`pyinterp.bicubic
+                <pyinterp.interpolator.bicubic.bicubic>`
             **kwargs: List of keyword arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic.bicubic`
+                method :py:meth:`pyinterp.bicubic
+                <pyinterp.interpolator.bicubic.bicubic>`
 
         Returns:
             The interpolated values
         """
-        return bicubic.bicubic(self, *_coords(coords, self._dims), *args,
-                               **kwargs)
+        return interpolator.bicubic(self, *_coords(coords, self._dims), *args,
+                                    **kwargs)
 
 
 class Grid3D(grid.Grid3D):
@@ -204,12 +208,36 @@ class Grid3D(grid.Grid3D):
             coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
-                method :py:meth:`pyinterp.trivariate.trivariate`
+                method :py:meth:`pyinterp.trivariate
+                <pyinterp.interpolator.trivariate.trivariate>`
             **kwargs: List of keywords arguments provided to the interpolation
-                method :py:meth:`pyinterp.trivariate.trivariate`
+                method :py:meth:`pyinterp.trivariate
+                <pyinterp.interpolator.trivariate.trivariate>`
 
         Returns:
             The interpolated values
         """
-        return trivariate.trivariate(self, *_coords(coords, self._dims), *args,
-                                     **kwargs)
+        return interpolator.trivariate(self, *_coords(coords, self._dims),
+                                       *args, **kwargs)
+
+
+def init_interpolator(array: xr.DataArray) -> Union[Grid2D, Grid3D]:
+    """Initialization of the object allowing to interpolate the Cartesian grid
+    represented by the XArray data.
+
+    Args:
+        data_array (xarray.DataArray): Provided data array
+
+    Returns:
+        pyinterp.backends.xarray.Grid2D, pyinterp.backends.xarray.Grid3D: The
+            instance of the interpolator allowing to process the Cartesian
+            grid
+    """
+    ndims = len(array.dims)
+    if ndims == 2:
+        return Grid2D(array)
+    elif ndims:
+        return Grid3D(array)
+    else:
+        ValueError("There is no implemented interpolator to process a "
+                   "%d-dimensional array." % ndims)

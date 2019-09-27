@@ -3,34 +3,32 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 """
-Trivariate interpolation
-========================
+Bivariate interpolation
+=======================
 """
 from typing import Optional
 import numpy as np
-from . import core
-from . import grid
-from . import interface
+from .. import core
+from .. import grid
+from .. import interface
 
 
-def trivariate(grid3d: grid.Grid3D,
-               x: np.ndarray,
-               y: np.ndarray,
-               z: np.ndarray,
-               interpolator: Optional[str] = "bilinear",
-               bounds_error: Optional[bool] = False,
-               num_threads: Optional[int] = 0,
-               **kwargs) -> np.ndarray:
-    """Interpolate the values provided on the defined trivariate function.
+def bivariate(grid2d: grid.Grid2D,
+              x: np.ndarray,
+              y: np.ndarray,
+              interpolator: Optional[str] = "bilinear",
+              bounds_error: Optional[bool] = False,
+              num_threads: Optional[int] = 0,
+              **kwargs) -> np.ndarray:
+    """Interpolate the values provided on the defined bivariate function.
 
     Args:
-        grid3d (pyinterp.grid.Grid2D): Function on a uniform 3-dimensional
+        grid2d (pyinterp.grid.Grid2D): Function on a uniform 2-dimensional
             grid to be interpolated.
         x (numpy.ndarray): X-values
         y (numpy.ndarray): Y-values
-        z (numpy.ndarray): Z-values
         interpolator (str, optional): The method of interpolation to
-            perform. Supported are ``bilinear`` and ``nearest``, and
+            perform. Supported are ``bilinear``, ``nearest``, and
             ``inverse_distance_weighting``. Default to ``bilinear``.
         bounds_error (bool, optional): If True, when interpolated values
             are requested outside of the domain of the input axes (x,y), a
@@ -45,10 +43,9 @@ def trivariate(grid3d: grid.Grid3D,
     Return:
         numpy.ndarray: Values interpolated
     """
-    instance = grid3d._instance
-    function = f"trivariate_{interface._core_function_suffix(instance)}"
+    instance = grid2d._instance
+    function = f"bivariate_{interface._core_function_suffix(instance)}"
     return getattr(core, function)(instance, np.asarray(x), np.asarray(y),
-                                   np.asarray(z),
                                    grid._core_variate_interpolator(
-                                       grid3d, interpolator, **kwargs),
+                                       grid2d, interpolator, **kwargs),
                                    bounds_error, num_threads)

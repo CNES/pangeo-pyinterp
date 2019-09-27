@@ -26,8 +26,6 @@ The first step is to load the data into memory:
 .. code:: python
 
     import netCDF4
-    import pyinterp.bivariate
-
     ds = netCDF4.Dataset("tests/dataset/mss.nc")
 
 Afterwards, build the :py:class:`axes <pyinterp.core.Axis>` associated with the
@@ -35,10 +33,10 @@ grid:
 
 .. code:: python
 
-    import pyinterp.core
+    import pyinterp
 
-    x_axis = pyinterp.core.Axis(ds.variables["lon"][:], is_circle=True)
-    y_axis = pyinterp.core.Axis(ds.variables["lat"][:])
+    x_axis = pyinterp.Axis(ds.variables["lon"][:], is_circle=True)
+    y_axis = pyinterp.Axis(ds.variables["lat"][:])
 
 Finally, we can build the object defining the :py:class:`grid
 <pyinterp.grid.Grid2D>` to interpolate:
@@ -49,7 +47,7 @@ Finally, we can build the object defining the :py:class:`grid
     mss = ds.variables["mss"][:].T
     # The undefined values must be set to nan.
     mss[mss.mask] = float("nan")
-    grid = pyinterp.grid.Grid2D(x_axis, y_axis, mss.data)
+    grid = pyinterp.Grid2D(x_axis, y_axis, mss.data)
 
 We will then build the coordinates on which we want to interpolate our grid:
 
@@ -68,7 +66,7 @@ the desired coordinates:
 
 .. code:: python
 
-    mss = pyinterp.bivariate.bivariate(
+    mss = pyinterp.bivariate(
         grid, mx.flatten(), my.flatten()).reshape(mx.shape)
 
 Values can be interpolated with several methods: *bilinear*, *nearest*, and
@@ -86,7 +84,8 @@ implements all the other interpolators of the regular grids presented below.
     import xarray as xr
 
     ds = xr.load_dataset("tests/dataset/mss.nc")
-    interpolator = pyinterp.backends.xarray.Grid2D(ds.data_vars["mss"])
+    interpolator = pyinterp.backends.xarray.init_interpolator(
+        ds.data_vars["mss"])
     mss = interpolator.bivariate(dict(lon=mx.flatten(), lat=my.flatten()))
 
 Bicubic
@@ -112,9 +111,7 @@ how to process the edges of the regional grids:
 
 .. code:: python
 
-    import pyinterp.bicubic
-
-    mss = pyinterp.bicubic.bicubic(
+    mss = pyinterp.bicubic(
         grid, mx.flatten(), my.flatten(), nx=3, ny=3).reshape(mx.shape)
 
 
@@ -148,18 +145,16 @@ axis which is handled by this object.
 
 .. code:: python
 
-    import pyinterp.trivariate
-
     ds = netCDF4.Dataset("tests/dataset/tcw.nc")
-    x_axis = pyinterp.core.Axis(ds.variables["longitude"][:], is_circle=True)
-    y_axis = pyinterp.core.Axis(ds.variables["latitude"][:])
-    z_axis = pyinterp.core.Axis(ds.variables["time"][:])
+    x_axis = pyinterp.Axis(ds.variables["longitude"][:], is_circle=True)
+    y_axis = pyinterp.Axis(ds.variables["latitude"][:])
+    z_axis = pyinterp.Axis(ds.variables["time"][:])
     # The shape of the bivariate values must be
     # (len(x_axis), len(y_axis), len(z_axis))
     tcw = ds.variables['tcw'][:].T
     # The undefined values must be set to nan.
     tcw[tcw.mask] = float("nan")
-    grid = pyinterp.grid.Grid3D(
+    grid = pyinterp.Grid3D(
         x_axis, y_axis, z_axis, tcw.data)
     # The coordinates used for interpolation are shifted to avoid using the
     # points of the bivariate function.
@@ -167,7 +162,7 @@ axis which is handled by this object.
                             np.arange(-89, 89, 1) + 1 / 3.0,
                             898500 + 3,
                             indexing='ij')
-    tcw = pyinterp.trivariate.trivariate(
+    tcw = pyinterp.trivariate(
         grid, mx.flatten(), my.flatten(), mz.flatten()).reshape(mx.shape)
 
 It is also possible to simplify the interpolation of the dataset by using
@@ -176,7 +171,8 @@ xarray:
 .. code:: python
 
     ds = xr.load_dataset("tests/dataset/tcw.nc")
-    interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars["tcw"])
+    interpolator = pyinterp.backends.xarray.init_interpolator(
+        ds.data_vars["tcw"])
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
@@ -377,7 +373,7 @@ To manage the time series retrieved, we create the following object:
             print(f"fetch data from {selected.min()} to {selected.max()}")
 
             data_array = ds[varname].isel(time=selected.index)
-            return pyinterp.backends.xarray.Grid3D(data_array)
+            return pyinterp.backends.xarray.init_interpolator(data_array)
 
     time_series = TimeSeries(ds)
 
