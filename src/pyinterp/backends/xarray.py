@@ -15,7 +15,7 @@ from .. import core
 from .. import grid
 from .. import interpolator
 
-__all__ = ['init_interpolator', 'Grid2D', 'Grid3D']
+__all__ = ['Grid2D', 'Grid3D']
 
 
 class AxisIdentifier:
@@ -219,25 +219,3 @@ class Grid3D(grid.Grid3D):
         """
         return interpolator.trivariate(self, *_coords(coords, self._dims),
                                        *args, **kwargs)
-
-
-def init_interpolator(array: xr.DataArray) -> Union[Grid2D, Grid3D]:
-    """Initialization of the object allowing to interpolate the Cartesian grid
-    represented by the XArray data.
-
-    Args:
-        data_array (xarray.DataArray): Provided data array
-
-    Returns:
-        pyinterp.backends.xarray.Grid2D, pyinterp.backends.xarray.Grid3D: The
-            instance of the interpolator allowing to process the Cartesian
-            grid
-    """
-    ndims = len(array.dims)
-    if ndims == 2:
-        return Grid2D(array)
-    elif ndims:
-        return Grid3D(array)
-    else:
-        ValueError("There is no implemented interpolator to process a "
-                   "%d-dimensional array." % ndims)

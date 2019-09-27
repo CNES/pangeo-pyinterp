@@ -17,8 +17,7 @@ class Grid2D(unittest.TestCase):
                         "mss.nc")
 
     def test_biavariate(self):
-        grid = pyinterp.backends.xarray.init_interpolator(
-            xr.load_dataset(self.GRID).mss)
+        grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(self.GRID).mss)
 
         self.assertIsInstance(grid, pyinterp.backends.xarray.Grid2D)
         self.assertIsInstance(grid, pyinterp.Grid2D)
@@ -112,7 +111,8 @@ class TestRTree(unittest.TestCase):
         z = ds.mss.T
         x, y = np.meshgrid(ds.lon.values, ds.lat.values, indexing='ij')
         mesh = pyinterp.RTree()
-        mesh.packing(np.vstack((x.flatten(), y.flatten())).T, z.values.flatten())
+        mesh.packing(
+            np.vstack((x.flatten(), y.flatten())).T, z.values.flatten())
         return mesh
 
     def test_interpolate(self):

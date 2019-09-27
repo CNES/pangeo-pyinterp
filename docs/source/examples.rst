@@ -84,8 +84,7 @@ implements all the other interpolators of the regular grids presented below.
     import xarray as xr
 
     ds = xr.load_dataset("tests/dataset/mss.nc")
-    interpolator = pyinterp.backends.xarray.init_interpolator(
-        ds.data_vars["mss"])
+    interpolator = pyinterp.backends.xarray.Grid2D(ds.data_vars["mss"])
     mss = interpolator.bivariate(dict(lon=mx.flatten(), lat=my.flatten()))
 
 Bicubic
@@ -171,8 +170,7 @@ xarray:
 .. code:: python
 
     ds = xr.load_dataset("tests/dataset/tcw.nc")
-    interpolator = pyinterp.backends.xarray.init_interpolator(
-        ds.data_vars["tcw"])
+    interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars["tcw"])
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
@@ -373,7 +371,7 @@ To manage the time series retrieved, we create the following object:
             print(f"fetch data from {selected.min()} to {selected.max()}")
 
             data_array = ds[varname].isel(time=selected.index)
-            return pyinterp.backends.xarray.init_interpolator(data_array)
+            return pyinterp.backends.xarray.Grid3D(data_array)
 
     time_series = TimeSeries(ds)
 
