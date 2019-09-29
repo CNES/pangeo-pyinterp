@@ -18,8 +18,8 @@
             "name": "OSX",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/local/include/eigen3",
-                "/opt/local/include",
+                "~/anaconda3/include/eigen3",
+                "~/anaconda3/include",
                 "~/anaconda3/include/python3.7m",
                 "${workspaceFolder}/third_party/pybind11/include"
             ],
