@@ -251,6 +251,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         cfg = 'Debug' if self.debug else 'Release'
 
         cmake_args = [
+            "-DCMAKE_BUILD_TYPE=" + cfg,
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + str(extdir),
             "-DPYTHON_EXECUTABLE=" + sys.executable
         ] + self.set_cmake_user_options()
@@ -259,7 +260,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         if platform.system() != 'Windows':
             build_args += ['--', '-j%d' % os.cpu_count()]
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
             if platform.system() == 'Darwin':
                 cmake_args += ['-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14']
         else:
@@ -352,7 +352,7 @@ def main():
                                                     exclude=['*core*']),
         platforms=['POSIX', 'MacOS', 'Windows'],
         python_requires='>=3.6',
-        tests_require=["netCDF4", "numpy", "xarray"],
+        tests_require=["netCDF4", "numpy", "xarray>=0.13"],
         url='https://github.com/CNES/pangeo-pyinterp',
         version=revision(),
         zip_safe=False,
