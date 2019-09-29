@@ -4,8 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/detail/axis.hpp"
 
-namespace pyinterp {
-namespace detail {
+namespace pyinterp::detail {
 
 void Axis::normalize_longitude(std::vector<double>& points) {
   auto monotonic = true;
@@ -45,7 +44,8 @@ std::optional<double> is_evenly_spaced(const std::vector<double>& points,
     return {};
   }
 
-  double increment = (points.back() - points.front()) / (n - 1);
+  double increment =
+      (points.back() - points.front()) / static_cast<double>(n - 1);
 
   for (size_t ix = 1; ix < n; ++ix) {
     if (!math::is_same(points[ix] - points[ix - 1], increment, epsilon)) {
@@ -72,7 +72,8 @@ void Axis::compute_properties(const double epsilon) {
       is_circle_ = math::is_same<double>(std::fabs(ptr->step() * size()),
                                          circle_, epsilon);
     } else {
-      auto increment = (axis_->back() - axis_->front()) / (axis_->size() - 1);
+      auto increment = (axis_->back() - axis_->front()) /
+                       static_cast<double>(axis_->size() - 1);
       is_circle_ = std::fabs((axis_->max_value() - axis_->min_value()) -
                              circle_) <= increment;
     }
@@ -218,5 +219,4 @@ std::vector<int64_t> Axis::find_indexes(double coordinate, uint32_t size,
   return result;
 }
 
-}  // namespace detail
-}  // namespace pyinterp
+}  // namespace pyinterp::detail

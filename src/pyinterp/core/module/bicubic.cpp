@@ -3,10 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/bicubic.hpp"
+#include <cctype>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <cctype>
 
 namespace py = pybind11;
 
@@ -57,11 +57,11 @@ bool load_frame(const Grid2D<Type>& grid, const double x, const double y,
 
   auto x0 = (*grid.x())(x_indexes[0]);
 
-  for (auto jx = 0; jx < frame.y().size(); ++jx) {
+  for (Eigen::Index jx = 0; jx < frame.y().size(); ++jx) {
     frame.y(jx) = (*grid.y())(y_indexes[jx]);
   }
 
-  for (auto ix = 0; ix < frame.x().size(); ++ix) {
+  for (Eigen::Index ix = 0; ix < frame.x().size(); ++ix) {
     auto index = x_indexes[ix];
     auto value = (*grid.x())(index);
 
@@ -70,7 +70,7 @@ bool load_frame(const Grid2D<Type>& grid, const double x, const double y,
     }
     frame.x(ix) = value;
 
-    for (auto jx = 0; jx < frame.y().size(); ++jx) {
+    for (Eigen::Index jx = 0; jx < frame.y().size(); ++jx) {
       frame.z(ix, jx) = static_cast<double>(grid.value(index, y_indexes[jx]));
     }
   }

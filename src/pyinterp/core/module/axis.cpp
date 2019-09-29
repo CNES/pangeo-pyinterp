@@ -11,12 +11,12 @@ namespace py = pybind11;
 namespace pyinterp {
 
 // Opaque identification objects
-#define UNDEFINED 0x618d86f8334b6c93
-#define REGULAR 0x22d06666a82610a3
-#define IRREGULAR 0x3ab687f709def680
+constexpr int64_t UNDEFINED = 0x618d86f8334b6c93;
+constexpr int64_t REGULAR = 0x22d06666a82610a3;
+constexpr int64_t IRREGULAR = 0x3ab687f709def680;
 
 template <typename T>
-inline std::vector<T> vector_from_numpy(
+constexpr std::vector<T> vector_from_numpy(
     const std::string& name,
     const py::array_t<T, py::array::c_style>& ndarray) {
   detail::check_array_ndim(name, 1, ndarray);
@@ -61,7 +61,7 @@ pybind11::array_t<int64_t> Axis::find_index(
 
   {
     pybind11::gil_scoped_release release;
-    for (auto ix = 0; ix < size; ++ix) {
+    for (py::ssize_t ix = 0; ix < size; ++ix) {
       _result(ix) = detail::Axis::find_index(_coordinates(ix), bounded);
     }
   }
@@ -99,7 +99,7 @@ pybind11::tuple Axis::getstate() const {
 }
 
 Axis Axis::setstate(const pybind11::tuple& state) {
-  if (state.size() < 1) {
+  if (state.empty()) {
     throw std::invalid_argument("invalid state");
   }
   auto identification = state[0].cast<int64_t>();
