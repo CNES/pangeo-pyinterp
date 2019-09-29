@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #include <gtest/gtest.h>
 #include "pyinterp/detail/geodetic/rtree.hpp"
+#include "pyinterp/detail/broadcast.hpp"
 
 namespace geodetic = pyinterp::detail::geodetic;
 namespace geometry = pyinterp::detail::geometry;
