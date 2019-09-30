@@ -37,7 +37,7 @@ TEST(axis_container, irregular) {
   EXPECT_EQ(a1.find_index(30, false), -1);
   EXPECT_EQ(a1.size(), 5);
   EXPECT_EQ(a1, a1);
-  values = std::move(std::vector<double>{0, 1});
+  values = std::vector<double>{0, 1};
   auto a2 = container::Irregular(
       Eigen::Map<Eigen::VectorXd>(values.data(), values.size()));
   EXPECT_FALSE(a1 == a2);
