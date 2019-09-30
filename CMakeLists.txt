@@ -97,6 +97,11 @@ if(NOT WIN32)
   endif()
 endif()
 
+if (MSVC)
+  # Disable warnings about using deprecated std::equal_to<>::result_type
+  add_definitions (-D_SILENCE_CXX17_ADAPTOR_TYPEDEFS_DEPRECATION_WARNING)
+endif()
+
 CHECK_FUNCTION_EXISTS(pow POW_FUNCTION_EXISTS)
 if(NOT POW_FUNCTION_EXISTS)
   unset(POW_FUNCTION_EXISTS CACHE)
