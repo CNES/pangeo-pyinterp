@@ -3,6 +3,9 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include "pyinterp/detail/axis/container.hpp"
+#include "pyinterp/detail/math.hpp"
+#include <Eigen/Core>
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -13,8 +16,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include "pyinterp/detail/axis/container.hpp"
-#include "pyinterp/detail/math.hpp"
 
 namespace pyinterp::detail {
 
@@ -58,7 +59,7 @@ class Axis {
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle.
   /// @param is_radian True, if the coordinate system is radian.
-  explicit Axis(std::vector<double> values, double epsilon, bool is_circle,
+  explicit Axis(Eigen::Ref<Eigen::VectorXd> values, double epsilon, bool is_circle,
                 bool is_radian);
 
   /// Destructor
@@ -300,7 +301,7 @@ class Axis {
   void compute_properties(double epsilon);
 
   /// Put longitude into the range [0, circle_] degrees.
-  void normalize_longitude(std::vector<double>& points);  // NOLINT
+  void normalize_longitude(Eigen::Ref<Eigen::VectorXd>& points);  // NOLINT
 };
 
 }  // namespace pyinterp::detail

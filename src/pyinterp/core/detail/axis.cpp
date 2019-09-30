@@ -3,14 +3,13 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/detail/axis.hpp"
-
 namespace pyinterp::detail {
 
-void Axis::normalize_longitude(std::vector<double>& points) {
+void Axis::normalize_longitude(Eigen::Ref<Eigen::VectorXd>& points) {
   auto monotonic = true;
   auto ascending = points.size() < 2 ? true : points[0] < points[1];
 
-  for (size_t ix = 1; ix < points.size(); ++ix) {
+  for (Eigen::Index ix = 1; ix < points.size(); ++ix) {
     monotonic =
         ascending ? points[ix - 1] < points[ix] : points[ix - 1] > points[ix];
 
@@ -22,7 +21,7 @@ void Axis::normalize_longitude(std::vector<double>& points) {
   if (!monotonic) {
     auto cross = false;
 
-    for (size_t ix = 1; ix < points.size(); ++ix) {
+    for (Eigen::Index ix = 1; ix < points.size(); ++ix) {
       if (!cross) {
         cross = ascending ? points[ix - 1] > points[ix]
                           : points[ix - 1] < points[ix];
@@ -35,7 +34,7 @@ void Axis::normalize_longitude(std::vector<double>& points) {
   }
 }
 
-std::optional<double> is_evenly_spaced(const std::vector<double>& points,
+std::optional<double> is_evenly_spaced(const Eigen::Ref<const Eigen::VectorXd>& points,
                                        const double epsilon) {
   size_t n = points.size();
 
@@ -45,7 +44,7 @@ std::optional<double> is_evenly_spaced(const std::vector<double>& points,
   }
 
   double increment =
-      (points.back() - points.front()) / static_cast<double>(n - 1);
+      (points[points.size() - 1] - points[0]) / static_cast<double>(n - 1);
 
   for (size_t ix = 1; ix < n; ++ix) {
     if (!math::is_same(points[ix] - points[ix - 1], increment, epsilon)) {
@@ -80,12 +79,11 @@ void Axis::compute_properties(const double epsilon) {
   }
 }
 
-Axis::Axis(std::vector<double> values, const double epsilon,
-           const bool is_circle, const bool is_radian)
+Axis::Axis(Eigen::Ref<Eigen::VectorXd> values, const double epsilon, const bool is_circle,
+           const bool is_radian)
     : circle_(Axis::set_circle(is_circle, is_radian)) {
   // Axis size control
-  if (values.size() >
-      static_cast<size_t>(std::numeric_limits<int64_t>::max())) {
+  if (values.size() > std::numeric_limits<int64_t>::max()) {
     throw std::invalid_argument(
         "The size of the axis must not contain more than " +
         std::to_string(std::numeric_limits<int64_t>::max()) + "elements.");
@@ -99,11 +97,12 @@ Axis::Axis(std::vector<double> values, const double epsilon,
   // interval.
   auto increment = is_evenly_spaced(values, epsilon);
   if (increment) {
-    axis_ = std::make_shared<axis::container::Regular>(axis::container::Regular(
-        values.front(), values.back(), static_cast<double>(values.size())));
+    axis_ = std::make_shared<axis::container::Regular>(
+        axis::container::Regular(values[0], values[values.size() - 1],
+                                 static_cast<double>(values.size())));
   } else {
     axis_ = std::make_shared<axis::container::Irregular>(
-        axis::container::Irregular(std::move(values)));
+        axis::container::Irregular(values));
   }
   compute_properties(epsilon);
 }

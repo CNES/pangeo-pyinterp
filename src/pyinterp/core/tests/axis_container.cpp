@@ -22,7 +22,9 @@ TEST(axis_container, undefined) {
 
 TEST(axis_container, irregular) {
   // irregular axis
-  auto a1 = container::Irregular({0, 1, 4, 8, 20});
+  auto values = std::vector<double>{0, 1, 4, 8, 20};
+  auto a1 = container::Irregular(
+      Eigen::Map<Eigen::VectorXd>(values.data(), values.size()));
   EXPECT_EQ(a1.front(), 0);
   EXPECT_EQ(a1.back(), 20);
   EXPECT_EQ(a1.min_value(), 0);
@@ -35,7 +37,9 @@ TEST(axis_container, irregular) {
   EXPECT_EQ(a1.find_index(30, false), -1);
   EXPECT_EQ(a1.size(), 5);
   EXPECT_EQ(a1, a1);
-  auto a2 = container::Irregular({0, 1});
+  values = std::move(std::vector<double>{0, 1});
+  auto a2 = container::Irregular(
+      Eigen::Map<Eigen::VectorXd>(values.data(), values.size()));
   EXPECT_FALSE(a1 == a2);
   EXPECT_FALSE(a1 == container::Undefined());
 }

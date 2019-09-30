@@ -332,7 +332,8 @@ TEST(axis, irregular) {
   values.push_back(88.843755);
   values.push_back(88.940374);
 
-  detail::Axis axis(values, 1e-6, false, false);
+  detail::Axis axis(Eigen::Map<Eigen::VectorXd>(values.data(), values.size()),
+                    1e-6, false, false);
   EXPECT_EQ(axis.front(), -89);
   double inc;
   EXPECT_THROW(inc = axis.increment(), std::logic_error);
@@ -370,7 +371,8 @@ TEST(axis, irregular) {
   EXPECT_EQ(std::get<1>(*indexes), 70);
 
   std::reverse(values.begin(), values.end());
-  axis = detail::Axis(values, 1e-6, false, false);
+  axis = detail::Axis(Eigen::Map<Eigen::VectorXd>(values.data(), values.size()),
+                      1e-6, false, false);
   EXPECT_EQ(axis.front(), 88.940374);
   EXPECT_THROW(inc = axis.increment(), std::logic_error);
   EXPECT_FALSE(axis.is_circle());

@@ -10,7 +10,7 @@ void Irregular::make_edges() {
   auto n = points_.size();
   edges_.resize(n + 1);
 
-  for (size_t ix = 1; ix < n; ++ix) {
+  for (Eigen::Index ix = 1; ix < n; ++ix) {
     edges_[ix] = (points_[ix - 1] + points_[ix]) / 2;
   }
 
@@ -18,8 +18,8 @@ void Irregular::make_edges() {
   edges_[n] = 2 * points_[n - 1] - edges_[n - 1];
 }
 
-Irregular::Irregular(std::vector<double> points) : points_(std::move(points)) {
-  if (points_.empty()) {
+Irregular::Irregular(Eigen::VectorXd points) : points_(std::move(points)) {
+  if (points_.size() == 0) {
     throw std::invalid_argument("unable to create an empty container.");
   }
   is_ascending_ = calculate_is_ascending();
@@ -32,11 +32,11 @@ int64_t Irregular::find_index(double coordinate, bool bounded) const {
   int64_t high = size();
 
   if (is_ascending_) {
-    if (coordinate < edges_.front()) {
+    if (coordinate < edges_[0]) {
       return bounded ? 0 : -1;
     }
 
-    if (coordinate > edges_.back()) {
+    if (coordinate > edges_[edges_.size() - 1]) {
       return bounded ? high - 1 : -1;
     }
 
@@ -52,11 +52,11 @@ int64_t Irregular::find_index(double coordinate, bool bounded) const {
     return low;
   }
 
-  if (coordinate < edges_.back()) {
+  if (coordinate < edges_[edges_.size() - 1]) {
     return bounded ? high - 1 : -1;
   }
 
-  if (coordinate > edges_.front()) {
+  if (coordinate > edges_[0]) {
     return bounded ? 0 : -1;
   }
 

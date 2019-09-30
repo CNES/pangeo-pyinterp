@@ -3,10 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include <pybind11/numpy.h>
-#include <memory>
 #include "pyinterp/detail/axis.hpp"
 #include "pyinterp/detail/math.hpp"
+#include <memory>
+#include <pybind11/numpy.h>
 
 namespace pyinterp {
 
@@ -24,9 +24,8 @@ class Axis : public detail::Axis, public std::enable_shared_from_this<Axis> {
   /// @param is_circle True, if the axis can represent a circle. Be careful,
   /// the angle shown must be expressed in degrees.
   /// @param is_radian True, if the coordinate system is radian.
-  explicit Axis(
-      const pybind11::array_t<double, pybind11::array::c_style>& points,
-      double epsilon, bool is_circle, bool is_radian);
+  explicit Axis(pybind11::array_t<double, pybind11::array::c_style>& points,
+                double epsilon, bool is_circle, bool is_radian);
 
   /// Get coordinate values.
   ///

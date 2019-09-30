@@ -9,6 +9,7 @@ XArray
 Build interpolation objects from xarray.DataArray instances
 """
 from typing import Iterable, Optional, Tuple, Union
+import numpy as np
 import xarray as xr
 from .. import cf
 from .. import core
@@ -103,7 +104,9 @@ def _lon_lat_from_data_array(data_array: xr.DataArray,
     return lon, lat
 
 
-def _coords(coords: dict, dims: Iterable):
+def _coords(coords: dict,
+            dims: Iterable,
+            datetime64: Optional[Tuple[str, np.dtype]] = None) -> Tuple:
     """
     Get the list of arguments to provide to the grid interpolation
     functions.
@@ -112,9 +115,10 @@ def _coords(coords: dict, dims: Iterable):
         coords (dict): Mapping from dimension names to the
             new coordinates. New coordinate can be an scalar, array-like.
         dims (iterable): List of dimensions handled by the grid
+        datetime64 (tuple, optional): Properties of the axis used
 
     Returns:
-        The list of arguments decoded.
+        The tuple of arguments decoded.
 
     Raises:
         TypeError if coords is not on instance of ``dict``
@@ -130,6 +134,16 @@ def _coords(coords: dict, dims: Iterable):
     if unknown:
         raise IndexError("axes not handled by this grid: " +
                          ", ".join([str(item) for item in unknown]))
+    # Is it necessary to manage a time axis?
+    if datetime64 is not None:
+        # In this case, it's checked that the unit between the time axis and
+        # the data provided is identical.
+        dim, dtype = datetime64
+        if coords[dim].dtype != dtype:
+            raise ValueError(
+                f"the unit ({dtype!s}) of the time axis ({dim}) is different "
+                f"from the time unit provided: {coords[dim].dtype!s}")
+        coords[dim] = coords[dim].astype("float64")
     return tuple(coords[dim] for dim in dims)
 
 
@@ -195,11 +209,27 @@ class Grid3D(grid.Grid3D):
         x, y = _lon_lat_from_data_array(data_array, ndims=3)
         z = (set(data_array.dims) - {x, y}).pop()
         self._dims = (x, y, z)
+        # If the grid has a time axis, its properties are stored in order to
+        # check the consistency between the time axis and the data provided
+        # during interpolation.
+        dtype = data_array.coords[z].dtype
+        self._datetime64 = (z, dtype) if "datetime64" in dtype.name else None
         super(Grid3D, self).__init__(
             core.Axis(data_array.coords[x].values, is_circle=True),
             core.Axis(data_array.coords[y].values),
-            core.Axis(data_array.coords[z].values),
+            core.Axis(data_array.coords[z].astype("float64") if self.
+                      _datetime64 else data_array.coords[z].values),
             data_array.transpose(x, y, z).values)
+
+    def time_unit(self) -> Optional[np.dtype]:
+        """Gets the time units handled by this instance
+
+        Returns:
+            np.dtype, optional: The unity of the temporal axis or None if
+            the third dimension of this instance does not represent a time.
+        """
+        if self._datetime64:
+            return self._datetime64[1]
 
     def trivariate(self, coords: dict, *args, **kwargs):
         """Evaluate the interpolation defined for the given coordinates
@@ -217,5 +247,6 @@ class Grid3D(grid.Grid3D):
         Returns:
             The interpolated values
         """
-        return interpolator.trivariate(self, *_coords(coords, self._dims),
-                                       *args, **kwargs)
+        return interpolator.trivariate(
+            self, *_coords(coords, self._dims, self._datetime64), *args,
+            **kwargs)

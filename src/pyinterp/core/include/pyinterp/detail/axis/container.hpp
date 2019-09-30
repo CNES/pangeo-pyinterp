@@ -3,11 +3,11 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <Eigen/Core>
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
-#include <vector>
 
 namespace pyinterp::detail::axis::container {
 
@@ -182,7 +182,7 @@ class Irregular : public Abstract {
   /// system.
   ///
   /// @param points axis values
-  explicit Irregular(std::vector<double> points);
+  explicit Irregular(Eigen::VectorXd points);
 
   /// Destructor
   ~Irregular() override = default;
@@ -210,9 +210,10 @@ class Irregular : public Abstract {
   /// @copydoc Abstract::is_monotonic() const
   [[nodiscard]] inline bool is_monotonic() const noexcept override {
     if (is_ascending_) {
-      return std::is_sorted(points_.begin(), points_.end());
+      return std::is_sorted(points_.data(), points_.data() + points_.size());
     }
-    return std::is_sorted(points_.rbegin(), points_.rend());
+    return std::is_sorted(points_.data(), points_.data() + points_.size(),
+                          std::greater<>());
   };
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
@@ -237,10 +238,12 @@ class Irregular : public Abstract {
   }
 
   /// @copydoc Abstract::front() const
-  [[nodiscard]] inline double front() const override { return points_.front(); }
+  [[nodiscard]] inline double front() const override { return points_[0]; }
 
   /// @copydoc Abstract::back() const
-  [[nodiscard]] inline double back() const override { return points_.back(); }
+  [[nodiscard]] inline double back() const override {
+    return points_[points_.size() - 1];
+  }
 
   /// @copydoc Abstract::find_index(double,bool) const
   [[nodiscard]] int64_t find_index(double coordinate,
@@ -256,8 +259,8 @@ class Irregular : public Abstract {
   }
 
  private:
-  std::vector<double> points_{};
-  std::vector<double> edges_{};
+  Eigen::VectorXd points_{};
+  Eigen::VectorXd edges_{};
 
   /// Computes the edges, if the axis data are not spaced regularly.
   void make_edges();

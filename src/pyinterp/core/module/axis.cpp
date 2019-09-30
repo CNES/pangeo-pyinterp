@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/axis.hpp"
 #include <pybind11/pybind11.h>
+#include <pybind11/eigen.h>
 #include "pyinterp/detail/broadcast.hpp"
 
 namespace py = pybind11;
@@ -16,17 +17,17 @@ constexpr int64_t REGULAR = 0x22d06666a82610a3;
 constexpr int64_t IRREGULAR = 0x3ab687f709def680;
 
 template <typename T>
-constexpr std::vector<T> vector_from_numpy(
-    const std::string& name,
-    const py::array_t<T, py::array::c_style>& ndarray) {
+inline Eigen::Map<Eigen::Matrix<T, -1, 1>> vector_from_numpy(
+    const std::string& name, py::array_t<T, py::array::c_style>& ndarray) {
   detail::check_array_ndim(name, 1, ndarray);
-  return std::vector<T>(ndarray.data(), ndarray.data() + ndarray.size());
+  return Eigen::Map<Eigen::Matrix<T, -1, 1>>(ndarray.mutable_data(),
+                                             ndarray.size());
 }
 
-Axis::Axis(const py::array_t<double, py::array::c_style>& points,
+Axis::Axis(py::array_t<double, py::array::c_style>& points,
            const double epsilon, const bool is_circle, const bool is_radian)
-    : Axis(vector_from_numpy<double>("points", points), epsilon, is_circle,
-           is_radian) {}
+    : Axis(vector_from_numpy("points", points), epsilon, is_circle, is_radian) {
+}
 
 py::array_t<double> Axis::coordinate_values(const py::slice& slice) const {
   size_t start;
@@ -107,12 +108,14 @@ Axis Axis::setstate(const pybind11::tuple& state) {
     case UNDEFINED:
       return Axis();
       break;
-    case IRREGULAR:
-      return Axis(
-          std::shared_ptr<detail::axis::container::Abstract>(
-              new detail::axis::container::Irregular(vector_from_numpy<double>(
-                  "state[1]", state[1].cast<py::array_t<double>>()))),
-          state[2].cast<bool>(), state[3].cast<bool>());
+    case IRREGULAR: {
+      auto ndarray = state[1].cast<py::array_t<double>>();
+      return Axis(std::shared_ptr<detail::axis::container::Abstract>(
+                      new detail::axis::container::Irregular(
+                          Eigen::Map<Eigen::VectorXd>(ndarray.mutable_data(),
+                                                      ndarray.size()))),
+                  state[2].cast<bool>(), state[3].cast<bool>());
+    }
     case REGULAR:
       return Axis(std::shared_ptr<detail::axis::container::Abstract>(
                       new detail::axis::container::Regular(
@@ -143,7 +146,8 @@ Type of boundary handling.
       .value("Undef", pyinterp::Axis::kUndef,
              "*Boundary violation is not defined*.");
 
-  axis.def(py::init<const py::array_t<double>&, double, bool, bool>(),
+  axis.def(py::init<py::array_t<double, py::array::c_style>&, double, bool,
+                    bool>(),
            py::arg("values"), py::arg("epsilon") = 1e-6,
            py::arg("is_circle") = false, py::arg("is_radian") = false,
            R"__doc__(

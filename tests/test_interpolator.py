@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+import datetime
 import collections
 import os
 import unittest
@@ -85,7 +86,8 @@ class Trivariate(unittest.TestCase):
 
         lon = np.arange(-180, 180, 1) + 1 / 3.0
         lat = np.arange(-90, 90, 1) + 1 / 3.0
-        time = 898500 + 3
+        time = np.array([datetime.datetime(2002, 7, 2, 15, 0)],
+                        grid.time_unit())
         x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
 
         z = grid.trivariate(
@@ -95,6 +97,9 @@ class Trivariate(unittest.TestCase):
         self.assertIsInstance(z, np.ndarray)
 
         with self.assertRaises(ValueError):
+            time = np.array([datetime.datetime(2012, 7, 2, 15, 0)],
+                            grid.time_unit())
+            x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
             grid.trivariate(collections.OrderedDict(longitude=x.flatten(),
                                                     latitude=y.flatten(),
                                                     time=t.flatten()),
