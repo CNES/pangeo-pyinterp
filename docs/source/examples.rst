@@ -169,8 +169,19 @@ xarray:
 
 .. code:: python
 
+    import datetime
+
     ds = xr.load_dataset("tests/dataset/tcw.nc")
     interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars["tcw"])
+
+    # Note: if the grid loaded in memory uses a time axis, then dates must be
+    # manipulated in the same unit as the one manipulated by the class. The
+    # "time_unit" method is used to obtain this information.
+    mx, my, mz = np.meshgrid(np.arange(-180, 180, 1) + 1 / 3.0,
+                            np.arange(-89, 89, 1) + 1 / 3.0,
+                            np.array([datetime.datetime(2002, 7, 2, 15, 0)],
+                                    dtype=interpolator.time_unit()),
+                            indexing='ij')
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
