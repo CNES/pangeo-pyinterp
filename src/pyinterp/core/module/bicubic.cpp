@@ -101,6 +101,9 @@ py::array_t<double> bicubic(const Grid2D<Type>& grid,
     // (only the last exception captured is kept)
     auto except = std::exception_ptr(nullptr);
 
+    // Access to the shared pointer outside the loop to avoid data races
+    const auto is_angle = grid.x()->is_angle();
+
     detail::dispatch(
         [&](const size_t start, const size_t end) {
           try {
@@ -112,11 +115,12 @@ py::array_t<double> bicubic(const Grid2D<Type>& grid,
               auto xi = _x(ix);
               auto yi = _y(ix);
               _result(ix) =
+                  // The grid instance is accessed as a constant reference, no
+                  // data race problem here.
                   load_frame(grid, xi, yi, boundary, bounds_error, frame)
-                      ? interpolator.interpolate(grid.x()->is_angle()
-                                                     ? frame.normalize_angle(xi)
-                                                     : xi,
-                                                 yi, frame)
+                      ? interpolator.interpolate(
+                            is_angle ? frame.normalize_angle(xi) : xi, yi,
+                            frame)
                       : std::numeric_limits<double>::quiet_NaN();
             }
           } catch (...) {

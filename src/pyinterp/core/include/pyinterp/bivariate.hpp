@@ -92,12 +92,16 @@ pybind11::array_t<Coordinate> bivariate(
     // (only the last exception captured is kept)
     auto except = std::exception_ptr(nullptr);
 
+    // Access to the shared pointer outside the loop to avoid data races
+    const auto& x_axis = *grid.x();
+    const auto& y_axis = *grid.y();
+
     detail::dispatch(
         [&](size_t start, size_t end) {
           try {
             for (size_t ix = start; ix < end; ++ix) {
-              auto x_indexes = grid.x()->find_indexes(_x(ix));
-              auto y_indexes = grid.y()->find_indexes(_y(ix));
+              auto x_indexes = x_axis.find_indexes(_x(ix));
+              auto y_indexes = y_axis.find_indexes(_y(ix));
 
               if (x_indexes.has_value() && y_indexes.has_value()) {
                 int64_t ix0;
@@ -108,16 +112,16 @@ pybind11::array_t<Coordinate> bivariate(
                 std::tie(ix0, ix1) = *x_indexes;
                 std::tie(iy0, iy1) = *y_indexes;
 
-                auto x0 = (*grid.x())(ix0);
+                auto x0 = x_axis(ix0);
 
                 _result(ix) = interpolator->evaluate(
                     Point<Coordinate>(
-                        grid.x()->is_angle()
+                        x_axis.is_angle()
                             ? detail::math::normalize_angle(_x(ix), x0, 360.0)
                             : _x(ix),
                         _y(ix)),
-                    Point<Coordinate>((*grid.x())(ix0), (*grid.y())(iy0)),
-                    Point<Coordinate>((*grid.x())(ix1), (*grid.y())(iy1)),
+                    Point<Coordinate>(x0, y_axis(iy0)),
+                    Point<Coordinate>(x_axis(ix1), y_axis(iy1)),
                     static_cast<Coordinate>(grid.value(ix0, iy0)),
                     static_cast<Coordinate>(grid.value(ix0, iy1)),
                     static_cast<Coordinate>(grid.value(ix1, iy0)),
@@ -126,9 +130,9 @@ pybind11::array_t<Coordinate> bivariate(
               } else {
                 if (bounds_error) {
                   if (!x_indexes.has_value()) {
-                    Grid2D<Type>::index_error(*grid.x(), _x(ix), "x");
+                    Grid2D<Type>::index_error(x_axis, _x(ix), "x");
                   }
-                  Grid2D<Type>::index_error(*grid.y(), _y(ix), "y");
+                  Grid2D<Type>::index_error(y_axis, _y(ix), "y");
                 }
                 _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
               }

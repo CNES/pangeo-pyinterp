@@ -3,15 +3,15 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <cctype>
 #include "pyinterp/bivariate.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/trivariate.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/grid.hpp"
+#include <cctype>
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace pyinterp {
 
@@ -48,13 +48,18 @@ pybind11::array_t<Coordinate> trivariate(
     // (only the last exception captured is kept)
     auto except = std::exception_ptr(nullptr);
 
+    // Access to the shared pointer outside the loop to avoid data races
+    const auto& x_axis = *grid.x();
+    const auto& y_axis = *grid.y();
+    const auto& z_axis = *grid.z();
+
     detail::dispatch(
         [&](size_t start, size_t end) {
           try {
             for (size_t ix = start; ix < end; ++ix) {
-              auto x_indexes = grid.x()->find_indexes(_x(ix));
-              auto y_indexes = grid.y()->find_indexes(_y(ix));
-              auto z_indexes = grid.z()->find_indexes(_z(ix));
+              auto x_indexes = x_axis.find_indexes(_x(ix));
+              auto y_indexes = y_axis.find_indexes(_y(ix));
+              auto z_indexes = z_axis.find_indexes(_z(ix));
 
               if (x_indexes.has_value() && y_indexes.has_value() &&
                   z_indexes.has_value()) {
@@ -69,19 +74,18 @@ pybind11::array_t<Coordinate> trivariate(
                 std::tie(iy0, iy1) = *y_indexes;
                 std::tie(iz0, iz1) = *z_indexes;
 
-                auto x0 = (*grid.x())(ix0);
+                auto x0 = x_axis(ix0);
 
                 _result(ix) =
                     pyinterp::detail::math::trivariate<Point, Coordinate>(
-                        Point<Coordinate>(grid.x()->is_angle()
+                        Point<Coordinate>(x_axis.is_angle()
                                               ? detail::math::normalize_angle(
                                                     _x(ix), x0, 360.0)
                                               : _x(ix),
                                           _y(ix), _z(ix)),
-                        Point<Coordinate>((*grid.x())(ix0), (*grid.y())(iy0),
-                                          (*grid.z())(iz0)),
-                        Point<Coordinate>((*grid.x())(ix1), (*grid.y())(iy1),
-                                          (*grid.z())(iz1)),
+                        Point<Coordinate>(x0, y_axis(iy0), z_axis(iz0)),
+                        Point<Coordinate>(x_axis(ix1), y_axis(iy1),
+                                          z_axis(iz1)),
                         static_cast<Coordinate>(grid.value(ix0, iy0, iz0)),
                         static_cast<Coordinate>(grid.value(ix0, iy1, iz0)),
                         static_cast<Coordinate>(grid.value(ix1, iy0, iz0)),
@@ -95,12 +99,12 @@ pybind11::array_t<Coordinate> trivariate(
               } else {
                 if (bounds_error) {
                   if (!x_indexes.has_value()) {
-                    Grid3D<Type>::index_error(*grid.x(), _x(ix), "x");
+                    Grid3D<Type>::index_error(x_axis, _x(ix), "x");
                   }
                   if (!y_indexes.has_value()) {
-                    Grid3D<Type>::index_error(*grid.y(), _y(ix), "y");
+                    Grid3D<Type>::index_error(y_axis, _y(ix), "y");
                   }
-                  Grid3D<Type>::index_error(*grid.z(), _z(ix), "z");
+                  Grid3D<Type>::index_error(z_axis, _z(ix), "z");
                 }
                 _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
               }
