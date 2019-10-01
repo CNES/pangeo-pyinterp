@@ -1,6 +1,14 @@
 Changelog
 #########
 
+0.0.6 (4 October 2019)
+-------------------------
+* Improvement of axis performance.
+* Fixed a performance problem with bilinear, bicubic and trivariate
+  interpolations.
+* Handling of time axes in the xarray backend
+* Access to main objects from the main module.
+
 0.0.5 (19 September 2019)
 -------------------------
 * Use of the conda-forge channel
