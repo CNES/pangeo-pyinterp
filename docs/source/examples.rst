@@ -196,8 +196,8 @@ But you can define another one using class :py:class:`System
 
 .. code:: python
 
-    import pyinterp.rtree
-    mesh = pyinterp.rtree.RTree()
+    import pyinterp
+    mesh = pyinterp.RTree()
 
 Then, we will insert points into the tree. The class allows you to insert
 points using two algorithms. The first one called :py:meth:`packing
