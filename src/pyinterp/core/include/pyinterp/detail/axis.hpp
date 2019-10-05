@@ -59,8 +59,8 @@ class Axis {
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle.
   /// @param is_radian True, if the coordinate system is radian.
-  explicit Axis(Eigen::Ref<Eigen::VectorXd> values, double epsilon, bool is_circle,
-                bool is_radian);
+  explicit Axis(Eigen::Ref<Eigen::VectorXd> values, double epsilon,
+                bool is_circle, bool is_radian);
 
   /// Destructor
   ~Axis() = default;

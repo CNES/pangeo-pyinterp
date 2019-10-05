@@ -34,8 +34,8 @@ void Axis::normalize_longitude(Eigen::Ref<Eigen::VectorXd>& points) {
   }
 }
 
-std::optional<double> is_evenly_spaced(const Eigen::Ref<const Eigen::VectorXd>& points,
-                                       const double epsilon) {
+std::optional<double> is_evenly_spaced(
+    const Eigen::Ref<const Eigen::VectorXd>& points, const double epsilon) {
   size_t n = points.size();
 
   // The axis is defined by a single value.
@@ -79,8 +79,8 @@ void Axis::compute_properties(const double epsilon) {
   }
 }
 
-Axis::Axis(Eigen::Ref<Eigen::VectorXd> values, const double epsilon, const bool is_circle,
-           const bool is_radian)
+Axis::Axis(Eigen::Ref<Eigen::VectorXd> values, const double epsilon,
+           const bool is_circle, const bool is_radian)
     : circle_(Axis::set_circle(is_circle, is_radian)) {
   // Axis size control
   if (values.size() > std::numeric_limits<int64_t>::max()) {
