@@ -49,6 +49,21 @@ def update_meta(path, version):
         stream.write("".join(lines))
 
 
+def update_environment(path, version):
+    """Updating the version number desciption in conda environment"""
+    with open(path, 'r') as stream:
+        lines = stream.readlines()
+    pattern = re.compile(r'(\s+-\s+pyinterp)\s*>=\s*(.+)')
+
+    for idx, line in enumerate(lines):
+        match = pattern.search(line)
+        if match is not None:
+            lines[idx] = "%s>=%s\n" % (match.group(1), version)
+
+    with open(path, "w") as stream:
+        stream.write("".join(lines))
+
+
 def revision():
     """Returns the software version"""
     cwd = pathlib.Path().absolute()
@@ -82,11 +97,15 @@ def revision():
     stdout = stdout.strip().split()
     date = datetime.datetime.utcfromtimestamp(int(stdout[1]))
 
-    # This file is not present in the distribution, but only in the GIT
-    # repository of the source code.
+    # Conda configuration files are not present in the distribution, but only
+    # in the GIT repository of the source code.
     meta = os.path.join(cwd, 'conda', 'meta.yaml')
     if os.path.exists(meta):
         update_meta(meta, version)
+        update_environment(os.path.join(cwd, 'conda', 'environment.yml'),
+                           version)
+        update_environment(os.path.join(cwd, 'binder', 'environment.yml'),
+                           version)
 
     # Updating the version number description for sphinx
     conf = os.path.join(cwd, 'docs', 'source', 'conf.py')
@@ -251,9 +270,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         cfg = 'Debug' if self.debug else 'Release'
 
         cmake_args = [
-            "-DCMAKE_BUILD_TYPE=" + cfg,
-            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + str(extdir),
-            "-DPYTHON_EXECUTABLE=" + sys.executable
+            "-DCMAKE_BUILD_TYPE=" + cfg, "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" +
+            str(extdir), "-DPYTHON_EXECUTABLE=" + sys.executable
         ] + self.set_cmake_user_options()
 
         build_args = ['--config', cfg]
