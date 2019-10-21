@@ -82,7 +82,7 @@ Args:
 Get a box that covers the entire Earth. In other words, a box that covers all
 positions, whatever they may be.
 
-Returns:
+Return:
     pyinterp.core.geodetic.Box2D: a box that covers the entire Earth
 )__doc__")
       .def(
@@ -95,7 +95,7 @@ Test if the given point is inside or on border of this box
 Args:
     point (pyinterp.geodectic.Point2D): point to test
 
-Returns:
+Return:
     bool: True if the given point is inside or on border of this Box
 )__doc__")
       .def(
@@ -117,7 +117,7 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Default to 1.
-Returns:
+Return:
     (numpy.ndarray): a vector containing a flag equal to 1 if the coordinate
     is located in the box or at the edge otherwise 0.
 )__doc__")
@@ -265,7 +265,7 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
-Returns:
+Return:
     tuple: Longitudes, latitudes and altitudes in the coordinate system
     defined by this instance.
 .. seealso::
