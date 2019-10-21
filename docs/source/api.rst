@@ -9,6 +9,7 @@ API Documentation
     pyinterp.core <api/pyinterp.core>
     pyinterp.core.fill <api/pyinterp.core.fill>
     pyinterp.core.geodetic <api/pyinterp.core.geodetic>
+    pyinterp.core.statistics <api/pyinterp.core.statistics>
     pyinterp.fill <api/pyinterp.fill>
     pyinterp.geodetic <api/pyinterp.geodetic>
     pyinterp.grid <api/pyinterp.grid>

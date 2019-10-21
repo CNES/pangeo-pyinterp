@@ -13,6 +13,7 @@ extern void init_geodetic(py::module&);
 extern void init_grid(py::module&);
 extern void init_fill(py::module&);
 extern void init_rtree(py::module&);
+extern void init_statistics(py::module&);
 
 PYBIND11_MODULE(core, m) {
   m.doc() = R"__doc__(
@@ -30,6 +31,11 @@ Replace undefined values
 ------------------------
 )__doc__");
 
+  auto statistics = m.def_submodule("statistics", R"__doc__(
+Spatial statistics
+------------------
+)__doc__");
+
   pyinterp::detail::gsl::set_error_handler();
 
   init_axis(m);
@@ -38,4 +44,5 @@ Replace undefined values
   init_geodetic(geodetic);
   init_fill(fill);
   init_rtree(m);
+  init_statistics(statistics);
 }
