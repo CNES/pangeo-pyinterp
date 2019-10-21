@@ -84,6 +84,10 @@
         "*.tcc": "cpp",
         "fstream": "cpp",
         "cinttypes": "cpp",
-        "condition_variable": "cpp"
+        "condition_variable": "cpp",
+        "hash_map": "cpp",
+        "cfenv": "cpp",
+        "memory_resource": "cpp",
+        "conv_stats2grid.h": "c"
     }
 }
