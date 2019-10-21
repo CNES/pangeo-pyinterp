@@ -43,7 +43,6 @@ class TestBinnedStatistics(unittest.TestCase):
     def test_acessors(self):
         x_axis = core.Axis(np.linspace(-180, 180, 10), is_circle=True)
         y_axis = core.Axis(np.linspace(-90, 90, 10))
-        print(x_axis[:])
 
         binned = core.statistics.BinnedFloat64(x_axis, y_axis)
         self.assertIsInstance(binned.x, core.Axis)
