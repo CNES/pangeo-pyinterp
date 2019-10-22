@@ -44,7 +44,7 @@ class TestBinningNearest(unittest.TestCase):
         x_axis = core.Axis(np.linspace(-180, 180, 10), is_circle=True)
         y_axis = core.Axis(np.linspace(-90, 90, 10))
 
-        binned = core.binning.NearestFloat64(x_axis, y_axis)
+        binned = core.binning.NearestBivariateFloat64(x_axis, y_axis)
         self.assertIsInstance(binned.x, core.Axis)
         self.assertIsInstance(binned.y, core.Axis)
         self.assertEqual(id(x_axis), id(binned.x))
@@ -60,7 +60,7 @@ class TestBinningNearest(unittest.TestCase):
         x_axis = core.Axis(np.linspace(-180, 180, 361 // 4), is_circle=True)
         y_axis = core.Axis(np.linspace(-90, 90, 180 // 4))
 
-        binned = core.binning.NearestFloat64(x_axis, y_axis)
+        binned = core.binning.NearestBivariateFloat64(x_axis, y_axis)
         x, y, z = self.load_data()
         mx, my = np.meshgrid(x, y, indexing='ij')
         binned.push(mx.flatten(), my.flatten(), z.flatten())
@@ -70,7 +70,7 @@ class TestBinningNearest(unittest.TestCase):
         mean = np.ma.fix_invalid(binned.mean())
         if HAVE_PLT:
             mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
-            plot(mx, my, mean, "binning_nearest.png")
+            plot(mx, my, mean, "binning_bivariate_nearest.png")
 
 
 if __name__ == "__main__":

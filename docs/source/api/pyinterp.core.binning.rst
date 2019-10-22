@@ -1,6 +1,6 @@
 .. automodule:: pyinterp.core.binning
 
-    .. autoclass:: NearestFloat64
+    .. autoclass:: NearestBivariateFloat64
         :show-inheritance:
         :members:
         :inherited-members:

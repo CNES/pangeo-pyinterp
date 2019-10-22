@@ -14,6 +14,7 @@
 #include <boost/accumulators/statistics/min.hpp>
 #include <boost/accumulators/statistics/skewness.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/sum.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 #include <pybind11/numpy.h>
 
@@ -22,13 +23,13 @@ namespace pyinterp::binning {
 /// Discretizes the data into a regular grid (computes a binned approximation)
 /// using the nearest binning technique.
 template <typename T>
-class Nearest {
+class NearestBivariate {
  public:
   /// Default constructor
   ///
   /// @param x Definition of the bin edges for the X axis of the grid.
   /// @param y Definition of the bin edges for the Y axis of the grid.
-  Nearest(std::shared_ptr<Axis> x, std::shared_ptr<Axis> y)
+  NearestBivariate(std::shared_ptr<Axis> x, std::shared_ptr<Axis> y)
       : x_(std::move(x)), y_(std::move(y)), acc_(x_->size(), y_->size()) {}
 
   /// Inserts new values in the grid from Z values for X, Y data coordinates.
@@ -69,44 +70,49 @@ class Nearest {
     }
   }
 
-  /// Gets the number of samples pushed into the bin.
+  /// Compute the count of points within each bin.
   [[nodiscard]] pybind11::array_t<T> count() const {
     return calculate_statistics(boost::accumulators::count);
   }
 
-      /// Gets the minimum value of all the samples pushed into the bin.
-      [[nodiscard]] pybind11::array_t<T> min() const {
+  /// Compute the minimum of values for points within each bin.
+  [[nodiscard]] pybind11::array_t<T> min() const {
     return calculate_statistics(boost::accumulators::min);
   }
 
-  /// Gets the maximum value of all the samples pushed into the bin.
+  /// Compute the maximum of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> max() const {
     return calculate_statistics(boost::accumulators::max);
   }
 
-      /// Gets the mean of all the samples pushed into the bin.
-      [[nodiscard]] pybind11::array_t<T> mean() const {
+  /// Compute the mean of values for points within each bin.
+  [[nodiscard]] pybind11::array_t<T> mean() const {
     return calculate_statistics(boost::accumulators::mean);
   }
 
-  /// Gets the median of all the samples pushed into the bin.
+  /// Compute the median of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> median() const {
     return calculate_statistics(boost::accumulators::median);
   }
 
-      /// Gets the variance of all the samples pushed into the bin.
-      [[nodiscard]] pybind11::array_t<T> variance() const {
+  /// Compute the variance of values for points within each bin.
+  [[nodiscard]] pybind11::array_t<T> variance() const {
     return calculate_statistics(boost::accumulators::variance);
   }
 
-  /// Gets the kurtosis of all the samples pushed into the bin.
+  /// Compute the kurtosis of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> kurtosis() const {
     return calculate_statistics(boost::accumulators::kurtosis);
   }
 
-  /// Gets the skewness of all the samples pushed into the bin.
+  /// Compute the skewness of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> skewness() const {
     return calculate_statistics(boost::accumulators::skewness);
+  }
+
+  /// Compute the sum of values for points within each bin.
+  [[nodiscard]] pybind11::array_t<T> sum() const {
+    return calculate_statistics(boost::accumulators::sum);
   }
 
   /// Gets the X-Axis
@@ -119,11 +125,11 @@ class Nearest {
   using Accumulators = boost::accumulators::accumulator_set<
       T,
       boost::accumulators::stats<
-          boost::accumulators::tag::count, boost::accumulators::tag::min,
+          boost::accumulators::tag::count, boost::accumulators::tag::kurtosis,
           boost::accumulators::tag::max, boost::accumulators::tag::mean,
-          boost::accumulators::tag::median, boost::accumulators::tag::variance,
-          boost::accumulators::tag::kurtosis,
-          boost::accumulators::tag::skewness>>;
+          boost::accumulators::tag::median, boost::accumulators::tag::min,
+          boost::accumulators::tag::skewness, boost::accumulators::tag::sum,
+          boost::accumulators::tag::variance>>;
   std::shared_ptr<Axis> x_;
   std::shared_ptr<Axis> y_;
   Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic> acc_;
