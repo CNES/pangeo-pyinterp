@@ -29,7 +29,7 @@ TEST(axis, default_constructor) {
   auto indexes = axis.find_indexes(360);
   EXPECT_FALSE(indexes.has_value());
   EXPECT_EQ(static_cast<std::string>(axis),
-            "Axis([nan, ..., nan], is_circle=false, is_radian=false)");
+            "Axis([nan], is_circle=false, is_radian=false)");
 }
 
 TEST(axis, singleton) {
@@ -53,7 +53,7 @@ TEST(axis, singleton) {
   double value;
   EXPECT_THROW(value = axis.coordinate_value(1), std::exception);
   EXPECT_EQ(static_cast<std::string>(axis),
-            "Axis([0, ..., 0], is_circle=false, is_radian=false)");
+            "Axis([0], is_circle=false, is_radian=false)");
 }
 
 TEST(axis, binary) {
@@ -92,7 +92,7 @@ TEST(axis, binary) {
   EXPECT_EQ(value, 1);
   EXPECT_THROW(value = axis.coordinate_value(2), std::exception);
   EXPECT_EQ(static_cast<std::string>(axis),
-            "Axis([0, ..., 1], is_circle=false, is_radian=false)");
+            "Axis([0, 1], is_circle=false, is_radian=false)");
 }
 
 TEST(axis, wrap_longitude) {
@@ -133,7 +133,7 @@ TEST(axis, wrap_longitude) {
   EXPECT_EQ(std::get<0>(*indexes), 350);
   EXPECT_EQ(std::get<1>(*indexes), 351);
   EXPECT_EQ(static_cast<std::string>(a1),
-            "Axis([0, ..., 359], is_circle=true, is_radian=false)");
+            "Axis([0, 1, 2, ..., 358, 359], is_circle=true, is_radian=false)");
 
   detail::Axis a2(-180, 179, 360, 1e-6, true, false);
   EXPECT_EQ(a2.front(), -180);
@@ -215,7 +215,8 @@ TEST(axis, radians) {
   EXPECT_TRUE(a1(std::get<0>(*indexes)) <= a1.normalize_coordinate(angle) &&
               a1.normalize_coordinate(angle) <= a1(std::get<1>(*indexes)));
   EXPECT_EQ(static_cast<std::string>(a1),
-            "Axis([0, ..., 3.13287], is_circle=true, is_radian=true)");
+            "Axis([0, 0.00872665, 0.0174533, ..., 3.12414, 3.13287], "
+            "is_circle=true, is_radian=true)");
 }
 
 TEST(axis, irregular) {

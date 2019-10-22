@@ -10,7 +10,6 @@
 #include <limits>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -232,13 +231,7 @@ class Axis {
   /// Get a string representing this instance.
   ///
   /// @return a string holding the converted instance.
-  explicit operator std::string() const {
-    auto ss = std::stringstream();
-    ss << std::boolalpha << "Axis([" << front() << ", ..., " << back()
-       << "], is_circle=" << is_angle()
-       << ", is_radian=" << (circle_ == math::pi<double>()) << ")";
-    return ss.str();
-  }
+  explicit operator std::string() const;
 
  protected:
   /// Specifies if this instance handles a radian angle.

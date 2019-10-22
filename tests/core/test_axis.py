@@ -39,7 +39,8 @@ class TextAxis(unittest.TestCase):
         self.assertFalse(a != b)
         self.assertEqual(str(a), str(b))
         self.assertEqual(
-            str(a), "Axis([0, ..., 359], is_circle=false, is_radian=false)")
+            str(a), "Axis([0, 1, 2, ..., 358, 359], is_circle=false, "
+            "is_radian=false)")
         self.assertEqual(a.increment(), 1)
         self.assertTrue(a.is_ascending())
         self.assertEqual(a.front(), 0)

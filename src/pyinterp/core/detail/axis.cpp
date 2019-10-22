@@ -3,6 +3,7 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/detail/axis.hpp"
+#include <sstream>
 namespace pyinterp::detail {
 
 void Axis::normalize_longitude(Eigen::Ref<Eigen::VectorXd>& points) {
@@ -216,6 +217,29 @@ std::vector<int64_t> Axis::find_indexes(double coordinate, uint32_t size,
     ++shift;
   }
   return result;
+}
+
+Axis::operator std::string() const {
+  auto ss = std::stringstream();
+  ss << "Axis([";
+  if (size() > 10) {
+    for (auto ix = 0; ix < 3; ++ix) {
+      ss << coordinate_value(ix) << ", ";
+    }
+    ss << "...";
+    for (auto ix = size() - 2; ix < size(); ++ix) {
+      ss << ", " << coordinate_value(ix);
+    }
+  } else {
+    auto length = std::min(6LL, size());
+    for (auto ix = 0; ix < length - 1; ++ix) {
+      ss << coordinate_value(ix) << ", ";
+    }
+    ss << coordinate_value(length - 1);
+  }
+  ss << std::boolalpha << "], is_circle=" << is_angle()
+     << ", is_radian=" << (circle_ == math::pi<double>()) << ")";
+  return ss.str();
 }
 
 }  // namespace pyinterp::detail
