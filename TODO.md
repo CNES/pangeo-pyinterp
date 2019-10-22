@@ -1,8 +1,6 @@
-# Bicubic
+# Binned
 
-- [x] Avoid memory allocation for each 1D interpolation. Perhaps it is
-      necessary to allocate the memory in the structure manipulating the
-      calculation frame.
+- [ ] Linear binned bivariate
 
 # 3D interpolation
 
