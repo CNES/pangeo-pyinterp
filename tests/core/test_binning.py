@@ -29,7 +29,7 @@ def plot(x, y, z, filename):
                    pad_inches=0.4)
 
 
-class TestBinnedStatistics(unittest.TestCase):
+class TestBinningNearest(unittest.TestCase):
     GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
                         "dataset", "mss.nc")
 
@@ -44,7 +44,7 @@ class TestBinnedStatistics(unittest.TestCase):
         x_axis = core.Axis(np.linspace(-180, 180, 10), is_circle=True)
         y_axis = core.Axis(np.linspace(-90, 90, 10))
 
-        binned = core.statistics.BinnedFloat64(x_axis, y_axis)
+        binned = core.binning.NearestFloat64(x_axis, y_axis)
         self.assertIsInstance(binned.x, core.Axis)
         self.assertIsInstance(binned.y, core.Axis)
         self.assertEqual(id(x_axis), id(binned.x))
@@ -60,7 +60,7 @@ class TestBinnedStatistics(unittest.TestCase):
         x_axis = core.Axis(np.linspace(-180, 180, 361 // 4), is_circle=True)
         y_axis = core.Axis(np.linspace(-90, 90, 180 // 4))
 
-        binned = core.statistics.BinnedFloat64(x_axis, y_axis)
+        binned = core.binning.NearestFloat64(x_axis, y_axis)
         x, y, z = self.load_data()
         mx, my = np.meshgrid(x, y, indexing='ij')
         binned.push(mx.flatten(), my.flatten(), z.flatten())
@@ -70,8 +70,7 @@ class TestBinnedStatistics(unittest.TestCase):
         mean = np.ma.fix_invalid(binned.mean())
         if HAVE_PLT:
             mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
-            plot(mx, my, mean, "binned_mean.png")
-            plot(mx, my, count, "binned_count.png")
+            plot(mx, my, mean, "binning_nearest.png")
 
 
 if __name__ == "__main__":

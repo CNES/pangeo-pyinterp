@@ -7,9 +7,9 @@ API Documentation
     pyinterp.backends.xarray <api/pyinterp.backends.xarray>
     pyinterp.cf <api/pyinterp.cf>
     pyinterp.core <api/pyinterp.core>
+    pyinterp.core.binning <api/pyinterp.core.binning>
     pyinterp.core.fill <api/pyinterp.core.fill>
     pyinterp.core.geodetic <api/pyinterp.core.geodetic>
-    pyinterp.core.statistics <api/pyinterp.core.statistics>
     pyinterp.fill <api/pyinterp.fill>
     pyinterp.geodetic <api/pyinterp.geodetic>
     pyinterp.grid <api/pyinterp.grid>

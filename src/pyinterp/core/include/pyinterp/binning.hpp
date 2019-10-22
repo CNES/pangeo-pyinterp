@@ -17,20 +17,21 @@
 #include <boost/accumulators/statistics/variance.hpp>
 #include <pybind11/numpy.h>
 
-namespace pyinterp::statistics {
+namespace pyinterp::binning {
 
-/// Compute a binned statistic for a set of data.
+/// Discretizes the data into a regular grid (computes a binned approximation)
+/// using the nearest binning technique.
 template <typename T>
-class Binned {
+class Nearest {
  public:
   /// Default constructor
   ///
-  /// @param x Definition of the binned values for the X axis of the grid.
-  /// @param y Definition of the binned values for the Y axis of the grid.
-  Binned(std::shared_ptr<Axis> x, std::shared_ptr<Axis> y)
+  /// @param x Definition of the bin edges for the X axis of the grid.
+  /// @param y Definition of the bin edges for the Y axis of the grid.
+  Nearest(std::shared_ptr<Axis> x, std::shared_ptr<Axis> y)
       : x_(std::move(x)), y_(std::move(y)), acc_(x_->size(), y_->size()) {}
 
-  /// Updates grid statistics from Z values for X, Y data coordinates.
+  /// Inserts new values in the grid from Z values for X, Y data coordinates.
   void push(const pybind11::array_t<T>& x, const pybind11::array_t<T>& y,
             const pybind11::array_t<T>& z) {
     detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
@@ -73,8 +74,8 @@ class Binned {
     return calculate_statistics(boost::accumulators::count);
   }
 
-  /// Gets the minimum value of all the samples pushed into the bin.
-  [[nodiscard]] pybind11::array_t<T> min() const {
+      /// Gets the minimum value of all the samples pushed into the bin.
+      [[nodiscard]] pybind11::array_t<T> min() const {
     return calculate_statistics(boost::accumulators::min);
   }
 
@@ -83,8 +84,8 @@ class Binned {
     return calculate_statistics(boost::accumulators::max);
   }
 
-  /// Gets the mean of all the samples pushed into the bin.
-  [[nodiscard]] pybind11::array_t<T> mean() const {
+      /// Gets the mean of all the samples pushed into the bin.
+      [[nodiscard]] pybind11::array_t<T> mean() const {
     return calculate_statistics(boost::accumulators::mean);
   }
 
@@ -93,8 +94,8 @@ class Binned {
     return calculate_statistics(boost::accumulators::median);
   }
 
-  /// Gets the variance of all the samples pushed into the bin.
-  [[nodiscard]] pybind11::array_t<T> variance() const {
+      /// Gets the variance of all the samples pushed into the bin.
+      [[nodiscard]] pybind11::array_t<T> variance() const {
     return calculate_statistics(boost::accumulators::variance);
   }
 
@@ -127,6 +128,7 @@ class Binned {
   std::shared_ptr<Axis> y_;
   Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic> acc_;
 
+  /// Calculation of a given statistical variable.
   template <typename Func>
   [[nodiscard]] pybind11::array_t<T> calculate_statistics(
       const Func& func) const {
@@ -141,4 +143,4 @@ class Binned {
   }
 };
 
-}  // namespace pyinterp::statistics
+}  // namespace pyinterp::binning
