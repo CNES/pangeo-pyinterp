@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.0.7 (X Y 2019)
+-------------------------
+* Adding binned bivariate statistics
+
 0.0.6 (4 October 2019)
 -------------------------
 * Improvement of axis performance.

@@ -121,6 +121,42 @@ xarray:
 
     mss = interpolator.bicubic(dict(lon=mx.flatten(), lat=my.flatten()))
 
+Binning
+#######
+
+Statistical data binning is a way to group a number of more or less continuous
+values into a smaller number of *bins*. For example, if you have irregularly
+distributed data over the oceans, you can organize these observations into a
+smaller number of geographical intervals (for example, by grouping them all five
+degrees into latitudes and longitudes).
+
+In this example, we will calculate the statistics on the MSS grid with boxes of
+5 degrees in latitudes and longitudes by :py:class:`nearest bivariate binning
+<pyinterp.binning.NearestBivariate>`.
+
+.. code:: python
+
+    import pyinterp.binning
+
+    binned = pyinterp.binning.NearestBivariate(
+        pyinterp.Axis(np.arange(-180, 180, 5), is_circle=True),
+        pyinterp.Axis(np.arange(-90, 95, 5)))
+
+Then push data into each bin.
+
+.. code:: python
+
+    mx, my = np.meshgrid(ds.lon, ds.lat)
+    binned.push(mx, my, ds.mss)
+
+You can access the different statistical :py:meth:`variables
+<pyinterp.binning.NearestBivariate.variable>` calculated by increment. For
+example, to obtain the mean per bin.
+
+.. code:: python
+
+    binned.variable('mean')
+
 3D interpolation
 ================
 

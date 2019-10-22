@@ -5,6 +5,7 @@ API Documentation
    :maxdepth: 1
 
     pyinterp.backends.xarray <api/pyinterp.backends.xarray>
+    pyinterp.binning <api/pyinterp.binning>
     pyinterp.cf <api/pyinterp.cf>
     pyinterp.core <api/pyinterp.core>
     pyinterp.core.binning <api/pyinterp.core.binning>
