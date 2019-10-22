@@ -231,7 +231,7 @@ Axis::operator std::string() const {
       ss << ", " << coordinate_value(ix);
     }
   } else {
-    auto length = std::min(6LL, size());
+    auto length = std::min<int64_t>(6, size());
     for (auto ix = 0; ix < length - 1; ++ix) {
       ss << coordinate_value(ix) << ", ";
     }
