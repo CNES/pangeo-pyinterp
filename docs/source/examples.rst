@@ -130,32 +130,31 @@ distributed data over the oceans, you can organize these observations into a
 smaller number of geographical intervals (for example, by grouping them all five
 degrees into latitudes and longitudes).
 
-In this example, we will calculate the statistics on the MSS grid with boxes of
-5 degrees in latitudes and longitudes by :py:class:`nearest bivariate binning
-<pyinterp.binning.NearestBivariate>`.
+In this example, we will calculate the :py:class:`binning
+<pyinterp.binning.Binning2D>` on the MSS grid with boxes of 5 degrees in
+latitudes and longitudes.
 
 .. code:: python
 
-    import pyinterp.binning
-
-    binned = pyinterp.binning.NearestBivariate(
+    binning = pyinterp.Binning2D(
         pyinterp.Axis(np.arange(-180, 180, 5), is_circle=True),
         pyinterp.Axis(np.arange(-90, 95, 5)))
 
-Then push data into each bin.
+Then push data into each bin. Here, a simple binning 2D is used but you can also
+apply a linear binning if you set the ``simple`` keyword to ``False``.
 
 .. code:: python
 
     mx, my = np.meshgrid(ds.lon, ds.lat)
-    binned.push(mx, my, ds.mss)
+    binning.push(mx, my, ds.mss, simple=True)
 
 You can access the different statistical :py:meth:`variables
-<pyinterp.binning.NearestBivariate.variable>` calculated by increment. For
-example, to obtain the mean per bin.
+<pyinterp.binning.Binning2D.variable>` calculated by increment. For example, to
+obtain the mean per bin.
 
 .. code:: python
 
-    binned.variable('mean')
+    binning.variable('mean')
 
 3D interpolation
 ================

@@ -11,6 +11,13 @@
 
     .. autofunction:: bivariate_float64
 
+    .. autoclass:: Binning2DFloat64
+        :show-inheritance:
+        :members:
+        :inherited-members:
+
+        .. automethod:: __init__
+
     .. autoclass:: BivariateInterpolator2D
         :show-inheritance:
         :members:

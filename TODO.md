@@ -1,6 +1,6 @@
 # Binned
 
-- [ ] Linear binned bivariate
+- [x] Linear binned bivariate
 
 # 3D interpolation
 

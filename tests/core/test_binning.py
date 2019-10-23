@@ -29,7 +29,7 @@ def plot(x, y, z, filename):
                    pad_inches=0.4)
 
 
-class TestBinningNearest(unittest.TestCase):
+class TestBinning2D(unittest.TestCase):
     GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
                         "dataset", "mss.nc")
 
@@ -44,33 +44,46 @@ class TestBinningNearest(unittest.TestCase):
         x_axis = core.Axis(np.linspace(-180, 180, 10), is_circle=True)
         y_axis = core.Axis(np.linspace(-90, 90, 10))
 
-        binned = core.binning.NearestBivariateFloat64(x_axis, y_axis)
-        self.assertIsInstance(binned.x, core.Axis)
-        self.assertIsInstance(binned.y, core.Axis)
-        self.assertEqual(id(x_axis), id(binned.x))
-        self.assertEqual(id(y_axis), id(binned.y))
+        binning = core.Binning2DFloat64(x_axis, y_axis)
+        self.assertIsInstance(binning.x, core.Axis)
+        self.assertIsInstance(binning.y, core.Axis)
+        self.assertEqual(id(x_axis), id(binning.x))
+        self.assertEqual(id(y_axis), id(binning.y))
 
-        binned.clear()
-        count = binned.count()
+        binning.clear()
+        count = binning.count()
         self.assertIsInstance(count, np.ndarray)
         self.assertEqual(count.size, len(x_axis) * len(y_axis))
         self.assertEqual(count.mean(), 0)
 
-    def test_mean(self):
+    def test_methods(self):
         x_axis = core.Axis(np.linspace(-180, 180, 361 // 4), is_circle=True)
         y_axis = core.Axis(np.linspace(-90, 90, 180 // 4))
 
-        binned = core.binning.NearestBivariateFloat64(x_axis, y_axis)
+        binning = core.Binning2DFloat64(x_axis, y_axis, None)
         x, y, z = self.load_data()
         mx, my = np.meshgrid(x, y, indexing='ij')
-        binned.push(mx.flatten(), my.flatten(), z.flatten())
+        binning.push(mx.flatten(), my.flatten(), z.flatten())
 
-        count = binned.count()
+        count = binning.count()
         self.assertNotEqual(count.max(), 0)
-        mean = np.ma.fix_invalid(binned.mean())
+        simple_mean = np.ma.fix_invalid(binning.mean())
         if HAVE_PLT:
             mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
-            plot(mx, my, mean, "binning_bivariate_nearest.png")
+            plot(mx, my, simple_mean, "binning2d_simple.png")
+
+        mx, my = np.meshgrid(x, y, indexing='ij')
+        binning.clear()
+        binning.push(mx.flatten(), my.flatten(), z.flatten(), simple=False)
+
+        count = binning.count()
+        self.assertNotEqual(count.max(), 0)
+        linear_mean = np.ma.fix_invalid(binning.mean())
+        if HAVE_PLT:
+            mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
+            plot(mx, my, linear_mean, "binning2d_linear.png")
+
+        self.assertFalse(np.all(linear_mean == simple_mean))
 
 
 if __name__ == "__main__":

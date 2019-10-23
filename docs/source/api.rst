@@ -8,7 +8,6 @@ API Documentation
     pyinterp.binning <api/pyinterp.binning>
     pyinterp.cf <api/pyinterp.cf>
     pyinterp.core <api/pyinterp.core>
-    pyinterp.core.binning <api/pyinterp.core.binning>
     pyinterp.core.fill <api/pyinterp.core.fill>
     pyinterp.core.geodetic <api/pyinterp.core.geodetic>
     pyinterp.fill <api/pyinterp.fill>

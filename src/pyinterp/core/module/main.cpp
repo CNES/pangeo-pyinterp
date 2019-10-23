@@ -31,15 +31,10 @@ Replace undefined values
 ------------------------
 )__doc__");
 
-  auto binning = m.def_submodule("binning", R"__doc__(
-Binned statistic
-----------------
-)__doc__");
-
   pyinterp::detail::gsl::set_error_handler();
 
   init_axis(m);
-  init_binning(binning);
+  init_binning(m);
   init_grid(m);
   init_bicubic(m);
   init_geodetic(geodetic);

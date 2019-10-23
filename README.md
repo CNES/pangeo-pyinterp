@@ -16,8 +16,10 @@ that cover this problem, but written entirely in Python, the performance of
 these projects was not quite sufficient for our needs. That is why this project
 was created.
 
-This first version can interpolate 2D fields using `bivariate` and `bicubic`
-interpolators, 3D fields using `trivariate` interpolators and `unstructured grid`.
+This version can interpolate 2D fields using `bivariate` and `bicubic`
+interpolators, 3D fields using `trivariate` interpolators and `unstructured
+grid`. You can also apply a data `binning` on bivariate field by simple or linear
+binning.
 
 The library core is written in C++ using the [Boost C++
 Libararies](https://www.boost.org/), [Eigen3](http://eigen.tuxfamily.org/),

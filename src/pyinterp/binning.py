@@ -3,34 +3,40 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 """
-Binned statistic
-----------------
+Data binning
+------------
 """
 from typing import Optional
 import numpy as np
 from . import core
+from . import geodetic
 
-
-class NearestBivariate:
+class Binning2D:
     """
-    Discretizes the data into a regular grid (computes a binned approximation)
-    using the nearest binning technique.
+    Group a number of more or less continuous values into a smaller number of
+    "bins" located on a grid.
 
     Args:
         x (pyinterp.core.Axis) : Definition of the bin edges for the X axis of
             the grid.
         y (pyinterp.core.Axis) : Definition of the bin edges for the Y axis of
             the grid.
+        wgs (pyinterp.geodetic.System, optional): WGS of the coordinate system
+            used to manipulate geographic coordinates. If this parameter is not
+            set, the handled coordinates will be considered as Cartesian
+            coordinates. Otherwise, ``x`` and ``y`` are considered to
+            represents the longitudes and latitudes.
         dtype (numpy.dtype, optional): Data type of the instance to create.
     """
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
+                 wgs: Optional[geodetic.System] = None,
                  dtype: Optional[np.dtype] = np.dtype("float64")):
         if dtype == np.dtype("float64"):
-            self._instance = core.binning.NearestBivariateFloat64(x, y)
+            self._instance = core.Binning2DFloat64(x, y, wgs)
         elif dtype == np.dtype("float32"):
-            self._instance = core.binning.NearestBivariateFloat32(x, y)
+            self._instance = core.Binning2DFloat32(x, y, wgs)
         else:
             raise ValueError(f"dtype {dtype} not handled by the object")
         self.dtype = dtype
@@ -58,18 +64,47 @@ class NearestBivariate:
         result.append(f"  y: {self._instance.y}")
         return "\n".join(result)
 
-    def push(self, x: np.ndarray, y: np.ndarray, z: np.ndarray) -> None:
+    def push(self,
+             x: np.ndarray,
+             y: np.ndarray,
+             z: np.ndarray,
+             simple: Optional[bool] = True) -> None:
         """Push new samples into the defined bins.
 
         Args:
             x (numpy.ndarray): X coordinates of the samples
             y (numpy.ndarray): Y coordinates of the samples
             z (numpy.ndarray): New samples to push into the defined bins.
+            simple (bool, optional): If true, a simple binning 2D is used
+                otherwise a linear binning 2d is applied. See the full
+                description of the algorithm below.
+
+        The figure below is a graphical presentation of how a sample data
+        point :math:`x` distributes its weight to neighboring grid points.
+
+        :math:`A` is the area of the grid cell. :math:`\\alpha`,
+        :math:`\\beta`, :math:`\\gamma` and :math:`\delta` are the areas of the
+        different sub-rectangles. :math:`g_{00}`, :math:`g_{01}`,
+        :math:`g_{10}` and :math:`g_{11}` are the grid points identified around
+        point :math:`x`. :math:`w_{00}`, :math:`w_{01}`, :math:`w_{10}` and
+        :math:`w_{11}` are the weights associated with the grid points.
+
+        .. figure:: ../pictures/binning_2d.svg
+            :align: center
+
+        For simple binning, the point :math:`x` gives all its weight to its nearest
+        grid point. In this example, the lower left grid point takes the weight
+        equal to 1, that is :math:`w_{00}=1`.
+
+        In the case of linear binning, the contribution from :math:`x` is
+        distributed among each of the four surrounding grid points according to
+        the areas of the opposite sub-rectangle induced by the position of the
+        point.
         """
         self._instance.push(
             np.asarray(x).flatten(),
             np.asarray(y).flatten(),
-            np.asarray(z).flatten())
+            np.asarray(z).flatten(), simple)
 
     def variable(self, statistics: Optional[str] = 'mean') -> np.ndarray:
         """Gets the regular grid containing the calculated statistics.
