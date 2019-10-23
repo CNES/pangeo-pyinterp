@@ -134,9 +134,11 @@ class Binning2D {
       boost::accumulators::stats<
           boost::accumulators::tag::count, boost::accumulators::tag::kurtosis,
           boost::accumulators::tag::max, boost::accumulators::tag::mean,
-          boost::accumulators::tag::median, boost::accumulators::tag::min,
-          boost::accumulators::tag::skewness, boost::accumulators::tag::sum,
-          boost::accumulators::tag::variance>>;
+          boost::accumulators::tag::median(
+              boost::accumulators::with_p_square_quantile),
+          boost::accumulators::tag::min, boost::accumulators::tag::skewness,
+          boost::accumulators::tag::sum,
+          boost::accumulators::tag::variance(boost::accumulators::lazy)>>;
   std::shared_ptr<Axis> x_;
   std::shared_ptr<Axis> y_;
   Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic> acc_;

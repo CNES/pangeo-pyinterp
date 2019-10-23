@@ -139,6 +139,8 @@ class Binning2D:
                 data = data.astype(np.int64)
             else:
                 data[~np.isfinite(data)] = np.nan
+                if statistics in ['min', 'max', 'median', 'sum']:
+                    data[self._instance.count() == 0] = np.nan
             return data
         except AttributeError:
             raise ValueError(f"The statistical variable {item} is unknown.")
