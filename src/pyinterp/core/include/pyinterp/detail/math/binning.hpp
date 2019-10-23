@@ -25,9 +25,9 @@ namespace pyinterp::detail::math {
 ///   * w01 Weight for the coordinate (x0, y1)
 ///   * w10 Weight for the coordinate (x1, y0)
 ///   * w11 Weight for the coordinate (x1, y1)
-template <template <class> class Point, typename T>
+template <template <class> class Point, typename Strategy, typename T>
 std::tuple<T, T, T, T> binning(const Point<T>& pij, const Point<T>& p00,
-                               const Point<T>& p11) {
+                               const Point<T>& p11, Strategy const & strategy) {
   // Coordinates of the grid points deducted.
   const auto p01 =
       Point<T>{boost::geometry::get<0>(p00), boost::geometry::get<1>(p11)};
@@ -44,16 +44,19 @@ std::tuple<T, T, T, T> binning(const Point<T>& pij, const Point<T>& p00,
   const auto pi0 =
       Point<T>{boost::geometry::get<0>(pij), boost::geometry::get<1>(p00)};
   // Area calculation.
-  auto total_area = boost::geometry::area(
-      boost::geometry::model::polygon<Point<T>>{{p00, p01, p11, p10, p00}});
   auto a = boost::geometry::area(
-      boost::geometry::model::polygon<Point<T>>{{pij, p0j, p01, pi1, pij}});
+      boost::geometry::model::polygon<Point<T>>{{pij, p0j, p01, pi1, pij}},
+      strategy);
   auto b = boost::geometry::area(
-      boost::geometry::model::polygon<Point<T>>{{pij, pi1, p11, p1j, pij}});
+      boost::geometry::model::polygon<Point<T>>{{pij, pi1, p11, p1j, pij}},
+      strategy);
   auto c = boost::geometry::area(
-      boost::geometry::model::polygon<Point<T>>{{pij, pi0, p00, p0j, pij}});
+      boost::geometry::model::polygon<Point<T>>{{pij, pi0, p00, p0j, pij}},
+      strategy);
   auto d = boost::geometry::area(
-      boost::geometry::model::polygon<Point<T>>{{pij, p1j, p10, pi0, pij}});
+      boost::geometry::model::polygon<Point<T>>{{pij, p1j, p10, pi0, pij}},
+      strategy);
+  auto total_area = a + b + c + d;
 
   return std::make_tuple(b / total_area, d / total_area, c / total_area,
                          a / total_area);

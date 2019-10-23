@@ -122,4 +122,11 @@ template <typename T>
 using EquatorialPoint3D = boost::geometry::model::point<
     T, 3, boost::geometry::cs::spherical_equatorial<boost::geometry::degree>>;
 
+/// Points of a 2-dimensional spheroid space.
+///
+/// @tparam T Storage class of the coordinates of the point.
+template <typename T>
+using SpheriodPoint2D = boost::geometry::model::point<
+    T, 2, boost::geometry::cs::geographic<boost::geometry::degree>>;
+
 }  // namespace pyinterp::detail::geometry
