@@ -195,7 +195,14 @@ inline constexpr T sqr(const T& x) noexcept {
 template <typename T>
 inline constexpr bool is_same(const T& a, const T& b,
                               const T& epsilon) noexcept {
-  return std::fabs(a - b) <= epsilon;
+  auto diff = std::fabs(a - b);
+  if (diff <= epsilon) {
+    return true;
+  }
+  if (diff < std::fmax(std::fabs(a), std::fabs(b)) * epsilon) {
+    return true;
+  }
+  return false;
 }
 
 /// Represents a filling value
