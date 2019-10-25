@@ -191,6 +191,12 @@ inline constexpr T sqr(const T& x) noexcept {
   return x * x;
 }
 
+/// True if a is almost zero to epsilon
+template <typename T>
+inline constexpr bool is_almost_zero(const T& a, const T& epsilon) noexcept {
+  return std::fabs(a) < epsilon;
+}
+
 /// True if a and b are two values identical to an epsilon.
 template <typename T>
 inline constexpr bool is_same(const T& a, const T& b,
@@ -203,6 +209,18 @@ inline constexpr bool is_same(const T& a, const T& b,
     return true;
   }
   return false;
+}
+
+/// Compares two real values for a given accuracy expressed as a number of real
+/// values that can be represented between these two values.
+template <typename T>
+inline constexpr bool is_within(const T& a, const T& b, size_t interval_size) {
+  const T lower =
+      (a - std::nextafter(a, std::numeric_limits<T>::lowest())) * interval_size;
+  const T upper =
+      (std::nextafter(a, std::numeric_limits<T>::max()) - a) * interval_size;
+
+  return (a - lower) <= b && b <= (a + upper);
 }
 
 /// Represents a filling value

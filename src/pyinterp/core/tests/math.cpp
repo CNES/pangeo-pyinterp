@@ -118,3 +118,23 @@ TEST(math, fill_value) {
   EXPECT_FALSE(int_.is_not(std::numeric_limits<int>::max()));
   EXPECT_TRUE(int_.is_not(1));
 }
+
+TEST(math, is_within) {
+  double step = 0.1;
+  double value = 26.0 + 58 * step;
+  EXPECT_TRUE(math::is_within(value, 31.8, 1));
+
+  float from = 0;
+  float to =
+      std::nextafter(std::nextafter(std::nextafter(from, 1.f), 1.f), 1.f);
+  EXPECT_FALSE(math::is_within(from, to, 1));
+  EXPECT_FALSE(math::is_within(from, to, 2));
+  EXPECT_TRUE(math::is_within(from, to, 3));
+}
+TEST(math, is_almost_zero) {
+  EXPECT_TRUE(
+      math::is_almost_zero(0.0, std::numeric_limits<double>::epsilon()));
+  EXPECT_FALSE(
+      math::is_almost_zero(0.0 + std::numeric_limits<double>::epsilon(),
+                           std::numeric_limits<double>::epsilon()));
+}
