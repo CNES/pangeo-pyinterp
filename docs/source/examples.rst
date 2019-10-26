@@ -140,8 +140,9 @@ latitudes and longitudes.
         pyinterp.Axis(np.arange(-180, 180, 5), is_circle=True),
         pyinterp.Axis(np.arange(-90, 95, 5)))
 
-Then push data into each bin. Here, a simple binning 2D is used but you can also
-apply a linear binning if you set the ``simple`` keyword to ``False``.
+Then push data into each bin. Here, a :ref:`simple binning <bilinear_binning>`
+2D is used but you can also apply a :ref:`linear binning <bilinear_binning>` if
+you set the ``simple`` keyword to ``False``.
 
 .. code:: python
 

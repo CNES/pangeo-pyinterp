@@ -79,6 +79,8 @@ class Binning2D:
                 otherwise a linear binning 2d is applied. See the full
                 description of the algorithm below.
 
+        .. _bilinear_binning:
+
         The figure below is a graphical presentation of how a sample data
         point :math:`x` distributes its weight to neighboring grid points.
 
@@ -100,6 +102,15 @@ class Binning2D:
         distributed among each of the four surrounding grid points according to
         the areas of the opposite sub-rectangle induced by the position of the
         point.
+
+        .. seealso::
+
+            Peter Hall, M.P. Wand,
+            On the Accuracy of Binned Kernel Density Estimators,
+            Journal of Multivariate Analysis,
+            Volume 56, Issue 2,
+            1996,
+            Pages 165-184,
         """
         self._instance.push(
             np.asarray(x).flatten(),
