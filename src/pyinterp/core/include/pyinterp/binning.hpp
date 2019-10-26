@@ -10,15 +10,13 @@
 #include "pyinterp/geodetic/system.hpp"
 #include <Eigen/Core>
 #include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/kurtosis.hpp>
-#include <boost/accumulators/statistics/max.hpp>
-#include <boost/accumulators/statistics/mean.hpp>
-#include <boost/accumulators/statistics/median.hpp>
-#include <boost/accumulators/statistics/min.hpp>
-#include <boost/accumulators/statistics/skewness.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/sum.hpp>
-#include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/weighted_sum.hpp>
+#include <boost/accumulators/statistics/weighted_kurtosis.hpp>
+#include <boost/accumulators/statistics/weighted_mean.hpp>
+#include <boost/accumulators/statistics/weighted_median.hpp>
+#include <boost/accumulators/statistics/weighted_skewness.hpp>
+#include <boost/accumulators/statistics/weighted_variance.hpp>
 #include <boost/geometry.hpp>
 #include <optional>
 #include <pybind11/numpy.h>
@@ -94,32 +92,32 @@ class Binning2D {
 
   /// Compute the mean of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> mean() const {
-    return calculate_statistics(boost::accumulators::mean);
+    return calculate_statistics(boost::accumulators::weighted_mean);
   }
 
   /// Compute the median of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> median() const {
-    return calculate_statistics(boost::accumulators::median);
+    return calculate_statistics(boost::accumulators::weighted_median);
   }
 
   /// Compute the variance of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> variance() const {
-    return calculate_statistics(boost::accumulators::variance);
+    return calculate_statistics(boost::accumulators::weighted_variance);
   }
 
   /// Compute the kurtosis of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> kurtosis() const {
-    return calculate_statistics(boost::accumulators::kurtosis);
+    return calculate_statistics(boost::accumulators::weighted_kurtosis);
   }
 
   /// Compute the skewness of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> skewness() const {
-    return calculate_statistics(boost::accumulators::skewness);
+    return calculate_statistics(boost::accumulators::weighted_skewness);
   }
 
   /// Compute the sum of values for points within each bin.
   [[nodiscard]] pybind11::array_t<T> sum() const {
-    return calculate_statistics(boost::accumulators::sum);
+    return calculate_statistics(boost::accumulators::weighted_sum);
   }
 
   /// Gets the X-Axis
@@ -129,19 +127,31 @@ class Binning2D {
   [[nodiscard]] inline std::shared_ptr<Axis> y() const { return y_; }
 
  private:
+  /// Statistics handled by this object.
   using Accumulators = boost::accumulators::accumulator_set<
       T,
       boost::accumulators::stats<
-          boost::accumulators::tag::count, boost::accumulators::tag::kurtosis,
-          boost::accumulators::tag::max, boost::accumulators::tag::mean,
-          boost::accumulators::tag::median(
+          boost::accumulators::tag::count, boost::accumulators::tag::max,
+          boost::accumulators::tag::min,
+          boost::accumulators::tag::weighted_kurtosis,
+          boost::accumulators::tag::weighted_mean,
+          boost::accumulators::tag::weighted_median(
               boost::accumulators::with_p_square_quantile),
-          boost::accumulators::tag::min, boost::accumulators::tag::skewness,
-          boost::accumulators::tag::sum,
-          boost::accumulators::tag::variance(boost::accumulators::lazy)>>;
+          boost::accumulators::tag::weighted_skewness,
+          boost::accumulators::tag::weighted_sum,
+          boost::accumulators::tag::weighted_variance(
+              boost::accumulators::lazy)>,
+      T>;
+
+  /// Grid axis
   std::shared_ptr<Axis> x_;
   std::shared_ptr<Axis> y_;
+  
+  /// Statistics grid
   Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic> acc_;
+
+  /// Geodetic coordinate system required to calculate areas (optional if the
+  /// user wishes to handle Cartesian coordinates).
   std::optional<geodetic::System> wgs_;
 
   /// Calculation of a given statistical variable.
@@ -158,6 +168,7 @@ class Binning2D {
     return z;
   }
 
+  /// Insertion of data on the nearest bin.
   void push_nearest(const pybind11::array_t<T>& x,
                     const pybind11::array_t<T>& y,
                     const pybind11::array_t<T>& z) {
@@ -179,13 +190,23 @@ class Binning2D {
           auto iy = y_axis.find_index(_y(idx), true);
 
           if (ix != -1 && iy != -1) {
-            acc_(ix, iy)(value);
+            acc_(ix, iy)(value, boost::accumulators::weight = 1);
           }
         }
       }
     }
   }
 
+  /// Update statistics for the linear binning (ignore zero weights).
+  void update_acc(const int64_t ix, const int64_t iy, const T& value,
+                  const T& weight) {
+    if (!detail::math::is_almost_zero(weight,
+                                      std::numeric_limits<T>::epsilon())) {
+      acc_(ix, iy)(value, boost::accumulators::weight = weight);
+    }
+  }
+
+  /// Set bins with nearest binning.
   template <template <class> class Point, typename Strategy>
   void push_linear(const pybind11::array_t<T>& x, const pybind11::array_t<T>& y,
                    const pybind11::array_t<T>& z, const Strategy& strategy) {
@@ -219,7 +240,7 @@ class Binning2D {
 
           auto x0 = x_axis(ix0);
 
-          auto weights = detail::math::binning<Point, Strategy, double>(
+          auto weights = detail::math::binning_2d<Point, Strategy, double>(
               Point<double>(x_axis.is_angle()
                                 ? detail::math::normalize_angle<double>(
                                       _x(idx), x0, 360.0)
@@ -228,10 +249,10 @@ class Binning2D {
               Point<double>(x0, y_axis(iy0)),
               Point<double>(x_axis(ix1), y_axis(iy1)), strategy);
 
-          acc_(ix0, iy0)(static_cast<T>(value * std::get<0>(weights)));
-          acc_(ix0, iy1)(static_cast<T>(value * std::get<1>(weights)));
-          acc_(ix1, iy0)(static_cast<T>(value * std::get<2>(weights)));
-          acc_(ix1, iy1)(static_cast<T>(value * std::get<3>(weights)));
+          update_acc(ix0, iy0, value, static_cast<T>(std::get<0>(weights)));
+          update_acc(ix0, iy1, value, static_cast<T>(std::get<1>(weights)));
+          update_acc(ix1, iy1, value, static_cast<T>(std::get<2>(weights)));
+          update_acc(ix1, iy0, value, static_cast<T>(std::get<3>(weights)));
         }
       }
     }
