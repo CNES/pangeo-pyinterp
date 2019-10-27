@@ -160,9 +160,13 @@ class Binning2D {
       const Func& func) const {
     pybind11::array_t<T> z({x_->size(), y_->size()});
     auto _z = z.template mutable_unchecked<2>();
-    for (Eigen::Index ix = 0; ix < acc_.rows(); ++ix) {
-      for (Eigen::Index iy = 0; iy < acc_.cols(); ++iy) {
-        _z(ix, iy) = func(acc_(ix, iy));
+    {
+      pybind11::gil_scoped_release release;
+
+      for (Eigen::Index ix = 0; ix < acc_.rows(); ++ix) {
+        for (Eigen::Index iy = 0; iy < acc_.cols(); ++iy) {
+          _z(ix, iy) = func(acc_(ix, iy));
+        }
       }
     }
     return z;
