@@ -43,23 +43,25 @@ class Coordinates {
   Coordinates(const Coordinates&) = default;
 
   /// Default copy assignment operator
-  Coordinates& operator=(const Coordinates&) = default;
+  auto operator=(const Coordinates&) -> Coordinates& = default;
 
   /// Move constructor
   Coordinates(Coordinates&&) noexcept = default;
 
   /// Move assignment operator
-  Coordinates& operator=(Coordinates&&) noexcept = default;
+  auto operator=(Coordinates&&) noexcept -> Coordinates& = default;
 
   /// Gets the WGS used by this instance
-  [[nodiscard]] inline System system() const noexcept { return System(a_, f_); }
+  [[nodiscard]] inline auto system() const noexcept -> System {
+    return System(a_, f_);
+  }
 
   /// Converts Cartesian coordinates to Geographic latitude, longitude, and
   /// altitude. Cartesian coordinates should be in meters. The returned latitude
   /// and longitude are in degrees, and the altitude will be in meters.
   template <typename T>
-  geometry::EquatorialPoint3D<T> ecef_to_lla(
-      const geometry::Point3D<T>& ecef) const noexcept {
+  auto ecef_to_lla(const geometry::Point3D<T>& ecef) const noexcept
+      -> geometry::EquatorialPoint3D<T> {
     const double x = boost::geometry::get<0>(ecef);
     const double y = boost::geometry::get<1>(ecef);
     const double z = boost::geometry::get<2>(ecef);
@@ -109,8 +111,8 @@ class Coordinates {
   /// Cartesian coordinates. The latitude and longitude should be in degrees and
   /// the altitude in meters. The returned ECEF coordinates will be in meters.
   template <typename T>
-  inline geometry::Point3D<T> lla_to_ecef(
-      const geometry::EquatorialPoint3D<T>& lla) const noexcept {
+  inline auto lla_to_ecef(const geometry::EquatorialPoint3D<T>& lla) const
+      noexcept -> geometry::Point3D<T> {
     double siny;
     double cosy;
     double sinx;
@@ -127,9 +129,9 @@ class Coordinates {
   /// Transform points between two coordinate systems defined by the
   /// Coordinates instances this and target.
   template <typename T>
-  inline geometry::EquatorialPoint3D<T> transform(
-      const Coordinates& target,
-      const geometry::EquatorialPoint3D<T>& lla) const noexcept {
+  inline auto transform(const Coordinates& target,
+                        const geometry::EquatorialPoint3D<T>& lla) const
+      noexcept -> geometry::EquatorialPoint3D<T> {
     return target.ecef_to_lla(lla_to_ecef(lla));
   }
 

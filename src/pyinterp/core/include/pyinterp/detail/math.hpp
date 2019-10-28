@@ -10,31 +10,31 @@ namespace pyinterp::detail::math {
 
 /// π
 template <typename T>
-inline constexpr T pi() noexcept {
+inline constexpr auto pi() noexcept -> T {
   return std::atan2(T(0), T(-1));
 }
 
 /// π/2
 template <typename T>
-inline constexpr T pi_2() noexcept {
+inline constexpr auto pi_2() noexcept -> T {
   return 0.5 * pi<T>();
 }
 
 /// 2π
 template <typename T>
-inline constexpr T two_pi() noexcept {
+inline constexpr auto two_pi() noexcept -> T {
   return T(2) * pi<T>();
 }
 
 /// Convert angle x from radians to degrees.
 template <typename T>
-inline constexpr T radians(const T& x) noexcept {
+inline constexpr auto radians(const T& x) noexcept -> T {
   return x * pi<T>() / T(180);
 }
 
 /// Convert angle x from degrees to radians.
 template <typename T>
-inline constexpr T degrees(const T& x) noexcept {
+inline constexpr auto degrees(const T& x) noexcept -> T {
   return x * T(180) / pi<T>();
 }
 
@@ -45,8 +45,8 @@ inline constexpr T degrees(const T& x) noexcept {
 /// @param circle Circle value
 /// @return the angle reduced to the range [min, circle + min[
 template <typename T>
-inline constexpr T normalize_angle(const T& x, const T& min,
-                                   const T& circle) noexcept {
+inline constexpr auto normalize_angle(const T& x, const T& min,
+                                      const T& circle) noexcept -> T {
   T result = std::remainder(x - min, circle);
   if (result < T(0)) {
     result += circle;
@@ -59,7 +59,7 @@ inline constexpr T normalize_angle(const T& x, const T& min,
 ///
 /// @return a result with the same sign as its second operand
 template <typename T, typename = std::enable_if_t<std::is_integral<T>::value>>
-inline constexpr T remainder(const T& x, const T& y) noexcept {
+inline constexpr auto remainder(const T& x, const T& y) noexcept -> T {
   auto result = x % y;
   return result != 0 && (result ^ y) < 0 ? result + y : result;
 }
@@ -72,7 +72,7 @@ inline constexpr T remainder(const T& x, const T& y) noexcept {
 /// @param x x in degrees.
 /// @return sin(x).
 template <typename T>
-inline constexpr T sind(const T& x) noexcept {
+inline constexpr auto sind(const T& x) noexcept -> T {
   int quotient{};
   T result = radians(std::remquo(x, T(90), &quotient));
   // now |result| <= π/4
@@ -89,7 +89,7 @@ inline constexpr T sind(const T& x) noexcept {
 /// @param x in degrees.
 /// @return cos(x).
 template <typename T>
-inline constexpr T cosd(const T& x) noexcept {
+inline constexpr auto cosd(const T& x) noexcept -> T {
   int quotient{};
   T result = radians(std::remquo(x, T(90), &quotient));
   // now |result| <= π/4
@@ -106,7 +106,7 @@ inline constexpr T cosd(const T& x) noexcept {
 /// @param x in degrees.
 /// @return a tuple that contains sin(x) and cos(x)
 template <typename T>
-inline constexpr std::tuple<T, T> sincosd(const T& x) noexcept {
+inline constexpr auto sincosd(const T& x) noexcept -> std::tuple<T, T> {
   int quotient{};
   T angle = radians(std::remquo(x, T(90), &quotient));
   // now |angle| <= π/4
@@ -128,7 +128,7 @@ inline constexpr std::tuple<T, T> sincosd(const T& x) noexcept {
 /// @param x in degrees.
 /// @return tan(x).
 template <typename T>
-inline constexpr T tand(const T& x) noexcept {
+inline constexpr auto tand(const T& x) noexcept -> T {
   T sinx{};
   T cosx{};
 
@@ -142,7 +142,7 @@ inline constexpr T tand(const T& x) noexcept {
 /// @param x
 /// @return atan2(y, x) in degrees.
 template <typename T>
-inline constexpr T atan2d(T y, T x) noexcept {
+inline constexpr auto atan2d(T y, T x) noexcept -> T {
   // In order to minimize round-off errors, this function rearranges the
   // arguments so that result of atan2 is in the range [-π/4, π/4] before
   // converting it to degrees and mapping the result to the correct
@@ -179,7 +179,7 @@ inline constexpr T atan2d(T y, T x) noexcept {
 /// @param x
 /// @return atan(x) in degrees.
 template <typename T>
-inline constexpr T atand(const T& x) noexcept {
+inline constexpr auto atand(const T& x) noexcept -> T {
   return atan2d(x, T(1));
 }
 
@@ -187,20 +187,21 @@ inline constexpr T atand(const T& x) noexcept {
 ///
 /// @return \f$x^2\f$
 template <typename T>
-inline constexpr T sqr(const T& x) noexcept {
+inline constexpr auto sqr(const T& x) noexcept -> T {
   return x * x;
 }
 
 /// True if a is almost zero to epsilon
 template <typename T>
-inline constexpr bool is_almost_zero(const T& a, const T& epsilon) noexcept {
+inline constexpr auto is_almost_zero(const T& a, const T& epsilon) noexcept
+    -> bool {
   return std::fabs(a) < epsilon;
 }
 
 /// True if a and b are two values identical to an epsilon.
 template <typename T>
-inline constexpr bool is_same(const T& a, const T& b,
-                              const T& epsilon) noexcept {
+inline constexpr auto is_same(const T& a, const T& b, const T& epsilon) noexcept
+    -> bool {
   auto diff = std::fabs(a - b);
   if (diff <= epsilon) {
     return true;
@@ -214,7 +215,8 @@ inline constexpr bool is_same(const T& a, const T& b,
 /// Compares two real values for a given accuracy expressed as a number of real
 /// values that can be represented between these two values.
 template <typename T>
-inline constexpr bool is_within(const T& a, const T& b, size_t interval_size) {
+inline constexpr auto is_within(const T& a, const T& b, size_t interval_size)
+    -> bool {
   const T lower =
       (a - std::nextafter(a, std::numeric_limits<T>::lowest())) * interval_size;
   const T upper =
@@ -230,10 +232,10 @@ struct Fill;
 /// Represents a filling value for floating point number
 template <class T>
 struct Fill<T, std::enable_if_t<std::is_floating_point<T>::value>> {
-  static inline constexpr T value() noexcept {
+  static inline constexpr auto value() noexcept -> T {
     return std::numeric_limits<T>::quiet_NaN();
   }
-  static inline constexpr T is_not(const T& x) noexcept {
+  static inline constexpr auto is_not(const T& x) noexcept -> T {
     return !std::isnan(x);
   }
 };
@@ -241,10 +243,10 @@ struct Fill<T, std::enable_if_t<std::is_floating_point<T>::value>> {
 /// Represents a filling value for integer number
 template <class T>
 struct Fill<T, std::enable_if_t<std::is_integral<T>::value>> {
-  static inline constexpr T value() noexcept {
+  static inline constexpr auto value() noexcept -> T {
     return std::numeric_limits<T>::max();
   }
-  static inline constexpr T is_not(const T& x) noexcept {
+  static inline constexpr auto is_not(const T& x) noexcept -> T {
     return Fill::value() != x;
   }
 };

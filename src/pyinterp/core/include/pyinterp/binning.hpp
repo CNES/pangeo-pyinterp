@@ -3,23 +3,23 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <Eigen/Core>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/weighted_kurtosis.hpp>
+#include <boost/accumulators/statistics/weighted_mean.hpp>
+#include <boost/accumulators/statistics/weighted_median.hpp>
+#include <boost/accumulators/statistics/weighted_skewness.hpp>
+#include <boost/accumulators/statistics/weighted_sum.hpp>
+#include <boost/accumulators/statistics/weighted_variance.hpp>
+#include <boost/geometry.hpp>
+#include <optional>
+#include <pybind11/numpy.h>
 #include "pyinterp/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/binning.hpp"
 #include "pyinterp/geodetic/system.hpp"
-#include <Eigen/Core>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/weighted_sum.hpp>
-#include <boost/accumulators/statistics/weighted_kurtosis.hpp>
-#include <boost/accumulators/statistics/weighted_mean.hpp>
-#include <boost/accumulators/statistics/weighted_median.hpp>
-#include <boost/accumulators/statistics/weighted_skewness.hpp>
-#include <boost/accumulators/statistics/weighted_variance.hpp>
-#include <boost/geometry.hpp>
-#include <optional>
-#include <pybind11/numpy.h>
 
 namespace pyinterp {
 
@@ -76,55 +76,55 @@ class Binning2D {
   }
 
   /// Compute the count of points within each bin.
-  [[nodiscard]] pybind11::array_t<T> count() const {
+  [[nodiscard]] auto count() const -> pybind11::array_t<T> {
     return calculate_statistics(boost::accumulators::count);
   }
 
   /// Compute the minimum of values for points within each bin.
-  [[nodiscard]] pybind11::array_t<T> min() const {
+  [[nodiscard]] auto min() const -> pybind11::array_t<T> {
     return calculate_statistics(boost::accumulators::min);
   }
 
   /// Compute the maximum of values for points within each bin.
-  [[nodiscard]] pybind11::array_t<T> max() const {
+  [[nodiscard]] auto max() const -> pybind11::array_t<T> {
     return calculate_statistics(boost::accumulators::max);
   }
 
   /// Compute the mean of values for points within each bin.
-  [[nodiscard]] pybind11::array_t<T> mean() const {
+  [[nodiscard]] auto mean() const -> pybind11::array_t<T> {
     return calculate_statistics(boost::accumulators::weighted_mean);
   }
 
   /// Compute the median of values for points within each bin.
-  [[nodiscard]] pybind11::array_t<T> median() const {
+  [[nodiscard]] auto median() const -> pybind11::array_t<T> {
     return calculate_statistics(boost::accumulators::weighted_median);
   }
 
   /// Compute the variance of values for points within each bin.
-  [[nodiscard]] pybind11::array_t<T> variance() const {
+  [[nodiscard]] auto variance() const -> pybind11::array_t<T> {
     return calculate_statistics(boost::accumulators::weighted_variance);
   }
 
   /// Compute the kurtosis of values for points within each bin.
-  [[nodiscard]] pybind11::array_t<T> kurtosis() const {
+  [[nodiscard]] auto kurtosis() const -> pybind11::array_t<T> {
     return calculate_statistics(boost::accumulators::weighted_kurtosis);
   }
 
   /// Compute the skewness of values for points within each bin.
-  [[nodiscard]] pybind11::array_t<T> skewness() const {
+  [[nodiscard]] auto skewness() const -> pybind11::array_t<T> {
     return calculate_statistics(boost::accumulators::weighted_skewness);
   }
 
   /// Compute the sum of values for points within each bin.
-  [[nodiscard]] pybind11::array_t<T> sum() const {
+  [[nodiscard]] auto sum() const -> pybind11::array_t<T> {
     return calculate_statistics(boost::accumulators::weighted_sum);
   }
 
   /// Gets the X-Axis
-  [[nodiscard]] inline std::shared_ptr<Axis> x() const { return x_; }
+  [[nodiscard]] inline auto x() const -> std::shared_ptr<Axis> { return x_; }
 
   /// Gets the Y-Axis
-  [[nodiscard]] inline std::shared_ptr<Axis> y() const { return y_; }
+  [[nodiscard]] inline auto y() const -> std::shared_ptr<Axis> { return y_; }
 
  private:
   /// Statistics handled by this object.
@@ -146,7 +146,7 @@ class Binning2D {
   /// Grid axis
   std::shared_ptr<Axis> x_;
   std::shared_ptr<Axis> y_;
-  
+
   /// Statistics grid
   Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic> acc_;
 
@@ -156,8 +156,8 @@ class Binning2D {
 
   /// Calculation of a given statistical variable.
   template <typename Func>
-  [[nodiscard]] pybind11::array_t<T> calculate_statistics(
-      const Func& func) const {
+  [[nodiscard]] auto calculate_statistics(const Func& func) const
+      -> pybind11::array_t<T> {
     pybind11::array_t<T> z({x_->size(), y_->size()});
     auto _z = z.template mutable_unchecked<2>();
     {

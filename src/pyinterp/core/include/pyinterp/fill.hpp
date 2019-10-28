@@ -5,7 +5,6 @@
 #pragma once
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <Eigen/Core>
 #include <atomic>
@@ -83,11 +82,11 @@ void set_zonal_average(
 /// @param relaxation Relaxation constant
 /// @return maximum residual value
 template <typename Type>
-Type gauss_seidel(
+auto gauss_seidel(
     pybind11::EigenDRef<Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>&
         grid,
     Eigen::Matrix<bool, -1, -1>& mask, const bool is_circle,
-    const Type relaxation, const size_t num_threads) {
+    const Type relaxation, const size_t num_threads) -> Type {
   // Maximum residual values for each thread.
   std::vector<Type> max_residuals(num_threads);
 
@@ -224,12 +223,12 @@ enum FirstGuess {
 /// @return A tuple containing the number of iterations performed and the
 /// maximum residual value.
 template <typename Type>
-std::tuple<size_t, Type> gauss_seidel(
+auto gauss_seidel(
     pybind11::EigenDRef<Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>&
         grid,
     const FirstGuess first_guess, const bool is_circle,
     const size_t max_iterations, const Type epsilon, const Type relaxation,
-    size_t num_threads) {
+    size_t num_threads) -> std::tuple<size_t, Type> {
   /// If the grid doesn't have an undefined value, this routine has nothing more
   /// to do.
   if (!grid.hasNaN()) {
@@ -287,8 +286,8 @@ std::tuple<size_t, Type> gauss_seidel(
 /// which is useful for debugging.
 /// @return The grid will have all the NaN filled with extrapolated values.
 template <typename Type>
-pybind11::array_t<Type> loess(const Grid2D<Type>& grid, const uint32_t nx,
-                              const uint32_t ny, const size_t num_threads) {
+auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
+           const size_t num_threads) -> pybind11::array_t<Type> {
   auto result = pybind11::array_t<Type>(
       pybind11::array::ShapeContainer{grid.x()->size(), grid.y()->size()});
   auto _result = result.template mutable_unchecked<2>();

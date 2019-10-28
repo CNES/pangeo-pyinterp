@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/detail/axis.hpp"
 #include <sstream>
+
 namespace pyinterp::detail {
 
 void Axis::normalize_longitude(Eigen::Ref<Eigen::VectorXd>& points) {
@@ -35,8 +36,8 @@ void Axis::normalize_longitude(Eigen::Ref<Eigen::VectorXd>& points) {
   }
 }
 
-std::optional<double> is_evenly_spaced(
-    const Eigen::Ref<const Eigen::VectorXd>& points, const double epsilon) {
+auto is_evenly_spaced(const Eigen::Ref<const Eigen::VectorXd>& points,
+                      const double epsilon) -> std::optional<double> {
   size_t n = points.size();
 
   // The axis is defined by a single value.
@@ -108,8 +109,8 @@ Axis::Axis(Eigen::Ref<Eigen::VectorXd> values, const double epsilon,
   compute_properties(epsilon);
 }
 
-std::optional<std::tuple<int64_t, int64_t>> Axis::find_indexes(
-    double coordinate) const {
+auto Axis::find_indexes(double coordinate) const
+    -> std::optional<std::tuple<int64_t, int64_t>> {
   coordinate = normalize_coordinate(coordinate);
   auto length = size();
   auto i0 = find_index(coordinate, false);
@@ -150,8 +151,8 @@ std::optional<std::tuple<int64_t, int64_t>> Axis::find_indexes(
   return std::optional<std::tuple<int64_t, int64_t>>{};
 }
 
-std::vector<int64_t> Axis::find_indexes(double coordinate, uint32_t size,
-                                        Boundary boundary) const {
+auto Axis::find_indexes(double coordinate, uint32_t size,
+                        Boundary boundary) const -> std::vector<int64_t> {
   if (size == 0) {
     throw std::invalid_argument("The size must not be zero.");
   }

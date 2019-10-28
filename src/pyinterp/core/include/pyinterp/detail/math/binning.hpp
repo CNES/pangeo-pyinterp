@@ -3,9 +3,9 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include <tuple>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
+#include <tuple>
 
 namespace pyinterp::detail::math {
 
@@ -13,8 +13,8 @@ namespace detail {
 
 /// Calculates the area of a polygon.
 template <template <class> class Point, typename Strategy, typename T>
-inline T calculate_area(boost::geometry::model::polygon<Point<T>>& polygon,
-                        const Strategy& strategy) {
+inline auto calculate_area(boost::geometry::model::polygon<Point<T>>& polygon,
+                           const Strategy& strategy) -> T {
   auto result = boost::geometry::area(polygon, strategy);
   if (result < 0) {
     boost::geometry::reverse(polygon);
@@ -26,9 +26,9 @@ inline T calculate_area(boost::geometry::model::polygon<Point<T>>& polygon,
 /// Calculate the area of a polygon. If the area is less than one epsilon, the
 /// calculated area is set to zero.
 template <template <class> class Point, typename Strategy, typename T>
-inline T calculate_and_normalize_area(
+inline auto calculate_and_normalize_area(
     boost::geometry::model::polygon<Point<T>>& polygon,
-    const Strategy& strategy, const double total_area) {
+    const Strategy& strategy, const double total_area) -> T {
   auto result = calculate_area<Point, Strategy, T>(polygon, strategy);
   if (result > total_area || std::fabs(result) < 1e-12) {
     result = 0;
@@ -59,9 +59,8 @@ inline T calculate_and_normalize_area(
 ///   * w11 Weight for the coordinate (x1, y1)
 ///   * w10 Weight for the coordinate (x1, y0)
 template <template <class> class Point, typename Strategy, typename T>
-std::tuple<T, T, T, T> binning_2d(const Point<T>& pij, const Point<T>& p00,
-                                  const Point<T>& p11,
-                                  Strategy const& strategy) {
+auto binning_2d(const Point<T>& pij, const Point<T>& p00, const Point<T>& p11,
+                Strategy const& strategy) -> std::tuple<T, T, T, T> {
   // Coordinates of the grid points deducted.
   const auto p01 =
       Point<T>{boost::geometry::get<0>(p00), boost::geometry::get<1>(p11)};

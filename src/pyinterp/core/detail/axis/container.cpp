@@ -26,7 +26,7 @@ Irregular::Irregular(Eigen::VectorXd points) : points_(std::move(points)) {
   make_edges();
 }
 
-int64_t Irregular::find_index(double coordinate, bool bounded) const {
+auto Irregular::find_index(double coordinate, bool bounded) const -> int64_t {
   int64_t low = 0;
   int64_t mid = 0;
   int64_t high = size();

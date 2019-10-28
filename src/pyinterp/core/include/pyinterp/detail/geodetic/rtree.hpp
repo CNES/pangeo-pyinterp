@@ -44,20 +44,20 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
   RTree(const RTree &) = default;
 
   /// Default copy assignment operator
-  RTree &operator=(const RTree &) = default;
+  auto operator=(const RTree &) -> RTree & = default;
 
   /// Move constructor
   RTree(RTree &&) noexcept = default;
 
   /// Move assignment operator
-  RTree &operator=(RTree &&) noexcept = default;
+  auto operator=(RTree &&) noexcept -> RTree & = default;
 
   /// Returns the box able to contain all values stored in the container.
   ///
   /// @returns The box able to contain all values stored in the container or an
   /// invalid box if there are no values in the container.
-  std::optional<geometry::EquatorialBox3D<Coordinate>> equatorial_bounds()
-      const {
+  auto equatorial_bounds() const
+      -> std::optional<geometry::EquatorialBox3D<Coordinate>> {
     if (this->empty()) {
       return {};
     }
@@ -88,9 +88,8 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
   /// @param point Point of interest
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors
-  std::vector<result_t> query(
-      const geometry::EquatorialPoint3D<Coordinate> &point,
-      const uint32_t k) const {
+  auto query(const geometry::EquatorialPoint3D<Coordinate> &point,
+             const uint32_t k) const -> std::vector<result_t> {
     std::vector<result_t> result;
     std::for_each(
         this->tree_->qbegin(boost::geometry::index::nearest(
@@ -109,9 +108,8 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
   /// @param point Point of interest
   /// @param radius distance within which neighbors are returned
   /// @return the k nearest neighbors
-  std::vector<result_t> query_ball(
-      const geometry::EquatorialPoint3D<Coordinate> &point,
-      const double radius) const {
+  auto query_ball(const geometry::EquatorialPoint3D<Coordinate> &point,
+                  const double radius) const -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     std::for_each(
         this->tree_->qbegin(
@@ -135,9 +133,8 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors if the point is within by its
   /// neighbors.
-  std::vector<result_t> query_within(
-      const geometry::EquatorialPoint3D<Coordinate> &point,
-      const uint32_t k) const {
+  auto query_within(const geometry::EquatorialPoint3D<Coordinate> &point,
+                    const uint32_t k) const -> std::vector<result_t> {
     std::vector<result_t> result;
     auto ecef =
         boost::geometry::model::multi_point<geometry::Point3D<Coordinate>>();
@@ -174,9 +171,9 @@ class RTree : public geometry::RTree<Coordinate, Type, 3> {
   /// ensures that the calculated values will not be extrapolated.
   /// @return a tuple containing the interpolated value and the number of
   /// neighbors used in the calculation.
-  std::pair<Type, uint32_t> inverse_distance_weighting(
+  auto inverse_distance_weighting(
       const geometry::EquatorialPoint3D<Coordinate> &point, distance_t radius,
-      uint32_t k, uint32_t p, bool within) const {
+      uint32_t k, uint32_t p, bool within) const -> std::pair<Type, uint32_t> {
     Type result = 0;
     Type total_weight = 0;
 

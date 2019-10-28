@@ -13,7 +13,7 @@ namespace pyinterp::detail {
 ///
 /// @param array tensor to process
 template <typename Array>
-std::string eigen_shape(const Array& array) {
+auto eigen_shape(const Array& array) -> std::string {
   std::stringstream ss;
   ss << "(" << array.rows() << ", " << array.cols() << ")";
   return ss.str();
@@ -23,7 +23,7 @@ std::string eigen_shape(const Array& array) {
 ///
 /// @param array tensor to process
 template <typename Array>
-std::string ndarray_shape(const Array& array) {
+auto ndarray_shape(const Array& array) -> std::string {
   std::stringstream ss;
   ss << "(";
   for (auto ix = 0; ix < array.ndim(); ++ix) {

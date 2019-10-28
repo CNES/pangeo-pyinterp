@@ -4,7 +4,6 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <cctype>
 #include "pyinterp/detail/geometry/point.hpp"
@@ -22,11 +21,11 @@ using BivariateInterpolator = detail::math::Bivariate<Point, T>;
 template <template <class> class Point, typename T>
 class Bilinear : public detail::math::Bilinear<Point, T> {
  public:
-  [[nodiscard]] pybind11::tuple getstate() const {
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple();
   }
 
-  static Bilinear setstate(const pybind11::tuple& /*tuple*/) {
+  static auto setstate(const pybind11::tuple & /*tuple*/) -> Bilinear {
     return Bilinear();
   }
 };
@@ -35,11 +34,11 @@ class Bilinear : public detail::math::Bilinear<Point, T> {
 template <template <class> class Point, typename T>
 class Nearest : public detail::math::Nearest<Point, T> {
  public:
-  [[nodiscard]] pybind11::tuple getstate() const {
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple();
   }
 
-  static Nearest setstate(const pybind11::tuple& /*tuple*/) {
+  static auto setstate(const pybind11::tuple & /*tuple*/) -> Nearest {
     return Nearest();
   }
 };
@@ -52,11 +51,12 @@ class InverseDistanceWeighting
   using detail::math::InverseDistanceWeighting<Point,
                                                T>::InverseDistanceWeighting;
 
-  [[nodiscard]] pybind11::tuple getstate() const {
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple(this->exp());
   }
 
-  static InverseDistanceWeighting setstate(const pybind11::tuple& tuple) {
+  static auto setstate(const pybind11::tuple& tuple)
+      -> InverseDistanceWeighting {
     if (tuple.size() != 1) {
       throw std::runtime_error("invalid state");
     }
@@ -70,11 +70,11 @@ class InverseDistanceWeighting
 /// @tparam Coordinate The type of data used by the interpolators.
 /// @tparam Type The type of data used by the numerical grid.
 template <template <class> class Point, typename Coordinate, typename Type>
-pybind11::array_t<Coordinate> bivariate(
-    const Grid2D<Type>& grid, const pybind11::array_t<Coordinate>& x,
-    const pybind11::array_t<Coordinate>& y,
-    const BivariateInterpolator<Point, Coordinate>* interpolator,
-    const bool bounds_error, const size_t num_threads) {
+auto bivariate(const Grid2D<Type>& grid, const pybind11::array_t<Coordinate>& x,
+               const pybind11::array_t<Coordinate>& y,
+               const BivariateInterpolator<Point, Coordinate>* interpolator,
+               const bool bounds_error, const size_t num_threads)
+    -> pybind11::array_t<Coordinate> {
   pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
   pyinterp::detail::check_ndarray_shape("x", x, "y", y);
 
@@ -160,9 +160,9 @@ void implement_bivariate_interpolator(pybind11::module& m,
    public:
     using CoordinateSystem::CoordinateSystem;
 
-    T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
-               const T& q00, const T& q01, const T& q10,
-               const T& q11) const override {
+    auto evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
+                  const T& q00, const T& q01, const T& q10, const T& q11) const
+        -> T override {
       PYBIND11_OVERLOAD_PURE(T, CoordinateSystem, "evaluate", p, p0, p1, q00,
                              q01, q10, q11);
     }

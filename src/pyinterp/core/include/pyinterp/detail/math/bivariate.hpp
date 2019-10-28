@@ -31,12 +31,12 @@ struct Bivariate {
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  Bivariate& operator=(const Bivariate& rhs) = default;
+  auto operator=(const Bivariate& rhs) -> Bivariate& = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  Bivariate& operator=(Bivariate&& rhs) noexcept = default;
+  auto operator=(Bivariate&& rhs) noexcept -> Bivariate& = default;
 
   /// Performs the interpolation
   ///
@@ -48,9 +48,9 @@ struct Bivariate {
   /// @param q10 Point value for the coordinate (x1, y0)
   /// @param q11 Point value for the coordinate (x1, y1)
   /// @return interpolated value at coordinate (x, y)
-  virtual T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
-                     const T& q00, const T& q01, const T& q10,
-                     const T& q11) const = 0;
+  virtual auto evaluate(const Point<T>& p, const Point<T>& p0,
+                        const Point<T>& p1, const T& q00, const T& q01,
+                        const T& q10, const T& q11) const -> T = 0;
 };
 
 /// Bilinear interpolation
@@ -75,17 +75,17 @@ struct Bilinear : public Bivariate<Point, T> {
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  Bilinear& operator=(const Bilinear& rhs) = default;
+  auto operator=(const Bilinear& rhs) -> Bilinear& = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  Bilinear& operator=(Bilinear&& rhs) noexcept = default;
+  auto operator=(Bilinear&& rhs) noexcept -> Bilinear& = default;
 
   /// Performs the bilinear interpolation
-  inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
-                    const T& q00, const T& q01, const T& q10,
-                    const T& q11) const final {
+  inline auto evaluate(const Point<T>& p, const Point<T>& p0,
+                       const Point<T>& p1, const T& q00, const T& q01,
+                       const T& q10, const T& q11) const -> T final {
     auto dx = boost::geometry::get<0>(p1) - boost::geometry::get<0>(p0);
     auto dy = boost::geometry::get<1>(p1) - boost::geometry::get<1>(p0);
     auto t = (boost::geometry::get<0>(p) - boost::geometry::get<0>(p0)) / dx;
@@ -108,7 +108,7 @@ struct InverseDistanceWeighting : public Bivariate<Point, T> {
   explicit InverseDistanceWeighting(const int exp) : exp_(exp) {}
 
   /// Return the exponent used by this instance
-  [[nodiscard]] inline int exp() const noexcept { return exp_; }
+  [[nodiscard]] inline auto exp() const noexcept -> int { return exp_; }
 
   /// Default destructor
   virtual ~InverseDistanceWeighting() = default;
@@ -126,19 +126,19 @@ struct InverseDistanceWeighting : public Bivariate<Point, T> {
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  InverseDistanceWeighting& operator=(const InverseDistanceWeighting& rhs) =
-      default;
+  auto operator=(const InverseDistanceWeighting& rhs)
+      -> InverseDistanceWeighting& = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  InverseDistanceWeighting& operator=(InverseDistanceWeighting&& rhs) noexcept =
-      default;
+  auto operator=(InverseDistanceWeighting&& rhs) noexcept
+      -> InverseDistanceWeighting& = default;
 
   /// Performs the interpolation
-  inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
-                    const T& q00, const T& q01, const T& q10,
-                    const T& q11) const final {
+  inline auto evaluate(const Point<T>& p, const Point<T>& p0,
+                       const Point<T>& p1, const T& q00, const T& q01,
+                       const T& q10, const T& q11) const -> T final {
     auto distance = boost::geometry::distance(
         p, Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)});
     if (distance <= std::numeric_limits<T>::epsilon()) {
@@ -210,17 +210,17 @@ struct Nearest : public Bivariate<Point, T> {
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  Nearest& operator=(const Nearest& rhs) = default;
+  auto operator=(const Nearest& rhs) -> Nearest& = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  Nearest& operator=(Nearest&& rhs) noexcept = default;
+  auto operator=(Nearest&& rhs) noexcept -> Nearest& = default;
 
   /// Performs the interpolation
-  inline T evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
-                    const T& q00, const T& q01, const T& q10,
-                    const T& q11) const final {
+  inline auto evaluate(const Point<T>& p, const Point<T>& p0,
+                       const Point<T>& p1, const T& q00, const T& q01,
+                       const T& q10, const T& q11) const -> T final {
     auto distance = boost::geometry::comparable_distance(
         p, Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)});
     auto result = std::make_tuple(distance, q00);

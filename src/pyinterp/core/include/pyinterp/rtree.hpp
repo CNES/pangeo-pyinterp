@@ -4,7 +4,6 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geodetic/rtree.hpp"
 #include "pyinterp/detail/geodetic/system.hpp"
@@ -80,9 +79,9 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
   }
 
   /// Search for the nearest K nearest neighbors of a given coordinates.
-  pybind11::tuple query(const pybind11::array_t<Type> &coordinates,
-                        const uint32_t k, const bool within,
-                        const size_t num_threads) const {
+  auto query(const pybind11::array_t<Type> &coordinates, const uint32_t k,
+             const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case 2:
@@ -100,9 +99,10 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
   }
 
   /// TODO
-  pybind11::tuple inverse_distance_weighting(
-      const pybind11::array_t<Type> &coordinates, distance_t radius, uint32_t k,
-      uint32_t p, bool within, size_t num_threads) const {
+  auto inverse_distance_weighting(const pybind11::array_t<Type> &coordinates,
+                                  distance_t radius, uint32_t k, uint32_t p,
+                                  bool within, size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case 2:
@@ -122,7 +122,7 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
   }
 
   /// Get a tuple that fully encodes the state of this instance
-  [[nodiscard]] pybind11::tuple getstate() const {
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
     auto x = pybind11::array_t<Coordinate>(
         pybind11::array::ShapeContainer{{this->size()}});
     auto y = pybind11::array_t<Coordinate>(
@@ -150,7 +150,8 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static RTree<Coordinate, Type> setstate(const pybind11::tuple &state) {
+  static auto setstate(const pybind11::tuple &state)
+      -> RTree<Coordinate, Type> {
     if (state.size() != 5) {
       throw std::runtime_error("invalid state");
     }
@@ -238,9 +239,9 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
 
   /// Search for the nearest K nearest neighbors of a given coordinates.
   template <size_t Dimensions>
-  pybind11::tuple _query(const pybind11::array_t<Coordinate> &coordinates,
-                         const uint32_t k, const bool within,
-                         const size_t num_threads) const {
+  auto _query(const pybind11::array_t<Coordinate> &coordinates,
+              const uint32_t k, const bool within,
+              const size_t num_threads) const -> pybind11::tuple {
     // Signature of the function of the class to be called.
     using query_t = std::vector<
         typename detail::geodetic::RTree<Coordinate, Type>::result_t> (
@@ -324,9 +325,10 @@ class RTree : public detail::geodetic::RTree<Coordinate, Type> {
 
   /// Inverse distance weighting interpolation
   template <size_t Dimensions>
-  pybind11::tuple _inverse_distance_weighting(
-      const pybind11::array_t<Type> &coordinates, distance_t radius, uint32_t k,
-      uint32_t p, bool within, size_t num_threads) const {
+  auto _inverse_distance_weighting(const pybind11::array_t<Type> &coordinates,
+                                   distance_t radius, uint32_t k, uint32_t p,
+                                   bool within, size_t num_threads) const
+      -> pybind11::tuple {
     auto _coordinates = coordinates.template unchecked<2>();
     auto size = coordinates.shape(0);
 

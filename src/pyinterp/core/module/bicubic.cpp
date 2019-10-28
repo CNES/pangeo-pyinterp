@@ -5,7 +5,6 @@
 #include "pyinterp/bicubic.hpp"
 #include <cctype>
 #include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
@@ -13,7 +12,7 @@ namespace py = pybind11;
 namespace pyinterp {
 
 /// Returns the GSL interp type
-inline const gsl_interp_type* interp_type(const FittingModel kind) {
+inline auto interp_type(const FittingModel kind) -> const gsl_interp_type* {
   switch (kind) {
     case kLinear:
       return gsl_interp_linear;
@@ -37,9 +36,9 @@ inline const gsl_interp_type* interp_type(const FittingModel kind) {
 
 /// Loads the interpolation frame into memory
 template <typename Type>
-bool load_frame(const Grid2D<Type>& grid, const double x, const double y,
+auto load_frame(const Grid2D<Type>& grid, const double x, const double y,
                 const Axis::Boundary boundary, const bool bounds_error,
-                detail::math::XArray& frame) {
+                detail::math::XArray& frame) -> bool {
   auto y_indexes =
       grid.y()->find_indexes(y, static_cast<uint32_t>(frame.ny()), boundary);
   auto x_indexes =
@@ -79,12 +78,11 @@ bool load_frame(const Grid2D<Type>& grid, const double x, const double y,
 
 /// Evaluate the interpolation.
 template <typename Type>
-py::array_t<double> bicubic(const Grid2D<Type>& grid,
-                            const py::array_t<double>& x,
-                            const py::array_t<double>& y, size_t nx, size_t ny,
-                            FittingModel fitting_model,
-                            const Axis::Boundary boundary,
-                            const bool bounds_error, size_t num_threads) {
+auto bicubic(const Grid2D<Type>& grid, const py::array_t<double>& x,
+             const py::array_t<double>& y, size_t nx, size_t ny,
+             FittingModel fitting_model, const Axis::Boundary boundary,
+             const bool bounds_error, size_t num_threads)
+    -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y);
   detail::check_ndarray_shape("x", x, "y", y);
 

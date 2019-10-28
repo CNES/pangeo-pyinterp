@@ -3,8 +3,6 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/axis/container.hpp"
-#include "pyinterp/detail/math.hpp"
 #include <Eigen/Core>
 #include <cmath>
 #include <limits>
@@ -15,6 +13,8 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include "pyinterp/detail/axis/container.hpp"
+#include "pyinterp/detail/math.hpp"
 
 namespace pyinterp::detail {
 
@@ -77,19 +77,20 @@ class Axis {
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  Axis& operator=(const Axis& rhs) = default;
+  auto operator=(const Axis& rhs) -> Axis& = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  Axis& operator=(Axis&& rhs) = default;
+  auto operator=(Axis&& rhs) -> Axis& = default;
 
   /// Get the ith coordinate value.
   ///
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
   /// @throw std::out_of_range if !(index < size()).
-  [[nodiscard]] inline double coordinate_value(const size_t index) const {
+  [[nodiscard]] inline auto coordinate_value(const size_t index) const
+      -> double {
     if (static_cast<int64_t>(index) >= size()) {
       throw std::out_of_range("axis index out of range");
     }
@@ -99,49 +100,55 @@ class Axis {
   /// Get the minimum coordinate value.
   ///
   /// @return minimum coordinate value
-  [[nodiscard]] inline double min_value() const { return axis_->min_value(); }
+  [[nodiscard]] inline auto min_value() const -> double {
+    return axis_->min_value();
+  }
 
   /// Get the maximum coordinate value.
   ///
   /// @return maximum coordinate value
-  [[nodiscard]] inline double max_value() const { return axis_->max_value(); }
+  [[nodiscard]] inline auto max_value() const -> double {
+    return axis_->max_value();
+  }
 
   /// Get the number of values for this axis
   ///
   /// @return the number of values
-  [[nodiscard]] inline int64_t size() const noexcept { return axis_->size(); }
+  [[nodiscard]] inline auto size() const noexcept -> int64_t {
+    return axis_->size();
+  }
 
   /// Check if this axis values are spaced regularly
-  [[nodiscard]] inline bool is_regular() const noexcept {
+  [[nodiscard]] inline auto is_regular() const noexcept -> bool {
     return dynamic_cast<axis::container::Regular*>(axis_.get()) != nullptr;
   }
 
   /// Returns true if this axis represents a circle.
-  [[nodiscard]] inline constexpr bool is_circle() const noexcept {
+  [[nodiscard]] inline constexpr auto is_circle() const noexcept -> bool {
     return is_circle_;
   }
 
   /// Does the axis represent an angle?
   ///
   /// @return true if the axis represent an angle
-  [[nodiscard]] inline bool is_angle() const noexcept {
+  [[nodiscard]] inline auto is_angle() const noexcept -> bool {
     return !std::isnan(circle_);
   }
 
   /// Get the first value of this axis
   ///
   /// @return the first value
-  [[nodiscard]] inline double front() const { return axis_->front(); }
+  [[nodiscard]] inline auto front() const -> double { return axis_->front(); }
 
   /// Get the last value of this axis
   ///
   /// @return the last value
-  [[nodiscard]] inline double back() const { return axis_->back(); }
+  [[nodiscard]] inline auto back() const -> double { return axis_->back(); }
 
   /// Test if the data is sorted in ascending order.
   ///
   /// @return True if the data is sorted in ascending order.
-  [[nodiscard]] inline bool is_ascending() const {
+  [[nodiscard]] inline auto is_ascending() const -> bool {
     return axis_->is_ascending();
   }
 
@@ -149,7 +156,7 @@ class Axis {
   ///
   /// @return increment value if is_regular()
   /// @throw std::logic_error if this instance does not represent a regular axis
-  [[nodiscard]] inline double increment() const {
+  [[nodiscard]] inline auto increment() const -> double {
     auto ptr = dynamic_cast<axis::container::Regular*>(axis_.get());
     if (ptr == nullptr) {
       throw std::logic_error("this axis is not regular.");
@@ -161,7 +168,7 @@ class Axis {
   ///
   /// @param rhs an other axis to compare
   /// @return if axis are equals
-  inline bool operator==(Axis const& rhs) const {
+  inline auto operator==(Axis const& rhs) const -> bool {
     return *axis_ == *rhs.axis_ && is_circle_ == rhs.is_circle_;
   }
 
@@ -169,7 +176,7 @@ class Axis {
   ///
   /// @param rhs an other axis to compare
   /// @return if axis are equals
-  inline bool operator!=(Axis const& rhs) const {
+  inline auto operator!=(Axis const& rhs) const -> bool {
     return !this->operator==(rhs);
   }
 
@@ -177,15 +184,15 @@ class Axis {
   ///
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
-  inline double operator()(const size_t index) const noexcept {
+  inline auto operator()(const size_t index) const noexcept -> double {
     return axis_->coordinate_value(index);
   }
 
   /// Returns the normalized value with respect to the axis definition. This
   /// means if the axis defines a circle, this method returns a value within the
   /// interval [font(), back()] otherwise it returns the value supplied.
-  [[nodiscard]] inline double normalize_coordinate(
-      const double coordinate) const noexcept {
+  [[nodiscard]] inline auto normalize_coordinate(const double coordinate) const
+      noexcept -> double {
     return normalize_coordinate(coordinate, axis_->min_value());
   }
 
@@ -197,8 +204,8 @@ class Axis {
   /// is located before, or the value of the last element of this container if
   /// the requested value is located after.
   /// @return index of the grid point containing it or -1 if outside grid area
-  [[nodiscard]] inline int64_t find_index(const double coordinate,
-                                          const bool bounded) const {
+  [[nodiscard]] inline auto find_index(const double coordinate,
+                                       const bool bounded) const -> int64_t {
     return axis_->find_index(normalize_coordinate(coordinate), bounded);
   }
 
@@ -211,8 +218,8 @@ class Axis {
   /// @param coordinate position in this coordinate system
   /// @return None if coordinate is outside the axis definition domain otherwise
   /// the tuple (i0, i1)
-  [[nodiscard]] std::optional<std::tuple<int64_t, int64_t>> find_indexes(
-      double coordinate) const;
+  [[nodiscard]] auto find_indexes(double coordinate) const
+      -> std::optional<std::tuple<int64_t, int64_t>>;
 
   /// Create a table of "size" indices located on either side of the required
   /// position.
@@ -224,9 +231,9 @@ class Axis {
   /// @return A table of size "2*size" containing the indices of the axis
   /// framing the value provided or an empty table if the value is located
   /// outside the axis definition domain.
-  [[nodiscard]] std::vector<int64_t> find_indexes(double coordinate,
-                                                  uint32_t size,
-                                                  Boundary boundary) const;
+  [[nodiscard]] auto find_indexes(double coordinate, uint32_t size,
+                                  Boundary boundary) const
+      -> std::vector<int64_t>;
 
   /// Get a string representing this instance.
   ///
@@ -237,15 +244,15 @@ class Axis {
   /// Specifies if this instance handles a radian angle.
   ///
   /// @return true if this instance handles a radian angle.
-  [[nodiscard]] inline bool is_radian() const noexcept {
+  [[nodiscard]] inline auto is_radian() const noexcept -> bool {
     return circle_ == math::pi<double>();
   }
 
   /// Gets the axis handler
   ///
   /// @return the axis handler
-  [[nodiscard]] inline const std::shared_ptr<axis::container::Abstract>&
-  handler() const noexcept {
+  [[nodiscard]] inline auto handler() const noexcept
+      -> const std::shared_ptr<axis::container::Abstract>& {
     return axis_;
   }
 
@@ -274,16 +281,17 @@ class Axis {
       std::make_shared<axis::container::Undefined>()};
 
   /// Determines if the axis represents a circle.
-  inline static constexpr double set_circle(const bool is_circle,
-                                            const bool is_radian) noexcept {
+  inline static constexpr auto set_circle(const bool is_circle,
+                                          const bool is_radian) noexcept
+      -> double {
     return is_circle ? (is_radian ? math::pi<double>() : 360)
                      : std::numeric_limits<double>::quiet_NaN();
   }
 
   /// Normalize angle
-  [[nodiscard]] inline double normalize_coordinate(const double coordinate,
-                                                   const double min) const
-      noexcept {
+  [[nodiscard]] inline auto normalize_coordinate(const double coordinate,
+                                                 const double min) const
+      noexcept -> double {
     if (is_angle() && (coordinate >= min + circle_ || coordinate < min)) {
       return math::normalize_angle(coordinate, min, circle_);
     }

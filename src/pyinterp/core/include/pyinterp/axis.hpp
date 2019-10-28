@@ -3,10 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/axis.hpp"
-#include "pyinterp/detail/math.hpp"
 #include <memory>
 #include <pybind11/numpy.h>
+#include "pyinterp/detail/axis.hpp"
+#include "pyinterp/detail/math.hpp"
 
 namespace pyinterp {
 
@@ -31,8 +31,8 @@ class Axis : public detail::Axis, public std::enable_shared_from_this<Axis> {
   ///
   /// @param slice Slice of indexes to read
   /// @return coordinate values
-  pybind11::array_t<double> coordinate_values(
-      const pybind11::slice& slice) const;
+  auto coordinate_values(const pybind11::slice& slice) const
+      -> pybind11::array_t<double>;
 
   /// Given a coordinate position, find what axis element contains it.
   ///
@@ -43,15 +43,15 @@ class Axis : public detail::Axis, public std::enable_shared_from_this<Axis> {
   ///   points on the axis or the value -1 if the *bounded* parameter is set
   ///   to false and the index looked for is located outside the limits of the
   ///   axis.
-  pybind11::array_t<int64_t> find_index(
-      const pybind11::array_t<double>& coordinates, bool bounded) const;
+  auto find_index(const pybind11::array_t<double>& coordinates,
+                  bool bounded) const -> pybind11::array_t<int64_t>;
 
   /// Get a tuple that fully encodes the state of this instance
-  pybind11::tuple getstate() const;
+  auto getstate() const -> pybind11::tuple;
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static Axis setstate(const pybind11::tuple& state);
+  static auto setstate(const pybind11::tuple& state) -> Axis;
 };
 
 }  // namespace pyinterp

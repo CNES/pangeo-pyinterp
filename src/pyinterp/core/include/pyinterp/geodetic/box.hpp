@@ -4,7 +4,6 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
 #include <Eigen/Core>
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geometry/box.hpp"
@@ -31,13 +30,13 @@ class Box2D : public boost::geometry::model::box<Point2D<T>> {
   /// covers all positions, whatever they may be.
   ///
   // @return a box that covers the entire Earth
-  static Box2D entire_earth() { return Box2D({-180, -90}, {180, 90}); }
+  static auto entire_earth() -> Box2D { return Box2D({-180, -90}, {180, 90}); }
 
   /// @brief Test if the given point is inside or on border of this instance
   ///
   /// @param pt Point to test
   //  @return True if the given point is inside or on border of this Box
-  bool covered_by(const Point2D<T>& pt) const {
+  auto covered_by(const Point2D<T>& pt) const -> bool {
     return boost::geometry::covered_by(pt, *this);
   }
 
@@ -48,10 +47,10 @@ class Box2D : public boost::geometry::model::box<Point2D<T>> {
   /// @param lat Latitude coordinates in degrees to check
   /// @return Returns a vector containing a flag equal to 1 if the coordinate is
   /// located in the box or at the edge otherwise 0.
-  [[nodiscard]] pybind11::array_t<int8_t> covered_by(
-      const Eigen::Ref<const Eigen::VectorXd>& lon,
-      const Eigen::Ref<const Eigen::VectorXd>& lat,
-      const size_t num_threads) const {
+  [[nodiscard]] auto covered_by(const Eigen::Ref<const Eigen::VectorXd>& lon,
+                                const Eigen::Ref<const Eigen::VectorXd>& lat,
+                                const size_t num_threads) const
+      -> pybind11::array_t<int8_t> {
     detail::check_eigen_shape("lon", lon, "lat", lat);
     auto size = lon.size();
     auto result =
@@ -87,21 +86,21 @@ class Box2D : public boost::geometry::model::box<Point2D<T>> {
 
   /// Converts a Box2D into a string with the same meaning as that of this
   /// instance.
-  [[nodiscard]] std::string to_string() const {
+  [[nodiscard]] auto to_string() const -> std::string {
     std::stringstream ss;
     ss << boost::geometry::dsv(*this);
     return ss.str();
   }
 
   /// Get a tuple that fully encodes the state of this instance
-  [[nodiscard]] pybind11::tuple getstate() const {
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple(this->min_corner().getstate(),
                                 this->max_corner().getstate());
   }
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static Box2D<T> setstate(const pybind11::tuple& state) {
+  static auto setstate(const pybind11::tuple& state) -> Box2D<T> {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
@@ -133,7 +132,7 @@ struct point_type<pg::Box2D<T>> {
 template <typename T, std::size_t Dimension>
 struct indexed_access<pg::Box2D<T>, min_corner, Dimension> {
   /// get corner of box
-  static inline double get(pg::Box2D<T> const& box) {
+  static inline auto get(pg::Box2D<T> const& box) -> double {
     return geometry::get<Dimension>(box.min_corner());
   }
 
@@ -147,7 +146,7 @@ struct indexed_access<pg::Box2D<T>, min_corner, Dimension> {
 template <typename T, std::size_t Dimension>
 struct indexed_access<pg::Box2D<T>, max_corner, Dimension> {
   /// get corner of box
-  static inline double get(pg::Box2D<T> const& box) {
+  static inline auto get(pg::Box2D<T> const& box) -> double {
     return geometry::get<Dimension>(box.max_corner());
   }
 

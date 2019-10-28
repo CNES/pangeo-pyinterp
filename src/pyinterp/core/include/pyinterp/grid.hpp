@@ -42,25 +42,31 @@ class Grid2D {
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  Grid2D& operator=(const Grid2D& rhs) = default;
+  auto operator=(const Grid2D& rhs) -> Grid2D& = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  Grid2D& operator=(Grid2D&& rhs) noexcept = default;
+  auto operator=(Grid2D&& rhs) noexcept -> Grid2D& = default;
 
   /// Gets the X-Axis
-  [[nodiscard]] inline std::shared_ptr<Axis> x() const noexcept { return x_; }
+  [[nodiscard]] inline auto x() const noexcept -> std::shared_ptr<Axis> {
+    return x_;
+  }
 
   /// Gets the Y-Axis
-  [[nodiscard]] inline std::shared_ptr<Axis> y() const noexcept { return y_; }
+  [[nodiscard]] inline auto y() const noexcept -> std::shared_ptr<Axis> {
+    return y_;
+  }
 
   /// Gets values of the array to interpolate
-  inline const pybind11::array_t<T>& array() const noexcept { return array_; }
+  inline auto array() const noexcept -> const pybind11::array_t<T>& {
+    return array_;
+  }
 
   /// Gets the grid value for the coordinate pixel (ix, iy, ...).
   template <typename... Index>
-  inline const T& value(Index&&... index) const noexcept {
+  inline auto value(Index&&... index) const noexcept -> const T& {
     return ptr_(std::forward<Index>(index)...);
   }
 
@@ -78,12 +84,12 @@ class Grid2D {
   }
 
   /// Pickle support: get state of this instance
-  [[nodiscard]] virtual pybind11::tuple getstate() const {
+  [[nodiscard]] virtual auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple(x_->getstate(), y_->getstate(), array_);
   }
 
   /// Pickle support: set state of this instance
-  static Grid2D setstate(const pybind11::tuple& tuple) {
+  static auto setstate(const pybind11::tuple& tuple) -> Grid2D {
     if (tuple.size() != 3) {
       throw std::runtime_error("invalid state");
     }
@@ -129,16 +135,18 @@ class Grid3D : public Grid2D<T, 3> {
   }
 
   /// Gets the Y-Axis
-  [[nodiscard]] inline std::shared_ptr<Axis> z() const noexcept { return z_; }
+  [[nodiscard]] inline auto z() const noexcept -> std::shared_ptr<Axis> {
+    return z_;
+  }
 
   /// Pickle support: get state of this instance
-  [[nodiscard]] pybind11::tuple getstate() const final {
+  [[nodiscard]] auto getstate() const -> pybind11::tuple final {
     return pybind11::make_tuple(this->x_->getstate(), this->y_->getstate(),
                                 z_->getstate(), this->array_);
   }
 
   /// Pickle support: set state of this instance
-  static Grid3D setstate(const pybind11::tuple& tuple) {
+  static auto setstate(const pybind11::tuple& tuple) -> Grid3D {
     if (tuple.size() != 4) {
       throw std::runtime_error("invalid state");
     }

@@ -3,15 +3,14 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <cctype>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include "pyinterp/bivariate.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/trivariate.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/grid.hpp"
-#include <cctype>
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
 namespace pyinterp {
 
@@ -24,12 +23,13 @@ using Bivariate3D = detail::math::Bivariate<Point, T>;
 /// @tparam Coordinate The type of data used by the interpolators.
 /// @tparam Type The type of data used by the numerical grid.
 template <template <class> class Point, typename Coordinate, typename Type>
-pybind11::array_t<Coordinate> trivariate(
-    const Grid3D<Type>& grid, const pybind11::array_t<Coordinate>& x,
-    const pybind11::array_t<Coordinate>& y,
-    const pybind11::array_t<Coordinate>& z,
-    const Bivariate3D<Point, Coordinate>* interpolator, const bool bounds_error,
-    const size_t num_threads) {
+auto trivariate(const Grid3D<Type>& grid,
+                const pybind11::array_t<Coordinate>& x,
+                const pybind11::array_t<Coordinate>& y,
+                const pybind11::array_t<Coordinate>& z,
+                const Bivariate3D<Point, Coordinate>* interpolator,
+                const bool bounds_error, const size_t num_threads)
+    -> pybind11::array_t<Coordinate> {
   pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
   pyinterp::detail::check_ndarray_shape("x", x, "y", y);
 

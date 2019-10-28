@@ -55,70 +55,83 @@ class XArray {
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  XArray &operator=(const XArray &rhs) = default;
+  auto operator=(const XArray &rhs) -> XArray & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  XArray &operator=(XArray &&rhs) noexcept = default;
+  auto operator=(XArray &&rhs) noexcept -> XArray & = default;
 
   /// Get the half size of the window in abscissa.
-  [[nodiscard]] inline size_t nx() const noexcept {
+  [[nodiscard]] inline auto nx() const noexcept -> size_t {
     return static_cast<size_t>(x_.size()) >> 1U;
   }
 
   /// Get the half size of the window in ordinate.
-  [[nodiscard]] inline size_t ny() const noexcept {
+  [[nodiscard]] inline auto ny() const noexcept -> size_t {
     return static_cast<size_t>(y_.size()) >> 1U;
   }
 
   /// Get x-coordinates
-  inline Eigen::VectorXd &x() noexcept { return x_; }
+  inline auto x() noexcept -> Eigen::VectorXd & { return x_; }
 
   /// Get x-coordinates
-  [[nodiscard]] inline const Eigen::VectorXd &x() const noexcept { return x_; }
+  [[nodiscard]] inline auto x() const noexcept -> const Eigen::VectorXd & {
+    return x_;
+  }
 
   /// Get y-coordinates
-  inline Eigen::VectorXd &y() noexcept { return y_; }
+  inline auto y() noexcept -> Eigen::VectorXd & { return y_; }
 
   /// Get y-coordinates
-  [[nodiscard]] inline const Eigen::VectorXd &y() const noexcept { return y_; }
+  [[nodiscard]] inline auto y() const noexcept -> const Eigen::VectorXd & {
+    return y_;
+  }
 
   /// Get the values from the array for all x and y coordinates.
-  inline Eigen::MatrixXd &q() noexcept { return q_; }
+  inline auto q() noexcept -> Eigen::MatrixXd & { return q_; }
 
   /// Get the values from the array for all x and y coordinates.
-  [[nodiscard]] inline const Eigen::MatrixXd &q() const noexcept { return q_; }
+  [[nodiscard]] inline auto q() const noexcept -> const Eigen::MatrixXd & {
+    return q_;
+  }
 
   /// Get the ith x-axis.
-  [[nodiscard]] inline double x(const size_t ix) const { return x_(ix); }
+  [[nodiscard]] inline auto x(const size_t ix) const -> double {
+    return x_(ix);
+  }
 
   /// Get the ith y-axis.
-  [[nodiscard]] inline double y(const size_t jx) const { return y_(jx); }
+  [[nodiscard]] inline auto y(const size_t jx) const -> double {
+    return y_(jx);
+  }
 
   /// Get the value at coordinate (ix, jx).
-  [[nodiscard]] inline double z(const size_t ix, const size_t jx) const {
+  [[nodiscard]] inline auto z(const size_t ix, const size_t jx) const
+      -> double {
     return q_(ix, jx);
   }
 
   /// Set the ith x-axis.
-  inline double &x(const size_t ix) { return x_(ix); }
+  inline auto x(const size_t ix) -> double & { return x_(ix); }
 
   /// Get the ith y-axis.
-  inline double &y(const size_t jx) { return y_(jx); }
+  inline auto y(const size_t jx) -> double & { return y_(jx); }
 
   /// Get the value at coordinate (ix, jx).
-  inline double &z(const size_t ix, const size_t jx) { return q_(ix, jx); }
+  inline auto z(const size_t ix, const size_t jx) -> double & {
+    return q_(ix, jx);
+  }
 
   /// Normalizes the angle with respect to the first value of the X axis of this
   /// array.
-  [[nodiscard]] inline double normalize_angle(const double xi) const {
+  [[nodiscard]] inline auto normalize_angle(const double xi) const -> double {
     return math::normalize_angle(xi, x(0), 360.0);
   }
 
   /// Returns true if this instance does not contains at least one Not A Number
   /// (NaN).
-  [[nodiscard]] inline bool is_valid() const { return !q_.hasNaN(); }
+  [[nodiscard]] inline auto is_valid() const -> bool { return !q_.hasNaN(); }
 
  private:
   Eigen::VectorXd x_{};
@@ -142,17 +155,18 @@ class Bicubic {
                       gsl::Accelerator()) {}
 
   /// Return the interpolated value of y for a given point x
-  double interpolate(const double x, const double y, const XArray &xr) {
+  auto interpolate(const double x, const double y, const XArray &xr) -> double {
     return evaluate(&gsl::Interpolate1D::interpolate, x, y, xr);
   }
 
   /// Return the derivative for a given point x
-  double derivative(const double x, const double y, const XArray &xr) {
+  auto derivative(const double x, const double y, const XArray &xr) -> double {
     return evaluate(&gsl::Interpolate1D::derivative, x, y, xr);
   }
 
   /// Return the second derivative for a given point x
-  double second_derivative(const double x, const double y, const XArray &xr) {
+  auto second_derivative(const double x, const double y, const XArray &xr)
+      -> double {
     return evaluate(&gsl::Interpolate1D::second_derivative, x, y, xr);
   }
 
@@ -166,11 +180,11 @@ class Bicubic {
   gsl::Interpolate1D interpolator_;
 
   /// Evaluation of the GSL function performing the calculation.
-  double evaluate(
+  auto evaluate(
       const std::function<double(gsl::Interpolate1D &, const Eigen::VectorXd &,
                                  const Eigen::VectorXd &, const double)>
           &function,
-      const double x, const double y, const XArray &xr) {
+      const double x, const double y, const XArray &xr) -> double {
     // Spline interpolation as function of Y-coordinate
     for (Eigen::Index ix = 0; ix < xr.x().size(); ++ix) {
       column_(ix) = function(interpolator_, xr.y(), xr.q().row(ix), y);

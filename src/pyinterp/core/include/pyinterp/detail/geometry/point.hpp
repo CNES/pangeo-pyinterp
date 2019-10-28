@@ -25,8 +25,8 @@ struct GetDimension {
   ///
   /// @param point Point handled.
   /// @param axis The axis of the point to be read.
-  static typename coordinate_t<Point>::type get(const Point &point,
-                                                size_t axis) {
+  static auto get(const Point &point, size_t axis) ->
+      typename coordinate_t<Point>::type {
     if (Axis == axis) {
       return boost::geometry::get<Axis>(point);
     }
@@ -55,8 +55,8 @@ struct GetDimension {
 template <typename Point, size_t Count>
 struct GetDimension<Point, Count, Count> {
   /// Get accessor
-  static typename coordinate_t<Point>::type get(const Point & /*point*/,
-                                                size_t /*axis*/) {
+  static auto get(const Point & /*point*/, size_t /*axis*/) ->
+      typename coordinate_t<Point>::type {
     return std::numeric_limits<typename coordinate_t<Point>::type>::max();
   }
 
@@ -68,7 +68,8 @@ struct GetDimension<Point, Count, Count> {
 
 /// Get a point value for a given axis
 template <typename Point>
-typename coordinate_t<Point>::type get(const Point &point, size_t axis) {
+auto get(const Point &point, size_t axis) ->
+    typename coordinate_t<Point>::type {
   return GetDimension<
       Point, 0, boost::geometry::dimension<Point>::type::value>::get(point,
                                                                      axis);

@@ -43,19 +43,19 @@ class RTree {
   RTree(const RTree &) = default;
 
   /// Default copy assignment operator
-  RTree &operator=(const RTree &) = default;
+  auto operator=(const RTree &) -> RTree & = default;
 
   /// Move constructor
   RTree(RTree &&) noexcept = default;
 
   /// Move assignment operator
-  RTree &operator=(RTree &&) noexcept = default;
+  auto operator=(RTree &&) noexcept -> RTree & = default;
 
   /// Returns the box able to contain all values stored in the container.
   ///
   /// @returns The box able to contain all values stored in the container or an
   /// invalid box if there are no values in the container.
-  virtual std::optional<geometry::BoxND<Coordinate, N>> bounds() const {
+  virtual auto bounds() const -> std::optional<geometry::BoxND<Coordinate, N>> {
     if (empty()) {
       return {};
     }
@@ -65,12 +65,12 @@ class RTree {
   /// Returns the number of points of this mesh
   ///
   /// @return the number of points
-  [[nodiscard]] inline size_t size() const { return tree_->size(); }
+  [[nodiscard]] inline auto size() const -> size_t { return tree_->size(); }
 
   /// Query if the container is empty.
   ///
   /// @return true if the container is empty.
-  [[nodiscard]] inline bool empty() const { return tree_->empty(); }
+  [[nodiscard]] inline auto empty() const -> bool { return tree_->empty(); }
 
   /// Removes all values stored in the container.
   inline void clear() { tree_->clear(); }
@@ -91,8 +91,8 @@ class RTree {
   /// @param point Point of interest
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors
-  std::vector<result_t> query(const geometry::PointND<Coordinate, N> &point,
-                              const uint32_t k) const {
+  auto query(const geometry::PointND<Coordinate, N> &point,
+             const uint32_t k) const -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     std::for_each(
         tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
@@ -108,9 +108,8 @@ class RTree {
   /// @param point Point of interest
   /// @param radius distance within which neighbors are returned
   /// @return the k nearest neighbors
-  std::vector<result_t> query_ball(
-      const geometry::PointND<Coordinate, N> &point,
-      const double radius) const {
+  auto query_ball(const geometry::PointND<Coordinate, N> &point,
+                  const double radius) const -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     std::for_each(
         tree_->qbegin(boost::geometry::index::satisfies([&](const auto &item) {
@@ -129,8 +128,8 @@ class RTree {
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors if the point is within by its
   /// neighbors.
-  std::vector<result_t> query_within(
-      const geometry::PointND<Coordinate, N> &point, const uint32_t k) const {
+  auto query_within(const geometry::PointND<Coordinate, N> &point,
+                    const uint32_t k) const -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     auto points =
         boost::geometry::model::multi_point<geometry::PointND<Coordinate, N>>();

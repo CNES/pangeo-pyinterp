@@ -32,10 +32,9 @@ enum FittingModel {
 ///
 /// @tparam Type The type of data used by the numerical grid.
 template <typename Type>
-pybind11::array_t<double> bicubic(const Grid2D<Type>& grid,
-                                  const pybind11::array_t<double>& x,
-                                  const pybind11::array_t<double>& y, size_t nx,
-                                  size_t ny, FittingModel fitting_model,
-                                  Axis::Boundary boundary, bool bounds_error,
-                                  size_t num_threads);
+auto bicubic(const Grid2D<Type>& grid, const pybind11::array_t<double>& x,
+             const pybind11::array_t<double>& y, size_t nx, size_t ny,
+             FittingModel fitting_model, Axis::Boundary boundary,
+             bool bounds_error, size_t num_threads)
+    -> pybind11::array_t<double>;
 }  // namespace pyinterp

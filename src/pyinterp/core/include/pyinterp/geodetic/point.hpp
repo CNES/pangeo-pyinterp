@@ -20,10 +20,10 @@ class Point2D : public detail::geometry::EquatorialPoint2D<T> {
       : detail::geometry::EquatorialPoint2D<T>(lon, lat) {}
 
   /// Get longitude value in degrees
-  inline T const& lon() const { return this->template get<0>(); }
+  inline auto lon() const -> T const& { return this->template get<0>(); }
 
   /// Get latitude value in degrees
-  inline T const& lat() const { return this->template get<1>(); }
+  inline auto lat() const -> T const& { return this->template get<1>(); }
 
   /// Set longitude value in degrees
   inline void lon(T const& v) { this->template set<0>(v); }
@@ -32,13 +32,13 @@ class Point2D : public detail::geometry::EquatorialPoint2D<T> {
   inline void lat(T const& v) { this->template set<1>(v); }
 
   /// Get a tuple that fully encodes the state of this instance
-  [[nodiscard]] pybind11::tuple getstate() const {
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple(lon(), lat());
   }
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static Point2D<T> setstate(const pybind11::tuple& state) {
+  static auto setstate(const pybind11::tuple& state) -> Point2D<T> {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
@@ -47,7 +47,7 @@ class Point2D : public detail::geometry::EquatorialPoint2D<T> {
 
   /// Converts a Point2D into a string with the same meaning as that of this
   /// instance.
-  [[nodiscard]] std::string to_string() const {
+  [[nodiscard]] auto to_string() const -> std::string {
     std::stringstream ss;
     ss << boost::geometry::dsv(*this);
     return ss.str();
@@ -90,7 +90,9 @@ struct dimension<pg::Point2D<T> > : boost::mpl::int_<2> {};
 template <typename T, std::size_t I>
 struct access<pg::Point2D<T>, I> {
   /// Accessor to pointer.
-  static double get(pg::Point2D<T> const& p) { return p.template get<I>(); }
+  static auto get(pg::Point2D<T> const& p) -> double {
+    return p.template get<I>();
+  }
 
   /// Pointer setter.
   static void set(pg::Point2D<T>& p, double const& v) {  // NOLINT
