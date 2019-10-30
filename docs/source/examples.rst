@@ -194,9 +194,9 @@ axis which is handled by this object.
     # The coordinates used for interpolation are shifted to avoid using the
     # points of the bivariate function.
     mx, my, mz = np.meshgrid(np.arange(-180, 180, 1) + 1 / 3.0,
-                            np.arange(-89, 89, 1) + 1 / 3.0,
-                            898500 + 3,
-                            indexing='ij')
+                             np.arange(-89, 89, 1) + 1 / 3.0,
+                             898500 + 3,
+                             indexing='ij')
     tcw = pyinterp.trivariate(
         grid, mx.flatten(), my.flatten(), mz.flatten()).reshape(mx.shape)
 
@@ -214,10 +214,10 @@ xarray:
     # manipulated in the same unit as the one manipulated by the class. The
     # "time_unit" method is used to obtain this information.
     mx, my, mz = np.meshgrid(np.arange(-180, 180, 1) + 1 / 3.0,
-                            np.arange(-89, 89, 1) + 1 / 3.0,
-                            np.array([datetime.datetime(2002, 7, 2, 15, 0)],
-                                    dtype=interpolator.time_unit()),
-                            indexing='ij')
+                             np.arange(-89, 89, 1) + 1 / 3.0,
+                             np.array([datetime.datetime(2002, 7, 2, 15, 0)],
+                                      dtype=interpolator.time_unit()),
+                             indexing='ij')
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
@@ -358,8 +358,8 @@ AVISO/CMEMS. We start by retrieving the data:
 .. code:: python
 
     cat = intake.Catalog("https://raw.githubusercontent.com/pangeo-data"
-                        "/pangeo-datastore/master/intake-catalogs/"
-                        "ocean.yaml")
+                         "/pangeo-datastore/master/intake-catalogs/"
+                         "ocean.yaml")
     ds = cat["sea_surface_height"].to_dask()
 
 To manage the time series retrieved, we create the following object:
