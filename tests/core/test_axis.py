@@ -47,8 +47,8 @@ class TextAxis(unittest.TestCase):
         self.assertEqual(a.back(), 359)
         self.assertTrue(
             np.all(
-                a.find_index(np.arange(0, 359, 360) +
-                             0.01) == np.arange(0, 359, 360)))
+                a.find_index(np.arange(0, 359, 1) +
+                             0.01) == np.arange(0, 359, 1)))
         self.assertTrue(a.is_regular())
         self.assertEqual(a.min_value(), 0)
         self.assertEqual(a.max_value(), 359)
