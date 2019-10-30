@@ -298,19 +298,23 @@ auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
 
   auto worker = [&](const size_t start, const size_t end) {
     try {
-      for (size_t ix = start; ix < end; ++ix) {
-        auto x = (*grid.x())(ix);
+      // Access to the shared pointer outside the loop to avoid data races
+      const auto& x_axis = *grid.x();
+      const auto& y_axis = *grid.y();
 
-        for (int64_t iy = 0; iy < grid.y()->size(); ++iy) {
+      for (size_t ix = start; ix < end; ++ix) {
+        auto x = x_axis(ix);
+
+        for (int64_t iy = 0; iy < y_axis.size(); ++iy) {
           auto z = grid.value(ix, iy);
 
           // If the current value is masked.
           if (std::isnan(z)) {
-            auto y = (*grid.y())(iy);
+            auto y = y_axis(iy);
 
             // Reading the coordinates of the window around the masked point.
-            auto x_frame = grid.x()->find_indexes(x, nx, Axis::kSym);
-            auto y_frame = grid.y()->find_indexes(y, ny, Axis::kSym);
+            auto x_frame = x_axis.find_indexes(x, nx, Axis::kSym);
+            auto y_frame = y_axis.find_indexes(y, ny, Axis::kSym);
 
             // Initialization of values to calculate the extrapolated value.
             auto value = Type(0);
@@ -326,8 +330,8 @@ auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
                 if (!std::isnan(zi)) {
                   const auto power = 3.0;
                   auto d =
-                      std::sqrt(detail::math::sqr((((*grid.x())(wx)-x)) / nx) +
-                                detail::math::sqr((((*grid.y())(wy)-y)) / ny));
+                      std::sqrt(detail::math::sqr(((x_axis(wx) - x)) / nx) +
+                                detail::math::sqr(((y_axis(wy) - y)) / ny));
                   auto wi = d <= 1 ? std::pow((1.0 - std::pow(d, power)), power)
                                    : 0.0;
                   value += static_cast<Type>(wi * zi);
