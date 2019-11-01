@@ -210,6 +210,9 @@ Check if this axis values are spaced regularly
 Return:
   bool: True if this axis values are spaced regularly
 )__doc__")
+      .def("flip", &pyinterp::Axis::flip, R"__doc__(
+Reverse the order of elements in this axis
+)__doc__")
       .def(
           "find_index",
           [](const pyinterp::Axis& self, const py::array_t<double>& coordinates,

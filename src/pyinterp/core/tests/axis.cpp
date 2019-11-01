@@ -134,7 +134,41 @@ TEST(axis, wrap_longitude) {
   EXPECT_EQ(std::get<1>(*indexes), 351);
   EXPECT_EQ(static_cast<std::string>(a1),
             "Axis([0, 1, 2, ..., 358, 359], is_circle=true, is_radian=false)");
-
+  a1.flip();
+  EXPECT_EQ(a1.front(), 359);
+  EXPECT_EQ(a1.increment(), -1);
+  EXPECT_TRUE(a1.is_circle());
+  EXPECT_TRUE(a1.is_regular());
+  EXPECT_FALSE(a1.is_ascending());
+  EXPECT_EQ(a1.front(), 359);
+  EXPECT_EQ(a1.back(), 0);
+  EXPECT_EQ(a1.min_value(), 0);
+  EXPECT_EQ(a1.max_value(), 359);
+  EXPECT_EQ(a1.size(), 360);
+  EXPECT_EQ(a1.coordinate_value(0), 359);
+  EXPECT_EQ(a1.coordinate_value(180), 179);
+  EXPECT_THROW(value = a1.coordinate_value(520), std::exception);
+  i1 = a1.find_index(0, false);
+  EXPECT_EQ(i1, 359);
+  i1 = a1.find_index(359, true);
+  EXPECT_EQ(i1, 0);
+  i1 = a1.find_index(359, false);
+  EXPECT_EQ(i1, 0);
+  indexes = a1.find_indexes(359.5);
+  ASSERT_TRUE(indexes);
+  EXPECT_EQ(std::get<0>(*indexes), 359);
+  EXPECT_EQ(std::get<1>(*indexes), 0);
+  indexes = a1.find_indexes(370);
+  ASSERT_TRUE(indexes);
+  EXPECT_EQ(std::get<0>(*indexes), 349);
+  EXPECT_EQ(std::get<1>(*indexes), 350);
+  indexes = a1.find_indexes(-9.5);
+  ASSERT_TRUE(indexes);
+  EXPECT_EQ(std::get<0>(*indexes), 9);
+  EXPECT_EQ(std::get<1>(*indexes), 8);
+  EXPECT_EQ(
+      static_cast<std::string>(a1),
+      "Axis([359, 358, 357, ..., 1, 0], is_circle=true, is_radian=false)");
   detail::Axis a2(-180, 179, 360, 1e-6, true, false);
   EXPECT_EQ(a2.front(), -180);
   EXPECT_EQ(a2.increment(), 1);
@@ -172,6 +206,24 @@ TEST(axis, wrap_longitude) {
   EXPECT_EQ(a2.coordinate_value(0), 180);
   EXPECT_EQ(a2.coordinate_value(180), 0);
   EXPECT_NE(a1, a2);
+
+  a2.flip();
+  EXPECT_EQ(a2.front(), -179);
+  EXPECT_EQ(a2.increment(), 1);
+  EXPECT_TRUE(a2.is_circle());
+  EXPECT_TRUE(a2.is_regular());
+  EXPECT_TRUE(a2.is_ascending());
+  indexes = a2.find_indexes(370.2);
+  ASSERT_TRUE(indexes);
+  EXPECT_TRUE(a2(std::get<0>(*indexes)) <= a2.normalize_coordinate(370.2) &&
+              a2.normalize_coordinate(370.2) <= a2(std::get<1>(*indexes)));
+  EXPECT_EQ(a2.coordinate_value(190), 11);
+  EXPECT_EQ(a2.min_value(), -179);
+  EXPECT_EQ(a2.max_value(), 180);
+  EXPECT_EQ(a2.front(), -179);
+  EXPECT_EQ(a2.back(), 180);
+  EXPECT_EQ(a2.coordinate_value(0), -179);
+  EXPECT_EQ(a2.coordinate_value(180), 1);
 }
 
 TEST(axis, radians) {
@@ -371,9 +423,7 @@ TEST(axis, irregular) {
   EXPECT_EQ(std::get<0>(*indexes), 69);
   EXPECT_EQ(std::get<1>(*indexes), 70);
 
-  std::reverse(values.begin(), values.end());
-  axis = detail::Axis(Eigen::Map<Eigen::VectorXd>(values.data(), values.size()),
-                      1e-6, false, false);
+  axis.flip();
   EXPECT_EQ(axis.front(), 88.940374);
   EXPECT_THROW(inc = axis.increment(), std::logic_error);
   EXPECT_FALSE(axis.is_circle());

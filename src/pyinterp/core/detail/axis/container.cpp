@@ -26,6 +26,12 @@ Irregular::Irregular(Eigen::VectorXd points) : points_(std::move(points)) {
   make_edges();
 }
 
+auto Irregular::flip() -> void {
+  std::reverse(points_.data(), points_.data() + points_.size());
+  is_ascending_ = !is_ascending_;
+  make_edges();
+}
+
 auto Irregular::find_index(double coordinate, bool bounded) const -> int64_t {
   int64_t low = 0;
   int64_t mid = 0;

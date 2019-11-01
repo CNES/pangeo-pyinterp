@@ -152,6 +152,9 @@ class Axis {
     return axis_->is_ascending();
   }
 
+  /// Reverse the order of elements in this axis
+  auto flip() -> void { axis_->flip(); }
+
   /// Get increment value if is_regular()
   ///
   /// @return increment value if is_regular()

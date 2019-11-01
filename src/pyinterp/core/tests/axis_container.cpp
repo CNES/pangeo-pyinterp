@@ -10,6 +10,7 @@ namespace container = pyinterp::detail::axis::container;
 TEST(axis_container, undefined) {
   // undefined axis
   auto a1 = container::Undefined();
+  a1.flip();
   EXPECT_TRUE(std::isnan(a1.front()));
   EXPECT_TRUE(std::isnan(a1.back()));
   EXPECT_TRUE(std::isnan(a1.min_value()));
@@ -37,6 +38,19 @@ TEST(axis_container, irregular) {
   EXPECT_EQ(a1.find_index(30, false), -1);
   EXPECT_EQ(a1.size(), 5);
   EXPECT_EQ(a1, a1);
+  a1.flip();
+  EXPECT_EQ(a1.front(), 20);
+  EXPECT_EQ(a1.back(), 0);
+  EXPECT_EQ(a1.min_value(), 0);
+  EXPECT_EQ(a1.max_value(), 20);
+  EXPECT_EQ(a1.coordinate_value(2), 4);
+  EXPECT_EQ(a1.find_index(8, false), 1);
+  EXPECT_EQ(a1.find_index(8.3, false), 1);
+  EXPECT_EQ(a1.find_index(30, true), 0);
+  EXPECT_EQ(a1.find_index(20.1, true), 0);
+  EXPECT_EQ(a1.find_index(30, false), -1);
+  EXPECT_EQ(a1.size(), 5);
+  EXPECT_EQ(a1, a1);
   values = std::vector<double>{0, 1};
   auto a2 = container::Irregular(
       Eigen::Map<Eigen::VectorXd>(values.data(), values.size()));
@@ -56,6 +70,17 @@ TEST(axis_container, regular) {
   EXPECT_EQ(a1.find_index(180, false), 180);
   EXPECT_EQ(a1.find_index(360, false), -1);
   EXPECT_EQ(a1.find_index(360, true), 359);
+  EXPECT_EQ(a1.size(), 360);
+  EXPECT_EQ(a1, a1);
+  a1.flip();
+  EXPECT_EQ(a1.front(), 359);
+  EXPECT_EQ(a1.back(), 0);
+  EXPECT_EQ(a1.min_value(), 0);
+  EXPECT_EQ(a1.max_value(), 359);
+  EXPECT_EQ(a1.coordinate_value(2), 357);
+  EXPECT_EQ(a1.find_index(180, false), 179);
+  EXPECT_EQ(a1.find_index(360, false), -1);
+  EXPECT_EQ(a1.find_index(360, true), 0);
   EXPECT_EQ(a1.size(), 360);
   EXPECT_EQ(a1, a1);
   auto a2 = container::Regular(-180, 179, 360);

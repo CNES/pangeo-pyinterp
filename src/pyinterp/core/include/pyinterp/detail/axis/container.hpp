@@ -45,6 +45,9 @@ class Abstract {
     return is_ascending_;
   }
 
+  /// Reverse the order of elements in this axis
+  virtual auto flip() -> void = 0;
+
   /// Checks thats axis is monotonic
   [[nodiscard]] virtual auto is_monotonic() const -> bool { return true; }
 
@@ -136,8 +139,11 @@ class Undefined : public Abstract {
   /// @param rhs right value
   auto operator=(Undefined&& rhs) -> Undefined& = default;
 
-  /// @copydoc Abstract::coordinate_value(const size_t) const
-  [[nodiscard]] inline auto coordinate_value(const size_t /* index */) const
+  /// @copydoc Abstract::flip()
+  auto flip() -> void override{}
+
+      /// @copydoc Abstract::coordinate_value(const size_t) const
+      [[nodiscard]] inline auto coordinate_value(const size_t /* index */) const
       noexcept -> double override {
     return std::numeric_limits<double>::quiet_NaN();
   }
@@ -210,6 +216,9 @@ class Irregular : public Abstract {
   ///
   /// @param rhs right value
   auto operator=(Irregular&& rhs) -> Irregular& = default;
+
+  /// @copydoc Abstract::flip()
+  auto flip() -> void override;
 
   /// @copydoc Abstract::is_monotonic() const
   [[nodiscard]] inline auto is_monotonic() const noexcept -> bool override {
@@ -320,6 +329,14 @@ class Regular : public Abstract {
   ///
   /// @return increment value
   [[nodiscard]] auto step() const -> double { return step_; }
+
+  /// @copydoc Abstract::flip()
+  auto flip() -> void override {
+    start_ = back();
+    step_ = -step_;
+    inv_step_ = -inv_step_;
+    is_ascending_ = !is_ascending_;
+  }
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
   [[nodiscard]] inline auto coordinate_value(const size_t index) const noexcept
