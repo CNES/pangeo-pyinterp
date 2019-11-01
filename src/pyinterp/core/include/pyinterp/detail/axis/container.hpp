@@ -142,8 +142,8 @@ class Undefined : public Abstract {
   /// @copydoc Abstract::flip()
   auto flip() -> void override{}
 
-      /// @copydoc Abstract::coordinate_value(const size_t) const
-      [[nodiscard]] inline auto coordinate_value(const size_t /* index */) const
+  /// @copydoc Abstract::coordinate_value(const size_t) const
+  [[nodiscard]] inline auto coordinate_value(const size_t /* index */) const
       noexcept -> double override {
     return std::numeric_limits<double>::quiet_NaN();
   }
