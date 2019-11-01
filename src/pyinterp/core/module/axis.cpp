@@ -202,16 +202,36 @@ Return:
     float: The maximum coordinate value.
 )__doc__")
       .def(
-          "is_regular",
-          [](const pyinterp::Axis& self) -> bool { return self.is_regular(); },
-          R"__doc__(
+           "is_regular",
+           [](const pyinterp::Axis& self) -> bool { return self.is_regular(); },
+           R"__doc__(
 Check if this axis values are spaced regularly
 
 Return:
   bool: True if this axis values are spaced regularly
 )__doc__")
-      .def("flip", &pyinterp::Axis::flip, R"__doc__(
+      .def("flip",
+           [](std::shared_ptr<pyinterp::Axis>& self,
+              const bool inplace) -> std::shared_ptr<pyinterp::Axis> {
+             if (inplace) {
+               self->flip();
+               return self;
+             }
+             auto result = std::make_shared<pyinterp::Axis>(*self);
+             result->flip();
+             return result;
+           },
+           py::arg("inplace") = false,
+           R"__doc__(
 Reverse the order of elements in this axis
+
+Args:
+    inplace (bool, optional): If true, this instance will be modified,
+        otherwise the modification will be made on a copy. Default to
+        ``False``.
+
+Return:
+    pyinterp.core.Axis: The flipped axis
 )__doc__")
       .def(
           "find_index",

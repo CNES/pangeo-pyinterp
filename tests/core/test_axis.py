@@ -55,7 +55,8 @@ class TextAxis(unittest.TestCase):
         self.assertEqual(a[0], 0)
         self.assertTrue(np.all(a[:] == np.arange(0, 360)))
         self.assertEqual(len(a), 360)
-        a.flip()
+        b = a.flip(inplace=True)
+        self.assertEqual(id(a), id(b))
         self.assertEqual(a.increment(), -1)
         self.assertFalse(a.is_ascending())
         self.assertEqual(a.front(), 359)
@@ -70,6 +71,10 @@ class TextAxis(unittest.TestCase):
         self.assertEqual(a[0], 359)
         self.assertTrue(np.all(a[:] == np.arange(359, -1, -1)))
         self.assertEqual(len(a), 360)
+
+        b = a.flip(inplace=False)
+        self.assertNotEqual(id(a), id(b))
+        self.assertEqual(b, a.flip(inplace=True))
 
     def test_pickle(self):
         a = core.Axis(0, 359, 360, is_circle=False, is_radian=False)
