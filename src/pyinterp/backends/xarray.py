@@ -152,13 +152,19 @@ class Grid2D(grid.Grid2D):
 
     Args:
         data_array (xarray.DataArray): Provided data
+        increasing_axes (bool, optional): If this is true, check that the grid
+            axes are increasing: the decreasing axes and the supplied grid will
+            be flipped. Default to ``False``.
     """
-    def __init__(self, data_array: xr.DataArray):
+    def __init__(self,
+                 data_array: xr.DataArray,
+                 increasing_axes: Optional[bool] = False):
         self._dims = _lon_lat_from_data_array(data_array)
         super(Grid2D, self).__init__(
             core.Axis(data_array.coords[self._dims[0]].values, is_circle=True),
             core.Axis(data_array.coords[self._dims[1]].values),
-            data_array.transpose(*self._dims).values)
+            data_array.transpose(*self._dims).values,
+            increasing_axes='inplace' if increasing_axes else None)
 
     def bivariate(self, coords: dict, *args, **kwargs):
         """Evaluate the interpolation defined for the given coordinates
@@ -204,8 +210,13 @@ class Grid3D(grid.Grid3D):
 
     Args:
         data_array (xarray.DataArray): Provided data array
+        increasing_axes (bool, optional): If this is true, check that the grid
+            axes are increasing: the decreasing axes and the supplied grid will
+            be flipped. Default to ``False``.
     """
-    def __init__(self, data_array: xr.DataArray):
+    def __init__(self,
+                 data_array: xr.DataArray,
+                 increasing_axes: Optional[bool] = False):
         x, y = _lon_lat_from_data_array(data_array, ndims=3)
         z = (set(data_array.dims) - {x, y}).pop()
         self._dims = (x, y, z)
@@ -219,7 +230,8 @@ class Grid3D(grid.Grid3D):
             core.Axis(data_array.coords[y].values),
             core.Axis(data_array.coords[z].astype("float64") if self.
                       _datetime64 else data_array.coords[z].values),
-            data_array.transpose(x, y, z).values)
+            data_array.transpose(x, y, z).values,
+            increasing_axes='inplace' if increasing_axes else None)
 
     def time_unit(self) -> Optional[np.dtype]:
         """Gets the time units handled by this instance

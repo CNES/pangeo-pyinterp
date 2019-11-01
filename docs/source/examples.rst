@@ -61,7 +61,7 @@ We will then build the coordinates on which we want to interpolate our grid:
                          np.arange(-89, 89, 1) + 1 / 3.0,
                          indexing='ij')
 
-The grid is :py:meth:`interpolated <pyinterp.bivariate.bivariate>` to
+The grid is :py:meth:`interpolated <pyinterp.interpolator.bivariate>` to
 the desired coordinates:
 
 .. code:: python
@@ -104,7 +104,7 @@ by `GSL <https://www.gnu.org/software/gsl/>`_.
     behavior, it is necessary to :ref:`pre-process <fill_values>` the grid to
     delete undefined values.
 
-The interpolation :py:meth:`pyinterp.bicubic.bicubic` function has more
+The interpolation :py:meth:`pyinterp.interpolator.bicubic` function has more
 parameters in order to define the data frame used by the spline functions and
 how to process the edges of the regional grids:
 
@@ -113,6 +113,17 @@ how to process the edges of the regional grids:
     mss = pyinterp.bicubic(
         grid, mx.flatten(), my.flatten(), nx=3, ny=3).reshape(mx.shape)
 
+.. warning::
+
+    The grid provided must have strictly increasing axes in order to meet the
+    specifications of the GSL library. When building the grid, specify the
+    ``increasing_axes`` option to automatically flip the decreasing axes and the
+    grid. For example:
+
+    .. code:: python
+
+        interpolator = pyinterp.backends.xarray.Grid2D(
+            ds.data_vars["mss"], increasing_axes=True)
 
 It is also possible to simplify the interpolation of the dataset by using
 xarray:

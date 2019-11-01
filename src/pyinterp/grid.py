@@ -6,6 +6,7 @@
 Regular grids
 =============
 """
+from typing import Optional
 import numpy as np
 from . import core
 from . import interface
@@ -19,12 +20,27 @@ class Grid2D:
         y (pyinterp.core.Axis): Y-Axis
         array (numpy.ndarray): Discrete representation of a continuous
             function on a uniform 2-dimensional grid.
+        increasing_axes ({'inplace', 'copy'}, optional): Optional string
+            indicating how to ensure that the grid axes are increasing. If axes
+            are decreasing, the axes and grid provided will be flipped in place
+            or copied before being flipped. By default, the decreasing axes are
+            not modified.
     """
     _DIMENSIONS = 2
 
-    def __init__(self, *args):
+    def __init__(self, *args, increasing_axes: Optional[str] = None):
         _class = f"Grid{self._DIMENSIONS}D" + interface._core_class_suffix(
             args[-1])
+        if increasing_axes:
+            if increasing_axes not in ['inplace', 'copy']:
+                raise ValueError("increasing_axes model "
+                                 f"{increasing_axes!r} is not defined")
+            inplace = increasing_axes == 'inplace'
+            args = list(args)
+            for idx, item in enumerate(args):
+                if isinstance(item, core.Axis) and not item.is_ascending():
+                    args[idx] = item.flip(inplace=inplace)
+                    args[-1] = np.flip(args[-1], axis=idx)
         self._instance = getattr(core, _class)(*args)
 
     def __repr__(self):
@@ -80,6 +96,9 @@ class Grid3D(Grid2D):
         z (pyinterp.core.Axis): Z-Axis
         array (numpy.ndarray): Discrete representation of a continuous
             function on a uniform 3-dimensional grid.
+        increasing_axes (bool, optional): Ensure that the axes of the grid are
+            increasing. If this is not the case, the axes and grid provided
+            will be flipped. Default to False.
     """
     _DIMENSIONS = 3
 

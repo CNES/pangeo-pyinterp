@@ -71,7 +71,8 @@ class Trivariate(unittest.TestCase):
                         "tcw.nc")
 
     def test(self):
-        grid = pyinterp.backends.xarray.Grid3D(xr.load_dataset(self.GRID).tcw)
+        grid = pyinterp.backends.xarray.Grid3D(xr.load_dataset(self.GRID).tcw,
+                                               increasing_axes=True)
 
         self.assertIsInstance(grid, pyinterp.backends.xarray.Grid3D)
         self.assertIsInstance(grid, pyinterp.Grid3D)
