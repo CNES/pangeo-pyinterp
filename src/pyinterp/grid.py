@@ -31,9 +31,9 @@ class Grid2D:
     def __init__(self, *args, increasing_axes: Optional[str] = None):
         _class = f"Grid{self._DIMENSIONS}D" + interface._core_class_suffix(
             args[-1])
-        if increasing_axes:
+        if increasing_axes is not None:
             if increasing_axes not in ['inplace', 'copy']:
-                raise ValueError("increasing_axes model "
+                raise ValueError("increasing_axes "
                                  f"{increasing_axes!r} is not defined")
             inplace = increasing_axes == 'inplace'
             args = list(args)
