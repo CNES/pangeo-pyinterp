@@ -30,6 +30,12 @@ def bicubic(grid2d: grid.Grid2D,
     Args:
         grid2d (pyinterp.grid.Grid2D): Function on a uniform 2-dimensional
             grid to be interpolated.
+
+            .. warning::
+
+                The GSL functions for calculating spline functions require
+                that the axes defined in the grids are strictly increasing.
+
         x (numpy.ndarray): X-values
         y (numpy.ndarray): Y-values
         nx (int, optional): The number of X coordinate values required to
@@ -62,6 +68,10 @@ def bicubic(grid2d: grid.Grid2D,
     Return:
         numpy.ndarray: Values interpolated
     """
+    if not grid2d.x.is_ascending():
+        raise ValueError('X-axis is not increasing')
+    if not grid2d.y.is_ascending():
+        raise ValueError('Y-axis is not increasing')
     if fitting_model not in [
             'c_spline', 'c_spline_periodic', 'akima', 'akima_periodic',
             'steffen'
