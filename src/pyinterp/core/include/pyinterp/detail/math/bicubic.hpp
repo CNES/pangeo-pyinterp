@@ -204,7 +204,7 @@ class XArrayStack : public CoordsXY {
     z_.resize(nz);
     q_.resize(nz);
 
-    for (Eigen::Index iz = 0; iz < nz; ++iz) {
+    for (auto iz = 0U; iz < nz; ++iz) {
       q_(iz) = std::shared_ptr<Eigen::MatrixXd>(
           new Eigen::MatrixXd(x()->size(), y()->size()));
     }
