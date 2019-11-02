@@ -3,14 +3,15 @@ Changelog
 
 0.0.7 (X Y 2019)
 -------------------------
-* Adding binned bivariate statistics
+* Addition of binned bivariate statistics.
+* Addition of bicubic interpolation in 3D space.
 
 0.0.6 (4 October 2019)
 -------------------------
 * Improvement of axis performance.
 * Fixed a performance problem with bilinear, bicubic and trivariate
   interpolations.
-* Handling of time axes in the xarray backend
+* Handling of time axes in the xarray backend.
 * Access to main objects from the main module.
 
 0.0.5 (19 September 2019)
