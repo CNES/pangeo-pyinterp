@@ -6,16 +6,17 @@
 Bicubic interpolation
 =====================
 """
-from typing import Optional
+from typing import Optional, Union
 import numpy as np
 from .. import core
 from .. import grid
 from .. import interface
 
 
-def bicubic(grid2d: grid.Grid2D,
+def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D],
             x: np.ndarray,
             y: np.ndarray,
+            z: Optional[np.ndarray] = None,
             nx: Optional[int] = 3,
             ny: Optional[int] = 3,
             fitting_model: Optional[str] = "c_spline",
@@ -28,8 +29,11 @@ def bicubic(grid2d: grid.Grid2D,
     nearest-neighbor interpolation.
 
     Args:
-        grid2d (pyinterp.grid.Grid2D): Function on a uniform 2-dimensional
-            grid to be interpolated.
+        mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D): Function on a
+            uniform grid to be interpolated. If the grid is a 3D grid, the
+            cubic interpolation is performed spatially along the X and Y axes
+            of the 3D grid and a linear interpolation is performed along the Z
+            axis between the two values obtained by the bicubic interpolation.
 
             .. warning::
 
@@ -38,6 +42,7 @@ def bicubic(grid2d: grid.Grid2D,
 
         x (numpy.ndarray): X-values
         y (numpy.ndarray): Y-values
+        z (numpy.ndarray, optional): None for a 2D Grid otherwise Z-values
         nx (int, optional): The number of X coordinate values required to
             perform the interpolation. Defaults to ``3``.
         ny (int, optional): The number of Y coordinate values required to
@@ -68,9 +73,9 @@ def bicubic(grid2d: grid.Grid2D,
     Return:
         numpy.ndarray: Values interpolated
     """
-    if not grid2d.x.is_ascending():
+    if not mesh.x.is_ascending():
         raise ValueError('X-axis is not increasing')
-    if not grid2d.y.is_ascending():
+    if not mesh.y.is_ascending():
         raise ValueError('Y-axis is not increasing')
     if fitting_model not in [
             'c_spline', 'c_spline_periodic', 'akima', 'akima_periodic',
@@ -86,10 +91,17 @@ def bicubic(grid2d: grid.Grid2D,
 
     boundary = boundary.capitalize()
 
-    instance = grid2d._instance
+    instance = mesh._instance
     function = f"bicubic_{interface._core_function_suffix(instance)}"
-    return getattr(core,
-                   function)(instance, np.asarray(x), np.asarray(y), nx, ny,
-                             getattr(core.FittingModel, fitting_model),
-                             getattr(core.Axis.Boundary, boundary),
-                             bounds_error, num_threads)
+    args = [
+        instance,
+        np.asarray(x),
+        np.asarray(y), nx, ny,
+        getattr(core.FittingModel, fitting_model),
+        getattr(core.Axis.Boundary, boundary), bounds_error, num_threads
+    ]
+    if isinstance(mesh, grid.Grid3D):
+        if z is None:
+            raise ValueError("You must specify the Z-values for a 3D grid.")
+        args.insert(3, np.asarray(z))
+    return getattr(core, function)(*args)

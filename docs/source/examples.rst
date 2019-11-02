@@ -174,7 +174,7 @@ obtain the mean per bin.
 Trivariate
 ##########
 
-The :py:class:`trivariate <pyinterp.trivariate.Trivariate>` interpolation
+The :py:func:`trivariate <pyinterp.interpolator.trivariate>` interpolation
 allows to obtain values at arbitrary points in a 3D space of a function defined
 on a grid.
 
@@ -182,11 +182,10 @@ The distribution contains a 3D field ``tcw.nc`` that will be used in this help.
 This file is located in the ``tests/dataset`` directory at the root of the
 project.
 
-
 This method performs a bilinear interpolation in 2D space by considering the
 axes of longitude and latitude of the grid, then performs a linear
 interpolation in the third dimension. Its interface is similar to the
-:py:class:`Bivariate <pyinterp.bivariate.Bivariate>` class except for a third
+:py:func:`bivariate <pyinterp.interpolator.bivariate>` class except for a third
 axis which is handled by this object.
 
 .. code:: python
@@ -231,6 +230,30 @@ xarray:
                              indexing='ij')
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
+
+Bicubic
+#######
+
+This :py:func:`function <pyinterp.interpolator.bicubic>` allows obtaining a
+value from any position in a 3D space by a 2D spatial bicubic interpolation
+(considering the X and Y axes of the grid), followed by a linear interpolation
+along the Z axis of the two values obtained by the bicubic interpolation.
+
+The use of this function is identical to the function presented for
+``bivariate`` interpolations except for the type of grid passed as parameter, a
+:py:class:`3D grid <pyinterp.grid.Grid3D>`, and the coordinates along the Z
+axis. First, the 3D grid is reconstructed using the backend ``xarray``,
+requesting axes sorted in ascending order (GSL requirements). 
+
+.. code:: python
+
+    ds = xr.load_dataset("tests/dataset/tcw.nc")
+    interpolator = pyinterp.backends.xarray.Grid3D(
+        ds.data_vars["tcw"], increasing_axes=True)
+    
+    tcw = interpolator.bicubic(
+        dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
+
 
 Unstructured grid
 =================

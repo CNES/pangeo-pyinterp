@@ -97,6 +97,12 @@ class Trivariate(unittest.TestCase):
                                     time=t.flatten()))
         self.assertIsInstance(z, np.ndarray)
 
+        z = grid.bicubic(
+            collections.OrderedDict(longitude=x.flatten()[1:2],
+                                    latitude=y.flatten()[1:2],
+                                    time=t.flatten()[1:2]))
+        self.assertIsInstance(z, np.ndarray)
+
         with self.assertRaises(ValueError):
             time = np.array([datetime.datetime(2012, 7, 2, 15, 0)],
                             grid.time_unit())

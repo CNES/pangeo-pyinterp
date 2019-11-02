@@ -262,3 +262,23 @@ class Grid3D(grid.Grid3D):
         return interpolator.trivariate(
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
+
+    def bicubic(self, coords: dict, *args, **kwargs):
+        """Evaluate the interpolation defined for the given coordinates
+
+        Args:
+            coords (dict): Mapping from dimension names to the
+                coordinates to interpolate. Coordinates must be array-like.
+            *args: List of arguments provided to the interpolation
+                method :py:meth:`pyinterp.bicubic
+                <pyinterp.interpolator.bicubic.bicubic>`
+            **kwargs: List of keyword arguments provided to the interpolation
+                method :py:meth:`pyinterp.bicubic
+                <pyinterp.interpolator.bicubic.bicubic>`
+
+        Returns:
+            The interpolated values
+        """
+        return interpolator.bicubic(
+            self, *_coords(coords, self._dims, self._datetime64), *args,
+            **kwargs)
