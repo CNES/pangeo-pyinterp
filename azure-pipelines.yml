@@ -27,6 +27,7 @@ jobs:
   - bash: |
       source activate Build
       conda install --yes --quiet --name Build python=$PYTHON_VERSION cmake eigen gsl libboost numpy setuptools netCDF4
+    displayName: Install build requirements
   - bash: |
       source activate Build
       python setup.py build -x g++-7
