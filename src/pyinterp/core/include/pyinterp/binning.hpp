@@ -120,6 +120,11 @@ class Binning2D {
     return calculate_statistics(boost::accumulators::weighted_sum);
   }
 
+  /// Compute the sum of weights within each bin.
+  [[nodiscard]] auto sum_of_weights() const -> pybind11::array_t<T> {
+    return calculate_statistics(boost::accumulators::sum_of_weights);
+  }
+
   /// Gets the X-Axis
   [[nodiscard]] inline auto x() const -> std::shared_ptr<Axis> { return x_; }
 
@@ -133,6 +138,7 @@ class Binning2D {
       boost::accumulators::stats<
           boost::accumulators::tag::count, boost::accumulators::tag::max,
           boost::accumulators::tag::min,
+          boost::accumulators::tag::sum_of_weights,
           boost::accumulators::tag::weighted_kurtosis,
           boost::accumulators::tag::weighted_mean,
           boost::accumulators::tag::weighted_median(

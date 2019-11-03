@@ -112,6 +112,13 @@ Compute the sum of values for points within each bin.
 Return:
     numpy.ndarray: sum of values for points within each bin.
 )__doc__")
+      .def("sum_of_weights", &pyinterp::Binning2D<Type>::sum_of_weights,
+           R"__doc__(
+Compute the sum of weights for points within each bin.
+
+Return:
+    numpy.ndarray: sum of weights for points within each bin.
+)__doc__")
       .def("skewness", &pyinterp::Binning2D<Type>::skewness,
            R"__doc__(
 Compute the skewness of values for points within each bin.

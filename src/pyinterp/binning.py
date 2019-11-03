@@ -138,6 +138,8 @@ class Binning2D:
                     * ``skewness`` : compute the skewness within each bin.
                     * ``sum`` : compute the sum of values for points within
                       each bin.
+                    * ``sum_of_weights`` : compute the sum of weigths within
+                      each bin.
                     * ``variance`` : compute the variance within each bin.
 
         Return:
@@ -150,8 +152,11 @@ class Binning2D:
                 data = data.astype(np.int64)
             else:
                 data[~np.isfinite(data)] = np.nan
-                if statistics in ['min', 'max', 'median', 'sum']:
+                if statistics in [
+                        'min', 'max', 'median', 'sum', 'sum_of_weights'
+                ]:
                     data[self._instance.count() == 0] = np.nan
             return data
         except AttributeError:
-            raise ValueError(f"The statistical variable {item} is unknown.")
+            raise ValueError(
+                f"The statistical variable {statistics} is unknown.")
