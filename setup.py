@@ -352,7 +352,8 @@ def main():
             "Operating System :: MacOS",
             "Operating System :: Microsoft :: Windows",
             "Programming Language :: Python :: 3.6",
-            "Programming Language :: Python :: 3.7"
+            "Programming Language :: Python :: 3.7",
+            "Programming Language :: Python :: 3.8"
         ],
         cmdclass={
             'build': Build,
