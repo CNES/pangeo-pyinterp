@@ -11,4 +11,5 @@ from .interpolator.bicubic import bicubic
 from .interpolator.bivariate import bivariate
 from .interpolator.trivariate import trivariate
 __version__ = version.release()
+__date__ = version.date()
 del version

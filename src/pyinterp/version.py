@@ -4,9 +4,11 @@ Get software version information
 """
 
 
-def release(full: bool = False) -> str:
+def release() -> str:
     """Returns the software version number"""
-    result = "0.0.6"
-    if full:
-        result += " (26 October 2019)"
-    return result
+    return "0.0.6"
+
+
+def date() -> str:
+    """Returns the creation date of this release"""
+    return "09 November 2019"

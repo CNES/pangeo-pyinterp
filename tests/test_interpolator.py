@@ -38,6 +38,16 @@ class Grid2D(unittest.TestCase):
             collections.OrderedDict(lon=x.flatten(), lat=y.flatten()))
         self.assertIsInstance(z, np.ndarray)
 
+        z = grid.bivariate(collections.OrderedDict(lon=x.flatten(),
+                                                   lat=y.flatten()),
+                           interpolator="nearest")
+        self.assertIsInstance(z, np.ndarray)
+
+        z = grid.bivariate(collections.OrderedDict(lon=x.flatten(),
+                                                   lat=y.flatten()),
+                           interpolator="inverse_distance_weighting")
+        self.assertIsInstance(z, np.ndarray)
+
         with self.assertRaises(ValueError):
             grid.bivariate(collections.OrderedDict(lon=x.flatten(),
                                                    lat=y.flatten()),
@@ -64,6 +74,31 @@ class Grid2D(unittest.TestCase):
                                                  lat=y.flatten()),
                          bounds_error=True,
                          boundary="sym")
+
+        x_axis = pyinterp.Axis(-180, 179, 360, is_circle=True)
+        y_axis = pyinterp.Axis(-90, 90, 181, is_circle=False)
+        z_axis = pyinterp.Axis(0, 10, 10, is_circle=False)
+        matrix, _ = np.meshgrid(x_axis[:], y_axis[:])
+        grid = pyinterp.Grid2D(x_axis, y_axis, matrix.T)
+
+        self.assertIsInstance(grid, pyinterp.Grid2D)
+        with self.assertRaises(ValueError):
+            pyinterp.bicubic(grid, x.flatten(), y.flatten(), fitting_model='_')
+        with self.assertRaises(ValueError):
+            pyinterp.bicubic(grid, x.flatten(), y.flatten(), boundary='_')
+        grid = pyinterp.Grid2D(x_axis.flip(inplace=False), y_axis, matrix.T)
+        with self.assertRaises(ValueError):
+            pyinterp.bicubic(grid, x.flatten(), y.flatten())
+
+        grid = pyinterp.Grid2D(x_axis, y_axis.flip(), matrix.T)
+        with self.assertRaises(ValueError):
+            pyinterp.bicubic(grid, x.flatten(), y.flatten())
+
+        matrix, _, _ = np.meshgrid(x_axis[:], y_axis[:], z_axis[:])
+        grid = pyinterp.Grid3D(x_axis, y_axis, z_axis,
+                               matrix.transpose(1, 0, 2))
+        with self.assertRaises(ValueError):
+            pyinterp.bicubic(grid, x.flatten(), y.flatten())
 
 
 class Trivariate(unittest.TestCase):
@@ -117,9 +152,51 @@ class TestRTree(unittest.TestCase):
     GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
                         "mss.nc")
 
-    @classmethod
-    def load_data(cls):
-        ds = xr.load_dataset(cls.GRID)
+    def init(self, dtype):
+        lon = np.arange(-180, 180, 10)
+        lat = np.arange(-90, 90, 10)
+        lon, lat = np.meshgrid(lon, lat)
+        data = lon * 0
+        mesh = pyinterp.RTree(dtype=dtype)
+        self.assertIsInstance(mesh, pyinterp.RTree)
+        self.assertEqual(len(mesh), 0)
+        self.assertFalse(bool(mesh))
+        mesh.packing(
+            np.vstack((lon.flatten(), lat.flatten())).T, data.flatten())
+        self.assertEqual(len(mesh), len(lon.flatten()))
+        self.assertTrue(bool(mesh))
+        (x_min, y_min, z_min), (x_max, y_max, z_max) = mesh.bounds()
+        self.assertEqual(x_min, -180)
+        self.assertEqual(y_min, -90.0)
+        self.assertEqual(x_max, 180.0)
+        self.assertEqual(y_max, 80)
+        self.assertAlmostEqual(z_min,
+                               0,
+                               delta=1e-6 if dtype == np.float64 else 0.5)
+        self.assertAlmostEqual(z_max,
+                               0,
+                               delta=1e-6 if dtype == np.float64 else 0.5)
+        mesh.clear()
+        self.assertEqual(len(mesh), 0)
+        self.assertFalse(bool(mesh))
+        mesh.insert(
+            np.vstack((lon.flatten(), lat.flatten())).T, data.flatten())
+        self.assertEqual(len(mesh), len(lon.flatten()))
+        self.assertIsInstance(pickle.loads(pickle.dumps(mesh)), pyinterp.RTree)
+
+    def test_init(self):
+        self.init(dtype=np.float32)
+        self.init(dtype=np.float64)
+
+        with self.assertRaises(ValueError):
+            self.init(np.int8)
+
+        with self.assertRaises(ValueError):
+            mesh = pyinterp.RTree()
+            mesh.__setstate__((1, ))
+
+    def load_data(self):
+        ds = xr.load_dataset(self.GRID)
         z = ds.mss.T
         x, y = np.meshgrid(ds.lon.values, ds.lat.values, indexing='ij')
         mesh = pyinterp.RTree()

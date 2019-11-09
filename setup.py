@@ -152,12 +152,14 @@ Get software version information
 """
 
 
-def release(full: bool = False) -> str:
+def release() -> str:
     """Returns the software version number"""
-    result = "{version}"
-    if full:
-        result += " ({date})"
-    return result
+    return "{version}"
+
+
+def date() -> str:
+    """Returns the creation date of this release"""
+    return "{date}"
 '''.format(version=version, date=date.strftime("%d %B %Y")))
     return version
 
