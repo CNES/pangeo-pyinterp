@@ -85,7 +85,7 @@ class Binning2D:
         point :math:`x` distributes its weight to neighboring grid points.
 
         :math:`A` is the area of the grid cell. :math:`\\alpha`,
-        :math:`\\beta`, :math:`\\gamma` and :math:`\delta` are the areas of the
+        :math:`\\beta`, :math:`\\gamma` and :math:`\\delta` are the areas of the
         different sub-rectangles. :math:`g_{00}`, :math:`g_{01}`,
         :math:`g_{10}` and :math:`g_{11}` are the grid points identified around
         point :math:`x`. :math:`w_{00}`, :math:`w_{01}`, :math:`w_{10}` and
@@ -94,9 +94,9 @@ class Binning2D:
         .. figure:: ../pictures/binning_2d.svg
             :align: center
 
-        For simple binning, the point :math:`x` gives all its weight to its nearest
-        grid point. In this example, the lower left grid point takes the weight
-        equal to 1, that is :math:`w_{00}=1`.
+        For simple binning, the point :math:`x` gives all its weight to its
+        nearest grid point. In this example, the lower left grid point takes
+        the weight equal to 1, that is :math:`w_{00}=1`.
 
         In the case of linear binning, the contribution from :math:`x` is
         distributed among each of the four surrounding grid points according to
