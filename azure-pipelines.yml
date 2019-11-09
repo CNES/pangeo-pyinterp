@@ -34,7 +34,7 @@ jobs:
     displayName: Build package
   - bash: |
       source activate Build
-      python setup.py test --pytest-args="--junitxml=junit/test-results.xml --cov=pyinterp --cov-report=xml"
+      python setup.py test --pytest-args="--junitxml=junit/test-results.xml --cov=pyinterp --cov-report=xml --cov-report=html"
     displayName: Test cases
   - task: PublishTestResults@2
     condition: succeededOrFailed()
