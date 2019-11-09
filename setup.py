@@ -11,10 +11,13 @@ import platform
 import re
 import subprocess
 import os
+import shlex
 import sys
+import sysconfig
 import setuptools
 import setuptools.command.build_ext
 import setuptools.command.install
+import setuptools.command.test
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -22,6 +25,13 @@ MINOR = sys.version_info[1]
 if not (MAJOR >= 3 and MINOR >= 6):
     raise RuntimeError("Python %d.%d is not supported, "
                        "you need at least Python 3.6." % (MAJOR, MINOR))
+
+
+def build_dir_name():
+    """Returns the name of the build directory"""
+    return str(
+        pathlib.Path(pathlib.Path().absolute(), "build", "lib.%s-%d-%d" %
+                     (sysconfig.get_platform(), MAJOR, MINOR)))
 
 
 def execute(cmd):
@@ -264,8 +274,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         # any python sources to bundle, the dirs will be missing
         build_temp = pathlib.Path(self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
-        extdir = pathlib.Path(self.get_ext_fullpath(
-            ext.name)).absolute().parent
+        extdir = build_dir_name()
 
         cfg = 'Debug' if self.debug else 'Release'
 
@@ -333,6 +342,25 @@ class Build(distutils.command.build.build):
         super().run()
 
 
+class Test(setuptools.command.test.test):
+    """Test runner"""
+    user_options = [("pytest-args=", "a", "Arguments to pass to pytest")]
+
+    def initialize_options(self):
+        """Set default values for all the options that this command
+        supports"""
+        setuptools.command.test.test.initialize_options(self)
+        self.pytest_args = "tests"
+
+    def run_tests(self):
+        """Run tests"""
+        import pytest
+        sys.path.insert(0, build_dir_name())
+
+        errno = pytest.main(shlex.split(self.pytest_args))
+        sys.exit(errno)
+
+
 def long_description():
     """Reads the README file"""
     with open("README.md") as stream:
@@ -357,7 +385,8 @@ def main():
         ],
         cmdclass={
             'build': Build,
-            'build_ext': BuildExt
+            'build_ext': BuildExt,
+            'test': Test
         },
         description='Interpolation of geo-referenced data for Python.',
         ext_modules=[CMakeExtension(name="pyinterp.core")],
@@ -371,7 +400,7 @@ def main():
                                                     exclude=['*core*']),
         platforms=['POSIX', 'MacOS', 'Windows'],
         python_requires='>=3.6',
-        tests_require=["netCDF4", "numpy", "xarray>=0.13"],
+        tests_require=["netCDF4", "numpy", "pytest", "xarray>=0.13"],
         url='https://github.com/CNES/pangeo-pyinterp',
         version=revision(),
         zip_safe=False,

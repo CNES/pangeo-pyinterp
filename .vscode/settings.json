@@ -88,6 +88,7 @@
         "hash_map": "cpp",
         "cfenv": "cpp",
         "memory_resource": "cpp",
-        "conv_stats2grid.h": "c"
+        "conv_stats2grid.h": "c",
+        "bit": "cpp"
     }
 }
