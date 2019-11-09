@@ -27,11 +27,19 @@ if not (MAJOR >= 3 and MINOR >= 6):
                        "you need at least Python 3.6." % (MAJOR, MINOR))
 
 
-def build_dir_name():
+def build_dirname(extname=None):
     """Returns the name of the build directory"""
+    if extname is not None:
+        parts = extname.split(".")
+        if parts:
+            parts.pop(-1)
+        extname = os.sep.join(parts)
+    else:
+        extname = ''
     return str(
-        pathlib.Path(pathlib.Path().absolute(), "build", "lib.%s-%d-%d" %
-                     (sysconfig.get_platform(), MAJOR, MINOR)))
+        pathlib.Path(pathlib.Path().absolute(), "build",
+                     "lib.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR),
+                     extname))
 
 
 def execute(cmd):
@@ -274,7 +282,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         # any python sources to bundle, the dirs will be missing
         build_temp = pathlib.Path(self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
-        extdir = build_dir_name()
+        extdir = build_dirname(ext.name)
 
         cfg = 'Debug' if self.debug else 'Release'
 
@@ -355,7 +363,7 @@ class Test(setuptools.command.test.test):
     def run_tests(self):
         """Run tests"""
         import pytest
-        sys.path.insert(0, build_dir_name())
+        sys.path.insert(0, build_dirname())
 
         errno = pytest.main(shlex.split(self.pytest_args))
         sys.exit(errno)
