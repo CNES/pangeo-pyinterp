@@ -373,7 +373,9 @@ class Test(setuptools.command.test.test):
         import pytest
         sys.path.insert(0, build_dirname())
 
-        errno = pytest.main(shlex.split(self.pytest_args))
+        errno = pytest.main(
+            shlex.split(self.pytest_args,
+                        posix=platform.system() != 'Windows'))
         sys.exit(errno)
 
 
