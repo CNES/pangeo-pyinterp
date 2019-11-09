@@ -358,7 +358,15 @@ class Test(setuptools.command.test.test):
         """Set default values for all the options that this command
         supports"""
         setuptools.command.test.test.initialize_options(self)
-        self.pytest_args = "tests"
+        self.pytest_args = None
+
+    def finalize_options(self):
+        """"Set final values for all the options that this command supports"""
+        dirname = pathlib.Path(pathlib.Path(__file__).absolute().parent)
+        rootdir = "--rootdir=" + str(dirname)
+        if self.pytest_args is None:
+            self.pytest_args = ''
+        self.pytest_args = rootdir + " tests " + self.pytest_args
 
     def run_tests(self):
         """Run tests"""
