@@ -72,9 +72,15 @@ class TextAxis(unittest.TestCase):
         self.assertTrue(np.all(a[:] == np.arange(359, -1, -1)))
         self.assertEqual(len(a), 360)
 
+        frozen = pickle.loads(pickle.dumps(a))
         b = a.flip(inplace=False)
+        self.assertEqual(a, frozen)
         self.assertNotEqual(id(a), id(b))
-        self.assertEqual(b, a.flip(inplace=True))
+        self.assertEqual(b, a.flip(inplace=False))
+        b = a.flip(inplace=True)
+        self.assertEqual(id(a), id(b))
+        self.assertEqual(b, a)
+        self.assertNotEqual(a, frozen)
 
     def test_pickle(self):
         a = core.Axis(0, 359, 360, is_circle=False, is_radian=False)

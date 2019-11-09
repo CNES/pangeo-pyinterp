@@ -217,7 +217,8 @@ Return:
                self->flip();
                return self;
              }
-             auto result = std::make_shared<pyinterp::Axis>(*self);
+             auto result = std::make_shared<pyinterp::Axis>(
+                 pyinterp::Axis::setstate(self->getstate()));
              result->flip();
              return result;
            },
