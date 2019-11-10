@@ -268,7 +268,7 @@ class Irregular : public Abstract {
   auto operator==(const Abstract& rhs) const noexcept -> bool override {
     const auto ptr = dynamic_cast<const Irregular*>(&rhs);
     if (ptr != nullptr) {
-      return ptr->points_ == points_;
+      return ptr->points_.size() == points_.size() && ptr->points_ == points_;
     }
     return false;
   }
