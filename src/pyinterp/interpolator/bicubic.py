@@ -78,8 +78,8 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D],
     if not mesh.y.is_ascending():
         raise ValueError('Y-axis is not increasing')
     if fitting_model not in [
-            'c_spline', 'c_spline_periodic', 'akima', 'akima_periodic',
-            'steffen'
+            'akima_periodic', 'akima', 'c_spline_periodic', 'c_spline',
+            'linear', 'polynomial', 'steffen'
     ]:
         raise ValueError(f"fitting model {fitting_model!r} is not defined")
 
