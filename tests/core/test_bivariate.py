@@ -101,6 +101,16 @@ class TestBivariate(TestCase):
         self.assertTrue((a - c).std() != 0)
         self.assertTrue((b - c).std() != 0)
 
+    def test_pickle(self):
+        for item in [
+                'InverseDistanceWeighting2D', 'InverseDistanceWeighting3D',
+                'Bilinear2D', 'Bilinear3D', 'Nearest2D', 'Nearest3D'
+        ]:
+            obj = getattr(core, item)()
+            self.assertIsInstance(obj, getattr(core, item))
+            self.assertIsInstance(pickle.loads(pickle.dumps(obj)),
+                                  getattr(core, item))
+
 
 class TestBicubic(TestCase):
     def test_multi_threads(self):

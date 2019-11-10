@@ -53,6 +53,21 @@ class Grid2D(unittest.TestCase):
                                                    lat=y.flatten()),
                            bounds_error=True)
 
+        lon = pyinterp.Axis(0, 360, 100, is_circle=True)
+        lat = pyinterp.Axis(-80, 80, 50, is_circle=False)
+        array, _ = np.meshgrid(lon[:], lat[:])
+
+        with self.assertRaises(ValueError):
+            pyinterp.Grid2D(lon, lat, array)
+
+        grid = pyinterp.Grid2D(lon, lat, array.T)
+
+        self.assertIsInstance(grid, pyinterp.Grid2D)
+        self.assertIsInstance(str(grid), str)
+
+        with self.assertRaises(ValueError):
+            pyinterp.Grid2D(lon, lat, array, increasing_axes='_')
+
     def test_bicubic(self):
         grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(self.GRID).mss)
 
@@ -63,6 +78,15 @@ class Grid2D(unittest.TestCase):
         z = grid.bicubic(
             collections.OrderedDict(lon=x.flatten(), lat=y.flatten()))
         self.assertIsInstance(z, np.ndarray)
+
+        for fitting_model in [
+                'linear', 'polynomial', 'c_spline', 'c_spline_periodic',
+                'akima', 'akima_periodic', 'steffen'
+        ]:
+            other = grid.bicubic(collections.OrderedDict(lon=x.flatten(),
+                                                         lat=y.flatten()),
+                                 fitting_model=fitting_model)
+            self.assertNotEqual((z - other).mean(), 0)
 
         with self.assertRaises(ValueError):
             grid.bicubic(collections.OrderedDict(lon=x.flatten(),

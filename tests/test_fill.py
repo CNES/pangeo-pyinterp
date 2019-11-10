@@ -12,9 +12,9 @@ class Fill(unittest.TestCase):
     @classmethod
     def _load(cls, cube=False):
         ds = netCDF4.Dataset(cls.GRID)
-        x_axis = pyinterp.core.Axis(ds.variables["lon"][:], is_circle=True)
-        y_axis = pyinterp.core.Axis(ds.variables["lat"][:])
-        mss = ds.variables["mss"][:].T
+        x_axis = pyinterp.core.Axis(ds.variables["lon"][::5], is_circle=True)
+        y_axis = pyinterp.core.Axis(ds.variables["lat"][::5])
+        mss = ds.variables["mss"][::5, ::5].T
         mss[mss.mask] = float("nan")
         if cube:
             z_axis = pyinterp.core.Axis(np.arange(2))
@@ -38,13 +38,18 @@ class Fill(unittest.TestCase):
         grid = self._load()
         _, filled0 = pyinterp.fill.gauss_seidel(grid, num_threads=0)
         _, filled1 = pyinterp.fill.gauss_seidel(grid, num_threads=1)
+        _, filled2 = pyinterp.fill.gauss_seidel(grid,
+                                                first_guess='zero',
+                                                num_threads=0)
         data = np.copy(grid.array)
         data[np.isnan(data)] = 0
         filled0[np.isnan(filled0)] = 0
         filled1[np.isnan(filled1)] = 0
+        filled2[np.isnan(filled2)] = 0
         self.assertEqual((filled0 - filled1).mean(), 0)
         self.assertEqual(np.ma.fix_invalid(grid.array - filled1).mean(), 0)
         self.assertNotEqual((data - filled1).mean(), 0)
+        self.assertNotEqual((filled2 - filled1).mean(), 0)
 
         with self.assertRaises(ValueError):
             pyinterp.fill.gauss_seidel(grid, '_')

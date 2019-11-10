@@ -38,18 +38,6 @@ class Interface(unittest.TestCase):
 
 
 class Grid2D(unittest.TestCase):
-    def test_init(self):
-        lon = pyinterp.Axis(0, 360, 1, is_circle=True)
-        lat = pyinterp.Axis(-80, 80, 1, is_circle=False)
-        matrix, _ = np.meshgrid(lon[:], lat[:])
-
-        grid = pyinterp.Grid2D(lon, lat, matrix)
-        self.assertIsInstance(grid, pyinterp.Grid2D)
-        self.assertIsInstance(str(grid), str)
-
-        with self.assertRaises(ValueError):
-            pyinterp.Grid2D(lon, lat, matrix, increasing_axes='_')
-
     def test_core_variate_interpolator(self):
         lon = pyinterp.Axis(0, 360, 1, is_circle=True)
         lat = pyinterp.Axis(-80, 80, 1, is_circle=False)

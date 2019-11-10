@@ -82,6 +82,15 @@ class TextAxis(unittest.TestCase):
         self.assertEqual(b, a)
         self.assertNotEqual(a, frozen)
 
+        with self.assertRaises(ValueError):
+            core.Axis([], is_circle=False)
+
+        with self.assertRaises(ValueError):
+            core.Axis([5, 2, 7], is_circle=False)
+
+        a = core.Axis(MERCATOR_LATITUDES, is_circle=True)
+        self.assertFalse(a.is_circle)
+
     def test_pickle(self):
         a = core.Axis(0, 359, 360, is_circle=False, is_radian=False)
         b = pickle.loads(pickle.dumps(a))

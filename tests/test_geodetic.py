@@ -34,11 +34,17 @@ class Point2D(unittest.TestCase):
 
 class Box2D(unittest.TestCase):
     def test_init(self):
-        # box = pyinterp.geodetic.Box2D()
+        box = pyinterp.geodetic.Box2D()
         # self.assertEqual(box.min_corner.lon, 0)
         # self.assertEqual(box.min_corner.lat, 0)
         # self.assertEqual(box.max_corner.lon, 0)
         # self.assertEqual(box.max_corner.lat, 0)
+
+        box = pyinterp.geodetic.Box2D.entire_earth()
+        self.assertEqual(box.min_corner.lon, -180)
+        self.assertEqual(box.min_corner.lat, -90)
+        self.assertEqual(box.max_corner.lon, 180)
+        self.assertEqual(box.max_corner.lat, 90)
 
         box = pyinterp.geodetic.Box2D(pyinterp.geodetic.Point2D(1, 2),
                                       pyinterp.geodetic.Point2D(3, 4))
