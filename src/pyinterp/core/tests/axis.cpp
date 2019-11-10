@@ -504,6 +504,9 @@ TEST(axis, search_window) {
   EXPECT_EQ(indexes[0], 180);
   EXPECT_EQ(indexes[1], 181);
 
+  EXPECT_THROW(indexes = axis.find_indexes(0, 0, detail::Axis::kUndef),
+               std::invalid_argument);
+
   indexes = axis.find_indexes(0, 5, detail::Axis::kUndef);
   ASSERT_EQ(indexes.size(), 10);
   EXPECT_EQ(indexes[0], 176);
