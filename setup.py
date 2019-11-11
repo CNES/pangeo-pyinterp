@@ -218,15 +218,18 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     @staticmethod
     def boost():
         """Get the default boost path in Anaconda's environnement."""
+        # Do not search system for Boost & disable the search for boost-cmake
+        boost_option = " -DBoost_NO_SYSTEM_PATHS=TRUE " \
+            "-DBoost_NO_BOOST_CMAKE=TRUE"
         boost_root = sys.prefix
         if os.path.exists(os.path.join(boost_root, "include", "boost")):
-            return "-DBOOST_ROOT=%s -DBoost_NO_SYSTEM_PATHS=TRUE" % boost_root
+            return "-DBOOST_ROOT=" + boost_root + boost_option
         boost_root = os.path.join(sys.prefix, "Library", "include")
         if not os.path.exists(boost_root):
             raise RuntimeError(
                 "Unable to find the Boost library in the conda distribution "
                 "used.")
-        return "-DBoost_INCLUDE_DIR=" + boost_root
+        return "-DBoost_INCLUDE_DIR=" + boost_root + boost_option
 
     @staticmethod
     def eigen():
