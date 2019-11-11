@@ -220,7 +220,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         """Get the default boost path in Anaconda's environnement."""
         boost_root = sys.prefix
         if os.path.exists(os.path.join(boost_root, "include", "boost")):
-            return "-DBOOST_ROOT=" + boost_root
+            return "-DBOOST_ROOT=%s -DBoost_NO_SYSTEM_PATHS=TRUE" % boost_root
         boost_root = os.path.join(sys.prefix, "Library", "include")
         if not os.path.exists(boost_root):
             raise RuntimeError(
