@@ -26,6 +26,9 @@ if not (MAJOR >= 3 and MINOR >= 6):
     raise RuntimeError("Python %d.%d is not supported, "
                        "you need at least Python 3.6." % (MAJOR, MINOR))
 
+# Working directory
+WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
+
 
 def build_dirname(extname=None):
     """Returns the name of the build directory"""
@@ -37,7 +40,7 @@ def build_dirname(extname=None):
     else:
         extname = ''
     return str(
-        pathlib.Path(pathlib.Path().absolute(), "build",
+        pathlib.Path(WORKING_DIRECTORY, "build",
                      "lib.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR),
                      extname))
 
@@ -84,8 +87,8 @@ def update_environment(path, version):
 
 def revision():
     """Returns the software version"""
-    cwd = pathlib.Path().absolute()
-    module = os.path.join(cwd, 'src', 'pyinterp', 'version.py')
+    os.chdir(WORKING_DIRECTORY)
+    module = pathlib.Path(WORKING_DIRECTORY, 'src', 'pyinterp', 'version.py')
     stdout = execute("git describe --tags --dirty --long --always").strip()
     pattern = re.compile(r'([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?')
     match = pattern.search(stdout)
@@ -117,16 +120,18 @@ def revision():
 
     # Conda configuration files are not present in the distribution, but only
     # in the GIT repository of the source code.
-    meta = os.path.join(cwd, 'conda', 'meta.yaml')
-    if os.path.exists(meta):
+    meta = pathlib.Path(WORKING_DIRECTORY, 'conda', 'meta.yaml')
+    if meta.exists():
         update_meta(meta, version)
-        update_environment(os.path.join(cwd, 'conda', 'environment.yml'),
-                           version)
-        update_environment(os.path.join(cwd, 'binder', 'environment.yml'),
-                           version)
+        update_environment(
+            pathlib.Path(WORKING_DIRECTORY, 'conda', 'environment.yml'),
+            version)
+        update_environment(
+            pathlib.Path(WORKING_DIRECTORY, 'binder', 'environment.yml'),
+            version)
 
     # Updating the version number description for sphinx
-    conf = os.path.join(cwd, 'docs', 'source', 'conf.py')
+    conf = pathlib.Path(WORKING_DIRECTORY, 'docs', 'source', 'conf.py')
     with open(conf, "r") as stream:
         lines = stream.readlines()
     pattern = re.compile(r'(\w+)\s+=\s+(.*)')
@@ -176,17 +181,20 @@ class CMakeExtension(setuptools.Extension):
 class BuildExt(setuptools.command.build_ext.build_ext):
     """Build the Python extension using cmake"""
 
-    #: Preferred C++ compiler
-    CXX_COMPILER = None
-
     #: Preferred BOOST root
     BOOST_ROOT = None
 
-    #: Preferred GSL root
-    GSL_ROOT = None
+    #: Preferred C++ compiler
+    CXX_COMPILER = None
+
+    #: Enable coverage reporting
+    CODE_COVERAGE = None
 
     #: Preferred Eigen root
     EIGEN3_INCLUDE_DIR = None
+
+    #: Preferred GSL root
+    GSL_ROOT = None
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
@@ -278,15 +286,13 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     def build_cmake(self, ext):
         """Execute cmake to build the Python extension"""
-        cwd = pathlib.Path().absolute()
-
         # These dirs will be created in build_py, so if you don't have
         # any python sources to bundle, the dirs will be missing
         build_temp = pathlib.Path(self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
         extdir = build_dirname(ext.name)
 
-        cfg = 'Debug' if self.debug else 'Release'
+        cfg = 'Debug' if self.debug or self.CODE_COVERAGE else 'Release'
 
         cmake_args = [
             "-DCMAKE_BUILD_TYPE=" + cfg, "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" +
@@ -299,6 +305,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             build_args += ['--', '-j%d' % os.cpu_count()]
             if platform.system() == 'Darwin':
                 cmake_args += ['-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14']
+            if self.CODE_COVERAGE:
+                cmake_args += ["-DCODE_COVERAGE=ON"]
         else:
             cmake_args += [
                 '-G', 'Visual Studio 15 2017',
@@ -314,21 +322,22 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             build_args.insert(0, "--verbose")
 
         os.chdir(str(build_temp))
-        self.spawn(['cmake', str(cwd)] + cmake_args)
+        self.spawn(['cmake', str(WORKING_DIRECTORY)] + cmake_args)
         if not self.dry_run:
             self.spawn(['cmake', '--build', '.', '--target', 'core'] +
                        build_args)
-        os.chdir(str(cwd))
+        os.chdir(str(WORKING_DIRECTORY))
 
 
 class Build(distutils.command.build.build):
     """Build everything needed to install"""
     user_options = distutils.command.build.build.user_options
     user_options += [
-        ('boost-root=', 'u', 'Preferred Boost installation prefix'),
-        ('gsl-root=', 'g', 'Preferred GSL installation prefix'),
-        ('eigen-root=', 'e', 'Preferred Eigen3 include directory'),
-        ('cxx-compiler=', 'x', 'Preferred C++ compiler')
+        ('boost-root=', None, 'Preferred Boost installation prefix'),
+        ('gsl-root=', None, 'Preferred GSL installation prefix'),
+        ('eigen-root=', None, 'Preferred Eigen3 include directory'),
+        ('cxx-compiler=', None, 'Preferred C++ compiler'),
+        ('code-coverage', None, 'Enable coverage reporting')
     ]
 
     def initialize_options(self):
@@ -336,6 +345,7 @@ class Build(distutils.command.build.build):
         super().initialize_options()
         self.boost_root = None
         self.cxx_compiler = None
+        self.code_coverage = None
         self.eigen_root = None
         self.gsl_root = None
 
@@ -345,30 +355,46 @@ class Build(distutils.command.build.build):
             BuildExt.BOOST_ROOT = self.boost_root
         if self.cxx_compiler is not None:
             BuildExt.CXX_COMPILER = self.cxx_compiler
-        if self.gsl_root is not None:
-            BuildExt.GSL_ROOT = self.gsl_root
+        if self.code_coverage is not None:
+            if platform.system() == 'Windows':
+                raise RuntimeError("Code coverage is not supported on Windows")
+            BuildExt.CODE_COVERAGE = self.code_coverage
         if self.eigen_root is not None:
             BuildExt.EIGEN3_INCLUDE_DIR = self.eigen_root
+        if self.gsl_root is not None:
+            BuildExt.GSL_ROOT = self.gsl_root
         super().run()
 
 
 class Test(setuptools.command.test.test):
     """Test runner"""
-    user_options = [("pytest-args=", "a", "Arguments to pass to pytest")]
+    user_options = [('ext-coverage', None,
+                     "Generate C++ extension coverage reports"),
+                    ("pytest-args=", None, "Arguments to pass to pytest")]
 
     def initialize_options(self):
         """Set default values for all the options that this command
         supports"""
         setuptools.command.test.test.initialize_options(self)
         self.pytest_args = None
+        self.ext_coverage = None
 
     def finalize_options(self):
         """"Set final values for all the options that this command supports"""
         dirname = pathlib.Path(pathlib.Path(__file__).absolute().parent)
         rootdir = "--rootdir=" + str(dirname)
+        if self.ext_coverage is not None:
+            BuildExt.CODE_COVERAGE = True
         if self.pytest_args is None:
             self.pytest_args = ''
         self.pytest_args = rootdir + " tests " + self.pytest_args
+
+    @staticmethod
+    def tempdir():
+        """Gets the build directory of the extension"""
+        return pathlib.Path(
+            WORKING_DIRECTORY, "build",
+            "temp.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR))
 
     def run_tests(self):
         """Run tests"""
@@ -378,12 +404,49 @@ class Test(setuptools.command.test.test):
         errno = pytest.main(
             shlex.split(self.pytest_args,
                         posix=platform.system() != 'Windows'))
-        sys.exit(errno)
+        if errno:
+            sys.exit(errno)
+
+        if not self.ext_coverage:
+            return
+
+        # Generation of the code coverage of the C++ extension
+        tempdir = self.tempdir()
+
+        # Directory for writing the HTML coverage report.
+        htmlcov = str(pathlib.Path(tempdir.parent.parent, "htmlcov"))
+
+        # File containing the coverage report.
+        coverage_info = str(pathlib.Path(tempdir, "coverage.info"))
+
+        # We work in the extension generation directory (CMake directory)
+        os.chdir(str(tempdir))
+
+        # We build/execute the C++ unit tests that are skipped during the
+        # generation of the extension.
+        self.spawn(["make", "-j%d" % os.cpu_count()])
+        self.spawn(["ctest", "-j%d" % os.cpu_count(), "--output-on-failure"])
+
+        # Collect coverage data from python/C++ unit tests
+        self.spawn([
+            "lcov", "--capture", "--directory",
+            str(tempdir), "--output-file", coverage_info
+        ])
+
+        # The coverage of third-party libraries is removed.
+        self.spawn([
+            'lcov', '-r', coverage_info, "*/Xcode.app/*", "*/third_party/*",
+            "*/boost/*", "*/eigen3/*", "*/tests/*", "*/usr/*", '--output-file',
+            coverage_info
+        ])
+
+        # Finally, we generate the HTML coverage report.
+        self.spawn(["genhtml", coverage_info, "--output-directory", htmlcov])
 
 
 def long_description():
     """Reads the README file"""
-    with open("README.md") as stream:
+    with open(pathlib.Path(WORKING_DIRECTORY, "README.md")) as stream:
         return stream.read()
 
 
