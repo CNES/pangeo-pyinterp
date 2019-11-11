@@ -412,17 +412,8 @@ class Test(setuptools.command.test.test):
         if errno:
             sys.exit(errno)
 
-        if not self.ext_coverage:
-            return
-
-        # Generation of the code coverage of the C++ extension
+        # Directory used during the generating the C++ extension.
         tempdir = self.tempdir()
-
-        # Directory for writing the HTML coverage report.
-        htmlcov = str(pathlib.Path(tempdir.parent.parent, "htmlcov"))
-
-        # File containing the coverage report.
-        coverage_info = str(pathlib.Path(tempdir, "coverage.info"))
 
         # We work in the extension generation directory (CMake directory)
         os.chdir(str(tempdir))
@@ -430,7 +421,17 @@ class Test(setuptools.command.test.test):
         # We build/execute the C++ unit tests that are skipped during the
         # generation of the extension.
         self.spawn(["make", "-j%d" % os.cpu_count()])
-        self.spawn(["ctest", "-j%d" % os.cpu_count(), "--output-on-failure"])
+        self.spawn(["ctest", "--output-on-failure"])
+
+        # Generation of the code coverage of the C++ extension?
+        if not self.ext_coverage:
+            return
+
+        # Directory for writing the HTML coverage report.
+        htmlcov = str(pathlib.Path(tempdir.parent.parent, "htmlcov"))
+
+        # File containing the coverage report.
+        coverage_info = str(pathlib.Path(tempdir, "coverage.info"))
 
         # Collect coverage data from python/C++ unit tests
         self.spawn([
