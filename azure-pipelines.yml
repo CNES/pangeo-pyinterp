@@ -30,7 +30,7 @@ jobs:
     displayName: Install build requirements
   - bash: |
       source activate Build
-      python setup.py build -x g++-7
+      python setup.py build --cxx-compiler g++-7
     displayName: Build package
   - bash: |
       source activate Build
