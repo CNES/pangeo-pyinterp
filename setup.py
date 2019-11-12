@@ -18,6 +18,7 @@ import setuptools
 import setuptools.command.build_ext
 import setuptools.command.install
 import setuptools.command.test
+import pytest
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -32,13 +33,7 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 def build_dirname(extname=None):
     """Returns the name of the build directory"""
-    if extname is not None:
-        parts = extname.split(".")
-        if parts:
-            parts.pop(-1)
-        extname = os.sep.join(parts)
-    else:
-        extname = ''
+    extname = '' if extname is None else os.sep.join(extname.split(".")[:-1])
     return str(
         pathlib.Path(WORKING_DIRECTORY, "build",
                      "lib.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR),
@@ -184,17 +179,23 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     #: Preferred BOOST root
     BOOST_ROOT = None
 
-    #: Preferred C++ compiler
-    CXX_COMPILER = None
+    #: Build the unit tests of the C++ extension
+    BUILD_INITTESTS = None
 
     #: Enable coverage reporting
     CODE_COVERAGE = None
+
+    #: Preferred C++ compiler
+    CXX_COMPILER = None
 
     #: Preferred Eigen root
     EIGEN3_INCLUDE_DIR = None
 
     #: Preferred GSL root
     GSL_ROOT = None
+
+    #: Run CMake to configure this project
+    RECONFIGURE = None
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
@@ -293,7 +294,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         """Execute cmake to build the Python extension"""
         # These dirs will be created in build_py, so if you don't have
         # any python sources to bundle, the dirs will be missing
-        build_temp = pathlib.Path(self.build_temp)
+        build_temp = pathlib.Path(WORKING_DIRECTORY, self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
         extdir = build_dirname(ext.name)
 
@@ -327,10 +328,22 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             build_args.insert(0, "--verbose")
 
         os.chdir(str(build_temp))
-        self.spawn(['cmake', str(WORKING_DIRECTORY)] + cmake_args)
+
+        # Has CMake ever been executed?
+        if pathlib.Path(build_temp, "CMakeFiles",
+                        "TargetDirectories.txt").exists():
+            # The user must force the reconfiguration
+            configure = self.RECONFIGURE is not None
+        else:
+            configure = True
+
+        if configure:
+            self.spawn(['cmake', str(WORKING_DIRECTORY)] + cmake_args)
         if not self.dry_run:
-            self.spawn(['cmake', '--build', '.', '--target', 'core'] +
-                       build_args)
+            cmake_cmd = ['cmake', '--build', '.']
+            if self.BUILD_INITTESTS is None:
+                cmake_cmd += ['--target', 'core']
+            self.spawn(cmake_cmd + build_args)
         os.chdir(str(WORKING_DIRECTORY))
 
 
@@ -339,25 +352,37 @@ class Build(distutils.command.build.build):
     user_options = distutils.command.build.build.user_options
     user_options += [
         ('boost-root=', None, 'Preferred Boost installation prefix'),
-        ('gsl-root=', None, 'Preferred GSL installation prefix'),
-        ('eigen-root=', None, 'Preferred Eigen3 include directory'),
+        ('build-unittests', None, "Build the unit tests of the C++ extension"),
+        ('reconfigure', None, 'Forces CMake to reconfigure this project'),
+        ('code-coverage', None, 'Enable coverage reporting'),
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
-        ('code-coverage', None, 'Enable coverage reporting')
+        ('eigen-root=', None, 'Preferred Eigen3 include directory'),
+        ('gsl-root=', None, 'Preferred GSL installation prefix')
     ]
 
     def initialize_options(self):
         """Set default values for all the options that this command supports"""
         super().initialize_options()
         self.boost_root = None
-        self.cxx_compiler = None
+        self.build_unittests = None
         self.code_coverage = None
+        self.cxx_compiler = None
         self.eigen_root = None
         self.gsl_root = None
+        self.reconfigure = None
+
+    def finalize_options(self):
+        """Set final values for all the options that this command supports"""
+        super().finalize_options()
+        if self.code_coverage is not None and platform.system() == 'Windows':
+            raise RuntimeError("Code coverage is not supported on Windows")
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
         if self.boost_root is not None:
             BuildExt.BOOST_ROOT = self.boost_root
+        if self.build_unittests is not None:
+            BuildExt.BUILD_INITTESTS = self.build_unittests
         if self.cxx_compiler is not None:
             BuildExt.CXX_COMPILER = self.cxx_compiler
         if self.code_coverage is not None:
@@ -368,6 +393,8 @@ class Build(distutils.command.build.build):
             BuildExt.EIGEN3_INCLUDE_DIR = self.eigen_root
         if self.gsl_root is not None:
             BuildExt.GSL_ROOT = self.gsl_root
+        if self.reconfigure is not None:
+            BuildExt.RECONFIGURE = True
         super().run()
 
 
@@ -380,16 +407,14 @@ class Test(setuptools.command.test.test):
     def initialize_options(self):
         """Set default values for all the options that this command
         supports"""
-        setuptools.command.test.test.initialize_options(self)
-        self.pytest_args = None
+        super().initialize_options()
         self.ext_coverage = None
+        self.pytest_args = None
 
     def finalize_options(self):
-        """"Set final values for all the options that this command supports"""
+        """Set final values for all the options that this command supports"""
         dirname = pathlib.Path(pathlib.Path(__file__).absolute().parent)
         rootdir = "--rootdir=" + str(dirname)
-        if self.ext_coverage is not None:
-            BuildExt.CODE_COVERAGE = True
         if self.pytest_args is None:
             self.pytest_args = ''
         self.pytest_args = rootdir + " tests " + self.pytest_args
@@ -403,7 +428,6 @@ class Test(setuptools.command.test.test):
 
     def run_tests(self):
         """Run tests"""
-        import pytest
         sys.path.insert(0, build_dirname())
 
         errno = pytest.main(
@@ -418,10 +442,10 @@ class Test(setuptools.command.test.test):
         # We work in the extension generation directory (CMake directory)
         os.chdir(str(tempdir))
 
-        # We build/execute the C++ unit tests that are skipped during the
-        # generation of the extension.
-        self.spawn(["make", "-j%d" % os.cpu_count()])
-        self.spawn(["ctest", "--output-on-failure"])
+        # If the C++ unit tests have been generated, they are executed.
+        if pathlib.Path(tempdir, "src", "pyinterp", "core", "tests",
+                        "test_axis").exists():
+            self.spawn(["ctest", "--output-on-failure"])
 
         # Generation of the code coverage of the C++ extension?
         if not self.ext_coverage:
