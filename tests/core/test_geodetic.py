@@ -10,7 +10,10 @@ from pyinterp import core
 
 
 class TextSystem(unittest.TestCase):
-    def test_wgs84(self):
+    """Test of the C+++/Python interface of the pyinterp::geodetic::System
+    class"""
+    def test_system_wgs84(self):
+        """Checking expected WGS-84 properties"""
         wgs84 = core.geodetic.System()
         # https://fr.wikipedia.org/wiki/WGS_84
         # https://en.wikipedia.org/wiki/Geodetic_datum
@@ -49,7 +52,8 @@ class TextSystem(unittest.TestCase):
                                6371000.7900,
                                delta=1e-4)
 
-    def test_operator(self):
+    def test_system_operators(self):
+        """Test operators"""
         wgs84 = core.geodetic.System()
         # https://en.wikipedia.org/wiki/Geodetic_Reference_System_1980
         grs80 = core.geodetic.System(6378137, 1 / 298.257222101)
@@ -58,20 +62,25 @@ class TextSystem(unittest.TestCase):
         self.assertEqual(wgs84, wgs84)
         self.assertNotEqual(wgs84, grs80)
 
-    def test_pickle(self):
+    def test_system_pickle(self):
+        """Serialization test"""
         wgs84 = core.geodetic.System()
         self.assertEqual(wgs84, pickle.loads(pickle.dumps(wgs84)))
 
 
 class TestCoordinates(unittest.TestCase):
-    def test_ecef_lla(self):
+    """Test of the C+++/Python interface of the pyinterp::geodetic::Coordinates
+    class"""
+    def test_coordinates_ecef_lla(self):
+        """ECEF/LLA Conversion Test"""
         lon, lat, alt = core.geodetic.Coordinates(None).ecef_to_lla(
             [1176498.769459714], [5555043.905503586], [2895446.8901510699])
         self.assertAlmostEqual(78.042068, lon[0], delta=1e-8)
         self.assertAlmostEqual(27.173891, lat[0], delta=1e-8)
         self.assertAlmostEqual(168.0, alt[0], delta=1e-8)
 
-    def test_lla_to_ecef(self):
+    def test_coordinates_lla_to_ecef(self):
+        """LLA/ECEF Conversion Test"""
         x, y, z = core.geodetic.Coordinates(None).lla_to_ecef([78.042068],
                                                               [27.173891],
                                                               [168.0])
@@ -79,7 +88,8 @@ class TestCoordinates(unittest.TestCase):
         self.assertAlmostEqual(5555043.905503586, y[0], delta=1e-8)
         self.assertAlmostEqual(2895446.8901510699, z[0], delta=1e-8)
 
-    def test_round_trip(self):
+    def test_coordinates_round_trip(self):
+        """Check algorithm precision"""
         lon1 = np.random.uniform(-180.0, 180.0, 1000000)
         lat1 = np.random.uniform(-90.0, 90.0, 1000000)
         alt1 = np.random.uniform(-10000, 100000, 1000000)
@@ -94,13 +104,17 @@ class TestCoordinates(unittest.TestCase):
         self.assertAlmostEqual((alt1 - alt2).mean(), 0, delta=1e-10)
 
     def test_pickle(self):
+        """Serialization test"""
         a = core.geodetic.Coordinates(None)
         b = pickle.loads(pickle.dumps(a))
         self.assertTrue(np.all(a.__getstate__() == b.__getstate__()))
 
 
 class TestPoint2D(unittest.TestCase):
-    def test_init(self):
+    """Test of the C+++/Python interface of the pyinterp::geodetic::Point2D
+    class"""
+    def test_point2d_init(self):
+        """Test construction and accessors of the object"""
         pt = core.geodetic.Point2D(12, 24)
         self.assertEqual(pt.lon, 12)
         self.assertEqual(pt.lat, 24)
@@ -110,7 +124,8 @@ class TestPoint2D(unittest.TestCase):
         pt.lat = 33
         self.assertEqual(pt.lat, 33)
 
-    def test_pickle(self):
+    def test_point2d_pickle(self):
+        """Serialization tests"""
         a = core.geodetic.Point2D(1, 2)
         b = pickle.loads(pickle.dumps(a))
         self.assertEqual(a.lon, b.lon)
@@ -119,7 +134,10 @@ class TestPoint2D(unittest.TestCase):
 
 
 class TestBox2D(unittest.TestCase):
-    def test_init(self):
+    """Test of the C+++/Python interface of the pyinterp::geodetic::Box2D
+    class"""
+    def test_box2d_init(self):
+        """Test construction and accessors of the object"""
         min_corner = core.geodetic.Point2D(0, 1)
         max_corner = core.geodetic.Point2D(2, 3)
 
@@ -145,6 +163,7 @@ class TestBox2D(unittest.TestCase):
         self.assertEqual(box.max_corner.lat, 1)
 
     def test_pickle(self):
+        """Serialization tests"""
         min_corner = core.geodetic.Point2D(0, 1)
         max_corner = core.geodetic.Point2D(2, 3)
         a = core.geodetic.Box2D(min_corner, max_corner)

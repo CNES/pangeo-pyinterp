@@ -30,23 +30,36 @@ def plot(x, y, z, filename):
 
 
 class TestRTree(unittest.TestCase):
+    """Test of the C+++/Python interface of the pyinterp::RTree class"""
     GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
                         "dataset", "mss.nc")
 
     @classmethod
-    def load_data(cls):
+    def load_data(cls, packing=True):
+        """Creating the search tree"""
         with netCDF4.Dataset(cls.GRID) as ds:
             z = ds.variables['mss'][:].T
             z[z.mask] = float("nan")
-            x, y = np.meshgrid(ds.variables['lon'][:],
-                               ds.variables['lat'][:],
-                               indexing='ij')
+            x = ds.variables['lon'][:]
+            y = ds.variables['lat'][:]
+            # Since insertion is slower, the data are sub-sampled to avoid
+            # the test being too long.
+            if not packing:
+                x = x[::5]
+                y = y[::5]
+                z = z[::5, ::5]
+            x, y = np.meshgrid(x, y, indexing='ij')
             mesh = core.RTreeFloat32(core.geodetic.System())
-            mesh.packing(
-                np.vstack((x.flatten(), y.flatten())).T, z.data.flatten())
+            if packing:
+                mesh.packing(
+                    np.vstack((x.flatten(), y.flatten())).T, z.data.flatten())
+            else:
+                mesh.insert(
+                    np.vstack((x.flatten(), y.flatten())).T, z.data.flatten())
             return mesh
 
-    def test_interpolate(self):
+    def test_rtree_interpolate(self):
+        """Interpolation test"""
         mesh = self.load_data()
         lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
         lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
@@ -66,10 +79,18 @@ class TestRTree(unittest.TestCase):
         z0 = np.ma.fix_invalid(z0)
         z1 = np.ma.fix_invalid(z1)
         self.assertTrue(np.all(z1 == z0))
+
         if HAVE_PLT:
             plot(x, y, z0.reshape((len(lon), len(lat))), "mss_rtree_idw.png")
 
-    def test_pickle(self):
+    def test_rtree_insert(self):
+        """Data insertion test"""
+        mesh = self.load_data(packing=False)
+        self.assertIsInstance(mesh, core.RTreeFloat32)
+        self.assertTrue(len(mesh) != 0)
+
+    def test_rtree_pickle(self):
+        """Serialization test"""
         interpolator = self.load_data()
         other = pickle.loads(pickle.dumps(interpolator))
         self.assertTrue(isinstance(other, core.RTreeFloat32))

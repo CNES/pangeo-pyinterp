@@ -31,7 +31,8 @@ MERCATOR_LATITUDES = np.array([
 
 
 class TextAxis(unittest.TestCase):
-    def test_accessor(self):
+    """Test of the C+++/Python interface of the pyinterp::Axis class"""
+    def test_axis_accessor(self):
         lon = np.linspace(0, 359, 360)
         a = core.Axis(lon, is_circle=False, is_radian=False)
         b = core.Axis(0, 359, 360, is_circle=False, is_radian=False)
@@ -91,7 +92,10 @@ class TextAxis(unittest.TestCase):
         a = core.Axis(MERCATOR_LATITUDES, is_circle=True)
         self.assertFalse(a.is_circle)
 
-    def test_pickle(self):
+        with self.assertRaises(RuntimeError):
+            a.increment()
+
+    def test_axis_pickle(self):
         a = core.Axis(0, 359, 360, is_circle=False, is_radian=False)
         b = pickle.loads(pickle.dumps(a))
         self.assertEqual(a, b)
