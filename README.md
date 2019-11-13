@@ -1,5 +1,4 @@
 [![Build Status](https://dev.azure.com/fbriol/pangeo-pyinterp/_apis/build/status/CNES.pangeo-pyinterp?branchName=master)](https://dev.azure.com/fbriol/pangeo-pyinterp/_build/latest?definitionId=2&branchName=master)
-![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/fbriol/pangeo-pyinterp/2)
 [![conda](https://anaconda.org/conda-forge/pyinterp/badges/installer/conda.svg?service=github)](https://www.anaconda.com/distribution/)
 [![platforms](https://anaconda.org/conda-forge/pyinterp/badges/platforms.svg?service=github)](https://anaconda.org/conda-forge/pyinterp)
 [![latest-release-date](https://anaconda.org/conda-forge/pyinterp/badges/latest_release_date.svg?service=github)](https://github.com/CNES/pangeo-pyinterp/commits/master)
