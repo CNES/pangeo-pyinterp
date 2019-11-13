@@ -91,7 +91,7 @@ def revision():
     # If the information is unavailable (execution of this function outside the
     # development environment), file creation is not possible
     if not stdout:
-        pattern = re.compile(r'\s+result = "(.*)"')
+        pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
         with open(module, "r") as stream:
             for line in stream:
                 match = pattern.search(line)
