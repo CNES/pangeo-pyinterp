@@ -1,7 +1,7 @@
 Changelog
 #########
 
-0.0.7 (X Y 2019)
+0.0.7 (13 November 2019)
 -------------------------
 * Addition of binned bivariate statistics.
 * Addition of bicubic interpolation in 3D space.
