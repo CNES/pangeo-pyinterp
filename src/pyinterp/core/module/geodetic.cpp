@@ -202,7 +202,7 @@ Return:
       .def("axis_ratio", &geodetic::System::axis_ratio, R"__doc__(
 Gets the axis ratio
 
-Return
+Return:
     float: :math:`\frac{b}{a}`
 )__doc__")
       .def("linear_eccentricity", &geodetic::System::linear_eccentricity,

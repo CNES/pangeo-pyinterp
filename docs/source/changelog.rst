@@ -5,6 +5,9 @@ Changelog
 -------------------------
 * Addition of binned bivariate statistics.
 * Addition of bicubic interpolation in 3D space.
+* Improved generation of the C++ extension.
+* Analysis of test coverage.
+* Minor bug fixes.
 
 0.0.6 (4 October 2019)
 -------------------------

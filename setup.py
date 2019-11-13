@@ -452,7 +452,7 @@ class Test(setuptools.command.test.test):
             return
 
         # Directory for writing the HTML coverage report.
-        htmlcov = str(pathlib.Path(tempdir.parent.parent, "htmlcov"))
+        htmllcov = str(pathlib.Path(tempdir.parent.parent, "htmllcov"))
 
         # File containing the coverage report.
         coverage_info = str(pathlib.Path(tempdir, "coverage.info"))
@@ -471,7 +471,7 @@ class Test(setuptools.command.test.test):
         ])
 
         # Finally, we generate the HTML coverage report.
-        self.spawn(["genhtml", coverage_info, "--output-directory", htmlcov])
+        self.spawn(["genhtml", coverage_info, "--output-directory", htmllcov])
 
 
 def long_description():

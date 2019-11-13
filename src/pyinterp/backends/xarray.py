@@ -32,7 +32,7 @@ class AxisIdentifier:
             array : xarray.DataArray
                 The array defining the regular grid in n dimensions.
 
-        Returns
+        Return:
             str, optional:
                 The name of the coordinate
         """
@@ -49,7 +49,7 @@ class AxisIdentifier:
             array : xarray.DataArray
                 The array defining the regular grid in n dimensions.
 
-        Returns
+        Return:
             str, optional:
                 The name of the longitude coordinate
         """
@@ -63,7 +63,7 @@ class AxisIdentifier:
             array : xarray.DataArray
                 The array defining the regular grid in n dimensions.
 
-        Returns
+        Return:
             str, optional:
                 The name of the latitude coordinate
         """
@@ -80,7 +80,7 @@ def _lon_lat_from_data_array(data_array: xr.DataArray,
         data_array (xarray.DataArray): Provided data array
         ndims (int, optional): Number of dimension expected for the variable
 
-    Returns:
+    Return:
         tuple: longitude and latitude names
 
     Raises:
@@ -117,8 +117,8 @@ def _coords(coords: dict,
         dims (iterable): List of dimensions handled by the grid
         datetime64 (tuple, optional): Properties of the axis used
 
-    Returns:
-        The tuple of arguments decoded.
+    Return:
+        tuple: the tuple of arguments decoded.
 
     Raises:
         TypeError if coords is not on instance of ``dict``
@@ -166,7 +166,7 @@ class Grid2D(grid.Grid2D):
             data_array.transpose(*self._dims).values,
             increasing_axes='inplace' if increasing_axes else None)
 
-    def bivariate(self, coords: dict, *args, **kwargs):
+    def bivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
@@ -179,13 +179,13 @@ class Grid2D(grid.Grid2D):
                 method :py:meth:`pyinterp.bivariate
                 <pyinterp.interpolator.bivariate.bivariate>`
 
-        Returns:
-            The interpolated values
+        Return:
+            np.ndarray: the interpolated values
         """
         return interpolator.bivariate(self, *_coords(coords, self._dims),
                                       *args, **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs):
+    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
@@ -198,8 +198,8 @@ class Grid2D(grid.Grid2D):
                 method :py:meth:`pyinterp.bicubic
                 <pyinterp.interpolator.bicubic.bicubic>`
 
-        Returns:
-            The interpolated values
+        Return:
+            np.ndarray: the interpolated values
         """
         return interpolator.bicubic(self, *_coords(coords, self._dims), *args,
                                     **kwargs)
@@ -236,14 +236,14 @@ class Grid3D(grid.Grid3D):
     def time_unit(self) -> Optional[np.dtype]:
         """Gets the time units handled by this instance
 
-        Returns:
+        Return:
             np.dtype, optional: The unity of the temporal axis or None if
             the third dimension of this instance does not represent a time.
         """
         if self._datetime64:
             return self._datetime64[1]
 
-    def trivariate(self, coords: dict, *args, **kwargs):
+    def trivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
@@ -256,14 +256,14 @@ class Grid3D(grid.Grid3D):
                 method :py:meth:`pyinterp.trivariate
                 <pyinterp.interpolator.trivariate.trivariate>`
 
-        Returns:
-            The interpolated values
+        Return:
+            np.ndarray: the interpolated values
         """
         return interpolator.trivariate(
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs):
+    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
@@ -276,8 +276,8 @@ class Grid3D(grid.Grid3D):
                 method :py:meth:`pyinterp.bicubic
                 <pyinterp.interpolator.bicubic.bicubic>`
 
-        Returns:
-            The interpolated values
+        Return:
+            np.ndarray: the interpolated values
         """
         return interpolator.bicubic(
             self, *_coords(coords, self._dims, self._datetime64), *args,
