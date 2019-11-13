@@ -25,6 +25,7 @@ requirements:
     - boost-cpp
     - numpy
     - pip
+    - pytest
     - python
     - setuptools
     - xarray
