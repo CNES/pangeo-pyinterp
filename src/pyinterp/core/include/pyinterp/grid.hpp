@@ -260,7 +260,6 @@ Return:
           [](const pybind11::tuple& state) {
             return Grid3D<Type>::setstate(state);
           }));
-  ;
 }
 
 }  // namespace pyinterp

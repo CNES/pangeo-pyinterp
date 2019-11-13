@@ -266,8 +266,8 @@ class XArrayStack : public CoordsXY {
 
   /// Returns true if this instance does not contains at least one Not A Number
   /// (NaN).
-  [[nodiscard]] inline auto is_valid() const -> bool { 
-    for(Eigen::Index kx = 0; kx < q_.size(); ++kx) {
+  [[nodiscard]] inline auto is_valid() const -> bool {
+    for (Eigen::Index kx = 0; kx < q_.size(); ++kx) {
       if ((*q_(kx)).hasNaN()) {
         return false;
       }
