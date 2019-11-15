@@ -75,8 +75,9 @@ calculated using the `Haversine formula
 <https://en.wikipedia.org/wiki/Haversine_formula>`_.
 
 An experimental module of the library simplifies the use of the library by
-using xarray and CF information contained in dataset. This module
-implements all the other interpolators of the regular grids presented below.
+using :py:mod:`xarray <pyinterp.backends.xarray>` and CF information contained
+in dataset. This module implements all the other interpolators of the regular
+grids presented below.
 
 .. code:: python
 
@@ -84,8 +85,18 @@ implements all the other interpolators of the regular grids presented below.
     import xarray as xr
 
     ds = xr.load_dataset("tests/dataset/mss.nc")
-    interpolator = pyinterp.backends.xarray.Grid2D(ds.data_vars["mss"])
+    interpolator = pyinterp.backends.xarray.Grid2D(
+        ds.data_vars["mss"], geodetic=True)
     mss = interpolator.bivariate(dict(lon=mx.flatten(), lat=my.flatten()))
+
+.. note ::
+
+    An exception will be thrown if the constructor is not able to determine
+    which axes are the longitudes and latitudes. You can force the data to be
+    read by specifying on the longitude and latitude axes the respective
+    ``degrees_east`` and ``degrees_north`` attribute ``units``. If your grid
+    does not contain geodetic coordinates, set the ``geodetic`` option of the
+    constructor to ``False``.
 
 Bicubic
 #######
@@ -243,14 +254,14 @@ The use of this function is identical to the function presented for
 ``bivariate`` interpolations except for the type of grid passed as parameter, a
 :py:class:`3D grid <pyinterp.grid.Grid3D>`, and the coordinates along the Z
 axis. First, the 3D grid is reconstructed using the backend ``xarray``,
-requesting axes sorted in ascending order (GSL requirements). 
+requesting axes sorted in ascending order (GSL requirements).
 
 .. code:: python
 
     ds = xr.load_dataset("tests/dataset/tcw.nc")
     interpolator = pyinterp.backends.xarray.Grid3D(
         ds.data_vars["tcw"], increasing_axes=True)
-    
+
     tcw = interpolator.bicubic(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
