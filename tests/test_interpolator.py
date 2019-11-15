@@ -48,6 +48,17 @@ class Grid2D(unittest.TestCase):
                            interpolator="inverse_distance_weighting")
         self.assertIsInstance(z, np.ndarray)
 
+        grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(self.GRID).mss,
+                                               geodetic=False)
+
+        self.assertIsInstance(grid, pyinterp.backends.xarray.Grid2D)
+        w = grid.bivariate(collections.OrderedDict(lon=x.flatten(),
+                                                   lat=y.flatten()),
+                           interpolator="inverse_distance_weighting")
+        self.assertNotEqual(
+            np.ma.fix_invalid(z).mean(),
+            np.ma.fix_invalid(w).mean())
+
         with self.assertRaises(ValueError):
             grid.bivariate(collections.OrderedDict(lon=x.flatten(),
                                                    lat=y.flatten()),
@@ -67,6 +78,7 @@ class Grid2D(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             pyinterp.Grid2D(lon, lat, array, increasing_axes='_')
+
 
     def test_bicubic(self):
         grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(self.GRID).mss)

@@ -70,14 +70,18 @@ class AxisIdentifier:
         return self._axis(cf.AxisLatitudeUnit())
 
 
-def _lon_lat_from_data_array(data_array: xr.DataArray,
-                             ndims: Optional[int] = 2) -> Tuple[str, str]:
+def _dims_from_data_array(data_array: xr.DataArray,
+                          geodetic: bool,
+                          ndims: Optional[int] = 2) -> Tuple[str, str]:
     """
-    Gets the name of the dimensions that define the longitudes and latitudes
+    Gets the name of the dimensions that define the grid axes.
+    the longitudes and latitudes
     of the data array.
 
     Args:
         data_array (xarray.DataArray): Provided data array
+        geodetic (bool): True, if the axes of the grid represent
+            longitudes and latitudes otherwise Cartesian
         ndims (int, optional): Number of dimension expected for the variable
 
     Return:
@@ -89,6 +93,15 @@ def _lon_lat_from_data_array(data_array: xr.DataArray,
         ValueError if the number of dimensions is different from the number of
             dimensions of the grid provided.
     """
+    size = len(data_array.shape)
+    if size != ndims:
+        raise ValueError(
+            "The number of dimensions of the variable is incorrect. Expected "
+            f"{ndims}, found {size}.")
+
+    if not geodetic:
+        return tuple(data_array.coords)[:2]
+
     ident = AxisIdentifier(data_array)
     lon = ident.longitude()
     if lon is None:
@@ -96,11 +109,6 @@ def _lon_lat_from_data_array(data_array: xr.DataArray,
     lat = ident.latitude()
     if lat is None:
         raise ValueError("The dataset doesn't define a longitude axis")
-    size = len(data_array.shape)
-    if size != ndims:
-        raise ValueError(
-            "The number of dimensions of the variable is incorrect. Expected "
-            f"{ndims}, found {size}.")
     return lon, lat
 
 
@@ -155,13 +163,36 @@ class Grid2D(grid.Grid2D):
         increasing_axes (bool, optional): If this is true, check that the grid
             axes are increasing: the decreasing axes and the supplied grid will
             be flipped. Default to ``False``.
+        geodetic (bool, optional): True, if the axes of the grid represent
+            longitudes and latitudes. In this case, the constructor will try to
+            determine the axes of longitudes and latitudes according to the
+            value of the attribute ``units`` using the following algorithm:
+
+                * if the axis unit is one of the values of the set
+                  ``degrees_east``, ``degree_east``, "degree_E``,
+                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                  the axis represents a longitude,
+                * if the axis unit is one of the values of the set
+                  ``degrees_north``, ``degree_north``, ``degree_N``,
+                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                  represents a latitude.
+
+            If this option is false, the axes will be considered Cartesian.
+            Default to ``True``.
+
+    Raises:
+        ValueError: if the provided data array doesn't define a
+            longitude/latitude axis if ``geodetic`` is True
+        ValueError: if the number of dimensions is different of 2.
     """
     def __init__(self,
                  data_array: xr.DataArray,
-                 increasing_axes: Optional[bool] = False):
-        self._dims = _lon_lat_from_data_array(data_array)
+                 increasing_axes: Optional[bool] = False,
+                 geodetic: Optional[bool] = True):
+
+        self._dims = _dims_from_data_array(data_array, geodetic)
         super(Grid2D, self).__init__(
-            core.Axis(data_array.coords[self._dims[0]].values, is_circle=True),
+            core.Axis(data_array.coords[self._dims[0]].values, is_circle=geodetic),
             core.Axis(data_array.coords[self._dims[1]].values),
             data_array.transpose(*self._dims).values,
             increasing_axes='inplace' if increasing_axes else None)
@@ -213,11 +244,33 @@ class Grid3D(grid.Grid3D):
         increasing_axes (bool, optional): If this is true, check that the grid
             axes are increasing: the decreasing axes and the supplied grid will
             be flipped. Default to ``False``.
+        geodetic (bool, optional): True, if the axes of the grid represent
+            longitudes and latitudes. In this case, the constructor will try to
+            determine the axes of longitudes and latitudes according to the
+            value of the attribute ``units`` using the following algorithm:
+
+                * if the axis unit is one of the values of the set
+                  ``degrees_east``, ``degree_east``, "degree_E``,
+                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                  the axis represents a longitude,
+                * if the axis unit is one of the values of the set
+                  ``degrees_north``, ``degree_north``, ``degree_N``,
+                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                  represents a latitude.
+
+            If this option is false, the axes will be considered Cartesian.
+            Default to ``True``.
+
+    Raises:
+        ValueError: if the provided data array doesn't define a
+            longitude/latitude axis if ``geodetic`` is True
+        ValueError: if the number of dimensions is different of 3.
     """
     def __init__(self,
                  data_array: xr.DataArray,
-                 increasing_axes: Optional[bool] = False):
-        x, y = _lon_lat_from_data_array(data_array, ndims=3)
+                 increasing_axes: Optional[bool] = False,
+                 geodetic: Optional[bool] = True):
+        x, y = _dims_from_data_array(data_array, geodetic, ndims=3)
         z = (set(data_array.dims) - {x, y}).pop()
         self._dims = (x, y, z)
         # If the grid has a time axis, its properties are stored in order to
@@ -226,7 +279,7 @@ class Grid3D(grid.Grid3D):
         dtype = data_array.coords[z].dtype
         self._datetime64 = (z, dtype) if "datetime64" in dtype.name else None
         super(Grid3D, self).__init__(
-            core.Axis(data_array.coords[x].values, is_circle=True),
+            core.Axis(data_array.coords[x].values, is_circle=geodetic),
             core.Axis(data_array.coords[y].values),
             core.Axis(data_array.coords[z].astype("float64") if self.
                       _datetime64 else data_array.coords[z].values),
