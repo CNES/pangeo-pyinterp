@@ -18,7 +18,6 @@ import setuptools
 import setuptools.command.build_ext
 import setuptools.command.install
 import setuptools.command.test
-import pytest
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -428,6 +427,7 @@ class Test(setuptools.command.test.test):
 
     def run_tests(self):
         """Run tests"""
+        import pytest
         sys.path.insert(0, build_dirname())
 
         errno = pytest.main(
