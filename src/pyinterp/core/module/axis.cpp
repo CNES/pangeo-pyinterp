@@ -163,25 +163,6 @@ Args:
     is_radian (bool, optional): True, if the coordinate system is radian.
         Defaults to ``false``.
 )__doc__")
-      .def(py::init<double, double, double, double, bool, bool>(),
-           py::arg("start"), py::arg("stop"), py::arg("step"),
-           py::arg("epsilon") = 1e-6, py::arg("is_circle") = false,
-           py::arg("is_radian") = false,
-           R"__doc__(
-Create a coordinate axis from evenly spaced numbers over a specified
-interval.
-
-Args:
-    start (float): The first value of the axis.
-    stop (float): The last value of the axis.
-    num (int): Number of samples in the axis.
-    epsilon (float, optional): Maximum allowed difference between two real
-        numbers in order to consider them equal.
-    is_circle (bool, optional): True, if the axis can represent a circle.
-        Defaults to ``false``.
-    is_radian (bool, optional): True, if the coordinate system is radian.
-        Defaults to ``false``.
-)__doc__")
       .def("__len__",
            [](const pyinterp::Axis& self) -> size_t { return self.size(); })
       .def("__getitem__",

@@ -35,7 +35,7 @@ class TextAxis(unittest.TestCase):
     def test_axis_accessor(self):
         lon = np.linspace(0, 359, 360)
         a = core.Axis(lon, is_circle=False, is_radian=False)
-        b = core.Axis(0, 359, 360, is_circle=False, is_radian=False)
+        b = core.Axis(lon, is_circle=False, is_radian=False)
         self.assertEqual(a, b)
         self.assertFalse(a != b)
         self.assertEqual(str(a), str(b))
@@ -96,7 +96,9 @@ class TextAxis(unittest.TestCase):
             a.increment()
 
     def test_axis_pickle(self):
-        a = core.Axis(0, 359, 360, is_circle=False, is_radian=False)
+        a = core.Axis(np.linspace(0, 359, 360),
+                      is_circle=False,
+                      is_radian=False)
         b = pickle.loads(pickle.dumps(a))
         self.assertEqual(a, b)
 

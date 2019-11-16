@@ -54,8 +54,8 @@ class Fill(unittest.TestCase):
         with self.assertRaises(ValueError):
             pyinterp.fill.gauss_seidel(grid, '_')
 
-        x_axis = pyinterp.Axis(-180, 180, 10, is_circle=True)
-        y_axis = pyinterp.Axis(-90, 90, 10, is_circle=False)
+        x_axis = pyinterp.Axis(np.linspace(-180, 180, 10), is_circle=True)
+        y_axis = pyinterp.Axis(np.linspace(-90, 90, 10), is_circle=False)
         data = np.random.rand(len(x_axis), len(y_axis))
         grid = pyinterp.Grid2D(x_axis, y_axis, data)
         _, filled0 = pyinterp.fill.gauss_seidel(grid, num_threads=0)

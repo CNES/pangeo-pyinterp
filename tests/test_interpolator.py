@@ -64,8 +64,8 @@ class Grid2D(unittest.TestCase):
                                                    lat=y.flatten()),
                            bounds_error=True)
 
-        lon = pyinterp.Axis(0, 360, 100, is_circle=True)
-        lat = pyinterp.Axis(-80, 80, 50, is_circle=False)
+        lon = pyinterp.Axis(np.linspace(0, 360, 100), is_circle=True)
+        lat = pyinterp.Axis(np.linspace(-80, 80, 50), is_circle=False)
         array, _ = np.meshgrid(lon[:], lat[:])
 
         with self.assertRaises(ValueError):
@@ -78,7 +78,6 @@ class Grid2D(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             pyinterp.Grid2D(lon, lat, array, increasing_axes='_')
-
 
     def test_bicubic(self):
         grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(self.GRID).mss)
@@ -111,9 +110,9 @@ class Grid2D(unittest.TestCase):
                          bounds_error=True,
                          boundary="sym")
 
-        x_axis = pyinterp.Axis(-180, 179, 360, is_circle=True)
-        y_axis = pyinterp.Axis(-90, 90, 181, is_circle=False)
-        z_axis = pyinterp.Axis(0, 10, 10, is_circle=False)
+        x_axis = pyinterp.Axis(np.linspace(-180, 179, 360), is_circle=True)
+        y_axis = pyinterp.Axis(np.linspace(-90, 90, 181), is_circle=False)
+        z_axis = pyinterp.Axis(np.linspace(0, 10, 10), is_circle=False)
         matrix, _ = np.meshgrid(x_axis[:], y_axis[:])
         grid = pyinterp.Grid2D(x_axis, y_axis, matrix.T)
 
