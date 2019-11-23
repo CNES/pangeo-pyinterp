@@ -89,7 +89,7 @@
 
         .. automethod:: __init__
 
-    .. autoclass:: RTreeFloat64
+    .. autoclass:: RTree3DFloat64
         :show-inheritance:
         :members:
         :inherited-members:

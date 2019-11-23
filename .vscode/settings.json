@@ -89,6 +89,10 @@
         "cfenv": "cpp",
         "memory_resource": "cpp",
         "conv_stats2grid.h": "c",
-        "bit": "cpp"
+        "bit": "cpp",
+        "xhash": "cpp",
+        "xtree": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp"
     }
 }

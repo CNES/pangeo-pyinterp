@@ -52,7 +52,7 @@ class TestRTree(unittest.TestCase):
             y = y.astype("float32")
             z = z.astype("float32")
             x, y = np.meshgrid(x, y, indexing='ij')
-            mesh = core.RTreeFloat32(core.geodetic.System())
+            mesh = core.RTree3DFloat32(core.geodetic.System())
             if packing:
                 mesh.packing(
                     np.vstack((x.flatten(), y.flatten())).T, z.data.flatten())
@@ -89,14 +89,14 @@ class TestRTree(unittest.TestCase):
     def test_rtree_insert(self):
         """Data insertion test"""
         mesh = self.load_data(packing=False)
-        self.assertIsInstance(mesh, core.RTreeFloat32)
+        self.assertIsInstance(mesh, core.RTree3DFloat32)
         self.assertTrue(len(mesh) != 0)
 
     def test_rtree_pickle(self):
         """Serialization test"""
         interpolator = self.load_data()
         other = pickle.loads(pickle.dumps(interpolator))
-        self.assertTrue(isinstance(other, core.RTreeFloat32))
+        self.assertTrue(isinstance(other, core.RTree3DFloat32))
 
 
 if __name__ == "__main__":

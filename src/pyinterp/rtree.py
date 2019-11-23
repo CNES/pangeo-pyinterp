@@ -22,15 +22,21 @@ class RTree:
             (longitudes, latitudes, altitude) into ECEF coordinates. If not set
             the geodetic system used is WGS-84. Default to ``None``.
         dtype (numpy.dtype, optional): Data type of the instance to create.
+        ndims (int, optional): The number of dimensions of the tree. This
+            dimension must be at least equal to 3 to store the ECEF coordinates
+            of the points. Default to ``3``.
     """
 
     def __init__(self,
                  system: Optional[geodetic.System] = None,
-                 dtype: Optional[np.dtype] = np.dtype("float64")):
+                 dtype: Optional[np.dtype] = np.dtype("float64"),
+                 ndims: Optional[int] = 3):
+        if ndims < 3:
+            raise ValueError("ndims must be >= 3")
         if dtype == np.dtype("float64"):
-            self._instance = core.RTreeFloat64(system)
+            self._instance = getattr(core, f"RTree{ndims}DFloat64")(system)
         elif dtype == np.dtype("float32"):
-            self._instance = core.RTreeFloat32(system)
+            self._instance = getattr(core, f"RTree{ndims}DFloat32")(system)
         else:
             raise ValueError(f"dtype {dtype} not handled by the object")
         self.dtype = dtype
@@ -41,10 +47,10 @@ class RTree:
         """Returns the box able to contain all values stored in the container.
 
         Return:
-            tuple: A tuple containing two tuples defining 3 coordinates
-            (longitude, latitude, altitude) capable of containing all the
-            values stored in the container or None if there are no values
-            in the container.
+            tuple: A tuple that contains the coordinates of the minimum and
+            maximum corners of the box able to contain all values stored in
+            the container or an empty tuple if there are no values in the
+            container.
         """
         return self._instance.bounds()
 
@@ -64,10 +70,13 @@ class RTree:
         before construction.)
 
         Args:
-            coordinates (numpy.ndarray): A matrix ``(n, 2)`` to add points
-                defined by their longitudes and latitudes or a matrix
-                ``(n, 3)`` to add points defined by their longitudes, latitudes
-                and altitudes.
+            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
+                the number of observations and ``ndims`` is the number of
+                coordinates in order: longitude and latitude in degrees,
+                altitude in meters and then the other coordinates defined in
+                Euclidean space if ``dims`` > 3. If the shape of the matrix is
+                ``(n, ndims)`` then the method considers the altitude constant
+                and equal to zero.
             values (numpy.ndarray): An array of size ``(n)`` containing the
                 values associated with the coordinates provided
         """
@@ -77,10 +86,13 @@ class RTree:
         """Insert new data into the search tree.
 
         Args:
-            coordinates (numpy.ndarray): A matrix ``(n, 2)`` to add points
-                defined by their longitudes and latitudes or a matrix
-                ``(n, 3)`` to add points defined by their longitudes, latitudes
-                and altitudes.
+            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
+                the number of observations and ``ndims`` is the number of
+                coordinates in order: longitude and latitude in degrees,
+                altitude in meters and then the other coordinates defined in
+                Euclidean space if ``dims`` > 3. If the shape of the matrix is
+                ``(n, ndims)`` then the method considers the altitude constant
+                and equal to zero.
             values (numpy.ndarray): An array of size ``(n)`` containing the
                 values associated with the coordinates provided
         """
@@ -94,10 +106,13 @@ class RTree:
         """Search for the nearest K nearest neighbors of a given point.
 
         Args:
-            coordinates (numpy.ndarray): A matrix ``(n, 2)`` to search points
-                defined by their longitudes and latitudes or a matrix
-                ``(n, 3)`` to search points defined by their longitudes,
-                latitudes and altitudes.
+            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
+                the number of observations and ``ndims`` is the number of
+                coordinates in order: longitude and latitude in degrees,
+                altitude in meters and then the other coordinates defined in
+                Euclidean space if ``dims`` > 3. If the shape of the matrix is
+                ``(n, ndims)`` then the method considers the altitude constant
+                and equal to zero.
             k (int, optional): The number of nearest neighbors to be searched.
                 Defaults to ``4``.
             within (bool, optional): If true, the method ensures that the
@@ -127,10 +142,13 @@ class RTree:
         distance weighting method.
 
         Args:
-            coordinates (numpy.ndarray): A matrix ``(n, 2)`` to interpolate
-                points defined by their longitudes and latitudes or a matrix
-                ``(n, 3)`` to interpolate points defined by their longitudes,
-                latitudes and altitudes.
+            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
+                the number of observations and ``ndims`` is the number of
+                coordinates in order: longitude and latitude in degrees,
+                altitude in meters and then the other coordinates defined in
+                Euclidean space if ``dims`` > 3. If the shape of the matrix is
+                ``(n, ndims)`` then the method considers the altitude constant
+                and equal to zero.
             radius (float, optional): The maximum radius of the search (m).
                 Defaults The maximum distance between two points.
             k (int, optional): The number of nearest neighbors to be used for
