@@ -13,21 +13,24 @@ namespace pyinterp::detail::geometry {
 
 /// Index points in the Cartesian space at N dimensions.
 ///
-/// @tparam Coordinate The class of storage for a point's coordinates.
+/// @tparam CoordinateType The class of storage for a point's coordinates.
 /// @tparam Type The type of data stored in the tree.
 /// @tparam N Number of dimensions in the Cartesian space handled.
-template <typename Coordinate, typename Type, size_t N>
+template <typename CoordinateType, typename Type, size_t N>
 class RTree {
  public:
+  /// Type of the point handled by this instance.
+  using point_t = geometry::PointND<CoordinateType, N>;
+
   /// Type of distances between two points.
   using distance_t = typename boost::geometry::default_distance_result<
-      geometry::PointND<Coordinate, N>, geometry::PointND<Coordinate, N>>::type;
+      point_t, geometry::PointND<CoordinateType, N>>::type;
 
   /// Type of query results.
   using result_t = std::pair<distance_t, Type>;
 
   /// Value handled by this object
-  using value_t = std::pair<geometry::PointND<Coordinate, N>, Type>;
+  using value_t = std::pair<point_t, Type>;
 
   /// Spatial index used
   using rtree_t =
@@ -55,7 +58,8 @@ class RTree {
   ///
   /// @returns The box able to contain all values stored in the container or an
   /// invalid box if there are no values in the container.
-  virtual auto bounds() const -> std::optional<geometry::BoxND<Coordinate, N>> {
+  virtual auto bounds() const
+      -> std::optional<geometry::BoxND<CoordinateType, N>> {
     if (empty()) {
       return {};
     }
@@ -90,9 +94,9 @@ class RTree {
   ///
   /// @param point Point of interest
   /// @param k The number of nearest neighbors to search.
-  /// @return the k nearest neighbors
-  auto query(const geometry::PointND<Coordinate, N> &point,
-             const uint32_t k) const -> std::vector<result_t> {
+  /// @return the k nearest neighbors: 
+  auto query(const point_t &point, const uint32_t k) const
+      -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     std::for_each(
         tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
@@ -108,8 +112,8 @@ class RTree {
   /// @param point Point of interest
   /// @param radius distance within which neighbors are returned
   /// @return the k nearest neighbors
-  auto query_ball(const geometry::PointND<Coordinate, N> &point,
-                  const double radius) const -> std::vector<result_t> {
+  auto query_ball(const point_t &point, const double radius) const
+      -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     std::for_each(
         tree_->qbegin(boost::geometry::index::satisfies([&](const auto &item) {
@@ -128,11 +132,10 @@ class RTree {
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors if the point is within by its
   /// neighbors.
-  auto query_within(const geometry::PointND<Coordinate, N> &point,
-                    const uint32_t k) const -> std::vector<result_t> {
+  auto query_within(const point_t &point, const uint32_t k) const
+      -> std::vector<result_t> {
     auto result = std::vector<result_t>();
-    auto points =
-        boost::geometry::model::multi_point<geometry::PointND<Coordinate, N>>();
+    auto points = boost::geometry::model::multi_point<point_t>();
     points.reserve(k);
 
     std::for_each(
@@ -145,13 +148,62 @@ class RTree {
 
     // Are found points located around the requested point?
     if (!boost::geometry::covered_by(
-            point,
-            boost::geometry::return_envelope<
-                boost::geometry::model::box<geometry::PointND<Coordinate, N>>>(
-                points))) {
+            point, boost::geometry::return_envelope<
+                       boost::geometry::model::box<point_t>>(points))) {
       return {};
     }
     return result;
+  }
+
+  /// Interpolation of the value at the requested position.
+  ///
+  /// @param point Point of interrest
+  /// @param radius The maximum radius of the search (m).
+  /// @param k The number of nearest neighbors to be used for calculating the
+  /// interpolated value.
+  /// @param p the power parameter.
+  /// @param within If true, the method ensures that the neighbors found are
+  /// located around the point of interest. In other words, this parameter
+  /// ensures that the calculated values will not be extrapolated.
+  /// @return a tuple containing the interpolated value and the number of
+  /// neighbors used in the calculation.
+  auto inverse_distance_weighting(const point_t &point, distance_t radius,
+                                  uint32_t k, uint32_t p, bool within) const
+      -> std::pair<Type, uint32_t> {
+    Type result = 0;
+    Type total_weight = 0;
+
+    // We're looking for the nearest k points.
+    auto nearest = within ? query(point, k) : query_within(point, k);
+    uint32_t neighbors = 0;
+
+    // For each point, the distance between the point requested and the point
+    // found is calculated and the information required for the Inverse distance
+    // weighting interpolation method is updated.
+    for (const auto &item : nearest) {
+      const auto distance = item.first;
+      if (distance < 1e-6) {
+        // If the user has requested a grid point, the mesh value is returned.
+        return std::make_pair(item.second, k);
+      }
+
+      if (distance <= radius) {
+        // If the neighbor found is within an acceptable radius it can be taken
+        // into account in the calculation.
+        auto wk = 1 / std::pow(distance, static_cast<Type>(p));
+        total_weight += wk;
+        result += item.second * wk;
+        ++neighbors;
+      }
+    }
+
+    // Finally the interpolated value is returned if there are selected points
+    // otherwise one returns an undefined value.
+    return total_weight != 0
+               ? std::make_pair(static_cast<Type>(result / total_weight),
+                                neighbors)
+               : std::make_pair(std::numeric_limits<Type>::quiet_NaN(),
+                                static_cast<uint32_t>(0));
   }
 
  protected:

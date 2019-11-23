@@ -48,6 +48,9 @@ class TestRTree(unittest.TestCase):
                 x = x[::5]
                 y = y[::5]
                 z = z[::5, ::5]
+            x = x.astype("float32")
+            y = y.astype("float32")
+            z = z.astype("float32")
             x, y = np.meshgrid(x, y, indexing='ij')
             mesh = core.RTreeFloat32(core.geodetic.System())
             if packing:
@@ -61,8 +64,8 @@ class TestRTree(unittest.TestCase):
     def test_rtree_interpolate(self):
         """Interpolation test"""
         mesh = self.load_data()
-        lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
-        lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
+        lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
+        lat = np.arange(-90, 90, 1 / 3.0, dtype="float32") + 1 / 3.0
         x, y = np.meshgrid(lon, lat, indexing="ij")
         z0, _ = mesh.inverse_distance_weighting(np.vstack(
             (x.flatten(), y.flatten())).T,

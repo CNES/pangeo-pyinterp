@@ -188,8 +188,8 @@ class TestRTree(unittest.TestCase):
                         "mss.nc")
 
     def init(self, dtype):
-        lon = np.arange(-180, 180, 10)
-        lat = np.arange(-90, 90, 10)
+        lon = np.arange(-180, 180, 10, dtype=dtype)
+        lat = np.arange(-90, 90, 10, dtype=dtype)
         lon, lat = np.meshgrid(lon, lat)
         data = lon * 0
         mesh = pyinterp.RTree(dtype=dtype)

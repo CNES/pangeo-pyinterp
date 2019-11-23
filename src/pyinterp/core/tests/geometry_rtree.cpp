@@ -70,4 +70,18 @@ TEST(geometry_rtree, query) {
   EXPECT_EQ(nearest.size(), 3);
   nearest = rtree.query_within({2, 3}, 3);
   EXPECT_EQ(nearest.size(), 3);
+
+  auto interp = rtree.inverse_distance_weighting({4, 6}, 2, 4, 2, true);
+  EXPECT_EQ(interp.first, 3);
+  EXPECT_EQ(interp.second, 1);
+
+  interp = rtree.inverse_distance_weighting({4, 4}, 3, 4, 2, false);
+  EXPECT_EQ(interp.first, 1);
+  EXPECT_EQ(interp.second, 3);
+
+  interp = rtree.inverse_distance_weighting({4, 4}, 0.1, 4, 2, false);
+  EXPECT_EQ(interp.second, 0);
+
+  interp = rtree.inverse_distance_weighting({0, 0}, 3, 4, 2, true);
+  EXPECT_EQ(interp.second, 0);
 }

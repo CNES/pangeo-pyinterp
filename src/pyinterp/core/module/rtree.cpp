@@ -10,9 +10,9 @@
 
 namespace py = pybind11;
 
-template <typename Coordinate, typename Type>
+template <typename CoordinateType, typename Type>
 static void implement_rtree(py::module& m, const char* const class_name) {
-  py::class_<pyinterp::RTree<Coordinate, Type>>(m, class_name, R"__doc__(
+  py::class_<pyinterp::RTree<CoordinateType, Type>>(m, class_name, R"__doc__(
 RTree spatial index for geodetic scalar values
 )__doc__")
       .def(py::init<std::optional<pyinterp::geodetic::System>>(),
@@ -26,37 +26,23 @@ Args:
         (longitudes, latitudes, altitude) into ECEF coordinates. If not set
         the geodetic system used is WGS-84.
 )__doc__")
-      .def(
-          "bounds",
-          [](const pyinterp::RTree<Coordinate, Type>& self) {
-            auto bounds = self.equatorial_bounds();
-            if (bounds) {
-              return py::make_tuple(
-                  py::make_tuple(boost::geometry::get<0>(bounds->min_corner()),
-                                 boost::geometry::get<1>(bounds->min_corner()),
-                                 boost::geometry::get<2>(bounds->min_corner())),
-                  py::make_tuple(
-                      boost::geometry::get<0>(bounds->max_corner()),
-                      boost::geometry::get<1>(bounds->max_corner()),
-                      boost::geometry::get<2>(bounds->max_corner())));
-            }
-            return py::make_tuple();
-          },
-          R"__doc__(
+      .def("bounds", &pyinterp::RTree<CoordinateType, Type>::equatorial_bounds,
+           R"__doc__(
 Returns the box able to contain all values stored in the container.
 
 Return:
-    tuple: A box defined by 3 coordinates able to contain all values stored
-    in the container or None if there are no values in the container.
+    tuple: A tuple that contains the coordinates of the minimum and
+    maximum corners of the box able to contain all values stored in the
+    container or an empty tuple if there are no values in the container.
 )__doc__")
-      .def("__len__", &pyinterp::RTree<Coordinate, Type>::size)
+      .def("__len__", &pyinterp::RTree<CoordinateType, Type>::size)
       .def("__bool__",
-           [](const pyinterp::RTree<Coordinate, Type>& self) {
+           [](const pyinterp::RTree<CoordinateType, Type>& self) {
              return !self.empty();
            })
-      .def("clear", &pyinterp::RTree<Coordinate, Type>::clear,
+      .def("clear", &pyinterp::RTree<CoordinateType, Type>::clear,
            "Removes all values stored in the container.")
-      .def("packing", &pyinterp::RTree<Coordinate, Type>::packing,
+      .def("packing", &pyinterp::RTree<CoordinateType, Type>::packing,
            py::arg("coordinates"), py::arg("values"),
            R"__doc__(
 The tree is created using packing algorithm (The old data is erased
@@ -69,7 +55,7 @@ Args:
     values (numpy.ndarray): An array of size ``(n)`` containing the values
         associated with the coordinates provided
 )__doc__")
-      .def("insert", &pyinterp::RTree<Coordinate, Type>::insert,
+      .def("insert", &pyinterp::RTree<CoordinateType, Type>::insert,
            py::arg("coordinates"), py::arg("values"),
            R"__doc__(
 Insert new data into the search tree.
@@ -81,16 +67,15 @@ Args:
     values (numpy.ndarray): An array of size ``(n)`` containing the values
         associated with the coordinates provided
 )__doc__")
-      .def(
-          "query",
-          [](const pyinterp::RTree<Coordinate, Type>& self,
-             const py::array_t<double>& coordinates, const uint32_t k,
-             const bool within, const size_t num_threads) -> py::tuple {
-            return self.query(coordinates, k, within, num_threads);
-          },
-          py::arg("coordinates"), py::arg("k") = 4, py::arg("within") = false,
-          py::arg("num_threads") = 0,
-          R"__doc__(
+      .def("query",
+           [](const pyinterp::RTree<CoordinateType, Type>& self,
+              const py::array_t<double>& coordinates, const uint32_t k,
+              const bool within, const size_t num_threads) -> py::tuple {
+             return self.query(coordinates, k, within, num_threads);
+           },
+           py::arg("coordinates"), py::arg("k") = 4, py::arg("within") = false,
+           py::arg("num_threads") = 0,
+           R"__doc__(
 Search for the nearest K nearest neighbors of a given point.
 
 Args:
@@ -113,9 +98,9 @@ Return:
     found for all provided positions.
 )__doc__")
       .def("inverse_distance_weighting",
-           &pyinterp::RTree<Coordinate, Type>::inverse_distance_weighting,
+           &pyinterp::RTree<CoordinateType, Type>::inverse_distance_weighting,
            py::arg("coordinates"),
-           py::arg("radius") = std::numeric_limits<Coordinate>::max(),
+           py::arg("radius") = std::numeric_limits<CoordinateType>::max(),
            py::arg("k") = 4, py::arg("p") = 2, py::arg("within") = true,
            py::arg("num_threads") = 0,
            R"__doc__(
@@ -145,11 +130,11 @@ Return:
     calculation.
 )__doc__")
       .def(py::pickle(
-          [](const pyinterp::RTree<Coordinate, Type>& self) {
+          [](const pyinterp::RTree<CoordinateType, Type>& self) {
             return self.getstate();
           },
           [](const py::tuple& state) {
-            return pyinterp::RTree<Coordinate, Type>::setstate(state);
+            return pyinterp::RTree<CoordinateType, Type>::setstate(state);
           }));
 }
 
