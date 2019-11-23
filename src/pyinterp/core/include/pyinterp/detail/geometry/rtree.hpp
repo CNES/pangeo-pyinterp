@@ -3,6 +3,7 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <Eigen/Core>
 #include <algorithm>
 #include <boost/geometry.hpp>
 #include <optional>
@@ -94,7 +95,7 @@ class RTree {
   ///
   /// @param point Point of interest
   /// @param k The number of nearest neighbors to search.
-  /// @return the k nearest neighbors: 
+  /// @return the k nearest neighbors:
   auto query(const point_t &point, const uint32_t k) const
       -> std::vector<result_t> {
     auto result = std::vector<result_t>();
@@ -112,7 +113,7 @@ class RTree {
   /// @param point Point of interest
   /// @param radius distance within which neighbors are returned
   /// @return the k nearest neighbors
-  auto query_ball(const point_t &point, const double radius) const
+  auto query_ball(const point_t &point, const distance_t radius) const
       -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     std::for_each(
@@ -158,7 +159,7 @@ class RTree {
   /// Interpolation of the value at the requested position.
   ///
   /// @param point Point of interrest
-  /// @param radius The maximum radius of the search (m).
+  /// @param radius The maximum radius of the search.
   /// @param k The number of nearest neighbors to be used for calculating the
   /// interpolated value.
   /// @param p the power parameter.
@@ -204,6 +205,93 @@ class RTree {
                                 neighbors)
                : std::make_pair(std::numeric_limits<Type>::quiet_NaN(),
                                 static_cast<uint32_t>(0));
+  }
+
+  /// Search for the nearest K neighbors of a given point.
+  ///
+  /// @param point Point of interest
+  /// @param radius The maximum radius of the search.
+  /// @param k The number of nearest neighbors to be used for calculating the
+  /// interpolated value.
+  /// @return A tuple containing the matrix describing the coordinates of the
+  /// selected points and a vector of the values of the points. The arrays will
+  /// be empty if no points are selected.
+  auto nearest(const point_t &point, const distance_t radius,
+               const uint32_t k) const
+      -> std::tuple<Eigen::Matrix<CoordinateType, -1, -1>,
+                    Eigen::Matrix<Type, -1, 1>> {
+    auto coordinates = Eigen::Matrix<CoordinateType, -1, -1>(N, k);
+    auto values = Eigen::Matrix<Type, -1, 1>(k);
+    auto jx = 0U;
+
+    std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
+                  tree_->qend(), [&](const auto &item) {
+                    if (boost::geometry::distance(point, item.first) < radius) {
+                      // If the point is not too far away, it is inserted and
+                      // its coordinates and value are stored.
+                      for (size_t ix = 0; ix < N; ++ix) {
+                        coordinates(ix, jx) =
+                            geometry::point::get(item.first, ix);
+                      }
+                      values(jx++) = item.second;
+                    }
+                  });
+
+    // The arrays are resized according to the number of selected points. This
+    // number can be zero.
+    coordinates.conservativeResize(N, jx);
+    values.conservativeResize(jx);
+    return std::make_tuple(coordinates, values);
+  }
+
+  /// Search for the nearest K neighbors around a given point.
+  ///
+  /// @param point Point of interest
+  /// @param radius The maximum radius of the search.
+  /// @param k The number of nearest neighbors to be used for calculating the
+  /// interpolated value.
+  /// @return A tuple containing the matrix describing the coordinates of the
+  /// selected points and a vector of the values of the points. The arrays will
+  /// be empty if no points are selected.
+  auto nearest_within(const point_t &point, const distance_t radius,
+                      const uint32_t k) const
+      -> std::tuple<Eigen::Matrix<CoordinateType, -1, -1>,
+                    Eigen::Matrix<Type, -1, 1>> {
+    auto points = boost::geometry::model::multi_point<point_t>();
+    auto coordinates = Eigen::Matrix<CoordinateType, -1, -1>(N, k);
+    auto values = Eigen::Matrix<Type, -1, 1>(k);
+    auto jx = 0U;
+
+    // List of selected points ()
+    points.reserve(k);
+
+    std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
+                  tree_->qend(), [&](const auto &item) {
+                    if (boost::geometry::distance(point, item.first) < radius) {
+                      // If the point is not too far away, it is inserted and
+                      // its coordinates and value are stored.
+                      points.emplace_back(item.first);
+                      for (size_t ix = 0; ix < N; ++ix) {
+                        coordinates(ix, jx) =
+                            geometry::point::get(item.first, ix);
+                      }
+                      values(jx++) = item.second;
+                    }
+                  });
+
+    // If the point is not covered by its closest neighbors, an empty set will
+    // be returned.
+    if (!boost::geometry::covered_by(
+            point, boost::geometry::return_envelope<
+                       boost::geometry::model::box<point_t>>(points))) {
+      jx = 0;
+    }
+
+    // The arrays are resized according to the number of selected points. This
+    // number can be zero.
+    coordinates.conservativeResize(N, jx);
+    values.conservativeResize(jx);
+    return std::make_tuple(coordinates, values);
   }
 
  protected:
