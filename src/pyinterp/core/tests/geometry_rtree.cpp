@@ -32,17 +32,19 @@ TEST(geometry_rtree, constructor) {
   EXPECT_TRUE(rtree.empty());
 }
 
+static auto get_coordinates() -> std::vector<RTree::value_t> {
+  // https://en.wikipedia.org/wiki/K-d_tree#/media/File:Kdtree_2d.svg
+  return {{geometry::PointND<double, 2>(2, 3), 0},
+          {geometry::PointND<double, 2>(5, 4), 1},
+          {geometry::PointND<double, 2>(9, 6), 2},
+          {geometry::PointND<double, 2>(4, 7), 3},
+          {geometry::PointND<double, 2>(8, 1), 4},
+          {geometry::PointND<double, 2>(7, 2), 5}};
+}
+
 TEST(geometry_rtree, query) {
   auto rtree = RTree();
-  // https://en.wikipedia.org/wiki/K-d_tree#/media/File:Kdtree_2d.svg
-  auto coordinates =
-      std::vector<RTree::value_t>{{geometry::PointND<double, 2>(2, 3), 0},
-                                  {geometry::PointND<double, 2>(5, 4), 1},
-                                  {geometry::PointND<double, 2>(9, 6), 2},
-                                  {geometry::PointND<double, 2>(4, 7), 3},
-                                  {geometry::PointND<double, 2>(8, 1), 4},
-                                  {geometry::PointND<double, 2>(7, 2), 5}};
-  rtree.packing(coordinates);
+  rtree.packing(get_coordinates());
   auto nearest = rtree.query({3, 4}, 1);
   ASSERT_EQ(nearest.size(), 1);
   EXPECT_EQ(nearest[0].second, 0);
@@ -70,18 +72,108 @@ TEST(geometry_rtree, query) {
   EXPECT_EQ(nearest.size(), 3);
   nearest = rtree.query_within({2, 3}, 3);
   EXPECT_EQ(nearest.size(), 3);
+}
 
-  auto interp = rtree.inverse_distance_weighting({4, 6}, 2, 4, 2, true);
-  EXPECT_EQ(interp.first, 3);
-  EXPECT_EQ(interp.second, 1);
+TEST(geometry_rtree, inverse_distance_weighting) {
+  auto rtree = RTree();
+  rtree.packing(get_coordinates());
 
-  interp = rtree.inverse_distance_weighting({4, 4}, 3, 4, 2, false);
-  EXPECT_EQ(interp.first, 1);
-  EXPECT_EQ(interp.second, 3);
+  auto idw = rtree.inverse_distance_weighting({4, 6}, 2, 4, 2, true);
+  EXPECT_EQ(idw.first, 3);
+  EXPECT_EQ(idw.second, 1);
 
-  interp = rtree.inverse_distance_weighting({4, 4}, 0.1, 4, 2, false);
-  EXPECT_EQ(interp.second, 0);
+  idw = rtree.inverse_distance_weighting({4, 4}, 3, 4, 2, false);
+  EXPECT_EQ(idw.first, 1);
+  EXPECT_EQ(idw.second, 3);
 
-  interp = rtree.inverse_distance_weighting({0, 0}, 3, 4, 2, true);
-  EXPECT_EQ(interp.second, 0);
+  idw = rtree.inverse_distance_weighting({4, 4}, 0.1, 4, 2, false);
+  EXPECT_EQ(idw.second, 0);
+
+  idw = rtree.inverse_distance_weighting({0, 0}, 3, 4, 2, true);
+  EXPECT_EQ(idw.second, 0);
+}
+
+TEST(geometry_rtree, nearest) {
+  auto rtree = RTree();
+  rtree.packing(get_coordinates());
+
+  auto nearest = rtree.nearest({4, 4}, 3, 4);
+  auto points = std::get<0>(nearest);
+  ASSERT_EQ(points.cols(), 3);
+  ASSERT_EQ(points.rows(), 2);
+  EXPECT_EQ(points(0, 0), 5);
+  EXPECT_EQ(points(1, 0), 4);
+  EXPECT_EQ(points(0, 1), 2);
+  EXPECT_EQ(points(1, 1), 3);
+  EXPECT_EQ(points(0, 2), 4);
+  EXPECT_EQ(points(1, 2), 7);
+
+  auto values = std::get<1>(nearest);
+  ASSERT_EQ(values.size(), 3);
+  EXPECT_EQ(values(0), 1);
+  EXPECT_EQ(values(1), 0);
+  EXPECT_EQ(values(2), 3);
+
+  nearest = rtree.nearest({4, 4}, 0.1, 4);
+  points = std::get<0>(nearest);
+  ASSERT_EQ(points.cols(), 0);
+  ASSERT_EQ(points.rows(), 2);
+
+  values = std::get<1>(nearest);
+  ASSERT_EQ(values.size(), 0);
+
+  nearest = rtree.nearest({2, 8}, 5, 4);
+  points = std::get<0>(nearest);
+  ASSERT_EQ(points.cols(), 3);
+  ASSERT_EQ(points.rows(), 2);
+  EXPECT_EQ(points(0, 0), 4);
+  EXPECT_EQ(points(1, 0), 7);
+  EXPECT_EQ(points(0, 1), 2);
+  EXPECT_EQ(points(1, 1), 3);
+  EXPECT_EQ(points(0, 2), 5);
+  EXPECT_EQ(points(1, 2), 4);
+
+  values = std::get<1>(nearest);
+  ASSERT_EQ(values.size(), 3);
+  EXPECT_EQ(values(0), 3);
+  EXPECT_EQ(values(1), 0);
+  EXPECT_EQ(values(2), 1);
+}
+
+TEST(geometry_rtree, nearest_within) {
+  auto rtree = RTree();
+  rtree.packing(get_coordinates());
+
+  auto nearest = rtree.nearest_within({4, 4}, 3, 4);
+  auto points = std::get<0>(nearest);
+  ASSERT_EQ(points.cols(), 3);
+  ASSERT_EQ(points.rows(), 2);
+  EXPECT_EQ(points(0, 0), 5);
+  EXPECT_EQ(points(1, 0), 4);
+  EXPECT_EQ(points(0, 1), 2);
+  EXPECT_EQ(points(1, 1), 3);
+  EXPECT_EQ(points(0, 2), 4);
+  EXPECT_EQ(points(1, 2), 7);
+
+  auto values = std::get<1>(nearest);
+  ASSERT_EQ(values.size(), 3);
+  EXPECT_EQ(values(0), 1);
+  EXPECT_EQ(values(1), 0);
+  EXPECT_EQ(values(2), 3);
+
+  nearest = rtree.nearest_within({4, 4}, 0.1, 4);
+  points = std::get<0>(nearest);
+  ASSERT_EQ(points.cols(), 0);
+  ASSERT_EQ(points.rows(), 2);
+
+  values = std::get<1>(nearest);
+  ASSERT_EQ(values.size(), 0);
+
+  nearest = rtree.nearest_within({2, 8}, 5, 4);
+  points = std::get<0>(nearest);
+  ASSERT_EQ(points.cols(), 0);
+  ASSERT_EQ(points.rows(), 2);
+
+  values = std::get<1>(nearest);
+  ASSERT_EQ(values.size(), 0);
 }

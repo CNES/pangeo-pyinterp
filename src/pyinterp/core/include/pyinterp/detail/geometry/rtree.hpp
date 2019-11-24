@@ -226,7 +226,7 @@ class RTree {
 
     std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
                   tree_->qend(), [&](const auto &item) {
-                    if (boost::geometry::distance(point, item.first) < radius) {
+                    if (boost::geometry::distance(point, item.first) <= radius) {
                       // If the point is not too far away, it is inserted and
                       // its coordinates and value are stored.
                       for (size_t ix = 0; ix < N; ++ix) {
@@ -267,7 +267,7 @@ class RTree {
 
     std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
                   tree_->qend(), [&](const auto &item) {
-                    if (boost::geometry::distance(point, item.first) < radius) {
+                    if (boost::geometry::distance(point, item.first) <= radius) {
                       // If the point is not too far away, it is inserted and
                       // its coordinates and value are stored.
                       points.emplace_back(item.first);
