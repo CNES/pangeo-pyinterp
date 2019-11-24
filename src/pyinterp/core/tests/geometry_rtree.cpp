@@ -183,8 +183,8 @@ TEST(geometry_rtree, radial_basis_function) {
   auto rtree = RTree();
   rtree.packing(get_coordinates());
   using PromotionType = RTree::promotion_t;
-  auto rbf = math::RadialBasisFunction<PromotionType>(
+  auto rbf = math::RBF<PromotionType>(
       std::numeric_limits<PromotionType>::quiet_NaN(), 0,
-      math::RadialBasisFunction<PromotionType>::Multiquadric);
+      math::RadialBasisFunction::Multiquadric);
   rtree.radial_basis_function({4, 4}, rbf, 4, 4, false);
 }

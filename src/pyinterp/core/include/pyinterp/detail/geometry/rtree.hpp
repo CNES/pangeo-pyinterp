@@ -300,7 +300,7 @@ class RTree {
   }
 
   auto radial_basis_function(const point_t &point,
-                             const math::RadialBasisFunction<promotion_t> &rbf,
+                             const math::RBF<promotion_t> &rbf,
                              distance_t radius, uint32_t k, bool within) const
       -> std::pair<promotion_t, uint32_t> {
     Eigen::Matrix<promotion_t, -1, -1> coordinates;

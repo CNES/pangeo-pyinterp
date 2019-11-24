@@ -10,27 +10,27 @@
 
 namespace pyinterp::detail::math {
 
+/// Known radial functions.
+enum RadialBasisFunction : uint8_t {
+  Multiquadric,
+  Inverse,
+  Gaussian,
+  Linear,
+  Cubic,
+  Quintic,
+  ThinPlate
+};
+
 //// A radial basis function (RBF) is a real-valued function φ whose value
 /// depends only on the distance between the input and some fixed point,
 /// either the origin, so that φ(x) = φ(║x║), or some other fixed point
 /// c, called a center, so that φ(x) = φ(║x - c║). Any function φ that
 /// satisfies the property φ(x) = φ(║x║) is a radial function.
 template <typename T>
-class RadialBasisFunction {
+class RBF {
  public:
-  /// Radial function handled by this instance
-  enum RadialFunction : uint8_t {
-    Multiquadric,
-    Inverse,
-    Gaussian,
-    Linear,
-    Cubic,
-    Quintic,
-    ThinPlate
-  };
-
   /// Pointer to the Radial function used
-  using PtrRadialFunction = Eigen::Matrix<T, -1, -1> (*)(
+  using PtrRadialBasisFunction = Eigen::Matrix<T, -1, -1> (*)(
       const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r, const double);
 
   /// Default constructor
@@ -43,30 +43,29 @@ class RadialBasisFunction {
   /// go through the nodal points in this case.
   /// @param rbf The radial basis function, based on the radius, r, given by the
   /// norm (Euclidean distance)
-  RadialBasisFunction(const T& epsilon, const T& smooth,
-                      const RadialFunction rbf)
+  RBF(const T& epsilon, const T& smooth, const RadialBasisFunction rbf)
       : epsilon_(epsilon), smooth_(smooth) {
     switch (rbf) {
-      case RadialFunction::Multiquadric:
-        function_ = &RadialBasisFunction::multiquadric;
+      case RadialBasisFunction::Multiquadric:
+        function_ = &RBF::multiquadric;
         break;
-      case RadialFunction::Inverse:
-        function_ = &RadialBasisFunction::inverse_multiquadric;
+      case RadialBasisFunction::Inverse:
+        function_ = &RBF::inverse_multiquadric;
         break;
-      case RadialFunction::Gaussian:
-        function_ = &RadialBasisFunction::gaussian;
+      case RadialBasisFunction::Gaussian:
+        function_ = &RBF::gaussian;
         break;
-      case RadialFunction::Linear:
-        function_ = &RadialBasisFunction::linear;
+      case RadialBasisFunction::Linear:
+        function_ = &RBF::linear;
         break;
-      case RadialFunction::Cubic:
-        function_ = &RadialBasisFunction::cubic;
+      case RadialBasisFunction::Cubic:
+        function_ = &RBF::cubic;
         break;
-      case RadialFunction::Quintic:
-        function_ = &RadialBasisFunction::quintic;
+      case RadialBasisFunction::Quintic:
+        function_ = &RBF::quintic;
         break;
-      case RadialFunction::ThinPlate:
-        function_ = &RadialBasisFunction::thin_plate;
+      case RadialBasisFunction::ThinPlate:
+        function_ = &RBF::thin_plate;
         break;
       default:
         throw std::invalid_argument("Radial function unknown: " +
@@ -86,7 +85,7 @@ class RadialBasisFunction {
       const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& xi) const
       -> Eigen::Matrix<T, -1, 1> {
     // Matrix of distances between the coordinates provided.
-    auto r = RadialBasisFunction::distance_matrix(xk, xk);
+    auto r = RBF::distance_matrix(xk, xk);
 
     // Default epsilon to approximate average distance between nodes
     auto epsilon = std::isnan(epsilon_) ? r.mean() : epsilon_;
@@ -98,8 +97,8 @@ class RadialBasisFunction {
     if (smooth_) {
       A -= Eigen::Matrix<T, -1, -1>::Identity(xk.cols(), xk.cols()) * smooth_;
     }
-    
-    auto yi = RadialBasisFunction<T>::solve_linear_system(A, yk);
+
+    auto yi = RBF<T>::solve_linear_system(A, yk);
     auto wi = function_(distance_matrix(xk, xi), epsilon);
 
     if (wi.cols() == 1) {
@@ -116,7 +115,7 @@ class RadialBasisFunction {
   T smooth_;
 
   /// Radial bassis function, based on the radius
-  PtrRadialFunction function_;
+  PtrRadialBasisFunction function_;
 
   /// Returns the distance between two points in a euclidean space
   static auto euclidean_distance(
