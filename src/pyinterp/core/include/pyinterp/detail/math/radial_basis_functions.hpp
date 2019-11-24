@@ -174,7 +174,7 @@ class RBF {
       -> Eigen::Matrix<T, -1, -1> {
     assert(xk.rows() == xi.rows());
 
-    auto result = Eigen::MatrixXd(xk.cols(), xi.cols());
+    auto result = Eigen::Matrix<T, -1, -1>(xk.cols(), xi.cols());
 
     for (Eigen::Index i0 = 0; i0 < xk.cols(); ++i0) {
       for (Eigen::Index i1 = 0; i1 < xi.cols(); ++i1) {
@@ -188,7 +188,7 @@ class RBF {
   static auto solve_linear_system(const Eigen::Matrix<T, -1, -1>& A,
                                   const Eigen::Matrix<T, -1, 1>& di)
       -> Eigen::Matrix<T, -1, 1> {
-    Eigen::FullPivLU<Eigen::MatrixXd> lu(A);
+    Eigen::FullPivLU<Eigen::Matrix<T, -1, -1>> lu(A);
     return lu.solve(di);
   }
 };
