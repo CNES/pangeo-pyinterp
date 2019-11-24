@@ -9,6 +9,7 @@
 #include <optional>
 #include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
+#include "pyinterp/detail/math/radial_basis_functions.hpp"
 
 namespace pyinterp::detail::geometry {
 
@@ -36,6 +37,10 @@ class RTree {
   /// Spatial index used
   using rtree_t =
       boost::geometry::index::rtree<value_t, boost::geometry::index::rstar<16>>;
+
+  /// Type of the implicit conversion between the type of coordinates and values
+  using promotion_t =
+      decltype(std::declval<CoordinateType>() + std::declval<Type>());
 
   /// Default constructor
   RTree() : tree_(new rtree_t{}) {}
@@ -218,24 +223,24 @@ class RTree {
   /// be empty if no points are selected.
   auto nearest(const point_t &point, const distance_t radius,
                const uint32_t k) const
-      -> std::tuple<Eigen::Matrix<CoordinateType, -1, -1>,
-                    Eigen::Matrix<Type, -1, 1>> {
-    auto coordinates = Eigen::Matrix<CoordinateType, -1, -1>(N, k);
-    auto values = Eigen::Matrix<Type, -1, 1>(k);
+      -> std::tuple<Eigen::Matrix<promotion_t, -1, -1>,
+                    Eigen::Matrix<promotion_t, -1, 1>> {
+    auto coordinates = Eigen::Matrix<promotion_t, -1, -1>(N, k);
+    auto values = Eigen::Matrix<promotion_t, -1, 1>(k);
     auto jx = 0U;
 
-    std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
-                  tree_->qend(), [&](const auto &item) {
-                    if (boost::geometry::distance(point, item.first) <= radius) {
-                      // If the point is not too far away, it is inserted and
-                      // its coordinates and value are stored.
-                      for (size_t ix = 0; ix < N; ++ix) {
-                        coordinates(ix, jx) =
-                            geometry::point::get(item.first, ix);
-                      }
-                      values(jx++) = item.second;
-                    }
-                  });
+    std::for_each(
+        tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
+        [&](const auto &item) {
+          if (boost::geometry::distance(point, item.first) <= radius) {
+            // If the point is not too far away, it is inserted and
+            // its coordinates and value are stored.
+            for (size_t ix = 0; ix < N; ++ix) {
+              coordinates(ix, jx) = geometry::point::get(item.first, ix);
+            }
+            values(jx++) = item.second;
+          }
+        });
 
     // The arrays are resized according to the number of selected points. This
     // number can be zero.
@@ -255,29 +260,29 @@ class RTree {
   /// be empty if no points are selected.
   auto nearest_within(const point_t &point, const distance_t radius,
                       const uint32_t k) const
-      -> std::tuple<Eigen::Matrix<CoordinateType, -1, -1>,
-                    Eigen::Matrix<Type, -1, 1>> {
+      -> std::tuple<Eigen::Matrix<promotion_t, -1, -1>,
+                    Eigen::Matrix<promotion_t, -1, 1>> {
     auto points = boost::geometry::model::multi_point<point_t>();
-    auto coordinates = Eigen::Matrix<CoordinateType, -1, -1>(N, k);
-    auto values = Eigen::Matrix<Type, -1, 1>(k);
+    auto coordinates = Eigen::Matrix<promotion_t, -1, -1>(N, k);
+    auto values = Eigen::Matrix<promotion_t, -1, 1>(k);
     auto jx = 0U;
 
     // List of selected points ()
     points.reserve(k);
 
-    std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
-                  tree_->qend(), [&](const auto &item) {
-                    if (boost::geometry::distance(point, item.first) <= radius) {
-                      // If the point is not too far away, it is inserted and
-                      // its coordinates and value are stored.
-                      points.emplace_back(item.first);
-                      for (size_t ix = 0; ix < N; ++ix) {
-                        coordinates(ix, jx) =
-                            geometry::point::get(item.first, ix);
-                      }
-                      values(jx++) = item.second;
-                    }
-                  });
+    std::for_each(
+        tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
+        [&](const auto &item) {
+          if (boost::geometry::distance(point, item.first) <= radius) {
+            // If the point is not too far away, it is inserted and
+            // its coordinates and value are stored.
+            points.emplace_back(item.first);
+            for (size_t ix = 0; ix < N; ++ix) {
+              coordinates(ix, jx) = geometry::point::get(item.first, ix);
+            }
+            values(jx++) = item.second;
+          }
+        });
 
     // If the point is not covered by its closest neighbors, an empty set will
     // be returned.
@@ -292,6 +297,25 @@ class RTree {
     coordinates.conservativeResize(N, jx);
     values.conservativeResize(jx);
     return std::make_tuple(coordinates, values);
+  }
+
+  auto radial_basis_function(const point_t &point,
+                             const math::RadialBasisFunction<promotion_t> &rbf,
+                             distance_t radius, uint32_t k, bool within) const
+      -> std::pair<promotion_t, uint32_t> {
+    Eigen::Matrix<promotion_t, -1, -1> coordinates;
+    Eigen::Matrix<promotion_t, -1, 1> values;
+    std::tie(coordinates, values) =
+        within ? nearest_within(point, radius, k) : nearest(point, radius, k);
+    if (values.size() == 0) {
+      return std::make_pair(std::numeric_limits<promotion_t>::quiet_NaN(), 0);
+    }
+    auto xi = Eigen::Matrix<promotion_t, N, 1>();
+    for (size_t ix = 0; ix < N; ++ix) {
+      xi(ix, 0) = geometry::point::get(point, ix);
+    }
+    auto interpolated = rbf.interpolate(coordinates, values, xi);
+    return std::make_pair(interpolated(0), values.size());
   }
 
  protected:

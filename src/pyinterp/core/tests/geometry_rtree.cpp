@@ -6,6 +6,7 @@
 #include "pyinterp/detail/geometry/rtree.hpp"
 
 namespace geometry = pyinterp::detail::geometry;
+namespace math = pyinterp::detail::math;
 
 using RTree = geometry::RTree<double, int64_t, 2>;
 
@@ -176,4 +177,14 @@ TEST(geometry_rtree, nearest_within) {
 
   values = std::get<1>(nearest);
   ASSERT_EQ(values.size(), 0);
+}
+
+TEST(geometry_rtree, radial_basis_function) {
+  auto rtree = RTree();
+  rtree.packing(get_coordinates());
+  using PromotionType = RTree::promotion_t;
+  auto rbf = math::RadialBasisFunction<PromotionType>(
+      std::numeric_limits<PromotionType>::quiet_NaN(), 0,
+      math::RadialBasisFunction<PromotionType>::Multiquadric);
+  rtree.radial_basis_function({4, 4}, rbf, 4, 4, false);
 }
