@@ -98,13 +98,8 @@ class RBF {
       A -= Eigen::Matrix<T, -1, -1>::Identity(xk.cols(), xk.cols()) * smooth_;
     }
 
-    auto yi = RBF<T>::solve_linear_system(A, yk);
-    auto wi = function_(distance_matrix(xk, xi), epsilon);
-
-    if (wi.cols() == 1) {
-      return wi.transpose() * yi;
-    }
-    return wi * yi;
+    return function_(distance_matrix(xk, xi), epsilon) *
+           RBF<T>::solve_linear_system(A, yk);
   }
 
  private:
@@ -174,11 +169,11 @@ class RBF {
       -> Eigen::Matrix<T, -1, -1> {
     assert(xk.rows() == xi.rows());
 
-    auto result = Eigen::Matrix<T, -1, -1>(xk.cols(), xi.cols());
+    auto result = Eigen::Matrix<T, -1, -1>(xi.cols(), xk.cols());
 
-    for (Eigen::Index i0 = 0; i0 < xk.cols(); ++i0) {
-      for (Eigen::Index i1 = 0; i1 < xi.cols(); ++i1) {
-        result(i0, i1) = euclidean_distance(xk.col(i0), xi.col(i1));
+    for (Eigen::Index i0 = 0; i0 < xi.cols(); ++i0) {
+      for (Eigen::Index i1 = 0; i1 < xk.cols(); ++i1) {
+        result(i0, i1) = euclidean_distance(xi.col(i0), xk.col(i1));
       }
     }
     return result;

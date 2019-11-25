@@ -78,3 +78,20 @@ TEST(math_rbf, 3d) {
   test_3d(math::RadialBasisFunction::Quintic);
   test_3d(math::RadialBasisFunction::ThinPlate);
 }
+
+TEST(math_rbf, point) {
+  Eigen::Matrix<double, 3, 50> x = Eigen::Matrix<double, 3, 50>::Random();
+  Eigen::Matrix<double, 50, 1> y =
+      (x.row(0).array().pow(2) - x.row(1).array().pow(2)).array().exp();
+  auto rbf = math::RBF<double>(std::numeric_limits<double>::quiet_NaN(), 0,
+                               math::RadialBasisFunction::Cubic);
+
+  auto xi = Eigen::Matrix<double, 3, 1>();
+  for (Eigen::Index ix = 0; ix < xi.cols(); ++ix) {
+    xi << x.col(ix);
+    auto yi = rbf.interpolate(x, y, xi);
+
+    ASSERT_EQ(yi.size(), 1);
+    EXPECT_NEAR(y(ix), yi(0), 1e-9);
+  }
+}
