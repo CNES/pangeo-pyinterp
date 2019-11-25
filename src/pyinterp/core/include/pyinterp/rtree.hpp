@@ -15,6 +15,9 @@
 
 namespace pyinterp {
 
+/// Type of radial functions exposed in the Python module.
+using RadialBasisFunction = detail::math::RadialBasisFunction;
+
 /// RTree spatial index for geodetic point
 ///
 /// @note
@@ -24,7 +27,7 @@ namespace pyinterp {
 /// @tparam CoordinateType The class of storage for a point's coordinates.
 /// @tparam Type The type of data stored in the tree.
 /// @tparam N Number of dimensions in the Cartesian space handled.
-template <typename CoordinateType, typename Type, size_t N = 3>
+template <typename CoordinateType, typename Type, size_t N>
 class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
  public:
   /// The tree must at least store the ECEF coordinates
@@ -42,6 +45,10 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
   /// Type of distances between two points.
   using result_t =
       typename detail::geometry::RTree<CoordinateType, Type, N>::result_t;
+
+  /// Type of the implicit conversion between the type of coordinates and values
+  using promotion_t =
+      typename detail::geometry::RTree<CoordinateType, Type, N>::promotion_t;
 
   /// Pointer on the method converting LLA coordinates to ECEF.
   using Converter = point_t (RTree<CoordinateType, Type, N>::*)(
@@ -154,10 +161,10 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case N - 1:
-        return _query<2>(&RTree<CoordinateType, Type, N>::from_lon_lat,
-                         coordinates, k, within, num_threads);
+        return _query<N - 1>(&RTree<CoordinateType, Type, N>::from_lon_lat,
+                             coordinates, k, within, num_threads);
       case N:
-        return _query<3>(&RTree<CoordinateType, Type, N>::from_lon_lat,
+        return _query<N>(&RTree<CoordinateType, Type, N>::from_lon_lat,
                          coordinates, k, within, num_threads);
       default:
         throw std::invalid_argument(
@@ -169,18 +176,50 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
   auto inverse_distance_weighting(
       const pybind11::array_t<CoordinateType, pybind11::array::c_style>
           &coordinates,
-      distance_t radius, uint32_t k, uint32_t p, bool within,
-      size_t num_threads) const -> pybind11::tuple {
+      const std::optional<distance_t> &radius, const uint32_t k,
+      const uint32_t p, const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
+    detail::check_array_ndim("coordinates", 2, coordinates);
+
+    switch (coordinates.shape(1)) {
+      case N - 1:
+        return _inverse_distance_weighting<N - 1>(
+            &RTree<CoordinateType, Type, N>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<distance_t>::max()), k, p,
+            within, num_threads);
+      case N:
+        return _inverse_distance_weighting<N>(
+            &RTree<CoordinateType, Type, N>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<distance_t>::max()), k, p,
+            within, num_threads);
+      default:
+        throw std::invalid_argument(
+            RTree<CoordinateType, Type, N>::invalid_shape());
+    }
+  }
+
+  /// TODO
+  auto radial_basis_function(
+      const pybind11::array_t<CoordinateType, pybind11::array::c_style>
+          &coordinates,
+      const std::optional<distance_t> &radius, const uint32_t k,
+      const RadialBasisFunction rbf, const std::optional<promotion_t> &epsilon,
+      const promotion_t smooth, const bool within,
+      const size_t num_threads) const -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case N - 1:
-        return _inverse_distance_weighting<2>(
-            &RTree<CoordinateType, Type, N>::from_lon_lat, coordinates, radius,
-            k, p, within, num_threads);
+        return _rbf<N - 1>(
+            &RTree<CoordinateType, Type, N>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<distance_t>::max()), k, rbf,
+            epsilon.value_or(std::numeric_limits<promotion_t>::quiet_NaN()),
+            smooth, within, num_threads);
       case N:
-        return _inverse_distance_weighting<3>(
-            &RTree<CoordinateType, Type, N>::from_lon_lat, coordinates, radius,
-            k, p, within, num_threads);
+        return _rbf<N>(
+            &RTree<CoordinateType, Type, N>::from_lon_lat_alt, coordinates,
+            radius.value_or(std::numeric_limits<distance_t>::max()), k, rbf,
+            epsilon.value_or(std::numeric_limits<promotion_t>::quiet_NaN()),
+            smooth, within, num_threads);
       default:
         throw std::invalid_argument(
             RTree<CoordinateType, Type, N>::invalid_shape());
@@ -198,7 +237,7 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     size_t ix = 0;
     std::for_each(this->tree_->begin(), this->tree_->end(),
                   [&](const auto &item) {
-                    for (auto jx = 0; jx < N; ++jx) {
+                    for (auto jx = 0UL; jx < N; ++jx) {
                       _x(ix, jx) = detail::geometry::point::get(item.first, jx);
                     }
                     _u(ix) = item.second;
@@ -233,7 +272,7 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     auto point = point_t();
 
     for (auto ix = 0; ix < u.size(); ++ix) {
-      for (auto jx = 0; jx < N; ++jx) {
+      for (auto jx = 0UL; jx < N; ++jx) {
         detail::geometry::point::set(point, _x(ix, jx), jx);
       }
       vector.emplace_back(std::make_pair(point, _u(ix)));
@@ -263,7 +302,7 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     boost::geometry::set<1>(result, boost::geometry::get<1>(ecef));
     boost::geometry::set<2>(result, boost::geometry::get<2>(ecef));
 
-    for (auto ix = 3; ix < N; ++ix) {
+    for (auto ix = 3UL; ix < N; ++ix) {
       detail::geometry::point::set(result, coordinates(ix), ix);
     }
     return result;
@@ -283,7 +322,7 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     boost::geometry::set<1>(result, boost::geometry::get<1>(ecef));
     boost::geometry::set<2>(result, boost::geometry::get<2>(ecef));
 
-    for (auto ix = 2; ix < N - 1; ++ix) {
+    for (auto ix = 2UL; ix < N - 1; ++ix) {
       detail::geometry::point::set(result, coordinates(ix), ix + 1);
     }
     return result;
@@ -320,7 +359,8 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     auto _coordinates = coordinates.template unchecked<2>();
     auto _values = values.template unchecked<1>();
     auto observations = coordinates.shape(0);
-    auto vector = std::vector<typename RTree<CoordinateType, Type>::value_t>();
+    auto vector =
+        std::vector<typename RTree<CoordinateType, Type, N>::value_t>();
 
     vector.reserve(observations);
 
@@ -425,8 +465,8 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
   template <size_t M>
   auto _inverse_distance_weighting(
       Converter converter, const pybind11::array_t<CoordinateType> &coordinates,
-      distance_t radius, uint32_t k, uint32_t p, bool within,
-      size_t num_threads) const -> pybind11::tuple {
+      const distance_t radius, const uint32_t k, const uint32_t p,
+      const bool within, const size_t num_threads) const -> pybind11::tuple {
     auto _coordinates = coordinates.template unchecked<2>();
     auto size = coordinates.shape(0);
 
@@ -459,6 +499,68 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
 
                 auto result = detail::geometry::RTree<CoordinateType, Type, N>::
                     inverse_distance_weighting(point, radius, k, p, within);
+                _data(ix) = result.first;
+                _neighbors(ix) = result.second;
+              }
+            } catch (...) {
+              except = std::current_exception();
+            }
+          },
+          size, num_threads);
+
+      if (except != nullptr) {
+        std::rethrow_exception(except);
+      }
+    }
+    return pybind11::make_tuple(data, neighbors);
+  }
+
+  /// Inverse distance weighting interpolation
+  template <size_t M>
+  auto _rbf(Converter converter,
+            const pybind11::array_t<CoordinateType> &coordinates,
+            const distance_t radius, const uint32_t k,
+            const RadialBasisFunction rbf, const promotion_t epsilon,
+            const promotion_t smooth, const bool within,
+            const size_t num_threads) const -> pybind11::tuple {
+    auto _coordinates = coordinates.template unchecked<2>();
+    auto size = coordinates.shape(0);
+
+    // Construction of the interpolator.
+    auto rbf_handler = detail::math::RBF<promotion_t>(epsilon, smooth, rbf);
+
+    // Allocation of result vectors.
+    auto data =
+        pybind11::array_t<promotion_t>(pybind11::array::ShapeContainer{size});
+    auto neighbors =
+        pybind11::array_t<uint32_t>(pybind11::array::ShapeContainer{size});
+
+    auto _data = data.template mutable_unchecked<1>();
+    auto _neighbors = neighbors.template mutable_unchecked<1>();
+
+    {
+      pybind11::gil_scoped_release release;
+
+      // Captures the detected exceptions in the calculation function
+      // (only the last exception captured is kept)
+      auto except = std::exception_ptr(nullptr);
+
+      detail::dispatch(
+          [&](size_t start, size_t end) {
+            try {
+              auto point = point_t();
+
+              for (size_t ix = start; ix < end; ++ix) {
+                point = std::move(std::invoke(
+                    converter, *this,
+                    Eigen::Map<const Eigen::Matrix<CoordinateType, -1, 1>>(
+                        &_coordinates(ix, 0), M)));
+
+                auto result = detail::geometry::RTree<
+                    CoordinateType, Type, N>::radial_basis_function(point,
+                                                                    rbf_handler,
+                                                                    radius, k,
+                                                                    within);
                 _data(ix) = result.first;
                 _neighbors(ix) = result.second;
               }

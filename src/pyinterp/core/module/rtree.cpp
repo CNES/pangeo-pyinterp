@@ -43,7 +43,7 @@ static auto class_name(const char* const suffix) -> std::string {
 
 template <typename CoordinateType, typename Type, size_t N>
 static void implement_rtree(py::module& m, const char* const suffix) {
-  py::class_<pyinterp::RTree<CoordinateType, Type>>(
+  py::class_<pyinterp::RTree<CoordinateType, Type, N>>(
       m, class_name<N>(suffix).c_str(),
       R"__doc__(
 RTree spatial index for geodetic scalar values
@@ -59,7 +59,8 @@ Args:
         (longitudes, latitudes, altitude) into ECEF coordinates. If not set
         the geodetic system used is WGS-84.
 )__doc__")
-      .def("bounds", &pyinterp::RTree<CoordinateType, Type>::equatorial_bounds,
+      .def("bounds",
+           &pyinterp::RTree<CoordinateType, Type, N>::equatorial_bounds,
            R"__doc__(
 Returns the box able to contain all values stored in the container.
 
@@ -68,14 +69,14 @@ Return:
     maximum corners of the box able to contain all values stored in the
     container or an empty tuple if there are no values in the container.
 )__doc__")
-      .def("__len__", &pyinterp::RTree<CoordinateType, Type>::size)
+      .def("__len__", &pyinterp::RTree<CoordinateType, Type, N>::size)
       .def("__bool__",
-           [](const pyinterp::RTree<CoordinateType, Type>& self) {
+           [](const pyinterp::RTree<CoordinateType, Type, N>& self) {
              return !self.empty();
            })
-      .def("clear", &pyinterp::RTree<CoordinateType, Type>::clear,
+      .def("clear", &pyinterp::RTree<CoordinateType, Type, N>::clear,
            "Removes all values stored in the container.")
-      .def("packing", &pyinterp::RTree<CoordinateType, Type>::packing,
+      .def("packing", &pyinterp::RTree<CoordinateType, Type, N>::packing,
            py::arg("coordinates"), py::arg("values"),
            (R"__doc__(
 The tree is created using packing algorithm (The old data is erased
@@ -88,7 +89,7 @@ Args:
         associated with the coordinates provided
 )__doc__")
                .c_str())
-      .def("insert", &pyinterp::RTree<CoordinateType, Type>::insert,
+      .def("insert", &pyinterp::RTree<CoordinateType, Type, N>::insert,
            py::arg("coordinates"), py::arg("values"),
            (R"__doc__(
 Insert new data into the search tree.
@@ -100,20 +101,21 @@ Args:
         associated with the coordinates provided
 )__doc__")
                .c_str())
-      .def("query",
-           [](const pyinterp::RTree<CoordinateType, Type>& self,
-              const py::array_t<double>& coordinates, const uint32_t k,
-              const bool within, const size_t num_threads) -> py::tuple {
-             return self.query(coordinates, k, within, num_threads);
-           },
-           py::arg("coordinates"), py::arg("k") = 4, py::arg("within") = false,
-           py::arg("num_threads") = 0,
-           (R"__doc__(
+      .def(
+          "query",
+          [](const pyinterp::RTree<CoordinateType, Type, N>& self,
+             const py::array_t<double>& coordinates, const uint32_t k,
+             const bool within, const size_t num_threads) -> py::tuple {
+            return self.query(coordinates, k, within, num_threads);
+          },
+          py::arg("coordinates"), py::arg("k") = 4, py::arg("within") = false,
+          py::arg("num_threads") = 0,
+          (R"__doc__(
 Search for the nearest K nearest neighbors of a given point.
 
 Args:
     )__doc__" +
-            coordinates_help<N>() + R"__doc__(
+           coordinates_help<N>() + R"__doc__(
     k (int, optional): The number of nearest neighbors to be used for
         calculating the interpolated value. Defaults to ``4``.
     within (bool, optional): If true, the method ensures that the neighbors
@@ -129,20 +131,20 @@ Return:
     neighbors and a matrix containing the value of the different neighbors
     found for all provided positions.
 )__doc__")
-               .c_str())
-      .def("inverse_distance_weighting",
-           &pyinterp::RTree<CoordinateType, Type>::inverse_distance_weighting,
-           py::arg("coordinates"),
-           py::arg("radius") = std::numeric_limits<CoordinateType>::max(),
-           py::arg("k") = 4, py::arg("p") = 2, py::arg("within") = true,
-           py::arg("num_threads") = 0,
-           (R"__doc__(
+              .c_str())
+      .def(
+          "inverse_distance_weighting",
+          &pyinterp::RTree<CoordinateType, Type, N>::inverse_distance_weighting,
+          py::arg("coordinates"), py::arg("radius"), py::arg("k") = 4,
+          py::arg("p") = 2, py::arg("within") = true,
+          py::arg("num_threads") = 0,
+          (R"__doc__(
 Interpolation of the value at the requested position by inverse distance
 weighting method.
 
 Args:
     )__doc__" +
-            coordinates_help<N>() + R"__doc__(
+           coordinates_help<N>() + R"__doc__(
     radius (float, optional): The maximum radius of the search (m).
         Defaults The maximum distance between two points.
     k (int, optional): The number of nearest neighbors to be used for
@@ -160,17 +162,46 @@ Return:
     tuple: The interpolated value and the number of neighbors used in the
     calculation.
 )__doc__")
-               .c_str())
+              .c_str())
+      .def(
+          "radial_basis_function",
+          &pyinterp::RTree<CoordinateType, Type, N>::radial_basis_function,
+          py::arg("coordinates"), py::arg("radius"), py::arg("k") = 4,
+          py::arg("rbf") = pyinterp::RadialBasisFunction::Multiquadric,
+          py::arg("epsilon") = std::optional<
+              typename pyinterp::RTree<CoordinateType, Type, N>::promotion_t>(),
+          py::arg("smooth") = 0, py::arg("within") = true,
+          py::arg("num_threads") = 0)
       .def(py::pickle(
-          [](const pyinterp::RTree<CoordinateType, Type>& self) {
+          [](const pyinterp::RTree<CoordinateType, Type, N>& self) {
             return self.getstate();
           },
           [](const py::tuple& state) {
-            return pyinterp::RTree<CoordinateType, Type>::setstate(state);
+            return pyinterp::RTree<CoordinateType, Type, N>::setstate(state);
           }));
 }
 
 void init_rtree(py::module& m) {
+  py::enum_<pyinterp::RadialBasisFunction>(m, "RadialBasisFunction",
+                                           "Radial basis functions")
+      .value("Cubic", pyinterp::RadialBasisFunction::Cubic,
+             ":math:`\\varphi(r) = r^3`")
+      .value("Gaussian", pyinterp::RadialBasisFunction::Gaussian,
+             ":math:`\\varphi(r) = e^{-(\\dfrac{1}{\\varepsilon} r)^2}`")
+      .value("InverseMultiquadric",
+             pyinterp::RadialBasisFunction::InverseMultiquadric,
+             ":math:`\\varphi(r) = \\dfrac{1}"
+             "{\\sqrt{1+(\\dfrac{1}{\\varepsilon} r)^2}}`")
+      .value("Linear", pyinterp::RadialBasisFunction::Linear,
+             ":math:`\\varphi(r) = r`")
+      .value("Multiquadric", pyinterp::RadialBasisFunction::Multiquadric,
+             ":math:`\\varphi(r) = \\sqrt{1+(\\dfrac{1}"
+             "{\\varepsilon} r)^2}`")
+      .value("Quintic", pyinterp::RadialBasisFunction::Quintic,
+             ":math:`\\varphi(r) = r^5`.")
+      .value("ThinPlate", pyinterp::RadialBasisFunction::ThinPlate,
+             ":math:`\\varphi(r) = r^2 \\ln(r)`.");
+
   implement_rtree<double, double, 3>(m, "Float64");
   implement_rtree<float, float, 3>(m, "Float32");
 }

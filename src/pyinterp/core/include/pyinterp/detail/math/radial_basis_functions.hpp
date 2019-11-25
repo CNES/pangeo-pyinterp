@@ -13,7 +13,7 @@ namespace pyinterp::detail::math {
 /// Known radial functions.
 enum RadialBasisFunction : uint8_t {
   Multiquadric,
-  Inverse,
+  InverseMultiquadric,
   Gaussian,
   Linear,
   Cubic,
@@ -49,7 +49,7 @@ class RBF {
       case RadialBasisFunction::Multiquadric:
         function_ = &RBF::multiquadric;
         break;
-      case RadialBasisFunction::Inverse:
+      case RadialBasisFunction::InverseMultiquadric:
         function_ = &RBF::inverse_multiquadric;
         break;
       case RadialBasisFunction::Gaussian:

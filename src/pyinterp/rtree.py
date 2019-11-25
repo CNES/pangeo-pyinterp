@@ -133,7 +133,7 @@ class RTree:
     def inverse_distance_weighting(
             self,
             coordinates: np.ndarray,
-            radius: Optional[float] = sys.float_info.max,
+            radius: Optional[float] = None,
             k: Optional[int] = 4,
             p: Optional[int] = 2,
             within: Optional[bool] = True,
