@@ -89,7 +89,12 @@
 
         .. automethod:: __init__
 
-    .. autoclass:: RTreeFloat64
+    .. autoclass:: RadialBasisFunction
+        :show-inheritance:
+        :members:
+        :inherited-members:
+
+    .. autoclass:: RTree3DFloat64
         :show-inheritance:
         :members:
         :inherited-members:

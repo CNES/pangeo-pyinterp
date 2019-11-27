@@ -313,9 +313,22 @@ using the :py:meth:`insert <pyinterp.rtree.RTree.insert>` method.
         np.vstack((lons.values.flatten(), lats.values.flatten())).T,
         ssh.values.flatten())
 
-When the tree is created, you can :py:meth:`interpolate
-<pyinterp.rtree.RTree.inverse_distance_weighting>` the data or make various
-:py:meth:`queries <pyinterp.rtree.RTree.query>` on the tree.
+When the tree is created, you can interpolate data with two algorithms:
+
+* :py:meth:`Inverse Distance Weighting
+  <pyinterp.rtree.RTree.inverse_distance_weighting>` or IDW
+* :py:meth:`Radial Basis Function
+  <pyinterp.rtree.RTree.radial_basis_function>` or RBF
+
+.. note::
+
+    When comparing an RBF to IDW, IDW will never predict values higher than the
+    maximum measured value or lower than the minimum measured value. However,
+    RBFs can predict values higher than the maximum values and lower than the
+    minimum measured values.
+
+The python code below illustrates the interpolation performed using the IDW
+method.
 
 .. code:: python
 
@@ -329,11 +342,11 @@ When the tree is created, you can :py:meth:`interpolate
     eta, neighbors = mesh.inverse_distance_weighting(
         np.vstack((mx.flatten(), my.flatten())).T,
         within=False,
-        radius=35434,
-        k=8,
+        radius=35500,  # 35.5 Km
+        k=9,
         num_threads=0)
 
-The image below illustrates the result:
+The image below illustrates the result for the IDW interpolation:
 
 .. figure:: pictures/mit_gcm.png
     :scale: 60 %
