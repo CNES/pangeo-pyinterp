@@ -52,30 +52,27 @@ static void test_3d(math::RadialBasisFunction function) {
 TEST(math_rbf, 1d) {
   test_1d(math::RadialBasisFunction::Cubic);
   test_1d(math::RadialBasisFunction::Gaussian);
-  test_1d(math::RadialBasisFunction::Inverse);
+  test_1d(math::RadialBasisFunction::InverseMultiquadric);
   test_1d(math::RadialBasisFunction::Linear);
   test_1d(math::RadialBasisFunction::Multiquadric);
-  test_1d(math::RadialBasisFunction::Quintic);
   test_1d(math::RadialBasisFunction::ThinPlate);
 }
 
 TEST(math_rbf, 2d) {
   test_2d(math::RadialBasisFunction::Cubic);
   test_2d(math::RadialBasisFunction::Gaussian);
-  test_2d(math::RadialBasisFunction::Inverse);
+  test_2d(math::RadialBasisFunction::InverseMultiquadric);
   test_2d(math::RadialBasisFunction::Linear);
   test_2d(math::RadialBasisFunction::Multiquadric);
-  test_2d(math::RadialBasisFunction::Quintic);
   test_2d(math::RadialBasisFunction::ThinPlate);
 }
 
 TEST(math_rbf, 3d) {
   test_3d(math::RadialBasisFunction::Cubic);
   test_3d(math::RadialBasisFunction::Gaussian);
-  test_3d(math::RadialBasisFunction::Inverse);
+  test_3d(math::RadialBasisFunction::InverseMultiquadric);
   test_3d(math::RadialBasisFunction::Linear);
   test_3d(math::RadialBasisFunction::Multiquadric);
-  test_3d(math::RadialBasisFunction::Quintic);
   test_3d(math::RadialBasisFunction::ThinPlate);
 }
 

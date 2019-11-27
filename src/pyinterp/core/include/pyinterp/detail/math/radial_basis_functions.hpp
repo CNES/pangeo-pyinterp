@@ -12,12 +12,11 @@ namespace pyinterp::detail::math {
 
 /// Known radial functions.
 enum RadialBasisFunction : uint8_t {
-  Multiquadric,
-  InverseMultiquadric,
-  Gaussian,
-  Linear,
   Cubic,
-  Quintic,
+  Gaussian,
+  InverseMultiquadric,
+  Linear,
+  Multiquadric,
   ThinPlate
 };
 
@@ -44,25 +43,22 @@ class RBF {
   /// @param rbf The radial basis function, based on the radius, r, given by the
   /// norm (Euclidean distance)
   RBF(const T& epsilon, const T& smooth, const RadialBasisFunction rbf)
-      : epsilon_(epsilon), smooth_(smooth) {
+      : epsilon_(T(1) / epsilon), smooth_(smooth) {
     switch (rbf) {
-      case RadialBasisFunction::Multiquadric:
-        function_ = &RBF::multiquadric;
-        break;
-      case RadialBasisFunction::InverseMultiquadric:
-        function_ = &RBF::inverse_multiquadric;
+      case RadialBasisFunction::Cubic:
+        function_ = &RBF::cubic;
         break;
       case RadialBasisFunction::Gaussian:
         function_ = &RBF::gaussian;
         break;
+      case RadialBasisFunction::InverseMultiquadric:
+        function_ = &RBF::inverse_multiquadric;
+        break;
       case RadialBasisFunction::Linear:
         function_ = &RBF::linear;
         break;
-      case RadialBasisFunction::Cubic:
-        function_ = &RBF::cubic;
-        break;
-      case RadialBasisFunction::Quintic:
-        function_ = &RBF::quintic;
+      case RadialBasisFunction::Multiquadric:
+        function_ = &RBF::multiquadric;
         break;
       case RadialBasisFunction::ThinPlate:
         function_ = &RBF::thin_plate;
@@ -88,7 +84,7 @@ class RBF {
     auto r = RBF::distance_matrix(xk, xk);
 
     // Default epsilon to approximate average distance between nodes
-    auto epsilon = std::isnan(epsilon_) ? r.mean() : epsilon_;
+    auto epsilon = std::isnan(epsilon_) ? 1 / RBF<T>::average(r) : epsilon_;
 
     // TODO(fbriol)
     auto A = function_(r, epsilon);
@@ -112,6 +108,20 @@ class RBF {
   /// Radial bassis function, based on the radius
   PtrRadialBasisFunction function_;
 
+  // Calculates the distance average excluding the diagonal
+  static auto average(
+      const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& distance) -> T {
+    assert(distance.cols() == distance.rows());
+    auto sum = T(0);
+    auto n = distance.cols();
+    for (Eigen::Index ix = 0; ix < distance.rows() - 1; ++ix) {
+      for (Eigen::Index jx = ix + 1; jx < distance.cols(); ++jx) {
+        sum += distance(ix, jx);
+      }
+    }
+    return sum / (n * (n - 1) * 0.5);
+  };
+
   /// Returns the distance between two points in a euclidean space
   static auto euclidean_distance(
       const Eigen::Ref<const Eigen::Matrix<T, -1, 1>>& x,
@@ -122,7 +132,7 @@ class RBF {
   /// Multiquadric
   static auto multiquadric(const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r,
                            const double epsilon) -> Eigen::Matrix<T, -1, -1> {
-    return ((1.0 / epsilon * r).array().pow(2) + 1).sqrt();
+    return ((epsilon * r).array().pow(2) + 1).sqrt();
   }
 
   /// Inverse multiquadric
@@ -135,7 +145,7 @@ class RBF {
   /// Gauss
   static auto gaussian(const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r,
                        const double epsilon) -> Eigen::Matrix<T, -1, -1> {
-    return (-(1.0 / epsilon * r).array().pow(2)).exp();
+    return (-(epsilon * r).array().pow(2)).exp();
   }
 
   /// Linear spline
@@ -148,12 +158,6 @@ class RBF {
   static auto cubic(const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r,
                     const double /*epsilon*/) -> Eigen::Matrix<T, -1, -1> {
     return r.array().pow(3);
-  }
-
-  /// Quintic spline
-  static auto quintic(const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r,
-                      const double /*epsilon*/) -> Eigen::Matrix<T, -1, -1> {
-    return r.array().pow(5);
   }
 
   /// Thin plate spline

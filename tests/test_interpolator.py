@@ -247,6 +247,7 @@ class TestRTree(unittest.TestCase):
         coordinates = np.vstack((x.flatten(), y.flatten())).T
         mesh.query(coordinates)
         mesh.inverse_distance_weighting(coordinates)
+        mesh.radial_basis_function(coordinates)
 
 
 if __name__ == "__main__":

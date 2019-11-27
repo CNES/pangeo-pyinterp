@@ -92,27 +92,27 @@ class TestRTree(unittest.TestCase):
         lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
         lat = np.arange(-90, 90, 1 / 3.0, dtype="float32") + 1 / 3.0
         x, y = np.meshgrid(lon, lat, indexing="ij")
-        z0, _ = mesh.radial_basis_function(np.vstack(
-            (x.flatten(), y.flatten())).T,
-                                           within=False,
-                                           radius=None,
-                                            rbf=core.RadialBasisFunction.Gaussian,
-                                           epsilon=25*1e3*2,
-                                           smooth=0,
-                                           k=9,
-                                           num_threads=0)
-        # z1, _ = mesh.radial_basis_function(np.vstack(
-        #     (x.flatten(), y.flatten())).T,
-        #                                    within=False,
-        #                                    radius=None,
-        #                                    epsilon=27*1e3,
-        #                                    rbf=core.RadialBasisFunction.Gaussian,
-        #                                 #    smooth=1,
-        #                                    k=9,
-        #                                    num_threads=1)
+        z0, _ = mesh.radial_basis_function(
+            np.vstack((x.flatten(), y.flatten())).T,
+            within=False,
+            radius=None,
+            rbf=core.RadialBasisFunction.InverseMultiquadric,
+            epsilon=75000,  # 75 Km
+            smooth=0,
+            k=11,
+            num_threads=1)
+        z1, _ = mesh.radial_basis_function(
+            np.vstack((x.flatten(), y.flatten())).T,
+            within=False,
+            radius=None,
+            rbf=core.RadialBasisFunction.InverseMultiquadric,
+            epsilon=75000,  # 75 Km
+            smooth=0,
+            k=11,
+            num_threads=1)
         z0 = np.ma.fix_invalid(z0)
-        # z1 = np.ma.fix_invalid(z1)
-        # self.assertTrue(np.all(z1 == z0))
+        z1 = np.ma.fix_invalid(z1)
+        self.assertTrue(np.all(z1 == z0))
 
         if HAVE_PLT:
             plot(x, y, z0.reshape((len(lon), len(lat))), "mss_rtree_rbf.png")
