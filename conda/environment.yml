@@ -1,8 +1,8 @@
 name: RTD
 dependencies:
   - numpy
-  - pyinterp>=0.0.7
+  - pyinterp>=0.0.8
   - python=3.7
   - xarray
 channels:
-  - conda-forge
+  - fbriol

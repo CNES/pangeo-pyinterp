@@ -1,7 +1,7 @@
 Changelog
 #########
 
-0.0.8 (XX December 2019)
+0.0.8 (7 December 2019)
 -------------------------
 * Added interpolation by RBF in RTree
 * Improvement of RTree class performance
