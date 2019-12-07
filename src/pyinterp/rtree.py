@@ -228,7 +228,7 @@ class RTree:
         adjustable = ['gaussian', 'inverse_multiquadric', 'multiquadric']
         non_adjustable = ['cubic', 'linear', 'thin_plate']
         rbf = rbf or adjustable[-1]
-        if epsilon is not None and rbf in adjustable:
+        if epsilon is not None and rbf in non_adjustable:
             raise ValueError(
                 f"epsilon must be None for {', '.join(non_adjustable)} RBF")
         if rbf not in adjustable + non_adjustable:
