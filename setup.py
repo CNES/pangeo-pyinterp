@@ -291,7 +291,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             result.append(self.eigen())
 
         if self.MKL_ROOT is not None:
-            result.append("-DMKLROOT=" + self.MKL_ROOT)
+            os.environ["DMKLROOT"] = self.MKL_ROOT
 
         return result
 
