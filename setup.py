@@ -193,6 +193,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     #: Preferred GSL root
     GSL_ROOT = None
 
+    #: Preferred MKL root
+    MKL_ROOT = None
+
     #: Run CMake to configure this project
     RECONFIGURE = None
 
@@ -287,6 +290,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         elif is_conda:
             result.append(self.eigen())
 
+        if self.MKL_ROOT is not None:
+            result.append("-DMKLROOT=" + self.MKL_ROOT)
+
         return result
 
     def build_cmake(self, ext):
@@ -356,7 +362,8 @@ class Build(distutils.command.build.build):
         ('code-coverage', None, 'Enable coverage reporting'),
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
         ('eigen-root=', None, 'Preferred Eigen3 include directory'),
-        ('gsl-root=', None, 'Preferred GSL installation prefix')
+        ('gsl-root=', None, 'Preferred GSL installation prefix'),
+        ('mkl-root=', None, 'Preferred MKL installation prefix')
     ]
 
     def initialize_options(self):
@@ -368,6 +375,7 @@ class Build(distutils.command.build.build):
         self.cxx_compiler = None
         self.eigen_root = None
         self.gsl_root = None
+        self.mkl_root = None
         self.reconfigure = None
 
     def finalize_options(self):
@@ -392,6 +400,8 @@ class Build(distutils.command.build.build):
             BuildExt.EIGEN3_INCLUDE_DIR = self.eigen_root
         if self.gsl_root is not None:
             BuildExt.GSL_ROOT = self.gsl_root
+        if self.mkl_root is not None:
+            BuildExt.MKL_ROOT = self.mkl_root
         if self.reconfigure is not None:
             BuildExt.RECONFIGURE = True
         super().run()
