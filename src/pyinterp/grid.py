@@ -113,6 +113,33 @@ class Grid3D(Grid2D):
         return self._instance.z
 
 
+class Grid4D(Grid3D):
+    """Cartesian Grid 4D
+
+    Args:
+        x (pyinterp.core.Axis): X-Axis
+        y (pyinterp.core.Axis): Y-Axis
+        z (pyinterp.core.Axis): Z-Axis
+        u (pyinterp.core.Axis): U-Axis
+        array (numpy.ndarray): Discrete representation of a continuous
+            function on a uniform 4-dimensional grid.
+        increasing_axes (bool, optional): Ensure that the axes of the grid are
+            increasing. If this is not the case, the axes and grid provided
+            will be flipped. Default to False.
+    """
+    _DIMENSIONS = 4
+
+    @property
+    def u(self) -> core.Axis:
+        """
+        Gets the U-Axis handled by this instance
+
+        Returns:
+            pyinterp.core.Axis: U-Axis
+        """
+        return self._instance.u
+
+
 def _core_variate_interpolator(instance: object, interpolator: str, **kwargs):
     """Obtain the interpolator from the string provided."""
     if isinstance(instance, Grid2D):

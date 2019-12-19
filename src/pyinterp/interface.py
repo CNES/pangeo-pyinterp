@@ -50,8 +50,10 @@ def _core_function_suffix(instance: object) -> str:
     Returns:
         str: the class suffix
     """
-    if not isinstance(instance, (core.Grid2DFloat64, core.Grid2DFloat32,
-                                 core.Grid3DFloat64, core.Grid3DFloat32)):
+    if not isinstance(
+            instance,
+        (core.Grid2DFloat64, core.Grid2DFloat32, core.Grid3DFloat64,
+         core.Grid3DFloat32, core.Grid4DFloat64, core.Grid4DFloat32)):
         raise TypeError("instance is not an object handling a grid.")
     name = instance.__class__.__name__
     if name.endswith("Float64"):

@@ -5,6 +5,7 @@
 #include <pybind11/pybind11.h>
 #include "pyinterp/bivariate.hpp"
 #include "pyinterp/trivariate.hpp"
+#include "pyinterp/quadrivariate.hpp"
 
 namespace py = pybind11;
 namespace geometry = pyinterp::detail::geometry;
@@ -14,6 +15,8 @@ void init_grid(py::module& m) {
                                              double>(m, "2D");
   pyinterp::implement_bivariate_interpolator<geometry::EquatorialPoint3D,
                                              double>(m, "3D");
+  pyinterp::implement_bivariate_interpolator<geometry::EquatorialPoint4D,
+                                             double>(m, "4D");
 
   pyinterp::implement_grid<double>(m, "Float64");
   pyinterp::implement_grid<float>(m, "Float32");
@@ -26,5 +29,10 @@ void init_grid(py::module& m) {
   pyinterp::implement_trivariate<geometry::EquatorialPoint3D, double, double>(
       m, "Float64");
   pyinterp::implement_trivariate<geometry::EquatorialPoint3D, double, float>(
+      m, "Float32");
+
+  pyinterp::implement_quadrivariate<geometry::EquatorialPoint4D, double,
+                                    double>(m, "Float64");
+  pyinterp::implement_quadrivariate<geometry::EquatorialPoint4D, double, float>(
       m, "Float32");
 }

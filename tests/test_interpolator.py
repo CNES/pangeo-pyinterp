@@ -183,6 +183,51 @@ class Trivariate(unittest.TestCase):
                             bounds_error=True)
 
 
+class Quadrivariate(unittest.TestCase):
+    GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
+                        "pres_temp_4D.nc")
+
+    def test(self):
+        grid = pyinterp.backends.xarray.Grid4D(xr.load_dataset(
+            self.GRID).pressure,
+                                               increasing_axes=True)
+
+        self.assertIsInstance(grid, pyinterp.backends.xarray.Grid4D)
+        self.assertIsInstance(grid, pyinterp.Grid4D)
+        other = pickle.loads(pickle.dumps(grid))
+        self.assertIsInstance(other, pyinterp.backends.xarray.Grid4D)
+        self.assertIsInstance(grid, pyinterp.Grid4D)
+
+        self.assertIsInstance(grid.x, pyinterp.Axis)
+        self.assertIsInstance(grid.y, pyinterp.Axis)
+        self.assertIsInstance(grid.z, pyinterp.Axis)
+        self.assertIsInstance(grid.u, pyinterp.Axis)
+        self.assertIsInstance(grid.array, np.ndarray)
+
+        lon = np.arange(-125, -70, 0.25)
+        lat = np.arange(-25, 50, 0.25)
+        level = 0.5
+        time = 0.5
+        x, y, z, t = np.meshgrid(lon, lat, level, time, indexing="ij")
+
+        pressure = grid.quadrivariate(
+            collections.OrderedDict(longitude=x.flatten(),
+                                    latitude=y.flatten(),
+                                    level=z.flatten(),
+                                    time=t.flatten()))
+        self.assertIsInstance(pressure, np.ndarray)
+
+        with self.assertRaises(ValueError):
+            time = 5
+            x, y, t = np.meshgrid(lon, lat, level, time, indexing="ij")
+            pressure = grid.quadrivariate(collections.OrderedDict(
+                longitude=x.flatten(),
+                latitude=y.flatten(),
+                level=z.flatten(),
+                time=t.flatten()),
+                                          bounds_error=True)
+
+
 class TestRTree(unittest.TestCase):
     GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
                         "mss.nc")

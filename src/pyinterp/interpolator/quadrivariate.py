@@ -13,22 +13,24 @@ from .. import grid
 from .. import interface
 
 
-def trivariate(grid3d: grid.Grid3D,
-               x: np.ndarray,
-               y: np.ndarray,
-               z: np.ndarray,
-               interpolator: Optional[str] = "bilinear",
-               bounds_error: Optional[bool] = False,
-               num_threads: Optional[int] = 0,
-               **kwargs) -> np.ndarray:
-    """Interpolate the values provided on the defined trivariate function.
+def quadrivariate(grid4d: grid.Grid4D,
+                  x: np.ndarray,
+                  y: np.ndarray,
+                  z: np.ndarray,
+                  u: np.ndarray,
+                  interpolator: Optional[str] = "bilinear",
+                  bounds_error: Optional[bool] = False,
+                  num_threads: Optional[int] = 0,
+                  **kwargs) -> np.ndarray:
+    """Interpolate the values provided on the defined quadrivariate function.
 
     Args:
-        grid3d (pyinterp.grid.Grid3D): Function on a uniform 3-dimensional
+        grid4d (pyinterp.grid.Grid4D): Function on a uniform 4-dimensional
             grid to be interpolated.
         x (numpy.ndarray): X-values
         y (numpy.ndarray): Y-values
         z (numpy.ndarray): Z-values
+        u (numpy.ndarray): U-values
         interpolator (str, optional): The method of interpolation to
             perform. Supported are ``bilinear`` and ``nearest``, and
             ``inverse_distance_weighting``. Default to ``bilinear``.
@@ -45,10 +47,10 @@ def trivariate(grid3d: grid.Grid3D,
     Return:
         numpy.ndarray: Values interpolated
     """
-    instance = grid3d._instance
-    function = f"trivariate_{interface._core_function_suffix(instance)}"
+    instance = grid4d._instance
+    function = f"quadrivariate_{interface._core_function_suffix(instance)}"
     return getattr(core, function)(instance, np.asarray(x), np.asarray(y),
-                                   np.asarray(z),
+                                   np.asarray(z), np.asarray(u),
                                    grid._core_variate_interpolator(
-                                       grid3d, interpolator, **kwargs),
+                                       grid4d, interpolator, **kwargs),
                                    bounds_error, num_threads)

@@ -15,12 +15,12 @@ class Grid2D {
  public:
   /// Default constructor
   Grid2D(std::shared_ptr<Axis> x, std::shared_ptr<Axis> y,
-         pybind11::array_t<T> z)
+         pybind11::array_t<T> array)
       : x_(std::move(x)),
         y_(std::move(y)),
-        array_(std::move(z)),
+        array_(std::move(array)),
         ptr_(array_.template unchecked<Dimension>()) {
-    check_shape(0, x_.get(), "x", "z", y_.get(), "y", "z");
+    check_shape(0, x_.get(), "x", "array", y_.get(), "y", "array");
   }
 
   /// Default constructor
@@ -124,14 +124,14 @@ class Grid2D {
 };
 
 /// Cartesian Grid 3D
-template <typename T>
-class Grid3D : public Grid2D<T, 3> {
+template <typename T, ssize_t Dimension = 3>
+class Grid3D : public Grid2D<T, Dimension> {
  public:
   /// Default constructor
   Grid3D(const std::shared_ptr<Axis>& x, const std::shared_ptr<Axis>& y,
-         std::shared_ptr<Axis> z, pybind11::array_t<T> u)
-      : Grid2D<T, 3>(x, y, std::move(u)), z_(std::move(z)) {
-    this->check_shape(2, z_.get(), "z", "u");
+         std::shared_ptr<Axis> z, pybind11::array_t<T> array)
+      : Grid2D<T, Dimension>(x, y, std::move(array)), z_(std::move(z)) {
+    this->check_shape(2, z_.get(), "z", "array");
   }
 
   /// Gets the Y-Axis
@@ -140,7 +140,7 @@ class Grid3D : public Grid2D<T, 3> {
   }
 
   /// Pickle support: get state of this instance
-  [[nodiscard]] auto getstate() const -> pybind11::tuple final {
+  [[nodiscard]] auto getstate() const -> pybind11::tuple override {
     return pybind11::make_tuple(this->x_->getstate(), this->y_->getstate(),
                                 z_->getstate(), this->array_);
   }
@@ -163,13 +163,57 @@ class Grid3D : public Grid2D<T, 3> {
   std::shared_ptr<Axis> z_;
 };
 
+/// Cartesian Grid 3D
+template <typename T>
+class Grid4D : public Grid3D<T, 4> {
+ public:
+  /// Default constructor
+  Grid4D(const std::shared_ptr<Axis>& x, const std::shared_ptr<Axis>& y,
+         std::shared_ptr<Axis> z, std::shared_ptr<Axis> u,
+         pybind11::array_t<T> array)
+      : Grid3D<T, 4>(x, y, z, std::move(array)), u_(std::move(u)) {
+    this->check_shape(3, u_.get(), "u", "array");
+  }
+
+  /// Gets the U-Axis
+  [[nodiscard]] inline auto u() const noexcept -> std::shared_ptr<Axis> {
+    return u_;
+  }
+
+  /// Pickle support: get state of this instance
+  [[nodiscard]] auto getstate() const -> pybind11::tuple final {
+    return pybind11::make_tuple(this->x_->getstate(), this->y_->getstate(),
+                                this->z_->getstate(), u_->getstate(),
+                                this->array_);
+  }
+
+  /// Pickle support: set state of this instance
+  static auto setstate(const pybind11::tuple& tuple) -> Grid4D {
+    if (tuple.size() != 5) {
+      throw std::runtime_error("invalid state");
+    }
+    return Grid4D(std::make_shared<Axis>(
+                      Axis::setstate(tuple[0].cast<pybind11::tuple>())),
+                  std::make_shared<Axis>(
+                      Axis::setstate(tuple[1].cast<pybind11::tuple>())),
+                  std::make_shared<Axis>(
+                      Axis::setstate(tuple[2].cast<pybind11::tuple>())),
+                  std::make_shared<Axis>(
+                      Axis::setstate(tuple[3].cast<pybind11::tuple>())),
+                  tuple[4].cast<pybind11::array_t<T>>());
+  }
+
+ protected:
+  std::shared_ptr<Axis> u_;
+};
+
 template <typename Type>
 void implement_grid(pybind11::module& m, const std::string& suffix) {
   pybind11::class_<Grid2D<Type>>(m, ("Grid2D" + suffix).c_str(),
                                  "Cartesian Grid 2D")
       .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
                           pybind11::array_t<Type>>(),
-           pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
+           pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("array"),
            R"__doc__(
 Default constructor
 
@@ -259,6 +303,69 @@ Return:
           [](const Grid3D<Type>& self) { return self.getstate(); },
           [](const pybind11::tuple& state) {
             return Grid3D<Type>::setstate(state);
+          }));
+
+  pybind11::class_<Grid4D<Type>>(m, ("Grid4D" + suffix).c_str(),
+                                 "Cartesian Grid 4D")
+      .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
+                          std::shared_ptr<Axis>, std::shared_ptr<Axis>,
+                          pybind11::array_t<Type>>(),
+           pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
+           pybind11::arg("u"), pybind11::arg("array"),
+           R"__doc__(
+Default constructor
+
+Args:
+    x (pyinterp.core.Axis): X-Axis
+    y (pyinterp.core.Axis): Y-Axis
+    z (pyinterp.core.Axis): Z-Axis
+    u (pyinterp.core.Axis): U-Axis
+    array (numpy.ndarray): Trivariate function
+)__doc__")
+      .def_property_readonly(
+          "x", [](const Grid4D<Type>& self) { return self.x(); },
+          R"__doc__(
+Gets the X-Axis handled by this instance
+
+Return:
+    pyinterp.core.Axis: X-Axis
+)__doc__")
+      .def_property_readonly(
+          "y", [](const Grid4D<Type>& self) { return self.y(); },
+          R"__doc__(
+Gets the Y-Axis handled by this instance
+
+Return:
+    pyinterp.core.Axis: Y-Axis
+)__doc__")
+      .def_property_readonly(
+          "z", [](const Grid4D<Type>& self) { return self.z(); },
+          R"__doc__(
+Gets the Z-Axis handled by this instance
+
+Return:
+    pyinterp.core.Axis: Z-Axis
+)__doc__")
+      .def_property_readonly(
+          "u", [](const Grid4D<Type>& self) { return self.u(); },
+          R"__doc__(
+Gets the U-Axis handled by this instance
+
+Return:
+    pyinterp.core.Axis: U-Axis
+)__doc__")
+      .def_property_readonly(
+          "array", [](const Grid4D<Type>& self) { return self.array(); },
+          R"__doc__(
+Gets the values handled by this instance
+
+Return:
+    numpy.ndarray: values
+)__doc__")
+      .def(pybind11::pickle(
+          [](const Grid4D<Type>& self) { return self.getstate(); },
+          [](const pybind11::tuple& state) {
+            return Grid4D<Type>::setstate(state);
           }));
 }
 

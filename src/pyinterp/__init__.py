@@ -5,7 +5,7 @@
 from . import version
 from .binning import Binning2D
 from .core import Axis
-from .grid import Grid2D, Grid3D
+from .grid import Grid2D, Grid3D, Grid4D
 from .rtree import RTree
 from .interpolator.bicubic import bicubic
 from .interpolator.bivariate import bivariate
