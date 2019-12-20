@@ -375,22 +375,22 @@ class Grid4D(grid.Grid4D):
         x, y = _dims_from_data_array(data_array, geodetic, ndims=4)
         z, u = tuple(set(data_array.dims) - {x, y})
         self._dims = (x, y, z, u)
+        z_values = data_array.coords[z].values
+        u_values = data_array.coords[u].values
+
         # If the grid has a time axis, its properties are stored in order to
         # check the consistency between the time axis and the data provided
         # during interpolation.
         dtype = data_array.coords[z].dtype
-        self._datetime64 = (z, dtype) if "datetime64" in dtype.name else None
-        if self._datetime64 is None:
-            z_values = data_array.coords[z].values
-            dtype = data_array.coords[u].dtype
-            self._datetime64 = (u,
-                                dtype) if "datetime64" in dtype.name else None
-            if self._datetime64 is None:
-                u_values = data_array.coords[u]
-            else:
-                u_values = data_array.coords[u].values.astype("float64")
-        else:
+        if "datetime64" in dtype.name:
+            self._datetime64 = (z, dtype)
             z_values = data_array.coords[z].values.astype("float64")
+        dtype = data_array.coords[u].dtype
+        if "datetime64" in dtype.name:
+            if self._datetime64 is not None:
+                raise ValueError("unable to handle two time axes")
+            self._datetime64 = (u, dtype)
+            u_values = data_array.coords[u].values.astype("float64")
         super(Grid4D, self).__init__(
             core.Axis(data_array.coords[x].values, is_circle=geodetic),
             core.Axis(data_array.coords[y].values),
