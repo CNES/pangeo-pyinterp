@@ -17,4 +17,5 @@ API Documentation
     pyinterp.interpolator.bicubic <api/pyinterp.interpolator.bicubic>
     pyinterp.interpolator.bivariate <api/pyinterp.interpolator.bivariate>
     pyinterp.interpolator.trivariate <api/pyinterp.interpolator.trivariate>
+    pyinterp.interpolator.quadrivariate <api/pyinterp.interpolator.quadrivariate>
     pyinterp.rtree <api/pyinterp.rtree>

@@ -89,6 +89,34 @@
 
         .. automethod:: __init__
 
+    .. autoclass:: BivariateInterpolator4D
+        :show-inheritance:
+        :members:
+        :inherited-members:
+
+        .. automethod:: __init__
+
+    .. autoclass:: Bilinear4D
+        :show-inheritance:
+        :members:
+        :inherited-members:
+
+        .. automethod:: __init__
+
+    .. autoclass:: InverseDistanceWeighting4D
+        :show-inheritance:
+        :members:
+        :inherited-members:
+
+        .. automethod:: __init__
+
+    .. autoclass:: Nearest4D
+        :show-inheritance:
+        :members:
+        :inherited-members:
+
+        .. automethod:: __init__
+
     .. autoclass:: RadialBasisFunction
         :show-inheritance:
         :members:

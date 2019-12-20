@@ -16,7 +16,7 @@ from .. import core
 from .. import grid
 from .. import interpolator
 
-__all__ = ['Grid2D', 'Grid3D']
+__all__ = ['Grid2D', 'Grid3D', 'Grid4D']
 
 
 class AxisIdentifier:
