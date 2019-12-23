@@ -199,7 +199,20 @@ inline constexpr auto is_almost_zero(const T& a, const T& epsilon) noexcept
 }
 
 /// True if a and b are two values identical to an epsilon.
-template <typename T>
+template <typename T, typename std::enable_if<std::is_integral<T>::value,
+                                              T>::type* = nullptr>
+inline constexpr auto is_same(const T& a, const T& b, const T& epsilon) noexcept
+    -> bool {
+  auto diff = std::abs(a - b);
+  if (diff <= epsilon) {
+    return true;
+  }
+  return false;
+}
+
+/// True if a and b are two values identical to an epsilon.
+template <typename T, typename std::enable_if<std::is_floating_point<T>::value,
+                                              T>::type* = nullptr>
 inline constexpr auto is_same(const T& a, const T& b, const T& epsilon) noexcept
     -> bool {
   auto diff = std::fabs(a - b);
@@ -235,6 +248,9 @@ struct Fill<T, std::enable_if_t<std::is_floating_point<T>::value>> {
   static inline constexpr auto value() noexcept -> T {
     return std::numeric_limits<T>::quiet_NaN();
   }
+  static inline constexpr auto is(const T& x) noexcept -> T {
+    return std::isnan(x);
+  }
   static inline constexpr auto is_not(const T& x) noexcept -> T {
     return !std::isnan(x);
   }
@@ -245,6 +261,9 @@ template <class T>
 struct Fill<T, std::enable_if_t<std::is_integral<T>::value>> {
   static inline constexpr auto value() noexcept -> T {
     return std::numeric_limits<T>::max();
+  }
+  static inline constexpr auto is(const T& x) noexcept -> T {
+    return Fill::value() == x;
   }
   static inline constexpr auto is_not(const T& x) noexcept -> T {
     return Fill::value() != x;
