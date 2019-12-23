@@ -8,10 +8,14 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include "pyinterp/detail/math.hpp"
 
 namespace pyinterp::detail::axis::container {
 
 /// Abstraction of a container of values representing a mathematical axis.
+///
+/// @tparam T type of data handled by this container
+template <typename T>
 class Abstract {
  public:
   /// Default constructor
@@ -55,17 +59,17 @@ class Abstract {
   ///
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
-  [[nodiscard]] virtual auto coordinate_value(size_t index) const -> double = 0;
+  [[nodiscard]] virtual auto coordinate_value(size_t index) const -> T = 0;
 
   /// Get the minimum coordinate value.
   ///
   /// @return minimum coordinate value
-  [[nodiscard]] virtual auto min_value() const -> double = 0;
+  [[nodiscard]] virtual auto min_value() const -> T = 0;
 
   /// Get the maximum coordinate value.
   ///
   /// @return maximum coordinate value
-  [[nodiscard]] virtual auto max_value() const -> double = 0;
+  [[nodiscard]] virtual auto max_value() const -> T = 0;
 
   /// Get the number of values for this axis
   ///
@@ -75,12 +79,12 @@ class Abstract {
   /// Gets the first element in the container
   ///
   /// @return the first element
-  [[nodiscard]] virtual auto front() const -> double = 0;
+  [[nodiscard]] virtual auto front() const -> T = 0;
 
   /// Gets the last element in the container
   ///
   /// @return the last element
-  [[nodiscard]] virtual auto back() const -> double = 0;
+  [[nodiscard]] virtual auto back() const -> T = 0;
 
   /// Search for the index corresponding to the requested value.
   ///
@@ -91,7 +95,7 @@ class Abstract {
   /// the requested value is located after.
   /// @return index of the requested value it or -1 if outside this coordinate
   /// system area.
-  [[nodiscard]] virtual auto find_index(double coordinate, bool bounded) const
+  [[nodiscard]] virtual auto find_index(T coordinate, bool bounded) const
       -> int64_t = 0;
 
   /// compare two variables instances
@@ -111,7 +115,10 @@ class Abstract {
 };
 
 /// Represents a container for an undefined axis
-class Undefined : public Abstract {
+///
+/// @tparam T type of data handled by this container
+template <typename T>
+class Undefined : public Abstract<T> {
  public:
   /// Default constructor
   Undefined() = default;
@@ -140,21 +147,21 @@ class Undefined : public Abstract {
   auto operator=(Undefined&& rhs) -> Undefined& = default;
 
   /// @copydoc Abstract::flip()
-  auto flip() -> void override {}
+  auto flip() -> void override{}
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
   [[nodiscard]] inline auto coordinate_value(const size_t /* index */) const
-      noexcept -> double override {
-    return std::numeric_limits<double>::quiet_NaN();
+      noexcept -> T override {
+    return math::Fill<T>::value();
   }
 
   /// @copydoc Abstract::min_value() const
-  [[nodiscard]] inline auto min_value() const noexcept -> double override {
+  [[nodiscard]] inline auto min_value() const noexcept -> T override {
     return coordinate_value(0);
   }
 
   /// @copydoc Abstract::max_value() const
-  [[nodiscard]] inline auto max_value() const noexcept -> double override {
+  [[nodiscard]] inline auto max_value() const noexcept -> T override {
     return coordinate_value(0);
   }
 
@@ -164,35 +171,47 @@ class Undefined : public Abstract {
   }
 
   /// @copydoc Abstract::front() const
-  [[nodiscard]] inline auto front() const noexcept -> double override {
+  [[nodiscard]] inline auto front() const noexcept -> T override {
     return coordinate_value(0);
   }
 
   /// @copydoc Abstract::back() const
-  [[nodiscard]] inline auto back() const noexcept -> double override {
+  [[nodiscard]] inline auto back() const noexcept -> T override {
     return coordinate_value(0);
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  inline int64_t find_index(double coordinate, bool bounded) const  /// NOLINT
+  inline int64_t find_index(T /* coordinate */,
+                            bool /* bounded */) const  /// NOLINT
       noexcept override {
     return -1;
   }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
-  inline auto operator==(const Abstract& rhs) const noexcept -> bool override {
-    return dynamic_cast<const Undefined*>(&rhs) != nullptr;
+  inline auto operator==(const Abstract<T>& rhs) const noexcept
+      -> bool override {
+    return dynamic_cast<const Undefined<T>*>(&rhs) != nullptr;
   }
 };
 
 /// Represents a container for an irregularly spaced axis
-class Irregular : public Abstract {
+///
+/// @tparam T type of data handled by this container
+template <typename T>
+class Irregular : public Abstract<T> {
  public:
   /// Creation of a container representing an irregularly spaced coordinate
   /// system.
   ///
   /// @param points axis values
-  explicit Irregular(Eigen::VectorXd points);
+  explicit Irregular(Eigen::Matrix<T, Eigen::Dynamic, 1> points)
+      : points_(std::move(points)) {
+    if (points_.size() == 0) {
+      throw std::invalid_argument("unable to create an empty container.");
+    }
+    this->is_ascending_ = this->calculate_is_ascending();
+    make_edges();
+  }
 
   /// Destructor
   ~Irregular() override = default;
@@ -218,11 +237,15 @@ class Irregular : public Abstract {
   auto operator=(Irregular&& rhs) -> Irregular& = default;
 
   /// @copydoc Abstract::flip()
-  auto flip() -> void override;
+  auto flip() -> void override {
+    std::reverse(points_.data(), points_.data() + points_.size());
+    this->is_ascending_ = !this->is_ascending_;
+    make_edges();
+  }
 
   /// @copydoc Abstract::is_monotonic() const
   [[nodiscard]] inline auto is_monotonic() const noexcept -> bool override {
-    if (is_ascending_) {
+    if (this->is_ascending_) {
       return std::is_sorted(points_.data(), points_.data() + points_.size());
     }
     return std::is_sorted(points_.data(), points_.data() + points_.size(),
@@ -231,18 +254,18 @@ class Irregular : public Abstract {
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
   [[nodiscard]] inline auto coordinate_value(const size_t index) const
-      -> double override {
+      -> T override {
     return points_[index];
   }
 
   /// @copydoc Abstract::min_value() const
-  [[nodiscard]] inline auto min_value() const -> double override {
-    return is_ascending_ ? front() : back();
+  [[nodiscard]] inline auto min_value() const -> T override {
+    return this->is_ascending_ ? front() : back();
   }
 
   /// @copydoc Abstract::max_value() const
-  [[nodiscard]] inline auto max_value() const -> double override {
-    return is_ascending_ ? back() : front();
+  [[nodiscard]] inline auto max_value() const -> T override {
+    return this->is_ascending_ ? back() : front();
   }
 
   /// @copydoc Abstract::size() const
@@ -251,22 +274,66 @@ class Irregular : public Abstract {
   }
 
   /// @copydoc Abstract::front() const
-  [[nodiscard]] inline auto front() const -> double override {
-    return points_[0];
-  }
+  [[nodiscard]] inline auto front() const -> T override { return points_[0]; }
 
   /// @copydoc Abstract::back() const
-  [[nodiscard]] inline auto back() const -> double override {
+  [[nodiscard]] inline auto back() const -> T override {
     return points_[points_.size() - 1];
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] auto find_index(double coordinate, bool bounded) const
-      -> int64_t override;
+  [[nodiscard]] auto find_index(T coordinate, bool bounded) const
+      -> int64_t override {
+    int64_t low = 0;
+    int64_t mid = 0;
+    int64_t high = size();
+
+    if (this->is_ascending_) {
+      if (coordinate < edges_[0]) {
+        return bounded ? 0 : -1;
+      }
+
+      if (coordinate > edges_[edges_.size() - 1]) {
+        return bounded ? high - 1 : -1;
+      }
+
+      while (high > low + 1) {
+        // low and high are strictly positive
+        mid = (low + high) >> 1;  // NOLINT
+        auto value = edges_[mid];
+
+        if (value == coordinate) {
+          return mid;
+        }
+        value < coordinate ? low = mid : high = mid;
+      }
+      return low;
+    }
+
+    if (coordinate < edges_[edges_.size() - 1]) {
+      return bounded ? high - 1 : -1;
+    }
+
+    if (coordinate > edges_[0]) {
+      return bounded ? 0 : -1;
+    }
+
+    while (high > low + 1) {
+      // low and high are strictly positive
+      mid = (low + high) >> 1;  // NOLINT
+      auto value = edges_[mid];
+
+      if (value == coordinate) {
+        return mid;
+      }
+      value < coordinate ? high = mid : low = mid;
+    }
+    return low;
+  }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
-  auto operator==(const Abstract& rhs) const noexcept -> bool override {
-    const auto ptr = dynamic_cast<const Irregular*>(&rhs);
+  auto operator==(const Abstract<T>& rhs) const noexcept -> bool override {
+    const auto ptr = dynamic_cast<const Irregular<T>*>(&rhs);
     if (ptr != nullptr) {
       return ptr->points_.size() == points_.size() && ptr->points_ == points_;
     }
@@ -274,15 +341,28 @@ class Irregular : public Abstract {
   }
 
  private:
-  Eigen::VectorXd points_{};
-  Eigen::VectorXd edges_{};
+  Eigen::Matrix<T, Eigen::Dynamic, 1> points_{};
+  Eigen::Matrix<T, Eigen::Dynamic, 1> edges_{};
 
   /// Computes the edges, if the axis data are not spaced regularly.
-  void make_edges();
+  void make_edges() {
+    auto n = points_.size();
+    edges_.resize(n + 1);
+
+    for (Eigen::Index ix = 1; ix < n; ++ix) {
+      edges_[ix] = (points_[ix - 1] + points_[ix]) / 2;
+    }
+
+    edges_[0] = 2 * points_[0] - edges_[1];
+    edges_[n] = 2 * points_[n - 1] - edges_[n - 1];
+  }
 };
 
 /// Represents a container for an regularly spaced axis
-class Regular : public Abstract {
+///
+/// @tparam T type of data handled by this container
+template <typename T>
+class Regular : public Abstract<T> {
  public:
   /// Create a container from evenly spaced numbers over a specified
   /// interval.
@@ -290,7 +370,7 @@ class Regular : public Abstract {
   /// @param start the starting value of the sequence
   /// @param stop the end value of the sequence
   /// @param num number of samples in the container
-  Regular(const double start, const double stop, const double num)
+  Regular(const T start, const T stop, const T num)
       : size_(static_cast<int64_t>(num)), start_(start) {
     if (num == 0) {
       throw std::invalid_argument("unable to create an empty container.");
@@ -299,7 +379,7 @@ class Regular : public Abstract {
     // The inverse step of this axis is stored in order to optimize the search
     // for an index for a given value by avoiding a division.
     inv_step_ = 1.0 / step_;
-    is_ascending_ = calculate_is_ascending();
+    this->is_ascending_ = this->calculate_is_ascending();
   }
 
   /// Destructor
@@ -328,24 +408,24 @@ class Regular : public Abstract {
   /// Get the step between two successive values.
   ///
   /// @return increment value
-  [[nodiscard]] auto step() const -> double { return step_; }
+  [[nodiscard]] auto step() const -> T { return step_; }
 
   /// @copydoc Abstract::flip()
   auto flip() -> void override {
     start_ = back();
     step_ = -step_;
     inv_step_ = -inv_step_;
-    is_ascending_ = !is_ascending_;
+    this->is_ascending_ = !this->is_ascending_;
   }
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
   [[nodiscard]] inline auto coordinate_value(const size_t index) const noexcept
-      -> double override {
+      -> T override {
     return start_ + index * step_;
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] auto find_index(double coordinate, bool bounded) const noexcept
+  [[nodiscard]] auto find_index(T coordinate, bool bounded) const noexcept
       -> int64_t override {
     auto index =
         static_cast<int64_t>(std::round((coordinate - start_) * inv_step_));
@@ -353,6 +433,7 @@ class Regular : public Abstract {
     if (index < 0) {
       return bounded ? 0 : -1;
     }
+
     if (index >= size_) {
       return bounded ? size_ - 1 : -1;
     }
@@ -360,22 +441,22 @@ class Regular : public Abstract {
   }
 
   /// @copydoc Abstract::min_value() const
-  [[nodiscard]] inline auto min_value() const noexcept -> double override {
-    return coordinate_value(is_ascending_ ? 0 : size_ - 1);
+  [[nodiscard]] inline auto min_value() const noexcept -> T override {
+    return coordinate_value(this->is_ascending_ ? 0 : size_ - 1);
   }
 
   /// @copydoc Abstract::max_value() const
-  [[nodiscard]] inline auto max_value() const noexcept -> double override {
-    return coordinate_value(is_ascending_ ? size_ - 1 : 0);
+  [[nodiscard]] inline auto max_value() const noexcept -> T override {
+    return coordinate_value(this->is_ascending_ ? size_ - 1 : 0);
   }
 
   /// @copydoc Abstract::front() const
-  [[nodiscard]] inline auto front() const noexcept -> double override {
+  [[nodiscard]] inline auto front() const noexcept -> T override {
     return start_;
   }
 
   /// @copydoc Abstract::back() const
-  [[nodiscard]] inline auto back() const noexcept -> double override {
+  [[nodiscard]] inline auto back() const noexcept -> T override {
     return coordinate_value(size_ - 1);
   }
 
@@ -385,8 +466,8 @@ class Regular : public Abstract {
   }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
-  auto operator==(const Abstract& rhs) const noexcept -> bool override {
-    const auto ptr = dynamic_cast<const Regular*>(&rhs);
+  auto operator==(const Abstract<T>& rhs) const noexcept -> bool override {
+    const auto ptr = dynamic_cast<const Regular<T>*>(&rhs);
     if (ptr != nullptr) {
       return ptr->step_ == step_ && ptr->start_ == start_ &&
              ptr->size_ == size_;
@@ -398,9 +479,9 @@ class Regular : public Abstract {
   /// Container size.
   int64_t size_{};
   /// Value of the first item in the container.
-  double start_{};
+  T start_{};
   /// The step between two succeeding values.
-  double step_{};
+  T step_{};
   /// The inverse of the step (to avoid a division between real numbers).
   double inv_step_{};
 };

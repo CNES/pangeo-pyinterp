@@ -46,8 +46,8 @@ class Axis {
   Axis(const double start, const double stop, const double num,
        const double epsilon, const bool is_circle, const bool is_radian)
       : circle_(Axis::set_circle(is_circle, is_radian)),
-        axis_(std::make_shared<axis::container::Regular>(
-            axis::container::Regular(start, stop, num))) {
+        axis_(std::make_shared<axis::container::Regular<double>>(
+            axis::container::Regular<double>(start, stop, num))) {
     compute_properties(epsilon);
   }
 
@@ -120,7 +120,8 @@ class Axis {
 
   /// Check if this axis values are spaced regularly
   [[nodiscard]] inline auto is_regular() const noexcept -> bool {
-    return dynamic_cast<axis::container::Regular*>(axis_.get()) != nullptr;
+    return dynamic_cast<axis::container::Regular<double>*>(axis_.get()) !=
+           nullptr;
   }
 
   /// Returns true if this axis represents a circle.
@@ -160,7 +161,7 @@ class Axis {
   /// @return increment value if is_regular()
   /// @throw std::logic_error if this instance does not represent a regular axis
   [[nodiscard]] inline auto increment() const -> double {
-    auto ptr = dynamic_cast<axis::container::Regular*>(axis_.get());
+    auto ptr = dynamic_cast<axis::container::Regular<double>*>(axis_.get());
     if (ptr == nullptr) {
       throw std::logic_error("this axis is not regular.");
     }
@@ -255,7 +256,7 @@ class Axis {
   ///
   /// @return the axis handler
   [[nodiscard]] inline auto handler() const noexcept
-      -> const std::shared_ptr<axis::container::Abstract>& {
+      -> const std::shared_ptr<axis::container::Abstract<double>>& {
     return axis_;
   }
 
@@ -264,8 +265,8 @@ class Axis {
   /// @param axis Axis handler
   /// @param is_circle True, if the axis can represent a circle.
   /// @param is_radian True, if the coordinate system is radian.
-  Axis(std::shared_ptr<axis::container::Abstract> axis, const bool is_circle,
-       const bool is_radian)
+  Axis(std::shared_ptr<axis::container::Abstract<double>> axis,
+       const bool is_circle, const bool is_radian)
       : is_circle_(is_circle),
         circle_(is_circle_ ? (is_radian ? math::pi<double>() : 360)
                            : std::numeric_limits<double>::quiet_NaN()),
@@ -280,8 +281,8 @@ class Axis {
 
   /// The object that handles access and searches for the values defined by the
   /// axis.
-  std::shared_ptr<axis::container::Abstract> axis_{
-      std::make_shared<axis::container::Undefined>()};
+  std::shared_ptr<axis::container::Abstract<double>> axis_{
+      std::make_shared<axis::container::Undefined<double>>()};
 
   /// Determines if the axis represents a circle.
   inline static constexpr auto set_circle(const bool is_circle,

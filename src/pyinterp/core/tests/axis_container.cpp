@@ -6,35 +6,53 @@
 #include "pyinterp/detail/axis/container.hpp"
 
 namespace container = pyinterp::detail::axis::container;
+namespace math = pyinterp::detail::math;
 
-TEST(axis_container, undefined) {
+using Implementations = testing::Types<int32_t, int64_t, float, double>;
+
+template <typename T>
+class UndefinedTest : public testing::Test {
+ public:
+  using Axis = container::Undefined<T>;
+};
+TYPED_TEST_SUITE(UndefinedTest, Implementations);
+
+TYPED_TEST(UndefinedTest, undefined) {
   // undefined axis
-  auto a1 = container::Undefined();
+  auto a1 = typename TestFixture::Axis();
   a1.flip();
-  EXPECT_TRUE(std::isnan(a1.front()));
-  EXPECT_TRUE(std::isnan(a1.back()));
-  EXPECT_TRUE(std::isnan(a1.min_value()));
-  EXPECT_TRUE(std::isnan(a1.max_value()));
+  EXPECT_TRUE(math::Fill<TypeParam>::is(a1.front()));
+  EXPECT_TRUE(math::Fill<TypeParam>::is(a1.back()));
+  EXPECT_TRUE(math::Fill<TypeParam>::is(a1.min_value()));
+  EXPECT_TRUE(math::Fill<TypeParam>::is(a1.max_value()));
   EXPECT_EQ(a1.size(), 0);
   EXPECT_EQ(a1.find_index(360, true), -1);
   EXPECT_EQ(a1.find_index(360, false), -1);
   EXPECT_EQ(a1, a1);
 }
 
-TEST(axis_container, irregular) {
+template <typename T>
+class IrregularTest : public testing::Test {
+ public:
+  using Axis = container::Irregular<T>;
+};
+TYPED_TEST_SUITE(IrregularTest, Implementations);
+
+TYPED_TEST(IrregularTest, irregular) {
   // irregular axis
-  auto values = std::vector<double>{0, 1, 4, 8, 20};
-  auto a1 = container::Irregular(
-      Eigen::Map<Eigen::VectorXd>(values.data(), values.size()));
+  auto values = std::vector<TypeParam>{0, 1, 4, 8, 20};
+  auto a1 =
+      typename TestFixture::Axis(Eigen::Map<Eigen::Matrix<TypeParam, -1, 1>>(
+          values.data(), values.size()));
   EXPECT_EQ(a1.front(), 0);
   EXPECT_EQ(a1.back(), 20);
   EXPECT_EQ(a1.min_value(), 0);
   EXPECT_EQ(a1.max_value(), 20);
   EXPECT_EQ(a1.coordinate_value(2), 4);
   EXPECT_EQ(a1.find_index(8, false), 3);
-  EXPECT_EQ(a1.find_index(8.3, false), 3);
+  EXPECT_EQ(a1.find_index(static_cast<TypeParam>(8.3), false), 3);
   EXPECT_EQ(a1.find_index(30, true), 4);
-  EXPECT_EQ(a1.find_index(20.1, true), 4);
+  EXPECT_EQ(a1.find_index(static_cast<TypeParam>(20.1), true), 4);
   EXPECT_EQ(a1.find_index(30, false), -1);
   EXPECT_EQ(a1.size(), 5);
   EXPECT_EQ(a1, a1);
@@ -45,23 +63,31 @@ TEST(axis_container, irregular) {
   EXPECT_EQ(a1.max_value(), 20);
   EXPECT_EQ(a1.coordinate_value(2), 4);
   EXPECT_EQ(a1.find_index(8, false), 1);
-  EXPECT_EQ(a1.find_index(8.3, false), 1);
+  EXPECT_EQ(a1.find_index(static_cast<TypeParam>(8.3), false), 1);
   EXPECT_EQ(a1.find_index(30, true), 0);
-  EXPECT_EQ(a1.find_index(20.1, true), 0);
+  EXPECT_EQ(a1.find_index(static_cast<TypeParam>(20.1), true), 0);
   EXPECT_EQ(a1.find_index(30, false), -1);
   EXPECT_EQ(a1.size(), 5);
   EXPECT_EQ(a1, a1);
-  values = std::vector<double>{0, 1};
-  auto a2 = container::Irregular(
-      Eigen::Map<Eigen::VectorXd>(values.data(), values.size()));
+  values = std::vector<TypeParam>{0, 1};
+  auto a2 =
+      typename TestFixture::Axis(Eigen::Map<Eigen::Matrix<TypeParam, -1, 1>>(
+          values.data(), values.size()));
   EXPECT_FALSE(a1 == a2);
-  EXPECT_FALSE(a1 == container::Undefined());
+  EXPECT_FALSE(a1 == container::Undefined<TypeParam>());
 }
 
-TEST(axis_container, regular) {
+template <typename T>
+class RegularTest : public testing::Test {
+ public:
+  using Axis = container::Regular<T>;
+};
+TYPED_TEST_SUITE(RegularTest, Implementations);
+
+TYPED_TEST(RegularTest, irregular) {
   // regular axis
-  EXPECT_THROW(container::Regular(0, 359, 0), std::invalid_argument);
-  auto a1 = container::Regular(0, 359, 360);
+  EXPECT_THROW(typename TestFixture::Axis(0, 359, 0), std::invalid_argument);
+  auto a1 = typename TestFixture::Axis(0, 359, 360);
   EXPECT_EQ(a1.front(), 0);
   EXPECT_EQ(a1.back(), 359);
   EXPECT_EQ(a1.min_value(), 0);
@@ -83,7 +109,7 @@ TEST(axis_container, regular) {
   EXPECT_EQ(a1.find_index(360, true), 0);
   EXPECT_EQ(a1.size(), 360);
   EXPECT_EQ(a1, a1);
-  auto a2 = container::Regular(-180, 179, 360);
+  auto a2 = typename TestFixture::Axis(-180, 179, 360);
   EXPECT_FALSE(a1 == a2);
-  EXPECT_FALSE(a1 == container::Undefined());
+  EXPECT_FALSE(a1 == container::Undefined<TypeParam>());
 }

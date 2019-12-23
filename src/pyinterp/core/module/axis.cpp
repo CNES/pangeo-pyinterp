@@ -73,7 +73,8 @@ auto Axis::find_index(const pybind11::array_t<double>& coordinates,
 auto Axis::getstate() const -> pybind11::tuple {
   // Regular
   {
-    auto ptr = dynamic_cast<detail::axis::container::Regular*>(handler().get());
+    auto ptr = dynamic_cast<detail::axis::container::Regular<double>*>(
+        handler().get());
     if (ptr != nullptr) {
       return pybind11::make_tuple(REGULAR, ptr->front(), ptr->back(),
                                   ptr->size(), is_circle(), is_radian());
@@ -81,8 +82,8 @@ auto Axis::getstate() const -> pybind11::tuple {
   }
   // Irregular
   {
-    auto ptr =
-        dynamic_cast<detail::axis::container::Irregular*>(handler().get());
+    auto ptr = dynamic_cast<detail::axis::container::Irregular<double>*>(
+        handler().get());
     if (ptr != nullptr) {
       auto values = py::array_t<double>(ptr->size());
       auto _values = values.mutable_unchecked<1>();
@@ -93,7 +94,8 @@ auto Axis::getstate() const -> pybind11::tuple {
     }
   }
   // Undefined
-  auto ptr = dynamic_cast<detail::axis::container::Undefined*>(handler().get());
+  auto ptr = dynamic_cast<detail::axis::container::Undefined<double>*>(
+      handler().get());
   if (ptr != nullptr) {
     return pybind11::make_tuple(UNDEFINED);
   }
@@ -111,15 +113,15 @@ auto Axis::setstate(const pybind11::tuple& state) -> Axis {
       break;
     case IRREGULAR: {
       auto ndarray = state[1].cast<py::array_t<double>>();
-      return Axis(std::shared_ptr<detail::axis::container::Abstract>(
-                      new detail::axis::container::Irregular(
+      return Axis(std::shared_ptr<detail::axis::container::Abstract<double>>(
+                      new detail::axis::container::Irregular<double>(
                           Eigen::Map<Eigen::VectorXd>(ndarray.mutable_data(),
                                                       ndarray.size()))),
                   state[2].cast<bool>(), state[3].cast<bool>());
     }
     case REGULAR:
-      return Axis(std::shared_ptr<detail::axis::container::Abstract>(
-                      new detail::axis::container::Regular(
+      return Axis(std::shared_ptr<detail::axis::container::Abstract<double>>(
+                      new detail::axis::container::Regular<double>(
                           state[1].cast<double>(), state[2].cast<double>(),
                           state[3].cast<double>())),
                   state[4].cast<bool>(), state[5].cast<bool>());
@@ -182,8 +184,7 @@ Get the maximum coordinate value.
 Return:
     float: The maximum coordinate value.
 )__doc__")
-      .def(
-           "is_regular",
+      .def("is_regular",
            [](const pyinterp::Axis& self) -> bool { return self.is_regular(); },
            R"__doc__(
 Check if this axis values are spaced regularly

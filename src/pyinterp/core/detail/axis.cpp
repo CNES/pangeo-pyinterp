@@ -68,7 +68,7 @@ void Axis::compute_properties(const double epsilon) {
   // If this axis represents an angle, determine if it represents the entire
   // trigonometric circle.
   if (is_angle()) {
-    auto ptr = dynamic_cast<axis::container::Regular*>(axis_.get());
+    auto ptr = dynamic_cast<axis::container::Regular<double>*>(axis_.get());
     if (ptr != nullptr) {
       is_circle_ = math::is_same<double>(std::fabs(ptr->step() * size()),
                                          circle_, epsilon);
@@ -99,12 +99,12 @@ Axis::Axis(Eigen::Ref<Eigen::VectorXd> values, const double epsilon,
   // interval.
   auto increment = is_evenly_spaced(values, epsilon);
   if (increment) {
-    axis_ = std::make_shared<axis::container::Regular>(
-        axis::container::Regular(values[0], values[values.size() - 1],
-                                 static_cast<double>(values.size())));
+    axis_ = std::make_shared<axis::container::Regular<double>>(
+        axis::container::Regular<double>(values[0], values[values.size() - 1],
+                                         static_cast<double>(values.size())));
   } else {
-    axis_ = std::make_shared<axis::container::Irregular>(
-        axis::container::Irregular(values));
+    axis_ = std::make_shared<axis::container::Irregular<double>>(
+        axis::container::Irregular<double>(values));
   }
   compute_properties(epsilon);
 }
