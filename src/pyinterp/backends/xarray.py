@@ -385,6 +385,8 @@ class Grid4D(grid.Grid4D):
         if "datetime64" in dtype.name:
             self._datetime64 = (z, dtype)
             z_values = data_array.coords[z].values.astype("float64")
+        else:
+            self._datetime64 = None
         dtype = data_array.coords[u].dtype
         if "datetime64" in dtype.name:
             if self._datetime64 is not None:
