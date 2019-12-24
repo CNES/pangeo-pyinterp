@@ -23,7 +23,7 @@ using Bivariate4D = detail::math::Bivariate<Point, T>;
 /// @tparam Coordinate The type of data used by the interpolators.
 /// @tparam Type The type of data used by the numerical grid.
 template <template <class> class Point, typename Coordinate, typename Type>
-auto quadrivariate(const Grid4D<Type>& grid,
+auto quadrivariate(const Grid4D<Type, double>& grid,
                    const pybind11::array_t<Coordinate>& x,
                    const pybind11::array_t<Coordinate>& y,
                    const pybind11::array_t<Coordinate>& z,
@@ -91,7 +91,8 @@ auto quadrivariate(const Grid4D<Type>& grid,
                         : _x(ix),
                     _y(ix), _z(ix));
                 auto p0 = Point<Coordinate>(x0, y_axis(iy0), z_axis(iz0));
-                auto p1 = Point<Coordinate>(x_axis(ix1), y_axis(iy1), z_axis(iz1));
+                auto p1 =
+                    Point<Coordinate>(x_axis(ix1), y_axis(iy1), z_axis(iz1));
 
                 auto u0 = pyinterp::detail::math::trivariate<Point, Coordinate>(
                     p, p0, p1,
@@ -123,15 +124,15 @@ auto quadrivariate(const Grid4D<Type>& grid,
               } else {
                 if (bounds_error) {
                   if (!x_indexes.has_value()) {
-                    Grid3D<Type>::index_error(x_axis, _x(ix), "x");
+                    Grid3D<Type, double>::index_error(x_axis, _x(ix), "x");
                   }
                   if (!y_indexes.has_value()) {
-                    Grid3D<Type>::index_error(y_axis, _y(ix), "y");
+                    Grid3D<Type, double>::index_error(y_axis, _y(ix), "y");
                   }
                   if (!z_indexes.has_value()) {
-                    Grid3D<Type>::index_error(z_axis, _z(ix), "z");
+                    Grid3D<Type, double>::index_error(z_axis, _z(ix), "z");
                   }
-                  Grid3D<Type>::index_error(u_axis, _u(ix), "u");
+                  Grid3D<Type, double>::index_error(u_axis, _u(ix), "u");
                 }
                 _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
               }

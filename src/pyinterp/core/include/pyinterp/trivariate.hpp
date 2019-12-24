@@ -23,7 +23,7 @@ using Bivariate3D = detail::math::Bivariate<Point, T>;
 /// @tparam Coordinate The type of data used by the interpolators.
 /// @tparam Type The type of data used by the numerical grid.
 template <template <class> class Point, typename Coordinate, typename Type>
-auto trivariate(const Grid3D<Type>& grid,
+auto trivariate(const Grid3D<Type, double>& grid,
                 const pybind11::array_t<Coordinate>& x,
                 const pybind11::array_t<Coordinate>& y,
                 const pybind11::array_t<Coordinate>& z,
@@ -99,12 +99,12 @@ auto trivariate(const Grid3D<Type>& grid,
               } else {
                 if (bounds_error) {
                   if (!x_indexes.has_value()) {
-                    Grid3D<Type>::index_error(x_axis, _x(ix), "x");
+                    Grid3D<Type, double>::index_error(x_axis, _x(ix), "x");
                   }
                   if (!y_indexes.has_value()) {
-                    Grid3D<Type>::index_error(y_axis, _y(ix), "y");
+                    Grid3D<Type, double>::index_error(y_axis, _y(ix), "y");
                   }
-                  Grid3D<Type>::index_error(z_axis, _z(ix), "z");
+                  Grid3D<Type, double>::index_error(z_axis, _z(ix), "z");
                 }
                 _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
               }

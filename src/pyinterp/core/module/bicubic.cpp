@@ -87,8 +87,8 @@ auto load_frame(const Grid2D<Type>& grid, const double x, const double y,
 
 /// Loads the interpolation frame into memory
 template <typename Type>
-auto load_frame(const Grid3D<Type>& grid, const double x, const double y,
-                const double z, const axis::Boundary boundary,
+auto load_frame(const Grid3D<Type, double>& grid, const double x,
+                const double y, const double z, const axis::Boundary boundary,
                 const bool bounds_error, detail::math::XArrayStack& frame)
     -> bool {
   const auto& x_axis = *grid.x();
@@ -202,7 +202,8 @@ auto bicubic(const Grid2D<Type>& grid, const py::array_t<double>& x,
 
 /// Evaluate the interpolation.
 template <typename Type>
-auto bicubic_and_linear(const Grid3D<Type>& grid, const py::array_t<double>& x,
+auto bicubic_and_linear(const Grid3D<Type, double>& grid,
+                        const py::array_t<double>& x,
                         const py::array_t<double>& y,
                         const py::array_t<double>& z, size_t nx, size_t ny,
                         FittingModel fitting_model,
