@@ -14,7 +14,7 @@ template <typename T, ssize_t Dimension = 2>
 class Grid2D {
  public:
   /// Default constructor
-  Grid2D(std::shared_ptr<Axis> x, std::shared_ptr<Axis> y,
+  Grid2D(std::shared_ptr<Axis<double>> x, std::shared_ptr<Axis<double>> y,
          pybind11::array_t<T> array)
       : x_(std::move(x)),
         y_(std::move(y)),
@@ -50,12 +50,14 @@ class Grid2D {
   auto operator=(Grid2D&& rhs) noexcept -> Grid2D& = default;
 
   /// Gets the X-Axis
-  [[nodiscard]] inline auto x() const noexcept -> std::shared_ptr<Axis> {
+  [[nodiscard]] inline auto x() const noexcept
+      -> std::shared_ptr<Axis<double>> {
     return x_;
   }
 
   /// Gets the Y-Axis
-  [[nodiscard]] inline auto y() const noexcept -> std::shared_ptr<Axis> {
+  [[nodiscard]] inline auto y() const noexcept
+      -> std::shared_ptr<Axis<double>> {
     return y_;
   }
 
@@ -76,7 +78,7 @@ class Grid2D {
   /// @param axis Axis involved.
   /// @param value The value outside the axis domain.
   /// @param axis_label The name of the axis
-  static void index_error(const Axis& axis, const double value,
+  static void index_error(const Axis<double>& axis, const double value,
                           const std::string& axis_label) {
     throw std::invalid_argument(std::to_string(value) +
                                 " is out ouf bounds for axis " + axis_label +
@@ -93,16 +95,17 @@ class Grid2D {
     if (tuple.size() != 3) {
       throw std::runtime_error("invalid state");
     }
-    return Grid2D(std::make_shared<Axis>(
-                      Axis(Axis::setstate(tuple[0].cast<pybind11::tuple>()))),
-                  std::make_shared<Axis>(
-                      Axis(Axis::setstate(tuple[1].cast<pybind11::tuple>()))),
-                  tuple[2].cast<pybind11::array_t<T>>());
+    return Grid2D(
+        std::make_shared<Axis<double>>(Axis<double>(
+            Axis<double>::setstate(tuple[0].cast<pybind11::tuple>()))),
+        std::make_shared<Axis<double>>(Axis<double>(
+            Axis<double>::setstate(tuple[1].cast<pybind11::tuple>()))),
+        tuple[2].cast<pybind11::array_t<T>>());
   }
 
  protected:
-  std::shared_ptr<Axis> x_;
-  std::shared_ptr<Axis> y_;
+  std::shared_ptr<Axis<double>> x_;
+  std::shared_ptr<Axis<double>> y_;
   pybind11::array_t<T> array_;
   pybind11::detail::unchecked_reference<T, Dimension> ptr_;
 
@@ -111,8 +114,8 @@ class Grid2D {
 
   /// Checking the shape of the array for each defined axis.
   template <typename... Args>
-  void check_shape(const size_t idx, const Axis* axis, const std::string& x,
-                   const std::string& y, Args... args) {
+  void check_shape(const size_t idx, const Axis<double>* axis,
+                   const std::string& x, const std::string& y, Args... args) {
     if (axis->size() != array_.shape(idx)) {
       throw std::invalid_argument(
           x + ", " + y + " could not be broadcast together with shape (" +
@@ -128,14 +131,16 @@ template <typename T, ssize_t Dimension = 3>
 class Grid3D : public Grid2D<T, Dimension> {
  public:
   /// Default constructor
-  Grid3D(const std::shared_ptr<Axis>& x, const std::shared_ptr<Axis>& y,
-         std::shared_ptr<Axis> z, pybind11::array_t<T> array)
+  Grid3D(const std::shared_ptr<Axis<double>>& x,
+         const std::shared_ptr<Axis<double>>& y,
+         std::shared_ptr<Axis<double>> z, pybind11::array_t<T> array)
       : Grid2D<T, Dimension>(x, y, std::move(array)), z_(std::move(z)) {
     this->check_shape(2, z_.get(), "z", "array");
   }
 
   /// Gets the Y-Axis
-  [[nodiscard]] inline auto z() const noexcept -> std::shared_ptr<Axis> {
+  [[nodiscard]] inline auto z() const noexcept
+      -> std::shared_ptr<Axis<double>> {
     return z_;
   }
 
@@ -150,17 +155,17 @@ class Grid3D : public Grid2D<T, Dimension> {
     if (tuple.size() != 4) {
       throw std::runtime_error("invalid state");
     }
-    return Grid3D(std::make_shared<Axis>(
-                      Axis::setstate(tuple[0].cast<pybind11::tuple>())),
-                  std::make_shared<Axis>(
-                      Axis::setstate(tuple[1].cast<pybind11::tuple>())),
-                  std::make_shared<Axis>(
-                      Axis::setstate(tuple[2].cast<pybind11::tuple>())),
+    return Grid3D(std::make_shared<Axis<double>>(
+                      Axis<double>::setstate(tuple[0].cast<pybind11::tuple>())),
+                  std::make_shared<Axis<double>>(
+                      Axis<double>::setstate(tuple[1].cast<pybind11::tuple>())),
+                  std::make_shared<Axis<double>>(
+                      Axis<double>::setstate(tuple[2].cast<pybind11::tuple>())),
                   tuple[3].cast<pybind11::array_t<T>>());
   }
 
  protected:
-  std::shared_ptr<Axis> z_;
+  std::shared_ptr<Axis<double>> z_;
 };
 
 /// Cartesian Grid 3D
@@ -168,15 +173,17 @@ template <typename T>
 class Grid4D : public Grid3D<T, 4> {
  public:
   /// Default constructor
-  Grid4D(const std::shared_ptr<Axis>& x, const std::shared_ptr<Axis>& y,
-         std::shared_ptr<Axis> z, std::shared_ptr<Axis> u,
+  Grid4D(const std::shared_ptr<Axis<double>>& x,
+         const std::shared_ptr<Axis<double>>& y,
+         std::shared_ptr<Axis<double>> z, std::shared_ptr<Axis<double>> u,
          pybind11::array_t<T> array)
       : Grid3D<T, 4>(x, y, z, std::move(array)), u_(std::move(u)) {
     this->check_shape(3, u_.get(), "u", "array");
   }
 
   /// Gets the U-Axis
-  [[nodiscard]] inline auto u() const noexcept -> std::shared_ptr<Axis> {
+  [[nodiscard]] inline auto u() const noexcept
+      -> std::shared_ptr<Axis<double>> {
     return u_;
   }
 
@@ -192,26 +199,27 @@ class Grid4D : public Grid3D<T, 4> {
     if (tuple.size() != 5) {
       throw std::runtime_error("invalid state");
     }
-    return Grid4D(std::make_shared<Axis>(
-                      Axis::setstate(tuple[0].cast<pybind11::tuple>())),
-                  std::make_shared<Axis>(
-                      Axis::setstate(tuple[1].cast<pybind11::tuple>())),
-                  std::make_shared<Axis>(
-                      Axis::setstate(tuple[2].cast<pybind11::tuple>())),
-                  std::make_shared<Axis>(
-                      Axis::setstate(tuple[3].cast<pybind11::tuple>())),
+    return Grid4D(std::make_shared<Axis<double>>(
+                      Axis<double>::setstate(tuple[0].cast<pybind11::tuple>())),
+                  std::make_shared<Axis<double>>(
+                      Axis<double>::setstate(tuple[1].cast<pybind11::tuple>())),
+                  std::make_shared<Axis<double>>(
+                      Axis<double>::setstate(tuple[2].cast<pybind11::tuple>())),
+                  std::make_shared<Axis<double>>(
+                      Axis<double>::setstate(tuple[3].cast<pybind11::tuple>())),
                   tuple[4].cast<pybind11::array_t<T>>());
   }
 
  protected:
-  std::shared_ptr<Axis> u_;
+  std::shared_ptr<Axis<double>> u_;
 };
 
 template <typename Type>
 void implement_grid(pybind11::module& m, const std::string& suffix) {
   pybind11::class_<Grid2D<Type>>(m, ("Grid2D" + suffix).c_str(),
                                  "Cartesian Grid 2D")
-      .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
+      .def(pybind11::init<std::shared_ptr<Axis<double>>,
+                          std::shared_ptr<Axis<double>>,
                           pybind11::array_t<Type>>(),
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("array"),
            R"__doc__(
@@ -222,17 +230,17 @@ Args:
     y (pyinterp.core.Axis): Y-Axis
     array (numpy.ndarray): Bivariate function
 )__doc__")
-      .def_property_readonly(
-          "x", [](const Grid2D<Type>& self) { return self.x(); },
-          R"__doc__(
+      .def_property_readonly("x",
+                             [](const Grid2D<Type>& self) { return self.x(); },
+                             R"__doc__(
 Gets the X-Axis handled by this instance
 
 Return:
     pyinterp.core.Axis: X-Axis
 )__doc__")
-      .def_property_readonly(
-          "y", [](const Grid2D<Type>& self) { return self.y(); },
-          R"__doc__(
+      .def_property_readonly("y",
+                             [](const Grid2D<Type>& self) { return self.y(); },
+                             R"__doc__(
 Gets the Y-Axis handled by this instance
 
 Return:
@@ -254,8 +262,9 @@ Return:
 
   pybind11::class_<Grid3D<Type>>(m, ("Grid3D" + suffix).c_str(),
                                  "Cartesian Grid 3D")
-      .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
-                          std::shared_ptr<Axis>, pybind11::array_t<Type>>(),
+      .def(pybind11::init<
+               std::shared_ptr<Axis<double>>, std::shared_ptr<Axis<double>>,
+               std::shared_ptr<Axis<double>>, pybind11::array_t<Type>>(),
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
            pybind11::arg("array"),
            R"__doc__(
@@ -267,25 +276,25 @@ Args:
     z (pyinterp.core.Axis): Z-Axis
     array (numpy.ndarray): Trivariate function
 )__doc__")
-      .def_property_readonly(
-          "x", [](const Grid3D<Type>& self) { return self.x(); },
-          R"__doc__(
+      .def_property_readonly("x",
+                             [](const Grid3D<Type>& self) { return self.x(); },
+                             R"__doc__(
 Gets the X-Axis handled by this instance
 
 Return:
     pyinterp.core.Axis: X-Axis
 )__doc__")
-      .def_property_readonly(
-          "y", [](const Grid3D<Type>& self) { return self.y(); },
-          R"__doc__(
+      .def_property_readonly("y",
+                             [](const Grid3D<Type>& self) { return self.y(); },
+                             R"__doc__(
 Gets the Y-Axis handled by this instance
 
 Return:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
-      .def_property_readonly(
-          "z", [](const Grid3D<Type>& self) { return self.z(); },
-          R"__doc__(
+      .def_property_readonly("z",
+                             [](const Grid3D<Type>& self) { return self.z(); },
+                             R"__doc__(
 Gets the Z-Axis handled by this instance
 
 Return:
@@ -307,9 +316,10 @@ Return:
 
   pybind11::class_<Grid4D<Type>>(m, ("Grid4D" + suffix).c_str(),
                                  "Cartesian Grid 4D")
-      .def(pybind11::init<std::shared_ptr<Axis>, std::shared_ptr<Axis>,
-                          std::shared_ptr<Axis>, std::shared_ptr<Axis>,
-                          pybind11::array_t<Type>>(),
+      .def(pybind11::init<
+               std::shared_ptr<Axis<double>>, std::shared_ptr<Axis<double>>,
+               std::shared_ptr<Axis<double>>, std::shared_ptr<Axis<double>>,
+               pybind11::array_t<Type>>(),
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
            pybind11::arg("u"), pybind11::arg("array"),
            R"__doc__(
@@ -322,33 +332,33 @@ Args:
     u (pyinterp.core.Axis): U-Axis
     array (numpy.ndarray): Trivariate function
 )__doc__")
-      .def_property_readonly(
-          "x", [](const Grid4D<Type>& self) { return self.x(); },
-          R"__doc__(
+      .def_property_readonly("x",
+                             [](const Grid4D<Type>& self) { return self.x(); },
+                             R"__doc__(
 Gets the X-Axis handled by this instance
 
 Return:
     pyinterp.core.Axis: X-Axis
 )__doc__")
-      .def_property_readonly(
-          "y", [](const Grid4D<Type>& self) { return self.y(); },
-          R"__doc__(
+      .def_property_readonly("y",
+                             [](const Grid4D<Type>& self) { return self.y(); },
+                             R"__doc__(
 Gets the Y-Axis handled by this instance
 
 Return:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
-      .def_property_readonly(
-          "z", [](const Grid4D<Type>& self) { return self.z(); },
-          R"__doc__(
+      .def_property_readonly("z",
+                             [](const Grid4D<Type>& self) { return self.z(); },
+                             R"__doc__(
 Gets the Z-Axis handled by this instance
 
 Return:
     pyinterp.core.Axis: Z-Axis
 )__doc__")
-      .def_property_readonly(
-          "u", [](const Grid4D<Type>& self) { return self.u(); },
-          R"__doc__(
+      .def_property_readonly("u",
+                             [](const Grid4D<Type>& self) { return self.u(); },
+                             R"__doc__(
 Gets the U-Axis handled by this instance
 
 Return:

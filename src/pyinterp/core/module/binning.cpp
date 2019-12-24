@@ -16,8 +16,8 @@ void implement_binning_2d(py::module& m, const std::string& suffix) {
 Group a number of more or less continuous values into a smaller number of
 "bins" located on a grid.
 )__doc__")
-      .def(py::init<std::shared_ptr<pyinterp::Axis>,
-                    std::shared_ptr<pyinterp::Axis>,
+      .def(py::init<std::shared_ptr<pyinterp::Axis<double>>,
+                    std::shared_ptr<pyinterp::Axis<double>>,
                     std::optional<pyinterp::geodetic::System>>(),
            py::arg("x"), py::arg("y"),
            py::arg("wgs") = std::optional<pyinterp::geodetic::System>(),

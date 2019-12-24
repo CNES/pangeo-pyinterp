@@ -98,7 +98,7 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D],
         np.asarray(x),
         np.asarray(y), nx, ny,
         getattr(core.FittingModel, fitting_model),
-        getattr(core.Axis.Boundary, boundary), bounds_error, num_threads
+        getattr(core.AxisBoundary, boundary), bounds_error, num_threads
     ]
     if isinstance(mesh, grid.Grid3D):
         if z is None:

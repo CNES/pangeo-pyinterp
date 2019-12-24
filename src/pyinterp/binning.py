@@ -11,6 +11,7 @@ import numpy as np
 from . import core
 from . import geodetic
 
+
 class Binning2D:
     """
     Group a number of more or less continuous values into a smaller number of
@@ -85,8 +86,8 @@ class Binning2D:
         point :math:`x` distributes its weight to neighboring grid points.
 
         :math:`A` is the area of the grid cell. :math:`\\alpha`,
-        :math:`\\beta`, :math:`\\gamma` and :math:`\\delta` are the areas of the
-        different sub-rectangles. :math:`g_{00}`, :math:`g_{01}`,
+        :math:`\\beta`, :math:`\\gamma` and :math:`\\delta` are the areas of
+        the different sub-rectangles. :math:`g_{00}`, :math:`g_{01}`,
         :math:`g_{10}` and :math:`g_{11}` are the grid points identified around
         point :math:`x`. :math:`w_{00}`, :math:`w_{01}`, :math:`w_{10}` and
         :math:`w_{11}` are the weights associated with the grid points.

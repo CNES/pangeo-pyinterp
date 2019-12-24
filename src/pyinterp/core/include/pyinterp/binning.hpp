@@ -36,7 +36,7 @@ class Binning2D {
   /// coordinates. If this parameter is not set, the handled coordinates will be
   /// considered as Cartesian coordinates. Otherwise, "x" and "y" are considered
   /// to represents the longitudes and latitudes on a grid.
-  Binning2D(std::shared_ptr<Axis> x, std::shared_ptr<Axis> y,
+  Binning2D(std::shared_ptr<Axis<double>> x, std::shared_ptr<Axis<double>> y,
             std::optional<geodetic::System> wgs)
       : x_(std::move(x)),
         y_(std::move(y)),
@@ -126,10 +126,14 @@ class Binning2D {
   }
 
   /// Gets the X-Axis
-  [[nodiscard]] inline auto x() const -> std::shared_ptr<Axis> { return x_; }
+  [[nodiscard]] inline auto x() const -> std::shared_ptr<Axis<double>> {
+    return x_;
+  }
 
   /// Gets the Y-Axis
-  [[nodiscard]] inline auto y() const -> std::shared_ptr<Axis> { return y_; }
+  [[nodiscard]] inline auto y() const -> std::shared_ptr<Axis<double>> {
+    return y_;
+  }
 
  private:
   /// Statistics handled by this object.
@@ -150,8 +154,8 @@ class Binning2D {
       T>;
 
   /// Grid axis
-  std::shared_ptr<Axis> x_;
-  std::shared_ptr<Axis> y_;
+  std::shared_ptr<Axis<double>> x_;
+  std::shared_ptr<Axis<double>> y_;
 
   /// Statistics grid
   Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic> acc_;

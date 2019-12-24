@@ -295,9 +295,9 @@ Args:
     fitting_model (pyinterp.core.FittingModel, optional): Type of interpolation
         to be performed. Defaults to
         :py:data:`pyinterp.core.FittingModel.CSpline`
-    boundary (pyinterp.core.Axis.Boundary, optional): Type of axis boundary
+    boundary (pyinterp.core.AxisBoundary, optional): Type of axis boundary
         management. Defaults to
-        :py:data:`pyinterp.core.Axis.Boundary.kUndef`
+        :py:data:`pyinterp.core.AxisBoundary.kUndef`
     bounds_error (bool, optional): If True, when interpolated values are
         requested outside of the domain of the input axes (x,y), a ValueError
         is raised. If False, then value is set to NaN.
@@ -335,9 +335,9 @@ Args:
     fitting_model (pyinterp.core.FittingModel, optional): Type of interpolation
         to be performed. Defaults to
         :py:data:`pyinterp.core.FittingModel.CSpline`
-    boundary (pyinterp.core.Axis.Boundary, optional): Type of axis boundary
+    boundary (pyinterp.core.AxisBoundary, optional): Type of axis boundary
         management. Defaults to
-        :py:data:`pyinterp.core.Axis.Boundary.kUndef`
+        :py:data:`pyinterp.core.AxisBoundary.kUndef`
     bounds_error (bool, optional): If True, when interpolated values are
         requested outside of the domain of the input axes (x,y), a ValueError
         is raised. If False, then value is set to NaN.

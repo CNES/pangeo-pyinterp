@@ -38,7 +38,10 @@ class Grid2D:
             inplace = increasing_axes == 'inplace'
             args = list(args)
             for idx, item in enumerate(args):
-                if isinstance(item, core.Axis) and not item.is_ascending():
+                if isinstance(
+                        item,
+                        (core.Axis,
+                         core.TimeAxis)) and not item.is_ascending():
                     args[idx] = item.flip(inplace=inplace)
                     args[-1] = np.flip(args[-1], axis=idx)
         self._instance = getattr(core, _class)(*args)
@@ -50,7 +53,7 @@ class Grid2D:
         result.append("Axis:")
         for item in dir(self):
             attr = getattr(self, item)
-            if isinstance(attr, core.Axis):
+            if isinstance(attr, (core.Axis, core.TimeAxis)):
                 result.append("  %s: %s" % (item, attr))
         result.append("Data:")
         result += ["  %s" % line for line in str(self.array).split("\n")]
