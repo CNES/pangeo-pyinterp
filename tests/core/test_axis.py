@@ -34,14 +34,13 @@ class TextAxis(unittest.TestCase):
     """Test of the C+++/Python interface of the pyinterp::Axis class"""
     def test_axis_accessor(self):
         lon = np.linspace(0, 359, 360)
-        a = core.Axis(lon, is_circle=False, is_radian=False)
-        b = core.Axis(lon, is_circle=False, is_radian=False)
+        a = core.Axis(lon, is_circle=False)
+        b = core.Axis(lon, is_circle=False)
         self.assertEqual(a, b)
         self.assertFalse(a != b)
         self.assertEqual(str(a), str(b))
-        self.assertEqual(
-            str(a), "Axis([0, 1, 2, ..., 358, 359], is_circle=false, "
-            "is_radian=false)")
+        self.assertEqual(str(a),
+                         "Axis([0, 1, 2, ..., 358, 359], is_circle=false)")
         self.assertEqual(a.increment(), 1)
         self.assertTrue(a.is_ascending())
         self.assertEqual(a.front(), 0)
@@ -96,13 +95,11 @@ class TextAxis(unittest.TestCase):
             a.increment()
 
     def test_axis_pickle(self):
-        a = core.Axis(np.linspace(0, 359, 360),
-                      is_circle=False,
-                      is_radian=False)
+        a = core.Axis(np.linspace(0, 359, 360), is_circle=False)
         b = pickle.loads(pickle.dumps(a))
         self.assertEqual(a, b)
 
-        a = core.Axis(MERCATOR_LATITUDES, is_circle=False, is_radian=False)
+        a = core.Axis(MERCATOR_LATITUDES, is_circle=False)
         b = pickle.loads(pickle.dumps(a))
         self.assertEqual(a, b)
 

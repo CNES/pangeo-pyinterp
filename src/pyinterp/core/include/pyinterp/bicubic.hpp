@@ -34,7 +34,7 @@ enum FittingModel {
 template <typename Type>
 auto bicubic(const Grid2D<Type>& grid, const pybind11::array_t<double>& x,
              const pybind11::array_t<double>& y, size_t nx, size_t ny,
-             FittingModel fitting_model, Axis::Boundary boundary,
+             FittingModel fitting_model, axis::Boundary boundary,
              bool bounds_error, size_t num_threads)
     -> pybind11::array_t<double>;
 }  // namespace pyinterp

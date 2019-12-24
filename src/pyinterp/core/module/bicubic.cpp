@@ -46,7 +46,7 @@ auto index_error(const std::string& axis, const double value, const size_t n)
 /// Loads the interpolation frame into memory
 template <typename Type>
 auto load_frame(const Grid2D<Type>& grid, const double x, const double y,
-                const Axis::Boundary boundary, const bool bounds_error,
+                const axis::Boundary boundary, const bool bounds_error,
                 detail::math::XArray& frame) -> bool {
   const auto& x_axis = *grid.x();
   const auto& y_axis = *grid.y();
@@ -88,7 +88,7 @@ auto load_frame(const Grid2D<Type>& grid, const double x, const double y,
 /// Loads the interpolation frame into memory
 template <typename Type>
 auto load_frame(const Grid3D<Type>& grid, const double x, const double y,
-                const double z, const Axis::Boundary boundary,
+                const double z, const axis::Boundary boundary,
                 const bool bounds_error, detail::math::XArrayStack& frame)
     -> bool {
   const auto& x_axis = *grid.x();
@@ -146,7 +146,7 @@ auto load_frame(const Grid3D<Type>& grid, const double x, const double y,
 template <typename Type>
 auto bicubic(const Grid2D<Type>& grid, const py::array_t<double>& x,
              const py::array_t<double>& y, size_t nx, size_t ny,
-             FittingModel fitting_model, const Axis::Boundary boundary,
+             FittingModel fitting_model, const axis::Boundary boundary,
              const bool bounds_error, size_t num_threads)
     -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y);
@@ -206,7 +206,7 @@ auto bicubic_and_linear(const Grid3D<Type>& grid, const py::array_t<double>& x,
                         const py::array_t<double>& y,
                         const py::array_t<double>& z, size_t nx, size_t ny,
                         FittingModel fitting_model,
-                        const Axis::Boundary boundary, const bool bounds_error,
+                        const axis::Boundary boundary, const bool bounds_error,
                         size_t num_threads) -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
   detail::check_ndarray_shape("x", x, "y", y, "z", z);
@@ -274,7 +274,7 @@ void implement_bicubic(py::module& m, const std::string& suffix) {
         py::arg("grid"), py::arg("x"), py::arg("y"), py::arg("nx") = 3,
         py::arg("ny") = 3,
         py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
-        py::arg("boundary") = pyinterp::Axis::kUndef,
+        py::arg("boundary") = pyinterp::axis::kUndef,
         py::arg("bounds_error") = false, py::arg("num_threads") = 0,
         (R"__doc__(
 Extension of cubic interpolation for interpolating data points on a
@@ -313,7 +313,7 @@ Return:
            &pyinterp::bicubic_and_linear<Type>, py::arg("grid"), py::arg("x"),
            py::arg("y"), py::arg("z"), py::arg("nx") = 3, py::arg("ny") = 3,
            py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
-           py::arg("boundary") = pyinterp::Axis::kUndef,
+           py::arg("boundary") = pyinterp::axis::kUndef,
            py::arg("bounds_error") = false, py::arg("num_threads") = 0,
            (R"__doc__(
 Extension of cubic interpolation for interpolating data points on a

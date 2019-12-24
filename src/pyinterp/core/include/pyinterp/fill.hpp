@@ -313,8 +313,8 @@ auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
             auto y = y_axis(iy);
 
             // Reading the coordinates of the window around the masked point.
-            auto x_frame = x_axis.find_indexes(x, nx, Axis::kSym);
-            auto y_frame = y_axis.find_indexes(y, ny, Axis::kSym);
+            auto x_frame = x_axis.find_indexes(x, nx, axis::kSym);
+            auto y_frame = y_axis.find_indexes(y, ny, axis::kSym);
 
             // Initialization of values to calculate the extrapolated value.
             auto value = Type(0);

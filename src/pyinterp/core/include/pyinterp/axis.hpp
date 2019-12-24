@@ -12,9 +12,9 @@ namespace pyinterp {
 
 /// Implementation of the Python wrapper
 class Axis;
-class Axis : public detail::Axis, public std::enable_shared_from_this<Axis> {
+class Axis : public detail::Axis<double>, public std::enable_shared_from_this<Axis> {
  public:
-  using detail::Axis::Axis;
+  using detail::Axis<double>::Axis;
 
   /// Create a coordinate axis from values.
   ///
@@ -23,9 +23,8 @@ class Axis : public detail::Axis, public std::enable_shared_from_this<Axis> {
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle. Be careful,
   /// the angle shown must be expressed in degrees.
-  /// @param is_radian True, if the coordinate system is radian.
   explicit Axis(pybind11::array_t<double, pybind11::array::c_style>& points,
-                double epsilon, bool is_circle, bool is_radian);
+                double epsilon, bool is_circle);
 
   /// Get coordinate values.
   ///

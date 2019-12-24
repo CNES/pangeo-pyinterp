@@ -25,9 +25,8 @@ inline auto vector_from_numpy(const std::string& name,
 }
 
 Axis::Axis(py::array_t<double, py::array::c_style>& points,
-           const double epsilon, const bool is_circle, const bool is_radian)
-    : Axis(vector_from_numpy("points", points), epsilon, is_circle, is_radian) {
-}
+           const double epsilon, const bool is_circle)
+    : Axis(vector_from_numpy("points", points), epsilon, is_circle) {}
 
 auto Axis::coordinate_values(const py::slice& slice) const
     -> py::array_t<double> {
@@ -64,7 +63,7 @@ auto Axis::find_index(const pybind11::array_t<double>& coordinates,
   {
     pybind11::gil_scoped_release release;
     for (py::ssize_t ix = 0; ix < size; ++ix) {
-      _result(ix) = detail::Axis::find_index(_coordinates(ix), bounded);
+      _result(ix) = detail::Axis<double>::find_index(_coordinates(ix), bounded);
     }
   }
   return result;
@@ -77,7 +76,7 @@ auto Axis::getstate() const -> pybind11::tuple {
         handler().get());
     if (ptr != nullptr) {
       return pybind11::make_tuple(REGULAR, ptr->front(), ptr->back(),
-                                  ptr->size(), is_circle(), is_radian());
+                                  ptr->size(), is_circle());
     }
   }
   // Irregular
@@ -90,7 +89,7 @@ auto Axis::getstate() const -> pybind11::tuple {
       for (auto ix = 0LL; ix < ptr->size(); ++ix) {
         _values[ix] = ptr->coordinate_value(ix);
       }
-      return pybind11::make_tuple(IRREGULAR, values, is_circle(), is_radian());
+      return pybind11::make_tuple(IRREGULAR, values, is_circle());
     }
   }
   // Undefined
@@ -117,14 +116,14 @@ auto Axis::setstate(const pybind11::tuple& state) -> Axis {
                       new detail::axis::container::Irregular<double>(
                           Eigen::Map<Eigen::VectorXd>(ndarray.mutable_data(),
                                                       ndarray.size()))),
-                  state[2].cast<bool>(), state[3].cast<bool>());
+                  state[2].cast<bool>());
     }
     case REGULAR:
       return Axis(std::shared_ptr<detail::axis::container::Abstract<double>>(
                       new detail::axis::container::Regular<double>(
                           state[1].cast<double>(), state[2].cast<double>(),
                           state[3].cast<double>())),
-                  state[4].cast<bool>(), state[5].cast<bool>());
+                  state[4].cast<bool>());
     default:
       throw std::invalid_argument("invalid state");
   }
@@ -139,20 +138,19 @@ A coordinate axis is a Variable that specifies one of the coordinates
 of a variable's values.
 )__doc__");
 
-  py::enum_<pyinterp::Axis::Boundary>(axis, "Boundary", R"__doc__(
+  py::enum_<pyinterp::axis::Boundary>(axis, "Boundary", R"__doc__(
 Type of boundary handling.
 )__doc__")
-      .value("Expand", pyinterp::Axis::kExpand,
+      .value("Expand", pyinterp::axis::kExpand,
              "*Expand the boundary as a constant*.")
-      .value("Wrap", pyinterp::Axis::kWrap, "*Circular boundary conditions*.")
-      .value("Sym", pyinterp::Axis::kSym, "*Symmetrical boundary conditions*.")
-      .value("Undef", pyinterp::Axis::kUndef,
+      .value("Wrap", pyinterp::axis::kWrap, "*Circular boundary conditions*.")
+      .value("Sym", pyinterp::axis::kSym, "*Symmetrical boundary conditions*.")
+      .value("Undef", pyinterp::axis::kUndef,
              "*Boundary violation is not defined*.");
 
-  axis.def(py::init<py::array_t<double, py::array::c_style>&, double, bool,
-                    bool>(),
+  axis.def(py::init<py::array_t<double, py::array::c_style>&, double, bool>(),
            py::arg("values"), py::arg("epsilon") = 1e-6,
-           py::arg("is_circle") = false, py::arg("is_radian") = false,
+           py::arg("is_circle") = false,
            R"__doc__(
 Create a coordinate axis from values.
 
@@ -162,8 +160,6 @@ Args:
         numbers in order to consider them equal.
     is_circle (bool, optional): True, if the axis can represent a
         circle. Defaults to ``false``.
-    is_radian (bool, optional): True, if the coordinate system is radian.
-        Defaults to ``false``.
 )__doc__")
       .def("__len__",
            [](const pyinterp::Axis& self) -> size_t { return self.size(); })

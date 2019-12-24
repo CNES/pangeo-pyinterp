@@ -189,8 +189,8 @@ class Binning2D {
     {
       pybind11::gil_scoped_release release;
 
-      const auto& x_axis = static_cast<pyinterp::detail::Axis&>(*x_);
-      const auto& y_axis = static_cast<pyinterp::detail::Axis&>(*y_);
+      const auto& x_axis = static_cast<pyinterp::detail::Axis<double>&>(*x_);
+      const auto& y_axis = static_cast<pyinterp::detail::Axis<double>&>(*y_);
 
       for (pybind11::ssize_t idx = 0; idx < x.size(); ++idx) {
         auto value = _z(idx);
@@ -227,8 +227,8 @@ class Binning2D {
     {
       pybind11::gil_scoped_release release;
 
-      const auto& x_axis = static_cast<pyinterp::detail::Axis&>(*x_);
-      const auto& y_axis = static_cast<pyinterp::detail::Axis&>(*y_);
+      const auto& x_axis = static_cast<pyinterp::detail::Axis<double>&>(*x_);
+      const auto& y_axis = static_cast<pyinterp::detail::Axis<double>&>(*y_);
 
       for (pybind11::ssize_t idx = 0; idx < x.size(); ++idx) {
         auto value = _z(idx);
