@@ -33,10 +33,13 @@ release = '0.0.8'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
 ]
+
+autosummary_generate = True
 
 numpydoc_class_members_toctree = True
 numpydoc_show_class_members = False

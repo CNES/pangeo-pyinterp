@@ -1,21 +1,78 @@
+.. currentmodule:: pyinterp
+
 API Documentation
 #################
 
-.. toctree::
-   :maxdepth: 1
+Geographic indexers
+===================
 
-    pyinterp.backends.xarray <api/pyinterp.backends.xarray>
-    pyinterp.binning <api/pyinterp.binning>
-    pyinterp.cf <api/pyinterp.cf>
-    pyinterp.core <api/pyinterp.core>
-    pyinterp.core.fill <api/pyinterp.core.fill>
-    pyinterp.core.geodetic <api/pyinterp.core.geodetic>
-    pyinterp.fill <api/pyinterp.fill>
-    pyinterp.geodetic <api/pyinterp.geodetic>
-    pyinterp.grid <api/pyinterp.grid>
-    pyinterp.interface <api/pyinterp.interface>
-    pyinterp.interpolator.bicubic <api/pyinterp.interpolator.bicubic>
-    pyinterp.interpolator.bivariate <api/pyinterp.interpolator.bivariate>
-    pyinterp.interpolator.trivariate <api/pyinterp.interpolator.trivariate>
-    pyinterp.interpolator.quadrivariate <api/pyinterp.interpolator.quadrivariate>
-    pyinterp.rtree <api/pyinterp.rtree>
+.. autosummary::
+  :toctree: generated/
+
+  Axis
+  RTree
+
+Binning
+=======
+
+.. autosummary::
+  :toctree: generated/
+
+  Binning2D
+
+Cartesian Grids
+===============
+
+.. autosummary::
+  :toctree: generated/
+
+  grid.Grid2D
+  grid.Grid3D
+  grid.Grid4D
+
+Climate and Forecast
+====================
+
+Axis identification from CF attribute values.
+
+.. autosummary::
+  :toctree: generated/
+
+  cf.AxisLatitudeUnit
+  cf.AxisLongitudeUnit
+  cf.AxisTimeUnit
+  cf.AxisUnit
+
+Geodetic systems
+================
+
+.. autosummary::
+  :toctree: generated/
+
+  geodetic.Box2D
+  geodetic.Coordinates
+  geodetic.Point2D
+  geodetic.System
+
+Cartesian interpolators
+=======================
+
+.. autosummary::
+  :toctree: generated/
+
+  bicubic
+  bivariate
+  trivariate
+  quadrivariate
+
+Xarray
+======
+
+Construction of Cartesian interpolators from xarray.DataArray
+
+.. autosummary::
+  :toctree: generated/
+
+  backends.xarray.Grid2D
+  backends.xarray.Grid3D
+  backends.xarray.Grid4D

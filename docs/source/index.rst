@@ -30,4 +30,4 @@ Welcome to pyinterp's documentation!
    :maxdepth: 1
 
    api
-
+   core_api

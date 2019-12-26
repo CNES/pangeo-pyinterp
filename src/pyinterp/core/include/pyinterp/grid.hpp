@@ -229,8 +229,12 @@ class Grid4D : public Grid3D<DataType, AxisType, 4> {
 template <typename DataType, typename AxisType>
 void implement_ndgrid(pybind11::module& m, const std::string& prefix,
                       const std::string& suffix) {
+  std::string help = "Cartesian Grid 3D";
+  if (prefix.length()) {
+    help = prefix + " " + help;
+  }
   pybind11::class_<Grid3D<DataType, AxisType>>(
-      m, (prefix + "Grid3D" + suffix).c_str())
+      m, (prefix + "Grid3D" + suffix).c_str(), help.c_str())
       .def(pybind11::init<
                std::shared_ptr<Axis<double>>, std::shared_ptr<Axis<double>>,
                std::shared_ptr<Axis<AxisType>>, pybind11::array_t<DataType>>(),
@@ -292,8 +296,12 @@ Return:
             return Grid3D<DataType, AxisType>::setstate(state);
           }));
 
+  help = "Cartesian Grid 4D";
+  if (prefix.length()) {
+    help = prefix + " " + help;
+  }
   pybind11::class_<Grid4D<DataType, AxisType>>(
-      m, (prefix + "Grid4D" + suffix).c_str())
+      m, (prefix + "Grid4D" + suffix).c_str(), help.c_str())
       .def(pybind11::init<
                std::shared_ptr<Axis<double>>, std::shared_ptr<Axis<double>>,
                std::shared_ptr<Axis<AxisType>>, std::shared_ptr<Axis<double>>,

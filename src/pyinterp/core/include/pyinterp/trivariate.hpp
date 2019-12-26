@@ -149,8 +149,9 @@ Args:
     x (numpy.ndarray): X-values
     y (numpy.ndarray): Y-values
     z (numpy.ndarray): Z-values
-    interpolator (pyinterp.core.BivariateInterpolator3D): 3D interpolator
-        used to interpolate values on the surface (x, y).
+    interpolator (pyinterp.core.)__doc__" +
+         prefix + R"__doc__(BivariateInterpolator3D): 3D interpolator
+        used to interpolate values on the surface (x, y, z).
     bounds_error (bool, optional): If True, when interpolated values are
       requested outside of the domain of the input axes (x,y,z), a ValueError
       is raised. If False, then value is set to NaN.

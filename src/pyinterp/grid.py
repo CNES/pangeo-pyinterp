@@ -147,6 +147,9 @@ def _core_variate_interpolator(instance: object, interpolator: str, **kwargs):
     """Obtain the interpolator from the string provided."""
     if isinstance(instance, Grid2D):
         dimensions = instance._DIMENSIONS
+        # 4D interpolation uses the 3D interpolator
+        if dimensions > 3:
+            dimensions -= 1
     else:
         raise TypeError("instance is not an object handling a grid.")
 

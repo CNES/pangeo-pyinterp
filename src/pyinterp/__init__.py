@@ -10,6 +10,7 @@ from .rtree import RTree
 from .interpolator.bicubic import bicubic
 from .interpolator.bivariate import bivariate
 from .interpolator.trivariate import trivariate
+from .interpolator.quadrivariate import quadrivariate
 __version__ = version.release()
 __date__ = version.date()
 del version

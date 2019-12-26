@@ -13,9 +13,6 @@ void init_bivariate_interpolator(py::module& m) {
                                              double>(m, "", "2D");
   pyinterp::implement_bivariate_interpolator<geometry::EquatorialPoint3D,
                                              double>(m, "", "3D");
-  pyinterp::implement_bivariate_interpolator<geometry::EquatorialPoint4D,
-                                             double>(m, "", "4D");
-
   pyinterp::implement_bivariate_interpolator<geometry::TemporalEquatorial2D,
                                              double>(m, "Temporal", "3D");
 }

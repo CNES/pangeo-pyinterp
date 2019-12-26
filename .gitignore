@@ -66,6 +66,7 @@ instance/
 
 # Sphinx documentation
 docs/source/_build/
+docs/source/generated/
 
 # PyBuilder
 target/
@@ -106,3 +107,6 @@ venv.bak/
 
 # VSCode stuff:
 .vscode/
+
+# Figures generated
+tests/**/*.png

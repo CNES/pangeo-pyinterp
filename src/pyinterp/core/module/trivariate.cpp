@@ -13,7 +13,8 @@ void init_trivariate(py::module& m) {
                                  double>(m, "", "Float64");
   pyinterp::implement_trivariate<geometry::EquatorialPoint3D, double, double,
                                  float>(m, "", "Float32");
-
   pyinterp::implement_trivariate<geometry::TemporalEquatorial2D, double,
                                  int64_t, double>(m, "Temporal", "Float64");
+  pyinterp::implement_trivariate<geometry::TemporalEquatorial2D, double,
+                                 int64_t, float>(m, "Temporal", "Float32");
 }

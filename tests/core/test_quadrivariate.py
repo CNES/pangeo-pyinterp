@@ -55,7 +55,7 @@ class TestGrid4D(unittest.TestCase):
         mx, my, mz, mu = np.meshgrid(x, y, z, u)
         expected = self.f4d(mx, my, mz, mu)
 
-        interpolator = core.Bilinear4D()
+        interpolator = core.Bilinear3D()
 
         calculated = core.quadrivariate_float64(grid,
                                                 mx.flatten(),
@@ -75,7 +75,7 @@ class TestGrid4D(unittest.TestCase):
         mx, my, mz, mu = np.meshgrid(x, y, z, u)
         expected = self.f4d(mx, my, mz, mu)
 
-        interpolator = core.Bilinear4D()
+        interpolator = core.Bilinear3D()
 
         calculated = core.quadrivariate_float64(grid,
                                                 mx.flatten(),
