@@ -6,7 +6,6 @@
 #include "pyinterp/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"
 namespace py = pybind11;
-namespace axis = pyinterp::axis;
 
 template <typename T>
 void implement_axis(py::module& m, const std::string& prefix) {
@@ -33,7 +32,7 @@ Args:
       .def("__len__",
            [](const pyinterp::Axis<T>& self) -> size_t { return self.size(); })
       .def("__getitem__",
-           [](const pyinterp::Axis<T>& self, size_t index) -> double {
+           [](const pyinterp::Axis<T>& self, size_t index) -> T {
              return self.coordinate_value(index);
            })
       .def("__getitem__", &pyinterp::Axis<T>::coordinate_values)
@@ -159,13 +158,15 @@ Return:
 }
 
 void init_axis(py::module& m) {
-  py::enum_<axis::Boundary>(m, "AxisBoundary", R"__doc__(
+  py::enum_<pyinterp::axis::Boundary>(m, "AxisBoundary", R"__doc__(
 Type of boundary handling.
 )__doc__")
-      .value("Expand", axis::kExpand, "*Expand the boundary as a constant*.")
-      .value("Wrap", axis::kWrap, "*Circular boundary conditions*.")
-      .value("Sym", axis::kSym, "*Symmetrical boundary conditions*.")
-      .value("Undef", axis::kUndef, "*Boundary violation is not defined*.");
+      .value("Expand", pyinterp::axis::kExpand,
+             "*Expand the boundary as a constant*.")
+      .value("Wrap", pyinterp::axis::kWrap, "*Circular boundary conditions*.")
+      .value("Sym", pyinterp::axis::kSym, "*Symmetrical boundary conditions*.")
+      .value("Undef", pyinterp::axis::kUndef,
+             "*Boundary violation is not defined*.");
 
   implement_axis<double>(m, "");
   implement_axis<int64_t>(m, "Temporal");

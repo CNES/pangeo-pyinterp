@@ -11,6 +11,14 @@
 
 namespace pyinterp {
 namespace detail {
+namespace axis {
+/// Opaque marker of a serialized undefined axis.
+constexpr int64_t UNDEFINED = 0x618d86f8334b6c93;
+/// Opaque marker of a serialized regular axis.
+constexpr int64_t REGULAR = 0x22d06666a82610a3;
+/// Opaque marker of a serialized irregular axis.
+constexpr int64_t IRREGULAR = 0x3ab687f709def680;
+}  // namespace axis
 
 /// Builds an Eigen::Vector from a numpy vector
 ///
@@ -37,16 +45,6 @@ class Axis;
 template <typename T>
 class Axis : public detail::Axis<T>,
              public std::enable_shared_from_this<Axis<T>> {
- private:
-  /// Opaque marker of a serialized undefined axis.
-  static const int64_t UNDEFINED;
-
-  /// Opaque marker of a serialized regular axis.
-  static const int64_t REGULAR;
-
-  /// Opaque marker of a serialized irregular axis.
-  static const int64_t IRREGULAR;
-
  public:
   using detail::Axis<T>::Axis;
 
@@ -123,8 +121,9 @@ class Axis : public detail::Axis<T>,
       auto ptr = dynamic_cast<detail::axis::container::Regular<T>*>(
           this->handler().get());
       if (ptr != nullptr) {
-        return pybind11::make_tuple(REGULAR, ptr->front(), ptr->back(),
-                                    ptr->size(), this->is_circle());
+        return pybind11::make_tuple(detail::axis::REGULAR, ptr->front(),
+                                    ptr->back(), ptr->size(),
+                                    this->is_circle());
       }
     }
     // Irregular
@@ -137,14 +136,15 @@ class Axis : public detail::Axis<T>,
         for (auto ix = 0LL; ix < ptr->size(); ++ix) {
           _values[ix] = ptr->coordinate_value(ix);
         }
-        return pybind11::make_tuple(IRREGULAR, values, this->is_circle());
+        return pybind11::make_tuple(detail::axis::IRREGULAR, values,
+                                    this->is_circle());
       }
     }
     // Undefined
     auto ptr = dynamic_cast<detail::axis::container::Undefined<T>*>(
         this->handler().get());
     if (ptr != nullptr) {
-      return pybind11::make_tuple(UNDEFINED);
+      return pybind11::make_tuple(detail::axis::UNDEFINED);
     }
     throw std::runtime_error("unknown axis handler");
   }
@@ -157,10 +157,10 @@ class Axis : public detail::Axis<T>,
     }
     auto identification = state[0].cast<int64_t>();
     switch (identification) {
-      case UNDEFINED:
+      case detail::axis::UNDEFINED:
         return Axis();
         break;
-      case IRREGULAR: {
+      case detail::axis::IRREGULAR: {
         auto ndarray = state[1].cast<pybind11::array_t<T>>();
         return Axis(std::shared_ptr<detail::axis::container::Abstract<T>>(
                         new detail::axis::container::Irregular<T>(
@@ -168,7 +168,7 @@ class Axis : public detail::Axis<T>,
                                 ndarray.mutable_data(), ndarray.size()))),
                     state[2].cast<bool>());
       }
-      case REGULAR:
+      case detail::axis::REGULAR:
         return Axis(std::shared_ptr<detail::axis::container::Abstract<T>>(
                         new detail::axis::container::Regular<T>(
                             state[1].cast<T>(), state[2].cast<T>(),
@@ -179,14 +179,5 @@ class Axis : public detail::Axis<T>,
     }
   }
 };
-
-template <typename T>
-const int64_t Axis<T>::UNDEFINED = 0x618d86f8334b6c93;
-
-template <typename T>
-const int64_t Axis<T>::REGULAR = 0x22d06666a82610a3;
-
-template <typename T>
-const int64_t Axis<T>::IRREGULAR = 0x3ab687f709def680;
 
 }  // namespace pyinterp
