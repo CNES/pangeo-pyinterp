@@ -116,6 +116,36 @@ template <typename T>
 using EquatorialPoint2D = boost::geometry::model::point<
     T, 2, boost::geometry::cs::spherical_equatorial<boost::geometry::degree>>;
 
+/// Points of a 2-dimensional spherical equatorial space and time
+///
+/// @tparam T Storage class of the coordinates of the point.
+template <typename T>
+class TemporalEquatorial2D : public EquatorialPoint2D<T> {
+ public:
+  /// Default constructor
+  ///
+  /// @param x X-coordinate of the point
+  /// @param y Y-coordinate of the point
+  /// @param timestamp Date associated with the point.
+  TemporalEquatorial2D(const T &x, const T &y, const int64_t timestamp)
+      : EquatorialPoint2D<T>(x, y), timestamp_(timestamp) {}
+
+  /// Construction of a point associated with an indefinite time reference
+  /// (NaT)
+  ///
+  /// @param x X-coordinate of the point
+  /// @param y Y-coordinate of the point
+  TemporalEquatorial2D(const T &x, const T &y)
+      : EquatorialPoint2D<T>(x, y),
+        timestamp_(std::numeric_limits<int64_t>::min()) {}
+
+  /// Gets the time stamp associated with the point
+  auto timestamp() const -> int64_t { return timestamp_; }
+
+ private:
+  int64_t timestamp_;
+};
+
 /// Points of a 3-dimensional spherical equatorial space.
 ///
 /// @tparam T Storage class of the coordinates of the point.
@@ -138,3 +168,47 @@ using SpheriodPoint2D = boost::geometry::model::point<
     T, 2, boost::geometry::cs::geographic<boost::geometry::degree>>;
 
 }  // namespace pyinterp::detail::geometry
+
+namespace boost::geometry::traits {
+
+/// Coordinate tag from TemporalEquatorial2D.
+template <typename T>
+struct tag<pyinterp::detail::geometry::TemporalEquatorial2D<T>> {
+  /// Typedef for type
+  using type = point_tag;
+};
+
+/// Coordinate type from TemporalEquatorial2D
+template <typename T>
+struct coordinate_type<pyinterp::detail::geometry::TemporalEquatorial2D<T>> {
+  /// Typedef for type
+  using type = T;
+};
+
+/// Coordinate system from TemporalEquatorial2D
+template <typename T>
+struct coordinate_system<pyinterp::detail::geometry::TemporalEquatorial2D<T>> {
+  /// Typedef for type
+  using type = cs::spherical_equatorial<degree>;
+};
+
+template <typename T>
+struct dimension<pyinterp::detail::geometry::TemporalEquatorial2D<T>>
+    : boost::mpl::int_<2> {};
+
+/// access struct defining with TemporalEquatorial2D
+template <typename T, size_t I>
+struct access<pyinterp::detail::geometry::TemporalEquatorial2D<T>, I> {
+  /// Pointer accessor
+  static T get(pyinterp::detail::geometry::TemporalEquatorial2D<T> const &p) {
+    return p.template get<I>();
+  }
+
+  /// Pointer setter
+  static void set(pyinterp::detail::geometry::TemporalEquatorial2D<T> &p,
+                  T const &v) {  // NOLINT
+    p.template set<I>(v);
+  }
+};
+
+}  // namespace boost::geometry::traits

@@ -168,5 +168,5 @@ Type of boundary handling.
       .value("Undef", axis::kUndef, "*Boundary violation is not defined*.");
 
   implement_axis<double>(m, "");
-  implement_axis<int64_t>(m, "Time");
+  implement_axis<int64_t>(m, "Temporal");
 }

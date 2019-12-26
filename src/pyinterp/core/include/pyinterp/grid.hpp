@@ -227,9 +227,10 @@ class Grid4D : public Grid3D<DataType, AxisType, 4> {
 };
 
 template <typename DataType, typename AxisType>
-void implement_ndgrid(pybind11::module& m, const std::string& suffix,
-                      const std::string& axis_class) {
-  pybind11::class_<Grid3D<DataType, AxisType>>(m, ("Grid3D" + suffix).c_str())
+void implement_ndgrid(pybind11::module& m, const std::string& prefix,
+                      const std::string& suffix) {
+  pybind11::class_<Grid3D<DataType, AxisType>>(
+      m, (prefix + "Grid3D" + suffix).c_str())
       .def(pybind11::init<
                std::shared_ptr<Axis<double>>, std::shared_ptr<Axis<double>>,
                std::shared_ptr<Axis<AxisType>>, pybind11::array_t<DataType>>(),
@@ -242,7 +243,7 @@ Args:
     x (pyinterp.core.Axis): X-Axis
     y (pyinterp.core.Axis): Y-Axis
     z (pyinterp.core.)__doc__" +
-            axis_class + R"__doc__(): Z-Axis
+            prefix + R"__doc__(Axis): Z-Axis
     array (numpy.ndarray): Trivariate function
 )__doc__")
                .c_str())
@@ -270,8 +271,8 @@ Return:
 Gets the Z-Axis handled by this instance
 
 Return:
-    pyinterp.core.)__doc__" + axis_class +
-                              R"__doc__(: Z-Axis
+    pyinterp.core.)__doc__" + prefix +
+                              R"__doc__(Axis: Z-Axis
 )__doc__")
                                  .c_str())
       .def_property_readonly(
@@ -291,7 +292,8 @@ Return:
             return Grid3D<DataType, AxisType>::setstate(state);
           }));
 
-  pybind11::class_<Grid4D<DataType, AxisType>>(m, ("Grid4D" + suffix).c_str())
+  pybind11::class_<Grid4D<DataType, AxisType>>(
+      m, (prefix + "Grid4D" + suffix).c_str())
       .def(pybind11::init<
                std::shared_ptr<Axis<double>>, std::shared_ptr<Axis<double>>,
                std::shared_ptr<Axis<AxisType>>, std::shared_ptr<Axis<double>>,
@@ -305,7 +307,7 @@ Args:
     x (pyinterp.core.Axis): X-Axis
     y (pyinterp.core.Axis): Y-Axis
     z (pyinterp.core.)__doc__" +
-            axis_class + R"__doc__(): Z-Axis
+            prefix + R"__doc__(Axis): Z-Axis
     u (pyinterp.core.Axis): U-Axis
     array (numpy.ndarray): Quadrivariate function
 )__doc__")
@@ -333,7 +335,7 @@ Gets the Z-Axis handled by this instance
 
 Return:
     pyinterp.core.)__doc__" +
-           axis_class + R"__doc__(: Z-Axis
+           prefix + R"__doc__(Axis: Z-Axis
 )__doc__")
               .c_str())
       .def_property_readonly(
@@ -408,7 +410,8 @@ Return:
             return Grid2D<DataType>::setstate(state);
           }));
 
-  implement_ndgrid<DataType, double>(m, suffix, "Axis");
+  implement_ndgrid<DataType, double>(m, "", suffix);
+  implement_ndgrid<DataType, int64_t>(m, "Temporal", suffix);
 }
 
 }  // namespace pyinterp

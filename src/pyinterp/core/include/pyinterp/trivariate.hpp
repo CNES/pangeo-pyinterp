@@ -22,11 +22,12 @@ using Bivariate3D = detail::math::Bivariate<Point, T>;
 ///
 /// @tparam Coordinate The type of data used by the interpolators.
 /// @tparam Type The type of data used by the numerical grid.
-template <template <class> class Point, typename Coordinate, typename Type>
-auto trivariate(const Grid3D<Type, double>& grid,
+template <template <class> class Point, typename Coordinate, typename AxisType,
+          typename Type>
+auto trivariate(const Grid3D<Type, AxisType>& grid,
                 const pybind11::array_t<Coordinate>& x,
                 const pybind11::array_t<Coordinate>& y,
-                const pybind11::array_t<Coordinate>& z,
+                const pybind11::array_t<AxisType>& z,
                 const Bivariate3D<Point, Coordinate>* interpolator,
                 const bool bounds_error, const size_t num_threads)
     -> pybind11::array_t<Coordinate> {
@@ -99,12 +100,12 @@ auto trivariate(const Grid3D<Type, double>& grid,
               } else {
                 if (bounds_error) {
                   if (!x_indexes.has_value()) {
-                    Grid3D<Type, double>::index_error(x_axis, _x(ix), "x");
+                    Grid3D<Type, AxisType>::index_error(x_axis, _x(ix), "x");
                   }
                   if (!y_indexes.has_value()) {
-                    Grid3D<Type, double>::index_error(y_axis, _y(ix), "y");
+                    Grid3D<Type, AxisType>::index_error(y_axis, _y(ix), "y");
                   }
-                  Grid3D<Type, double>::index_error(z_axis, _z(ix), "z");
+                  Grid3D<Type, AxisType>::index_error(z_axis, _z(ix), "z");
                 }
                 _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
               }
@@ -122,12 +123,19 @@ auto trivariate(const Grid3D<Type, double>& grid,
   return result;
 }
 
-template <template <class> class Point, typename Coordinate, typename Type>
-void implement_trivariate(pybind11::module& m, const std::string& suffix) {
+template <template <class> class Point, typename Coordinate, typename AxisType,
+          typename Type>
+void implement_trivariate(pybind11::module& m, const std::string& prefix,
+                          const std::string& suffix) {
   auto function_suffix = suffix;
+  auto function_prefix = prefix;
   function_suffix[0] = std::tolower(function_suffix[0]);
-  m.def(("trivariate_" + function_suffix).c_str(),
-        &trivariate<Point, Coordinate, Type>, pybind11::arg("grid"),
+  function_prefix[0] = std::tolower(function_prefix[0]);
+  if (function_prefix.length()) {
+    function_prefix += "_";
+  }
+  m.def((function_prefix + "trivariate_" + function_suffix).c_str(),
+        &trivariate<Point, Coordinate, AxisType, Type>, pybind11::arg("grid"),
         pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
         pybind11::arg("interpolator"), pybind11::arg("bounds_error") = false,
         pybind11::arg("num_threads") = 0,
@@ -135,8 +143,8 @@ void implement_trivariate(pybind11::module& m, const std::string& suffix) {
 Interpolate the values provided on the defined trivariate function.
 
 Args:
-    grid (pyinterp.core.Grid3D)__doc__" +
-         suffix +
+    grid (pyinterp.core.)__doc__" +
+         prefix + "Grid3D" + suffix +
          R"__doc__(): Grid containing the values to be interpolated.
     x (numpy.ndarray): X-values
     y (numpy.ndarray): Y-values

@@ -10,10 +10,14 @@ namespace py = pybind11;
 extern void init_axis(py::module&);
 extern void init_bicubic(py::module&);
 extern void init_binning(py::module&);
+extern void init_bivariate_interpolator(py::module&);
+extern void init_bivariate(py::module&);
+extern void init_fill(py::module&);
 extern void init_geodetic(py::module&);
 extern void init_grid(py::module&);
-extern void init_fill(py::module&);
+extern void init_quadrivariate(py::module&);
 extern void init_rtree(py::module&);
+extern void init_trivariate(py::module&);
 
 PYBIND11_MODULE(core, m) {
   m.doc() = R"__doc__(
@@ -35,7 +39,11 @@ Replace undefined values
 
   init_axis(m);
   init_binning(m);
+  init_bivariate_interpolator(m);
   init_grid(m);
+  init_bivariate(m);
+  init_trivariate(m);
+  init_quadrivariate(m);
   init_bicubic(m);
   init_geodetic(geodetic);
   init_fill(fill);

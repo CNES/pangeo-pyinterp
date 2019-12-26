@@ -152,6 +152,7 @@ auto bivariate(const Grid2D<Type>& grid, const pybind11::array_t<Coordinate>& x,
 
 template <template <class> class Point, typename T>
 void implement_bivariate_interpolator(pybind11::module& m,
+                                      const std::string& prefix,
                                       const std::string& suffix) {
   using CoordinateSystem = BivariateInterpolator<Point, T>;
 
@@ -170,11 +171,11 @@ void implement_bivariate_interpolator(pybind11::module& m,
 
   /// BivariateInterpolator implemented here
   auto interpolator = pybind11::class_<CoordinateSystem, PyInterpolator>(
-      m, ("BivariateInterpolator" + suffix).c_str(),
+      m, (prefix + "BivariateInterpolator" + suffix).c_str(),
       ("Bilinear interpolation in a " + suffix + " space").c_str());
 
   pybind11::class_<Bilinear<Point, T>>(
-      m, ("Bilinear" + suffix).c_str(), interpolator,
+      m, (prefix + "Bilinear" + suffix).c_str(), interpolator,
       ("Bilinear interpolation in a " + suffix + " space").c_str())
       .def(pybind11::init<>())
       .def(pybind11::pickle(
@@ -184,7 +185,7 @@ void implement_bivariate_interpolator(pybind11::module& m,
           }));
 
   pybind11::class_<Nearest<Point, T>>(
-      m, ("Nearest" + suffix).c_str(), interpolator,
+      m, (prefix + "Nearest" + suffix).c_str(), interpolator,
       ("Nearest interpolation in a " + suffix + " space").c_str())
       .def(pybind11::init<>())
       .def(pybind11::pickle(
@@ -194,7 +195,7 @@ void implement_bivariate_interpolator(pybind11::module& m,
           }));
 
   pybind11::class_<InverseDistanceWeighting<Point, T>>(
-      m, ("InverseDistanceWeighting" + suffix).c_str(), interpolator,
+      m, (prefix + "InverseDistanceWeighting" + suffix).c_str(), interpolator,
       ("Inverse distance weighting interpolation in a " + suffix + " space")
           .c_str())
       .def(pybind11::init<int>(), pybind11::arg("p") = 2)
