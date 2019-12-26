@@ -11,6 +11,7 @@ Geographic indexers
 
   Axis
   RTree
+  TemporalAxis
 
 Binning
 =======
