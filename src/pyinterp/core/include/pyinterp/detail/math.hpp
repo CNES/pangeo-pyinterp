@@ -38,6 +38,29 @@ inline constexpr auto degrees(const T& x) noexcept -> T {
   return x * T(180) / pi<T>();
 }
 
+/// Computes the remainder of the operation x/y
+///
+/// @return a result with the same sign as its second operand
+template <typename T, typename std::enable_if<std::is_integral<T>::value,
+                                              T>::type* = nullptr>
+inline constexpr auto remainder(const T& x, const T& y) noexcept -> T {
+  auto result = x % y;
+  return result != 0 && (result ^ y) < 0 ? result + y : result;
+}
+
+/// Computes the remainder of the operation x/y
+///
+/// @return a result with the same sign as its second operand
+template <typename T, typename std::enable_if<std::is_floating_point<T>::value,
+                                              T>::type* = nullptr>
+inline constexpr auto remainder(const T& x, const T& y) noexcept -> T {
+  auto result = std::remainder(x, y);
+  if (result < T(0)) {
+    result += y;
+  }
+  return result;
+}
+
 /// Normalize an angle.
 ///
 /// @param x The angle in degrees.
@@ -47,21 +70,7 @@ inline constexpr auto degrees(const T& x) noexcept -> T {
 template <typename T>
 inline constexpr auto normalize_angle(const T& x, const T& min,
                                       const T& circle) noexcept -> T {
-  T result = std::remainder(x - min, circle);
-  if (result < T(0)) {
-    result += circle;
-  }
-  result += min;
-  return result;
-}
-
-/// Computes the remainder of the operation x/y
-///
-/// @return a result with the same sign as its second operand
-template <typename T, typename = std::enable_if_t<std::is_integral<T>::value>>
-inline constexpr auto remainder(const T& x, const T& y) noexcept -> T {
-  auto result = x % y;
-  return result != 0 && (result ^ y) < 0 ? result + y : result;
+  return remainder(x - min, circle) + min;
 }
 
 /// Evaluate the sine function with the argument in degrees

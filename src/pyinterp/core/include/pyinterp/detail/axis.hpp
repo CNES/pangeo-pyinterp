@@ -81,7 +81,7 @@ class Axis {
     if (increment) {
       axis_ = std::make_shared<axis::container::Regular<T>>(
           axis::container::Regular<T>(values[0], values[values.size() - 1],
-                                      values.size()));
+                                      static_cast<T>(values.size())));
     } else {
       axis_ = std::make_shared<axis::container::Irregular<T>>(
           axis::container::Irregular<T>(values));
