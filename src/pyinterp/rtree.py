@@ -14,22 +14,26 @@ from . import geodetic
 
 
 class RTree:
-    """RTree spatial index for geodetic scalar values
-
-    Args:
-        system (pyinterp.geodetic.System, optional): WGS of the
-            coordinate system used to transform equatorial spherical positions
-            (longitudes, latitudes, altitude) into ECEF coordinates. If not set
-            the geodetic system used is WGS-84. Default to ``None``.
-        dtype (numpy.dtype, optional): Data type of the instance to create.
-        ndims (int, optional): The number of dimensions of the tree. This
-            dimension must be at least equal to 3 to store the ECEF coordinates
-            of the points. Default to ``3``.
+    """R*Tree spatial index for geodetic scalar values
     """
     def __init__(self,
                  system: Optional[geodetic.System] = None,
                  dtype: Optional[np.dtype] = np.dtype("float64"),
                  ndims: Optional[int] = 3):
+        """
+        Initialize a new R*Tree
+
+        Args:
+            system (pyinterp.geodetic.System, optional): WGS of the
+                coordinate system used to transform equatorial spherical
+                positions (longitudes, latitudes, altitude) into ECEF
+                coordinates. If not set the geodetic system used is WGS-84.
+                Default to ``None``.
+            dtype (numpy.dtype, optional): Data type of the instance to create.
+            ndims (int, optional): The number of dimensions of the tree. This
+                dimension must be at least equal to 3 to store the ECEF
+                coordinates of the points. Default to ``3``.
+        """
         if ndims < 3:
             raise ValueError("ndims must be >= 3")
         if dtype == np.dtype("float64"):

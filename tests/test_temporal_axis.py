@@ -42,6 +42,10 @@ class TemporalAxis(unittest.TestCase):
                                          dtype="datetime64"),
                                 bounded=False) == [86399, -1]))
 
+        axis = pyinterp.TemporalAxis(values.astype("datetime64[s]"))
+        with self.assertWarns(UserWarning):
+            axis.safe_cast(values)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -12,12 +12,12 @@ class Fill(unittest.TestCase):
     @classmethod
     def _load(cls, cube=False):
         ds = netCDF4.Dataset(cls.GRID)
-        x_axis = pyinterp.core.Axis(ds.variables["lon"][::5], is_circle=True)
-        y_axis = pyinterp.core.Axis(ds.variables["lat"][::5])
+        x_axis = pyinterp.Axis(ds.variables["lon"][::5], is_circle=True)
+        y_axis = pyinterp.Axis(ds.variables["lat"][::5])
         mss = ds.variables["mss"][::5, ::5].T
         mss[mss.mask] = float("nan")
         if cube:
-            z_axis = pyinterp.core.Axis(np.arange(2))
+            z_axis = pyinterp.Axis(np.arange(2))
             mss = np.stack([mss.data] * len(z_axis)).transpose(1, 2, 0)
             return pyinterp.grid.Grid3D(x_axis, y_axis, z_axis, mss)
         return pyinterp.grid.Grid2D(x_axis, y_axis, mss.data)

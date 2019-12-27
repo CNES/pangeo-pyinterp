@@ -28,7 +28,7 @@ The first step is to load the data into memory:
     import netCDF4
     ds = netCDF4.Dataset("tests/dataset/mss.nc")
 
-Afterwards, build the :py:class:`axes <pyinterp.core.Axis>` associated with the
+Afterwards, build the :py:class:`axes <pyinterp.Axis>` associated with the
 grid:
 
 .. code:: python

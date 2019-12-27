@@ -3,6 +3,7 @@ Axis
 ====
 """
 import re
+import warnings
 import numpy as np
 from . import core
 
@@ -10,6 +11,21 @@ from . import core
 class TemporalAxis(core.TemporalAxis):
     """Time axis
     """
+    #: Pattern to parse numpy time units
+    PATTERN = re.compile(r"\[([^\]]*)\]").search
+
+    #: Numpy time units
+    RESOLUTION = [
+        "Y", "M", "W", "D", "h", "m", "s", "ms", "us", "ns", "ps", "fs", "as"
+    ]
+
+    #: Numpy time unit meanings
+    UNITS = [
+        "year", "month", "week", "day", "hour", "minute", "second",
+        "millisecond", "microsecond", "nanosecond", "picosecond",
+        "femtosecond", "attosecond"
+    ]
+
     def __init__(self, values: np.ndarray):
         """
         Create a coordinate axis from values.
@@ -55,15 +71,30 @@ class TemporalAxis(core.TemporalAxis):
         Args:
             values (numpy.ndarray): Values to convert
 
-        Returns:
+        Return:
             numpy.ndarray: values converted
+
+        Raises:
+            UserWarning: if the implicit conversion from the unit of dates
+                provided to the unit of the axis, truncates the dates
+                (e.g. converting microseconds to seconds).
         """
+        if not np.issubdtype(values.dtype, np.dtype("datetime64")):
+            raise TypeError("values must be a datetime64 array")
+        resolution = self._datetime64_resolution(str(values.dtype))
+        source_idx = self.RESOLUTION.index(resolution)
+        target_idx = self.RESOLUTION.index(self.resolution)
+        if source_idx > target_idx:
+            source = self.UNITS[source_idx]
+            target = self.UNITS[target_idx]
+            warnings.warn(f"implicit conversion turns {source} into {target}",
+                          UserWarning)
         return values.astype(f"datetime64[{self.resolution}]").astype("int64")
 
     def back(self) -> np.datetime64:
         """Get the last value of this axis
 
-        Returns:
+        Return:
             numpy.datetime64: The last value
         """
         return np.datetime64(super().back(), self.resolution)
@@ -78,7 +109,7 @@ class TemporalAxis(core.TemporalAxis):
             bounded (bool, optional): True if you want to obtain the closest
                 value to a coordinate outside the axis definition range.
 
-        Returns:
+        Return:
             numpy.ndarray: index of the grid points containing them or -1 if
             the bounded parameter is set to false and if one of the searched
             indexes is out of the definition range of the axis, otherwise the
@@ -90,16 +121,15 @@ class TemporalAxis(core.TemporalAxis):
     def front(self) -> np.datetime64:
         """Get the first value of this axis
 
-        Returns:
+        Return:
             numpy.datetime64: The first value
         """
         return np.datetime64(super().front(), self.resolution)
 
-    @staticmethod
-    def _datetime64_resolution(dtype) -> str:
+    @classmethod
+    def _datetime64_resolution(cls, dtype) -> str:
         """Gets the date time resolution"""
-        pattern = re.compile(r"\[([^\]]*)\]")
-        match = pattern.search(dtype)
+        match = cls.PATTERN(dtype)
         assert match is not None
         return match.group(1)
 
@@ -117,7 +147,7 @@ class TemporalAxis(core.TemporalAxis):
     def max_value(self) -> np.datetime64:
         """Get the maximum value of this axis
 
-        Returns:
+        Return:
             numpy.datetime64: The maximum value
         """
         return np.datetime64(super().max_value(), self.resolution)
@@ -125,7 +155,7 @@ class TemporalAxis(core.TemporalAxis):
     def min_value(self) -> np.datetime64:
         """Get the minimum value of this axis
 
-        Returns:
+        Return:
             numpy.datetime64: The minimum value
         """
         return np.datetime64(super().min_value(), self.resolution)

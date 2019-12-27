@@ -16,7 +16,7 @@ class AxisUnit(list):
     def units(self) -> List:
         """Get the list of known units
 
-        Returns:
+        Return:
             list: The known units
         """
         return self

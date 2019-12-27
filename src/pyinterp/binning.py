@@ -16,24 +16,27 @@ class Binning2D:
     """
     Group a number of more or less continuous values into a smaller number of
     "bins" located on a grid.
-
-    Args:
-        x (pyinterp.core.Axis) : Definition of the bin edges for the X axis of
-            the grid.
-        y (pyinterp.core.Axis) : Definition of the bin edges for the Y axis of
-            the grid.
-        wgs (pyinterp.geodetic.System, optional): WGS of the coordinate system
-            used to manipulate geographic coordinates. If this parameter is not
-            set, the handled coordinates will be considered as Cartesian
-            coordinates. Otherwise, ``x`` and ``y`` are considered to
-            represents the longitudes and latitudes.
-        dtype (numpy.dtype, optional): Data type of the instance to create.
     """
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
                  wgs: Optional[geodetic.System] = None,
                  dtype: Optional[np.dtype] = np.dtype("float64")):
+        """
+        Initializes the grid used to calculate the statistics.
+
+        Args:
+            x (pyinterp.Axis) : Definition of the bin edges for the X axis of
+                the grid.
+            y (pyinterp.Axis) : Definition of the bin edges for the Y axis of
+                the grid.
+            wgs (pyinterp.geodetic.System, optional): WGS of the coordinate
+                system used to manipulate geographic coordinates. If this
+                parameter is not set, the handled coordinates will be
+                considered as Cartesian coordinates. Otherwise, ``x`` and ``y``
+                are considered to represents the longitudes and latitudes.
+            dtype (numpy.dtype, optional): Data type of the instance to create.
+        """
         if dtype == np.dtype("float64"):
             self._instance = core.Binning2DFloat64(x, y, wgs)
         elif dtype == np.dtype("float32"):

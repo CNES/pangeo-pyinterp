@@ -13,22 +13,49 @@ from . import interface
 
 
 class Grid2D:
-    """Cartesian Grid 2D
-
-    Args:
-        x (pyinterp.core.Axis): X-Axis
-        y (pyinterp.core.Axis): Y-Axis
-        array (numpy.ndarray): Discrete representation of a continuous
-            function on a uniform 2-dimensional grid.
-        increasing_axes ({'inplace', 'copy'}, optional): Optional string
-            indicating how to ensure that the grid axes are increasing. If axes
-            are decreasing, the axes and grid provided will be flipped in place
-            or copied before being flipped. By default, the decreasing axes are
-            not modified.
+    """2D Cartesian Grid
     """
     _DIMENSIONS = 2
 
     def __init__(self, *args, increasing_axes: Optional[str] = None):
+        """
+        Initialize a new 2D Cartesian Grid.
+
+        Args:
+            x (pyinterp.Axis): X-Axis
+            y (pyinterp.Axis): Y-Axis
+            array (numpy.ndarray): Discrete representation of a continuous
+                function on a uniform 2-dimensional grid.
+            increasing_axes ({'inplace', 'copy'}, optional): Optional string
+                indicating how to ensure that the grid axes are increasing. If
+                axes are decreasing, the axes and grid provided will be flipped
+                in place or copied before being flipped. By default, the
+                decreasing axes are not modified.
+
+        Examples:
+
+            >>> import numpy as np
+            >>> import pyinterp
+            >>> x_axis = pyinterp.Axis(np.arange(-180.0, 180.0, 1.0),
+            ...                        is_circle=True)
+            >>> y_axis = pyinterp.Axis(np.arange(-80.0, 80.0, 1.0),
+            ...                        is_circle=False)
+            >>> array = np.zeros((len(x_axis), len(y_axis)))
+            >>> grid = pyinterp.Grid2D(x_axis, y_axis, array)
+            >>> grid
+            <pyinterp.grid.Grid2D>
+            Axis:
+              x: Axis([-180, -179, -178, ..., 178, 179], is_circle=true)
+              y: Axis([-80, -79, -78, ..., 78, 79], is_circle=false)
+            Data:
+              [[0. 0. 0. ... 0. 0. 0.]
+               [0. 0. 0. ... 0. 0. 0.]
+               [0. 0. 0. ... 0. 0. 0.]
+               ...
+               [0. 0. 0. ... 0. 0. 0.]
+               [0. 0. 0. ... 0. 0. 0.]
+               [0. 0. 0. ... 0. 0. 0.]]
+        """
         prefix = ""
         for idx, item in enumerate(args):
             if isinstance(item, core.TemporalAxis):
@@ -69,8 +96,8 @@ class Grid2D:
         """
         Gets the X-Axis handled by this instance
 
-        Returns:
-            pyinterp.core.Axis: X-Axis
+        Return:
+            pyinterp.Axis: X-Axis
         """
         return self._instance.x
 
@@ -79,8 +106,8 @@ class Grid2D:
         """
         Gets the Y-Axis handled by this instance
 
-        Returns:
-            pyinterp.core.Axis: Y-Axis
+        Return:
+            pyinterp.Axis: Y-Axis
         """
         return self._instance.y
 
@@ -89,61 +116,97 @@ class Grid2D:
         """
         Gets the values handled by this instance
 
-        Returns:
+        Return:
             numpy.ndarray: values
         """
         return self._instance.array
 
 
 class Grid3D(Grid2D):
-    """Cartesian Grid 3D
-
-    Args:
-        x (pyinterp.core.Axis): X-Axis
-        y (pyinterp.core.Axis): Y-Axis
-        z (pyinterp.core.Axis): Z-Axis
-        array (numpy.ndarray): Discrete representation of a continuous
-            function on a uniform 3-dimensional grid.
-        increasing_axes (bool, optional): Ensure that the axes of the grid are
-            increasing. If this is not the case, the axes and grid provided
-            will be flipped. Default to False.
+    """3D Cartesian Grid
     """
     _DIMENSIONS = 3
+
+    def __init__(self, *args, increasing_axes=None):
+        """
+        Initialize a new 3D Cartesian Grid.
+
+        Args:
+            x (pyinterp.Axis): X-Axis
+            y (pyinterp.Axis): Y-Axis
+            z (pyinterp.Axis, pyinterp.TemporalAxis): Z-Axis
+            array (numpy.ndarray): Discrete representation of a continuous
+                function on a uniform 3-dimensional grid.
+            increasing_axes (bool, optional): Ensure that the axes of the grid
+                are increasing. If this is not the case, the axes and grid
+                provided will be flipped. Default to False.
+
+        .. note::
+
+            If the Z axis is a :py:class:`temporal axis
+            <pyinterp.TemporalAxis>`, the grid will handle this axis during
+            interpolations as a time axis.
+
+        Examples:
+
+            >>> import numpy as np
+            >>> import pyinterp
+            >>> x_axis = pyinterp.Axis(np.arange(-180.0, 180.0, 1.0),
+            ...                        is_circle=True)
+            >>> y_axis = pyinterp.Axis(np.arange(-80.0, 80.0, 1.0),
+            ...                        is_circle=False)
+            >>> z_axis = pyinterp.TemporalAxis(
+            ...     np.array(['2000-01-01'], dtype="datetime64[s]"))
+            >>> array = np.zeros((len(x_axis), len(y_axis), len(z_axis)))
+            >>> grid = pyinterp.Grid3D(x_axis, y_axis, z_axis, array)
+        """
+        super().__init__(*args, increasing_axes=increasing_axes)
 
     @property
     def z(self) -> Union[core.Axis, core.TemporalAxis]:
         """
         Gets the Z-Axis handled by this instance
 
-        Returns:
-            pyinterp.core.Axis, pyinterp.core.TemporalAxis: Z-Axis
+        Return:
+            pyinterp.Axis, pyinterp.TemporalAxis: Z-Axis
         """
         return self._instance.z
 
 
 class Grid4D(Grid3D):
-    """Cartesian Grid 4D
-
-    Args:
-        x (pyinterp.core.Axis): X-Axis
-        y (pyinterp.core.Axis): Y-Axis
-        z (pyinterp.core.Axis): Z-Axis
-        u (pyinterp.core.Axis): U-Axis
-        array (numpy.ndarray): Discrete representation of a continuous
-            function on a uniform 4-dimensional grid.
-        increasing_axes (bool, optional): Ensure that the axes of the grid are
-            increasing. If this is not the case, the axes and grid provided
-            will be flipped. Default to False.
+    """4D Cartesian Grid
     """
     _DIMENSIONS = 4
+
+    def __init__(self, *args, increasing_axes=None):
+        """
+        Initialize a new 4D Cartesian Grid.
+
+        Args:
+            x (pyinterp.Axis): X-Axis
+            y (pyinterp.Axis): Y-Axis
+            z (pyinterp.Axis, pyinterp.TemporalAxis): Z-Axis
+            u (pyinterp.Axis): U-Axis
+            array (numpy.ndarray): Discrete representation of a continuous
+                function on a uniform 4-dimensional grid.
+            increasing_axes (bool, optional): Ensure that the axes of the grid
+                are increasing. If this is not the case, the axes and grid
+                provided will be flipped. Default to False.
+
+        .. note::
+
+            If the Z axis is a temporal axis, the grid will handle this axis
+            during interpolations as a time axis.
+        """
+        super().__init__(*args, increasing_axes=increasing_axes)
 
     @property
     def u(self) -> core.Axis:
         """
         Gets the U-Axis handled by this instance
 
-        Returns:
-            pyinterp.core.Axis: U-Axis
+        Return:
+            pyinterp.Axis: U-Axis
         """
         return self._instance.u
 
