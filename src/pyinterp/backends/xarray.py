@@ -153,38 +153,42 @@ def _coords(coords: dict,
 
 class Grid2D(grid.Grid2D):
     """Builds a Grid2D from the Xarray data provided.
-
-    Args:
-        data_array (xarray.DataArray): Provided data
-        increasing_axes (bool, optional): If this is true, check that the grid
-            axes are increasing: the decreasing axes and the supplied grid will
-            be flipped. Default to ``False``.
-        geodetic (bool, optional): True, if the axes of the grid represent
-            longitudes and latitudes. In this case, the constructor will try to
-            determine the axes of longitudes and latitudes according to the
-            value of the attribute ``units`` using the following algorithm:
-
-                * if the axis unit is one of the values of the set
-                  ``degrees_east``, ``degree_east``, "degree_E``,
-                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  the axis represents a longitude,
-                * if the axis unit is one of the values of the set
-                  ``degrees_north``, ``degree_north``, ``degree_N``,
-                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  represents a latitude.
-
-            If this option is false, the axes will be considered Cartesian.
-            Default to ``True``.
-
-    Raises:
-        ValueError: if the provided data array doesn't define a
-            longitude/latitude axis if ``geodetic`` is True
-        ValueError: if the number of dimensions is different of 2.
     """
     def __init__(self,
                  data_array: xr.DataArray,
                  increasing_axes: Optional[bool] = False,
                  geodetic: Optional[bool] = True):
+        """
+        Initialize a new 2D Cartesian Grid.
+
+        Args:
+            data_array (xarray.DataArray): Provided data
+            increasing_axes (bool, optional): If this is true, check that the
+                grid axes are increasing: the decreasing axes and the supplied
+                grid will be flipped. Default to ``False``.
+            geodetic (bool, optional): True, if the axes of the grid represent
+                longitudes and latitudes. In this case, the constructor will
+                try to determine the axes of longitudes and latitudes according
+                to the value of the attribute ``units`` using the following
+                algorithm:
+
+                    * if the axis unit is one of the values of the set
+                    ``degrees_east``, ``degree_east``, "degree_E``,
+                    ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                    the axis represents a longitude,
+                    * if the axis unit is one of the values of the set
+                    ``degrees_north``, ``degree_north``, ``degree_N``,
+                    ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                    represents a latitude.
+
+                If this option is false, the axes will be considered Cartesian.
+                Default to ``True``.
+
+        Raises:
+            ValueError: if the provided data array doesn't define a
+                longitude/latitude axis if ``geodetic`` is True
+            ValueError: if the number of dimensions is different of 2.
+        """
 
         self._dims = _dims_from_data_array(data_array, geodetic)
         super(Grid2D, self).__init__(
@@ -235,38 +239,41 @@ class Grid2D(grid.Grid2D):
 
 class Grid3D(grid.Grid3D):
     """Builds a Grid3D from the Xarray data provided.
-
-    Args:
-        data_array (xarray.DataArray): Provided data array
-        increasing_axes (bool, optional): If this is true, check that the grid
-            axes are increasing: the decreasing axes and the supplied grid will
-            be flipped. Default to ``False``.
-        geodetic (bool, optional): True, if the axes of the grid represent
-            longitudes and latitudes. In this case, the constructor will try to
-            determine the axes of longitudes and latitudes according to the
-            value of the attribute ``units`` using the following algorithm:
-
-                * if the axis unit is one of the values of the set
-                  ``degrees_east``, ``degree_east``, "degree_E``,
-                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  the axis represents a longitude,
-                * if the axis unit is one of the values of the set
-                  ``degrees_north``, ``degree_north``, ``degree_N``,
-                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  represents a latitude.
-
-            If this option is false, the axes will be considered Cartesian.
-            Default to ``True``.
-
-    Raises:
-        ValueError: if the provided data array doesn't define a
-            longitude/latitude axis if ``geodetic`` is True
-        ValueError: if the number of dimensions is different of 3.
     """
     def __init__(self,
                  data_array: xr.DataArray,
                  increasing_axes: Optional[bool] = False,
                  geodetic: Optional[bool] = True):
+        """
+
+        Args:
+            data_array (xarray.DataArray): Provided data array
+            increasing_axes (bool, optional): If this is true, check that the
+                grid axes are increasing: the decreasing axes and the supplied
+                grid will be flipped. Default to ``False``.
+            geodetic (bool, optional): True, if the axes of the grid represent
+                longitudes and latitudes. In this case, the constructor will
+                try to determine the axes of longitudes and latitudes according
+                to the value of the attribute ``units`` using the following
+                algorithm:
+
+                    * if the axis unit is one of the values of the set
+                    ``degrees_east``, ``degree_east``, "degree_E``,
+                    ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                    the axis represents a longitude,
+                    * if the axis unit is one of the values of the set
+                    ``degrees_north``, ``degree_north``, ``degree_N``,
+                    ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                    represents a latitude.
+
+                If this option is false, the axes will be considered Cartesian.
+                Default to ``True``.
+
+        Raises:
+            ValueError: if the provided data array doesn't define a
+                longitude/latitude axis if ``geodetic`` is True
+            ValueError: if the number of dimensions is different of 3.
+        """
         x, y = _dims_from_data_array(data_array, geodetic, ndims=3)
         z = (set(data_array.dims) - {x, y}).pop()
         self._dims = (x, y, z)
@@ -328,76 +335,69 @@ class Grid3D(grid.Grid3D):
 
 class Grid4D(grid.Grid4D):
     """Builds a Grid4D from the Xarray data provided.
-
-    Args:
-        data_array (xarray.DataArray): Provided data array
-        increasing_axes (bool, optional): If this is true, check that the grid
-            axes are increasing: the decreasing axes and the supplied grid will
-            be flipped. Default to ``False``.
-        geodetic (bool, optional): True, if the axes of the grid represent
-            longitudes and latitudes. In this case, the constructor will try to
-            determine the axes of longitudes and latitudes according to the
-            value of the attribute ``units`` using the following algorithm:
-
-                * if the axis unit is one of the values of the set
-                  ``degrees_east``, ``degree_east``, "degree_E``,
-                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  the axis represents a longitude,
-                * if the axis unit is one of the values of the set
-                  ``degrees_north``, ``degree_north``, ``degree_N``,
-                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  represents a latitude.
-
-            If this option is false, the axes will be considered Cartesian.
-            Default to ``True``.
-
-    Raises:
-        ValueError: if the provided data array doesn't define a
-            longitude/latitude axis if ``geodetic`` is True
-        ValueError: if the number of dimensions is different of 3.
     """
     def __init__(self,
                  data_array: xr.DataArray,
                  increasing_axes: Optional[bool] = False,
                  geodetic: Optional[bool] = True):
+        """
+
+        Args:
+            data_array (xarray.DataArray): Provided data array
+            increasing_axes (bool, optional): If this is true, check that the
+                grid axes are increasing: the decreasing axes and the supplied
+                grid will be flipped. Default to ``False``.
+            geodetic (bool, optional): True, if the axes of the grid represent
+                longitudes and latitudes. In this case, the constructor will
+                try to determine the axes of longitudes and latitudes according
+                to the value of the attribute ``units`` using the following
+                algorithm:
+
+                    * if the axis unit is one of the values of the set
+                    ``degrees_east``, ``degree_east``, "degree_E``,
+                    ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                    the axis represents a longitude,
+                    * if the axis unit is one of the values of the set
+                    ``degrees_north``, ``degree_north``, ``degree_N``,
+                    ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                    represents a latitude.
+
+                If this option is false, the axes will be considered Cartesian.
+                Default to ``True``.
+
+        Raises:
+            ValueError: if the provided data array doesn't define a
+                longitude/latitude axis if ``geodetic`` is True
+            ValueError: if the number of dimensions is different of 4.
+        """
         x, y = _dims_from_data_array(data_array, geodetic, ndims=4)
         z, u = tuple(set(data_array.dims) - {x, y})
         self._dims = (x, y, z, u)
         z_values = data_array.coords[z].values
         u_values = data_array.coords[u].values
 
-        # If the grid has a time axis, its properties are stored in order to
-        # check the consistency between the time axis and the data provided
-        # during interpolation.
+        # Should the grid manage a time axis?
+        self._datetime64 = None
         dtype = data_array.coords[z].dtype
         if "datetime64" in dtype.name:
-            self._datetime64 = (z, dtype)
-            z_values = data_array.coords[z].values.astype("float64")
-        else:
-            self._datetime64 = None
+            self._datetime64 = z, axis.TemporalAxis(
+                data_array.coords[z].values)
         dtype = data_array.coords[u].dtype
         if "datetime64" in dtype.name:
             if self._datetime64 is not None:
                 raise ValueError("unable to handle two time axes")
-            self._datetime64 = (u, dtype)
-            u_values = data_array.coords[u].values.astype("float64")
+            self._datetime64 = u, axis.TemporalAxis(
+                data_array.coords[u].values)
+            # The time axis is the Z axis.
+            z, u = u, z
         super(Grid4D, self).__init__(
             core.Axis(data_array.coords[x].values, is_circle=geodetic),
             core.Axis(data_array.coords[y].values),
-            core.Axis(z_values),
-            core.Axis(u_values),
+            core.Axis(data_array.coords[z].values)
+            if self._datetime64 is None else self._datetime64[1],
+            core.Axis(data_array.coords[u].values),
             data_array.transpose(x, y, z, u).values,
             increasing_axes='inplace' if increasing_axes else None)
-
-    def time_unit(self) -> Optional[np.dtype]:
-        """Gets the time units handled by this instance
-
-        Return:
-            np.dtype, optional: The unity of the temporal axis or None if
-            the third dimension of this instance does not represent a time.
-        """
-        if self._datetime64:
-            return self._datetime64[1]
 
     def quadrivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates
