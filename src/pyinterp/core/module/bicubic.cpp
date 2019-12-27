@@ -36,7 +36,8 @@ inline auto interp_type(const FittingModel kind) -> const gsl_interp_type* {
 }
 
 // Error thrown if it' s not possible to frame the value on the specified axis.
-auto index_error(const std::string& axis, const double value, const size_t n)
+template <typename T>
+auto index_error(const std::string& axis, const T value, const size_t n)
     -> void {
   throw std::invalid_argument(
       "Unable to frame the value " + std::to_string(value) + " with " +
