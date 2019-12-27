@@ -38,10 +38,14 @@ inline auto vector_from_numpy(
 }  // namespace detail
 
 /// Forward declaration
+///
+/// @tparam T Type of data handled by the axis.
 template <typename T>
 class Axis;
 
 /// Implementation of the Python wrapper
+///
+/// @tparam T Type of data handled by the axis.
 template <typename T>
 class Axis : public detail::Axis<T>,
              public std::enable_shared_from_this<Axis<T>> {

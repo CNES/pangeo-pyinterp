@@ -226,6 +226,10 @@ class Grid4D : public Grid3D<DataType, AxisType, 4> {
   std::shared_ptr<Axis<double>> u_;
 };
 
+/// Implementations of Cartesian grids with N dimensions.
+///
+/// @tparam DataType Grid data type
+/// @tparam AxisType Axis data type
 template <typename DataType, typename AxisType>
 void implement_ndgrid(pybind11::module& m, const std::string& prefix,
                       const std::string& suffix) {
@@ -372,6 +376,9 @@ Return:
           }));
 }
 
+/// Implementations of Cartesian grids.
+///
+/// @tparam DataType Grid data type
 template <typename DataType>
 void implement_grid(pybind11::module& m, const std::string& suffix) {
   pybind11::class_<Grid2D<DataType>>(m, ("Grid2D" + suffix).c_str(),

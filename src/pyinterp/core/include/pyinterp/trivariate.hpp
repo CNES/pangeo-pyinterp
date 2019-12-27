@@ -20,8 +20,10 @@ using Bivariate3D = detail::math::Bivariate<Point, T>;
 
 /// Interpolation of bivariate function.
 ///
-/// @tparam Coordinate The type of data used by the interpolators.
-/// @tparam Type The type of data used by the numerical grid.
+/// @tparam Point A type of point defining a point in space.
+/// @tparam Coordinate Coordinate data type
+/// @tparam AxisType Axis data type
+/// @tparam Type Grid data type
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
 auto trivariate(const Grid3D<Type, AxisType>& grid,
@@ -123,6 +125,12 @@ auto trivariate(const Grid3D<Type, AxisType>& grid,
   return result;
 }
 
+/// Implementations trivariate interpolation
+///
+/// @tparam Point A type of point defining a point in space.
+/// @tparam Coordinate Coordinate data type
+/// @tparam AxisType Axis data type
+/// @tparam Type Grid data type
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
 void implement_trivariate(pybind11::module& m, const std::string& prefix,
