@@ -8,7 +8,8 @@ from . import core
 
 
 class TemporalAxis(core.TemporalAxis):
-    """Time axis"""
+    """Time axis
+    """
     def __init__(self, values: np.ndarray):
         """
         Create a coordinate axis from values.
@@ -19,6 +20,27 @@ class TemporalAxis(core.TemporalAxis):
 
         Raises:
             TypeError: if the array data type is not a datetime64 subtype.
+
+        Examples:
+
+            >>> import datetime
+            >>> import numpy as np
+            >>> start = datetime.datetime(2000, 1, 1)
+            >>> values = np.array([
+            ...     start + datetime.timedelta(hours=index)
+            ...     for index in range(86400)
+            ... ],
+            ...                   dtype="datetime64[us]")
+            >>> axis = pyinterp.TemporalAxis(values)
+            >>> axis
+            TemporalAxis(array(['2000-01-01T00:00:00.000000',
+                                '2000-01-01T01:00:00.000000',
+                                '2000-01-01T02:00:00.000000',
+                                ...,
+                                '2009-11-08T21:00:00.000000',
+                                '2009-11-08T22:00:00.000000',
+                                '2009-11-08T23:00:00.000000'],
+                            dtype='datetime64[us]'))
         """
         if not np.issubdtype(values.dtype, np.dtype("datetime64")):
             raise TypeError("values must be a datetime64 array")
@@ -29,7 +51,7 @@ class TemporalAxis(core.TemporalAxis):
     def safe_cast(self, values: np.ndarray) -> np.ndarray:
         """Convert the dates of the vector in the same unit as the time axis
         defined in this instance.
-        
+
         Args:
             values (numpy.ndarray): Values to convert
 

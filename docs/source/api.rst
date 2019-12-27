@@ -66,6 +66,15 @@ Cartesian interpolators
   trivariate
   quadrivariate
 
+Fill undefined values
+=====================
+
+.. autosummary::
+  :toctree: generated/
+
+  fill.loess
+  fill.gauss_seidel
+
 Xarray
 ======
 

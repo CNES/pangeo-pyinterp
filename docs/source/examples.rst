@@ -204,7 +204,11 @@ axis which is handled by this object.
     ds = netCDF4.Dataset("tests/dataset/tcw.nc")
     x_axis = pyinterp.Axis(ds.variables["longitude"][:], is_circle=True)
     y_axis = pyinterp.Axis(ds.variables["latitude"][:])
-    z_axis = pyinterp.Axis(ds.variables["time"][:])
+    z_axis = pyinterp.TemporalAxis(
+        np.array(
+            netCDF4.num2date(ds.variables["time"][:],
+                            ds.variables["time"].units),
+            dtype="datetime64"))
     # The shape of the bivariate values must be
     # (len(x_axis), len(y_axis), len(z_axis))
     tcw = ds.variables['tcw'][:].T
@@ -215,9 +219,9 @@ axis which is handled by this object.
     # The coordinates used for interpolation are shifted to avoid using the
     # points of the bivariate function.
     mx, my, mz = np.meshgrid(np.arange(-180, 180, 1) + 1 / 3.0,
-                             np.arange(-89, 89, 1) + 1 / 3.0,
-                             898500 + 3,
-                             indexing='ij')
+                            np.arange(-89, 89, 1) + 1 / 3.0,
+                            np.datetime64("2002-07-05T18:00:00"),
+                            indexing='ij')
     tcw = pyinterp.trivariate(
         grid, mx.flatten(), my.flatten(), mz.flatten()).reshape(mx.shape)
 
@@ -237,7 +241,7 @@ xarray:
     mx, my, mz = np.meshgrid(np.arange(-180, 180, 1) + 1 / 3.0,
                              np.arange(-89, 89, 1) + 1 / 3.0,
                              np.array([datetime.datetime(2002, 7, 2, 15, 0)],
-                                      dtype=interpolator.time_unit()),
+                                      dtype="datetime64"),
                              indexing='ij')
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))

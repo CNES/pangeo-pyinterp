@@ -17,9 +17,9 @@ these projects was not quite sufficient for our needs. That is why this project
 was created.
 
 This version can interpolate 2D fields using `bivariate` and `bicubic`
-interpolators, 3D fields using `trivariate` interpolators and `unstructured
-grid`. You can also apply a data `binning` on bivariate field by simple or linear
-binning.
+interpolators, 3D fields using `trivariate` and `bicubic`, 4D fields using
+`quadrivariate` interpolators and `unstructured grids`. You can also apply a
+data `binning` on bivariate field by simple or linear binning.
 
 The library core is written in C++ using the [Boost C++
 Libararies](https://www.boost.org/), [Eigen3](http://eigen.tuxfamily.org/),
@@ -56,17 +56,25 @@ the grid from the coordinates of a point. These axes are either:
 * *irregular*: latitudes are represented by a vector of 109 values
   irregularly spaced from -90 to 89.940374 degrees.
 
-These objects are manipulated by the class `pyinterp.core.Axis` which
-will choose, according to the definition of the axis, the best implementation.
-This object will allow you to find the two indexes framing a given value. This
-operating mode allows better performance when searching for a regular axis (a
-simple calculation allows you to immediately find the index of a point) while
-in the case of an irregular axis, the search will be performed using a binary
-search.
+These objects are manipulated by the class `pyinterp.Axis` which will choose,
+according to the definition of the axis, the best implementation. This object
+will allow you to find the two indexes framing a given value. This operating
+mode allows better performance when searching for a regular axis (a simple
+calculation allows you to immediately find the index of a point) while in the
+case of an irregular axis, the search will be performed using a binary search.
 
 Finally, this object is able to define a circular axis from a vector in order
 to correctly locate a value on the circle. This is the type of axis that will
 be used when handling longitudes.
+
+### Temporal Axes
+
+The `pyinterp.TemporalAxis` class is used to manage temporal axes, i.e. axes
+defined by 64-bit integer vectors, which is the encoding used by
+[numpy](https://docs.scipy.org/doc/numpy/reference/arrays.datetime.html) to
+handle dates. This allows handling dates without loss of information when the
+precision of the dates is the nanosecond. These objects are used by
+spatiotemporal grids in order to perform temporal interpolations.
 
 ### Unstructured Grids
 

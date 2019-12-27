@@ -14,7 +14,7 @@ the grid from the coordinates of a point. These axes are either:
 * irregular: latitudes are represented by a vector of 109 values irregularly
   spaced from -90 to 89.940374 degrees.
 
-These objects are manipulated by the class :py:class:`pyinterp.core.Axis` which
+These objects are manipulated by the class :py:class:`pyinterp.Axis` which
 will choose, according to the definition of the axis, the best implementation.
 This object will allow you to find the two indexes framing a given value. This
 operating mode allows better performance when searching for a regular axis (a
@@ -25,6 +25,16 @@ search.
 Finally, this object is able to define a circular axis from a vector in order
 to correctly locate a value on the circle. This is the type of axis that will
 be used when handling longitudes.
+
+Temporal Axes
+=============
+
+The :py:class:`pyinterp.TemporalAxis` class is used to manage temporal axes,
+i.e. axes defined by 64-bit integer vectors, which is the encoding used by
+`numpy <https://docs.scipy.org/doc/numpy/reference/arrays.datetime.html>`_
+to handle dates. This allows handling dates without loss of information when the
+precision of the dates is the nanosecond. These objects are used by
+spatiotemporal grids in order to perform temporal interpolations.
 
 Unstructured Grids
 ==================
