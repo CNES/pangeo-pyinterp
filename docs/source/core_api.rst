@@ -12,6 +12,7 @@ Axis
   :toctree: generated/
 
   core.Axis
+  core.AxisBoundary
   core.TemporalAxis
 
 Bicubic interpolation
@@ -33,7 +34,7 @@ Binning
   core.Binning2DFloat64
   core.Binning2DFloat32
 
-Bivariate interpolation
+Bivariate interpolators
 -----------------------
 
 .. autosummary::
@@ -43,6 +44,15 @@ Bivariate interpolation
   core.BivariateInterpolator2D
   core.InverseDistanceWeighting2D
   core.Nearest2D
+  core.bivariate_float32
+  core.bivariate_float64
+
+Bivariate interpolations
+------------------------
+
+.. autosummary::
+  :toctree: generated/
+
   core.bivariate_float32
   core.bivariate_float64
 
@@ -58,6 +68,17 @@ Cartesian Grids
   core.Grid3DFloat64
   core.Grid4DFloat32
   core.Grid4DFloat64
+
+Geodetic System
+---------------
+
+.. autosummary::
+  :toctree: generated/
+
+  core.geodetic.Box2D
+  core.geodetic.Coordinates
+  core.geodetic.Point2D
+  core.geodetic.System
 
 Temporal Cartesian Grids
 ------------------------
@@ -79,15 +100,6 @@ Temporal Cartesian Grids
   core.quadrivariate_float32
   core.quadrivariate_float64
 
-Temporal 4D interpolation
---------------------------
-
-.. autosummary::
-  :toctree: generated/
-
-  core.temporal_quadrivariate_float32
-  core.temporal_quadrivariate_float64
-
 R*Tree
 ------
 .. autosummary::
@@ -108,7 +120,7 @@ Replace undefined values
   core.fill.gauss_seidel_float64
   core.fill.gauss_seidel_float32
 
-3D interpolation
+3D interpolators
 ----------------
 
 .. autosummary::
@@ -118,10 +130,8 @@ Replace undefined values
   core.BivariateInterpolator3D
   core.InverseDistanceWeighting3D
   core.Nearest3D
-  core.trivariate_float32
-  core.trivariate_float64
 
-Temporal 3D interpolation
+Temporal 3D interpolators
 -------------------------
 
 .. autosummary::
@@ -131,5 +141,13 @@ Temporal 3D interpolation
   core.TemporalBivariateInterpolator3D
   core.TemporalInverseDistanceWeighting3D
   core.TemporalNearest3D
-  core.temporal_trivariate_float32
-  core.temporal_trivariate_float64
+
+3D interpolations
+-----------------
+
+.. autosummary::
+  :toctree: generated/
+
+  core.trivariate_float32
+  core.trivariate_float64
+

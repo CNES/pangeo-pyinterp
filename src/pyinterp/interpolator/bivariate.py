@@ -44,7 +44,7 @@ def bivariate(grid2d: grid.Grid2D,
         numpy.ndarray: Values interpolated
     """
     instance = grid2d._instance
-    function = f"bivariate_{interface._core_function_suffix(instance)}"
+    function = interface._core_function("bivariate", instance)
     return getattr(core, function)(instance, np.asarray(x), np.asarray(y),
                                    grid._core_variate_interpolator(
                                        grid2d, interpolator, **kwargs),

@@ -11,6 +11,7 @@ Build interpolation objects from xarray.DataArray instances
 from typing import Iterable, Optional, Tuple, Union
 import numpy as np
 import xarray as xr
+from .. import axis
 from .. import cf
 from .. import core
 from .. import grid
@@ -114,7 +115,8 @@ def _dims_from_data_array(data_array: xr.DataArray,
 
 def _coords(coords: dict,
             dims: Iterable,
-            datetime64: Optional[Tuple[str, np.dtype]] = None) -> Tuple:
+            datetime64: Optional[Tuple[str, axis.TemporalAxis]] = None
+            ) -> Tuple:
     """
     Get the list of arguments to provide to the grid interpolation
     functions.
@@ -144,14 +146,8 @@ def _coords(coords: dict,
                          ", ".join([str(item) for item in unknown]))
     # Is it necessary to manage a time axis?
     if datetime64 is not None:
-        # In this case, it's checked that the unit between the time axis and
-        # the data provided is identical.
-        dim, dtype = datetime64
-        if coords[dim].dtype != dtype:
-            raise ValueError(
-                f"the unit ({dtype!s}) of the time axis ({dim}) is different "
-                f"from the time unit provided: {coords[dim].dtype!s}")
-        coords[dim] = coords[dim].astype("float64")
+        dim, axis = datetime64
+        coords[dim] = axis.safe_cast(coords[dim])
     return tuple(coords[dim] for dim in dims)
 
 
@@ -274,28 +270,20 @@ class Grid3D(grid.Grid3D):
         x, y = _dims_from_data_array(data_array, geodetic, ndims=3)
         z = (set(data_array.dims) - {x, y}).pop()
         self._dims = (x, y, z)
-        # If the grid has a time axis, its properties are stored in order to
-        # check the consistency between the time axis and the data provided
-        # during interpolation.
+        # Should the grid manage a time axis?
         dtype = data_array.coords[z].dtype
-        self._datetime64 = (z, dtype) if "datetime64" in dtype.name else None
+        if "datetime64" in dtype.name:
+            self._datetime64 = z, axis.TemporalAxis(
+                data_array.coords[z].values)
+        else:
+            self._datetime64 = None
         super(Grid3D, self).__init__(
             core.Axis(data_array.coords[x].values, is_circle=geodetic),
             core.Axis(data_array.coords[y].values),
-            core.Axis(data_array.coords[z].astype("float64") if self.
-                      _datetime64 else data_array.coords[z].values),
+            core.Axis(data_array.coords[z].values)
+            if self._datetime64 is None else self._datetime64[1],
             data_array.transpose(x, y, z).values,
             increasing_axes='inplace' if increasing_axes else None)
-
-    def time_unit(self) -> Optional[np.dtype]:
-        """Gets the time units handled by this instance
-
-        Return:
-            np.dtype, optional: The unity of the temporal axis or None if
-            the third dimension of this instance does not represent a time.
-        """
-        if self._datetime64:
-            return self._datetime64[1]
 
     def trivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates

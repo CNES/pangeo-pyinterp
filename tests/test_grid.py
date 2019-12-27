@@ -24,17 +24,28 @@ class Interface(unittest.TestCase):
 
     def test__core_function_suffix(self):
         with self.assertRaises(TypeError):
-            pyinterp.interface._core_function_suffix(1)
+            pyinterp.interface._core_function(1)
 
         lon = pyinterp.Axis(np.arange(0, 360, 1), is_circle=True)
         lat = pyinterp.Axis(np.arange(-80, 80, 1), is_circle=False)
         matrix, _ = np.meshgrid(lon[:], lat[:])
         self.assertEqual(
-            pyinterp.interface._core_function_suffix(
-                pyinterp.core.Grid2DFloat64(lon, lat, matrix.T)), "float64")
+            pyinterp.interface._core_function(
+                "foo", pyinterp.core.Grid2DFloat64(lon, lat, matrix.T)),
+            "foo_float64")
         self.assertEqual(
-            pyinterp.interface._core_function_suffix(
-                pyinterp.core.Grid2DFloat32(lon, lat, matrix.T)), "float32")
+            pyinterp.interface._core_function(
+                "foo", pyinterp.core.Grid2DFloat32(lon, lat, matrix.T)),
+            "foo_float32")
+
+        time = pyinterp.TemporalAxis(
+            np.array(['2000-01-01'], dtype="datetime64"))
+        matrix, _, _ = np.meshgrid(lon[:], lat[:], time[:], indexing='ij')
+        self.assertEqual(
+            pyinterp.interface._core_function(
+                "foo",
+                pyinterp.core.TemporalGrid3DFloat64(lon, lat, time, matrix)),
+            "foo_float64")
 
 
 class Grid2D(unittest.TestCase):

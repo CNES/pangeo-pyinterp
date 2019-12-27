@@ -48,7 +48,7 @@ def quadrivariate(grid4d: grid.Grid4D,
         numpy.ndarray: Values interpolated
     """
     instance = grid4d._instance
-    function = f"quadrivariate_{interface._core_function_suffix(instance)}"
+    function = interface._core_function("quadrivariate", instance)
     return getattr(core, function)(instance, np.asarray(x), np.asarray(y),
                                    np.asarray(z), np.asarray(u),
                                    grid._core_variate_interpolator(

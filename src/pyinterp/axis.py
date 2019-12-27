@@ -26,6 +26,18 @@ class TemporalAxis(core.TemporalAxis):
         self.dtype = values.dtype
         self.resolution = self._datetime64_resolution(str(self.dtype))
 
+    def safe_cast(self, values: np.ndarray) -> np.ndarray:
+        """Convert the dates of the vector in the same unit as the time axis
+        defined in this instance.
+        
+        Args:
+            values (numpy.ndarray): Values to convert
+
+        Returns:
+            numpy.ndarray: values converted
+        """
+        return values.astype(f"datetime64[{self.resolution}]").astype("int64")
+
     def back(self) -> np.datetime64:
         """Get the last value of this axis
 
@@ -102,10 +114,10 @@ class TemporalAxis(core.TemporalAxis):
         return "TemporalAxis(" + "\n".join(array) + ")"
 
     def __setstate__(self, state):
-        if not isinstance(state, tuple) or len(state != 2):
+        if not isinstance(state, tuple) or len(state) != 2:
             raise ValueError("invalid state")
-        super().__setstate__(state[0])
-        self.dtype = state[1]
+        super().__setstate__(state[1])
+        self.dtype = state[0]
         self.resolution = self._datetime64_resolution(str(self.dtype))
 
     def __getstate__(self):

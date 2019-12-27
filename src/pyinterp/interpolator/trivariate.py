@@ -46,7 +46,7 @@ def trivariate(grid3d: grid.Grid3D,
         numpy.ndarray: Values interpolated
     """
     instance = grid3d._instance
-    function = f"trivariate_{interface._core_function_suffix(instance)}"
+    function = interface._core_function("trivariate", instance)
     return getattr(core, function)(instance, np.asarray(x), np.asarray(y),
                                    np.asarray(z),
                                    grid._core_variate_interpolator(

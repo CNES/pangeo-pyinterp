@@ -128,13 +128,8 @@ template <template <class> class Point, typename Coordinate, typename AxisType,
 void implement_trivariate(pybind11::module& m, const std::string& prefix,
                           const std::string& suffix) {
   auto function_suffix = suffix;
-  auto function_prefix = prefix;
   function_suffix[0] = std::tolower(function_suffix[0]);
-  function_prefix[0] = std::tolower(function_prefix[0]);
-  if (function_prefix.length()) {
-    function_prefix += "_";
-  }
-  m.def((function_prefix + "trivariate_" + function_suffix).c_str(),
+  m.def(("trivariate_" + function_suffix).c_str(),
         &trivariate<Point, Coordinate, AxisType, Type>, pybind11::arg("grid"),
         pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
         pybind11::arg("interpolator"), pybind11::arg("bounds_error") = false,

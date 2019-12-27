@@ -42,10 +42,11 @@ def _core_class_suffix(x: np.ndarray) -> str:
     raise ValueError("Unhandled dtype: " + str(dtype))
 
 
-def _core_function_suffix(instance: object) -> str:
+def _core_function(function: str, instance: object) -> str:
     """Get the suffix of the function handling the grid instance.
 
     Args:
+        function (str): TODO
         instance (object): grid instance
     Returns:
         str: the class suffix
@@ -53,9 +54,10 @@ def _core_function_suffix(instance: object) -> str:
     if not isinstance(
             instance,
             (core.Grid2DFloat64, core.Grid2DFloat32, core.Grid3DFloat64,
-             core.Grid3DFloat32, core.Grid4DFloat64, core.Grid4DFloat32)):
+             core.Grid3DFloat32, core.Grid4DFloat64, core.Grid4DFloat32,
+             core.TemporalGrid3DFloat64, core.TemporalGrid3DFloat32,
+             core.TemporalGrid4DFloat64, core.TemporalGrid4DFloat32)):
         raise TypeError("instance is not an object handling a grid.")
     name = instance.__class__.__name__
-    if name.endswith("Float64"):
-        return "float64"
-    return "float32"
+    suffix = "float64" if name.endswith("Float64") else "float32"
+    return f"{function}_{suffix}"

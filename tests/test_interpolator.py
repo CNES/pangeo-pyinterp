@@ -152,13 +152,13 @@ class Trivariate(unittest.TestCase):
 
         self.assertIsInstance(grid.x, pyinterp.Axis)
         self.assertIsInstance(grid.y, pyinterp.Axis)
-        self.assertIsInstance(grid.z, pyinterp.Axis)
+        self.assertIsInstance(grid.z, pyinterp.TemporalAxis)
         self.assertIsInstance(grid.array, np.ndarray)
 
         lon = np.arange(-180, 180, 1) + 1 / 3.0
         lat = np.arange(-90, 90, 1) + 1 / 3.0
         time = np.array([datetime.datetime(2002, 7, 2, 15, 0)],
-                        grid.time_unit())
+                        dtype="datetime64")
         x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
 
         z = grid.trivariate(
@@ -175,7 +175,7 @@ class Trivariate(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             time = np.array([datetime.datetime(2012, 7, 2, 15, 0)],
-                            grid.time_unit())
+                            dtype="datetime64")
             x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
             grid.trivariate(collections.OrderedDict(longitude=x.flatten(),
                                                     latitude=y.flatten(),

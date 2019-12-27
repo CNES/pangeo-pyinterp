@@ -34,7 +34,7 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
         numpy.ndarray: the grid will have NaN filled with extrapolated values.
     """
     instance = mesh._instance
-    function = f"loess_{interface._core_function_suffix(instance)}"
+    function = interface._core_function("loess", instance)
     nz = len(mesh.z) if isinstance(mesh, grid.Grid3D) else 0
 
     if nz == 0:
@@ -127,7 +127,7 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
         "".join(item.capitalize() for item in first_guess.split("_")))
 
     instance = mesh._instance
-    function = f"gauss_seidel_{interface._core_function_suffix(instance)}"
+    function = interface._core_function("gauss_seidel", instance)
     filled = np.copy(mesh.array)
     if nz == 0:
         _iterations, residual = getattr(core.fill,

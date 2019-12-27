@@ -92,7 +92,7 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D],
     boundary = boundary.capitalize()
 
     instance = mesh._instance
-    function = f"bicubic_{interface._core_function_suffix(instance)}"
+    function = interface._core_function("bicubic", instance)
     args = [
         instance,
         np.asarray(x),

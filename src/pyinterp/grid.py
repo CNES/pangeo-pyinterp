@@ -6,7 +6,7 @@
 Regular grids
 =============
 """
-from typing import Optional
+from typing import Optional, Union
 import numpy as np
 from . import core
 from . import interface
@@ -29,8 +29,13 @@ class Grid2D:
     _DIMENSIONS = 2
 
     def __init__(self, *args, increasing_axes: Optional[str] = None):
-        _class = f"Grid{self._DIMENSIONS}D" + interface._core_class_suffix(
-            args[-1])
+        prefix = ""
+        for idx, item in enumerate(args):
+            if isinstance(item, core.TemporalAxis):
+                prefix = "Temporal"
+                break
+        _class = f"{prefix}Grid{self._DIMENSIONS}D" + \
+            interface._core_class_suffix(args[-1])
         if increasing_axes is not None:
             if increasing_axes not in ['inplace', 'copy']:
                 raise ValueError("increasing_axes "
@@ -38,13 +43,13 @@ class Grid2D:
             inplace = increasing_axes == 'inplace'
             args = list(args)
             for idx, item in enumerate(args):
-                if isinstance(
-                        item,
-                        (core.Axis,
-                         core.TemporalAxis)) and not item.is_ascending():
+                if isinstance(item,
+                              (core.Axis,
+                               core.TemporalAxis)) and not item.is_ascending():
                     args[idx] = item.flip(inplace=inplace)
                     args[-1] = np.flip(args[-1], axis=idx)
         self._instance = getattr(core, _class)(*args)
+        self._prefix = prefix
 
     def __repr__(self):
         result = [
@@ -106,12 +111,12 @@ class Grid3D(Grid2D):
     _DIMENSIONS = 3
 
     @property
-    def z(self) -> core.Axis:
+    def z(self) -> Union[core.Axis, core.TemporalAxis]:
         """
         Gets the Z-Axis handled by this instance
 
         Returns:
-            pyinterp.core.Axis: Z-Axis
+            pyinterp.core.Axis, pyinterp.core.TemporalAxis: Z-Axis
         """
         return self._instance.z
 
@@ -153,12 +158,14 @@ def _core_variate_interpolator(instance: object, interpolator: str, **kwargs):
     else:
         raise TypeError("instance is not an object handling a grid.")
 
+    prefix = instance._prefix
+
     if interpolator == "bilinear":
-        return getattr(core, f"Bilinear{dimensions}D")(**kwargs)
+        return getattr(core, f"{prefix}Bilinear{dimensions}D")(**kwargs)
     if interpolator == "nearest":
-        return getattr(core, f"Nearest{dimensions}D")(**kwargs)
+        return getattr(core, f"{prefix}Nearest{dimensions}D")(**kwargs)
     if interpolator == "inverse_distance_weighting":
-        return getattr(core,
-                       f"InverseDistanceWeighting{dimensions}D")(**kwargs)
+        return getattr(
+            core, f"{prefix}InverseDistanceWeighting{dimensions}D")(**kwargs)
 
     raise ValueError(f"interpolator {interpolator!r} is not defined")
