@@ -1,11 +1,15 @@
 Changelog
 #########
 
+0.1.0 (3 January 2020)
+-------------------------
+* Support for numpy datetime64
+* Added 4D interpolation
+
 0.0.8 (7 December 2019)
 -------------------------
 * Added interpolation by RBF in RTree
 * Improvement of RTree class performance
-
 
 0.0.7 (13 November 2019)
 -------------------------
