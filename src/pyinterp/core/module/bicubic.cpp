@@ -44,8 +44,8 @@ auto index_error(const std::string& axis, const double value, const size_t n)
 }
 
 /// Loads the interpolation frame into memory
-template <typename Type>
-auto load_frame(const Grid2D<Type>& grid, const double x, const double y,
+template <typename DataType>
+auto load_frame(const Grid2D<DataType>& grid, const double x, const double y,
                 const axis::Boundary boundary, const bool bounds_error,
                 detail::math::XArray& frame) -> bool {
   const auto& x_axis = *grid.x();
@@ -86,11 +86,11 @@ auto load_frame(const Grid2D<Type>& grid, const double x, const double y,
 }
 
 /// Loads the interpolation frame into memory
-template <typename Type>
-auto load_frame(const Grid3D<Type, double>& grid, const double x,
-                const double y, const double z, const axis::Boundary boundary,
-                const bool bounds_error, detail::math::XArrayStack& frame)
-    -> bool {
+template <typename DataType, typename AxisType>
+auto load_frame(const Grid3D<DataType, AxisType>& grid, const double x,
+                const double y, const AxisType z, const axis::Boundary boundary,
+                const bool bounds_error,
+                detail::math::XArrayStack<AxisType>& frame) -> bool {
   const auto& x_axis = *grid.x();
   const auto& y_axis = *grid.y();
   const auto& z_axis = *grid.z();
@@ -143,8 +143,8 @@ auto load_frame(const Grid3D<Type, double>& grid, const double x,
 }
 
 /// Evaluate the interpolation.
-template <typename Type>
-auto bicubic(const Grid2D<Type>& grid, const py::array_t<double>& x,
+template <typename DataType>
+auto bicubic(const Grid2D<DataType>& grid, const py::array_t<double>& x,
              const py::array_t<double>& y, size_t nx, size_t ny,
              FittingModel fitting_model, const axis::Boundary boundary,
              const bool bounds_error, size_t num_threads)
@@ -201,11 +201,11 @@ auto bicubic(const Grid2D<Type>& grid, const py::array_t<double>& x,
 }
 
 /// Evaluate the interpolation.
-template <typename Type>
-auto bicubic_and_linear(const Grid3D<Type, double>& grid,
+template <typename DataType, typename AxisType>
+auto bicubic_and_linear(const Grid3D<DataType, AxisType>& grid,
                         const py::array_t<double>& x,
                         const py::array_t<double>& y,
-                        const py::array_t<double>& z, size_t nx, size_t ny,
+                        const py::array_t<AxisType>& z, size_t nx, size_t ny,
                         FittingModel fitting_model,
                         const axis::Boundary boundary, const bool bounds_error,
                         size_t num_threads) -> py::array_t<double> {
@@ -232,7 +232,7 @@ auto bicubic_and_linear(const Grid3D<Type, double>& grid,
     detail::dispatch(
         [&](const size_t start, const size_t end) {
           try {
-            auto frame = detail::math::XArrayStack(nx, ny, 1);
+            auto frame = detail::math::XArrayStack<AxisType>(nx, ny, 1);
             auto interpolator = detail::math::Bicubic(
                 detail::math::XArray(nx, ny), interp_type(fitting_model));
 
@@ -241,12 +241,14 @@ auto bicubic_and_linear(const Grid3D<Type, double>& grid,
               auto yi = _y(ix);
               auto zi = _z(ix);
 
-              if (load_frame(grid, xi, yi, zi, boundary, bounds_error, frame)) {
+              if (load_frame<DataType, AxisType>(grid, xi, yi, zi, boundary,
+                                                 bounds_error, frame)) {
                 xi = is_angle ? frame.normalize_angle(xi) : xi;
                 auto z0 = interpolator.interpolate(xi, yi, frame.xarray(0));
                 auto z1 = interpolator.interpolate(xi, yi, frame.xarray(1));
                 _result(ix) = z0;
-                detail::math::linear(zi, frame.z(0), frame.z(1), z0, z1);
+                detail::math::linear<AxisType, double>(zi, frame.z(0),
+                                                       frame.z(1), z0, z1);
               } else {
                 _result(ix) = std::numeric_limits<double>::quiet_NaN();
               }
@@ -266,12 +268,12 @@ auto bicubic_and_linear(const Grid3D<Type, double>& grid,
 
 }  // namespace pyinterp
 
-template <typename Type>
+template <typename DataType>
 void implement_bicubic(py::module& m, const std::string& suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = std::tolower(function_suffix[0]);
 
-  m.def(("bicubic_" + function_suffix).c_str(), &pyinterp::bicubic<Type>,
+  m.def(("bicubic_" + function_suffix).c_str(), &pyinterp::bicubic<DataType>,
         py::arg("grid"), py::arg("x"), py::arg("y"), py::arg("nx") = 3,
         py::arg("ny") = 3,
         py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
@@ -298,7 +300,7 @@ Args:
         :py:data:`pyinterp.core.FittingModel.CSpline`
     boundary (pyinterp.core.AxisBoundary, optional): Type of axis boundary
         management. Defaults to
-        :py:data:`pyinterp.core.AxisBoundary.kUndef`
+        :py:data:`pyinterp.core.AxisBoundary.Undef`
     bounds_error (bool, optional): If True, when interpolated values are
         requested outside of the domain of the input axes (x,y), a ValueError
         is raised. If False, then value is set to NaN.
@@ -309,23 +311,31 @@ Args:
 Return:
     numpy.ndarray: Values interpolated
   )__doc__")
-            .c_str())
-      .def(("bicubic_" + function_suffix).c_str(),
-           &pyinterp::bicubic_and_linear<Type>, py::arg("grid"), py::arg("x"),
-           py::arg("y"), py::arg("z"), py::arg("nx") = 3, py::arg("ny") = 3,
-           py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
-           py::arg("boundary") = pyinterp::axis::kUndef,
-           py::arg("bounds_error") = false, py::arg("num_threads") = 0,
-           (R"__doc__(
+            .c_str());
+}
+
+template <typename DataType, typename AxisType>
+void implement_bicubic(py::module& m, const std::string& prefix,
+                       const std::string& suffix) {
+  auto function_suffix = suffix;
+  function_suffix[0] = std::tolower(function_suffix[0]);
+  m.def(("bicubic_" + function_suffix).c_str(),
+        &pyinterp::bicubic_and_linear<DataType, AxisType>, py::arg("grid"),
+        py::arg("x"), py::arg("y"), py::arg("z"), py::arg("nx") = 3,
+        py::arg("ny") = 3,
+        py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
+        py::arg("boundary") = pyinterp::axis::kUndef,
+        py::arg("bounds_error") = false, py::arg("num_threads") = 0,
+        (R"__doc__(
 Extension of cubic interpolation for interpolating data points on a
 three-dimensional regular grid. A bicubic interpolation is performed along the
 X and Y axes of the 3D grid, and linearly along the Z axis between the two
 values obtained by the spatial bicubic interpolation.
 
 Args:
-    grid (pyinterp.core.Grid2D)__doc__" +
-            suffix +
-            R"__doc__(): Grid containing the values to be interpolated.
+    grid (pyinterp.core.)__doc__" +
+         prefix + "Grid3D" + suffix +
+         R"__doc__(): Grid containing the values to be interpolated.
     x (numpy.ndarray): X-values
     y (numpy.ndarray): Y-values
     z (numpy.ndarray): Z-values
@@ -338,7 +348,7 @@ Args:
         :py:data:`pyinterp.core.FittingModel.CSpline`
     boundary (pyinterp.core.AxisBoundary, optional): Type of axis boundary
         management. Defaults to
-        :py:data:`pyinterp.core.AxisBoundary.kUndef`
+        :py:data:`pyinterp.core.AxisBoundary.Undef`
     bounds_error (bool, optional): If True, when interpolated values are
         requested outside of the domain of the input axes (x,y), a ValueError
         is raised. If False, then value is set to NaN.
@@ -349,7 +359,7 @@ Args:
 Return:
     numpy.ndarray: Values interpolated
   )__doc__")
-               .c_str());
+            .c_str());
 }
 
 void init_bicubic(py::module& m) {
@@ -375,4 +385,8 @@ Bicubic fitting model
 
   implement_bicubic<double>(m, "Float64");
   implement_bicubic<float>(m, "Float32");
+  implement_bicubic<double, double>(m, "", "Float64");
+  implement_bicubic<double, int64_t>(m, "Temporal", "Float64");
+  implement_bicubic<float, double>(m, "", "Float32");
+  implement_bicubic<float, int64_t>(m, "Temporal", "Float32");
 }

@@ -45,7 +45,7 @@ TEST(math_bicubic, xarray) {
 }
 
 TEST(math_bicubic, xarray_stack) {
-  auto xr = math::XArrayStack(3, 4, 1);
+  auto xr = math::XArrayStack<int64_t>(3, 4, 1);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
   ASSERT_EQ(xr.nz(), 1);

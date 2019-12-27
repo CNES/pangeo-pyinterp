@@ -190,8 +190,10 @@ class XArray : public CoordsXY {
   std::shared_ptr<Eigen::MatrixXd> q_{};
 };
 
-
 /// Set of coordinates/values used for 3D-interpolation
+///
+/// @tparam Z-Axis type
+template <typename T>
 class XArrayStack : public CoordsXY {
  public:
   /// Default constructor
@@ -244,20 +246,21 @@ class XArrayStack : public CoordsXY {
   }
 
   /// Get z-coordinates
-  inline auto z() noexcept -> Eigen::VectorXd & { return z_; }
+  inline auto z() noexcept -> Eigen::Matrix<T, Eigen::Dynamic, 1> & {
+    return z_;
+  }
 
   /// Get z-coordinates
-  [[nodiscard]] inline auto z() const noexcept -> const Eigen::VectorXd & {
+  [[nodiscard]] inline auto z() const noexcept
+      -> const Eigen::Matrix<T, Eigen::Dynamic, 1> & {
     return z_;
   }
 
   /// Get the ith z-axis.
-  [[nodiscard]] inline auto z(const size_t ix) const -> double {
-    return z_(ix);
-  }
+  [[nodiscard]] inline auto z(const size_t ix) const -> T { return z_(ix); }
 
   /// Set the ith z-axis.
-  inline auto z(const size_t ix) -> double & { return z_(ix); }
+  inline auto z(const size_t ix) -> T & { return z_(ix); }
 
   /// Get the value at coordinate (ix, jx, kx).
   inline auto q(const size_t ix, const size_t jx, const size_t kx) -> double & {
@@ -276,8 +279,8 @@ class XArrayStack : public CoordsXY {
   }
 
  private:
-  Eigen::VectorXd z_;
-  Eigen::Matrix<std::shared_ptr<Eigen::MatrixXd>, -1, 1> q_;
+  Eigen::Matrix<T, Eigen::Dynamic, 1> z_;
+  Eigen::Matrix<std::shared_ptr<Eigen::MatrixXd>, Eigen::Dynamic, 1> q_;
 };
 
 /// Extension of cubic interpolation for interpolating data points on a
