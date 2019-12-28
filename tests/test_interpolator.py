@@ -200,14 +200,14 @@ class Quadrivariate(unittest.TestCase):
 
         self.assertIsInstance(grid.x, pyinterp.Axis)
         self.assertIsInstance(grid.y, pyinterp.Axis)
-        self.assertIsInstance(grid.z, pyinterp.Axis)
+        self.assertIsInstance(grid.z, pyinterp.TemporalAxis)
         self.assertIsInstance(grid.u, pyinterp.Axis)
         self.assertIsInstance(grid.array, np.ndarray)
 
         lon = np.arange(-125, -70, 0.25)
         lat = np.arange(-25, 50, 0.25)
         level = 0.5
-        time = 0.5
+        time = np.datetime64('2000-01-01T12:00')
         x, y, z, t = np.meshgrid(lon, lat, level, time, indexing="ij")
 
         pressure = grid.quadrivariate(
