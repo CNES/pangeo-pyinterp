@@ -82,7 +82,7 @@ class Grid2D {
   /// @param value The value outside the axis domain.
   /// @param axis_label The name of the axis
   template <typename AxisType>
-  static void index_error(const Axis<AxisType>& axis, const double value,
+  static void index_error(const Axis<AxisType>& axis, const AxisType value,
                           const std::string& axis_label) {
     throw std::invalid_argument(std::to_string(value) +
                                 " is out ouf bounds for axis " + axis_label +
