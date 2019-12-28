@@ -205,11 +205,9 @@ class Grid2D(grid.Grid2D):
             coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
-                method :py:meth:`pyinterp.bivariate
-                <pyinterp.interpolator.bivariate.bivariate>`
+                method :py:meth:`pyinterp.bivariate <pyinterp.bivariate>`
             **kwargs: List of keywords arguments provided to the interpolation
-                method :py:meth:`pyinterp.bivariate
-                <pyinterp.interpolator.bivariate.bivariate>`
+                method :py:meth:`pyinterp.bivariate <pyinterp.bivariate>`
 
         Return:
             np.ndarray: the interpolated values
@@ -224,11 +222,9 @@ class Grid2D(grid.Grid2D):
             coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic
-                <pyinterp.interpolator.bicubic.bicubic>`
+                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
             **kwargs: List of keyword arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic
-                <pyinterp.interpolator.bicubic.bicubic>`
+                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
 
         Return:
             np.ndarray: the interpolated values
@@ -300,10 +296,10 @@ class Grid3D(grid.Grid3D):
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
                 method :py:meth:`pyinterp.trivariate
-                <pyinterp.interpolator.trivariate.trivariate>`
+                <pyinterp.trivariate>`
             **kwargs: List of keywords arguments provided to the interpolation
                 method :py:meth:`pyinterp.trivariate
-                <pyinterp.interpolator.trivariate.trivariate>`
+                <pyinterp.trivariate>`
 
         Return:
             np.ndarray: the interpolated values
@@ -319,11 +315,9 @@ class Grid3D(grid.Grid3D):
             coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic
-                <pyinterp.interpolator.bicubic.bicubic>`
+                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
             **kwargs: List of keyword arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic
-                <pyinterp.interpolator.bicubic.bicubic>`
+                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
 
         Return:
             np.ndarray: the interpolated values
@@ -407,10 +401,10 @@ class Grid4D(grid.Grid4D):
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
                 method :py:meth:`pyinterp.quadrivariate
-                <pyinterp.interpolator.quadrivariate.quadrivariate>`
+                <pyinterp.quadrivariate>`
             **kwargs: List of keywords arguments provided to the interpolation
                 method :py:meth:`pyinterp.quadrivariate
-                <pyinterp.interpolator.quadrivariate.quadrivariate>`
+                <pyinterp.quadrivariate>`
 
         Return:
             np.ndarray: the interpolated values

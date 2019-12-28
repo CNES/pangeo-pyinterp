@@ -9,7 +9,6 @@ from ..core import geodetic
 class System(geodetic.System):
     """World Geodetic System (WGS).
     """
-
     def __init__(self, parameters: Optional[Tuple[float, float]] = None):
         """Constructor
 
@@ -22,15 +21,26 @@ class System(geodetic.System):
         .. note::
             If no arguments are provided, the constructor initializes a WGS-84
             ellipsoid.
+
+        Examples:
+            >>> import pyinterp
+            >>> wgs84 = pyinterp.geodetic.System()
+            >>> wgs84
+            System(6378137.0, 0.0033528106647474805)
+            >>> grs80 = pyinterp.geodetic.System((6378137, 1 / 298.257222101))
+            >>> grs80
+            System(6378137.0, 0.003352810681182319)
         """
         super(System, self).__init__() if parameters is None else super(
             System, self).__init__(*parameters)
+
+    def __repr__(self):
+        return f"System({self.semi_major_axis}, {self.flattening})"
 
 
 class Coordinates(geodetic.Coordinates):
     """World Geodetic Coordinates System
     """
-
     def __init__(self, system: Optional[System] = None):
         """Constructor
 
@@ -45,7 +55,6 @@ class Coordinates(geodetic.Coordinates):
 class Point2D(geodetic.Point2D):
     """Handle a point in a equatorial spherical coordinates system in degrees.
     """
-
     def __init__(self, lon: Optional[float] = 0, lat: Optional[float] = 0):
         """Initialize a new 2D point
 
@@ -60,7 +69,6 @@ class Box2D(geodetic.Box2D):
     """Defines a box made of two describing points in a spherical coordinates
     system in degrees.
     """
-
     def __init__(self,
                  min_corner: Optional[Point2D] = None,
                  max_corner: Optional[Point2D] = None):

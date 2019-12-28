@@ -199,31 +199,40 @@ interpolation in the third dimension. Its interface is similar to the
 :py:func:`bivariate <pyinterp.interpolator.bivariate>` class except for a third
 axis which is handled by this object.
 
+.. note::
+
+    When using a time axis, care must be taken to use the same unit of dates,
+    between the axis defined and the dates supplied during interpolation. The
+    function :py:meth:`pyinterp.TemporalAxis.safe_cast` automates this task and
+    will warn you if there is an inconsistency during the date conversion.
+
 .. code:: python
 
     ds = netCDF4.Dataset("tests/dataset/tcw.nc")
     x_axis = pyinterp.Axis(ds.variables["longitude"][:], is_circle=True)
     y_axis = pyinterp.Axis(ds.variables["latitude"][:])
     z_axis = pyinterp.TemporalAxis(
-        np.array(
-            netCDF4.num2date(ds.variables["time"][:],
-                            ds.variables["time"].units),
-            dtype="datetime64"))
+        np.array(netCDF4.num2date(ds.variables["time"][:],
+                                ds.variables["time"].units),
+                dtype="datetime64"))
     # The shape of the bivariate values must be
     # (len(x_axis), len(y_axis), len(z_axis))
-    tcw = ds.variables['tcw'][:].T
+    tcw = ds.variables["tcw"][:].T
     # The undefined values must be set to nan.
     tcw[tcw.mask] = float("nan")
-    grid = pyinterp.Grid3D(
-        x_axis, y_axis, z_axis, tcw.data)
+    grid = pyinterp.Grid3D(x_axis, y_axis, z_axis, tcw.data)
     # The coordinates used for interpolation are shifted to avoid using the
     # points of the bivariate function.
-    mx, my, mz = np.meshgrid(np.arange(-180, 180, 1) + 1 / 3.0,
-                            np.arange(-89, 89, 1) + 1 / 3.0,
-                            np.datetime64("2002-07-05T18:00:00"),
-                            indexing='ij')
-    tcw = pyinterp.trivariate(
-        grid, mx.flatten(), my.flatten(), mz.flatten()).reshape(mx.shape)
+    mx, my, mz = np.meshgrid(
+        np.arange(-180, 180, 1) + 1 / 3.0,
+        np.arange(-89, 89, 1) + 1 / 3.0,
+        z_axis.safe_cast(np.datetime64("2002-07-05T18:00:00")),
+        indexing="ij")
+    tcw = pyinterp.trivariate(grid,
+                              mx.flatten(),
+                              my.flatten(),
+                              mz.flatten(),
+                              bounds_error=True).reshape(mx.shape)
 
 It is also possible to simplify the interpolation of the dataset by using
 xarray:
@@ -235,14 +244,6 @@ xarray:
     ds = xr.load_dataset("tests/dataset/tcw.nc")
     interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars["tcw"])
 
-    # Note: if the grid loaded in memory uses a time axis, then dates must be
-    # manipulated in the same unit as the one manipulated by the class. The
-    # "time_unit" method is used to obtain this information.
-    mx, my, mz = np.meshgrid(np.arange(-180, 180, 1) + 1 / 3.0,
-                             np.arange(-89, 89, 1) + 1 / 3.0,
-                             np.array([datetime.datetime(2002, 7, 2, 15, 0)],
-                                      dtype="datetime64"),
-                             indexing='ij')
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
@@ -267,7 +268,84 @@ requesting axes sorted in ascending order (GSL requirements).
         ds.data_vars["tcw"], increasing_axes=True)
 
     tcw = interpolator.bicubic(
-        dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
+        dict(longitude=mx.flatten(),
+             latitude=my.flatten(),
+             time=mz.flatten())).reshape(mx.shape)
+
+4D interpolation
+================
+
+Quadrivariate
+#############
+
+The :py:func:`quadrivariate <pyinterp.interpolator.qudrivariate>` interpolation
+allows to obtain values at arbitrary points in a 4D space of a function defined
+on a grid.
+
+The distribution contains a 4D field ``pres_temp_4D.nc`` that will be used in
+this help. This file is located in the ``tests/dataset`` directory at the root
+of the project.
+
+This method performs a bilinear interpolation in 2D space by considering the
+axes of longitude and latitude of the grid, then performs a linear interpolation
+in the third and fourth dimension. Its interface is similar to the
+:py:func:`trivariate <pyinterp.interpolator.trivariate>` class except for a
+fourth axis which is handled by this object.
+
+.. note::
+
+    When using a time axis, care must be taken to use the same unit of dates,
+    between the axis defined and the dates supplied during interpolation. The
+    function :py:meth:`pyinterp.TemporalAxis.safe_cast` automates this task and
+    will warn you if there is an inconsistency during the date conversion.
+
+.. code:: python
+
+    ds = netCDF4.Dataset("tests/dataset/pres_temp_4D.nc")
+    x_axis = pyinterp.Axis(ds.variables["longitude"][:], is_circle=True)
+    y_axis = pyinterp.Axis(ds.variables["latitude"][:])
+    z_axis = pyinterp.TemporalAxis(
+        np.array(netCDF4.num2date(ds.variables["time"][:],
+                                ds.variables["time"].units),
+                dtype="datetime64"))
+    print(z_axis)
+    u_axis = pyinterp.Axis(ds.variables["level"][:])
+    # The shape of the bivariate values must be
+    # (len(x_axis), len(y_axis), len(z_axis), len(u_axis))
+    pressure = ds.variables["pressure"][:]
+    pressure = pressure.transpose(3, 2, 0, 1)
+    # The undefined values must be set to nan.
+    pressure[pressure.mask] = float("nan")
+    grid = pyinterp.Grid4D(x_axis, y_axis, z_axis, u_axis, pressure.data)
+    # The coordinates used for interpolation are shifted to avoid using the
+    # points of the bivariate function.
+    mx, my, mz, mu = np.meshgrid(
+        np.arange(-180, 180, 1) + 1 / 3.0,
+        np.arange(-89, 89, 1) + 1 / 3.0,
+        z_axis.safe_cast(np.datetime64("2000-01-01T12:00")),
+        0.5,
+        indexing="ij")
+    pressure = pyinterp.quadrivariate(grid,
+                                      mx.flatten(),
+                                      my.flatten(),
+                                      mz.flatten(),
+                                      mu.flatten()).reshape(mx.shape)
+
+It is also possible to simplify the interpolation of the dataset by using
+xarray:
+
+.. code:: python
+
+    import datetime
+
+    ds = xr.load_dataset("tests/dataset/pres_temp_4D.nc")
+    interpolator = pyinterp.backends.xarray.Grid4D(ds.data_vars["pressure"])
+
+    pressure = interpolator.quadrivariate(
+        dict(longitude=mx.flatten(),
+             latitude=my.flatten(),
+             time=mz.flatten(),
+             level=mu.flatten())).reshape(mx.shape)
 
 
 Unstructured grid

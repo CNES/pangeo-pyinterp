@@ -25,7 +25,7 @@ Create a coordinate axis from values.
 Args:
     values (numpy.ndarray): Axis values.
     epsilon (float, optional): Maximum allowed difference between two real
-        numbers in order to consider them equal.
+        numbers in order to consider them equal. Defaults to ``1e-6``.
     is_circle (bool, optional): True, if the axis can represent a
         circle. Defaults to ``false``.
 )__doc__")
