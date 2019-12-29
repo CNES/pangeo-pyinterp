@@ -176,4 +176,7 @@ class TemporalAxis(core.TemporalAxis):
         return (self.dtype, super().__getstate__())
 
     def __getitem__(self, *args):
-        return super().__getitem__(*args).astype(self.dtype)
+        result = super().__getitem__(*args)
+        if isinstance(result, int):
+            return np.datetime64(result, dtype=self.dtype)
+        return result.astype(self.dtype)

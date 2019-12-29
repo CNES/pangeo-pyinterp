@@ -6,7 +6,6 @@
 Quadrivariate interpolation
 ===========================
 """
-from typing import Optional
 import numpy as np
 from .. import core
 from .. import grid
@@ -18,9 +17,9 @@ def quadrivariate(grid4d: grid.Grid4D,
                   y: np.ndarray,
                   z: np.ndarray,
                   u: np.ndarray,
-                  interpolator: Optional[str] = "bilinear",
-                  bounds_error: Optional[bool] = False,
-                  num_threads: Optional[int] = 0,
+                  interpolator: str = "bilinear",
+                  bounds_error: bool = False,
+                  num_threads: int = 0,
                   **kwargs) -> np.ndarray:
     """Interpolate the values provided on the defined quadrivariate function.
 

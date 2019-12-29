@@ -6,7 +6,6 @@
 Trivariate interpolation
 ========================
 """
-from typing import Optional
 import numpy as np
 from .. import core
 from .. import grid
@@ -17,9 +16,9 @@ def trivariate(grid3d: grid.Grid3D,
                x: np.ndarray,
                y: np.ndarray,
                z: np.ndarray,
-               interpolator: Optional[str] = "bilinear",
-               bounds_error: Optional[bool] = False,
-               num_threads: Optional[int] = 0,
+               interpolator: str = "bilinear",
+               bounds_error: bool = False,
+               num_threads: int = 0,
                **kwargs) -> np.ndarray:
     """Interpolate the values provided on the defined trivariate function.
 

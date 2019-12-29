@@ -19,10 +19,10 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D],
             z: Optional[np.ndarray] = None,
             nx: Optional[int] = 3,
             ny: Optional[int] = 3,
-            fitting_model: Optional[str] = "c_spline",
-            boundary: Optional[str] = "undef",
-            bounds_error: Optional[bool] = False,
-            num_threads: Optional[int] = 0) -> np.ndarray:
+            fitting_model: str = "c_spline",
+            boundary: str = "undef",
+            bounds_error: bool = False,
+            num_threads: int = 0) -> np.ndarray:
     """Extension of cubic interpolation for interpolating data points on a
     two-dimensional regular grid. The interpolated surface is smoother than
     corresponding surfaces obtained by bilinear interpolation or

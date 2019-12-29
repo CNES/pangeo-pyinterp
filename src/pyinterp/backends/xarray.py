@@ -114,7 +114,7 @@ def _dims_from_data_array(data_array: xr.DataArray,
 
 
 def _coords(coords: dict,
-            dims: Iterable,
+            dims: Tuple,
             datetime64: Optional[Tuple[str, axis.TemporalAxis]] = None
             ) -> Tuple:
     """
@@ -124,7 +124,7 @@ def _coords(coords: dict,
     Args:
         coords (dict): Mapping from dimension names to the
             new coordinates. New coordinate can be an scalar, array-like.
-        dims (iterable): List of dimensions handled by the grid
+        dims (tuple): List of dimensions handled by the grid
         datetime64 (tuple, optional): Properties of the axis used
 
     Return:
@@ -156,8 +156,8 @@ class Grid2D(grid.Grid2D):
     """
     def __init__(self,
                  data_array: xr.DataArray,
-                 increasing_axes: Optional[bool] = False,
-                 geodetic: Optional[bool] = True):
+                 increasing_axes: bool = False,
+                 geodetic: bool = True):
         """
         Initialize a new 2D Cartesian Grid.
 
@@ -172,14 +172,14 @@ class Grid2D(grid.Grid2D):
                 to the value of the attribute ``units`` using the following
                 algorithm:
 
-                    * if the axis unit is one of the values of the set
-                    ``degrees_east``, ``degree_east``, "degree_E``,
-                    ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                    the axis represents a longitude,
-                    * if the axis unit is one of the values of the set
-                    ``degrees_north``, ``degree_north``, ``degree_N``,
-                    ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                    represents a latitude.
+                * if the axis unit is one of the values of the set
+                  ``degrees_east``, ``degree_east``, "degree_E``,
+                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                  the axis represents a longitude,
+                * if the axis unit is one of the values of the set
+                  ``degrees_north``, ``degree_north``, ``degree_N``,
+                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                  represents a latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.
@@ -238,8 +238,8 @@ class Grid3D(grid.Grid3D):
     """
     def __init__(self,
                  data_array: xr.DataArray,
-                 increasing_axes: Optional[bool] = False,
-                 geodetic: Optional[bool] = True):
+                 increasing_axes: bool = False,
+                 geodetic: bool = True):
         """
 
         Args:
@@ -253,14 +253,14 @@ class Grid3D(grid.Grid3D):
                 to the value of the attribute ``units`` using the following
                 algorithm:
 
-                    * if the axis unit is one of the values of the set
-                    ``degrees_east``, ``degree_east``, "degree_E``,
-                    ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                    the axis represents a longitude,
-                    * if the axis unit is one of the values of the set
-                    ``degrees_north``, ``degree_north``, ``degree_N``,
-                    ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                    represents a latitude.
+                * if the axis unit is one of the values of the set
+                  ``degrees_east``, ``degree_east``, "degree_E``,
+                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                  the axis represents a longitude,
+                * if the axis unit is one of the values of the set
+                  ``degrees_north``, ``degree_north``, ``degree_N``,
+                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                  represents a latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.
@@ -332,8 +332,8 @@ class Grid4D(grid.Grid4D):
     """
     def __init__(self,
                  data_array: xr.DataArray,
-                 increasing_axes: Optional[bool] = False,
-                 geodetic: Optional[bool] = True):
+                 increasing_axes: bool = False,
+                 geodetic: bool = True):
         """
 
         Args:
@@ -347,14 +347,14 @@ class Grid4D(grid.Grid4D):
                 to the value of the attribute ``units`` using the following
                 algorithm:
 
-                    * if the axis unit is one of the values of the set
-                    ``degrees_east``, ``degree_east``, "degree_E``,
-                    ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                    the axis represents a longitude,
-                    * if the axis unit is one of the values of the set
-                    ``degrees_north``, ``degree_north``, ``degree_N``,
-                    ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                    represents a latitude.
+                * if the axis unit is one of the values of the set
+                  ``degrees_east``, ``degree_east``, "degree_E``,
+                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                  the axis represents a longitude,
+                * if the axis unit is one of the values of the set
+                  ``degrees_north``, ``degree_north``, ``degree_N``,
+                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                  represents a latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.

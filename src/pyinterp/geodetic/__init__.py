@@ -55,7 +55,7 @@ class Coordinates(geodetic.Coordinates):
 class Point2D(geodetic.Point2D):
     """Handle a point in a equatorial spherical coordinates system in degrees.
     """
-    def __init__(self, lon: Optional[float] = 0, lat: Optional[float] = 0):
+    def __init__(self, lon: float = 0, lat: float = 0):
         """Initialize a new 2D point
 
         Args:

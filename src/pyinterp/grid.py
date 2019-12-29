@@ -68,6 +68,7 @@ class Grid2D:
                 raise ValueError("increasing_axes "
                                  f"{increasing_axes!r} is not defined")
             inplace = increasing_axes == 'inplace'
+            # Tuple does not support item assignment
             args = list(args)
             for idx, item in enumerate(args):
                 if isinstance(item,

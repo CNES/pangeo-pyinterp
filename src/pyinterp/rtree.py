@@ -18,8 +18,8 @@ class RTree:
     """
     def __init__(self,
                  system: Optional[geodetic.System] = None,
-                 dtype: Optional[np.dtype] = np.dtype("float64"),
-                 ndims: Optional[int] = 3):
+                 dtype: Optional[np.dtype] = None,
+                 ndims: int = 3):
         """
         Initialize a new R*Tree
 
@@ -34,6 +34,7 @@ class RTree:
                 dimension must be at least equal to 3 to store the ECEF
                 coordinates of the points. Default to ``3``.
         """
+        dtype = dtype or np.dtype("float64")
         if ndims < 3:
             raise ValueError("ndims must be >= 3")
         if dtype == np.dtype("float64"):

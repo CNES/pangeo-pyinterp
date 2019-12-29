@@ -121,7 +121,7 @@ class Binning2D:
             np.asarray(y).flatten(),
             np.asarray(z).flatten(), simple)
 
-    def variable(self, statistics: Optional[str] = 'mean') -> np.ndarray:
+    def variable(self, statistics: str = 'mean') -> np.ndarray:
         """Gets the regular grid containing the calculated statistics.
 
         Args:
