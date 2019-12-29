@@ -18,5 +18,4 @@ TEST(math_linear, linear) {
 
   y = math::linear<int64_t, double>(14, 13, 15, 162.0, 95.0);
   EXPECT_DOUBLE_EQ(y, 128.5);
-
 }

@@ -463,8 +463,7 @@ class Axis {
 
   /// Put longitude into the range [0, circle_] degrees.
   void normalize_longitude(
-      Eigen::Ref<Eigen::Matrix<T, Eigen::Dynamic, 1>>& points)  // NOLINT
-  {
+      Eigen::Ref<Eigen::Matrix<T, Eigen::Dynamic, 1>>& points)  {
     auto monotonic = true;
     auto ascending = points.size() < 2 ? true : points[0] < points[1];
 

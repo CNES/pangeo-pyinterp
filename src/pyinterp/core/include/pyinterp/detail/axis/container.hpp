@@ -147,7 +147,7 @@ class Undefined : public Abstract<T> {
   auto operator=(Undefined&& rhs) -> Undefined& = default;
 
   /// @copydoc Abstract::flip()
-  auto flip() -> void override{}
+  auto flip() -> void override {}
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
   [[nodiscard]] inline auto coordinate_value(const size_t /* index */) const

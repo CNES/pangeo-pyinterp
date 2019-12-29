@@ -13,7 +13,7 @@ namespace pyinterp::detail::math {
 /// @param x1 x1 coordinate
 /// @param y0 Point value for the coordinate (x0)
 /// @param y1 Point value for the coordinate (x1)
-template <typename T, typename U=T>
+template <typename T, typename U = T>
 inline constexpr auto linear(const T& x, const T& x0, const T& x1, const U& y0,
                              const U& y1) -> U {
   auto dx = static_cast<U>(x1 - x0);
