@@ -44,8 +44,6 @@ Bivariate interpolators
   core.BivariateInterpolator2D
   core.InverseDistanceWeighting2D
   core.Nearest2D
-  core.bivariate_float32
-  core.bivariate_float64
 
 Bivariate interpolations
 ------------------------

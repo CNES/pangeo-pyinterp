@@ -2,6 +2,7 @@ import unittest
 import os
 import netCDF4
 import numpy as np
+import pyinterp
 import pyinterp.fill
 
 

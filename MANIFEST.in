@@ -3,6 +3,7 @@ recursive-include docs *
 recursive-include src *
 recursive-include tests *
 recursive-include third_party *
+recursive-include src *.pyi
 include CMakeLists.txt
 include CODE_OF_CONDUCT.md
 include LICENSE

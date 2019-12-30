@@ -104,7 +104,7 @@ Args:
       .def(
           "query",
           [](const pyinterp::RTree<CoordinateType, Type, N>& self,
-             const py::array_t<double>& coordinates, const uint32_t k,
+             const py::array_t<CoordinateType>& coordinates, const uint32_t k,
              const bool within, const size_t num_threads) -> py::tuple {
             return self.query(coordinates, k, within, num_threads);
           },
