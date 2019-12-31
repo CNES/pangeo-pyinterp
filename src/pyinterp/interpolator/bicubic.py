@@ -13,10 +13,11 @@ from .. import grid
 from .. import interface
 
 
-def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D],
+def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
             x: np.ndarray,
             y: np.ndarray,
             z: Optional[np.ndarray] = None,
+            u: Optional[np.ndarray] = None,
             nx: Optional[int] = 3,
             ny: Optional[int] = 3,
             fitting_model: str = "c_spline",
@@ -24,55 +25,58 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D],
             bounds_error: bool = False,
             num_threads: int = 0) -> np.ndarray:
     """Extension of cubic interpolation for interpolating data points on a
-    two-dimensional regular grid. The interpolated surface is smoother than
-    corresponding surfaces obtained by bilinear interpolation or
-    nearest-neighbor interpolation.
+two-dimensional regular grid. The interpolated surface is smoother than
+corresponding surfaces obtained by bilinear interpolation or nearest-neighbor
+interpolation.
 
-    Args:
-        mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D): Function on a
-            uniform grid to be interpolated. If the grid is a 3D grid, the
-            cubic interpolation is performed spatially along the X and Y axes
-            of the 3D grid and a linear interpolation is performed along the Z
-            axis between the two values obtained by the bicubic interpolation.
+Args:
+    mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D, pyinterp.grid.Grid4D):
+        Function on a uniform grid to be interpolated. If the grid is a ND
+        grid, the cubic interpolation is performed spatially along the X
+        and Y axes of the ND grid and a linear interpolation is performed
+        along the other axes between the values obtained by the bicubic
+        interpolation.
 
-            .. warning::
+        .. warning::
 
-                The GSL functions for calculating spline functions require
-                that the axes defined in the grids are strictly increasing.
+            The GSL functions for calculating spline functions require
+            that the axes defined in the grids are strictly increasing.
 
-        x (numpy.ndarray): X-values
-        y (numpy.ndarray): Y-values
-        z (numpy.ndarray, optional): None for a 2D Grid otherwise Z-values
-        nx (int, optional): The number of X coordinate values required to
-            perform the interpolation. Defaults to ``3``.
-        ny (int, optional): The number of Y coordinate values required to
-            perform the interpolation. Defaults to ``3``.
-        fitting_model (str, optional): Type of interpolation to be
-            performed. Supported are ``linear``, ``polynomial``,
-            ``c_spline``, ``c_spline_periodic``, ``akima``,
-            ``akima_periodic`` and ``steffen``. Default to
-            ``c_spline``.
-        boundary (str, optional): A flag indicating how to handle
-            boundaries of the frame.
+    x (numpy.ndarray): X-values
+    y (numpy.ndarray): Y-values
+    z (numpy.ndarray, optional): None for a :py:class:`2D Grid
+        <pyinterp.grid.Grid2D>` otherwise Z-values
+    u (numpy.ndarray, optional): None for a :py:class:`2D Grid
+        <pyinterp.grid.Grid2D>`, :py:class:`3D Grid
+        <pyinterp.grid.Grid3D>` otherwise U-values
+    nx (int, optional): The number of X coordinate values required to perform
+        the interpolation. Defaults to ``3``.
+    ny (int, optional): The number of Y coordinate values required to perform
+        the interpolation. Defaults to ``3``.
+    fitting_model (str, optional): Type of interpolation to be performed.
+        Supported are ``linear``, ``polynomial``, ``c_spline``,
+        ``c_spline_periodic``, ``akima``, ``akima_periodic`` and ``steffen``.
+        Default to ``c_spline``.
+    boundary (str, optional): A flag indicating how to handle boundaries of the
+        frame.
 
-            * ``expand``: Expand the boundary as a constant.
-            * ``wrap``: circular boundary conditions.
-            * ``sym``: Symmetrical boundary conditions.
-            * ``undef``: Boundary violation is not defined.
+        * ``expand``: Expand the boundary as a constant.
+        * ``wrap``: circular boundary conditions.
+        * ``sym``: Symmetrical boundary conditions.
+        * ``undef``: Boundary violation is not defined.
 
-            Default ``undef``
-        bounds_error (bool, optional): If True, when interpolated values
-            are requested outside of the domain of the input axes (x,y), a
-            :py:class:`ValueError` is raised. If False, then value is set
-            to NaN. Default to ``False``
-
-        num_threads (int, optional): The number of threads to use for the
-            computation. If 0 all CPUs are used. If 1 is given, no parallel
-            computing code is used at all, which is useful for debugging.
-            Defaults to ``0``.
-    Return:
-        numpy.ndarray: Values interpolated
-    """
+        Default ``undef``
+    bounds_error (bool, optional): If True, when interpolated values are
+        requested outside of the domain of the input axes (x,y), a
+        :py:class:`ValueError` is raised. If False, then value is set to NaN.
+        Default to ``False``
+    num_threads (int, optional): The number of threads to use for the
+        computation. If 0 all CPUs are used. If 1 is given, no parallel
+        computing code is used at all, which is useful for debugging.
+        Defaults to ``0``.
+Return:
+    numpy.ndarray: Values interpolated
+"""
     if not mesh.x.is_ascending():
         raise ValueError('X-axis is not increasing')
     if not mesh.y.is_ascending():
@@ -100,8 +104,14 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D],
         getattr(core.FittingModel, fitting_model),
         getattr(core.AxisBoundary, boundary), bounds_error, num_threads
     ]
-    if isinstance(mesh, grid.Grid3D):
+    if isinstance(mesh, (grid.Grid3D, grid.Grid4D)):
         if z is None:
-            raise ValueError("You must specify the Z-values for a 3D grid.")
+            raise ValueError(
+                f"You must specify the Z-values for a {mesh._DIMENSIONS}D "
+                "grid.")
         args.insert(3, np.asarray(z))
+    if isinstance(mesh, grid.Grid4D):
+        if u is None:
+            raise ValueError("You must specify the U-values for a 4D grid.")
+        args.insert(4, np.asarray(u))
     return getattr(core, function)(*args)

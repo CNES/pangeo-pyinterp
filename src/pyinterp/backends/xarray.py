@@ -412,3 +412,21 @@ class Grid4D(grid.Grid4D):
         return interpolator.quadrivariate(
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
+
+    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+        """Evaluate the interpolation defined for the given coordinates
+
+        Args:
+            coords (dict): Mapping from dimension names to the
+                coordinates to interpolate. Coordinates must be array-like.
+            *args: List of arguments provided to the interpolation
+                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
+            **kwargs: List of keyword arguments provided to the interpolation
+                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
+
+        Return:
+            np.ndarray: the interpolated values
+        """
+        return interpolator.bicubic(
+            self, *_coords(coords, self._dims, self._datetime64), *args,
+            **kwargs)
