@@ -245,8 +245,8 @@ auto bicubic_and_linear(const Grid3D<DataType, AxisType>& grid,
               if (load_frame<DataType, AxisType>(grid, xi, yi, zi, boundary,
                                                  bounds_error, frame)) {
                 xi = is_angle ? frame.normalize_angle(xi) : xi;
-                auto z0 = interpolator.interpolate(xi, yi, frame.xarray(0));
-                auto z1 = interpolator.interpolate(xi, yi, frame.xarray(1));
+                auto z0 = interpolator.interpolate(xi, yi, frame.xarray_2d(0));
+                auto z1 = interpolator.interpolate(xi, yi, frame.xarray_2d(1));
                 _result(ix) = z0;
                 detail::math::linear<AxisType, double>(zi, frame.z(0),
                                                        frame.z(1), z0, z1);

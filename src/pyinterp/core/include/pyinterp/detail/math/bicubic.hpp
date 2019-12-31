@@ -214,7 +214,7 @@ class XArray3D : public CoordsXY {
   }
 
   /// Get the set of coordinates/values for the ith z-layer
-  [[nodiscard]] auto xarray(const Eigen::Index iz) const -> XArray2D {
+  [[nodiscard]] auto xarray_2d(const Eigen::Index iz) const -> XArray2D {
     return XArray2D(x(), y(), q_(iz));
   }
 
@@ -282,6 +282,132 @@ class XArray3D : public CoordsXY {
  private:
   Eigen::Matrix<T, Eigen::Dynamic, 1> z_;
   Eigen::Matrix<std::shared_ptr<Eigen::MatrixXd>, Eigen::Dynamic, 1> q_;
+};
+
+/// Set of coordinates/values used for 4D-interpolation
+///
+/// @tparam Z-Axis type
+template <typename T>
+class XArray4D : public CoordsXY {
+ public:
+  /// Default constructor
+  XArray4D() = delete;
+
+  /// Creates a new instance
+  XArray4D(const size_t x_size, const size_t y_size, const size_t z_size,
+           const size_t u_size)
+      : CoordsXY(x_size, y_size), z_(), u_(), q_() {
+    auto nz = z_size << 1U;
+    auto nu = u_size << 1U;
+    z_.resize(nz);
+    u_.resize(nu);
+    q_.resize(nz, nu);
+
+    for (auto iz = 0U; iz < nz; ++iz) {
+      for (auto iu = 0U; iu < nu; ++iu) {
+        q_(iz, iu) = std::shared_ptr<Eigen::MatrixXd>(
+            new Eigen::MatrixXd(x()->size(), y()->size()));
+      }
+    }
+  }
+
+  /// Get the set of coordinates/values for the ith z-layer
+  [[nodiscard]] auto xarray_2d(const Eigen::Index iz, const Eigen::Index iu) const
+      -> XArray2D {
+    return XArray2D(x(), y(), q_(iz, iu));
+  }
+
+  /// Default destructor
+  ~XArray4D() override = default;
+
+  /// Copy constructor
+  ///
+  /// @param rhs right value
+  XArray4D(const XArray4D &rhs) = default;
+
+  /// Move constructor
+  ///
+  /// @param rhs right value
+  XArray4D(XArray4D &&rhs) noexcept = default;
+
+  /// Copy assignment operator
+  ///
+  /// @param rhs right value
+  auto operator=(const XArray4D &rhs) -> XArray4D & = default;
+
+  /// Move assignment operator
+  ///
+  /// @param rhs right value
+  auto operator=(XArray4D &&rhs) noexcept -> XArray4D & = default;
+
+  /// Get the half size of the window in z.
+  [[nodiscard]] inline auto nz() const noexcept -> size_t {
+    return static_cast<size_t>(z_.size()) >> 1U;
+  }
+
+  /// Get the half size of the window in u.
+  [[nodiscard]] inline auto nu() const noexcept -> size_t {
+    return static_cast<size_t>(u_.size()) >> 1U;
+  }
+
+  /// Get z-coordinates
+  inline auto z() noexcept -> Eigen::Matrix<T, Eigen::Dynamic, 1> & {
+    return z_;
+  }
+
+  /// Get u-coordinates
+  inline auto u() noexcept -> Eigen::VectorXd & { return u_; }
+
+  /// Get z-coordinates
+  [[nodiscard]] inline auto z() const noexcept
+      -> const Eigen::Matrix<T, Eigen::Dynamic, 1> & {
+    return z_;
+  }
+
+  /// Get u-coordinates
+  [[nodiscard]] inline auto u() const noexcept -> const Eigen::VectorXd & {
+    return u_;
+  }
+
+  /// Get the ith z-axis.
+  [[nodiscard]] inline auto z(const size_t ix) const -> T { return z_(ix); }
+
+  /// Get the ith u-axis.
+  [[nodiscard]] inline auto u(const size_t ix) const -> double {
+    return u_(ix);
+  }
+
+  /// Set the ith z-axis.
+  inline auto z(const size_t ix) -> T & { return z_(ix); }
+
+  /// Set the ith u-axis.
+  inline auto u(const size_t ix) -> double & { return u_(ix); }
+
+  /// Get the value at coordinate (ix, jx, kx).
+  inline auto q(const size_t ix, const size_t jx, const size_t kx,
+                const size_t lx) -> double & {
+    return (*q_(kx, lx))(ix, jx);
+  }
+
+  /// Returns true if this instance does not contains at least one Not A Number
+  /// (NaN).
+  [[nodiscard]] inline auto is_valid() const -> bool {
+    for (Eigen::Index kx = 0; kx < z_.size(); ++kx) {
+      for (Eigen::Index lx = 0; lx < u_.size(); ++lx) {
+        if ((*q_(kx, lx)).hasNaN()) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+ private:
+  Eigen::Matrix<T, Eigen::Dynamic, 1> z_;
+  Eigen::VectorXd u_;
+  Eigen::Matrix<std::shared_ptr<Eigen::MatrixXd>, Eigen::Dynamic,
+                Eigen::Dynamic>
+      q_;
 };
 
 /// Extension of cubic interpolation for interpolating data points on a
