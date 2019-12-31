@@ -120,47 +120,48 @@ class CoordsXY {
 ///  * qnn = (xn, yn)
 ///
 /// @code
-/// Array({{x1, x2, ..., xn}, {y1, y2, ..., yn}},
-///        {q11, q12, ..., q21, q22, ...., qnn})
+/// Array2D({{x1, x2, ..., xn}, {y1, y2, ..., yn}},
+///         {q11, q12, ..., q21, q22, ...., qnn})
 /// @endcode
-class XArray : public CoordsXY {
+class XArray2D : public CoordsXY {
  public:
   /// Default constructor
-  XArray() = delete;
+  XArray2D() = delete;
 
   /// Creates a new Array
-  XArray(const size_t x_size, const size_t y_size)
+  XArray2D(const size_t x_size, const size_t y_size)
       : CoordsXY(x_size, y_size), q_(new Eigen::MatrixXd) {
     q_->resize(x()->size(), y()->size());
   }
 
   /// Creates a new Array from existing coordinates/values
-  XArray(std::shared_ptr<Eigen::VectorXd> x, std::shared_ptr<Eigen::VectorXd> y,
-         std::shared_ptr<Eigen::MatrixXd> q)
+  XArray2D(std::shared_ptr<Eigen::VectorXd> x,
+           std::shared_ptr<Eigen::VectorXd> y,
+           std::shared_ptr<Eigen::MatrixXd> q)
       : CoordsXY(std::move(x), std::move(y)), q_(std::move(q)) {}
 
   /// Default destructor
-  ~XArray() override = default;
+  ~XArray2D() override = default;
 
   /// Copy constructor
   ///
   /// @param rhs right value
-  XArray(const XArray &rhs) = default;
+  XArray2D(const XArray2D &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  XArray(XArray &&rhs) noexcept = default;
+  XArray2D(XArray2D &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const XArray &rhs) -> XArray & = default;
+  auto operator=(const XArray2D &rhs) -> XArray2D & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(XArray &&rhs) noexcept -> XArray & = default;
+  auto operator=(XArray2D &&rhs) noexcept -> XArray2D & = default;
 
   /// Get the values from the array for all x and y coordinates.
   inline auto q() noexcept -> std::shared_ptr<Eigen::MatrixXd> & { return q_; }
@@ -194,13 +195,13 @@ class XArray : public CoordsXY {
 ///
 /// @tparam Z-Axis type
 template <typename T>
-class XArrayStack : public CoordsXY {
+class XArray3D : public CoordsXY {
  public:
   /// Default constructor
-  XArrayStack() = delete;
+  XArray3D() = delete;
 
   /// Creates a new instance
-  XArrayStack(const size_t x_size, const size_t y_size, const size_t z_size)
+  XArray3D(const size_t x_size, const size_t y_size, const size_t z_size)
       : CoordsXY(x_size, y_size), z_(), q_() {
     auto nz = z_size << 1U;
     z_.resize(nz);
@@ -213,32 +214,32 @@ class XArrayStack : public CoordsXY {
   }
 
   /// Get the set of coordinates/values for the ith z-layer
-  [[nodiscard]] auto xarray(const Eigen::Index iz) const -> XArray {
-    return XArray(x(), y(), q_(iz));
+  [[nodiscard]] auto xarray(const Eigen::Index iz) const -> XArray2D {
+    return XArray2D(x(), y(), q_(iz));
   }
 
   /// Default destructor
-  ~XArrayStack() override = default;
+  ~XArray3D() override = default;
 
   /// Copy constructor
   ///
   /// @param rhs right value
-  XArrayStack(const XArrayStack &rhs) = default;
+  XArray3D(const XArray3D &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  XArrayStack(XArrayStack &&rhs) noexcept = default;
+  XArray3D(XArray3D &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const XArrayStack &rhs) -> XArrayStack & = default;
+  auto operator=(const XArray3D &rhs) -> XArray3D & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(XArrayStack &&rhs) noexcept -> XArrayStack & = default;
+  auto operator=(XArray3D &&rhs) noexcept -> XArray3D & = default;
 
   /// Get the half size of the window in z.
   [[nodiscard]] inline auto nz() const noexcept -> size_t {
@@ -293,23 +294,25 @@ class Bicubic {
   ///
   /// @param xr Calculation window.
   /// @param type method of calculation
-  explicit Bicubic(const XArray &xr, const gsl_interp_type *type)
+  explicit Bicubic(const XArray2D &xr, const gsl_interp_type *type)
       : column_(xr.x()->size()),
         interpolator_(std::max(xr.x()->size(), xr.y()->size()), type,
                       gsl::Accelerator()) {}
 
   /// Return the interpolated value of y for a given point x
-  auto interpolate(const double x, const double y, const XArray &xr) -> double {
+  auto interpolate(const double x, const double y, const XArray2D &xr)
+      -> double {
     return evaluate(&gsl::Interpolate1D::interpolate, x, y, xr);
   }
 
   /// Return the derivative for a given point x
-  auto derivative(const double x, const double y, const XArray &xr) -> double {
+  auto derivative(const double x, const double y, const XArray2D &xr)
+      -> double {
     return evaluate(&gsl::Interpolate1D::derivative, x, y, xr);
   }
 
   /// Return the second derivative for a given point x
-  auto second_derivative(const double x, const double y, const XArray &xr)
+  auto second_derivative(const double x, const double y, const XArray2D &xr)
       -> double {
     return evaluate(&gsl::Interpolate1D::second_derivative, x, y, xr);
   }
@@ -328,7 +331,7 @@ class Bicubic {
       const std::function<double(gsl::Interpolate1D &, const Eigen::VectorXd &,
                                  const Eigen::VectorXd &, const double)>
           &function,
-      const double x, const double y, const XArray &xr) -> double {
+      const double x, const double y, const XArray2D &xr) -> double {
     // Spline interpolation as function of Y-coordinate
     for (Eigen::Index ix = 0; ix < xr.x()->size(); ++ix) {
       column_(ix) = function(interpolator_, *(xr.y()), xr.q()->row(ix), y);

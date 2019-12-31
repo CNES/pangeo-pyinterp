@@ -8,8 +8,8 @@
 namespace math = pyinterp::detail::math;
 namespace gsl = pyinterp::detail::gsl;
 
-TEST(math_bicubic, xarray) {
-  auto xr = math::XArray(3, 4);
+TEST(math_bicubic, xarray_2d) {
+  auto xr = math::XArray2D(3, 4);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
 
@@ -44,8 +44,8 @@ TEST(math_bicubic, xarray) {
   EXPECT_EQ(xr.normalize_angle(-180), 180);
 }
 
-TEST(math_bicubic, xarray_stack) {
-  auto xr = math::XArrayStack<int64_t>(3, 4, 1);
+TEST(math_bicubic, xarray_3d) {
+  auto xr = math::XArray3D<int64_t>(3, 4, 1);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
   ASSERT_EQ(xr.nz(), 1);
@@ -101,7 +101,7 @@ TEST(math_bicubic, xarray_stack) {
 }
 
 TEST(math_bicubic, bicubic) {
-  auto xr = math::XArray(3, 3);
+  auto xr = math::XArray2D(3, 3);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 3);
 

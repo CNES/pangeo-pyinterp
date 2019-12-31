@@ -48,7 +48,7 @@ auto index_error(const std::string& axis, const T value, const size_t n)
 template <typename DataType>
 auto load_frame(const Grid2D<DataType>& grid, const double x, const double y,
                 const axis::Boundary boundary, const bool bounds_error,
-                detail::math::XArray& frame) -> bool {
+                detail::math::XArray2D& frame) -> bool {
   const auto& x_axis = *grid.x();
   const auto& y_axis = *grid.y();
   const auto y_indexes =
@@ -91,7 +91,7 @@ template <typename DataType, typename AxisType>
 auto load_frame(const Grid3D<DataType, AxisType>& grid, const double x,
                 const double y, const AxisType z, const axis::Boundary boundary,
                 const bool bounds_error,
-                detail::math::XArrayStack<AxisType>& frame) -> bool {
+                detail::math::XArray3D<AxisType>& frame) -> bool {
   const auto& x_axis = *grid.x();
   const auto& y_axis = *grid.y();
   const auto& z_axis = *grid.z();
@@ -172,7 +172,7 @@ auto bicubic(const Grid2D<DataType>& grid, const py::array_t<double>& x,
     detail::dispatch(
         [&](const size_t start, const size_t end) {
           try {
-            auto frame = detail::math::XArray(nx, ny);
+            auto frame = detail::math::XArray2D(nx, ny);
             auto interpolator =
                 detail::math::Bicubic(frame, interp_type(fitting_model));
 
@@ -233,9 +233,9 @@ auto bicubic_and_linear(const Grid3D<DataType, AxisType>& grid,
     detail::dispatch(
         [&](const size_t start, const size_t end) {
           try {
-            auto frame = detail::math::XArrayStack<AxisType>(nx, ny, 1);
+            auto frame = detail::math::XArray3D<AxisType>(nx, ny, 1);
             auto interpolator = detail::math::Bicubic(
-                detail::math::XArray(nx, ny), interp_type(fitting_model));
+                detail::math::XArray2D(nx, ny), interp_type(fitting_model));
 
             for (size_t ix = start; ix < end; ++ix) {
               auto xi = _x(ix);
