@@ -40,7 +40,9 @@ Args:
                     static_cast<void (geodetic::Point2D<T>::*)(const T&)>(
                         &geodetic::Point2D<T>::lat),
                     "Latitude coordinate in degrees")
-      .def("__repr__", &geodetic::Point2D<T>::to_string)
+      .def("__repr__", &geodetic::Point2D<T>::to_string,
+           "Called by the ``repr()`` built-in function to compute the string "
+           "representation of a point.")
       .def(py::pickle(
           [](const geodetic::Point2D<T>& self) { return self.getstate(); },
           [](const py::tuple& state) {
@@ -85,11 +87,10 @@ positions, whatever they may be.
 Return:
     pyinterp.core.geodetic.Box2D: a box that covers the entire Earth
 )__doc__")
-      .def(
-          "covered_by",
-          [](const geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
-              -> bool { return self.covered_by(point); },
-          py::arg("point"), R"__doc__(
+      .def("covered_by",
+           [](const geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
+               -> bool { return self.covered_by(point); },
+           py::arg("point"), R"__doc__(
 Test if the given point is inside or on border of this box
 
 Args:
@@ -98,15 +99,14 @@ Args:
 Return:
     bool: True if the given point is inside or on border of this Box
 )__doc__")
-      .def(
-          "covered_by",
-          [](const geodetic::Box2D<T>& self,
-             const Eigen::Ref<const Eigen::VectorXd>& lon,
-             const Eigen::Ref<const Eigen::VectorXd>& lat,
-             const size_t num_threads) -> py::array_t<int8_t> {
-            return self.covered_by(lon, lat, num_threads);
-          },
-          py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
+      .def("covered_by",
+           [](const geodetic::Box2D<T>& self,
+              const Eigen::Ref<const Eigen::VectorXd>& lon,
+              const Eigen::Ref<const Eigen::VectorXd>& lat,
+              const size_t num_threads) -> py::array_t<int8_t> {
+             return self.covered_by(lon, lat, num_threads);
+           },
+           py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
 Test if the coordinates of the points provided are located inside or at the
 edge of this box.
 
@@ -121,7 +121,9 @@ Return:
     (numpy.ndarray): a vector containing a flag equal to 1 if the coordinate
     is located in the box or at the edge otherwise 0.
 )__doc__")
-      .def("__repr__", &geodetic::Box2D<T>::to_string)
+      .def("__repr__", &geodetic::Box2D<T>::to_string,
+           "Called by the ``repr()`` built-in function to compute the string "
+           "representation of a box.")
       .def(py::pickle(
           [](const geodetic::Box2D<T>& self) { return self.getstate(); },
           [](const py::tuple& state) {
@@ -231,8 +233,10 @@ Gets the volumetric radius
 Return:
     float: :math:`R_3=\sqrt[3]{a^{2}b}`
 )__doc__")
-      .def("__eq__", &geodetic::System::operator==)
-      .def("__ne__", &geodetic::System::operator!=)
+      .def("__eq__", &geodetic::System::operator==, py::arg("other"),
+           "Overrides the default behavior of the ``==`` operator.")
+      .def("__ne__", &geodetic::System::operator!=, py::arg("other"),
+           "Overrides the default behavior of the ``!=`` operator.")
       .def(py::pickle(
           [](const geodetic::System& self) { return self.getstate(); },
           [](const py::tuple& state) {

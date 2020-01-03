@@ -15,6 +15,7 @@ from . import interface
 class Grid2D:
     """2D Cartesian Grid
     """
+    #: The number of grid dimensions handled by this object
     _DIMENSIONS = 2
 
     def __init__(self, *args, increasing_axes: Optional[str] = None):
@@ -80,6 +81,9 @@ class Grid2D:
         self._prefix = prefix
 
     def __repr__(self):
+        """Called by the ``repr()`` built-in function to compute the string
+        representation of this instance
+        """
         result = [
             "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
         ]

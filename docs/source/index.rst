@@ -24,6 +24,7 @@ Welcome to pyinterp's documentation!
    setup
    conda
    examples
+   xarray
 
 .. toctree::
    :caption: API Documentation

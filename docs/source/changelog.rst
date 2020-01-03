@@ -3,6 +3,7 @@ Changelog
 
 0.1.0 (3 January 2020)
 -------------------------
+* Simplification of interpolations with Xarray
 * Support for numpy datetime64
 * Added 4D interpolation
 

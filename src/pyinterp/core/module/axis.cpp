@@ -142,14 +142,20 @@ Return:
 )__doc__")
       .def("__eq__",
            [](const pyinterp::Axis<T>& self,
-              const pyinterp::Axis<T>& rhs) -> bool { return self == rhs; })
+              const pyinterp::Axis<T>& rhs) -> bool { return self == rhs; },
+           py::arg("other"),
+           "Overrides the default behavior of the ``==`` operator.")
       .def("__ne__",
            [](const pyinterp::Axis<T>& self,
-              const pyinterp::Axis<T>& rhs) -> bool { return self != rhs; })
+              const pyinterp::Axis<T>& rhs) -> bool { return self != rhs; },
+           py::arg("other"),
+           "Overrides the default behavior of the ``!=`` operator.")
       .def("__repr__",
            [](const pyinterp::Axis<T>& self) -> std::string {
              return static_cast<std::string>(self);
-           })
+           },
+           "Called by the ``repr()`` built-in function to compute the string "
+           "representation of an Axis.")
       .def(py::pickle(
           [](const pyinterp::Axis<T>& self) { return self.getstate(); },
           [](const py::tuple& state) {

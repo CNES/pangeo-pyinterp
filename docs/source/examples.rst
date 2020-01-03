@@ -74,10 +74,10 @@ Values can be interpolated with several methods: *bilinear*, *nearest*, and
 calculated using the `Haversine formula
 <https://en.wikipedia.org/wiki/Haversine_formula>`_.
 
-An experimental module of the library simplifies the use of the library by
-using :py:mod:`xarray <pyinterp.backends.xarray>` and CF information contained
-in dataset. This module implements all the other interpolators of the regular
-grids presented below.
+A module of the library simplifies the use of the library by using
+:py:mod:`xarray <pyinterp.backends.xarray>` and CF information contained in
+dataset. This module implements all the other interpolators of the regular grids
+presented below.
 
 .. code:: python
 

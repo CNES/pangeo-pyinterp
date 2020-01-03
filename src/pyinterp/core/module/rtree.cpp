@@ -69,11 +69,14 @@ Return:
     maximum corners of the box able to contain all values stored in the
     container or an empty tuple if there are no values in the container.
 )__doc__")
-      .def("__len__", &pyinterp::RTree<CoordinateType, Type, N>::size)
+      .def("__len__", &pyinterp::RTree<CoordinateType, Type, N>::size,
+           "Called to implement the built-in function ``len()``")
       .def("__bool__",
            [](const pyinterp::RTree<CoordinateType, Type, N>& self) {
              return !self.empty();
-           })
+           },
+           "Called to implement truth value testing and the built-in operation "
+           "``bool()``")
       .def("clear", &pyinterp::RTree<CoordinateType, Type, N>::clear,
            "Removes all values stored in the container.")
       .def("packing", &pyinterp::RTree<CoordinateType, Type, N>::packing,
@@ -101,21 +104,20 @@ Args:
         associated with the coordinates provided
 )__doc__")
                .c_str())
-      .def(
-          "query",
-          [](const pyinterp::RTree<CoordinateType, Type, N>& self,
-             const py::array_t<CoordinateType>& coordinates, const uint32_t k,
-             const bool within, const size_t num_threads) -> py::tuple {
-            return self.query(coordinates, k, within, num_threads);
-          },
-          py::arg("coordinates"), py::arg("k") = 4, py::arg("within") = false,
-          py::arg("num_threads") = 0,
-          (R"__doc__(
+      .def("query",
+           [](const pyinterp::RTree<CoordinateType, Type, N>& self,
+              const py::array_t<CoordinateType>& coordinates, const uint32_t k,
+              const bool within, const size_t num_threads) -> py::tuple {
+             return self.query(coordinates, k, within, num_threads);
+           },
+           py::arg("coordinates"), py::arg("k") = 4, py::arg("within") = false,
+           py::arg("num_threads") = 0,
+           (R"__doc__(
 Search for the nearest K nearest neighbors of a given point.
 
 Args:
     )__doc__" +
-           coordinates_help<N>() + R"__doc__(
+            coordinates_help<N>() + R"__doc__(
     k (int, optional): The number of nearest neighbors to be used for
         calculating the interpolated value. Defaults to ``4``.
     within (bool, optional): If true, the method ensures that the neighbors
@@ -131,7 +133,7 @@ Return:
     neighbors and a matrix containing the value of the different neighbors
     found for all provided positions.
 )__doc__")
-              .c_str())
+               .c_str())
       .def(
           "inverse_distance_weighting",
           &pyinterp::RTree<CoordinateType, Type, N>::inverse_distance_weighting,

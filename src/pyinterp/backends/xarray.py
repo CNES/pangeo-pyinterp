@@ -8,7 +8,7 @@ XArray
 
 Build interpolation objects from xarray.DataArray instances
 """
-from typing import Iterable, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 import numpy as np
 import xarray as xr
 from .. import axis
@@ -17,7 +17,7 @@ from .. import core
 from .. import grid
 from .. import interpolator
 
-__all__ = ['Grid2D', 'Grid3D', 'Grid4D']
+__all__ = ['Grid2D', 'Grid3D', 'Grid4D', 'RegularGridInterpolator']
 
 
 class AxisIdentifier:
@@ -173,13 +173,13 @@ class Grid2D(grid.Grid2D):
                 algorithm:
 
                 * if the axis unit is one of the values of the set
-                  ``degrees_east``, ``degree_east``, "degree_E``,
-                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  the axis represents a longitude,
+                  ``degrees_east``, ``degree_east``, ``degree_E``,
+                  degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                  e axis represents a longitude,
                 * if the axis unit is one of the values of the set
-                  ``degrees_north``, ``degree_north``, ``degree_N``,
-                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  represents a latitude.
+                  degrees_north``, ``degree_north``, ``degree_N``,
+                  degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                  presents a latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.
@@ -241,6 +241,7 @@ class Grid3D(grid.Grid3D):
                  increasing_axes: bool = False,
                  geodetic: bool = True):
         """
+        Initialize a new 3D Cartesian Grid.
 
         Args:
             data_array (xarray.DataArray): Provided data array
@@ -254,13 +255,13 @@ class Grid3D(grid.Grid3D):
                 algorithm:
 
                 * if the axis unit is one of the values of the set
-                  ``degrees_east``, ``degree_east``, "degree_E``,
-                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  the axis represents a longitude,
+                  ``degrees_east``, ``degree_east``, ``degree_E``,
+                  degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                  e axis represents a longitude,
                 * if the axis unit is one of the values of the set
-                  ``degrees_north``, ``degree_north``, ``degree_N``,
-                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  represents a latitude.
+                  degrees_north``, ``degree_north``, ``degree_N``,
+                  degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                  presents a latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.
@@ -335,6 +336,7 @@ class Grid4D(grid.Grid4D):
                  increasing_axes: bool = False,
                  geodetic: bool = True):
         """
+        Initialize a new 4D Cartesian Grid.
 
         Args:
             data_array (xarray.DataArray): Provided data array
@@ -348,13 +350,13 @@ class Grid4D(grid.Grid4D):
                 algorithm:
 
                 * if the axis unit is one of the values of the set
-                  ``degrees_east``, ``degree_east``, "degree_E``,
-                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  the axis represents a longitude,
+                  ``degrees_east``, ``degree_east``, ``degree_E``,
+                  degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                  e axis represents a longitude,
                 * if the axis unit is one of the values of the set
-                  ``degrees_north``, ``degree_north``, ``degree_N``,
-                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  represents a latitude.
+                  degrees_north``, ``degree_north``, ``degree_N``,
+                  degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                  presents a latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.
@@ -430,3 +432,126 @@ class Grid4D(grid.Grid4D):
         return interpolator.bicubic(
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
+
+
+class RegularGridInterpolator:
+    """Interpolation on a regular grid in arbitrary dimensions
+
+    The data must be defined on a regular grid; the grid spacing however may be
+    uneven.  Linear, nearest-neighbour, inverse distance weighting and spline
+    interpolation are supported.
+    """
+    def __init__(self,
+                 array: xr.DataArray,
+                 increasing_axes: bool = True,
+                 geodetic: bool = True):
+        """
+        Initialize a new RegularGridInterpolator.
+
+        Args:
+            array (xarray.DataArray): The array defining the regular grid in n
+                dimensions.
+            increasing_axes (bool, optional): If this is true, check that the
+                grid axes are increasing: the decreasing axes and the supplied
+                grid will be flipped. Default to ``False``.
+            geodetic (bool, optional): True, if the axes of the grid represent
+                longitudes and latitudes. In this case, the constructor will
+                try to determine the axes of longitudes and latitudes according
+                to the value of the attribute ``units`` using the following
+                algorithm:
+
+                * if the axis unit is one of the values of the set
+                  ``degrees_east``, ``degree_east``, ``degree_E``,
+                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
+                  the axis represents a longitude,
+                * if the axis unit is one of the values of the set
+                  ``degrees_north``, ``degree_north``, ``degree_N``,
+                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
+                  represents a latitude.
+
+                If this option is false, the axes will be considered Cartesian.
+                Default to ``True``.
+
+        Raises:
+            ValueError: if the provided data array doesn't define a
+                longitude/latitude axis if ``geodetic`` is True
+            NotImplementedError: if the number of dimensions in the array is
+                less than 2 or more than 4.
+        """
+        if len(array.shape) == 2:
+            self._grid = Grid2D(array,
+                                increasing_axes=increasing_axes,
+                                geodetic=geodetic)
+            self._interp = self._grid.bivariate
+        elif len(array.shape) == 3:
+            self._grid = Grid3D(array,
+                                increasing_axes=increasing_axes,
+                                geodetic=geodetic)
+            self._interp = self._grid.trivariate
+        elif len(array.shape) == 4:
+            self._grid = Grid4D(array,
+                                increasing_axes=increasing_axes,
+                                geodetic=geodetic)
+            self._interp = self._grid.quadrivariate
+        else:
+            raise NotImplementedError(
+                "Only the 2D, 3D or 4D grids can be interpolated.")
+
+    @property
+    def ndim(self) -> int:
+        """Gets the number of array dimensions
+
+        Returns:
+            int: Number of array dimensions
+        """
+        return self._grid.array.ndim
+
+    @property
+    def grid(self) -> Union[Grid2D, Grid3D, Grid4D]:
+        """Gets the instance handling the regular grid for interpolations.
+
+        Returns:
+            Grid2D, Grid3D, Grid4D: the regular grid
+        """
+        return self._grid
+
+    def __call__(self,
+                 coords: Dict,
+                 method: str = 'bilinear',
+                 bounds_error: bool = False,
+                 bicubic_kwargs: Optional[Dict] = None,
+                 num_threads: int = 0) -> np.ndarray:
+        """Interpolation at coordinates
+
+        Args:
+            coords (dict): Mapping from dimension names to the new coordinates.
+                New coordinate can be an scalar, array-like.
+            method (str, optional): The method of interpolation to perform.
+                Supported are ``bicubic``, ``bilinear``, ``nearest``, and
+                ``inverse_distance_weighting``. Default to ``bilinear``.
+            bounds_error (bool, optional): If True, when interpolated values
+                are requested outside of the domain of the input data, a
+                :py:class:`ValueError` is raised. If False, then `nan` is
+                used.
+            bicubic_kwargs (dict, optional): A dictionary of keyword arguments
+                to pass on to the :py:func:`bicubic <pyinterp.bicubic>`
+                function. This is useful to control the parameters of this
+                interpolator: window size in x, y and the edge control of the
+                calculation windows.
+            num_threads (int, optional): The number of threads to use for the
+                computation. If 0 all CPUs are used. If 1 is given, no parallel
+                computing code is used at all, which is useful for debugging.
+                Defaults to ``0``.
+        Returns:
+            numpy.ndarray: New array on the new coordinates.
+        """
+        if method == 'bicubic':
+            bicubic_kwargs = bicubic_kwargs or dict()
+            return self._grid.bicubic(coords,
+                                      bounds_error=bounds_error,
+                                      num_threads=num_threads,
+                                      **bicubic_kwargs)
+        return self._interp(coords,
+                            interpolator=method,
+                            bounds_error=bounds_error,
+                            num_threads=num_threads)

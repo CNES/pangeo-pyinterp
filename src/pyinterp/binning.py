@@ -59,7 +59,10 @@ class Binning2D:
         """Clears the data inside each bin."""
         self._instance.clear()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Called by the ``repr()`` built-in function to compute the string
+        representation of this instance
+        """
         result = [
             "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
         ]
