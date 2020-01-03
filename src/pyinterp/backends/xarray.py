@@ -174,12 +174,12 @@ class Grid2D(grid.Grid2D):
 
                 * if the axis unit is one of the values of the set
                   ``degrees_east``, ``degree_east``, ``degree_E``,
-                  degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  e axis represents a longitude,
+                  ``degrees_E``, ``degreeE`` or ``degreesE`` the axis
+                  represents a longitude,
                 * if the axis unit is one of the values of the set
-                  degrees_north``, ``degree_north``, ``degree_N``,
-                  degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  presents a latitude.
+                  ``degrees_north``, ``degree_north``, ``degree_N``,
+                  ``degrees_N`` or ``degreesN`` the axis represents a
+                  latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.
@@ -256,12 +256,12 @@ class Grid3D(grid.Grid3D):
 
                 * if the axis unit is one of the values of the set
                   ``degrees_east``, ``degree_east``, ``degree_E``,
-                  degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  e axis represents a longitude,
+                  ``degrees_E``, ``degreeE`` or ``degreesE`` the axis
+                  represents a longitude,
                 * if the axis unit is one of the values of the set
-                  degrees_north``, ``degree_north``, ``degree_N``,
-                  degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  presents a latitude.
+                  ``degrees_north``, ``degree_north``, ``degree_N``,
+                  ``degrees_N`` or ``degreesN`` the axis represents a
+                  latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.
@@ -351,12 +351,12 @@ class Grid4D(grid.Grid4D):
 
                 * if the axis unit is one of the values of the set
                   ``degrees_east``, ``degree_east``, ``degree_E``,
-                  degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  e axis represents a longitude,
+                  ``degrees_E``, ``degreeE`` or ``degreesE`` the axis
+                  represents a longitude,
                 * if the axis unit is one of the values of the set
-                  degrees_north``, ``degree_north``, ``degree_N``,
-                  degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  presents a latitude.
+                  ``degrees_north``, ``degree_north``, ``degree_N``,
+                  ``degrees_N`` or ``degreesN`` the axis represents a
+                  latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.
@@ -462,12 +462,12 @@ class RegularGridInterpolator:
 
                 * if the axis unit is one of the values of the set
                   ``degrees_east``, ``degree_east``, ``degree_E``,
-                  ``degrees_E``, ``degrees_E``, ``degreeE`` or ``degreesE``
-                  the axis represents a longitude,
+                  ``degrees_E``, ``degreeE`` or ``degreesE`` the axis
+                  represents a longitude,
                 * if the axis unit is one of the values of the set
                   ``degrees_north``, ``degree_north``, ``degree_N``,
-                  ``degree_N``, ``degrees_N`` or ``degreesN`` the axis
-                  represents a latitude.
+                  ``degrees_N`` or ``degreesN`` the axis represents a
+                  latitude.
 
                 If this option is false, the axes will be considered Cartesian.
                 Default to ``True``.
