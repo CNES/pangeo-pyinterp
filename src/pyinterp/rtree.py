@@ -7,7 +7,6 @@ RTree spatial index
 -------------------
 """
 from typing import Optional, Tuple
-import sys
 import numpy as np
 from . import core
 from . import geodetic
