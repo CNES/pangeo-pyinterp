@@ -6,7 +6,7 @@ dependencies:
   - netCDF4
   - cartopy
   - pandas
-  - pyinterp>=0.0.8
+  - pyinterp>=0.1.0
   - intake
   - intake-xarray
   - gcsfs
