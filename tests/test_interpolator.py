@@ -13,6 +13,28 @@ import pyinterp.backends.xarray
 import pyinterp
 
 
+class Degraded(unittest.TestCase):
+    def test_axis_identifier(self):
+        ident = pyinterp.backends.xarray.AxisIdentifier(xr.DataArray())
+        self.assertTrue(ident.longitude() is None)
+        self.assertTrue(ident.latitude() is None)
+
+    def test_dims_from_data_array(self):
+        array = xr.DataArray()
+        with self.assertRaises(ValueError):
+            pyinterp.backends.xarray._dims_from_data_array(array, True, 1)
+        array = xr.DataArray(data=np.zeros((2, 2), dtype="float64"))
+        with self.assertRaises(ValueError):
+            pyinterp.backends.xarray._dims_from_data_array(array, True, 2)
+        array = xr.DataArray(data=np.zeros((2, 2), dtype="float64"),
+                             coords=[("lon", xr.DataArray(data=np.arange(2)),
+                                      dict(units="degrees_east")),
+                                     ("lat", xr.DataArray(data=np.arange(2)))],
+                             dims=['lon', 'lat'])
+        with self.assertRaises(ValueError):
+            pyinterp.backends.xarray._dims_from_data_array(array, True, 2)
+
+
 class Grid2D(unittest.TestCase):
     GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
                         "mss.nc")
@@ -59,6 +81,20 @@ class Grid2D(unittest.TestCase):
             np.ma.fix_invalid(z).mean(),
             np.ma.fix_invalid(w).mean())
 
+        with self.assertRaises(TypeError):
+            grid.bivariate((x.flatten(), y.flatten()))
+
+        with self.assertRaises(IndexError):
+            grid.bivariate(
+                collections.OrderedDict(lon=x.flatten(),
+                                        lat=y.flatten(),
+                                        time=np.arange(3)))
+
+        with self.assertRaises(IndexError):
+            grid.bivariate(
+                collections.OrderedDict(longitude=x.flatten(),
+                                        lat=y.flatten()))
+
         with self.assertRaises(ValueError):
             grid.bivariate(collections.OrderedDict(lon=x.flatten(),
                                                    lat=y.flatten()),
@@ -78,6 +114,12 @@ class Grid2D(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             pyinterp.Grid2D(lon, lat, array, increasing_axes='_')
+
+        grid = pyinterp.backends.xarray.RegularGridInterpolator(
+            xr.load_dataset(self.GRID).mss)
+        z = grid(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),
+                 method="bilinear")
+        self.assertIsInstance(z, np.ndarray)
 
     def test_bicubic(self):
         grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(self.GRID).mss)
@@ -135,6 +177,15 @@ class Grid2D(unittest.TestCase):
         with self.assertRaises(ValueError):
             pyinterp.bicubic(grid, x.flatten(), y.flatten())
 
+        grid = pyinterp.backends.xarray.RegularGridInterpolator(
+            xr.load_dataset(self.GRID).mss)
+        self.assertEqual(grid.ndim, 2)
+        self.assertTrue(isinstance(grid.grid, pyinterp.backends.xarray.Grid2D))
+        z = grid(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),
+                 method="bicubic",
+                 bicubic_kwargs=dict(nx=3, ny=3))
+        self.assertIsInstance(z, np.ndarray)
+
 
 class Trivariate(unittest.TestCase):
     GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
@@ -182,6 +233,26 @@ class Trivariate(unittest.TestCase):
                                                     time=t.flatten()),
                             bounds_error=True)
 
+        array = xr.load_dataset(self.GRID).tcw
+        array.time.values = array.time.values.astype("float64")
+        grid = pyinterp.backends.xarray.Grid3D(array, increasing_axes=True)
+        x, y, t = np.meshgrid(lon, lat, time.astype("float64"), indexing="ij")
+        z = grid.trivariate(
+            collections.OrderedDict(longitude=x.flatten(),
+                                    latitude=y.flatten(),
+                                    time=t.flatten()))
+        self.assertIsInstance(z, np.ndarray)
+
+        grid = pyinterp.backends.xarray.RegularGridInterpolator(
+            xr.load_dataset(self.GRID).tcw, increasing_axes=True)
+        self.assertEqual(grid.ndim, 3)
+        self.assertTrue(isinstance(grid.grid, pyinterp.backends.xarray.Grid3D))
+        x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+        z = grid(
+            dict(longitude=x.flatten(), latitude=y.flatten(),
+                 time=t.flatten()))
+        self.assertIsInstance(z, np.ndarray)
+
 
 class Quadrivariate(unittest.TestCase):
     GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
@@ -226,6 +297,12 @@ class Quadrivariate(unittest.TestCase):
                 level=z.flatten(),
                 time=t.flatten()),
                                           bounds_error=True)
+
+        grid = pyinterp.backends.xarray.RegularGridInterpolator(
+            xr.load_dataset(self.GRID).pressure, increasing_axes=True)
+        self.assertEqual(grid.ndim, 4)
+        self.assertTrue(isinstance(grid.grid,
+                                   pyinterp.backends.xarray.Grid4D))
 
 
 class TestRTree(unittest.TestCase):
