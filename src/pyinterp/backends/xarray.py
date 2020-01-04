@@ -109,7 +109,7 @@ def _dims_from_data_array(data_array: xr.DataArray,
         raise ValueError("The dataset doesn't define a longitude axis")
     lat = ident.latitude()
     if lat is None:
-        raise ValueError("The dataset doesn't define a longitude axis")
+        raise ValueError("The dataset doesn't define a latitude axis")
     return lon, lat
 
 
