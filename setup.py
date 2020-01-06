@@ -494,6 +494,17 @@ def long_description():
         return stream.read()
 
 
+def typehints():
+    """Get the list of type information files"""
+    pyi = []
+    for root, _, files in os.walk(WORKING_DIRECTORY):
+        pyi += [
+            str(pathlib.Path(root, item).relative_to(WORKING_DIRECTORY))
+            for item in files if item.endswith('.pyi')
+        ]
+    return [(str(pathlib.Path('pyinterp', 'core')), pyi)]
+
+
 def main():
     """Main function"""
     setuptools.setup(
@@ -515,6 +526,7 @@ def main():
             'build_ext': BuildExt,
             'test': Test
         },
+        data_files=typehints(),
         description='Interpolation of geo-referenced data for Python.',
         ext_modules=[CMakeExtension(name="pyinterp.core")],
         install_requires=["numpy", "xarray"],
@@ -522,6 +534,9 @@ def main():
         long_description=long_description(),
         long_description_content_type='text/markdown',
         name='pyinterp',
+        package_data={
+            '': ['py.typed'],
+        },
         package_dir={'': 'src'},
         packages=setuptools.find_namespace_packages(where='src',
                                                     exclude=['*core*']),
