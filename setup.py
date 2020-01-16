@@ -257,6 +257,17 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         return "-DEIGEN3_INCLUDE_DIR=" + eigen_include_dir
 
     @staticmethod
+    def mkl():
+        """Get the default MKL path in Anaconda's environnement."""
+        mkl_header = pathlib.Path(sys.prefix, "include", "mkl.h")
+        if mkl_header.exists():
+            os.environ["MKLROOT"] = sys.prefix
+            return
+        raise RuntimeError(
+            "Unable to find the MKL library in the conda distribution "
+            "used.")
+
+    @staticmethod
     def is_conda():
         """Detect if the Python interpreter is part of a conda distribution."""
         result = os.path.exists(os.path.join(sys.prefix, 'conda-meta'))
@@ -295,7 +306,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             result.append(self.eigen())
 
         if self.MKL_ROOT is not None:
-            os.environ["DMKLROOT"] = self.MKL_ROOT
+            os.environ["MKLROOT"] = self.MKL_ROOT
+        elif is_conda:
+            self.mkl()
 
         return result
 

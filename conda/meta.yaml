@@ -23,6 +23,7 @@ requirements:
     - eigen
     - gsl
     - boost-cpp
+    - mkl-devel
     - numpy
     - pip
     - pytest
