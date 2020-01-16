@@ -261,6 +261,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         """Get the default MKL path in Anaconda's environnement."""
         mkl_header = pathlib.Path(sys.prefix, "include", "mkl.h")
         if mkl_header.exists():
+            if platform.system() == 'Darwin':
+                return
             os.environ["MKLROOT"] = sys.prefix
             return
         mkl_header = pathlib.Path(sys.prefix, "Library", "include", "mkl.h")

@@ -15,13 +15,27 @@ pybind11_add_module(core ${SOURCES})
 if(MKL_FOUND)
     add_definitions(-DEIGEN_USE_MKL_ALL)
     include_directories(${MKL_INCLUDE_DIRS})
-    target_link_libraries(core PUBLIC ${MKL_LIBRARIES})
+    set_target_properties(GSL::gsl PROPERTIES
+        IMPORTED_LOCATION                 "${GSL_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES     "${GSL_INCLUDE_DIRS}"
+        IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+        INTERFACE_LINK_LIBRARIES          "${MKL_LIBRARIES}" )
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    find_package(BLAS REQUIRED)
+    find_package(LAPACK REQUIRED)
+    add_definitions(-DEIGEN_USE_BLAS)
+    add_definitions(-DEIGEN_USE_LAPACKE)
+    set_target_properties(GSL::gsl PROPERTIES
+        IMPORTED_LOCATION                 "${GSL_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES     "${GSL_INCLUDE_DIRS}"
+        IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+        INTERFACE_LINK_LIBRARIES          "${BLAS_LIBRARIES}" )
 endif()
 
 target_link_libraries(
     core
-        PRIVATE pyinterp GSL::gsl GSL::gslcblas
-        PUBLIC cpp_coverage ${MKL_LIBRARIES}
+        PRIVATE pyinterp GSL::gsl
+        PUBLIC cpp_coverage
 )
 
 add_subdirectory(tests)
