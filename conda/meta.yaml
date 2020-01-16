@@ -33,6 +33,7 @@ requirements:
   run:
     - {{ pin_compatible('numpy') }}
     - python
+    - mkl
     - xarray
 
 test:
