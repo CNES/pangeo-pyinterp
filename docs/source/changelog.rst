@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.1.1 (17 January 2020)
+-------------------------
+* Use of MKL in the Conda package
+
 0.1.0 (4 January 2020)
 -------------------------
 * Simplification of interpolations with Xarray
