@@ -213,14 +213,14 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     def gsl():
         """Get the default boost path in Anaconda's environnement."""
         gsl_root = sys.prefix
-        if os.path.exists(os.path.join(gsl_root, "include", "gsl")):
+        if pathlib.Path(gsl_root, "include", "gsl").exists():
             return "-DGSL_ROOT_DIR=" + gsl_root
-        gsl_root = os.path.join(sys.prefix, "Library")
-        if not os.path.exists(os.path.join(gsl_root, "include", "gsl")):
+        gsl_root = pathlib.Path(sys.prefix, "Library")
+        if not gsl_root.joinpath("include", "gsl").exists():
             raise RuntimeError(
                 "Unable to find the GSL library in the conda distribution "
                 "used.")
-        return "-DGSL_ROOT_DIR=" + gsl_root
+        return "-DGSL_ROOT_DIR=" + str(gsl_root)
 
     @staticmethod
     def boost():
@@ -229,11 +229,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         boost_option = "-DBoost_NO_SYSTEM_PATHS=TRUE " \
             "-DBoost_NO_BOOST_CMAKE=TRUE"
         boost_root = sys.prefix
-        if os.path.exists(os.path.join(boost_root, "include", "boost")):
+        if pathlib.Path(boost_root, "include", "boost").exists():
             return "{boost_option} -DBOOST_ROOT={boost_root}".format(
                 boost_root=boost_root, boost_option=boost_option).split()
-        boost_root = os.path.join(sys.prefix, "Library", "include")
-        if not os.path.exists(boost_root):
+        boost_root = pathlib.Path(sys.prefix, "Library", "include")
+        if not boost_root.exists():
             raise RuntimeError(
                 "Unable to find the Boost library in the conda distribution "
                 "used.")
@@ -243,26 +243,24 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     @staticmethod
     def eigen():
         """Get the default Eigen3 path in Anaconda's environnement."""
-        eigen_include_dir = os.path.join(sys.prefix, "include", "eigen3")
-        if os.path.exists(eigen_include_dir):
-            return "-DEIGEN3_INCLUDE_DIR=" + eigen_include_dir
-        eigen_include_dir = os.path.join(sys.prefix, "Library", "include",
+        eigen_include_dir = pathlib.Path(sys.prefix, "include", "eigen3")
+        if eigen_include_dir.exists():
+            return "-DEIGEN3_INCLUDE_DIR=" + str(eigen_include_dir)
+        eigen_include_dir = pathlib.Path(sys.prefix, "Library", "include",
                                          "eigen3")
-        if not os.path.exists(eigen_include_dir):
-            eigen_include_dir = os.path.dirname(eigen_include_dir)
-        if not os.path.exists(eigen_include_dir):
+        if not eigen_include_dir.exists():
+            eigen_include_dir = eigen_include_dir.parent
+        if not eigen_include_dir.exists():
             raise RuntimeError(
                 "Unable to find the Eigen3 library in the conda distribution "
                 "used.")
-        return "-DEIGEN3_INCLUDE_DIR=" + eigen_include_dir
+        return "-DEIGEN3_INCLUDE_DIR=" + str(eigen_include_dir)
 
     @staticmethod
     def mkl():
         """Get the default MKL path in Anaconda's environnement."""
         mkl_header = pathlib.Path(sys.prefix, "include", "mkl.h")
         if mkl_header.exists():
-            if platform.system() == 'Darwin':
-                return
             os.environ["MKLROOT"] = sys.prefix
             return
         mkl_header = pathlib.Path(sys.prefix, "Library", "include", "mkl.h")
@@ -276,7 +274,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     @staticmethod
     def is_conda():
         """Detect if the Python interpreter is part of a conda distribution."""
-        result = os.path.exists(os.path.join(sys.prefix, 'conda-meta'))
+        result = pathlib.Path(sys.prefix, 'conda-meta').exists()
         if not result:
             try:
                 # pylint: disable=unused-import

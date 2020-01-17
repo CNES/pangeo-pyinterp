@@ -31,7 +31,6 @@ endif ()
 set(
   CMAKE_MODULE_PATH
   "${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/tools;"
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake;"
   "${CMAKE_MODULE_PATH}"
 )
 
@@ -150,11 +149,28 @@ set(__CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so" ".dylib" ".lib")
 find_package(GSL 2.0 REQUIRED)
 include_directories(${GSL_INCLUDE_DIRS})
-if (WIN32)
-  add_compile_definitions(GSL_DLL)
-endif()
 set(CMAKE_FIND_LIBRARY_SUFFIXES ${__CMAKE_FIND_LIBRARY_SUFFIXES})
 unset(__CMAKE_FIND_LIBRARY_SUFFIXES)
+
+# Blas
+find_package(BLAS)
+if (BLAS_FOUND)
+  # MKL
+  if (DEFINED ENV{MKLROOT})
+    find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS $ENV{MKLROOT}/include)
+    if (MKL_INCLUDE_DIR)
+      add_definitions(-DEIGEN_USE_MKL_ALL)
+      include_directories(${MKL_INCLUDE_DIRS})
+    endif()
+  # If a BLAS library has been found, it is used instead of the BLAS library
+  # provided with GSL.
+  set_target_properties(GSL::gsl PROPERTIES
+      IMPORTED_LOCATION                 "${GSL_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES     "${GSL_INCLUDE_DIRS}"
+      IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+      INTERFACE_LINK_LIBRARIES          "${BLAS_LIBRARIES}" )
+  endif()
+endif()
 
 # Eigen3
 find_package(Eigen3 3.3.1 REQUIRED)
