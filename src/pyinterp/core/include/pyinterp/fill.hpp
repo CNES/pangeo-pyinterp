@@ -272,6 +272,13 @@ auto gauss_seidel(
   return std::make_tuple(iteration, max_residual);
 }
 
+/// Type of values processed by the Loess filter.
+enum ValueType {
+  kUndefined,  //!< Undefined values (fill undefined values)
+  kDefined,    //!< Defined values (smooth values)
+  kAll         //!< Smooth and fill values
+};
+
 /// Fills undefined values using a locally weighted regression function or
 /// LOESS. The weight function used for LOESS is the tri-cube weight function,
 /// w(x)=(1-|d|^{3})^{3}
@@ -281,13 +288,15 @@ auto gauss_seidel(
 /// the longitude axis.
 /// @param nx Number of points of the half-window to be taken into account along
 /// the latitude axis.
+/// @param value_type Type of values processed by the filter
 /// @param num_threads The number of threads to use for the computation. If 0
 /// all CPUs are used. If 1 is given, no parallel computing code is used at all,
 /// which is useful for debugging.
 /// @return The grid will have all the NaN filled with extrapolated values.
 template <typename Type>
 auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
-           const size_t num_threads) -> pybind11::array_t<Type> {
+           const ValueType value_type, const size_t num_threads)
+    -> pybind11::array_t<Type> {
   auto result = pybind11::array_t<Type>(
       pybind11::array::ShapeContainer{grid.x()->size(), grid.y()->size()});
   auto _result = result.template mutable_unchecked<2>();
@@ -309,7 +318,10 @@ auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
           auto z = grid.value(ix, iy);
 
           // If the current value is masked.
-          if (std::isnan(z)) {
+          const auto undefined = std::isnan(z);
+          if (value_type == kAll ||
+              (value_type == kDefined && !undefined) ||
+              (value_type == kUndefined && undefined)) {
             auto y = y_axis(iy);
 
             // Reading the coordinates of the window around the masked point.

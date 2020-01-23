@@ -15,6 +15,7 @@ void implement_fill_functions(py::module& m, const std::string& suffix) {
 
   m.def(("loess_" + function_suffix).c_str(), &pyinterp::fill::loess<Type>,
         py::arg("grid"), py::arg("nx") = 3, py::arg("ny") = 3,
+        py::arg("value_type") = pyinterp::fill::kUndefined,
         py::arg("num_threads") = 0,
         (R"__doc__(
 Fills undefined values using a locally weighted regression function or
@@ -30,6 +31,8 @@ Args:
         account along the X-axis. Defaults to ``3``.
     ny (int, optional): Number of points of the half-window to be taken into
         account along the Y-axis. Defaults to ``3``.
+    value_type (pyinterp.core.fill.ValueType, optional): Type of values
+        processed by the filter
     num_threads (int, optional): The number of threads to use for the
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
@@ -78,6 +81,16 @@ void init_fill(py::module& m) {
       .value("Zero", pyinterp::fill::kZero, "Use 0.0 as an initial guess")
       .value("ZonalAverage", pyinterp::fill::kZonalAverage,
              "Use zonal average in x direction");
+
+  py::enum_<pyinterp::fill::ValueType>(m, "ValueType",
+                                       R"__doc__(
+Type of values processed by the loess filter
+)__doc__")
+      .value("Undefined", pyinterp::fill::kUndefined,
+             "*Undefined values (fill undefined values)*.")
+      .value("Defined", pyinterp::fill::kDefined,
+             "*Defined values (smooth values)*.")
+      .value("All", pyinterp::fill::kAll, "*Smooth and fill values*.");
 
   implement_fill_functions<double>(m, "Float64");
   implement_fill_functions<float>(m, "Float32");

@@ -11,9 +11,10 @@ from . import interface
 
 
 def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
-          nx: Optional[int] = 3,
-          ny: Optional[int] = 3,
-          num_threads: Optional[int] = 0):
+          nx: int = 3,
+          ny: int = 3,
+          value_type: Optional[str] = None,
+          num_threads: int = 0):
     """Fills undefined values using a locally weighted regression function or
     LOESS. The weight function used for LOESS is the tri-cube weight function,
     :math:`w(x)=(1-|d|^3)^3`
@@ -25,6 +26,9 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
             into account along the X-axis. Defaults to ``3``.
         ny (int, optional): Number of points of the half-window to be taken
             into account along the Y-axis. Defaults to ``3``.
+        value_type (str, optional): Type of values processed by the
+            filter. Supported are ``undefined``, ``defined``, ``all``.
+            Default to ``undefined``.
         num_threads (int, optional): The number of threads to use for the
             computation. If 0 all CPUs are used. If 1 is given, no parallel
             computing code is used at all, which is useful for debugging.
@@ -33,12 +37,19 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
     Return:
         numpy.ndarray: the grid will have NaN filled with extrapolated values.
     """
+    value_type = value_type or "undefined"
     instance = mesh._instance
     function = interface._core_function("loess", instance)
+
+    if value_type not in ['undefined', 'defined', 'all']:
+        raise ValueError(f"value type {value_type!r} is not defined")
     nz = len(mesh.z) if isinstance(mesh, grid.Grid3D) else 0
 
+    _value_type = getattr(core.fill.ValueType, value_type.capitalize())
+
     if nz == 0:
-        return getattr(core.fill, function)(instance, nx, ny, num_threads)
+        return getattr(core.fill, function)(instance, nx, ny, _value_type,
+                                            num_threads)
 
     with concurrent.futures.ThreadPoolExecutor(
             max_workers=num_threads if num_threads else None) as executor:
@@ -48,7 +59,7 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
             grid2d = grid.Grid2D(mesh.x, mesh.y, mesh.array[:, :, iz])
             futures[executor.submit(getattr(core.fill,
                                             function), grid2d._instance, nx,
-                                    ny, num_threads)] = iz
+                                    ny, _value_type, num_threads)] = iz
         for future in concurrent.futures.as_completed(futures):
             iz = futures[future]
             result[:, :, iz] = future.result()

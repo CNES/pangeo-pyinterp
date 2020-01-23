@@ -113,6 +113,8 @@ Replace undefined values
 .. autosummary::
   :toctree: generated/
 
+  core.fill.ValueType
+  core.fill.FirstGuess
   core.fill.loess_float64
   core.fill.loess_float32
   core.fill.gauss_seidel_float64
