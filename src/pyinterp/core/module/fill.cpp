@@ -75,6 +75,44 @@ Return:
         py::call_guard<py::gil_scoped_release>());
 }
 
+template <typename Type, typename AxisType>
+void implement_loess_3d(py::module& m, const std::string& prefix,
+                        const std::string& suffix) {
+  auto function_suffix = suffix;
+  function_suffix[0] = std::tolower(function_suffix[0]);
+
+  m.def(("loess_" + function_suffix).c_str(),
+        &pyinterp::fill::loess<Type, AxisType>, py::arg("grid"),
+        py::arg("nx") = 3, py::arg("ny") = 3,
+        py::arg("value_type") = pyinterp::fill::kUndefined,
+        py::arg("num_threads") = 0,
+        (R"__doc__(
+Fills undefined values using a locally weighted regression function or
+LOESS. The weight function used for LOESS is the tri-cube weight function,
+:math:`w(x)=(1-|d|^3)^3`
+
+Args:
+    grid (pyinterp.core.)__doc__" +
+         prefix + "Grid3D" + suffix +
+         R"__doc__(): Grid containing the values to be filtered.
+    nx (int, optional): Number of points of the half-window to be taken into
+        account along the X-axis. Defaults to ``3``.
+    ny (int, optional): Number of points of the half-window to be taken into
+        account along the Y-axis. Defaults to ``3``.
+    value_type (pyinterp.core.fill.ValueType, optional): Type of values
+        processed by the filter
+    num_threads (int, optional): The number of threads to use for the
+        computation. If 0 all CPUs are used. If 1 is given, no parallel
+        computing code is used at all, which is useful for debugging.
+        Defaults to ``0``.
+
+Return:
+    numpy.ndarray: the grid will have all the NaN filled with extrapolated
+    values.
+)__doc__")
+            .c_str());
+}
+
 void init_fill(py::module& m) {
   py::enum_<pyinterp::fill::FirstGuess>(
       m, "FirstGuess", "Type of first guess grid to solve Poisson's equation.")
@@ -94,4 +132,9 @@ Type of values processed by the loess filter
 
   implement_fill_functions<double>(m, "Float64");
   implement_fill_functions<float>(m, "Float32");
+  implement_loess_3d<double, double>(m, "", "Float64");
+  implement_loess_3d<double, int64_t>(m, "Temporal", "Float64");
+  implement_loess_3d<float, double>(m, "", "Float32");
+  implement_loess_3d<float, int64_t>(m, "Temporal", "Float32");
+
 }
