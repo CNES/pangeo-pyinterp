@@ -1,6 +1,7 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 import numpy
-from . import Grid2DFloat32, Grid2DFloat64
+from . import (Grid2DFloat32, Grid2DFloat64, Grid3DFloat32, Grid3DFloat32,
+               Grid3DFloat64, TemporalGrid3DFloat64, TemporalGrid3DFloat32)
 
 
 class FirstGuess:
@@ -14,19 +15,21 @@ class ValueType:
     All: 'All'
 
 
-def loess_float64(grid: Grid2DFloat64,
-                  nx: int = 3,
-                  ny: int = 3,
-                  processing_mode: Optional[str] = None,
-                  num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
+def loess_float64(
+        grid: Union[Grid2DFloat64, Grid3DFloat64, TemporalGrid3DFloat64],
+        nx: int = 3,
+        ny: int = 3,
+        processing_mode: Optional[str] = None,
+        num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
     ...
 
 
-def loess_float32(grid: Grid2DFloat32,
-                  nx: int = 3,
-                  ny: int = 3,
-                  processing_mode: Optional[str] = None,
-                  num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
+def loess_float32(
+        grid: Union[Grid2DFloat32, Grid3DFloat32, TemporalGrid3DFloat32],
+        nx: int = 3,
+        ny: int = 3,
+        processing_mode: Optional[str] = None,
+        num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
     ...
 
 

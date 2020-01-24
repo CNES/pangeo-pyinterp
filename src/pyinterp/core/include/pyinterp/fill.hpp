@@ -390,7 +390,7 @@ auto loess(const Grid3D<Type, AxisType>& grid, const uint32_t nx,
       const auto& x_axis = *grid.x();
       const auto& y_axis = *grid.y();
       for (size_t iz = start; iz < end; ++iz) {
-        for (size_t ix = 0; ix < x_axis.size(); ++ix) {
+        for (int64_t ix = 0; ix < x_axis.size(); ++ix) {
           auto x = x_axis(ix);
 
           for (int64_t iy = 0; iy < y_axis.size(); ++iy) {
