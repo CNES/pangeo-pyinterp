@@ -49,6 +49,9 @@ class TextAxis(unittest.TestCase):
             np.all(
                 a.find_index(np.arange(0, 359, 1) +
                              0.01) == np.arange(0, 359, 1)))
+        indexes = a.find_indexes(np.arange(0, 359, 1))
+        self.assertTrue(np.all(indexes[:, 0] == np.arange(0, 359, 1)))
+        self.assertTrue(np.all(indexes[:, 1] == np.arange(1, 360, 1)))
         self.assertTrue(a.is_regular())
         self.assertEqual(a.min_value(), 0)
         self.assertEqual(a.max_value(), 359)

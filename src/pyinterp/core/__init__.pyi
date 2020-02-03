@@ -65,6 +65,10 @@ class Axis:
                    bounded: bool = False) -> numpy.ndarray[numpy.float64]:
         ...
 
+    def find_indexes(self, coordinates: numpy.ndarray[numpy.float64]
+                     ) -> numpy.ndarray[numpy.float64]:
+        ...
+
     def increment(self) -> float:
         ...
 

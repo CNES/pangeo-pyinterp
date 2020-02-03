@@ -51,6 +51,7 @@ class Axis : public detail::Axis<T>,
              public std::enable_shared_from_this<Axis<T>> {
  public:
   using detail::Axis<T>::Axis;
+  using detail::Axis<T>::find_indexes;
 
   /// Create a coordinate axis from values.
   ///
@@ -113,6 +114,40 @@ class Axis : public detail::Axis<T>,
       pybind11::gil_scoped_release release;
       for (pybind11::ssize_t ix = 0; ix < size; ++ix) {
         _result(ix) = detail::Axis<T>::find_index(_coordinates(ix), bounded);
+      }
+    }
+    return result;
+  }
+
+  /// Given a coordinate position, find grids elements around it.
+  /// This mean that
+  /// @code
+  /// (*this)(i0) <= coordinate < (*this)(i1)
+  /// @endcode
+  ///
+  /// @param coordinate position in this coordinate system
+  /// @return A matrix of shape (n, 2). The first column of the matrix
+  /// contains the indexes i0 and the second column the indexes i1
+  /// found.
+  auto find_indexes(const pybind11::array_t<T>& coordinates) const
+      -> pybind11::array_t<int64_t> {
+    detail::check_array_ndim("coordinates", 1, coordinates);
+
+    auto size = coordinates.size();
+    auto result =
+        pybind11::array_t<int64_t>(pybind11::array::ShapeContainer({size, 2}));
+    auto _result = result.mutable_unchecked<2>();
+    auto _coordinates = coordinates.template unchecked<1>();
+
+    {
+      pybind11::gil_scoped_release release;
+      for (pybind11::ssize_t ix = 0; ix < size; ++ix) {
+        auto indexes = detail::Axis<T>::find_indexes(_coordinates(ix));
+        if (indexes) {
+          std::tie(_result(ix, 0), _result(ix, 1)) = *indexes;
+        } else {
+          _result(ix, 0) = _result(ix, 1) = -1;
+        }
       }
     }
     return result;
