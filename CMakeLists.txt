@@ -163,7 +163,7 @@ if (BLAS_FOUND)
     find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS $ENV{MKLROOT}/include)
     if (MKL_INCLUDE_DIR)
       add_definitions(-DEIGEN_USE_MKL_ALL)
-      include_directories(${MKL_INCLUDE_DIRS})
+      include_directories(${MKL_INCLUDE_DIR})
     endif()
   # If a BLAS library has been found, it is used instead of the BLAS library
   # provided with GSL.
