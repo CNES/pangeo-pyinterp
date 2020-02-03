@@ -88,12 +88,16 @@ class TemporalAxis(core.TemporalAxis):
         resolution = self._datetime64_resolution(str(values.dtype))
         source_idx = self.RESOLUTION.index(resolution)
         target_idx = self.RESOLUTION.index(self.resolution)
-        if source_idx > target_idx:
-            source = self.UNITS[source_idx]
-            target = self.UNITS[target_idx]
-            warnings.warn(f"implicit conversion turns {source} into {target}",
-                          UserWarning)
-        return values.astype(f"datetime64[{self.resolution}]").astype("int64")
+        if source_idx != target_idx:
+            if source_idx > target_idx:
+                source = self.UNITS[source_idx]
+                target = self.UNITS[target_idx]
+                warnings.warn(
+                    "implicit conversion turns "
+                    f"{source} into {target}", UserWarning)
+            return values.astype(f"datetime64[{self.resolution}]").astype(
+                "int64")
+        return values.astype("int64")
 
     def back(self) -> np.datetime64:
         """Get the last value of this axis
