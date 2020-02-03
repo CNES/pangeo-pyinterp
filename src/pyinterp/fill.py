@@ -15,8 +15,8 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
           ny: int = 3,
           value_type: Optional[str] = None,
           num_threads: int = 0):
-    """Fills undefined values using a locally weighted regression function or
-    LOESS. The weight function used for LOESS is the tri-cube weight function,
+    """Filter values using a locally weighted regression function or LOESS.
+    The weight function used for LOESS is the tri-cube weight function,
     :math:`w(x)=(1-|d|^3)^3`
 
     Args:
@@ -43,27 +43,11 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
 
     if value_type not in ['undefined', 'defined', 'all']:
         raise ValueError(f"value type {value_type!r} is not defined")
-    nz = len(mesh.z) if isinstance(mesh, grid.Grid3D) else 0
 
-    _value_type = getattr(core.fill.ValueType, value_type.capitalize())
-
-    if nz == 0:
-        return getattr(core.fill, function)(instance, nx, ny, _value_type,
-                                            num_threads)
-
-    with concurrent.futures.ThreadPoolExecutor(
-            max_workers=num_threads if num_threads else None) as executor:
-        futures = dict()
-        result = np.empty_like(mesh.array)
-        for iz in range(nz):
-            grid2d = grid.Grid2D(mesh.x, mesh.y, mesh.array[:, :, iz])
-            futures[executor.submit(getattr(core.fill,
-                                            function), grid2d._instance, nx,
-                                    ny, _value_type, num_threads)] = iz
-        for future in concurrent.futures.as_completed(futures):
-            iz = futures[future]
-            result[:, :, iz] = future.result()
-        return result
+    return getattr(core.fill, function)(instance, nx, ny,
+                                        getattr(core.fill.ValueType,
+                                                value_type.capitalize()),
+                                        num_threads)
 
 
 def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],

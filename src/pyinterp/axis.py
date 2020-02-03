@@ -126,6 +126,28 @@ class TemporalAxis(core.TemporalAxis):
         return super().find_index(
             coordinates.astype(self.dtype).astype("int64"), bounded)
 
+    def find_indexes(self, coordinates: np.ndarray) -> np.ndarray:
+        """For all coordinate positions, search for the axis elements around
+        them. This means that for n coordinate ``ix`` of the provided array,
+        the method searches the indexes ``i0`` and ``i1`` as fallow:
+
+        .. code::
+
+            self[i0] <= coordinates[ix] <= self[ix]
+
+        The provided coordinates located outside the axis definition range are
+        set to ``-1``.
+
+        Args:
+            coordinates (numpy.ndarray): Positions in this coordinate system
+        Return:
+            numpy.ndarray: A matrix of shape ``(n, 2)``. The first column of
+            the matrix contains the indexes ``i0`` and the second column the
+            indexes ``i1`` found.
+        """
+        return super().find_indexes(
+            coordinates.astype(self.dtype).astype("int64"))
+
     def front(self) -> np.datetime64:
         """Get the first value of this axis
 
@@ -186,5 +208,5 @@ class TemporalAxis(core.TemporalAxis):
     def __getitem__(self, *args):
         result = super().__getitem__(*args)
         if isinstance(result, int):
-            return np.datetime64(result, dtype=self.dtype)
+            return np.datetime64(result, self.resolution)
         return result.astype(self.dtype)

@@ -104,6 +104,29 @@ Return:
     is out of the definition range of the axis, otherwise the index of the
     closest value of the coordinate is returned.
 )__doc__")
+      .def("find_indexes",
+           [](const pyinterp::Axis<T>& self, const py::array_t<T>& coordinates) -> py::array_t<int64_t> {
+             return self.find_indexes(coordinates);
+           },
+           py::arg("coordinates"), R"__doc__(
+For all coordinate positions, search for the axis elements around them. This
+means that for n coordinate ``ix`` of the provided array, the method searches
+the indexes ``i0`` and ``i1`` as fallow:
+
+.. code::
+
+  self[i0] <= coordinates[ix] <= self[ix]
+
+The provided coordinates located outside the axis definition range are set to
+``-1``.
+
+Args:
+    coordinates (numpy.ndarray): Positions in this coordinate system
+Return:
+    numpy.ndarray: A matrix of shape ``(n, 2)``. The first column of the
+    matrix contains the indexes ``i0`` and the second column the indexes
+    ``i1`` found.
+)__doc__")
       .def("front", &pyinterp::Axis<T>::front, R"__doc__(
 Get the first value of this axis
 
