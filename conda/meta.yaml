@@ -23,6 +23,7 @@ requirements:
     - eigen
     - gsl
     - boost-cpp
+    - mkl
     - mkl-devel
     - numpy
     - pip
@@ -33,7 +34,7 @@ requirements:
   run:
     - {{ pin_compatible('numpy') }}
     - python
-    - mkl
+    - libblas * *mkl
     - xarray
 
 test:
