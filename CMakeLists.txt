@@ -156,6 +156,9 @@ set(CMAKE_FIND_LIBRARY_SUFFIXES ${__CMAKE_FIND_LIBRARY_SUFFIXES})
 unset(__CMAKE_FIND_LIBRARY_SUFFIXES)
 
 # Blas
+if (DEFINED ENV{MKLROOT})
+  set(BLA_VENDOR Intel10_64ilp)
+endif()
 find_package(BLAS)
 if (BLAS_FOUND)
   # MKL
@@ -163,6 +166,7 @@ if (BLAS_FOUND)
     find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS $ENV{MKLROOT}/include)
     if (MKL_INCLUDE_DIR)
       add_definitions(-DEIGEN_USE_MKL_ALL)
+      add_definitions(-DMKL_ILP64)
       include_directories(${MKL_INCLUDE_DIR})
     endif()
   # If a BLAS library has been found, it is used instead of the BLAS library
