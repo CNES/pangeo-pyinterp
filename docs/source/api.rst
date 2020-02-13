@@ -55,6 +55,8 @@ Geodetic systems
   geodetic.Point2D
   geodetic.System
 
+.. _cartesian_interpolators:
+
 Cartesian interpolators
 =======================
 

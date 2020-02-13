@@ -1,13 +1,13 @@
-Setup with the existing python
+Setup with the existing Python
 ===============================
 
-We will present how to compile the code, install and run the various scripts
+We will present how to compile the code, install, and run the various scripts
 with `setuptools <https://setuptools.readthedocs.io/en/latest/>`_.
 
 Requirements
 ############
 
-Because the programs are written in Python, and some parts of the library in
+Because of the programs written in Python, and some parts of the library in
 C++, you must have Python 3, at least Python version 3.6, a C++ compiler and
 `cmake <https://cmake.org/>`_ installed on your system to build the library.
 
@@ -17,7 +17,7 @@ C++, you must have Python 3, at least Python version 3.6, a C++ compiler and
 
 The compiling C++ requires the following development library:
 
-    * `Boost C++ Libararies <https://www.boost.org/>`_
+    * `Boost C++ Libraries <https://www.boost.org/>`_
     * `Eigen3 <http://eigen.tuxfamily.org/>`_
     * `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_
 
@@ -99,7 +99,7 @@ following steps:
 
 The first command compiles the extension to generate a coverage mapping to allow
 code coverage analysis. The second command performs the Python and C++ unit
-tests, analyze the coverage of the C++ code and generates the associated HTML
+tests, analyzes the coverage of the C++ code, and generates the associated HTML
 report with `lcov <http://ltp.sourceforge.net/coverage/lcov.php>`_. The
 generated report is available in the ``htmllcov`` directory located at the root
 of the project.
@@ -124,9 +124,9 @@ the project.
 Automatic Documentation
 #######################
 
-The source code of this documentation is managed by
-`sphinx <http://www.sphinx-doc.org/en/master/>`_. It is possible to
-generate it in order to produce a local mini WEB site to read and navigate it.
+`Sphinx <http://www.sphinx-doc.org/en/master/>`_ manages the source code of this
+documentation. It is possible to generate it to produce a local mini WEB site to
+read and navigate it.
 To do this, type the following command: ::
 
     python setup.py build_sphinx
@@ -134,8 +134,8 @@ To do this, type the following command: ::
 Install
 #######
 
-To install just type the command ``python3 setup.py``. You can specify an
-alternate installation path, with:
+To install this library, type the command ``python3 setup.py``. You can specify
+an alternate installation path, with:
 
 .. code-block:: bash
 

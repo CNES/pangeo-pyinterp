@@ -17,9 +17,10 @@ project.
 
 .. warning ::
 
-    This file is an old version of the sub-sampled quarter step MSS CNES/CLS. Do
-    not use it for scientific purposes, download the latest updated
-    high-resolution version instead `here <https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/mss.html>`_.
+    This file is an old version of the sub-sampled quarter step MSS CNES/CLS.
+    Please do not use it for scientific purposes, download the latest updated
+    high-resolution version instead `here
+    <https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/mss.html>`_.
 
 The first step is to load the data into memory:
 
@@ -28,7 +29,7 @@ The first step is to load the data into memory:
     import netCDF4
     ds = netCDF4.Dataset("tests/dataset/mss.nc")
 
-Afterwards, build the :py:class:`axes <pyinterp.Axis>` associated with the
+Afterward, build the :py:class:`axes <pyinterp.Axis>` associated with the
 grid:
 
 .. code:: python
@@ -75,7 +76,7 @@ calculated using the `Haversine formula
 <https://en.wikipedia.org/wiki/Haversine_formula>`_.
 
 A module of the library simplifies the use of the library by using
-:py:mod:`xarray <pyinterp.backends.xarray>` and CF information contained in
+:py:mod:`xarray <pyinterp.backends.xarray>` and CF information contained in a
 dataset. This module implements all the other interpolators of the regular grids
 presented below.
 
@@ -101,23 +102,23 @@ presented below.
 Bicubic
 #######
 
-Interpolating data points on two-dimensional regular grid. The interpolated
+To interpolate data points on a regular two-dimensional grid. The interpolated
 surface is smoother than the corresponding surfaces obtained by bilinear
-interpolation. Bicubic interpolation is achieved by spline functions provided
-by `GSL <https://www.gnu.org/software/gsl/>`_.
+interpolation. Spline functions provided by `GSL
+<https://www.gnu.org/software/gsl/>`_ achieve Bicubic interpolation.
 
 .. warning::
 
-    When using this interpolator, pay attention to the undefined values.
-    Because as long as the calculation window uses an indefinite point, the
-    interpolator will generate indefinite values. This means that this
-    interpolator increases the area covered by the masked values. To avoid this
-    behavior, it is necessary to :ref:`pre-process <fill_values>` the grid to
-    delete undefined values.
+    When using this interpolator, pay attention to the undefined values. Because
+    as long as the calculation window uses an indefinite point, the interpolator
+    will compute indeterminate values. In other words, this interpolator
+    increases the area covered by the masked values. To avoid this behavior, it
+    is necessary to :ref:`pre-process <fill_values>` the grid to delete
+    undefined values.
 
 The interpolation :py:meth:`pyinterp.interpolator.bicubic` function has more
-parameters in order to define the data frame used by the spline functions and
-how to process the edges of the regional grids:
+parameters to define the data frame used by the spline functions and how to
+process the edges of the regional grids:
 
 .. code:: python
 
@@ -126,10 +127,10 @@ how to process the edges of the regional grids:
 
 .. warning::
 
-    The grid provided must have strictly increasing axes in order to meet the
+    The grid provided must have strictly increasing axes to meet the
     specifications of the GSL library. When building the grid, specify the
-    ``increasing_axes`` option to automatically flip the decreasing axes and the
-    grid. For example:
+    ``increasing_axes`` option to flip the decreasing axes and the grid
+    automatically. For example:
 
     .. code:: python
 
@@ -146,10 +147,10 @@ xarray:
 Binning
 #######
 
-Statistical data binning is a way to group a number of more or less continuous
+Statistical data binning is a way to group several more or less continuous
 values into a smaller number of *bins*. For example, if you have irregularly
 distributed data over the oceans, you can organize these observations into a
-smaller number of geographical intervals (for example, by grouping them all five
+lower number of geographical intervals (for example, by grouping them all five
 degrees into latitudes and longitudes).
 
 In this example, we will calculate the :py:class:`binning
@@ -163,7 +164,7 @@ latitudes and longitudes.
         pyinterp.Axis(np.arange(-90, 95, 5)))
 
 Then push data into each bin. Here, a :ref:`simple binning <bilinear_binning>`
-2D is used but you can also apply a :ref:`linear binning <bilinear_binning>` if
+2D is used, but you can also apply a :ref:`linear binning <bilinear_binning>` if
 you set the ``simple`` keyword to ``False``.
 
 .. code:: python
@@ -186,7 +187,7 @@ Trivariate
 ##########
 
 The :py:func:`trivariate <pyinterp.interpolator.trivariate>` interpolation
-allows to obtain values at arbitrary points in a 3D space of a function defined
+allows obtaining values at arbitrary points in a 3D space of a function defined
 on a grid.
 
 The distribution contains a 3D field ``tcw.nc`` that will be used in this help.
@@ -197,7 +198,7 @@ This method performs a bilinear interpolation in 2D space by considering the
 axes of longitude and latitude of the grid, then performs a linear
 interpolation in the third dimension. Its interface is similar to the
 :py:func:`bivariate <pyinterp.interpolator.bivariate>` class except for a third
-axis which is handled by this object.
+axis, which is handled by this object.
 
 .. note::
 
@@ -253,12 +254,12 @@ Bicubic
 This :py:func:`function <pyinterp.interpolator.bicubic>` allows obtaining a
 value from any position in a 3D space by a 2D spatial bicubic interpolation
 (considering the X and Y axes of the grid), followed by a linear interpolation
-along the Z axis of the two values obtained by the bicubic interpolation.
+along the Z-axis of the two values obtained by the bicubic interpolation.
 
 The use of this function is identical to the function presented for
-``bivariate`` interpolations except for the type of grid passed as parameter, a
-:py:class:`3D grid <pyinterp.grid.Grid3D>`, and the coordinates along the Z
-axis. First, the 3D grid is reconstructed using the backend ``xarray``,
+``bivariate`` interpolations except for the type of grid passed as a parameter,
+a :py:class:`3D grid <pyinterp.grid.Grid3D>`, and the coordinates along the
+Z-axis. First, the 3D grid is reconstructed using the backend ``xarray``,
 requesting axes sorted in ascending order (GSL requirements).
 
 .. code:: python
@@ -279,7 +280,7 @@ Quadrivariate
 #############
 
 The :py:func:`quadrivariate <pyinterp.interpolator.qudrivariate>` interpolation
-allows to obtain values at arbitrary points in a 4D space of a function defined
+allows obtaining values at arbitrary points in a 4D space of a function defined
 on a grid.
 
 The distribution contains a 4D field ``pres_temp_4D.nc`` that will be used in
@@ -288,9 +289,9 @@ of the project.
 
 This method performs a bilinear interpolation in 2D space by considering the
 axes of longitude and latitude of the grid, then performs a linear interpolation
-in the third and fourth dimension. Its interface is similar to the
+in the third and fourth dimensions. Its interface is similar to the
 :py:func:`trivariate <pyinterp.interpolator.trivariate>` class except for a
-fourth axis which is handled by this object.
+fourth axis, which is handled by this object.
 
 .. note::
 
@@ -351,10 +352,10 @@ xarray:
 Unstructured grid
 =================
 
-The interpolation of this object is based on an :py:class:`R*Tree
+The interpolation of this object is based on a :py:class:`R*Tree
 <pyinterp.rtree.RTree>` structure. To begin with, we start by building this
-object. By default, this object considers WGS-84 geodetic coordinate system.
-But you can define another one using class :py:class:`System
+object. By default, this object considers the WGS-84 geodetic coordinate system.
+But you can define another one using the class :py:class:`System
 <pyinterp.geodetic.System>`.
 
 .. code:: python
@@ -362,13 +363,13 @@ But you can define another one using class :py:class:`System
     import pyinterp
     mesh = pyinterp.RTree()
 
-Then, we will insert points into the tree. The class allows you to insert
-points using two algorithms. The first one called :py:meth:`packing
-<pyinterp.rtree.RTree.packing>` allows you to insert the values in the tree at
-once. This mechanism is the recommended solution to create an optimized
+Then, we will insert points into the tree. The class allows you to add points
+using two algorithms. The first one, called :py:meth:`packing
+<pyinterp.rtree.RTree.packing>`, will enable you to enter the values in the tree
+at once. This mechanism is the recommended solution to create an optimized
 in-memory structure, both in terms of construction time and queries. When this
 is not possible, you can insert new information into the tree as you go along
-using the :py:meth:`insert <pyinterp.rtree.RTree.insert>` method.
+using the insert method.
 
 .. code:: python
 

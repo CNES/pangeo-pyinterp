@@ -1,9 +1,9 @@
 Xarray
 ------
 
-The :doc:`previous chapter <examples>` presents the detailed operation of all
+The :doc:`previous chapter <examples>` presents the full operation of all
 the functions implemented in this library and interfaces with the ``Xarray``
-library to build 2D, 3D and 4D grids:
+library to build 2D, 3D, and 4D grids:
 
 * :py:class:`pyinterp.backends.xarray.Grid2D`
 * :py:class:`pyinterp.backends.xarray.Grid3D`
@@ -17,9 +17,9 @@ previous examples.
 The module ``pyinterp.backends.xarray`` provides the class
 :py:class:`RegularGridInterpolator
 <pyinterp.backends.xarray.RegularGridInterpolator>` that automatically builds
-the interpolator compatible with the Xarray, i.e. the 2D, 3D or 4D grid
+the interpolator compatible with the Xarray, i.e. the 2D, 3D, or 4D grid
 depending on the number of dimensions of the array. A :py:meth:`unique method
-<pyinterp.backends.xarray.RegularGridInterpolator.__call__>` allows to perform a
+<pyinterp.backends.xarray.RegularGridInterpolator.__call__>` allows performing a
 linear or spline interpolation. For example:
 
 .. code:: python
