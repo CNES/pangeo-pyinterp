@@ -115,7 +115,7 @@ the indexes ``i0`` and ``i1`` as fallow:
 
 .. code::
 
-  self[i0] <= coordinates[ix] <= self[ix]
+  self[i0] <= coordinates[ix] <= self[i1]
 
 The provided coordinates located outside the axis definition range are set to
 ``-1``.
