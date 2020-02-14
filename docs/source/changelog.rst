@@ -1,6 +1,12 @@
 Changelog
 #########
 
+0.2.0 (16 February 2020)
+-------------------------
+* Publish the "Axis.find_indexes" method.
+* The Loess filter can process both undefined and defined data.
+* Updating documentation.
+
 0.1.1 (17 January 2020)
 -------------------------
 * Use of MKL in the Conda package
