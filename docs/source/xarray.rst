@@ -1,9 +1,10 @@
 Xarray
 ------
 
-The :doc:`previous chapter <examples>` presents the full operation of all
-the functions implemented in this library and interfaces with the ``Xarray``
-library to build 2D, 3D, and 4D grids:
+The :doc:`previous chapter <examples>` presents the full operation of all the
+functions implemented in this library and interfaces with the `Xarray
+<http://xarray.pydata.org/en/stable/index.html>`_ library to build 2D, 3D, and
+4D grids:
 
 * :py:class:`pyinterp.backends.xarray.Grid2D`
 * :py:class:`pyinterp.backends.xarray.Grid3D`
