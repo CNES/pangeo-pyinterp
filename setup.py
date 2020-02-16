@@ -263,13 +263,17 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if mkl_header.exists():
             os.environ["MKLROOT"] = sys.prefix
             return
-        mkl_header = pathlib.Path(sys.prefix, "Library", "include", "mkl.h")
-        if mkl_header.exists():
-            os.environ["MKLROOT"] = str(pathlib.Path(sys.prefix, "Library"))
-            return
-        raise RuntimeError(
-            "Unable to find the MKL library in the conda distribution "
-            "used.")
+
+        # Walkaround a problem of generation with Windows and CMake
+        # (fixed in CMake 3.17)
+
+        # mkl_header = pathlib.Path(sys.prefix, "Library", "include", "mkl.h")
+        # if mkl_header.exists():
+        #     os.environ["MKLROOT"] = str(pathlib.Path(sys.prefix, "Library"))
+        #     return
+        # raise RuntimeError(
+        #     "Unable to find the MKL library in the conda distribution "
+        #     "used.")
 
     @staticmethod
     def is_conda():
