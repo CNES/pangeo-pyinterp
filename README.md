@@ -16,9 +16,18 @@ geo-referenced data used in the field of geosciences. Other libraries cover this
 problem, but written entirely in Python, the performance of these projects was
 not quite sufficient for our needs. That is why this project started.
 
-With this library, you can interpolate `2D`, `3D`, or `4D` fields using
-`n-variate` and `bicubic` interpolators and `unstructured grids`. You can also
-apply for a data `binning` on the bivariate area by simple or linear binning.
+With this library, you can interpolate
+[2D](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.grid.Grid2D.html#pyinterp.grid.Grid2D),
+[3D](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.grid.Grid3D.html#pyinterp.grid.Grid3D),
+or
+[4D](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.grid.Grid4D.html#pyinterp.grid.Grid4D)
+fields using `n-variate` and `bicubic`
+[interpolators](https://pangeo-pyinterp.readthedocs.io/en/latest/api.html#cartesian-interpolators)
+and [unstructured
+grids](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.RTree.html).
+You can also apply for a data
+[binning](https://pangeo-pyinterp.readthedocs.io/en/latest/api.html#binning) on
+the bivariate area by simple or linear binning.
 
 The library core is written in C++ using the [Boost C++
 Libraries](https://www.boost.org/), [Eigen3](http://eigen.tuxfamily.org/),
@@ -36,10 +45,12 @@ in the neighborhood. This behavior is a concern when you need to interpolate
 values near the mask of some fields. The library provides utilities to fill the
 undefined values:
 
-* `loess` to fill the undefined values on the boundary between the defined/undefined
+* [loess](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.fill.loess.html)
+  to fill the undefined values on the boundary between the defined/undefined
   values using local regression.
-* `gauss_seidel` to fill all undefined values in a grid using the Gauss-Seidel
-  method by relaxation.
+* [gauss_seidel](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.fill.gauss_seidel.html)
+  to fill all undefined values in a grid using the Gauss-Seidel method by
+  relaxation.
 
 ## Geographic indexers
 
@@ -54,12 +65,14 @@ grid from the coordinates of a point. These axes are either:
 * *irregular*: a vector of 109 latitudes irregularly spaced from -90 to
   89.940374 degrees.
 
-These objects are manipulated by the class `pyinterp.Axis`, which will choose,
-according to Axis definition, the best implementation. This object will allow
-you to find the two indexes framing a given value. This operating mode allows
-better performance when searching for a regular axis (a simple calculation will
-enable you to see the index of a point immediately). In contrast, in the case
-of an irregular axis, the search will be performed using a binary search.
+These objects are manipulated by the class
+[pyinterp.Axis](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.Axis.html),
+which will choose, according to Axis definition, the best implementation. This
+object will allow you to find the two indexes framing a given value. This
+operating mode allows better performance when searching for a regular axis (a
+simple calculation will enable you to see the index of a point immediately). In
+contrast, in the case of an irregular axis, the search will be performed using a
+binary search.
 
 Finally, this class can define a circular axis from a vector to correctly
 locate a value on the circle. This type of Axis will is used handling
@@ -67,8 +80,10 @@ longitudes.
 
 ### Temporal Axes
 
-The `pyinterp.TemporalAxis` class handles temporal axes, i.e., axes defined by
-64-bit integer vectors, which is the encoding used by
+The
+[pyinterp.TemporalAxis](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.TemporalAxis.html)
+class handles temporal axes, i.e., axes defined by 64-bit integer vectors, which
+is the encoding used by
 [numpy](https://docs.scipy.org/doc/numpy/reference/arrays.datetime.html) to
 control dates. This class allows handling dates without loss of information when
 the precision of the times is the nanosecond. These objects are used by
@@ -92,7 +107,8 @@ for the user to ensure that we can preserve excellent performance. The
 disadvantage of this implementation is that it requires a little more memory, as
 one more element gets used to index the value of the Cartesian space.
 
-The management of the *LLA*/*ECEF* coordinate conversion is managed to use the
-[Olson, D.K.](https://ieeexplore.ieee.org/document/481290) algorithm. It has
-excellent performance with an accuracy of 1e-8 meters for altitude.
-
+The management of the
+[LLA](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.geodetic.Coordinates.ecef_to_lla.html)/[ECEF](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.geodetic.Coordinates.lla_to_ecef.html)
+coordinate conversion is managed to use the [Olson,
+D.K.](https://ieeexplore.ieee.org/document/481290) algorithm. It has excellent
+performance with an accuracy of 1e-8 meters for altitude.
