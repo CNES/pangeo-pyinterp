@@ -556,7 +556,7 @@ def main():
         long_description_content_type='text/markdown',
         name='pyinterp',
         package_data={
-            '': ['py.typed'],
+            'pyinterp': ['py.typed'],
         },
         package_dir={'': 'src'},
         packages=setuptools.find_namespace_packages(where='src',
