@@ -100,6 +100,8 @@ endif()
 if (MSVC)
   # Disable warnings about using deprecated std::equal_to<>::result_type
   add_definitions (-D_SILENCE_CXX17_ADAPTOR_TYPEDEFS_DEPRECATION_WARNING)
+  # Disable auto-linking and use cmake's dependency handling
+  add_definitions( -DBOOST_ALL_NO_LIB )
 endif()
 
 CHECK_FUNCTION_EXISTS(pow POW_FUNCTION_EXISTS)
