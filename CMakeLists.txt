@@ -66,6 +66,11 @@ macro(check_cxx_compiler_and_linker_flags _RESULT _CXX_FLAGS _LINKER_FLAGS)
   unset(_RESULT)
 endmacro()
 
+if(NOT WIN32)
+  set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+  find_package(Threads REQUIRED)
+endif()
+
 # Always use libc++ on Clang
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   check_cxx_compiler_and_linker_flags(
