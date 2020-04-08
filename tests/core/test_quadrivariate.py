@@ -87,6 +87,52 @@ class TestGrid4D(unittest.TestCase):
                                                 bounds_error=False)
         self.assertAlmostEqual(np.nanstd(expected.flatten() - calculated), 0)
 
+        other = core.quadrivariate_float64(grid,
+                                           mx.flatten(),
+                                           my.flatten(),
+                                           mz.flatten(),
+                                           mu.flatten(),
+                                           interpolator,
+                                           num_threads=0,
+                                           z_method="linear",
+                                           u_method="linear",
+                                           bounds_error=False)
+        self.assertAlmostEqual(np.nanstd(other - calculated), 0)
+
+        other = core.quadrivariate_float64(grid,
+                                           mx.flatten(),
+                                           my.flatten(),
+                                           mz.flatten(),
+                                           mu.flatten(),
+                                           interpolator,
+                                           num_threads=0,
+                                           z_method="linear",
+                                           u_method="nearest",
+                                           bounds_error=False)
+        self.assertNotAlmostEqual(np.nanstd(other - calculated), 0)
+        with self.assertRaises(ValueError):
+            other = core.quadrivariate_float64(grid,
+                                               mx.flatten(),
+                                               my.flatten(),
+                                               mz.flatten(),
+                                               mu.flatten(),
+                                               interpolator,
+                                               num_threads=0,
+                                               z_method="LINEAR",
+                                               u_method="nearest",
+                                               bounds_error=False)
+        with self.assertRaises(ValueError):
+            other = core.quadrivariate_float64(grid,
+                                               mx.flatten(),
+                                               my.flatten(),
+                                               mz.flatten(),
+                                               mu.flatten(),
+                                               interpolator,
+                                               num_threads=0,
+                                               z_method="linear",
+                                               u_method="NEAREST",
+                                               bounds_error=False)
+
 
 if __name__ == "__main__":
     unittest.main()

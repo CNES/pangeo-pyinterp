@@ -652,6 +652,7 @@ def trivariate_float64(grid: Union[Grid3DFloat64, TemporalGrid3DFloat64],
                        z: numpy.ndarray[numpy.float64],
                        interpolator: Union[BivariateInterpolator3D,
                                            TemporalBivariateInterpolator3D],
+                       z_method: Optional[str] = None,
                        bounds_error: bool = False,
                        num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
     ...
@@ -663,6 +664,7 @@ def trivariate_float32(grid: Union[Grid3DFloat32, TemporalGrid3DFloat32],
                        z: numpy.ndarray[numpy.float64],
                        interpolator: Union[BivariateInterpolator3D,
                                            TemporalBivariateInterpolator3D],
+                       z_method: Optional[str] = None,
                        bounds_error: bool = False,
                        num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
     ...
@@ -675,6 +677,23 @@ def quadrivariate_float64(grid: Union[Grid4DFloat64, TemporalGrid4DFloat64],
                           u: numpy.ndarray[numpy.float64],
                           interpolator: Union[BivariateInterpolator3D,
                                               TemporalBivariateInterpolator3D],
+                          z_method: Optional[str] = None,
+                          u_method: Optional[str] = None,
+                          bounds_error: bool = False,
+                          num_threads: int = 0
+                          ) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+def quadrivariate_float32(grid: Union[Grid4DFloat64, TemporalGrid4DFloat64],
+                          x: numpy.ndarray[numpy.float64],
+                          y: numpy.ndarray[numpy.float64],
+                          z: numpy.ndarray[numpy.float64],
+                          u: numpy.ndarray[numpy.float64],
+                          interpolator: Union[BivariateInterpolator3D,
+                                              TemporalBivariateInterpolator3D],
+                          z_method: Optional[str] = None,
+                          u_method: Optional[str] = None,
                           bounds_error: bool = False,
                           num_threads: int = 0
                           ) -> numpy.ndarray[numpy.float64]:

@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.3.0 (X Y Z)
+-------------------------
+* Selection of interpolation methods for the third and fourth axes.
+
 0.2.0 (16 February 2020)
 -------------------------
 * Publish the "Axis.find_indexes" method.

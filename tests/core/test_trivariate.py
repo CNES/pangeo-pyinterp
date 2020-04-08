@@ -152,6 +152,48 @@ class Trivariate(TestCase):
                                     bounds_error=True,
                                     num_threads=0)
 
+    def test_grid3d_z_method(self):
+        """Test of the interpolation method used on Z-axis"""
+        grid = self.load_data()
+        interpolator = core.Bilinear3D()
+        lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
+        lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
+        time = 898500 + 3
+        x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+        z0 = core.trivariate_float64(grid,
+                                     x.flatten(),
+                                     y.flatten(),
+                                     t.flatten(),
+                                     interpolator,
+                                     num_threads=0)
+        z1 = core.trivariate_float64(grid,
+                                     x.flatten(),
+                                     y.flatten(),
+                                     t.flatten(),
+                                     interpolator,
+                                     z_method="linear",
+                                     num_threads=0)
+        z0 = np.ma.fix_invalid(z0)
+        z1 = np.ma.fix_invalid(z1)
+        assert np.all(z0 == z1)
+        z1 = core.trivariate_float64(grid,
+                                     x.flatten(),
+                                     y.flatten(),
+                                     t.flatten(),
+                                     interpolator,
+                                     z_method="nearest",
+                                     num_threads=0)
+        z1 = np.ma.fix_invalid(z1)
+        assert np.all(z0 != z1)
+        with self.assertRaises(ValueError):
+            core.trivariate_float64(grid,
+                                    x.flatten(),
+                                    y.flatten(),
+                                    t.flatten(),
+                                    interpolator,
+                                    z_method="couic",
+                                    num_threads=0)
+
     def test_grid3d_interpolator(self):
         """Testing of different interpolation methods"""
         a = self._test(core.Nearest3D(), "tcw_trivariate_nearest")

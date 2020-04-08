@@ -17,6 +17,7 @@ def trivariate(grid3d: grid.Grid3D,
                y: np.ndarray,
                z: np.ndarray,
                interpolator: str = "bilinear",
+               z_method: str = "linear",
                bounds_error: bool = False,
                num_threads: int = 0,
                **kwargs) -> np.ndarray:
@@ -28,9 +29,13 @@ def trivariate(grid3d: grid.Grid3D,
         x (numpy.ndarray): X-values
         y (numpy.ndarray): Y-values
         z (numpy.ndarray): Z-values
-        interpolator (str, optional): The method of interpolation to
-            perform. Supported are ``bilinear`` and ``nearest``, and
-            ``inverse_distance_weighting``. Default to ``bilinear``.
+        interpolator (str, optional): The interpolation method to be performed
+            on the surface defined by the Y and Y axes. Supported are
+            ``bilinear`` and ``nearest``, and ``inverse_distance_weighting``.
+            Default to ``bilinear``.
+        z_method (str, optional): The interpolation method to be performed
+            on the Z axis. Supported are ``linear``and ``nearest``. Default
+            to ``linear``.
         bounds_error (bool, optional): If True, when interpolated values
             are requested outside of the domain of the input axes (x,y), a
             :py:class:`ValueError` is raised. If False, then value is set
@@ -46,8 +51,12 @@ def trivariate(grid3d: grid.Grid3D,
     """
     instance = grid3d._instance
     function = interface._core_function("trivariate", instance)
-    return getattr(core, function)(instance, np.asarray(x), np.asarray(y),
+    return getattr(core, function)(instance,
+                                   np.asarray(x),
+                                   np.asarray(y),
                                    np.asarray(z),
                                    grid._core_variate_interpolator(
                                        grid3d, interpolator, **kwargs),
-                                   bounds_error, num_threads)
+                                   z_method=z_method,
+                                   bounds_error=bounds_error,
+                                   num_threads=num_threads)

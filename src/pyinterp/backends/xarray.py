@@ -369,8 +369,6 @@ class Grid4D(grid.Grid4D):
         x, y = _dims_from_data_array(data_array, geodetic, ndims=4)
         z, u = tuple(set(data_array.dims) - {x, y})
         self._dims = (x, y, z, u)
-        z_values = data_array.coords[z].values
-        u_values = data_array.coords[u].values
 
         # Should the grid manage a time axis?
         self._datetime64 = None
