@@ -234,9 +234,8 @@ class Trivariate(unittest.TestCase):
                             bounds_error=True)
 
         array = xr.load_dataset(self.GRID).tcw
-        array.time.values = array.time.values.astype("float64")
         grid = pyinterp.backends.xarray.Grid3D(array, increasing_axes=True)
-        x, y, t = np.meshgrid(lon, lat, time.astype("float64"), indexing="ij")
+        x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
         z = grid.trivariate(
             collections.OrderedDict(longitude=x.flatten(),
                                     latitude=y.flatten(),
