@@ -368,7 +368,6 @@ class Grid4D(grid.Grid4D):
         """
         x, y = _dims_from_data_array(data_array, geodetic, ndims=4)
         z, u = tuple(set(data_array.dims) - {x, y})
-        self._dims = (x, y, z, u)
 
         # Should the grid manage a time axis?
         self._datetime64 = None
@@ -384,6 +383,11 @@ class Grid4D(grid.Grid4D):
                 data_array.coords[u].values)
             # The time axis is the Z axis.
             z, u = u, z
+
+        # Names of the dimensions in the order of the tensor handled by the
+        # library
+        self._dims = (x, y, z, u)
+
         super(Grid4D, self).__init__(
             core.Axis(data_array.coords[x].values, is_circle=geodetic),
             core.Axis(data_array.coords[y].values),
