@@ -146,8 +146,8 @@ def _coords(coords: dict,
                          ", ".join([str(item) for item in unknown]))
     # Is it necessary to manage a time axis?
     if datetime64 is not None:
-        dim, axis = datetime64
-        coords[dim] = axis.safe_cast(coords[dim])
+        dim, temporal_axis = datetime64
+        coords[dim] = temporal_axis.safe_cast(coords[dim])
     return tuple(coords[dim] for dim in dims)
 
 
