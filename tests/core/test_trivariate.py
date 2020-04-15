@@ -35,15 +35,24 @@ class TestCase(unittest.TestCase):
                         "dataset", "tcw.nc")
 
     @classmethod
-    def load_data(cls):
+    def load_data(cls, temporal_axis=False):
         with netCDF4.Dataset(cls.GRID) as ds:
             z = np.flip(ds.variables['tcw'][:].T, axis=1)
             z[z.mask] = float("nan")
+            z_axis = core.TemporalAxis(
+                netCDF4.num2date(
+                    ds.variables['time'][:],
+                    ds.variables['time'].units,
+                    only_use_cftime_datetimes=False,
+                    only_use_python_datetimes=True).astype("datetime64[h]").
+                astype("int64")) if temporal_axis else core.Axis(
+                    ds.variables['time'][:])
+            class_ = core.TemporalGrid3DFloat64 if temporal_axis else core.Grid3DFloat64
 
-            return core.Grid3DFloat64(
+            return class_(
                 core.Axis(ds.variables['longitude'][:], is_circle=True),
-                core.Axis(np.flip(ds.variables['latitude'][:])),
-                core.Axis(ds.variables['time'][:]), z.data)
+                core.Axis(np.flip(ds.variables['latitude'][:])), z_axis,
+                z.data)
 
 
 class TestGrid3D(TestCase):
@@ -154,11 +163,16 @@ class Trivariate(TestCase):
 
     def test_grid3d_z_method(self):
         """Test of the interpolation method used on Z-axis"""
-        grid = self.load_data()
-        interpolator = core.Bilinear3D()
+        grid = self.load_data(temporal_axis=True)
+        interpolator = core.TemporalBilinear3D()
         lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
         lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
-        time = 898500 + 3
+        time = np.array([
+            netCDF4.num2date(898500 + 3,
+                             "hours since 1900-01-01 00:00:0.0",
+                             only_use_cftime_datetimes=False,
+                             only_use_python_datetimes=True)
+        ]).astype("datetime64[h]").astype("int64")
         x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
         z0 = core.trivariate_float64(grid,
                                      x.flatten(),
@@ -191,7 +205,7 @@ class Trivariate(TestCase):
                                     y.flatten(),
                                     t.flatten(),
                                     interpolator,
-                                    z_method="couic",
+                                    z_method="NEAREST",
                                     num_threads=0)
 
     def test_grid3d_interpolator(self):
