@@ -1,9 +1,10 @@
 Changelog
 #########
 
-0.3.0 (X Y Z)
+0.3.0 (15 April 2020)
 -------------------------
 * Selection of interpolation methods for the third and fourth axes.
+* Fixed a bug on 4D interpolation with the xarray backend.
 
 0.2.0 (16 February 2020)
 -------------------------

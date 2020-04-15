@@ -10,9 +10,9 @@ Get software version information
 
 def release() -> str:
     """Returns the software version number"""
-    return "0.2.1"
+    return "0.3.0"
 
 
 def date() -> str:
     """Returns the creation date of this release"""
-    return "24 February 2020"
+    return "15 April 2020"
