@@ -20,6 +20,18 @@ namespace pyinterp {
 template <template <class> class Point, typename T>
 using Bivariate4D = detail::math::Bivariate<Point, T>;
 
+/// Get the fonction used to perform the interpolation on the U-Axis
+template <typename T>
+constexpr auto get_u_interpolation_method(const std::string& method)
+    -> pyinterp::detail::math::z_method_t<T, T> {
+  if (method == "linear") {
+    return &pyinterp::detail::math::linear<T, T>;
+  } else if (method == "nearest") {
+    return &pyinterp::detail::math::nearest<T, T>;
+  }
+  throw std::invalid_argument("unknown interpolation method: " + method);
+}
+
 /// Interpolation of quadrivariate function.
 ///
 /// @tparam Point A type of point defining a point in space.
@@ -45,8 +57,7 @@ auto quadrivariate(const Grid4D<Type, AxisType>& grid,
       pyinterp::detail::math::get_z_interpolation_method(
           interpolator, z_method.value_or("linear"));
   auto u_interpolation_method =
-      pyinterp::detail::math::get_z_interpolation_method(
-          interpolator, u_method.value_or("linear"));
+      get_u_interpolation_method<Coordinate>(u_method.value_or("linear"));
 
   auto size = x.size();
   auto result =
