@@ -68,9 +68,10 @@ class Fill(unittest.TestCase):
 
     def test_loess_3d(self):
         grid = self._load(True)
+        mask = np.isnan(grid.array)
         filled0 = pyinterp.fill.loess(grid, num_threads=0)
-        filled0[np.isnan(filled0)] = 0
-        self.assertEqual((filled0[:, :, 0] - filled0[:, :, 1]).mean(), 0)
+        filled0[mask] = np.nan
+        self.assertEqual(np.nanmean(filled0 - grid.array), 0)
 
     def test_gauss_seidel_3d(self):
         grid = self._load(True)

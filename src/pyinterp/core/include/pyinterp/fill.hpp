@@ -6,11 +6,13 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+
 #include <Eigen/Core>
 #include <atomic>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
+
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/grid.hpp"
@@ -272,6 +274,31 @@ auto gauss_seidel(
   return std::make_tuple(iteration, max_residual);
 }
 
+// Get the indexes that frame a given index.
+auto frame_index(const int64_t index, const int64_t size, const bool is_angle,
+                 std::vector<int64_t>& frame) -> void {
+  // Index in the center of the window
+  auto center = static_cast<int64_t>(frame.size() / 2);
+
+  for (int64_t ix = 0; ix < static_cast<int64_t>(frame.size()); ++ix) {
+    auto idx = index - center + ix;
+
+    // Normalizing longitude?
+    if (is_angle) {
+      idx = detail::math::remainder(idx, size);
+    } else {
+      // Otherwise, the symmetrical indexes are used if the indexes are outside
+      // the domain definition.
+      if (idx < 0) {
+        idx = -idx;
+      } else if (idx > size) {
+        idx = detail::math::remainder(-idx, size);
+      }
+    }
+    frame[ix] = idx;
+  }
+}
+
 /// Type of values processed by the Loess filter.
 enum ValueType {
   kUndefined,  //!< Undefined values (fill undefined values)
@@ -280,18 +307,18 @@ enum ValueType {
 };
 
 /// Fills undefined values using a locally weighted regression function or
-/// LOESS. The weight function used for LOESS is the tri-cube weight function,
-/// w(x)=(1-|d|^{3})^{3}
+/// LOESS. The weight function used for LOESS is the tri-cube weight
+/// function, w(x)=(1-|d|^{3})^{3}
 ///
 /// @param grid Grid Function on a uniform 2-dimensional grid to be filled.
-/// @param nx Number of points of the half-window to be taken into account along
-/// the longitude axis.
-/// @param nx Number of points of the half-window to be taken into account along
-/// the latitude axis.
+/// @param nx Number of points of the half-window to be taken into account
+/// along the longitude axis.
+/// @param nx Number of points of the half-window to be taken into account
+/// along the latitude axis.
 /// @param value_type Type of values processed by the filter
-/// @param num_threads The number of threads to use for the computation. If 0
-/// all CPUs are used. If 1 is given, no parallel computing code is used at all,
-/// which is useful for debugging.
+/// @param num_threads The number of threads to use for the computation. If
+/// 0 all CPUs are used. If 1 is given, no parallel computing code is used
+/// at all, which is useful for debugging.
 /// @return The grid will have all the NaN filled with extrapolated values.
 template <typename Type>
 auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
@@ -310,9 +337,23 @@ auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
       // Access to the shared pointer outside the loop to avoid data races
       const auto& x_axis = *grid.x();
       const auto& y_axis = *grid.y();
+      auto x_frame = std::vector<int64_t>(nx * 2 + 1);
+      auto y_frame = std::vector<int64_t>(ny * 2 + 1);
 
       for (size_t ix = start; ix < end; ++ix) {
         auto x = x_axis(ix);
+
+        // We retrieve the indexes framing the current value.
+        frame_index(ix, x_axis.size(), x_axis.is_angle(), x_frame);
+
+        // Read the first value of the calculated window.
+        const auto x0 = x_axis(x_frame[0]);
+
+        // The current value is normalized to the first value in the
+        // window.
+        if (x_axis.is_angle()) {
+          x = detail::math::normalize_angle(x, x0, 360.0);
+        }
 
         for (int64_t iy = 0; iy < y_axis.size(); ++iy) {
           auto z = grid.value(ix, iy);
@@ -323,25 +364,32 @@ auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
               (value_type == kUndefined && undefined)) {
             auto y = y_axis(iy);
 
-            // Reading the coordinates of the window around the masked point.
-            auto x_frame = x_axis.find_indexes(x, nx, axis::kSym);
-            auto y_frame = y_axis.find_indexes(y, ny, axis::kSym);
+            // We retrieve the indexes framing the current value.
+            frame_index(iy, y_axis.size(), false, y_frame);
 
-            // Initialization of values to calculate the extrapolated value.
+            // Initialization of values to calculate the extrapolated
+            // value.
             auto value = Type(0);
             auto weight = Type(0);
 
             // For all the coordinates of the frame.
             for (auto wx : x_frame) {
+              auto xi = x_axis(wx);
+
+              // We normalize the window's coordinates to its first value.
+              if (x_axis.is_angle()) {
+                xi = detail::math::normalize_angle(xi, x0, 360.0);
+              }
+
               for (auto wy : y_frame) {
                 auto zi = grid.value(wx, wy);
 
-                // If the value is not masked, its weight is calculated from the
-                // tri-cube weight function
+                // If the value is not masked, its weight is calculated from
+                // the tri-cube weight function
                 if (!std::isnan(zi)) {
                   const auto power = 3.0;
                   auto d =
-                      std::sqrt(detail::math::sqr(((x_axis(wx) - x)) / nx) +
+                      std::sqrt(detail::math::sqr(((xi - x)) / nx) +
                                 detail::math::sqr(((y_axis(wy) - y)) / ny));
                   auto wi = d <= 1 ? std::pow((1.0 - std::pow(d, power)), power)
                                    : 0.0;
@@ -389,9 +437,24 @@ auto loess(const Grid3D<Type, AxisType>& grid, const uint32_t nx,
       // Access to the shared pointer outside the loop to avoid data races
       const auto& x_axis = *grid.x();
       const auto& y_axis = *grid.y();
+      auto x_frame = std::vector<int64_t>(nx * 2 + 1);
+      auto y_frame = std::vector<int64_t>(ny * 2 + 1);
+
       for (size_t iz = start; iz < end; ++iz) {
         for (int64_t ix = 0; ix < x_axis.size(); ++ix) {
           auto x = x_axis(ix);
+
+          // We retrieve the indexes framing the current value.
+          frame_index(ix, x_axis.size(), x_axis.is_angle(), x_frame);
+
+          // Read the first value of the calculated window.
+          const auto x0 = x_axis(x_frame[0]);
+
+          // The current value is normalized to the first value in the
+          // window.
+          if (x_axis.is_angle()) {
+            x = detail::math::normalize_angle(x, x0, 360.0);
+          }
 
           for (int64_t iy = 0; iy < y_axis.size(); ++iy) {
             auto z = grid.value(ix, iy, iz);
@@ -402,25 +465,32 @@ auto loess(const Grid3D<Type, AxisType>& grid, const uint32_t nx,
                 (value_type == kUndefined && undefined)) {
               auto y = y_axis(iy);
 
-              // Reading the coordinates of the window around the masked point.
-              auto x_frame = x_axis.find_indexes(x, nx, axis::kSym);
-              auto y_frame = y_axis.find_indexes(y, ny, axis::kSym);
+              // We retrieve the indexes framing the current value.
+              frame_index(iy, y_axis.size(), false, y_frame);
 
-              // Initialization of values to calculate the extrapolated value.
+              // Initialization of values to calculate the extrapolated
+              // value.
               auto value = Type(0);
               auto weight = Type(0);
 
               // For all the coordinates of the frame.
               for (auto wx : x_frame) {
+                auto xi = x_axis(wx);
+
+                // We normalize the window's coordinates to its first value.
+                if (x_axis.is_angle()) {
+                  xi = detail::math::normalize_angle(xi, x0, 360.0);
+                }
+
                 for (auto wy : y_frame) {
                   auto zi = grid.value(wx, wy, iz);
 
-                  // If the value is not masked, its weight is calculated from
-                  // the tri-cube weight function
+                  // If the value is not masked, its weight is calculated
+                  // from the tri-cube weight function
                   if (!std::isnan(zi)) {
                     const auto power = 3.0;
                     auto d =
-                        std::sqrt(detail::math::sqr(((x_axis(wx) - x)) / nx) +
+                        std::sqrt(detail::math::sqr(((xi - x)) / nx) +
                                   detail::math::sqr(((y_axis(wy) - y)) / ny));
                     auto wi = d <= 1
                                   ? std::pow((1.0 - std::pow(d, power)), power)
