@@ -25,8 +25,9 @@ using z_method_t =
 /// Get the fonction used to perform the interpolation on the Z-Axis
 template <template <class> class Point = geometry::TemporalEquatorial2D,
           typename T>
-constexpr auto get_z_method(const Bivariate<geometry::TemporalEquatorial2D, T>*,
-                            const ZMethod method) -> z_method_t<int64_t, T> {
+constexpr auto get_z_method(
+    const Bivariate<geometry::TemporalEquatorial2D, T>* /*unused*/,
+    const ZMethod method) -> z_method_t<int64_t, T> {
   switch (method) {
     case kLinear:
       return &linear<int64_t, T>;
@@ -38,8 +39,8 @@ constexpr auto get_z_method(const Bivariate<geometry::TemporalEquatorial2D, T>*,
 
 /// Get the fonction used to perform the interpolation on the Z-Axis
 template <template <class> class Point, typename T>
-constexpr auto get_z_method(const Bivariate<Point, T>*, const ZMethod method)
-    -> z_method_t<T, T> {
+constexpr auto get_z_method(const Bivariate<Point, T>* /*unused*/,
+                            const ZMethod method) -> z_method_t<T, T> {
   switch (method) {
     case kLinear:
       return &linear<T, T>;
@@ -56,7 +57,8 @@ constexpr auto get_z_interpolation_method(
   if (method == "linear") {
     return pyinterp::detail::math::get_z_method<Point, T>(
         interpolator, pyinterp::detail::math::kLinear);
-  } else if (method == "nearest") {
+  }
+  if (method == "nearest") {
     return pyinterp::detail::math::get_z_method<Point, T>(
         interpolator, pyinterp::detail::math::kNearest);
   }

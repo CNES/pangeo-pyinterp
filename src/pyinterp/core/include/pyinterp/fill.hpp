@@ -275,8 +275,9 @@ auto gauss_seidel(
 }
 
 // Get the indexes that frame a given index.
-auto frame_index(const int64_t index, const int64_t size, const bool is_angle,
-                 std::vector<int64_t>& frame) -> void {
+inline auto frame_index(const int64_t index, const int64_t size,
+                        const bool is_angle, std::vector<int64_t>& frame)
+    -> void {
   // Index in the center of the window
   auto center = static_cast<int64_t>(frame.size() / 2);
 

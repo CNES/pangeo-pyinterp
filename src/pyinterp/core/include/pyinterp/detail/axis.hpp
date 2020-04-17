@@ -100,7 +100,7 @@ class Axis {
   /// Move constructor
   ///
   /// @param rhs right value
-  Axis(Axis&& rhs) = default;
+  Axis(Axis&& rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
@@ -110,7 +110,7 @@ class Axis {
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Axis&& rhs) -> Axis& = default;
+  auto operator=(Axis&& rhs) noexcept -> Axis& = default;
 
   /// Get the ith coordinate value.
   ///
@@ -463,7 +463,7 @@ class Axis {
 
   /// Put longitude into the range [0, circle_] degrees.
   void normalize_longitude(
-      Eigen::Ref<Eigen::Matrix<T, Eigen::Dynamic, 1>>& points)  {
+      Eigen::Ref<Eigen::Matrix<T, Eigen::Dynamic, 1>>& points) {
     auto monotonic = true;
     auto ascending = points.size() < 2 ? true : points[0] < points[1];
 

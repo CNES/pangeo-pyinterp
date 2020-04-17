@@ -208,8 +208,7 @@ class XArray3D : public CoordsXY {
     q_.resize(nz);
 
     for (auto iz = 0U; iz < nz; ++iz) {
-      q_(iz) = std::shared_ptr<Eigen::MatrixXd>(
-          new Eigen::MatrixXd(x()->size(), y()->size()));
+      q_(iz) = std::make_shared<Eigen::MatrixXd>(x()->size(), y()->size());
     }
   }
 
@@ -305,15 +304,15 @@ class XArray4D : public CoordsXY {
 
     for (auto iz = 0U; iz < nz; ++iz) {
       for (auto iu = 0U; iu < nu; ++iu) {
-        q_(iz, iu) = std::shared_ptr<Eigen::MatrixXd>(
-            new Eigen::MatrixXd(x()->size(), y()->size()));
+        q_(iz, iu) =
+            std::make_shared<Eigen::MatrixXd>(x()->size(), y()->size());
       }
     }
   }
 
   /// Get the set of coordinates/values for the ith z-layer
-  [[nodiscard]] auto xarray_2d(const Eigen::Index iz, const Eigen::Index iu) const
-      -> XArray2D {
+  [[nodiscard]] auto xarray_2d(const Eigen::Index iz,
+                               const Eigen::Index iu) const -> XArray2D {
     return XArray2D(x(), y(), q_(iz, iu));
   }
 

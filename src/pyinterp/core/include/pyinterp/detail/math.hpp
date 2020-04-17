@@ -212,11 +212,7 @@ template <typename T, typename std::enable_if<std::is_integral<T>::value,
                                               T>::type* = nullptr>
 inline constexpr auto is_same(const T& a, const T& b, const T& epsilon) noexcept
     -> bool {
-  auto diff = std::abs(a - b);
-  if (diff <= epsilon) {
-    return true;
-  }
-  return false;
+  return std::abs(a - b) <= epsilon;
 }
 
 /// True if a and b are two values identical to an epsilon.

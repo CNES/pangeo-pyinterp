@@ -140,7 +140,7 @@ class TemporalEquatorial2D : public EquatorialPoint2D<T> {
         timestamp_(std::numeric_limits<int64_t>::min()) {}
 
   /// Gets the time stamp associated with the point
-  auto timestamp() const -> int64_t { return timestamp_; }
+  [[nodiscard]] auto timestamp() const -> int64_t { return timestamp_; }
 
  private:
   int64_t timestamp_;
@@ -200,7 +200,8 @@ struct dimension<pyinterp::detail::geometry::TemporalEquatorial2D<T>>
 template <typename T, size_t I>
 struct access<pyinterp::detail::geometry::TemporalEquatorial2D<T>, I> {
   /// Pointer accessor
-  static T get(pyinterp::detail::geometry::TemporalEquatorial2D<T> const &p) {
+  static auto get(pyinterp::detail::geometry::TemporalEquatorial2D<T> const &p)
+      -> T {
     return p.template get<I>();
   }
 

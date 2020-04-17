@@ -26,7 +26,8 @@ constexpr auto get_u_interpolation_method(const std::string& method)
     -> pyinterp::detail::math::z_method_t<T, T> {
   if (method == "linear") {
     return &pyinterp::detail::math::linear<T, T>;
-  } else if (method == "nearest") {
+  }
+  if (method == "nearest") {
     return &pyinterp::detail::math::nearest<T, T>;
   }
   throw std::invalid_argument("unknown interpolation method: " + method);

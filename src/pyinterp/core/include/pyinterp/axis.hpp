@@ -154,7 +154,7 @@ class Axis : public detail::Axis<T>,
   }
 
   /// Get a tuple that fully encodes the state of this instance
-  auto getstate() const -> pybind11::tuple {
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
     // Regular
     {
       auto ptr = dynamic_cast<detail::axis::container::Regular<T>*>(

@@ -32,7 +32,7 @@ class Abstract {
   /// Move constructor
   ///
   /// @param rhs right value
-  Abstract(Abstract&& rhs) = default;
+  Abstract(Abstract&& rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
@@ -42,7 +42,7 @@ class Abstract {
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Abstract&& rhs) -> Abstract& = default;
+  auto operator=(Abstract&& rhs) noexcept -> Abstract& = default;
 
   /// Returns true if the data is arranged in ascending order.
   [[nodiscard]] inline auto is_ascending() const -> bool {
@@ -134,7 +134,7 @@ class Undefined : public Abstract<T> {
   /// Move constructor
   ///
   /// @param rhs right value
-  Undefined(Undefined&& rhs) = default;
+  Undefined(Undefined&& rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
@@ -144,7 +144,7 @@ class Undefined : public Abstract<T> {
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Undefined&& rhs) -> Undefined& = default;
+  auto operator=(Undefined&& rhs) noexcept -> Undefined& = default;
 
   /// @copydoc Abstract::flip()
   auto flip() -> void override {}
@@ -181,9 +181,9 @@ class Undefined : public Abstract<T> {
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  inline int64_t find_index(T /* coordinate */,
-                            bool /* bounded */) const  /// NOLINT
-      noexcept override {
+  inline auto find_index(T /* coordinate */,
+                         bool /* bounded */) const  /// NOLINT
+      noexcept -> int64_t override {
     return -1;
   }
 
@@ -224,7 +224,7 @@ class Irregular : public Abstract<T> {
   /// Move constructor
   ///
   /// @param rhs right value
-  Irregular(Irregular&& rhs) = default;
+  Irregular(Irregular&& rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
@@ -234,7 +234,7 @@ class Irregular : public Abstract<T> {
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Irregular&& rhs) -> Irregular& = default;
+  auto operator=(Irregular&& rhs) noexcept -> Irregular& = default;
 
   /// @copydoc Abstract::flip()
   auto flip() -> void override {
@@ -393,7 +393,7 @@ class Regular : public Abstract<T> {
   /// Move constructor
   ///
   /// @param rhs right value
-  Regular(Regular&& rhs) = default;
+  Regular(Regular&& rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
@@ -403,7 +403,7 @@ class Regular : public Abstract<T> {
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Regular&& rhs) -> Regular& = default;
+  auto operator=(Regular&& rhs) noexcept -> Regular& = default;
 
   /// Get the step between two successive values.
   ///
