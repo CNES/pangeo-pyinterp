@@ -290,14 +290,33 @@ inline auto frame_index(const int64_t index, const int64_t size,
     } else {
       // Otherwise, the symmetrical indexes are used if the indexes are outside
       // the domain definition.
-      if (idx < 0) {
-        idx = -idx;
-      } else if (idx > size) {
-        idx = detail::math::remainder(-idx, size);
+      if (idx < 0 || idx >= size) {
+        auto where = detail::math::remainder(idx, (size - 1) * 2);
+        if (where >= size) {
+          idx = size - 2 - detail::math::remainder(where, size);
+        } else {
+          idx = detail::math::remainder(where, size);
+        }
       }
     }
     frame[ix] = idx;
   }
+}
+
+/// Checking the size of the filter window.
+inline auto check_windows_size(const std::string& name1, const uint32_t size)
+    -> void {
+  if (size < 1) {
+    throw std::invalid_argument(name1 + " must be >= 1");
+  }
+}
+
+/// Checking the size of the filter window.
+template <typename... Args>
+inline auto check_windows_size(const std::string& name1, const uint32_t size,
+                               Args... args) -> void {
+  check_windows_size(name1, size);
+  check_windows_size(args...);
 }
 
 /// Type of values processed by the Loess filter.
@@ -325,6 +344,7 @@ template <typename Type>
 auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
            const ValueType value_type, const size_t num_threads)
     -> pybind11::array_t<Type> {
+  check_windows_size("nx", nx, "ny", ny);
   auto result = pybind11::array_t<Type>(
       pybind11::array::ShapeContainer{grid.x()->size(), grid.y()->size()});
   auto _result = result.template mutable_unchecked<2>();
@@ -425,6 +445,7 @@ template <typename Type, typename AxisType>
 auto loess(const Grid3D<Type, AxisType>& grid, const uint32_t nx,
            const uint32_t ny, const ValueType value_type,
            const size_t num_threads) -> pybind11::array_t<Type> {
+  check_windows_size("nx", nx, "ny", ny);
   auto result = pybind11::array_t<Type>(pybind11::array::ShapeContainer{
       grid.x()->size(), grid.y()->size(), grid.z()->size()});
   auto _result = result.template mutable_unchecked<3>();
