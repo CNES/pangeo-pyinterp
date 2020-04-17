@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.3.1 (17 April 2020)
+-------------------------
+* Fixed a bug in Loess filter.
+
 0.3.0 (15 April 2020)
 -------------------------
 * Selection of interpolation methods for the third and fourth axes.
