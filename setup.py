@@ -29,6 +29,9 @@ if not (MAJOR >= 3 and MINOR >= 6):
 # Working directory
 WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
+# OSX deployment target
+OSX_DEPLOYMENT_TARGET = '10.14'
+
 
 def build_dirname(extname=None):
     """Returns the name of the build directory"""
@@ -340,7 +343,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if platform.system() != 'Windows':
             build_args += ['--', '-j%d' % os.cpu_count()]
             if platform.system() == 'Darwin':
-                cmake_args += ['-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14']
+                cmake_args += [
+                    '-DCMAKE_OSX_DEPLOYMENT_TARGET=' + OSX_DEPLOYMENT_TARGET
+                ]
             if self.CODE_COVERAGE:
                 cmake_args += ["-DCODE_COVERAGE=ON"]
         else:
@@ -571,4 +576,6 @@ def main():
 
 
 if __name__ == "__main__":
+    if platform.system() == 'Darwin':
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = OSX_DEPLOYMENT_TARGET
     main()
