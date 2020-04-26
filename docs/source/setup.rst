@@ -53,6 +53,7 @@ You can specify, among other things, the following options:
     * ``--debug`` to compile the C++ library in Debug mode.
     * ``--eigen-root`` to specify the Eigen3 include directory.
     * ``--gsl-root`` to specify the Preferred GSL installation prefix.
+    * ``--mkl-root`` to specify the MKL directory.
     * ``--reconfigure``  to force CMake to reconfigure the project.
 
 Run the ``python setup.py build --help`` command to view all the options
