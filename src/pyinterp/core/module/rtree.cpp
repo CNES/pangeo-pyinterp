@@ -91,7 +91,7 @@ Args:
     values (numpy.ndarray): An array of size ``(n)`` containing the values
         associated with the coordinates provided
 )__doc__")
-               .c_str())
+               .c_str(), py::call_guard<py::gil_scoped_release>())
       .def("insert", &pyinterp::RTree<CoordinateType, Type, N>::insert,
            py::arg("coordinates"), py::arg("values"),
            (R"__doc__(
@@ -103,7 +103,7 @@ Args:
     values (numpy.ndarray): An array of size ``(n)`` containing the values
         associated with the coordinates provided
 )__doc__")
-               .c_str())
+               .c_str(), py::call_guard<py::gil_scoped_release>())
       .def("query",
            [](const pyinterp::RTree<CoordinateType, Type, N>& self,
               const py::array_t<CoordinateType>& coordinates, const uint32_t k,
