@@ -4,9 +4,11 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <gsl/gsl_interp.h>
+
 #include <Eigen/Core>
 #include <functional>
 #include <memory>
+
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/gsl/accelerator.hpp"
 
@@ -76,7 +78,8 @@ class Interpolate1D {
   Accelerator acc_;
 
   /// Initializes the interpolation object
-  void init(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya) {
+  inline void init(const Eigen::VectorXd& xa,
+                   const Eigen::VectorXd& ya) noexcept {
     acc_.reset();
     gsl_interp_init(workspace_.get(), xa.data(), ya.data(), xa.size());
   }
