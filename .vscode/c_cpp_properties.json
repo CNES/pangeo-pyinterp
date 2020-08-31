@@ -4,26 +4,30 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/include/eigen3",
-                "~/anaconda3/include/python3.7m",
-                "${workspaceFolder}/third_party/pybind11/include"
+                "~/anaconda3/include/",
+                "~/anaconda3/include/eigen3/",
+                "~/anaconda3/include/python3.7m"
             ],
-            "defines": [],
+            "defines": [
+                "HAVE_IEC559=1"
+            ]],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64"
         },
         {
-            "name": "OSX",
+            "name": "MacOSX",
             "includePath": [
                 "${workspaceFolder}/**",
-                "~/anaconda3/include/eigen3",
-                "~/anaconda3/include",
-                "~/anaconda3/include/python3.7m",
-                "${workspaceFolder}/third_party/pybind11/include"
+                "~/opt/miniconda3/include/",
+                "~/opt/miniconda3/include/eigen3/",
+                "~/opt/miniconda3/include/python3.8"
             ],
             "defines": [],
+            "macFrameworkPath": [
+                "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
             "cppStandard": "c++17",
@@ -35,7 +39,7 @@
                 "${workspaceFolder}/**",
                 "~\\Anaconda3\\include",
                 "~\\Anaconda3\\Library\\include",
-                "~\\Anaconda3\\Library\\include\\eigen",
+                "~\\Anaconda3\\Library\\include\\eigen3",
                 "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Tools\\MSVC\\14.16.27023\\include",
                 "${workspaceFolder}/third_party/pybind11/include"
             ],

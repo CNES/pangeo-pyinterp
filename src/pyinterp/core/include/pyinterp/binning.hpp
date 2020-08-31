@@ -62,7 +62,7 @@ class Binning2D {
       auto strategy = boost::geometry::strategy::area::geographic<>(
           boost::geometry::srs::spheroid(wgs_->semi_major_axis(),
                                          wgs_->semi_minor_axis()));
-      push_linear<detail::geometry::SpheriodPoint2D,
+      push_linear<detail::geometry::GeographicPoint2D,
                   boost::geometry::strategy::area::geographic<>>(x, y, z,
                                                                  strategy);
     }

@@ -164,7 +164,7 @@ using EquatorialPoint4D = boost::geometry::model::point<
 ///
 /// @tparam T Storage class of the coordinates of the point.
 template <typename T>
-using SpheriodPoint2D = boost::geometry::model::point<
+using GeographicPoint2D = boost::geometry::model::point<
     T, 2, boost::geometry::cs::geographic<boost::geometry::degree>>;
 
 }  // namespace pyinterp::detail::geometry

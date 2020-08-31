@@ -3,33 +3,33 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include <pybind11/pybind11.h>
 #include "pyinterp/detail/geometry/point.hpp"
+#include <boost/geometry/geometries/register/point.hpp>
+#include <pybind11/pybind11.h>
 
 namespace pyinterp::geodetic {
 
 // Handle a point in a equatorial spherical coordinates system in degrees.
-template <typename T>
-class Point2D : public detail::geometry::EquatorialPoint2D<T> {
+class Point : public detail::geometry::GeographicPoint2D<double> {
  public:
   /// Default constructor
-  Point2D() : detail::geometry::EquatorialPoint2D<T>() {}
+  Point() noexcept = default;
 
   /// Build a new point with the coordinates provided.
-  Point2D(const T& lon, const T& lat)
-      : detail::geometry::EquatorialPoint2D<T>(lon, lat) {}
+  Point(const double lon, const double lat)
+      : detail::geometry::GeographicPoint2D<double>(lon, lat) {}
 
   /// Get longitude value in degrees
-  inline auto lon() const -> T const& { return this->template get<0>(); }
+  [[nodiscard]] inline auto lon() const -> double { return this->get<0>(); }
 
   /// Get latitude value in degrees
-  inline auto lat() const -> T const& { return this->template get<1>(); }
+  [[nodiscard]] inline auto lat() const -> double { return this->get<1>(); }
 
   /// Set longitude value in degrees
-  inline void lon(T const& v) { this->template set<0>(v); }
+  inline void lon(double const v) { this->set<0>(v); }
 
   /// Set latitude value in degrees
-  inline void lat(T const& v) { this->template set<1>(v); }
+  inline void lat(double const v) { this->set<1>(v); }
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
@@ -38,14 +38,14 @@ class Point2D : public detail::geometry::EquatorialPoint2D<T> {
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static auto setstate(const pybind11::tuple& state) -> Point2D<T> {
+  static auto setstate(const pybind11::tuple& state) -> Point {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
-    return Point2D<T>(state[0].cast<T>(), state[1].cast<T>());
+    return Point(state[0].cast<double>(), state[1].cast<double>());
   }
 
-  /// Converts a Point2D into a string with the same meaning as that of this
+  /// Converts a Point into a string with the same meaning as that of this
   /// instance.
   [[nodiscard]] auto to_string() const -> std::string {
     std::stringstream ss;
@@ -56,46 +56,44 @@ class Point2D : public detail::geometry::EquatorialPoint2D<T> {
 
 }  // namespace pyinterp::geodetic
 
-// BOOST specialization to accept pyinterp::geodectic::Point2D as a geometry
+// BOOST specialization to accept pyinterp::geodectic::Point as a geometry
 // entity
 namespace boost::geometry::traits {
 
 namespace pg = pyinterp::geodetic;
 
 /// Coordinate tag
-template <typename T>
-struct tag<pg::Point2D<T> > {
+template <>
+struct tag<pg::Point> {
   /// Typedef for type
   using type = point_tag;
 };
 
 /// Coordinate type
-template <typename T>
-struct coordinate_type<pg::Point2D<T> > {
+template <>
+struct coordinate_type<pg::Point> {
   /// Typedef for type
-  using type = T;
+  using type = double;
 };
 
 /// Coordinate system
-template <typename T>
-struct coordinate_system<pg::Point2D<T> > {
+template <>
+struct coordinate_system<pg::Point> {
   /// Typedef for type
   using type = cs::spherical_equatorial<degree>;
 };
 
-template <typename T>
-struct dimension<pg::Point2D<T> > : boost::mpl::int_<2> {};
+template <>
+struct dimension<pg::Point> : boost::mpl::int_<2> {};
 
 /// access struct defining with Cartesian
-template <typename T, std::size_t I>
-struct access<pg::Point2D<T>, I> {
+template <std::size_t I>
+struct access<pg::Point, I> {
   /// Accessor to pointer.
-  static auto get(pg::Point2D<T> const& p) -> double {
-    return p.template get<I>();
-  }
+  static auto get(pg::Point const& p) -> double { return p.template get<I>(); }
 
   /// Pointer setter.
-  static void set(pg::Point2D<T>& p, double const& v) {  // NOLINT
+  static void set(pg::Point& p, double const& v) {  // NOLINT
     p.template set<I>(v);
   }
 };
