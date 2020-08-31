@@ -2,11 +2,14 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/detail/math/linear.hpp"
 #include "pyinterp/bicubic.hpp"
-#include <cctype>
+
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+
+#include <cctype>
+
+#include "pyinterp/detail/math/linear.hpp"
 
 namespace py = pybind11;
 
@@ -515,8 +518,8 @@ void implement_bicubic_4d(py::module& m, const std::string& prefix,
   function_suffix[0] = std::tolower(function_suffix[0]);
   m.def(("bicubic_" + function_suffix).c_str(),
         &pyinterp::bicubic_4d<DataType, AxisType>, py::arg("grid"),
-        py::arg("x"), py::arg("y"), py::arg("z"),py::arg("u"), py::arg("nx") = 3,
-        py::arg("ny") = 3,
+        py::arg("x"), py::arg("y"), py::arg("z"), py::arg("u"),
+        py::arg("nx") = 3, py::arg("ny") = 3,
         py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
         py::arg("boundary") = pyinterp::axis::kUndef,
         py::arg("bounds_error") = false, py::arg("num_threads") = 0,

@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <boost/geometry.hpp>
+
 #include "pyinterp/detail/geometry/point.hpp"
 
 namespace pyinterp::detail::geometry {

@@ -4,9 +4,10 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <Eigen/Core>
-#include "pyinterp/eigen.hpp"
+
 #include "pyinterp/detail/gsl/interpolate1d.hpp"
 #include "pyinterp/detail/math.hpp"
+#include "pyinterp/eigen.hpp"
 
 namespace pyinterp::detail::math {
 

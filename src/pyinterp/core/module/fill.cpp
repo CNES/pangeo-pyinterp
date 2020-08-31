@@ -3,7 +3,9 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/fill.hpp"
+
 #include <pybind11/pybind11.h>
+
 #include <cctype>
 
 namespace py = pybind11;
@@ -136,5 +138,4 @@ Type of values processed by the loess filter
   implement_loess_3d<double, int64_t>(m, "Temporal", "Float64");
   implement_loess_3d<float, double>(m, "", "Float32");
   implement_loess_3d<float, int64_t>(m, "Temporal", "Float32");
-
 }

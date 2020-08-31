@@ -13,9 +13,10 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-#include "pyinterp/eigen.hpp"
+
 #include "pyinterp/detail/axis/container.hpp"
 #include "pyinterp/detail/math.hpp"
+#include "pyinterp/eigen.hpp"
 
 namespace pyinterp::axis {
 /// Type of boundary handling on an Axis.
@@ -221,8 +222,8 @@ class Axis {
   /// Returns the normalized value with respect to the axis definition. This
   /// means if the axis defines a circle, this method returns a value within the
   /// interval [font(), back()] otherwise it returns the value supplied.
-  [[nodiscard]] inline auto normalize_coordinate(const T coordinate) const
-      noexcept -> T {
+  [[nodiscard]] inline auto normalize_coordinate(
+      const T coordinate) const noexcept -> T {
     return normalize_coordinate(coordinate, axis_->min_value());
   }
 
@@ -499,7 +500,7 @@ class Axis {
   /// order to consider them equal
   /// @return The increment between two values if the values are evenly spaced
   static auto is_evenly_spaced(const Eigen::Ref<const Vector<T>>& points,
-      const T epsilon) -> std::optional<T> {
+                               const T epsilon) -> std::optional<T> {
     size_t n = points.size();
 
     // The axis is defined by a single value.

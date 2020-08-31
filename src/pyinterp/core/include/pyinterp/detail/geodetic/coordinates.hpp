@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <optional>
+
 #include "pyinterp/detail/geodetic/system.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math.hpp"
@@ -111,8 +112,8 @@ class Coordinates {
   /// Cartesian coordinates. The latitude and longitude should be in degrees and
   /// the altitude in meters. The returned ECEF coordinates will be in meters.
   template <typename T>
-  inline auto lla_to_ecef(const geometry::EquatorialPoint3D<T>& lla) const
-      noexcept -> geometry::Point3D<T> {
+  inline auto lla_to_ecef(const geometry::EquatorialPoint3D<T>& lla)
+      const noexcept -> geometry::Point3D<T> {
     double siny;
     double cosy;
     double sinx;
@@ -130,8 +131,8 @@ class Coordinates {
   /// Coordinates instances this and target.
   template <typename T>
   inline auto transform(const Coordinates& target,
-                        const geometry::EquatorialPoint3D<T>& lla) const
-      noexcept -> geometry::EquatorialPoint3D<T> {
+                        const geometry::EquatorialPoint3D<T>& lla)
+      const noexcept -> geometry::EquatorialPoint3D<T> {
     return target.ecef_to_lla(lla_to_ecef(lla));
   }
 

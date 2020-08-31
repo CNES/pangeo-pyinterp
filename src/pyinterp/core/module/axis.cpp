@@ -2,8 +2,10 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include <pybind11/eigen.h>
 #include "pyinterp/axis.hpp"
+
+#include <pybind11/eigen.h>
+
 #include "pyinterp/detail/broadcast.hpp"
 namespace py = pybind11;
 
@@ -48,30 +50,32 @@ Get the maximum coordinate value.
 Return:
     float: The maximum coordinate value.
 )__doc__")
-      .def("is_regular",
-           [](const pyinterp::Axis<T>& self) -> bool {
-             return self.is_regular();
-           },
-           R"__doc__(
+      .def(
+          "is_regular",
+          [](const pyinterp::Axis<T>& self) -> bool {
+            return self.is_regular();
+          },
+          R"__doc__(
 Check if this axis values are spaced regularly
 
 Return:
   bool: True if this axis values are spaced regularly
 )__doc__")
-      .def("flip",
-           [](std::shared_ptr<pyinterp::Axis<T>>& self,
-              const bool inplace) -> std::shared_ptr<pyinterp::Axis<T>> {
-             if (inplace) {
-               self->flip();
-               return self;
-             }
-             auto result = std::make_shared<pyinterp::Axis<T>>(
-                 pyinterp::Axis<T>::setstate(self->getstate()));
-             result->flip();
-             return result;
-           },
-           py::arg("inplace") = false,
-           (R"__doc__(
+      .def(
+          "flip",
+          [](std::shared_ptr<pyinterp::Axis<T>>& self,
+             const bool inplace) -> std::shared_ptr<pyinterp::Axis<T>> {
+            if (inplace) {
+              self->flip();
+              return self;
+            }
+            auto result = std::make_shared<pyinterp::Axis<T>>(
+                pyinterp::Axis<T>::setstate(self->getstate()));
+            result->flip();
+            return result;
+          },
+          py::arg("inplace") = false,
+          (R"__doc__(
 Reverse the order of elements in this axis
 
 Args:
@@ -81,16 +85,17 @@ Args:
 
 Return:
     pyinterp.core.)__doc__" +
-            class_name +
-            R"__doc__(: The flipped axis
+           class_name +
+           R"__doc__(: The flipped axis
 )__doc__")
-               .c_str())
-      .def("find_index",
-           [](const pyinterp::Axis<T>& self, const py::array_t<T>& coordinates,
-              const bool bounded) -> py::array_t<int64_t> {
-             return self.find_index(coordinates, bounded);
-           },
-           py::arg("coordinates"), py::arg("bounded") = false, R"__doc__(
+              .c_str())
+      .def(
+          "find_index",
+          [](const pyinterp::Axis<T>& self, const py::array_t<T>& coordinates,
+             const bool bounded) -> py::array_t<int64_t> {
+            return self.find_index(coordinates, bounded);
+          },
+          py::arg("coordinates"), py::arg("bounded") = false, R"__doc__(
 Given coordinate positions, find what grid elements contains them, or is
 closest to them.
 
@@ -104,11 +109,13 @@ Return:
     is out of the definition range of the axis, otherwise the index of the
     closest value of the coordinate is returned.
 )__doc__")
-      .def("find_indexes",
-           [](const pyinterp::Axis<T>& self, const py::array_t<T>& coordinates) -> py::array_t<int64_t> {
-             return self.find_indexes(coordinates);
-           },
-           py::arg("coordinates"), R"__doc__(
+      .def(
+          "find_indexes",
+          [](const pyinterp::Axis<T>& self,
+             const py::array_t<T>& coordinates) -> py::array_t<int64_t> {
+            return self.find_indexes(coordinates);
+          },
+          py::arg("coordinates"), R"__doc__(
 For all coordinate positions, search for the axis elements around them. This
 means that for n coordinate ``ix`` of the provided array, the method searches
 the indexes ``i0`` and ``i1`` as fallow:
@@ -153,32 +160,36 @@ Raises:
 Return:
     float: Increment value
 )__doc__")
-      .def_property_readonly("is_circle",
-                             [](const pyinterp::Axis<T>& self) -> bool {
-                               return self.is_circle();
-                             },
-                             R"__doc__(
+      .def_property_readonly(
+          "is_circle",
+          [](const pyinterp::Axis<T>& self) -> bool {
+            return self.is_circle();
+          },
+          R"__doc__(
 Test if this axis represents a circle.
 
 Return:
     bool: True if this axis represents a circle
 )__doc__")
-      .def("__eq__",
-           [](const pyinterp::Axis<T>& self,
-              const pyinterp::Axis<T>& rhs) -> bool { return self == rhs; },
-           py::arg("other"),
-           "Overrides the default behavior of the ``==`` operator.")
-      .def("__ne__",
-           [](const pyinterp::Axis<T>& self,
-              const pyinterp::Axis<T>& rhs) -> bool { return self != rhs; },
-           py::arg("other"),
-           "Overrides the default behavior of the ``!=`` operator.")
-      .def("__repr__",
-           [](const pyinterp::Axis<T>& self) -> std::string {
-             return static_cast<std::string>(self);
-           },
-           "Called by the ``repr()`` built-in function to compute the string "
-           "representation of an Axis.")
+      .def(
+          "__eq__",
+          [](const pyinterp::Axis<T>& self,
+             const pyinterp::Axis<T>& rhs) -> bool { return self == rhs; },
+          py::arg("other"),
+          "Overrides the default behavior of the ``==`` operator.")
+      .def(
+          "__ne__",
+          [](const pyinterp::Axis<T>& self,
+             const pyinterp::Axis<T>& rhs) -> bool { return self != rhs; },
+          py::arg("other"),
+          "Overrides the default behavior of the ``!=`` operator.")
+      .def(
+          "__repr__",
+          [](const pyinterp::Axis<T>& self) -> std::string {
+            return static_cast<std::string>(self);
+          },
+          "Called by the ``repr()`` built-in function to compute the string "
+          "representation of an Axis.")
       .def(py::pickle(
           [](const pyinterp::Axis<T>& self) { return self.getstate(); },
           [](const py::tuple& state) {

@@ -2,8 +2,9 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include <pybind11/pybind11.h>
 #include "pyinterp/grid.hpp"
+
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 

@@ -8,8 +8,9 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
-#include "pyinterp/eigen.hpp"
+
 #include "pyinterp/detail/math.hpp"
+#include "pyinterp/eigen.hpp"
 
 namespace pyinterp::detail::axis::container {
 
@@ -151,8 +152,8 @@ class Undefined : public Abstract<T> {
   auto flip() -> void override {}
 
   /// @copydoc Abstract::coordinate_value(const size_t) const
-  [[nodiscard]] inline auto coordinate_value(const size_t /* index */) const
-      noexcept -> T override {
+  [[nodiscard]] inline auto coordinate_value(
+      const size_t /* index */) const noexcept -> T override {
     return math::Fill<T>::value();
   }
 

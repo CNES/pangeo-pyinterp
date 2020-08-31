@@ -7,6 +7,7 @@
 #include <Eigen/LU>
 #include <cmath>
 #include <functional>
+
 #include "pyinterp/eigen.hpp"
 
 namespace pyinterp::detail::math {
