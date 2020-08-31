@@ -10,7 +10,7 @@
             ],
             "defines": [
                 "HAVE_IEC559=1"
-            ]],
+            ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
             "cppStandard": "c++17",
