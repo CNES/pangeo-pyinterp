@@ -73,10 +73,40 @@ Geodetic System
 .. autosummary::
   :toctree: generated/
 
-  core.geodetic.Box2D
+  core.geodetic.Box
   core.geodetic.Coordinates
-  core.geodetic.Point2D
+  core.geodetic.Point
   core.geodetic.System
+
+Geohash encoding/decoding as integer
+------------------------------------
+
+.. autosummary::
+  :toctree: generated/
+
+  core.geohash.int64.bounding_box
+  core.geohash.int64.bounding_boxes
+  core.geohash.int64.decode
+  core.geohash.int64.encode
+  core.geohash.int64.error
+  core.geohash.int64.grid_properties
+  core.geohash.int64.neighbors
+  core.geohash.int64.where
+
+Geohash encoding/decoding as bytes
+----------------------------------
+
+.. autosummary::
+  :toctree: generated/
+
+  core.geohash.string.bounding_box
+  core.geohash.string.bounding_boxes
+  core.geohash.string.decode
+  core.geohash.string.encode
+  core.geohash.string.error
+  core.geohash.string.grid_properties
+  core.geohash.string.neighbors
+  core.geohash.string.where
 
 Temporal Cartesian Grids
 ------------------------

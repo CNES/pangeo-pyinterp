@@ -33,9 +33,45 @@ class Box : public boost::geometry::model::box<Point> {
     return {{-180, -90}, {180, 90}};
   }
 
+  // Returns the box, or the two boxes on either side of the dateline if the
+  // defined box wraps around the globe (i.e. the longitude of the min corner
+  // is greater than the longitude of the max corner.)
+  [[nodiscard]] auto split() const -> std::list<Box> {
+    // box wraps around the globe ?
+    if (this->min_corner().lon() > this->max_corner().lon()) {
+      return {Box({this->min_corner().lon(), this->min_corner().lat()},
+                  {180, this->max_corner().lat()}),
+              Box({-180, this->min_corner().lat()},
+                  {this->max_corner().lon(), this->max_corner().lat()})};
+    }
+    return {*this};
+  }
+
   /// @brief Returns the center of the box.
   [[nodiscard]] inline auto centroid() const -> Point {
     return boost::geometry::return_centroid<Point, Box>(*this);
+  }
+
+  /// @brief Returns the delta of the box in latitude and longitude.
+  [[nodiscard]] inline auto delta(bool round) const
+      -> std::tuple<double, double> {
+    auto x = this->max_corner().lon() - this->min_corner().lon();
+    auto y = this->max_corner().lat() - this->min_corner().lat();
+    if (round) {
+      x = Box::max_decimal_power(x);
+      y = Box::max_decimal_power(y);
+    }
+    return std::make_tuple(x, y);
+  }
+
+  /// @brief Returns a point inside the box, making an effort to round to
+  /// minimal precision.
+  [[nodiscard]] inline auto round() const -> Point {
+    const auto xy = delta(true);
+    const auto x = std::get<0>(xy);
+    const auto y = std::get<1>(xy);
+    return {std::ceil(this->min_corner().lon() / x) * x,
+            std::ceil(this->min_corner().lat() / y) * y};
   }
 
   /// @brief Test if the given point is inside or on border of this instance
@@ -113,6 +149,13 @@ class Box : public boost::geometry::model::box<Point> {
     }
     return Box(Point::setstate(state[0].cast<pybind11::tuple>()),
                Point::setstate(state[1].cast<pybind11::tuple>()));
+  }
+
+ private:
+  // Returns the maximum power of 10 from a number (x > 0)
+  static auto max_decimal_power(const double x) -> double {
+    auto m = static_cast<int32_t>(std::floor(std::log10(x)));
+    return detail::math::power10(m);
   }
 };
 

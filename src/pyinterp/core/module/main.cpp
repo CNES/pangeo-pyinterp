@@ -15,10 +15,27 @@ extern void init_bivariate_interpolator(py::module&);
 extern void init_bivariate(py::module&);
 extern void init_fill(py::module&);
 extern void init_geodetic(py::module&);
+extern void init_geohash_int64(py::module&);
+extern void init_geohash_string(py::module&);
 extern void init_grid(py::module&);
 extern void init_quadrivariate(py::module&);
 extern void init_rtree(py::module&);
 extern void init_trivariate(py::module&);
+
+static void init_geohash(py::module& m) {
+  auto int64 = m.def_submodule("int64", R"__doc__(
+GeoHash encoded as integer 64 bits
+----------------------------------
+)__doc__");
+
+  auto string = m.def_submodule("string", R"__doc__(
+GeoHash encoded as bytes
+------------------------
+)__doc__");
+
+  init_geohash_int64(int64);
+  init_geohash_string(string);
+}
 
 PYBIND11_MODULE(core, m) {
   m.doc() = R"__doc__(
@@ -29,6 +46,11 @@ Core module
   auto geodetic = m.def_submodule("geodetic", R"__doc__(
 Geographic coordinate system
 ----------------------------
+)__doc__");
+
+  auto geohash = m.def_submodule("geohash", R"__doc__(
+Geohash encoding/decoding
+-------------------------
 )__doc__");
 
   auto fill = m.def_submodule("fill", R"__doc__(
@@ -47,6 +69,7 @@ Replace undefined values
   init_quadrivariate(m);
   init_bicubic(m);
   init_geodetic(geodetic);
+  init_geohash(geohash);
   init_fill(fill);
   init_rtree(m);
 }

@@ -121,6 +121,30 @@ if(NOT POW_FUNCTION_EXISTS)
   endif()
 endif()
 
+# Check if floating-point types fulfill the requirements of IEC 559
+# (IEEE 754) standard
+macro(check_floating_point_is_iec559)
+  message("-- Performing Test HAVE_IEC559")
+  file(WRITE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/is_iec559.cpp"
+"#include <limits>
+int main() {
+  return std::numeric_limits<double>::is_iec559 ? 1 : 0;
+}")
+  try_run(IS_IEC559
+          _UNUSED
+          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
+          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/is_iec559.cpp")
+  if(IS_IEC559)
+    message("-- Performing Test HAVE_IEC559 - Success")
+    add_definitions(-DHAVE_IEC559)
+  else()
+    message("-- Performing Test HAVE_IEC559 - Failed")
+  endif()
+  unset(_UNUSED)
+endmacro()
+
+check_floating_point_is_iec559()
+
 # Code Coverage Configuration
 add_library(cpp_coverage INTERFACE)
 
@@ -204,5 +228,8 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/include
+)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11)
 add_subdirectory(src/pyinterp/core)
