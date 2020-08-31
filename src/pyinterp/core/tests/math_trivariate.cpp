@@ -45,4 +45,11 @@ TEST(math_trivariate, trivariate) {
       geometry::Point3D<double>{15.0, 20.0, 1}, 162.0, 91.0, 95.0, 210.0, 262.0,
       191.0, 195.0, 310.0, &bilinear, &math::nearest<double, double>);
   EXPECT_DOUBLE_EQ(interpolated, 246.1);
+
+  interpolated = math::trivariate<geometry::Point3D, double>(
+      geometry::Point3D<double>{14.5, 20.2, 0.6},
+      geometry::Point3D<double>{14.0, 21.0, 0},
+      geometry::Point3D<double>{15.0, 20.0, 1}, 162.0, 91.0, 95.0, 210.0, 262.0,
+      191.0, 195.0, 310.0, &bilinear, &math::linear<double, double>);
+  EXPECT_DOUBLE_EQ(interpolated, 206.1);
 }
