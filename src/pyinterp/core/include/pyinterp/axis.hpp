@@ -3,11 +3,14 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include <memory>
 #include <pybind11/numpy.h>
+
+#include <memory>
+
 #include "pyinterp/detail/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/math.hpp"
+#include "pyinterp/eigen.hpp"
 
 namespace pyinterp {
 namespace detail {
@@ -29,10 +32,9 @@ template <typename T>
 inline auto vector_from_numpy(
     const std::string& name,
     pybind11::array_t<T, pybind11::array::c_style>& ndarray)
-    -> Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1>> {
+    -> Eigen::Map<Vector<T>> {
   check_array_ndim(name, 1, ndarray);
-  return Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1>>(ndarray.mutable_data(),
-                                                         ndarray.size());
+  return Eigen::Map<Vector<T>>(ndarray.mutable_data(), ndarray.size());
 }
 
 }  // namespace detail
@@ -201,11 +203,11 @@ class Axis : public detail::Axis<T>,
         break;
       case detail::axis::IRREGULAR: {
         auto ndarray = state[1].cast<pybind11::array_t<T>>();
-        return Axis(std::shared_ptr<detail::axis::container::Abstract<T>>(
-                        new detail::axis::container::Irregular<T>(
-                            Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, 1>>(
-                                ndarray.mutable_data(), ndarray.size()))),
-                    state[2].cast<bool>());
+        return Axis(
+            std::shared_ptr<detail::axis::container::Abstract<T>>(
+                new detail::axis::container::Irregular<T>(Eigen::Map<Vector<T>>(
+                    ndarray.mutable_data(), ndarray.size()))),
+            state[2].cast<bool>());
       }
       case detail::axis::REGULAR:
         return Axis(std::shared_ptr<detail::axis::container::Abstract<T>>(

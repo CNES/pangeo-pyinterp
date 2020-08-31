@@ -13,6 +13,7 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/detail/axis/container.hpp"
 #include "pyinterp/detail/math.hpp"
 
@@ -61,8 +62,7 @@ class Axis {
   /// @param epsilon Maximum allowed difference between two real numbers in
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle.
-  explicit Axis(Eigen::Ref<Eigen::Matrix<T, Eigen::Dynamic, 1>> values,
-                T epsilon, bool is_circle)
+  explicit Axis(Eigen::Ref<Vector<T>> values, T epsilon, bool is_circle)
       : circle_(is_circle ? T(360) : math::Fill<T>::value()) {
     // Axis size control
     if (values.size() > std::numeric_limits<int64_t>::max()) {
@@ -462,8 +462,7 @@ class Axis {
   }
 
   /// Put longitude into the range [0, circle_] degrees.
-  void normalize_longitude(
-      Eigen::Ref<Eigen::Matrix<T, Eigen::Dynamic, 1>>& points) {
+  void normalize_longitude(Eigen::Ref<Vector<T>>& points) {
     auto monotonic = true;
     auto ascending = points.size() < 2 ? true : points[0] < points[1];
 
@@ -499,8 +498,7 @@ class Axis {
   /// @param epsilon Maximum allowed difference between two numbers in
   /// order to consider them equal
   /// @return The increment between two values if the values are evenly spaced
-  static auto is_evenly_spaced(
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& points,
+  static auto is_evenly_spaced(const Eigen::Ref<const Vector<T>>& points,
       const T epsilon) -> std::optional<T> {
     size_t n = points.size();
 

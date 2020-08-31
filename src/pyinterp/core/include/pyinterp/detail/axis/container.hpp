@@ -8,6 +8,7 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/detail/math.hpp"
 
 namespace pyinterp::detail::axis::container {
@@ -204,8 +205,7 @@ class Irregular : public Abstract<T> {
   /// system.
   ///
   /// @param points axis values
-  explicit Irregular(Eigen::Matrix<T, Eigen::Dynamic, 1> points)
-      : points_(std::move(points)) {
+  explicit Irregular(Vector<T> points) : points_(std::move(points)) {
     if (points_.size() == 0) {
       throw std::invalid_argument("unable to create an empty container.");
     }
@@ -341,8 +341,8 @@ class Irregular : public Abstract<T> {
   }
 
  private:
-  Eigen::Matrix<T, Eigen::Dynamic, 1> points_{};
-  Eigen::Matrix<T, Eigen::Dynamic, 1> edges_{};
+  Vector<T> points_{};
+  Vector<T> edges_{};
 
   /// Computes the edges, if the axis data are not spaced regularly.
   void make_edges() {

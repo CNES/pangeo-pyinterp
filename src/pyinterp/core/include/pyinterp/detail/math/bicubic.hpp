@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <Eigen/Core>
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/detail/gsl/interpolate1d.hpp"
 #include "pyinterp/detail/math.hpp"
 
@@ -246,13 +247,10 @@ class XArray3D : public CoordsXY {
   }
 
   /// Get z-coordinates
-  inline auto z() noexcept -> Eigen::Matrix<T, Eigen::Dynamic, 1> & {
-    return z_;
-  }
+  inline auto z() noexcept -> Vector<T> & { return z_; }
 
   /// Get z-coordinates
-  [[nodiscard]] inline auto z() const noexcept
-      -> const Eigen::Matrix<T, Eigen::Dynamic, 1> & {
+  [[nodiscard]] inline auto z() const noexcept -> const Vector<T> & {
     return z_;
   }
 
@@ -279,8 +277,8 @@ class XArray3D : public CoordsXY {
   }
 
  private:
-  Eigen::Matrix<T, Eigen::Dynamic, 1> z_;
-  Eigen::Matrix<std::shared_ptr<Eigen::MatrixXd>, Eigen::Dynamic, 1> q_;
+  Vector<T> z_;
+  Vector<std::shared_ptr<Eigen::MatrixXd>> q_;
 };
 
 /// Set of coordinates/values used for 4D-interpolation
@@ -350,16 +348,13 @@ class XArray4D : public CoordsXY {
   }
 
   /// Get z-coordinates
-  inline auto z() noexcept -> Eigen::Matrix<T, Eigen::Dynamic, 1> & {
-    return z_;
-  }
+  inline auto z() noexcept -> Vector<T> & { return z_; }
 
   /// Get u-coordinates
   inline auto u() noexcept -> Eigen::VectorXd & { return u_; }
 
   /// Get z-coordinates
-  [[nodiscard]] inline auto z() const noexcept
-      -> const Eigen::Matrix<T, Eigen::Dynamic, 1> & {
+  [[nodiscard]] inline auto z() const noexcept -> const Vector<T> & {
     return z_;
   }
 
@@ -402,11 +397,9 @@ class XArray4D : public CoordsXY {
   }
 
  private:
-  Eigen::Matrix<T, Eigen::Dynamic, 1> z_;
+  Vector<T> z_;
   Eigen::VectorXd u_;
-  Eigen::Matrix<std::shared_ptr<Eigen::MatrixXd>, Eigen::Dynamic,
-                Eigen::Dynamic>
-      q_;
+  Matrix<std::shared_ptr<Eigen::MatrixXd>> q_;
 };
 
 /// Extension of cubic interpolation for interpolating data points on a

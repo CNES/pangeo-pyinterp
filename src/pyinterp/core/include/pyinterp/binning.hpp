@@ -3,6 +3,8 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/numpy.h>
+
 #include <Eigen/Core>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
@@ -14,11 +16,12 @@
 #include <boost/accumulators/statistics/weighted_variance.hpp>
 #include <boost/geometry.hpp>
 #include <optional>
-#include <pybind11/numpy.h>
+
 #include "pyinterp/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/binning.hpp"
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp {
@@ -70,9 +73,7 @@ class Binning2D {
 
   /// Reset the statistics.
   void clear() {
-    acc_ =
-        std::move(Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic>(
-            x_->size(), y_->size()));
+    acc_ = std::move(Matrix<Accumulators>(x_->size(), y_->size()));
   }
 
   /// Compute the count of points within each bin.
@@ -158,7 +159,7 @@ class Binning2D {
   std::shared_ptr<Axis<double>> y_;
 
   /// Statistics grid
-  Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic> acc_;
+  Matrix<Accumulators> acc_;
 
   /// Geodetic coordinate system required to calculate areas (optional if the
   /// user wishes to handle Cartesian coordinates).

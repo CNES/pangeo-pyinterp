@@ -15,6 +15,7 @@
 
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/detail/thread.hpp"
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/grid.hpp"
 
 namespace pyinterp {
@@ -30,11 +31,8 @@ namespace detail {
 ///
 /// @param grid
 template <typename Type>
-void set_zonal_average(
-    pybind11::EigenDRef<Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>&
-        grid,
-    Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic>& mask,
-    const size_t num_threads) {
+void set_zonal_average(pybind11::EigenDRef<Matrix<Type>>& grid,
+                       Matrix<bool>& mask, const size_t num_threads) {
   // Captures the detected exceptions in the calculation function
   // (only the last exception captured is kept)
   auto except = std::exception_ptr(nullptr);
@@ -84,11 +82,9 @@ void set_zonal_average(
 /// @param relaxation Relaxation constant
 /// @return maximum residual value
 template <typename Type>
-auto gauss_seidel(
-    pybind11::EigenDRef<Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>&
-        grid,
-    Eigen::Matrix<bool, -1, -1>& mask, const bool is_circle,
-    const Type relaxation, const size_t num_threads) -> Type {
+auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>>& grid,
+                  Matrix<bool>& mask, const bool is_circle,
+                  const Type relaxation, const size_t num_threads) -> Type {
   // Maximum residual values for each thread.
   std::vector<Type> max_residuals(num_threads);
 
@@ -225,12 +221,11 @@ enum FirstGuess {
 /// @return A tuple containing the number of iterations performed and the
 /// maximum residual value.
 template <typename Type>
-auto gauss_seidel(
-    pybind11::EigenDRef<Eigen::Matrix<Type, Eigen::Dynamic, Eigen::Dynamic>>&
-        grid,
-    const FirstGuess first_guess, const bool is_circle,
-    const size_t max_iterations, const Type epsilon, const Type relaxation,
-    size_t num_threads) -> std::tuple<size_t, Type> {
+auto gauss_seidel(pybind11::EigenDRef<Matrix<Type>>& grid,
+                  const FirstGuess first_guess, const bool is_circle,
+                  const size_t max_iterations, const Type epsilon,
+                  const Type relaxation, size_t num_threads)
+    -> std::tuple<size_t, Type> {
   /// If the grid doesn't have an undefined value, this routine has nothing more
   /// to do.
   if (!grid.hasNaN()) {
@@ -243,8 +238,7 @@ auto gauss_seidel(
   }
 
   /// Calculation of the position of the undefined values on the grid.
-  auto mask =
-      Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic>(grid.array().isNaN());
+  auto mask = Matrix<bool>(grid.array().isNaN());
 
   /// Calculation of the first guess with the chosen method
   switch (first_guess) {
