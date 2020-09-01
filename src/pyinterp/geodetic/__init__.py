@@ -84,8 +84,8 @@ class Box(geodetic.Box):
     system in degrees.
     """
     def __init__(self,
-                 min_corner: Optional[Point2D] = None,
-                 max_corner: Optional[Point2D] = None):
+                 min_corner: Optional[Point] = None,
+                 max_corner: Optional[Point] = None):
         """Initialize a new box
 
         Args:
