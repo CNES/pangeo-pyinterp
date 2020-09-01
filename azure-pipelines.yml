@@ -26,7 +26,7 @@ jobs:
     displayName: Create Anaconda environment
   - bash: |
       source activate Build
-      conda install --yes --quiet --name Build python=$PYTHON_VERSION cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools
+      conda install --yes --quiet --name Build python=$PYTHON_VERSION cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy
     displayName: Install build requirements
   - bash: |
       source activate Build
@@ -67,7 +67,7 @@ jobs:
     displayName: Create Anaconda environment
   - bash: |
       source activate Build
-      conda install --yes --quiet --name Build python=$PYTHON_VERSION cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools
+      conda install --yes --quiet --name Build python=$PYTHON_VERSION cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy
     displayName: Install build requirements
   - bash: |
       source activate Build
