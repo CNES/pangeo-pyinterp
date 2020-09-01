@@ -42,7 +42,7 @@ class Array {
                            capsule_);
   }
 
-  static auto get_info(const pybind11::array& hashs, const ssize_t ndim)
+  static auto get_info(const pybind11::array& hash, const ssize_t ndim)
       -> pybind11::buffer_info;
 
  private:
@@ -71,10 +71,10 @@ auto encode(const geodetic::Point& point, char* const buffer,
 [[nodiscard]] auto decode(const char* const hash, const size_t count,
                           const bool round) -> geodetic::Point;
 
-/// Decode hashs into a spherical equatorial points. If round is true, the
+/// Decode hashes into a spherical equatorial points. If round is true, the
 /// coordinates of the points will be rounded to the accuracy defined by the
 /// GeoHash.
-[[nodiscard]] auto decode(const pybind11::array& hashs, const bool center)
+[[nodiscard]] auto decode(const pybind11::array& hash, const bool center)
     -> std::tuple<Eigen::VectorXd, Eigen::VectorXd>;
 
 /// Returns all neighbors hash clockwise from north around northwest at the
@@ -90,7 +90,7 @@ auto encode(const geodetic::Point& point, char* const buffer,
                                   const uint32_t chars) -> pybind11::array;
 
 /// Returns the start and end indexes of the different GeoHash boxes.
-[[nodiscard]] auto where(const pybind11::array& hashs)
+[[nodiscard]] auto where(const pybind11::array& hash)
     -> std::map<std::string, std::tuple<std::tuple<int64_t, int64_t>,
                                         std::tuple<int64_t, int64_t>>>;
 

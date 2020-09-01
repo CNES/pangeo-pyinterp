@@ -108,7 +108,7 @@ Raises:
 Decode a hash into a geographic point.
 
 Args:
-  hash (str) : Geohash.
+  hash (str): Geohash.
   round (optional, bool): If true, the coordinates of the point will be
     rounded to the accuracy defined by the GeoHash.
 Return:
@@ -116,16 +116,16 @@ Return:
 )__doc__")
       .def(
           "decode",
-          [](const pybind11::array& hashs,
+          [](const pybind11::array& hash,
              const bool round) -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
-            return geohash::string::decode(hashs, round);
+            return geohash::string::decode(hash, round);
           },
-          py::arg("hashs"), py::arg("round") = false,
+          py::arg("hash"), py::arg("round") = false,
           R"__doc__(
-Decode hashs into a geographic points.
+Decode hashes into a geographic points.
 
 Args:
-  hashs (numpy.ndarray) : Geohashs.
+  hash (numpy.ndarray): Geohash codes.
   round (optional, bool): If true, the coordinates of the point will be
     rounded to the accuracy defined by the GeoHash."
 Return:
@@ -143,7 +143,7 @@ Return:
 Returns the bounding box encoded by the geohash.
 
 Args:
-  hash (str) : Geohash.
+  hash (str): Geohash.
 Return:
   pyinterp.geodetic.Box: Bounding box.
 )__doc__")
@@ -159,7 +159,7 @@ Return:
 Returns all geohash codes contained in the defined bounding box.
 
 Args:
-  box (pyinterp.geohash.Box, optional) : Bounding box.
+  box (pyinterp.geohash.Box, optional): Bounding box.
   precision (int, optional): Required accuracy.
 Return:
   numpy.ndarray: Geohash codes.
@@ -172,12 +172,12 @@ Raises:
             auto buffer = parse_str(hash);
             return geohash::string::neighbors(buffer.data(), buffer.length());
           },
-          py::arg("box"),
+          py::arg("hash"),
           R"__doc__(
 Returns all neighbors hash clockwise from north around northwest.
 
 Args:
-  hash (str) : Geohash code.
+  hash (str): Geohash code.
 Return:
   numpy.ndarray: Geohash codes.
 )__doc__")
@@ -193,10 +193,10 @@ Return:
 Returns the property of the grid covering the given bounding box.
 
 Args:
-  box (pyinterp.geodetic.Box, optional) : Bounding box.
+  box (pyinterp.geodetic.Box, optional): Bounding box.
   precision (int, optional): Required accuracy.
 Return:
-  tuple: : geohash of the minimum corner point, number of boxes in longitudes
+  tuple: geohash of the minimum corner point, number of boxes in longitudes
     and latitudes.
 Raises:
   ValueError: If the given precision is not within [1, 12].
@@ -218,7 +218,7 @@ Raises:
 Returns the start and end indexes of the different GeoHash boxes.
 
 Args:
-  hashs (numpy.ndarray): Geohash codes
+  hash (numpy.ndarray): Geohash codes
 Return:
   dict: dictionary between successive identical geohash codes and start and
     end indexes in the table provided as input.

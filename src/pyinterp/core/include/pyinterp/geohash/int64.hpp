@@ -3,6 +3,8 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/eigen.h>
+
 #include <Eigen/Core>
 #include <map>
 #include <optional>
@@ -59,17 +61,17 @@ namespace pyinterp::geohash::int64 {
   return round ? bbox.round() : bbox.centroid();
 }
 
-// Decode hashs into a geographic points with the given bit depth.
+// Decode hashes into a geographic points with the given bit depth.
 // If round is true, the coordinates of the points will be rounded to the
 // accuracy defined by the GeoHash.
 [[nodiscard]] inline auto decode(
-    const Eigen::Ref<const Vector<uint64_t>>& hashs, const uint32_t precision,
+    const Eigen::Ref<const Vector<uint64_t>>& hash, const uint32_t precision,
     const bool center) -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
-  auto lon = Eigen::VectorXd(hashs.size());
-  auto lat = Eigen::VectorXd(hashs.size());
+  auto lon = Eigen::VectorXd(hash.size());
+  auto lat = Eigen::VectorXd(hash.size());
   auto point = geodetic::Point();
-  for (Eigen::Index ix = 0; ix < hashs.size(); ++ix) {
-    point = decode(hashs(ix), precision, center);
+  for (Eigen::Index ix = 0; ix < hash.size(); ++ix) {
+    point = decode(hash(ix), precision, center);
     lon[ix] = point.lon();
     lat[ix] = point.lat();
   }
@@ -103,7 +105,7 @@ namespace pyinterp::geohash::int64 {
 
 // Returns the start and end indexes of the different GeoHash boxes.
 [[nodiscard]] auto where(
-    const Eigen::Ref<const Eigen::Matrix<uint64_t, -1, -1>>& hashs)
+    const pybind11::EigenDRef<const Eigen::Matrix<uint64_t, -1, -1>>& hash)
     -> std::map<uint64_t, std::tuple<std::tuple<int64_t, int64_t>,
                                      std::tuple<int64_t, int64_t>>>;
 

@@ -15,4 +15,4 @@ def release() -> str:
 
 def date() -> str:
     """Returns the creation date of this release"""
-    return "13 May 2020"
+    return "31 August 2020"

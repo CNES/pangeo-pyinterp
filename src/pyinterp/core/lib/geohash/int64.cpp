@@ -305,7 +305,7 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
 }
 
 // ---------------------------------------------------------------------------
-auto where(const Eigen::Ref<const Matrix<uint64_t>>& hash)
+auto where(const pybind11::EigenDRef<const Matrix<uint64_t>>& hash)
     -> std::map<uint64_t, std::tuple<std::tuple<int64_t, int64_t>,
                                      std::tuple<int64_t, int64_t>>> {
   // Index shifts of neighboring pixels
