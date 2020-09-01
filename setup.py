@@ -286,10 +286,13 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         snappy_header = pathlib.Path(sys.prefix, "include", "snappy.h")
         if snappy_header.exists():
             return f"-DSNAPPY_ROOT_DIR={sys.prefix}"
+        snappy_header = pathlib.Path(sys.prefix, "Library", "include",
+                                     "snappy.py")
         if not snappy_header.exists():
             raise RuntimeError(
                 "Unable to find the Snappy library in the conda distribution "
                 "used.")
+        return f"-DSNAPPY_ROOT_DIR={snappy_header.parent.parent}"
 
     @staticmethod
     def mkl():
