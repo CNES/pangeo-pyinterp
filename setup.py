@@ -82,6 +82,24 @@ def update_environment(path, version):
         stream.write("".join(lines))
 
 
+def patch_unqlite(source: pathlib.Path, target: pathlib.Path):
+    """Patch unqlite to enable compilation with C++"""
+    path = target.joinpath(source.name)
+    if path.exists():
+        return
+
+    pattern = re.compile(r'^(\s+)(pgno\s+pgno;)\s{2}(\s+.*)$').search
+    with open(source, "r") as stream:
+        lines = stream.readlines()
+    for ix, line in enumerate(lines):
+        m = pattern(line)
+        if m is not None:
+            lines[ix] = m.group(1) + "::" + m.group(2) + m.group(3) + "\n"
+
+    with open(path, "w") as stream:
+        stream.writelines(lines)
+
+
 def revision():
     """Returns the software version"""
     os.chdir(WORKING_DIRECTORY)
@@ -203,6 +221,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     #: Preferred MKL root
     MKL_ROOT = None
 
+    #: Preferred Snappy root
+    SNAPPY_ROOT = None
+
     #: Run CMake to configure this project
     RECONFIGURE = None
 
@@ -258,6 +279,17 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                 "Unable to find the Eigen3 library in the conda distribution "
                 "used.")
         return "-DEIGEN3_INCLUDE_DIR=" + str(eigen_include_dir)
+
+    @staticmethod
+    def snappy():
+        """Get the default Snappy path in Anaconda's environnement."""
+        snappy_header = pathlib.Path(sys.prefix, "include", "snappy.h")
+        if snappy_header.exists():
+            return f"-DSNAPPY_ROOT_DIR={sys.prefix}"
+        if not snappy_header.exists():
+            raise RuntimeError(
+                "Unable to find the Snappy library in the conda distribution "
+                "used.")
 
     @staticmethod
     def mkl():
@@ -321,6 +353,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         elif is_conda:
             self.mkl()
 
+        if self.SNAPPY_ROOT is not None:
+            result.append("-DSNAPPY_ROOT_DIR=" + self.SNAPPY_ROOT)
+        else:
+            result.append(self.snappy())
+
         return result
 
     def build_cmake(self, ext):
@@ -330,6 +367,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         build_temp = pathlib.Path(WORKING_DIRECTORY, self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
         extdir = build_dirname(ext.name)
+
+        # patch unqlite
+        patch_unqlite(
+            WORKING_DIRECTORY.joinpath("third_party", "unqlite", "unqlite.h"),
+            WORKING_DIRECTORY.joinpath("src", "pyinterp", "core", "include"))
 
         cfg = 'Debug' if self.debug or self.CODE_COVERAGE else 'Release'
 
@@ -393,7 +435,8 @@ class Build(distutils.command.build.build):
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
         ('eigen-root=', None, 'Preferred Eigen3 include directory'),
         ('gsl-root=', None, 'Preferred GSL installation prefix'),
-        ('mkl-root=', None, 'Preferred MKL installation prefix')
+        ('mkl-root=', None, 'Preferred MKL installation prefix'),
+        ('snappy-root=', None, 'Preferred Snappy installation prefix')
     ]
 
     def initialize_options(self):
@@ -406,6 +449,7 @@ class Build(distutils.command.build.build):
         self.eigen_root = None
         self.gsl_root = None
         self.mkl_root = None
+        self.snappy_root = None
         self.reconfigure = None
 
     def finalize_options(self):
@@ -432,6 +476,8 @@ class Build(distutils.command.build.build):
             BuildExt.GSL_ROOT = self.gsl_root
         if self.mkl_root is not None:
             BuildExt.MKL_ROOT = self.mkl_root
+        if self.snappy_root is not None:
+            BuildExt.SNAPPY_ROOT = self.snappy_root
         if self.reconfigure is not None:
             BuildExt.RECONFIGURE = True
         super().run()

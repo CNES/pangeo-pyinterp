@@ -30,6 +30,7 @@ requirements:
     - pytest
     - python
     - setuptools
+    - snappy
     - xarray
   run:
     - {{ pin_compatible('numpy') }}

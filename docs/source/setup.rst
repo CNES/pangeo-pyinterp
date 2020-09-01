@@ -20,12 +20,13 @@ The compiling C++ requires the following development library:
     * `Boost C++ Libraries <https://www.boost.org/>`_
     * `Eigen3 <http://eigen.tuxfamily.org/>`_
     * `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_
+    * `Snappy <https://github.com/google/snappy>`_
 
 You can install these packages on Ubuntu by typing the following command:
 
 .. code-block:: bash
 
-    sudo apt-get install g++ cmake libeigen3-dev libboost-dev libgsl-dev
+    sudo apt-get install g++ cmake libeigen3-dev libboost-dev libgsl-dev libsnappy-dev
 
 You need, also, to install Python libraries before configuring and installing
 this software:
@@ -54,6 +55,7 @@ You can specify, among other things, the following options:
     * ``--eigen-root`` to specify the Eigen3 include directory.
     * ``--gsl-root`` to specify the Preferred GSL installation prefix.
     * ``--mkl-root`` to specify the MKL directory.
+    * ``--snappy-root`` to specify the Snappy directory.
     * ``--reconfigure``  to force CMake to reconfigure the project.
 
 Run the ``python setup.py build --help`` command to view all the options

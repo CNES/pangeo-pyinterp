@@ -13,7 +13,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 cmake_policy(SET CMP0048 NEW)
-project(pyinterp LANGUAGES CXX)
+project(pyinterp LANGUAGES C CXX)
 
 if (POLICY CMP0063)
   cmake_policy(SET CMP0063 NEW)
@@ -31,6 +31,7 @@ endif ()
 set(
   CMAKE_MODULE_PATH
   "${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/tools;"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
   "${CMAKE_MODULE_PATH}"
 )
 
@@ -38,7 +39,7 @@ set(
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
 endif()
-message("-- Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 # The library must be built using C++17 compiler.
 set(CMAKE_CXX_STANDARD 17)
@@ -124,7 +125,7 @@ endif()
 # Check if floating-point types fulfill the requirements of IEC 559
 # (IEEE 754) standard
 macro(check_floating_point_is_iec559)
-  message("-- Performing Test HAVE_IEC559")
+  message(STATUS "Performing Test HAVE_IEC559")
   file(WRITE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/is_iec559.cpp"
 "#include <limits>
 int main() {
@@ -135,10 +136,10 @@ int main() {
           "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
           "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/is_iec559.cpp")
   if(IS_IEC559)
-    message("-- Performing Test HAVE_IEC559 - Success")
+    message(STATUS "Performing Test HAVE_IEC559 - Success")
     add_definitions(-DHAVE_IEC559)
   else()
-    message("-- Performing Test HAVE_IEC559 - Failed")
+    message(STATUS "Performing Test HAVE_IEC559 - Failed")
   endif()
   unset(_UNUSED)
 endmacro()
@@ -175,14 +176,22 @@ find_package(PythonLibs REQUIRED)
 find_package(Boost 1.63 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-# GSL
+# We prefer the use of static libraries for the GSL and Snappy modules.
 set(__CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so" ".dylib" ".lib")
+
+# GSL
 find_package(GSL 2.0 REQUIRED)
 include_directories(${GSL_INCLUDE_DIRS})
 if (WIN32)
   add_compile_definitions(GSL_DLL)
 endif()
+
+# Snappy
+find_package(Snappy REQUIRED)
+include_directories(${SNAPPY_INCLUDE_DIR})
+
+# We restore the suffixes of the libraries to be found.
 set(CMAKE_FIND_LIBRARY_SUFFIXES ${__CMAKE_FIND_LIBRARY_SUFFIXES})
 unset(__CMAKE_FIND_LIBRARY_SUFFIXES)
 
@@ -227,6 +236,13 @@ include_directories(
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# unqlite
+add_library(unqlite STATIC "third_party/unqlite/unqlite.c")
+target_compile_definitions(unqlite PUBLIC UNQLITE_ENABLE_THREADS)
+if(NOT WIN32)
+  set_target_properties(unqlite PROPERTIES COMPILE_FLAGS "-fPIC")
+endif()
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/include

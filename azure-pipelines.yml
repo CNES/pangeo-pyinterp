@@ -98,7 +98,7 @@ jobs:
     displayName: Create Anaconda environment
   - script: |
       call activate Build
-      conda install --yes --quiet --name Build python=%PYTHON_VERSION% cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools
+      conda install --yes --quiet --name Build python=%PYTHON_VERSION% cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy
     displayName: Install build requirements
   - script: |
       call activate Build
