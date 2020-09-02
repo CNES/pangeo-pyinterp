@@ -79,8 +79,8 @@ Geodetic System
   core.geodetic.Polygon
   core.geodetic.System
 
-Geohash encoding/decoding as integer
-------------------------------------
+Geohash integer
+---------------
 
 .. autosummary::
   :toctree: generated/
@@ -94,8 +94,8 @@ Geohash encoding/decoding as integer
   core.geohash.int64.neighbors
   core.geohash.int64.where
 
-Geohash encoding/decoding as bytes
-----------------------------------
+Geohash bytes
+-------------
 
 .. autosummary::
   :toctree: generated/
@@ -108,6 +108,19 @@ Geohash encoding/decoding as bytes
   core.geohash.string.grid_properties
   core.geohash.string.neighbors
   core.geohash.string.where
+
+UnQLite Key/Value storage
+-------------------------
+
+.. autosummary::
+  :toctree: generated/
+
+  core.storage.unqlite.CompressionType
+  core.storage.unqlite.Database
+  core.storage.unqlite.DatabaseError
+  core.storage.unqlite.LockError
+  core.storage.unqlite.OperationalError
+  core.storage.unqlite.ProgrammingError
 
 Temporal Cartesian Grids
 ------------------------

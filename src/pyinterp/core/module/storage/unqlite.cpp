@@ -26,7 +26,10 @@ UnQLite Key/Value Storage
   py::register_exception<storage::LockError>(submodule, "LockError",
                                              PyExc_IOError);
 
-  py::enum_<storage::CompressionType>(submodule, "CompressionType")
+  py::enum_<storage::CompressionType>(submodule, "CompressionType", R"__doc__(
+Known compression algorithms used to compress the values stored in the
+database.
+)__doc__")
       .value("none", storage::kNoCompression, "No commpression")
       .value("snappy", storage::kSnappyCompression,
              "Compress values with Snappy");
