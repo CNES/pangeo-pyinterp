@@ -76,6 +76,7 @@ Geodetic System
   core.geodetic.Box
   core.geodetic.Coordinates
   core.geodetic.Point
+  core.geodetic.Polygon
   core.geodetic.System
 
 Geohash encoding/decoding as integer

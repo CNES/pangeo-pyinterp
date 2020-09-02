@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, overload
+from typing import List, Tuple, Optional, overload
 import numpy
 
 
@@ -155,4 +155,24 @@ class Box:
 
     @staticmethod
     def whole_earth() -> 'Box':
+        ...
+
+
+class Polygon:
+    def __init__(self,
+                 outer: List[Point],
+                 inners: Optional[List[List[Point]]] = None) -> None:
+        ...
+
+    def __repr__(self) -> str:
+        ...
+
+    def envelope(self) -> Box:
+        ...
+
+    def wkt(self) -> str:
+        ...
+
+    @staticmethod
+    def read_wkt(wkt: str) -> "Polygon":
         ...

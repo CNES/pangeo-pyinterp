@@ -53,6 +53,7 @@ Geodetic systems
   geodetic.Box
   geodetic.Coordinates
   geodetic.Point
+  geodetic.Polygon
   geodetic.System
 
 .. _cartesian_interpolators:

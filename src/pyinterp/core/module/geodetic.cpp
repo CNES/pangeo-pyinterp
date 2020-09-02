@@ -186,6 +186,102 @@ Return:
                       }));
 }
 
+void init_geodetic_polygon(py::module& m) {
+  py::class_<geodetic::Polygon>(
+      m, "Polygon",
+      "The polygon contains an outer ring and zero or more inner rings")
+      .def(py::init([](const py::list& outer,
+                       std::optional<const py::list>& inners) {
+             auto self = std::make_unique<geodetic::Polygon>();
+             try {
+               for (auto& item : outer) {
+                 auto point = item.cast<geodetic::Point>();
+                 boost::geometry::append(self->outer(), point);
+               }
+             } catch (const py::cast_error&) {
+               throw std::invalid_argument(
+                   "outers must be a list of pyinterp.geodetic.Point");
+             }
+             if (inners.has_value()) {
+               try {
+                 auto index = 0;
+                 self->inners().resize(inners->size());
+                 for (auto& inner : *inners) {
+                   auto points = inner.cast<py::list>();
+                   for (auto& item : points) {
+                     auto point = item.cast<geodetic::Point>();
+                     boost::geometry::append(self->inners()[index], point);
+                   }
+                   ++index;
+                 }
+               } catch (const py::cast_error&) {
+                 throw std::invalid_argument(
+                     "inners must be a list of "
+                     "list of pyinterp.geodetic.Point");
+               }
+             }
+             return self;
+           }),
+           py::arg("outer"), py::arg("inners") = py::none(), R"(
+Constructor filling the polygon
+
+Args:
+  outer (list): outer ring
+  inners (list, optional): list of inner rings
+Raises:
+  ValueError: if outer is not a list of pyinterp.geodetic.Point
+  ValueError: if inners is not a list of list of pyinterp.geodetic.Point
+)")
+      .def("__repr__",
+           [](const geodetic::Polygon& self) -> std::string {
+             auto ss = std::stringstream();
+             ss << boost::geometry::dsv(self);
+             return ss.str();
+           })
+      .def(
+          "envelope",
+          [](const geodetic::Polygon& self) -> geodetic::Box {
+            auto box = geodetic::Box();
+            boost::geometry::envelope(self, box);
+            return box;
+          },
+          R"__doc__(
+Calculates the envelope of this polygon.
+
+Return:
+  pyinterp.geodetic.Box: The envelope of this instance
+)__doc__")
+      .def(
+          "wkt",
+          [](const geodetic::Polygon& self) -> std::string {
+            auto ss = std::stringstream();
+            ss << boost::geometry::wkt(self);
+            return ss.str();
+          },
+          R"__doc__(
+Gets the OGC Well-Known Text (WKT) representation of this instance
+
+Return:
+    str: the WTK representation
+)__doc__")
+      .def_static(
+          "read_wkt",
+          [](const std::string& wkt) -> geodetic::Polygon {
+            auto polygon = geodetic::Polygon();
+            boost::geometry::read_wkt(wkt, polygon);
+            return polygon;
+          },
+          py::arg("wkt"), R"__doc__(
+Parses OGC Well-Known Text (WKT) into a polygon
+
+Args:
+    wkt (str): the WKT representation of the polygon
+Return:
+    pyinterp.geodetic.Box: The polygon defined by the WKT
+    representation.
+)__doc__");
+}
+
 void init_geodetic(py::module& m) {
   auto _system = py::class_<pyinterp::detail::geodetic::System>(
       m, "_System", "C++ implementation of the WGS system.");
@@ -381,4 +477,5 @@ Return:
 
   init_geodetic_point(m);
   init_geodetic_box(m);
+  init_geodetic_polygon(m);
 }

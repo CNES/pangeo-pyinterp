@@ -3,7 +3,7 @@ Geographic coordinate system
 ----------------------------
 """
 import warnings
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 from ..core import geodetic
 
 
@@ -97,6 +97,7 @@ class Box(geodetic.Box):
         super(Box, self).__init__(min_corner or geodetic.Point(), max_corner
                                   or geodetic.Point())
 
+
 class Box2D(geodetic.Box):
     """Deprecated Alias.
     """
@@ -113,4 +114,21 @@ class Box2D(geodetic.Box):
                                     or geodetic.Point())
 
 
+class Polygon(geodetic.Polygon):
+    """The polygon contains an outer ring and zero or more inner rings
+    """
+    def __init__(self,
+                 outer: List[Point],
+                 inners: Optional[List[List[Point]]] = None) -> None:
+        """Constructor filling the polygon
 
+        Args:
+          outer (list): outer ring
+          inners (list, optional): list of inner rings
+        Raises:
+          ValueError: if outer is not a list of
+            :py:class:`pyinterp.geodetic.Point`
+          ValueError: if inners is not a list of list of
+            :py:class:`pyinterp.geodetic.Point`
+        """
+        super().__init__(outer, inners)  # type: ignore

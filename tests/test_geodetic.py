@@ -63,5 +63,42 @@ class Box(unittest.TestCase):
             pyinterp.geodetic.Box2D()
 
 
+class Polygon(unittest.TestCase):
+    def test_init(self):
+        outer = [
+            pyinterp.geodetic.Point(0, 0),
+            pyinterp.geodetic.Point(0, 5),
+            pyinterp.geodetic.Point(5, 5),
+            pyinterp.geodetic.Point(5, 0),
+            pyinterp.geodetic.Point(0, 0)
+        ]
+        polygon = pyinterp.geodetic.Polygon(outer)
+        assert polygon.wkt() == 'POLYGON((0 0,0 5,5 5,5 0,0 0))'
+        inners = [
+            pyinterp.geodetic.Point(1, 1),
+            pyinterp.geodetic.Point(4, 1),
+            pyinterp.geodetic.Point(4, 4),
+            pyinterp.geodetic.Point(1, 4),
+            pyinterp.geodetic.Point(1, 1)
+        ]
+        polygon = pyinterp.geodetic.Polygon(outer, [inners])
+        assert polygon.wkt() == \
+            'POLYGON((0 0,0 5,5 5,5 0,0 0),(1 1,4 1,4 4,1 4,1 1))'
+
+        assert pyinterp.geodetic.Polygon.read_wkt(
+            'POLYGON((0 0,0 5,5 5,5 0,0 0),(1 1,4 1,4 4,1 4,1 1))').wkt(
+            ) == 'POLYGON((0 0,0 5,5 5,5 0,0 0),(1 1,4 1,4 4,1 4,1 1))'
+
+        with self.assertRaises(ValueError):
+            inners.append(5)
+            polygon = pyinterp.geodetic.Polygon(outer, [inners])
+
+        with self.assertRaises(TypeError):
+            polygon = pyinterp.geodetic.Polygon(outer, [1])
+
+        with self.assertRaises(ValueError):
+            polygon = pyinterp.geodetic.Polygon([1])
+
+
 if __name__ == "__main__":
     unittest.main()
