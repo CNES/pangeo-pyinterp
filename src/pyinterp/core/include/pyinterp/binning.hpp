@@ -78,7 +78,8 @@ class Binning2D {
 
   /// Compute the count of points within each bin.
   [[nodiscard]] auto count() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::count);
+    return calculate_statistics<decltype(boost::accumulators::count), size_t>(
+        boost::accumulators::count);
   }
 
   /// Compute the minimum of values for points within each bin.
@@ -166,10 +167,10 @@ class Binning2D {
   std::optional<geodetic::System> wgs_;
 
   /// Calculation of a given statistical variable.
-  template <typename Func>
+  template <typename Func, typename Type = T>
   [[nodiscard]] auto calculate_statistics(const Func& func) const
-      -> pybind11::array_t<T> {
-    pybind11::array_t<T> z({x_->size(), y_->size()});
+      -> pybind11::array_t<Type> {
+    pybind11::array_t<Type> z({x_->size(), y_->size()});
     auto _z = z.template mutable_unchecked<2>();
     {
       pybind11::gil_scoped_release release;
@@ -205,7 +206,7 @@ class Binning2D {
           auto iy = y_axis.find_index(_y(idx), true);
 
           if (ix != -1 && iy != -1) {
-            acc_(ix, iy)(value, boost::accumulators::weight = 1);
+            acc_(ix, iy)(value, boost::accumulators::weight = T(1));
           }
         }
       }
