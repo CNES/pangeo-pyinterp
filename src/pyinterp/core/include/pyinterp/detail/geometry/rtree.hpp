@@ -197,7 +197,8 @@ class RTree {
       if (distance <= radius) {
         // If the neighbor found is within an acceptable radius it can be taken
         // into account in the calculation.
-        auto wk = 1 / std::pow(distance, static_cast<Type>(p));
+        auto wk =
+            static_cast<Type>(1 / std::pow(distance, static_cast<Type>(p)));
         total_weight += wk;
         result += item.second * wk;
         ++neighbors;
@@ -314,7 +315,8 @@ class RTree {
       xi(ix, 0) = geometry::point::get(point, ix);
     }
     auto interpolated = rbf.interpolate(coordinates, values, xi);
-    return std::make_pair(interpolated(0), values.size());
+    return std::make_pair(interpolated(0),
+                          static_cast<uint32_t>(values.size()));
   }
 
  protected:

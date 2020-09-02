@@ -119,7 +119,7 @@ class RBF {
         sum += distance(ix, jx);
       }
     }
-    return sum / (n * (n - 1) * 0.5);
+    return static_cast<T>(sum / (n * (n - 1) * 0.5));
   };
 
   /// Returns the distance between two points in a euclidean space
