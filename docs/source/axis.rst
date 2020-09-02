@@ -40,7 +40,7 @@ Unstructured Grids
 ==================
 
 In the case of unstructured grids, the index used is a :py:class:`R*Tree
-<pyinterp.rtree.RTree>`. These trees have better performance than the *KDTree*
+<pyinterp.RTree>`. These trees have better performance than the *KDTree*
 generally found in Python library implementations.
 
 The tree used here is the implementation provided by the `C++ Boost library
