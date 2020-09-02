@@ -7,8 +7,8 @@ import json
 import numpy
 from . import lock
 from . import storage
-from . import string
 from .. import geodetic
+from ..core.geohash import string
 
 
 class GeoHash:
@@ -44,12 +44,12 @@ class GeoHash:
         self._synchronizer = synchronizer or lock.PuppetSynchronizer()
 
     @property
-    def store(self):
+    def store(self) -> storage.MutableMapping:
         """Gets the object hndling the storage of this instance"""
         return self._store
 
     @property
-    def precision(self):
+    def precision(self) -> int:
         """Accuracy of this instance"""
         return self._precision
 
@@ -62,27 +62,61 @@ class GeoHash:
 
     @staticmethod
     def get_properties(store) -> Dict[str, Any]:
-        """Reading index properties"""
+        """Reading index properties
+
+        Return:
+            dict: Index properties (number of character used to encode a
+            position)
+        """
         return json.loads(store[b'.properties'].pop())
 
     def encode(self, lon: numpy.ndarray, lat: numpy.ndarray) -> numpy.ndarray:
-        """Encode points into geohash with the given precision"""
+        """Encode points into geohash with the given precision
+
+        Args:
+            lon (numpy.ndarray): Longitudes in degrees of the positions to be
+                encoded.
+            lat (numpy.ndarray): Latitudes in degrees of the positions to be
+                encoded.
+
+        Return:
+            numpy.ndarray: geohash code for each coordinates of the points
+            read from the vectors provided.
+        """
         return string.encode(lon, lat, precision=self._precision)
 
     def update(self, data: Dict[bytes, object]) -> None:
         """Update the index with the key/value pairs from data, overwriting
-        existing keys."""
+        existing keys.
+
+        Args:
+            data (dict): Geohash codes associated with the values to be stored
+                in the database.
+        """
         with self._synchronizer:
             self._store.update(data)
 
     def extend(self, data: Dict[bytes, Any]) -> None:
         """Update the index with the key/value pairs from data, appending
-        existing keys with the new data."""
+        existing keys with the new data.
+
+        Args:
+            data (dict): Geohash codes associated with the values to be
+                updated in the database.
+        """
         with self._synchronizer:
             self._store.extend(data)
 
     def box(self, box: geodetic.Box) -> List[Any]:
-        """Selection of all data within the defined geographical area"""
+        """Selection of all data within the defined geographical area
+
+        Args:
+            box (pyinterp.geodetic.Box): Bounding box used for data selection.
+
+        Return:
+            list: List of data contained in the database for all positions
+            located in the selected geographic region.
+        """
         result = []
         values = self._store.values(
             list(string.bounding_boxes(box, precision=self._precision)))

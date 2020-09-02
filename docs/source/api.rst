@@ -56,6 +56,16 @@ Geodetic systems
   geodetic.Polygon
   geodetic.System
 
+Geohash index
+=============
+
+.. autosummary::
+  :toctree: generated/
+
+  geohash.index
+  geohash.lock
+  geohash.storage
+
 .. _cartesian_interpolators:
 
 Cartesian interpolators
