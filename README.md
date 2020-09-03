@@ -112,3 +112,17 @@ The management of the
 coordinate conversion is managed to use the [Olson,
 D.K.](https://ieeexplore.ieee.org/document/481290) algorithm. It has excellent
 performance with an accuracy of 1e-8 meters for altitude.
+
+### Geohash
+
+Geohashing is a geocoding method used to encode geographic coordinates
+(latitude and longitude) into a short string of digits and letters delineating
+an area on a map, which is called a cell, with varying resolutions. The more
+characters in the string, the more precise the location.
+
+Geohashes use Base-32 alphabet encoding (characters can be `0` to `9` and `A`
+to `Z`, excl `A`, `I`, `L` and `O`).
+
+This method is used to build a [geographic
+index](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.geohash.index.html),
+possibly stored on disk, for the purpose of indexing data.
