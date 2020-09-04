@@ -61,9 +61,13 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
   auto array = Array(size, precision);
   auto buffer = array.buffer();
 
-  for (Eigen::Index ix = 0; ix < size; ++ix) {
-    encode({lon[ix], lat[ix]}, buffer, precision);
-    buffer += precision;
+  {
+    auto gil = pybind11::gil_scoped_release();
+
+    for (Eigen::Index ix = 0; ix < size; ++ix) {
+      encode({lon[ix], lat[ix]}, buffer, precision);
+      buffer += precision;
+    }
   }
   return array.pyarray();
 }
@@ -101,11 +105,14 @@ auto decode(const pybind11::array& hashs, const bool round)
   auto lon = Eigen::VectorXd(info.shape[0]);
   auto lat = Eigen::VectorXd(info.shape[0]);
   auto ptr = static_cast<char*>(info.ptr);
-  for (auto ix = 0LL; ix < info.shape[0]; ++ix) {
-    auto point = decode(ptr, count, round);
-    lon[ix] = point.lon();
-    lat[ix] = point.lat();
-    ptr += count;
+  {
+    auto gil = pybind11::gil_scoped_release();
+    for (auto ix = 0LL; ix < info.shape[0]; ++ix) {
+      auto point = decode(ptr, count, round);
+      lon[ix] = point.lon();
+      lat[ix] = point.lat();
+      ptr += count;
+    }
   }
   return std::make_tuple(lon, lat);
 }
@@ -120,9 +127,12 @@ auto neighbors(const char* const hash, const size_t count) -> pybind11::array {
   auto array = Array(integers.size(), precision);
   auto buffer = array.buffer();
 
-  for (auto ix = 0; ix < integers.size(); ++ix) {
-    base32.encode(integers(ix), buffer, precision);
-    buffer += precision;
+  {
+    auto gil = pybind11::gil_scoped_release();
+    for (auto ix = 0; ix < integers.size(); ++ix) {
+      base32.encode(integers(ix), buffer, precision);
+      buffer += precision;
+    }
   }
   return array.pyarray();
 }
@@ -152,21 +162,26 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
   auto result = Array(size, precision);
   auto buffer = result.buffer();
 
-  for (const auto& item : boxes) {
-    std::tie(hash_sw, lon_step, lat_step) = int64::grid_properties(item, bits);
-    const auto point_sw = int64::decode(hash_sw, bits, true);
+  {
+    auto gil = pybind11::gil_scoped_release();
 
-    for (size_t lat = 0; lat < lat_step; ++lat) {
-      const auto lat_shift = lat * std::get<1>(lng_lat_err);
+    for (const auto& item : boxes) {
+      std::tie(hash_sw, lon_step, lat_step) =
+          int64::grid_properties(item, bits);
+      const auto point_sw = int64::decode(hash_sw, bits, true);
 
-      for (size_t lon = 0; lon < lon_step; ++lon) {
-        const auto lon_shift = lon * std::get<0>(lng_lat_err);
+      for (size_t lat = 0; lat < lat_step; ++lat) {
+        const auto lat_shift = lat * std::get<1>(lng_lat_err);
 
-        base32.encode(
-            int64::encode(
-                {point_sw.lon() + lon_shift, point_sw.lat() + lat_shift}, bits),
-            buffer, precision);
-        buffer += precision;
+        for (size_t lon = 0; lon < lon_step; ++lon) {
+          const auto lon_shift = lon * std::get<0>(lng_lat_err);
+
+          base32.encode(int64::encode({point_sw.lon() + lon_shift,
+                                       point_sw.lat() + lat_shift},
+                                      bits),
+                        buffer, precision);
+          buffer += precision;
+        }
       }
     }
   }
@@ -197,32 +212,36 @@ auto where(const pybind11::array& hashs)
 
   assert(chars <= 12);
 
-  for (int64_t ix = 0; ix < rows; ++ix) {
-    for (int64_t jx = 0; jx < cols; ++jx) {
-      current_code = std::string(ptr + (ix * cols + jx) * chars, chars);
+  {
+    auto gil = pybind11::gil_scoped_release();
 
-      auto it = result.find(current_code);
-      if (it == result.end()) {
-        result.emplace(std::make_pair(
-            current_code,
-            std::make_tuple(std::make_tuple(ix, ix), std::make_tuple(jx, jx))));
-        continue;
-      }
+    for (int64_t ix = 0; ix < rows; ++ix) {
+      for (int64_t jx = 0; jx < cols; ++jx) {
+        current_code = std::string(ptr + (ix * cols + jx) * chars, chars);
 
-      for (int64_t kx = 0; kx < 8; ++kx) {
-        const auto i = ix + shift_row[kx];
-        const auto j = jx + shift_col[kx];
+        auto it = result.find(current_code);
+        if (it == result.end()) {
+          result.emplace(std::make_pair(
+              current_code, std::make_tuple(std::make_tuple(ix, ix),
+                                            std::make_tuple(jx, jx))));
+          continue;
+        }
 
-        if (i >= 0 && i < rows && j >= 0 && j < cols) {
-          neighboring_code = std::string(ptr + (i * cols + j) * chars, chars);
-          if (current_code == neighboring_code) {
-            auto& first = std::get<0>(it->second);
-            std::get<0>(first) = std::min(std::get<0>(first), i);
-            std::get<1>(first) = std::max(std::get<1>(first), i);
+        for (int64_t kx = 0; kx < 8; ++kx) {
+          const auto i = ix + shift_row[kx];
+          const auto j = jx + shift_col[kx];
 
-            auto& second = std::get<1>(it->second);
-            std::get<0>(second) = std::min(std::get<0>(second), j);
-            std::get<1>(second) = std::max(std::get<1>(second), j);
+          if (i >= 0 && i < rows && j >= 0 && j < cols) {
+            neighboring_code = std::string(ptr + (i * cols + j) * chars, chars);
+            if (current_code == neighboring_code) {
+              auto& first = std::get<0>(it->second);
+              std::get<0>(first) = std::min(std::get<0>(first), i);
+              std::get<1>(first) = std::max(std::get<1>(first), i);
+
+              auto& second = std::get<1>(it->second);
+              std::get<0>(second) = std::min(std::get<0>(second), j);
+              std::get<1>(second) = std::max(std::get<1>(second), j);
+            }
           }
         }
       }
