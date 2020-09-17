@@ -22,7 +22,7 @@ def plot(x, y, z, filename):
     normalize = matplotlib.colors.Normalize(vmin=value - 3 * std,
                                             vmax=value + 3 * std)
     axe = figure.add_subplot(2, 1, 1)
-    axe.pcolormesh(x, y, z, cmap='jet', norm=normalize)
+    axe.pcolormesh(x, y, z, cmap='jet', norm=normalize, shading='auto')
     figure.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 filename),
                    bbox_inches='tight',
@@ -92,7 +92,6 @@ class TestBinning2D(unittest.TestCase):
         # Test of access to statistical variables
         self.assertIsInstance(binning.kurtosis(), np.ndarray)
         self.assertIsInstance(binning.max(), np.ndarray)
-        self.assertIsInstance(binning.median(), np.ndarray)
         self.assertIsInstance(binning.min(), np.ndarray)
         self.assertIsInstance(binning.skewness(), np.ndarray)
         self.assertIsInstance(binning.sum(), np.ndarray)

@@ -20,6 +20,7 @@ requirements:
     - vs2017_win-64          # [win]
     - cmake
   host:
+    - dask
     - eigen
     - gsl
     - boost-cpp
@@ -34,7 +35,8 @@ requirements:
   run:
     - {{ pin_compatible('numpy') }}
     - python
-    - libblas * *mkl
+    - mkl
+    - dask
     - xarray
 
 test:

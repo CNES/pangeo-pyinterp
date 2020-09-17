@@ -7,10 +7,26 @@ Data binning
 ------------
 """
 from typing import Optional
+import copy
+import dask.array as da
 import numpy as np
 from . import core
 from . import geodetic
 
+
+def _process_block(x: np.ndarray, y: np.ndarray, z: np.ndarray,
+                   binning: "Binning2D") -> np.ndarray:
+    binning.clear()
+    binning.push(x, y, z)
+    return np.ndarray([binning], dtype="object")
+
+def _map_blocks(x: da.Array, y: da.Array, z:da.Array, binning: "Binning2D") -> "Binning2D":
+    return da.map_blocks(_process_block,
+                         x.flatten(),
+                         y.flatten(),
+                         z.flatten(),
+                         binning,
+                         dtype="object").sum()
 
 class Binning2D:
     """
@@ -55,6 +71,11 @@ class Binning2D:
         """Gets the bin edges for the Y Axis of the grid"""
         return self._instance.y
 
+    @property
+    def wgs(self) -> core.geodetic.System:
+        """Gets the geodetic system handled of the grid"""
+        return self._instance.wgs
+
     def clear(self) -> None:
         """Clears the data inside each bin."""
         self._instance.clear()
@@ -71,6 +92,11 @@ class Binning2D:
         result.append(f"  y: {self._instance.y}")
         return "\n".join(result)
 
+    def __add__(self, other: "Binning2D") -> "Binning2D":
+        result = copy.copy(self)
+        result._instance += other._instance
+        return result
+
     def push(self,
              x: np.ndarray,
              y: np.ndarray,
@@ -81,7 +107,8 @@ class Binning2D:
         Args:
             x (numpy.ndarray): X coordinates of the samples
             y (numpy.ndarray): Y coordinates of the samples
-            z (numpy.ndarray): New samples to push into the defined bins.
+            z (numpy.ndarray): New samples to push into the
+                defined bins.
             simple (bool, optional): If true, a simple binning 2D is used
                 otherwise a linear binning 2d is applied. See the full
                 description of the algorithm below.
@@ -124,6 +151,44 @@ class Binning2D:
             np.asarray(y).flatten(),
             np.asarray(z).flatten(), simple)
 
+    def push_delayed(self,
+                     x: da.Array,
+                     y: da.Array,
+                     z: da.Array,
+                     simple: Optional[bool] = True) -> da.Array:
+        """Push new samples into the defined bins from dask array.
+
+        Args:
+            x (numpy.ndarray, dask.Array): X coordinates of the samples
+            y (numpy.ndarray, dask.Array): Y coordinates of the samples
+            z (numpy.ndarray, dask.Array): New samples to push into the
+                defined bins.
+            simple (bool, optional): If true, a simple binning 2D is used
+                otherwise a linear binning 2d is applied. See the full
+                description of the algorithm below.
+        Return:
+            The calculation graph producing the update of the grid from the
+            provided samples. Running the graph will return an instance of this
+            class containing the statistics calculated for all processed
+            samples.
+        """
+        x = da.asarray(x)
+        y = da.asarray(y)
+        z = da.asarray(z)
+
+        def _process_block(x: np.ndarray, y: np.ndarray, z: np.ndarray,
+                           simple: Optional[bool]) -> np.ndarray:
+            binning = Binning2D(self.x, self.y, self.wgs)
+            binning.push(x, y, z, simple)
+            return np.array([binning], dtype="object")
+
+        return da.map_blocks(_process_block,
+                             x.flatten(),
+                             y.flatten(),
+                             z.flatten(),
+                             simple,
+                             dtype="object").sum()
+
     def variable(self, statistics: str = 'mean') -> np.ndarray:
         """Gets the regular grid containing the calculated statistics.
 
@@ -154,16 +219,7 @@ class Binning2D:
             statistical variable.
         """
         try:
-            data = getattr(self._instance, statistics)()
-            if statistics == 'count':
-                data = data.astype(np.int64)
-            else:
-                data[~np.isfinite(data)] = np.nan
-                if statistics in [
-                        'min', 'max', 'median', 'sum', 'sum_of_weights'
-                ]:
-                    data[self._instance.count() == 0] = np.nan
-            return data
+            return getattr(self._instance, statistics)()
         except AttributeError:
             raise ValueError(
                 f"The statistical variable {statistics} is unknown.")
