@@ -55,7 +55,8 @@ Return:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
       .def_property_readonly(
-          "wgs", [](const pyinterp::Binning2D<Type>& self) { return self.wgs(); },
+          "wgs",
+          [](const pyinterp::Binning2D<Type>& self) { return self.wgs(); },
           R"__doc__(
 Gets the WGS system handled by this instance
 
@@ -137,7 +138,8 @@ Compute the variance of values for points within each bin.
 Return:
     numpy.ndarray: variance of values for points within each bin.
 )__doc__")
-      .def("__iadd__", &pyinterp::Binning2D<Type>::operator+=)
+      .def("__iadd__", &pyinterp::Binning2D<Type>::operator+=,
+           py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const pyinterp::Binning2D<Type>& self) { return self.getstate(); },
           [](const py::tuple& state) {

@@ -178,9 +178,12 @@ class Binning2D {
 
     // Unmarshalling instance
     auto result = std::make_unique<Binning2D<T>>(x, y, wgs);
-    for (Eigen::Index ix = 0; ix < result->acc_.rows(); ++ix) {
-      for (Eigen::Index iy = 0; iy < result->acc_.cols(); ++iy) {
-        result->acc_(ix, iy) = std::move(DescriptiveStatistics(acc(ix, iy)));
+    {
+      auto gil = pybind11::gil_scoped_release();
+      for (Eigen::Index ix = 0; ix < result->acc_.rows(); ++ix) {
+        for (Eigen::Index iy = 0; iy < result->acc_.cols(); ++iy) {
+          result->acc_(ix, iy) = std::move(DescriptiveStatistics(acc(ix, iy)));
+        }
       }
     }
     return result;
