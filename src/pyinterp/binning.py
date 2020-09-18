@@ -6,7 +6,7 @@
 Data binning
 ------------
 """
-from typing import Optional
+from typing import Optional, Union
 import copy
 import dask.array as da
 import numpy as np
@@ -138,9 +138,9 @@ class Binning2D:
             np.asarray(z).flatten(), simple)
 
     def push_delayed(self,
-                     x: da.Array,
-                     y: da.Array,
-                     z: da.Array,
+                     x: Union[np.ndarray, da.Array],
+                     y: Union[np.ndarray, da.Array],
+                     z: Union[np.ndarray, da.Array],
                      simple: Optional[bool] = True) -> da.Array:
         """Push new samples into the defined bins from dask array.
 
@@ -151,12 +151,16 @@ class Binning2D:
                 defined bins.
             simple (bool, optional): If true, a simple binning 2D is used
                 otherwise a linear binning 2d is applied. See the full
-                description of the algorithm below.
+                description of the algorithm :ref:`here <bilinear_binning>`.
         Return:
             The calculation graph producing the update of the grid from the
             provided samples. Running the graph will return an instance of this
             class containing the statistics calculated for all processed
             samples.
+
+        .. seealso ::
+
+            :py:meth:`push <pyinterp.Binning2D.push>`
         """
         x = da.asarray(x)
         y = da.asarray(y)
@@ -189,8 +193,6 @@ class Binning2D:
                       each bin.
                     * ``mean`` : compute the mean of values for points within
                       each bin.
-                    * ``median`` : compute the median of values for points
-                      within each bin.
                     * ``min`` : compute the minimum of values for points within
                       each bin.
                     * ``skewness`` : compute the skewness within each bin.
