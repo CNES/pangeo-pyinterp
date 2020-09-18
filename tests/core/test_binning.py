@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+import copy
 import os
 import pickle
 import unittest
@@ -97,6 +98,65 @@ class TestBinning2D(unittest.TestCase):
         self.assertIsInstance(binning.sum(), np.ndarray)
         self.assertIsInstance(binning.sum_of_weights(), np.ndarray)
         self.assertIsInstance(binning.variance(), np.ndarray)
+
+    def test_binning2d_pickle(self):
+        x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
+        y_axis = core.Axis(np.linspace(-90, 90, 1))
+
+        binning = core.Binning2DFloat64(x_axis, y_axis, None)
+        binning.push([-180], [-90], [np.pi])
+
+        self.assertTrue(np.all(binning.count() == 1))
+        self.assertTrue(np.all(binning.mean() == np.pi))
+        self.assertTrue(np.all(binning.min() == np.pi))
+        self.assertTrue(np.all(binning.max() == np.pi))
+        self.assertTrue(np.all(binning.sum() == np.pi))
+        self.assertTrue(np.all(binning.sum_of_weights() == 1))
+        self.assertTrue(np.all(binning.variance() == 0))
+        self.assertTrue(np.all(np.isnan(binning.skewness())))
+        self.assertTrue(np.all(np.isnan(binning.kurtosis())))
+
+        other = pickle.loads(pickle.dumps(binning))
+
+        self.assertTrue(np.all(other.count() == 1))
+        self.assertTrue(np.all(other.mean() == np.pi))
+        self.assertTrue(np.all(other.min() == np.pi))
+        self.assertTrue(np.all(other.max() == np.pi))
+        self.assertTrue(np.all(other.sum() == np.pi))
+        self.assertTrue(np.all(other.sum_of_weights() == 1))
+        self.assertTrue(np.all(other.variance() == 0))
+        self.assertTrue(np.all(np.isnan(other.skewness())))
+        self.assertTrue(np.all(np.isnan(other.kurtosis())))
+
+    def test_binning2d_iadd(self):
+        x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
+        y_axis = core.Axis(np.linspace(-90, 90, 1))
+
+        binning = core.Binning2DFloat64(x_axis, y_axis, None)
+        binning.push([-180], [-90], [np.pi])
+
+        other = copy.copy(binning)
+        other += binning
+
+        self.assertTrue(np.all(binning.count() == 1))
+        self.assertTrue(np.all(binning.mean() == np.pi))
+        self.assertTrue(np.all(binning.min() == np.pi))
+        self.assertTrue(np.all(binning.max() == np.pi))
+        self.assertTrue(np.all(binning.sum() == np.pi))
+        self.assertTrue(np.all(binning.sum_of_weights() == 1))
+        self.assertTrue(np.all(binning.variance() == 0))
+        self.assertTrue(np.all(np.isnan(other.skewness())))
+        self.assertTrue(np.all(np.isnan(other.kurtosis())))
+
+        self.assertTrue(np.all(other.count() == 2))
+        self.assertTrue(np.all(other.mean() == np.pi))
+        self.assertTrue(np.all(other.min() == np.pi))
+        self.assertTrue(np.all(other.max() == np.pi))
+        self.assertTrue(np.all(other.sum() == np.pi * 2))
+        self.assertTrue(np.all(other.sum_of_weights() == 2))
+        self.assertTrue(np.all(other.variance() == 0))
+        self.assertTrue(np.all(np.isnan(other.skewness())))
+        self.assertTrue(np.all(np.isnan(other.kurtosis())))
 
 
 if __name__ == "__main__":

@@ -202,6 +202,7 @@ class Binning2DFloat64:
 class Binning2DFloat32:
     x: Axis
     y: Axis
+    wgs: geodetic.System
 
     def __init__(self,
                  x: Axis,
