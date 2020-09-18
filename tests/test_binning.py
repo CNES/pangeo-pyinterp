@@ -5,7 +5,11 @@
 import os
 import unittest
 import dask.array as da
-import dask.array.stats as das
+try:
+    import dask.array.stats as das
+    HAVE_SCIPY = True
+except ImportError:
+    HAVE_SCIPY = False
 import numpy as np
 import xarray as xr
 import pyinterp
@@ -74,12 +78,13 @@ class Nearest(unittest.TestCase):
         self.assertAlmostEqual(
             binning.variable("sum")[0, 0],
             z.sum().compute())
-        self.assertAlmostEqual(
-            binning.variable("kurtosis")[0, 0],
-            das.kurtosis(z).compute())
-        self.assertAlmostEqual(
-            binning.variable("skewness")[0, 0],
-            das.skew(z).compute())
+        if HAVE_SCIPY:
+            self.assertAlmostEqual(
+                binning.variable("kurtosis")[0, 0],
+                das.kurtosis(z).compute())
+            self.assertAlmostEqual(
+                binning.variable("skewness")[0, 0],
+                das.skew(z).compute())
 
 
 if __name__ == "__main__":
