@@ -12,6 +12,9 @@ namespace py = pybind11;
 
 template <typename Type>
 void implement_binning_2d(py::module& m, const std::string& suffix) {
+  PYBIND11_NUMPY_DTYPE(pyinterp::detail::math::Accumulators<Type>, count,
+                       sum_of_weights, mean, min, max, sum, mom2, mom3, mom4);
+
   py::class_<pyinterp::Binning2D<Type>>(m, ("Binning2D" + suffix).c_str(),
                                         R"__doc__(
 Group a number of more or less continuous values into a smaller number of
@@ -52,6 +55,15 @@ Gets the bin edges for the Y Axis of the grid
 Return:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
+      .def_property_readonly(
+          "wgs",
+          [](const pyinterp::Binning2D<Type>& self) { return self.wgs(); },
+          R"__doc__(
+Gets the WGS system handled by this instance
+
+Return:
+    pyinterp.core.geodetic.System: Geodetic system
+)__doc__")
       .def("clear", &pyinterp::Binning2D<Type>::clear, "Reset the statistics")
       .def("count", &pyinterp::Binning2D<Type>::count,
            R"__doc__(
@@ -80,13 +92,6 @@ Compute the mean of values for points within each bin.
 
 Return:
     numpy.ndarray: mean of values for points within each bin.
-)__doc__")
-      .def("median", &pyinterp::Binning2D<Type>::median,
-           R"__doc__(
-Compute the median of values for points within each bin.
-
-Return:
-    numpy.ndarray: mdeian of values for points within each bin.
 )__doc__")
       .def("min", &pyinterp::Binning2D<Type>::min,
            R"__doc__(
@@ -133,7 +138,14 @@ Compute the variance of values for points within each bin.
 
 Return:
     numpy.ndarray: variance of values for points within each bin.
-)__doc__");
+)__doc__")
+      .def("__iadd__", &pyinterp::Binning2D<Type>::operator+=,
+           py::call_guard<py::gil_scoped_release>())
+      .def(py::pickle(
+          [](const pyinterp::Binning2D<Type>& self) { return self.getstate(); },
+          [](const py::tuple& state) {
+            return pyinterp::Binning2D<Type>::setstate(state);
+          }));
 }
 
 void init_binning(py::module& m) {

@@ -6,21 +6,15 @@
 #include <pybind11/numpy.h>
 
 #include <Eigen/Core>
-#include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/stats.hpp>
-#include <boost/accumulators/statistics/weighted_kurtosis.hpp>
-#include <boost/accumulators/statistics/weighted_mean.hpp>
-#include <boost/accumulators/statistics/weighted_median.hpp>
-#include <boost/accumulators/statistics/weighted_skewness.hpp>
-#include <boost/accumulators/statistics/weighted_sum.hpp>
-#include <boost/accumulators/statistics/weighted_variance.hpp>
 #include <boost/geometry.hpp>
+#include <iostream>
 #include <optional>
 
 #include "pyinterp/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/binning.hpp"
+#include "pyinterp/detail/math/descriptive_statistics.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/system.hpp"
 
@@ -31,6 +25,10 @@ namespace pyinterp {
 template <typename T>
 class Binning2D {
  public:
+  /// Statistics handled by this object.
+  using Accumulators = detail::math::Accumulators<T>;
+  using DescriptiveStatistics = detail::math::DescriptiveStatistics<T>;
+
   /// Default constructor
   ///
   /// @param x Definition of the bin edges for the X axis of the grid.
@@ -73,58 +71,53 @@ class Binning2D {
 
   /// Reset the statistics.
   void clear() {
-    acc_ = std::move(Matrix<Accumulators>(x_->size(), y_->size()));
+    acc_ = std::move(Matrix<DescriptiveStatistics>(x_->size(), y_->size()));
   }
 
   /// Compute the count of points within each bin.
-  [[nodiscard]] auto count() const -> pybind11::array_t<T> {
-    return calculate_statistics<decltype(boost::accumulators::count), size_t>(
-        boost::accumulators::count);
+  [[nodiscard]] auto count() const -> pybind11::array_t<uint64_t> {
+    return calculate_statistics<decltype(&DescriptiveStatistics::count),
+                                uint64_t>(&DescriptiveStatistics::count);
   }
 
   /// Compute the minimum of values for points within each bin.
   [[nodiscard]] auto min() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::min);
+    return calculate_statistics(&DescriptiveStatistics::min);
   }
 
   /// Compute the maximum of values for points within each bin.
   [[nodiscard]] auto max() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::max);
+    return calculate_statistics(&DescriptiveStatistics::max);
   }
 
   /// Compute the mean of values for points within each bin.
   [[nodiscard]] auto mean() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::weighted_mean);
-  }
-
-  /// Compute the median of values for points within each bin.
-  [[nodiscard]] auto median() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::weighted_median);
+    return calculate_statistics(&DescriptiveStatistics::mean);
   }
 
   /// Compute the variance of values for points within each bin.
   [[nodiscard]] auto variance() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::weighted_variance);
+    return calculate_statistics(&DescriptiveStatistics::variance);
   }
 
   /// Compute the kurtosis of values for points within each bin.
   [[nodiscard]] auto kurtosis() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::weighted_kurtosis);
+    return calculate_statistics(&DescriptiveStatistics::kurtosis);
   }
 
   /// Compute the skewness of values for points within each bin.
   [[nodiscard]] auto skewness() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::weighted_skewness);
+    return calculate_statistics(&DescriptiveStatistics::skewness);
   }
 
   /// Compute the sum of values for points within each bin.
   [[nodiscard]] auto sum() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::weighted_sum);
+    return calculate_statistics(&DescriptiveStatistics::sum);
   }
 
   /// Compute the sum of weights within each bin.
   [[nodiscard]] auto sum_of_weights() const -> pybind11::array_t<T> {
-    return calculate_statistics(boost::accumulators::sum_of_weights);
+    return calculate_statistics(&DescriptiveStatistics::sum_of_weights);
   }
 
   /// Gets the X-Axis
@@ -137,30 +130,101 @@ class Binning2D {
     return y_;
   }
 
- private:
-  /// Statistics handled by this object.
-  using Accumulators = boost::accumulators::accumulator_set<
-      T,
-      boost::accumulators::stats<
-          boost::accumulators::tag::count, boost::accumulators::tag::max,
-          boost::accumulators::tag::min,
-          boost::accumulators::tag::sum_of_weights,
-          boost::accumulators::tag::weighted_kurtosis,
-          boost::accumulators::tag::weighted_mean,
-          boost::accumulators::tag::weighted_median(
-              boost::accumulators::with_p_square_quantile),
-          boost::accumulators::tag::weighted_skewness,
-          boost::accumulators::tag::weighted_sum,
-          boost::accumulators::tag::weighted_variance(
-              boost::accumulators::lazy)>,
-      T>;
+  /// Gets the WGS system
+  [[nodiscard]] inline auto wgs() const
+      -> const std::optional<geodetic::System>& {
+    return wgs_;
+  }
 
+  /// Pickle support: get state of this instance
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
+    return pybind11::make_tuple(
+        x_->getstate(), y_->getstate(),
+        wgs_.has_value() ? wgs_->getstate() : pybind11::make_tuple(),
+        acc_.template cast<Accumulators>());
+  }
+
+  /// Pickle support: set state of this instance
+  static auto setstate(const pybind11::tuple& state)
+      -> std::unique_ptr<Binning2D<T>> {
+    if (state.size() != 4) {
+      throw std::invalid_argument("invalid state");
+    }
+
+    // Unmarshalling X-Axis
+    auto x = std::make_shared<Axis<double>>();
+    *x = Axis<double>::setstate(state[0].cast<pybind11::tuple>());
+
+    // Unmarshalling Y-Axis
+    auto y = std::make_shared<Axis<double>>();
+    *y = Axis<double>::setstate(state[1].cast<pybind11::tuple>());
+
+    // Unmarshalling WGS system
+    auto wgs = std::optional<geodetic::System>();
+    auto wgs_state = state[2].cast<pybind11::tuple>();
+    if (!wgs_state.empty()) {
+      *wgs = geodetic::System::setstate(wgs_state);
+    }
+
+    // Unmarshalling computed statistics
+    auto acc =
+        state[3]
+            .cast<
+                Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic>>();
+    if (acc.rows() != x->size() || acc.cols() != y->size()) {
+      throw std::invalid_argument("invalid state");
+    }
+
+    // Unmarshalling instance
+    auto result = std::make_unique<Binning2D<T>>(x, y, wgs);
+    {
+      auto gil = pybind11::gil_scoped_release();
+      for (Eigen::Index ix = 0; ix < result->acc_.rows(); ++ix) {
+        for (Eigen::Index iy = 0; iy < result->acc_.cols(); ++iy) {
+          result->acc_(ix, iy) = std::move(DescriptiveStatistics(acc(ix, iy)));
+        }
+      }
+    }
+    return result;
+  }
+
+  /// Aggregation of statistics
+  auto operator+=(const Binning2D& other) -> Binning2D& {
+    if (*x_ != *(other.x_) || *y_ != *(other.y_)) {
+      throw std::invalid_argument("Unable to combine different grids");
+    }
+    if ((wgs_ && !other.wgs_) || (!wgs_ && other.wgs_) ||
+        (wgs_.has_value() && other.wgs_.has_value() &&
+         (*wgs_ != *other.wgs_))) {
+      throw std::invalid_argument(
+          "Unable to combine different geodetic system");
+    }
+
+    for (Eigen::Index ix = 0; ix < acc_.rows(); ++ix) {
+      for (Eigen::Index iy = 0; iy < acc_.cols(); ++iy) {
+        auto& lhs = acc_(ix, iy);
+        auto& rhs = other.acc_(ix, iy);
+
+        // Statistics are defined only in the other instance.
+        if (lhs.count() == 0 && rhs.count() != 0) {
+          lhs = rhs;
+          // If the statistics are defined in both instances they can be
+          // combined.
+        } else if (lhs.count() != 0 && rhs.count() != 0) {
+          lhs += rhs;
+        }
+      }
+    }
+    return *this;
+  }
+
+ private:
   /// Grid axis
   std::shared_ptr<Axis<double>> x_;
   std::shared_ptr<Axis<double>> y_;
 
   /// Statistics grid
-  Matrix<Accumulators> acc_;
+  Matrix<DescriptiveStatistics> acc_;
 
   /// Geodetic coordinate system required to calculate areas (optional if the
   /// user wishes to handle Cartesian coordinates).
@@ -177,7 +241,7 @@ class Binning2D {
 
       for (Eigen::Index ix = 0; ix < acc_.rows(); ++ix) {
         for (Eigen::Index iy = 0; iy < acc_.cols(); ++iy) {
-          _z(ix, iy) = func(acc_(ix, iy));
+          _z(ix, iy) = (acc_(ix, iy).*func)();
         }
       }
     }
@@ -206,7 +270,7 @@ class Binning2D {
           auto iy = y_axis.find_index(_y(idx), true);
 
           if (ix != -1 && iy != -1) {
-            acc_(ix, iy)(value, boost::accumulators::weight = T(1));
+            acc_(ix, iy)(value);
           }
         }
       }
@@ -218,7 +282,7 @@ class Binning2D {
                   const T& weight) {
     if (!detail::math::is_almost_zero(weight,
                                       std::numeric_limits<T>::epsilon())) {
-      acc_(ix, iy)(value, boost::accumulators::weight = weight);
+      acc_(ix, iy)(value, weight);
     }
   }
 

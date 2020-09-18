@@ -604,7 +604,7 @@ def main():
         data_files=typehints(),
         description='Interpolation of geo-referenced data for Python.',
         ext_modules=[CMakeExtension(name="pyinterp.core")],
-        install_requires=["numpy", "xarray"],
+        install_requires=["dask", "numpy", "xarray"],
         license="BSD License",
         long_description=long_description(),
         long_description_content_type='text/markdown',
