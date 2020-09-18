@@ -14,20 +14,6 @@ from . import core
 from . import geodetic
 
 
-def _process_block(x: np.ndarray, y: np.ndarray, z: np.ndarray,
-                   binning: "Binning2D") -> np.ndarray:
-    binning.clear()
-    binning.push(x, y, z)
-    return np.ndarray([binning], dtype="object")
-
-def _map_blocks(x: da.Array, y: da.Array, z:da.Array, binning: "Binning2D") -> "Binning2D":
-    return da.map_blocks(_process_block,
-                         x.flatten(),
-                         y.flatten(),
-                         z.flatten(),
-                         binning,
-                         dtype="object").sum()
-
 class Binning2D:
     """
     Group a number of more or less continuous values into a smaller number of
