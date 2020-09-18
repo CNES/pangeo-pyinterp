@@ -166,9 +166,8 @@ class Binning2D:
         y = da.asarray(y)
         z = da.asarray(z)
 
-        def _process_block(x: np.ndarray, y: np.ndarray, z: np.ndarray,
-                           simple: Optional[bool]) -> np.ndarray:
-            binning = Binning2D(self.x, self.y, self.wgs)
+        def _process_block(x, y, z, x_axis, y_axis, wgs, simple):
+            binning = Binning2D(x_axis, y_axis, wgs)
             binning.push(x, y, z, simple)
             return np.array([binning], dtype="object")
 
@@ -176,6 +175,9 @@ class Binning2D:
                              x.flatten(),
                              y.flatten(),
                              z.flatten(),
+                             self.x,
+                             self.y,
+                             self.wgs,
                              simple,
                              dtype="object").sum()
 
