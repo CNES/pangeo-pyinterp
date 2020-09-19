@@ -16,7 +16,8 @@ namespace py = pybind11;
 namespace pyinterp {
 
 /// Returns the GSL interp type
-inline auto interp_type(const FittingModel kind) -> const gsl_interp_type* {
+static inline auto interp_type(const FittingModel kind)
+    -> const gsl_interp_type* {
   switch (kind) {
     case kLinear:
       return gsl_interp_linear;

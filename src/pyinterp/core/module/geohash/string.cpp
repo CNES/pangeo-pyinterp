@@ -18,7 +18,7 @@ namespace geohash = pyinterp::geohash;
 namespace geodetic = pyinterp::geodetic;
 
 // Parsing of the string defining a GeoHash.
-inline auto parse_str = [](const py::str& hash) -> auto {
+static inline auto parse_str = [](const py::str& hash) -> auto {
   auto result = std::string(hash);
   if (result.length() < 1 || result.length() > 12) {
     throw std::invalid_argument("Geohash length must be within [1, 12]");
@@ -27,7 +27,7 @@ inline auto parse_str = [](const py::str& hash) -> auto {
 };
 
 // Checking the value defining the precision of a geohash.
-inline auto check_range(uint32_t precision) -> void {
+static inline auto check_range(uint32_t precision) -> void {
   if (precision < 1 || precision > 12) {
     throw std::invalid_argument("precision must be within [1, 12]");
   }
@@ -38,9 +38,9 @@ void init_geohash_string(py::module& m) {
        "error",
        [](const uint32_t& precision) -> py::tuple {
          check_range(precision);
-         auto lat_lng_err = geohash::int64::error_with_precision(precision * 5);
-         return py::make_tuple(std::get<1>(lat_lng_err),
-                               std::get<0>(lat_lng_err));
+         auto lon_lat_err = geohash::int64::error_with_precision(precision * 5);
+         return py::make_tuple(std::get<1>(lon_lat_err),
+                               std::get<0>(lon_lat_err));
        },
        py::arg("precision"),
        R"__doc__(

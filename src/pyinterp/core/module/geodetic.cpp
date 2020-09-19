@@ -79,7 +79,7 @@ Return:
           }));
 }
 
-void init_geodetic_box(py::module& m) {
+static void init_geodetic_box(py::module& m) {
   py::class_<geodetic::Box>(m, "Box", R"__doc__(
     Defines a box made of two describing points.
 )__doc__")
@@ -186,7 +186,7 @@ Return:
                       }));
 }
 
-void init_geodetic_polygon(py::module& m) {
+static void init_geodetic_polygon(py::module& m) {
   py::class_<geodetic::Polygon>(
       m, "Polygon",
       "The polygon contains an outer ring and zero or more inner rings")

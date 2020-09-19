@@ -19,7 +19,7 @@ namespace geohash = pyinterp::geohash;
 namespace geodetic = pyinterp::geodetic;
 
 // Checking the value defining the precision of a geohash.
-inline auto check_range(uint32_t precision) -> void {
+static inline auto check_range(uint32_t precision) -> void {
   if (precision < 1 || precision > 64) {
     throw std::invalid_argument("precision must be within [1, 64]");
   }
@@ -30,9 +30,9 @@ void init_geohash_int64(py::module& m) {
        "error",
        [](const uint32_t& precision) -> py::tuple {
          check_range(precision);
-         auto lat_lon_err = geohash::int64::error_with_precision(precision);
-         return py::make_tuple(std::get<1>(lat_lon_err),
-                               std::get<0>(lat_lon_err));
+         auto lon_lat_err = geohash::int64::error_with_precision(precision);
+         return py::make_tuple(std::get<1>(lon_lat_err),
+                               std::get<0>(lon_lat_err));
        },
        py::arg("precision"),
        R"__doc__(
