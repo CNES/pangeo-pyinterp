@@ -13,6 +13,16 @@ Geographic indexers
   RTree
   TemporalAxis
 
+geohash
+-------
+
+.. autosummary::
+  :toctree: generated/
+
+  geohash.index
+  geohash.lock
+  geohash.storage
+
 Binning
 =======
 
@@ -55,16 +65,6 @@ Geodetic systems
   geodetic.Point
   geodetic.Polygon
   geodetic.System
-
-Geohash index
-=============
-
-.. autosummary::
-  :toctree: generated/
-
-  geohash.index
-  geohash.lock
-  geohash.storage
 
 .. _cartesian_interpolators:
 
