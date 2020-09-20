@@ -5,7 +5,6 @@
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
 import datetime
-import distutils.command.build
 import pathlib
 import platform
 import re
@@ -18,6 +17,8 @@ import setuptools
 import setuptools.command.build_ext
 import setuptools.command.install
 import setuptools.command.test
+# Setuptools must be imported first
+import distutils.command.build
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
