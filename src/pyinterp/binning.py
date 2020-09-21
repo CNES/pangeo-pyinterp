@@ -28,16 +28,29 @@ class Binning2D:
         Initializes the grid used to calculate the statistics.
 
         Args:
-            x (pyinterp.Axis) : Definition of the bin edges for the X axis of
-                the grid.
-            y (pyinterp.Axis) : Definition of the bin edges for the Y axis of
-                the grid.
+            x (pyinterp.Axis) : Definition of the bin centers for the X axis
+                of the grid.
+            y (pyinterp.Axis) : Definition of the bin centers for the Y axis
+                of the grid.
             wgs (pyinterp.geodetic.System, optional): WGS of the coordinate
                 system used to manipulate geographic coordinates. If this
                 parameter is not set, the handled coordinates will be
                 considered as Cartesian coordinates. Otherwise, ``x`` and ``y``
                 are considered to represents the longitudes and latitudes.
             dtype (numpy.dtype, optional): Data type of the instance to create.
+
+        .. note ::
+
+            The axes define the centers of the different cells where the
+            statistics will be calculated, as shown in the figure below.
+
+            .. figure:: ../pictures/coordinates.svg
+                :align: center
+                :width: 50%
+
+            In this example, to calculate the statistics in the different cells
+            defined, the coordinates of the axes must be shifted by half a grid
+            step, 0.5 in this example.
         """
         if dtype == np.dtype("float64"):
             self._instance = core.Binning2DFloat64(x, y, wgs)
@@ -49,12 +62,12 @@ class Binning2D:
 
     @property
     def x(self) -> core.Axis:
-        """Gets the bin edges for the X Axis of the grid"""
+        """Gets the bin centers for the X Axis of the grid"""
         return self._instance.x
 
     @property
     def y(self) -> core.Axis:
-        """Gets the bin edges for the Y Axis of the grid"""
+        """Gets the bin centers for the Y Axis of the grid"""
         return self._instance.y
 
     @property

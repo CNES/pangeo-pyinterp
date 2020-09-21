@@ -31,8 +31,8 @@ class Binning2D {
 
   /// Default constructor
   ///
-  /// @param x Definition of the bin edges for the X axis of the grid.
-  /// @param y Definition of the bin edges for the Y axis of the grid.
+  /// @param x Definition of the bin centers for the X axis of the grid.
+  /// @param y Definition of the bin centers for the Y axis of the grid.
   /// @param wgs WGS of the coordinate system used to manipulate geographic
   /// coordinates. If this parameter is not set, the handled coordinates will be
   /// considered as Cartesian coordinates. Otherwise, "x" and "y" are considered

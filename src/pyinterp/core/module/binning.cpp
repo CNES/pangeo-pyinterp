@@ -29,9 +29,9 @@ Group a number of more or less continuous values into a smaller number of
 Default constructor
 
 Args:
-    x (pyinterp.core.Axis): Definition of the bin edges for the X axis of
+    x (pyinterp.core.Axis): Definition of the bin centers for the X axis of
         the grid.
-    y (pyinterp.core.Axis): Definition of the bin edges for the Y axis of
+    y (pyinterp.core.Axis): Definition of the bin centers for the Y axis of
         the grid.
     wgs (pyinterp.geodetic.System, optional): WGS of the coordinate system
         used to manipulate geographic coordinates. If this parameter is not
@@ -42,7 +42,7 @@ Args:
       .def_property_readonly(
           "x", [](const pyinterp::Binning2D<Type>& self) { return self.x(); },
           R"__doc__(
-Gets the bin edges for the X Axis of the grid
+Gets the bin centers for the X Axis of the grid
 
 Return:
     pyinterp.core.Axis: X-Axis
@@ -50,7 +50,7 @@ Return:
       .def_property_readonly(
           "y", [](const pyinterp::Binning2D<Type>& self) { return self.y(); },
           R"__doc__(
-Gets the bin edges for the Y Axis of the grid
+Gets the bin centers for the Y Axis of the grid
 
 Return:
     pyinterp.core.Axis: Y-Axis
