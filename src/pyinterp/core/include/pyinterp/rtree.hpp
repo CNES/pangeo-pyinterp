@@ -3,14 +3,17 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/numpy.h>
+
 #include <Eigen/Core>
 #include <functional>
-#include <pybind11/numpy.h>
+
 #include "pyinterp/detail/broadcast.hpp"
-#include "pyinterp/detail/geometry/rtree.hpp"
 #include "pyinterp/detail/geodetic/coordinates.hpp"
 #include "pyinterp/detail/geodetic/system.hpp"
+#include "pyinterp/detail/geometry/rtree.hpp"
 #include "pyinterp/detail/thread.hpp"
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp {
@@ -52,7 +55,7 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
 
   /// Pointer on the method converting LLA coordinates to ECEF.
   using Converter = point_t (RTree<CoordinateType, Type, N>::*)(
-      const Eigen::Map<const Eigen::Matrix<CoordinateType, -1, 1>> &) const;
+      const Eigen::Map<const Vector<CoordinateType>> &) const;
 
   /// Pointer on the method to Search for the nearest K nearest neighbors
   using Requester = std::vector<result_t> (RTree<CoordinateType, Type, N>::*)(
@@ -291,8 +294,8 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
   /// latitude in degrees, altitude in meters, then the other coordinates
   /// defined in a Euclidean space.
   auto from_lon_lat_alt(
-      const Eigen::Map<const Eigen::Matrix<CoordinateType, -1, 1>> &coordinates)
-      const -> point_t {
+      const Eigen::Map<const Vector<CoordinateType>> &coordinates) const
+      -> point_t {
     auto ecef = coordinates_.lla_to_ecef(
         detail::geometry::EquatorialPoint3D<CoordinateType>{
             coordinates(0), coordinates(1), coordinates(2)});
@@ -311,8 +314,8 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
   /// Create the cartesian point for the given coordinates: longitude and
   /// latitude in degrees, then the other coordinated defined in a Euclidean
   /// space.
-  auto from_lon_lat(const Eigen::Map<const Eigen::Matrix<CoordinateType, -1, 1>>
-                        &coordinates) const -> point_t {
+  auto from_lon_lat(const Eigen::Map<const Vector<CoordinateType>> &coordinates)
+      const -> point_t {
     auto ecef = coordinates_.lla_to_ecef(
         detail::geometry::EquatorialPoint3D<CoordinateType>{coordinates(0),
                                                             coordinates(1), 0});
@@ -365,11 +368,11 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     vector.reserve(observations);
 
     for (auto ix = 0; ix < observations; ++ix) {
-      vector.emplace_back(std::make_pair(
-          std::invoke(converter, *this,
-                      Eigen::Map<const Eigen::Matrix<CoordinateType, -1, 1>>(
-                          &_coordinates(ix, 0), M)),
-          _values(ix)));
+      vector.emplace_back(
+          std::make_pair(std::invoke(converter, *this,
+                                     Eigen::Map<const Vector<CoordinateType>>(
+                                         &_coordinates(ix, 0), M)),
+                         _values(ix)));
     }
     detail::geometry::RTree<CoordinateType, Type, N>::packing(vector);
   }
@@ -385,11 +388,11 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     auto _values = values.template unchecked<1>();
 
     for (auto ix = 0; ix < coordinates.shape(0); ++ix) {
-      detail::geometry::RTree<CoordinateType, Type, N>::insert(std::make_pair(
-          std::invoke(converter, *this,
-                      Eigen::Map<const Eigen::Matrix<CoordinateType, -1, 1>>(
-                          &_coordinates(ix, 0), M)),
-          _values(ix)));
+      detail::geometry::RTree<CoordinateType, Type, N>::insert(
+          std::make_pair(std::invoke(converter, *this,
+                                     Eigen::Map<const Vector<CoordinateType>>(
+                                         &_coordinates(ix, 0), M)),
+                         _values(ix)));
     }
   }
 
@@ -428,10 +431,10 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
               auto point = point_t();
 
               for (size_t ix = start; ix < end; ++ix) {
-                point = std::move(std::invoke(
-                    converter, *this,
-                    Eigen::Map<const Eigen::Matrix<CoordinateType, -1, 1>>(
-                        &_coordinates(ix, 0), M)));
+                point = std::move(
+                    std::invoke(converter, *this,
+                                Eigen::Map<const Vector<CoordinateType>>(
+                                    &_coordinates(ix, 0), M)));
 
                 auto nearest = std::invoke(requester, *this, point, k);
                 auto jx = 0ULL;
@@ -492,10 +495,10 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
               auto point = point_t();
 
               for (size_t ix = start; ix < end; ++ix) {
-                point = std::move(std::invoke(
-                    converter, *this,
-                    Eigen::Map<const Eigen::Matrix<CoordinateType, -1, 1>>(
-                        &_coordinates(ix, 0), M)));
+                point = std::move(
+                    std::invoke(converter, *this,
+                                Eigen::Map<const Vector<CoordinateType>>(
+                                    &_coordinates(ix, 0), M)));
 
                 auto result = detail::geometry::RTree<CoordinateType, Type, N>::
                     inverse_distance_weighting(point, radius, k, p, within);
@@ -551,10 +554,10 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
               auto point = point_t();
 
               for (size_t ix = start; ix < end; ++ix) {
-                point = std::move(std::invoke(
-                    converter, *this,
-                    Eigen::Map<const Eigen::Matrix<CoordinateType, -1, 1>>(
-                        &_coordinates(ix, 0), M)));
+                point = std::move(
+                    std::invoke(converter, *this,
+                                Eigen::Map<const Vector<CoordinateType>>(
+                                    &_coordinates(ix, 0), M)));
 
                 auto result = detail::geometry::RTree<
                     CoordinateType, Type, N>::radial_basis_function(point,

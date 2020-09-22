@@ -110,12 +110,12 @@ class TestCoordinates(unittest.TestCase):
         self.assertTrue(np.all(a.__getstate__() == b.__getstate__()))
 
 
-class TestPoint2D(unittest.TestCase):
-    """Test of the C+++/Python interface of the pyinterp::geodetic::Point2D
+class TestPoint(unittest.TestCase):
+    """Test of the C+++/Python interface of the pyinterp::geodetic::Point
     class"""
-    def test_point2d_init(self):
+    def test_point_init(self):
         """Test construction and accessors of the object"""
-        pt = core.geodetic.Point2D(12, 24)
+        pt = core.geodetic.Point(12, 24)
         self.assertEqual(pt.lon, 12)
         self.assertEqual(pt.lat, 24)
         self.assertEqual(str(pt), "(12, 24)")
@@ -123,25 +123,27 @@ class TestPoint2D(unittest.TestCase):
         self.assertEqual(pt.lon, 55)
         pt.lat = 33
         self.assertEqual(pt.lat, 33)
+        point = core.geodetic.Point.read_wkt("POINT(-2 2)")
+        assert point.wkt() == "POINT(-2 2)"
 
-    def test_point2d_pickle(self):
+    def test_point_pickle(self):
         """Serialization tests"""
-        a = core.geodetic.Point2D(1, 2)
+        a = core.geodetic.Point(1, 2)
         b = pickle.loads(pickle.dumps(a))
         self.assertEqual(a.lon, b.lon)
         self.assertEqual(a.lat, b.lat)
         self.assertNotEqual(id(a), id(b))
 
 
-class TestBox2D(unittest.TestCase):
-    """Test of the C+++/Python interface of the pyinterp::geodetic::Box2D
+class TestBox(unittest.TestCase):
+    """Test of the C+++/Python interface of the pyinterp::geodetic::Box
     class"""
-    def test_box2d_init(self):
+    def test_box_init(self):
         """Test construction and accessors of the object"""
-        min_corner = core.geodetic.Point2D(0, 1)
-        max_corner = core.geodetic.Point2D(2, 3)
+        min_corner = core.geodetic.Point(0, 1)
+        max_corner = core.geodetic.Point(2, 3)
 
-        box = core.geodetic.Box2D(min_corner, max_corner)
+        box = core.geodetic.Box(min_corner, max_corner)
         self.assertEqual(str(box), "((0, 1), (2, 3))")
         self.assertEqual(box.min_corner.lon, 0)
         self.assertEqual(box.min_corner.lat, 1)
@@ -150,8 +152,8 @@ class TestBox2D(unittest.TestCase):
 
         self.assertTrue(box.covered_by(min_corner))
         self.assertTrue(box.covered_by(max_corner))
-        self.assertTrue(box.covered_by(core.geodetic.Point2D(1, 2)))
-        self.assertFalse(box.covered_by(core.geodetic.Point2D(0, 0)))
+        self.assertTrue(box.covered_by(core.geodetic.Point(1, 2)))
+        self.assertFalse(box.covered_by(core.geodetic.Point(0, 0)))
 
         flags = box.covered_by([1, 0], [2, 0])
         self.assertTrue(np.all(flags == [1, 0]))
@@ -162,11 +164,17 @@ class TestBox2D(unittest.TestCase):
         self.assertEqual(box.max_corner.lon, 0)
         self.assertEqual(box.max_corner.lat, 1)
 
+        assert box.wkt() == "POLYGON((2 3,2 1,0 1,0 3,2 3))"
+        box = core.geodetic.Box.read_wkt(
+            "POLYGON((2 3,2 1,0 1,0 3,2 3))")
+        assert repr(box) == "((2, 3), (0, 1))"
+
+
     def test_pickle(self):
         """Serialization tests"""
-        min_corner = core.geodetic.Point2D(0, 1)
-        max_corner = core.geodetic.Point2D(2, 3)
-        a = core.geodetic.Box2D(min_corner, max_corner)
+        min_corner = core.geodetic.Point(0, 1)
+        max_corner = core.geodetic.Point(2, 3)
+        a = core.geodetic.Box(min_corner, max_corner)
         b = pickle.loads(pickle.dumps(a))
         self.assertEqual(a.min_corner.lon, b.min_corner.lon)
         self.assertEqual(a.min_corner.lat, b.min_corner.lat)

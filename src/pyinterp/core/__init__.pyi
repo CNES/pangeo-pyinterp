@@ -1,6 +1,7 @@
 from typing import Any, Optional, Tuple, Union
 import numpy
 from . import geodetic
+from . import geohash
 from . import fill
 
 

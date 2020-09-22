@@ -3,9 +3,11 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include <cctype>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+
+#include <cctype>
+
 #include "pyinterp/bivariate.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/trivariate.hpp"
@@ -31,7 +33,7 @@ auto trivariate(const Grid3D<Type, AxisType>& grid,
                 const pybind11::array_t<Coordinate>& y,
                 const pybind11::array_t<AxisType>& z,
                 const Bivariate3D<Point, Coordinate>* interpolator,
-                const std::optional<std::string>& z_method, 
+                const std::optional<std::string>& z_method,
                 const bool bounds_error, const size_t num_threads)
     -> pybind11::array_t<Coordinate> {
   pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
@@ -100,8 +102,7 @@ auto trivariate(const Grid3D<Type, AxisType>& grid,
                         static_cast<Coordinate>(grid.value(ix0, iy1, iz1)),
                         static_cast<Coordinate>(grid.value(ix1, iy0, iz1)),
                         static_cast<Coordinate>(grid.value(ix1, iy1, iz1)),
-                        interpolator,
-                        z_interpolation_method);
+                        interpolator, z_interpolation_method);
 
               } else {
                 if (bounds_error) {
@@ -144,10 +145,9 @@ void implement_trivariate(pybind11::module& m, const std::string& prefix,
   m.def(("trivariate_" + function_suffix).c_str(),
         &trivariate<Point, Coordinate, AxisType, Type>, pybind11::arg("grid"),
         pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
-        pybind11::arg("interpolator"), 
+        pybind11::arg("interpolator"),
         pybind11::arg("z_method") = pybind11::none(),
-        pybind11::arg("bounds_error") = false,
-        pybind11::arg("num_threads") = 0,
+        pybind11::arg("bounds_error") = false, pybind11::arg("num_threads") = 0,
         (R"__doc__(
 Interpolate the values provided on the defined trivariate function.
 

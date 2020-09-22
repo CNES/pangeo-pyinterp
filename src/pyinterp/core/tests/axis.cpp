@@ -3,8 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/detail/axis.hpp"
-#include <memory>
+
 #include <gtest/gtest.h>
+
+#include <memory>
 
 namespace detail = pyinterp::detail;
 

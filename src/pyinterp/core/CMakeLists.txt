@@ -4,9 +4,10 @@
 # BSD-style license that can be found in the LICENSE file.
 include_directories(include)
 
-file(GLOB_RECURSE IMPLEMENT "detail/*.cpp")
+file(GLOB_RECURSE IMPLEMENT "lib/*.cpp")
 add_library(pyinterp STATIC ${IMPLEMENT})
-target_link_libraries(pyinterp PUBLIC cpp_coverage)
+target_include_directories(pyinterp PUBLIC ${PYTHON_INCLUDE_DIR})
+target_link_libraries(pyinterp PRIVATE unqlite ${SNAPPY_LIBRARIES} PUBLIC cpp_coverage)
 
 
 file(GLOB_RECURSE SOURCES "module/*.cpp")

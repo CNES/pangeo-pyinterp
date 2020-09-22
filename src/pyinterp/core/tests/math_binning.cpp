@@ -3,7 +3,9 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include <gtest/gtest.h>
+
 #include <boost/geometry.hpp>
+
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/binning.hpp"
 
@@ -134,11 +136,11 @@ TEST(math_binning, binning_cartesian) {
 TEST(math_binning, binning_spheroid) {
   auto wgs84 = boost::geometry::srs::spheroid(6378137.0, 6356752.3142451793);
   auto strategy = boost::geometry::strategy::area::geographic<>(wgs84);
-  auto p = geometry::SpheriodPoint2D<double>{2, 2};
-  auto p0 = geometry::SpheriodPoint2D<double>{1, 1};
-  auto p1 = geometry::SpheriodPoint2D<double>{3, 5};
+  auto p = geometry::GeographicPoint2D<double>{2, 2};
+  auto p0 = geometry::GeographicPoint2D<double>{1, 1};
+  auto p1 = geometry::GeographicPoint2D<double>{3, 5};
   auto weights =
-      math::binning_2d<geometry::SpheriodPoint2D,
+      math::binning_2d<geometry::GeographicPoint2D,
                        boost::geometry::strategy::area::geographic<>, double>(
           p, p0, p1, strategy);
 
@@ -147,14 +149,14 @@ TEST(math_binning, binning_spheroid) {
   EXPECT_FLOAT_EQ(std::get<2>(weights), 0.12513892);
   EXPECT_FLOAT_EQ(std::get<3>(weights), 0.37482309);
 
-  p = geometry::SpheriodPoint2D<double>{31.800000000000000711,
-                                        45.695000000000000284};
-  p0 = geometry::SpheriodPoint2D<double>{31.700000000000081002,
-                                         45.695000000000000284};
-  p1 = geometry::SpheriodPoint2D<double>{31.800000000000082423,
-                                         45.600000000000079581};
+  p = geometry::GeographicPoint2D<double>{31.800000000000000711,
+                                          45.695000000000000284};
+  p0 = geometry::GeographicPoint2D<double>{31.700000000000081002,
+                                           45.695000000000000284};
+  p1 = geometry::GeographicPoint2D<double>{31.800000000000082423,
+                                           45.600000000000079581};
   weights =
-      math::binning_2d<geometry::SpheriodPoint2D,
+      math::binning_2d<geometry::GeographicPoint2D,
                        boost::geometry::strategy::area::geographic<>, double>(
           p, p0, p1, strategy);
 

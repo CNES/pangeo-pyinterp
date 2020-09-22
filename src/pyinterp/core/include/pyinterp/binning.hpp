@@ -15,6 +15,7 @@
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/binning.hpp"
 #include "pyinterp/detail/math/descriptive_statistics.hpp"
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp {
@@ -30,8 +31,8 @@ class Binning2D {
 
   /// Default constructor
   ///
-  /// @param x Definition of the bin edges for the X axis of the grid.
-  /// @param y Definition of the bin edges for the Y axis of the grid.
+  /// @param x Definition of the bin centers for the X axis of the grid.
+  /// @param y Definition of the bin centers for the Y axis of the grid.
   /// @param wgs WGS of the coordinate system used to manipulate geographic
   /// coordinates. If this parameter is not set, the handled coordinates will be
   /// considered as Cartesian coordinates. Otherwise, "x" and "y" are considered
@@ -62,7 +63,7 @@ class Binning2D {
       auto strategy = boost::geometry::strategy::area::geographic<>(
           boost::geometry::srs::spheroid(wgs_->semi_major_axis(),
                                          wgs_->semi_minor_axis()));
-      push_linear<detail::geometry::SpheriodPoint2D,
+      push_linear<detail::geometry::GeographicPoint2D,
                   boost::geometry::strategy::area::geographic<>>(x, y, z,
                                                                  strategy);
     }
@@ -70,9 +71,7 @@ class Binning2D {
 
   /// Reset the statistics.
   void clear() {
-    acc_ = std::move(
-        Eigen::Matrix<DescriptiveStatistics, Eigen::Dynamic, Eigen::Dynamic>(
-            x_->size(), y_->size()));
+    acc_ = std::move(Matrix<DescriptiveStatistics>(x_->size(), y_->size()));
   }
 
   /// Compute the count of points within each bin.
@@ -225,7 +224,7 @@ class Binning2D {
   std::shared_ptr<Axis<double>> y_;
 
   /// Statistics grid
-  Eigen::Matrix<DescriptiveStatistics, Eigen::Dynamic, Eigen::Dynamic> acc_;
+  Matrix<DescriptiveStatistics> acc_;
 
   /// Geodetic coordinate system required to calculate areas (optional if the
   /// user wishes to handle Cartesian coordinates).

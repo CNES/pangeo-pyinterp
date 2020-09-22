@@ -1,6 +1,15 @@
 Changelog
 #########
 
+0.4.0 (X X 2020)
+-------------------------
+* Indexing data with geohash.
+* Parallelize the calculation of Binning with dask.
+
+0.3.2 (13 May 2020)
+-------------------------
+* Release GIL during RTree insertion or packing.
+
 0.3.1 (17 April 2020)
 -------------------------
 * Fixed a bug in Loess filter.

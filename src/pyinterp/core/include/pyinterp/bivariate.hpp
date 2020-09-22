@@ -5,7 +5,9 @@
 #pragma once
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+
 #include <cctype>
+
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/bivariate.hpp"
 #include "pyinterp/detail/thread.hpp"

@@ -4,8 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
+from typing import Optional
 import datetime
-import distutils.command.build
 import pathlib
 import platform
 import re
@@ -18,6 +18,8 @@ import setuptools
 import setuptools.command.build_ext
 import setuptools.command.install
 import setuptools.command.test
+# Setuptools must be imported first
+import distutils.command.build
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -31,6 +33,11 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 # OSX deployment target
 OSX_DEPLOYMENT_TARGET = '10.14'
+
+# BLAS implementations
+MKL = "mkl"
+OPENBLAS = "openblas"
+BLAS = [MKL, OPENBLAS]
 
 
 def build_dirname(extname=None):
@@ -80,6 +87,24 @@ def update_environment(path, version):
 
     with open(path, "w") as stream:
         stream.write("".join(lines))
+
+
+def patch_unqlite(source: pathlib.Path, target: pathlib.Path):
+    """Patch unqlite to enable compilation with C++"""
+    path = target.joinpath(source.name)
+    if path.exists():
+        return
+
+    pattern = re.compile(r'^(\s+)(pgno\s+pgno;)\s{2}(\s+.*)$').search
+    with open(source, "r") as stream:
+        lines = stream.readlines()
+    for ix, line in enumerate(lines):
+        m = pattern(line)
+        if m is not None:
+            lines[ix] = m.group(1) + "::" + m.group(2) + m.group(3) + "\n"
+
+    with open(path, "w") as stream:
+        stream.writelines(lines)
 
 
 def revision():
@@ -203,8 +228,14 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     #: Preferred MKL root
     MKL_ROOT = None
 
+    #: Preferred Snappy root
+    SNAPPY_ROOT = None
+
     #: Run CMake to configure this project
     RECONFIGURE = None
+
+    #: BLAS implementation selected
+    BLAS = None
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
@@ -258,6 +289,20 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                 "Unable to find the Eigen3 library in the conda distribution "
                 "used.")
         return "-DEIGEN3_INCLUDE_DIR=" + str(eigen_include_dir)
+
+    @staticmethod
+    def snappy():
+        """Get the default Snappy path in Anaconda's environnement."""
+        snappy_header = pathlib.Path(sys.prefix, "include", "snappy.h")
+        if snappy_header.exists():
+            return f"-DSNAPPY_ROOT_DIR={sys.prefix}"
+        snappy_header = pathlib.Path(sys.prefix, "Library", "include",
+                                     "snappy.h")
+        if not snappy_header.exists():
+            raise RuntimeError(
+                "Unable to find the Snappy library in the conda distribution "
+                "used.")
+        return f"-DSNAPPY_ROOT_DIR={snappy_header.parent.parent}"
 
     @staticmethod
     def mkl():
@@ -321,6 +366,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         elif is_conda:
             self.mkl()
 
+        if self.SNAPPY_ROOT is not None:
+            result.append("-DSNAPPY_ROOT_DIR=" + self.SNAPPY_ROOT)
+        else:
+            result.append(self.snappy())
+
         return result
 
     def build_cmake(self, ext):
@@ -330,6 +380,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         build_temp = pathlib.Path(WORKING_DIRECTORY, self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
         extdir = build_dirname(ext.name)
+
+        # patch unqlite
+        patch_unqlite(
+            WORKING_DIRECTORY.joinpath("third_party", "unqlite", "unqlite.h"),
+            WORKING_DIRECTORY.joinpath("src", "pyinterp", "core", "include"))
 
         cfg = 'Debug' if self.debug or self.CODE_COVERAGE else 'Release'
 
@@ -359,6 +414,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             if self.verbose:
                 build_args += ['/verbosity:n']
 
+        if self.BLAS is not None and self.BLAS == OPENBLAS:
+            cmake_args += ["-DBLA_VENDOR=OpenBLAS"]
+
         if self.verbose:
             build_args.insert(0, "--verbose")
 
@@ -386,6 +444,8 @@ class Build(distutils.command.build.build):
     """Build everything needed to install"""
     user_options = distutils.command.build.build.user_options
     user_options += [
+        ('blas=', None,
+         'BLAS library. List of vendors known: ' + ", ".join(BLAS)),
         ('boost-root=', None, 'Preferred Boost installation prefix'),
         ('build-unittests', None, "Build the unit tests of the C++ extension"),
         ('reconfigure', None, 'Forces CMake to reconfigure this project'),
@@ -393,12 +453,14 @@ class Build(distutils.command.build.build):
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
         ('eigen-root=', None, 'Preferred Eigen3 include directory'),
         ('gsl-root=', None, 'Preferred GSL installation prefix'),
-        ('mkl-root=', None, 'Preferred MKL installation prefix')
+        ('mkl-root=', None, 'Preferred MKL installation prefix'),
+        ('snappy-root=', None, 'Preferred Snappy installation prefix')
     ]
 
     def initialize_options(self):
         """Set default values for all the options that this command supports"""
         super().initialize_options()
+        self.blas: Optional[str] = None
         self.boost_root = None
         self.build_unittests = None
         self.code_coverage = None
@@ -406,6 +468,7 @@ class Build(distutils.command.build.build):
         self.eigen_root = None
         self.gsl_root = None
         self.mkl_root = None
+        self.snappy_root = None
         self.reconfigure = None
 
     def finalize_options(self):
@@ -413,6 +476,14 @@ class Build(distutils.command.build.build):
         super().finalize_options()
         if self.code_coverage is not None and platform.system() == 'Windows':
             raise RuntimeError("Code coverage is not supported on Windows")
+        if self.blas is not None:
+            self.blas = self.blas.lower()
+            if self.blas not in BLAS:
+                raise RuntimeError(f"Unknown BLAS implmentation: {self.blas}")
+            if self.mkl_root is not None and self.blas == OPENBLAS:
+                raise RuntimeError(
+                    "argument --mkl_root: not allowed with argument --blas=openblas"
+                )
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
@@ -432,8 +503,12 @@ class Build(distutils.command.build.build):
             BuildExt.GSL_ROOT = self.gsl_root
         if self.mkl_root is not None:
             BuildExt.MKL_ROOT = self.mkl_root
+        if self.snappy_root is not None:
+            BuildExt.SNAPPY_ROOT = self.snappy_root
         if self.reconfigure is not None:
             BuildExt.RECONFIGURE = True
+        if self.blas is not None:
+            BuildExt.BLAS = self.blas
         super().run()
 
 
@@ -537,7 +612,7 @@ def main():
         author='CNES/CLS',
         author_email='fbriol@gmail.com',
         classifiers=[
-            "Development Status :: 3 - Alpha",
+            "Development Status :: 4 - Beta",
             "Topic :: Scientific/Engineering :: Physics",
             "License :: OSI Approved :: BSD License",
             "Natural Language :: English", "Operating System :: POSIX",

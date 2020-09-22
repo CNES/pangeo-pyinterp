@@ -8,6 +8,8 @@
 #include <cmath>
 #include <functional>
 
+#include "pyinterp/eigen.hpp"
+
 namespace pyinterp::detail::math {
 
 /// Known radial functions.
@@ -29,8 +31,8 @@ template <typename T>
 class RBF {
  public:
   /// Pointer to the Radial function used
-  using PtrRadialBasisFunction = Eigen::Matrix<T, -1, -1> (*)(
-      const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r, const double);
+  using PtrRadialBasisFunction =
+      Matrix<T> (*)(const Eigen::Ref<const Matrix<T>>& r, const double);
 
   /// Default constructor
   ///
@@ -75,11 +77,10 @@ class RBF {
   /// @param yk Values of the nodes
   /// @param xi Coordinates to evaluate the interpolant at.
   /// @return interpolated values for each coordinates provided.
-  [[nodiscard]] auto interpolate(
-      const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& xk,
-      const Eigen::Ref<const Eigen::Matrix<T, -1, 1>>& yk,
-      const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& xi) const
-      -> Eigen::Matrix<T, -1, 1> {
+  [[nodiscard]] auto interpolate(const Eigen::Ref<const Matrix<T>>& xk,
+                                 const Eigen::Ref<const Vector<T>>& yk,
+                                 const Eigen::Ref<const Matrix<T>>& xi) const
+      -> Vector<T> {
     // Matrix of distances between the coordinates provided.
     auto r = RBF::distance_matrix(xk, xk);
 
@@ -91,7 +92,7 @@ class RBF {
 
     // Apply smoothing factor if needed
     if (smooth_) {
-      A -= Eigen::Matrix<T, -1, -1>::Identity(xk.cols(), xk.cols()) * smooth_;
+      A -= Matrix<T>::Identity(xk.cols(), xk.cols()) * smooth_;
     }
 
     return function_(distance_matrix(xk, xi), epsilon) *
@@ -109,8 +110,7 @@ class RBF {
   PtrRadialBasisFunction function_;
 
   // Calculates the distance average excluding the diagonal
-  static auto average(
-      const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& distance) -> T {
+  static auto average(const Eigen::Ref<const Matrix<T>>& distance) -> T {
     assert(distance.cols() == distance.rows());
     auto sum = T(0);
     auto n = distance.cols();
@@ -119,61 +119,58 @@ class RBF {
         sum += distance(ix, jx);
       }
     }
-    return sum / (n * (n - 1) * 0.5);
+    return static_cast<T>(sum / (n * (n - 1) * 0.5));
   };
 
   /// Returns the distance between two points in a euclidean space
-  static auto euclidean_distance(
-      const Eigen::Ref<const Eigen::Matrix<T, -1, 1>>& x,
-      const Eigen::Ref<const Eigen::Matrix<T, -1, 1>>& y) -> T {
+  static auto euclidean_distance(const Eigen::Ref<const Vector<T>>& x,
+                                 const Eigen::Ref<const Vector<T>>& y) -> T {
     return std::sqrt((x - y).array().pow(2).sum());
   }
 
   /// Multiquadric
-  static auto multiquadric(const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r,
-                           const double epsilon) -> Eigen::Matrix<T, -1, -1> {
+  static auto multiquadric(const Eigen::Ref<const Matrix<T>>& r,
+                           const double epsilon) -> Matrix<T> {
     return ((epsilon * r).array().pow(2) + 1).sqrt();
   }
 
   /// Inverse multiquadric
-  static auto inverse_multiquadric(
-      const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r, const double epsilon)
-      -> Eigen::Matrix<T, -1, -1> {
+  static auto inverse_multiquadric(const Eigen::Ref<const Matrix<T>>& r,
+                                   const double epsilon) -> Matrix<T> {
     return 1.0 / multiquadric(r, epsilon).array();
   }
 
   /// Gauss
-  static auto gaussian(const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r,
-                       const double epsilon) -> Eigen::Matrix<T, -1, -1> {
+  static auto gaussian(const Eigen::Ref<const Matrix<T>>& r,
+                       const double epsilon) -> Matrix<T> {
     return (-(epsilon * r).array().pow(2)).exp();
   }
 
   /// Linear spline
-  static auto linear(const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r,
-                     const double /*epsilon*/) -> Eigen::Matrix<T, -1, -1> {
+  static auto linear(const Eigen::Ref<const Matrix<T>>& r,
+                     const double /*epsilon*/) -> Matrix<T> {
     return r;
   }
 
   /// Cubic spline
-  static auto cubic(const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r,
-                    const double /*epsilon*/) -> Eigen::Matrix<T, -1, -1> {
+  static auto cubic(const Eigen::Ref<const Matrix<T>>& r,
+                    const double /*epsilon*/) -> Matrix<T> {
     return r.array().pow(3);
   }
 
   /// Thin plate spline
-  static auto thin_plate(const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& r,
-                         const double /*epsilon*/) -> Eigen::Matrix<T, -1, -1> {
+  static auto thin_plate(const Eigen::Ref<const Matrix<T>>& r,
+                         const double /*epsilon*/) -> Matrix<T> {
     return (r.array() == 0).select(0, r.array().pow(2) * r.array().log());
   }
 
   /// Calculation of distances between the coordinates provided.
-  static auto distance_matrix(
-      const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& xk,
-      const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& xi)
-      -> Eigen::Matrix<T, -1, -1> {
+  static auto distance_matrix(const Eigen::Ref<const Matrix<T>>& xk,
+                              const Eigen::Ref<const Matrix<T>>& xi)
+      -> Matrix<T> {
     assert(xk.rows() == xi.rows());
 
-    auto result = Eigen::Matrix<T, -1, -1>(xi.cols(), xk.cols());
+    auto result = Matrix<T>(xi.cols(), xk.cols());
 
     for (Eigen::Index i0 = 0; i0 < xi.cols(); ++i0) {
       for (Eigen::Index i1 = 0; i1 < xk.cols(); ++i1) {
@@ -184,10 +181,9 @@ class RBF {
   }
 
   /// Resolution of the linear system
-  static auto solve_linear_system(const Eigen::Matrix<T, -1, -1>& A,
-                                  const Eigen::Matrix<T, -1, 1>& di)
-      -> Eigen::Matrix<T, -1, 1> {
-    Eigen::FullPivLU<Eigen::Matrix<T, -1, -1>> lu(A);
+  static auto solve_linear_system(const Matrix<T>& A, const Vector<T>& di)
+      -> Vector<T> {
+    Eigen::FullPivLU<Matrix<T>> lu(A);
     return lu.solve(di);
   }
 };

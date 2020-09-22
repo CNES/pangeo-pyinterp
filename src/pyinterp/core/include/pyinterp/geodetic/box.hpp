@@ -4,40 +4,83 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <pybind11/numpy.h>
+
 #include <Eigen/Core>
+
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geometry/box.hpp"
+#include "pyinterp/detail/math.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/point.hpp"
 
 namespace pyinterp::geodetic {
 
 // Defines a box made of two describing points.
-template <typename T>
-class Box2D : public boost::geometry::model::box<Point2D<T>> {
+class Box : public boost::geometry::model::box<Point> {
  public:
   /// @brief Default constructor
-  Box2D() = default;
+  Box() : boost::geometry::model::box<Point>() {}
 
   /// @brief Constructor taking the minimum corner point and the maximum corner
   /// point.
   /// @param min_corner the minimum corner point
   /// @param max_corner the maximum corner point
-  Box2D(const Point2D<T>& min_corner, const Point2D<T>& max_corner)
-      : boost::geometry::model::box<Point2D<T>>(min_corner, max_corner) {}
+  Box(const Point& min_corner, const Point& max_corner)
+      : boost::geometry::model::box<Point>(min_corner, max_corner) {}
 
-  /// @brief Get a box that covers the entire Earth. In other words, a box that
-  /// covers all positions, whatever they may be.
-  ///
-  // @return a box that covers the entire Earth
-  static auto entire_earth() -> Box2D { return Box2D({-180, -90}, {180, 90}); }
+  /// @brief Returns the box covering the whole earth.
+  [[nodiscard]] static auto whole_earth() -> Box {
+    return {{-180, -90}, {180, 90}};
+  }
+
+  // Returns the box, or the two boxes on either side of the dateline if the
+  // defined box wraps around the globe (i.e. the longitude of the min corner
+  // is greater than the longitude of the max corner.)
+  [[nodiscard]] auto split() const -> std::list<Box> {
+    // box wraps around the globe ?
+    if (this->min_corner().lon() > this->max_corner().lon()) {
+      return {Box({this->min_corner().lon(), this->min_corner().lat()},
+                  {180, this->max_corner().lat()}),
+              Box({-180, this->min_corner().lat()},
+                  {this->max_corner().lon(), this->max_corner().lat()})};
+    }
+    return {*this};
+  }
+
+  /// @brief Returns the center of the box.
+  [[nodiscard]] inline auto centroid() const -> Point {
+    return boost::geometry::return_centroid<Point, Box>(*this);
+  }
+
+  /// @brief Returns the delta of the box in latitude and longitude.
+  [[nodiscard]] inline auto delta(bool round) const
+      -> std::tuple<double, double> {
+    auto x = this->max_corner().lon() - this->min_corner().lon();
+    auto y = this->max_corner().lat() - this->min_corner().lat();
+    if (round) {
+      x = Box::max_decimal_power(x);
+      y = Box::max_decimal_power(y);
+    }
+    return std::make_tuple(x, y);
+  }
+
+  /// @brief Returns a point inside the box, making an effort to round to
+  /// minimal precision.
+  [[nodiscard]] inline auto round() const -> Point {
+    const auto xy = delta(true);
+    const auto x = std::get<0>(xy);
+    const auto y = std::get<1>(xy);
+    return {std::ceil(this->min_corner().lon() / x) * x,
+            std::ceil(this->min_corner().lat() / y) * y};
+  }
 
   /// @brief Test if the given point is inside or on border of this instance
   ///
   /// @param pt Point to test
   //  @return True if the given point is inside or on border of this Box
-  auto covered_by(const Point2D<T>& pt) const -> bool {
-    return boost::geometry::covered_by(pt, *this);
+  [[nodiscard]] auto covered_by(const Point& point) const -> bool {
+    return boost::geometry::covered_by(point, *this);
+    ;
   }
 
   /// @brief Test if the coordinates of the points provided are located inside
@@ -68,8 +111,8 @@ class Box2D : public boost::geometry::model::box<Point2D<T>> {
           [&](size_t start, size_t end) {
             try {
               for (size_t ix = start; ix < end; ++ix) {
-                _result(ix) = static_cast<int8_t>(
-                    covered_by(Point2D<T>(lon(ix), lat(ix))));
+                _result(ix) =
+                    static_cast<int8_t>(covered_by({lon(ix), lat(ix)}));
               }
             } catch (...) {
               except = std::current_exception();
@@ -84,7 +127,7 @@ class Box2D : public boost::geometry::model::box<Point2D<T>> {
     return result;
   }
 
-  /// Converts a Box2D into a string with the same meaning as that of this
+  /// Converts a Box into a string with the same meaning as that of this
   /// instance.
   [[nodiscard]] auto to_string() const -> std::string {
     std::stringstream ss;
@@ -100,58 +143,65 @@ class Box2D : public boost::geometry::model::box<Point2D<T>> {
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static auto setstate(const pybind11::tuple& state) -> Box2D<T> {
+  static auto setstate(const pybind11::tuple& state) -> Box {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
-    return Box2D<T>(Point2D<T>::setstate(state[0].cast<pybind11::tuple>()),
-                    Point2D<T>::setstate(state[1].cast<pybind11::tuple>()));
+    return Box(Point::setstate(state[0].cast<pybind11::tuple>()),
+               Point::setstate(state[1].cast<pybind11::tuple>()));
+  }
+
+ private:
+  // Returns the maximum power of 10 from a number (x > 0)
+  static auto max_decimal_power(const double x) -> double {
+    auto m = static_cast<int32_t>(std::floor(std::log10(x)));
+    return detail::math::power10(m);
   }
 };
 
 }  // namespace pyinterp::geodetic
 
-// BOOST specialization to accept pyinterp::geodectic::Box2D as a geometry
+// BOOST specialization to accept pyinterp::geodectic::Box as a geometry
 // entity
 namespace boost::geometry::traits {
 
 namespace pg = pyinterp::geodetic;
 
 /// Box tag
-template <typename T>
-struct tag<pg::Box2D<T>> {
+template <>
+struct tag<pg::Box> {
   using type = box_tag;
 };
 
 /// Type of a point
-template <typename T>
-struct point_type<pg::Box2D<T>> {
-  using type = pg::Point2D<T>;
+template <>
+struct point_type<pg::Box> {
+  using type = pg::Point;
 };
 
-template <typename T, std::size_t Dimension>
-struct indexed_access<pg::Box2D<T>, min_corner, Dimension> {
+template <std::size_t Dimension>
+struct indexed_access<pg::Box, min_corner, Dimension> {
   /// get corner of box
-  static inline auto get(pg::Box2D<T> const& box) -> double {
+  static inline auto get(pg::Box const& box) -> double {
     return geometry::get<Dimension>(box.min_corner());
   }
 
   /// set corner of box
-  static inline void set(pg::Box2D<T>& box,  // NOLINT
+  static inline void set(pg::Box& box,  // NOLINT
                          double const& value) {
     geometry::set<Dimension>(box.min_corner(), value);
   }
 };
 
-template <typename T, std::size_t Dimension>
-struct indexed_access<pg::Box2D<T>, max_corner, Dimension> {
+template <std::size_t Dimension>
+struct indexed_access<pg::Box, max_corner, Dimension> {
   /// get corner of box
-  static inline auto get(pg::Box2D<T> const& box) -> double {
+  static inline auto get(pg::Box const& box) -> double {
     return geometry::get<Dimension>(box.max_corner());
   }
 
   /// set corner of box
-  static inline void set(pg::Box2D<T>& box,  // NOLINT
+  static inline void set(pg::Box& box,  // NOLINT
                          double const& value) {
     geometry::set<Dimension>(box.max_corner(), value);
   }

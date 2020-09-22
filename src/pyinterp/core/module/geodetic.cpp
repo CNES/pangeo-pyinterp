@@ -6,21 +6,22 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
 #include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geodetic/coordinates.hpp"
 #include "pyinterp/geodetic/point.hpp"
+#include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geodetic/system.hpp"
 
 namespace geodetic = pyinterp::geodetic;
 namespace py = pybind11;
 
-template <typename T>
-void init_point2d(py::module& m) {
-  py::class_<geodetic::Point2D<T>>(m, "Point2D", R"__doc__(
-    Handle a point in a equatorial spherical coordinates system in degrees.
+static void init_geodetic_point(py::module& m) {
+  py::class_<geodetic::Point>(m, "Point", R"__doc__(
+    Handle a point in a geographic coordinates system in degrees.
 )__doc__")
       .def(py::init<>())
-      .def(py::init<T, T>(), py::arg("lon"), py::arg("lat"),
+      .def(py::init<double, double>(), py::arg("lon"), py::arg("lat"),
            R"__doc__(
 Build a new point with the coordinates provided.
 
@@ -29,35 +30,62 @@ Args:
     lat (float): Latitude in degrees
 )__doc__")
       .def_property("lon",
-                    static_cast<const T& (geodetic::Point2D<T>::*)() const>(
-                        &geodetic::Point2D<T>::lon),
-                    static_cast<void (geodetic::Point2D<T>::*)(const T&)>(
-                        &geodetic::Point2D<T>::lon),
+                    static_cast<double (geodetic::Point::*)() const>(
+                        &geodetic::Point::lon),
+                    static_cast<void (geodetic::Point::*)(const double)>(
+                        &geodetic::Point::lon),
                     "Longitude coordinate in degrees")
       .def_property("lat",
-                    static_cast<const T& (geodetic::Point2D<T>::*)() const>(
-                        &geodetic::Point2D<T>::lat),
-                    static_cast<void (geodetic::Point2D<T>::*)(const T&)>(
-                        &geodetic::Point2D<T>::lat),
+                    static_cast<double (geodetic::Point::*)() const>(
+                        &geodetic::Point::lat),
+                    static_cast<void (geodetic::Point::*)(const double)>(
+                        &geodetic::Point::lat),
                     "Latitude coordinate in degrees")
-      .def("__repr__", &geodetic::Point2D<T>::to_string,
+      .def(
+          "wkt",
+          [](const geodetic::Point& self) -> std::string {
+            auto ss = std::stringstream();
+            ss << boost::geometry::wkt(self);
+            return ss.str();
+          },
+          R"__doc__(
+Gets the OGC Well-Known Text (WKT) representation of this instance
+
+Return:
+    str: the WTK representation
+)__doc__")
+      .def_static(
+          "read_wkt",
+          [](const std::string& wkt) -> geodetic::Point {
+            auto point = geodetic::Point();
+            boost::geometry::read_wkt(wkt, point);
+            return point;
+          },
+          py::arg("wkt"), R"__doc__(
+Parses OGC Well-Known Text (WKT) into a Point
+
+Args:
+    wkt (str): the WKT representation of the Point
+Return:
+    pyinterp.geodetic.Point: The point defined by the WKT representation.
+)__doc__")
+      .def("__repr__", &geodetic::Point::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a point.")
       .def(py::pickle(
-          [](const geodetic::Point2D<T>& self) { return self.getstate(); },
+          [](const geodetic::Point& self) { return self.getstate(); },
           [](const py::tuple& state) {
-            return geodetic::Point2D<T>::setstate(state);
+            return geodetic::Point::setstate(state);
           }));
 }
 
-template <typename T>
-void init_box2d(py::module& m) {
-  py::class_<geodetic::Box2D<T>>(m, "Box2D", R"__doc__(
+static void init_geodetic_box(py::module& m) {
+  py::class_<geodetic::Box>(m, "Box", R"__doc__(
     Defines a box made of two describing points.
 )__doc__")
       .def(py::init<>())
-      .def(py::init<geodetic::Point2D<T>, geodetic::Point2D<T>>(),
-           py::arg("min_corner"), py::arg("max_corner"),
+      .def(py::init<geodetic::Point, geodetic::Point>(), py::arg("min_corner"),
+           py::arg("max_corner"),
            R"__doc__(
 Constructor taking the minimum corner point and the maximum corner point.
 
@@ -69,44 +97,43 @@ Args:
 )__doc__")
       .def_property(
           "min_corner",
-          [](const geodetic::Box2D<T>& self) { return self.min_corner(); },
-          [](geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
-              -> void { self.min_corner() = point; },
+          [](const geodetic::Box& self) { return self.min_corner(); },
+          [](geodetic::Box& self, const geodetic::Point& point) -> void {
+            self.min_corner() = point;
+          },
           "The minimal corner (lower left) of the box")
       .def_property(
           "max_corner",
-          [](const geodetic::Box2D<T>& self) { return self.max_corner(); },
-          [](geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
-              -> void { self.max_corner() = point; },
+          [](const geodetic::Box& self) { return self.max_corner(); },
+          [](geodetic::Box& self, const geodetic::Point& point) -> void {
+            self.max_corner() = point;
+          },
           "The maximal corner (upper right) of the box")
-      .def_static("entire_earth", &geodetic::Box2D<T>::entire_earth,
-                  R"__doc__(
-Get a box that covers the entire Earth. In other words, a box that covers all
-positions, whatever they may be.
-
-Return:
-    pyinterp.core.geodetic.Box2D: a box that covers the entire Earth
-)__doc__")
-      .def("covered_by",
-           [](const geodetic::Box2D<T>& self, const geodetic::Point2D<T>& point)
-               -> bool { return self.covered_by(point); },
-           py::arg("point"), R"__doc__(
+      .def_static("whole_earth", &geodetic::Box::whole_earth,
+                  "Returns the box covering the whole earth.")
+      .def(
+          "covered_by",
+          [](const geodetic::Box& self, const geodetic::Point& point) -> bool {
+            return self.covered_by(point);
+          },
+          py::arg("point"), R"__doc__(
 Test if the given point is inside or on border of this box
 
 Args:
     point (pyinterp.geodectic.Point2D): point to test
-
 Return:
-    bool: True if the given point is inside or on border of this Box
+    bool: True if the given point is inside or on border of this
+    box
 )__doc__")
-      .def("covered_by",
-           [](const geodetic::Box2D<T>& self,
-              const Eigen::Ref<const Eigen::VectorXd>& lon,
-              const Eigen::Ref<const Eigen::VectorXd>& lat,
-              const size_t num_threads) -> py::array_t<int8_t> {
-             return self.covered_by(lon, lat, num_threads);
-           },
-           py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
+      .def(
+          "covered_by",
+          [](const geodetic::Box& self,
+             const Eigen::Ref<const Eigen::VectorXd>& lon,
+             const Eigen::Ref<const Eigen::VectorXd>& lat,
+             const size_t num_threads) -> py::array_t<int8_t> {
+            return self.covered_by(lon, lat, num_threads);
+          },
+          py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
 Test if the coordinates of the points provided are located inside or at the
 edge of this box.
 
@@ -121,14 +148,138 @@ Return:
     (numpy.ndarray): a vector containing a flag equal to 1 if the coordinate
     is located in the box or at the edge otherwise 0.
 )__doc__")
-      .def("__repr__", &geodetic::Box2D<T>::to_string,
+      .def(
+          "wkt",
+          [](const geodetic::Box& self) -> std::string {
+            auto ss = std::stringstream();
+            ss << boost::geometry::wkt(self);
+            return ss.str();
+          },
+          R"__doc__(
+Gets the OGC Well-Known Text (WKT) representation of this instance
+
+Return:
+    str: the WTK representation
+)__doc__")
+      .def_static(
+          "read_wkt",
+          [](const std::string& wkt) -> geodetic::Box {
+            auto box = geodetic::Box();
+            boost::geometry::read_wkt(wkt, box);
+            return box;
+          },
+          py::arg("wkt"), R"__doc__(
+Parses OGC Well-Known Text (WKT) into a box
+
+Args:
+    wkt (str): the WKT representation of the box
+Return:
+    pyinterp.geodetic.Box: The box defined by the WKT
+    representation.
+)__doc__")
+      .def("__repr__", &geodetic::Box::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a box.")
-      .def(py::pickle(
-          [](const geodetic::Box2D<T>& self) { return self.getstate(); },
-          [](const py::tuple& state) {
-            return geodetic::Box2D<T>::setstate(state);
-          }));
+      .def(py::pickle([](const geodetic::Box& self) { return self.getstate(); },
+                      [](const py::tuple& state) {
+                        return geodetic::Box::setstate(state);
+                      }));
+}
+
+static void init_geodetic_polygon(py::module& m) {
+  py::class_<geodetic::Polygon>(
+      m, "Polygon",
+      "The polygon contains an outer ring and zero or more inner rings")
+      .def(py::init([](const py::list& outer,
+                       std::optional<const py::list>& inners) {
+             auto self = std::make_unique<geodetic::Polygon>();
+             try {
+               for (auto& item : outer) {
+                 auto point = item.cast<geodetic::Point>();
+                 boost::geometry::append(self->outer(), point);
+               }
+             } catch (const py::cast_error&) {
+               throw std::invalid_argument(
+                   "outers must be a list of pyinterp.geodetic.Point");
+             }
+             if (inners.has_value()) {
+               try {
+                 auto index = 0;
+                 self->inners().resize(inners->size());
+                 for (auto& inner : *inners) {
+                   auto points = inner.cast<py::list>();
+                   for (auto& item : points) {
+                     auto point = item.cast<geodetic::Point>();
+                     boost::geometry::append(self->inners()[index], point);
+                   }
+                   ++index;
+                 }
+               } catch (const py::cast_error&) {
+                 throw std::invalid_argument(
+                     "inners must be a list of "
+                     "list of pyinterp.geodetic.Point");
+               }
+             }
+             return self;
+           }),
+           py::arg("outer"), py::arg("inners") = py::none(), R"(
+Constructor filling the polygon
+
+Args:
+  outer (list): outer ring
+  inners (list, optional): list of inner rings
+Raises:
+  ValueError: if outer is not a list of pyinterp.geodetic.Point
+  ValueError: if inners is not a list of list of pyinterp.geodetic.Point
+)")
+      .def("__repr__",
+           [](const geodetic::Polygon& self) -> std::string {
+             auto ss = std::stringstream();
+             ss << boost::geometry::dsv(self);
+             return ss.str();
+           })
+      .def(
+          "envelope",
+          [](const geodetic::Polygon& self) -> geodetic::Box {
+            auto box = geodetic::Box();
+            boost::geometry::envelope(self, box);
+            return box;
+          },
+          R"__doc__(
+Calculates the envelope of this polygon.
+
+Return:
+  pyinterp.geodetic.Box: The envelope of this instance
+)__doc__")
+      .def(
+          "wkt",
+          [](const geodetic::Polygon& self) -> std::string {
+            auto ss = std::stringstream();
+            ss << boost::geometry::wkt(self);
+            return ss.str();
+          },
+          R"__doc__(
+Gets the OGC Well-Known Text (WKT) representation of this instance
+
+Return:
+    str: the WTK representation
+)__doc__")
+      .def_static(
+          "read_wkt",
+          [](const std::string& wkt) -> geodetic::Polygon {
+            auto polygon = geodetic::Polygon();
+            boost::geometry::read_wkt(wkt, polygon);
+            return polygon;
+          },
+          py::arg("wkt"), R"__doc__(
+Parses OGC Well-Known Text (WKT) into a polygon
+
+Args:
+    wkt (str): the WKT representation of the polygon
+Return:
+    pyinterp.geodetic.Box: The polygon defined by the WKT
+    representation.
+)__doc__");
 }
 
 void init_geodetic(py::module& m) {
@@ -324,6 +475,7 @@ Return:
             return geodetic::Coordinates::setstate(state);
           }));
 
-  init_point2d<double>(m);
-  init_box2d<double>(m);
+  init_geodetic_point(m);
+  init_geodetic_box(m);
+  init_geodetic_polygon(m);
 }

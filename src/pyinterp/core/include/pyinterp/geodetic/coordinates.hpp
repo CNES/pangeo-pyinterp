@@ -4,10 +4,13 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <pybind11/numpy.h>
+
 #include <Eigen/Core>
+
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geodetic/coordinates.hpp"
 #include "pyinterp/detail/thread.hpp"
+#include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp::geodetic {
@@ -28,11 +31,10 @@ class Coordinates : public detail::geodetic::Coordinates {
   /// altitude. Cartesian coordinates should be in meters. The returned latitude
   /// and longitude are in degrees, and the altitude will be in meters.
   template <typename T>
-  auto ecef_to_lla(
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& x,
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& y,
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& z,
-      const size_t num_threads) const -> pybind11::tuple {
+  auto ecef_to_lla(const Eigen::Ref<const Vector<T>>& x,
+                   const Eigen::Ref<const Vector<T>>& y,
+                   const Eigen::Ref<const Vector<T>>& z,
+                   const size_t num_threads) const -> pybind11::tuple {
     detail::check_eigen_shape("x", x, "y", y, "z", z);
     auto size = x.size();
     auto lon = pybind11::array_t<T>(pybind11::array::ShapeContainer{{size}});
@@ -76,11 +78,10 @@ class Coordinates : public detail::geodetic::Coordinates {
   /// Cartesian coordinates. The latitude and longitude should be in degrees and
   /// the altitude in meters. The returned ECEF coordinates will be in meters.
   template <typename T>
-  auto lla_to_ecef(
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& lon,
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& lat,
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& alt,
-      const size_t num_threads) const -> pybind11::tuple {
+  auto lla_to_ecef(const Eigen::Ref<const Vector<T>>& lon,
+                   const Eigen::Ref<const Vector<T>>& lat,
+                   const Eigen::Ref<const Vector<T>>& alt,
+                   const size_t num_threads) const -> pybind11::tuple {
     detail::check_eigen_shape("lon", lon, "lat", lat, "alt", alt);
     auto size = lon.size();
     auto x = pybind11::array_t<T>(pybind11::array::ShapeContainer{{size}});
@@ -124,12 +125,11 @@ class Coordinates : public detail::geodetic::Coordinates {
   /// Transform points between two coordinate systems defined by the
   /// Coordinates instances this and target.
   template <typename T>
-  auto transform(
-      const Coordinates& target,
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& lon1,
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& lat1,
-      const Eigen::Ref<const Eigen::Matrix<T, Eigen::Dynamic, 1>>& alt1,
-      const size_t num_threads) const -> pybind11::tuple {
+  auto transform(const Coordinates& target,
+                 const Eigen::Ref<const Vector<T>>& lon1,
+                 const Eigen::Ref<const Vector<T>>& lat1,
+                 const Eigen::Ref<const Vector<T>>& alt1,
+                 const size_t num_threads) const -> pybind11::tuple {
     detail::check_eigen_shape("lon1", lon1, "lat1", lat1, "alt1", alt1);
     auto size = lon1.size();
     auto lon2 = pybind11::array_t<T>(pybind11::array::ShapeContainer{{size}});

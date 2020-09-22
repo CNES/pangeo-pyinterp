@@ -3,7 +3,9 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include <gtest/gtest.h>
+
 #include <boost/geometry.hpp>
+
 #include "pyinterp/detail/math/linear.hpp"
 
 namespace math = pyinterp::detail::math;

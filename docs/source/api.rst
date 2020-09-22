@@ -13,6 +13,16 @@ Geographic indexers
   RTree
   TemporalAxis
 
+geohash
+-------
+
+.. autosummary::
+  :toctree: generated/
+
+  geohash.index
+  geohash.lock
+  geohash.storage
+
 Binning
 =======
 
@@ -50,9 +60,10 @@ Geodetic systems
 .. autosummary::
   :toctree: generated/
 
-  geodetic.Box2D
+  geodetic.Box
   geodetic.Coordinates
-  geodetic.Point2D
+  geodetic.Point
+  geodetic.Polygon
   geodetic.System
 
 .. _cartesian_interpolators:
@@ -87,5 +98,5 @@ Construction of Cartesian interpolators from xarray.DataArray
 
   backends.xarray.Grid2D
   backends.xarray.Grid3D
-  backends.xarray.Grid4D 
+  backends.xarray.Grid4D
   backends.xarray.RegularGridInterpolator

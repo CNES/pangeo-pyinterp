@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <pybind11/pybind11.h>
+
 #include "pyinterp/detail/geodetic/system.hpp"
 
 namespace pyinterp::geodetic {

@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <pybind11/numpy.h>
+
 #include "pyinterp/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"
 
@@ -271,18 +272,17 @@ Gets the Y-Axis handled by this instance
 Return:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
-      .def_property_readonly("z",
-                             [](const Grid3D<DataType, AxisType>& self) {
-                               return self.z();
-                             },
-                             (R"__doc__(
+      .def_property_readonly(
+          "z", [](const Grid3D<DataType, AxisType>& self) { return self.z(); },
+          (R"__doc__(
 Gets the Z-Axis handled by this instance
 
 Return:
-    pyinterp.core.)__doc__" + prefix +
-                              R"__doc__(Axis: Z-Axis
+    pyinterp.core.)__doc__" +
+           prefix +
+           R"__doc__(Axis: Z-Axis
 )__doc__")
-                                 .c_str())
+              .c_str())
       .def_property_readonly(
           "array",
           [](const Grid3D<DataType, AxisType>& self) { return self.array(); },

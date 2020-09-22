@@ -110,3 +110,6 @@ venv.bak/
 
 # Figures generated
 tests/**/*.png
+
+# Generated header file
+src/pyinterp/core/include/unqlite.h

@@ -40,7 +40,7 @@ Unstructured Grids
 ==================
 
 In the case of unstructured grids, the index used is a :py:class:`R*Tree
-<pyinterp.rtree.RTree>`. These trees have better performance than the *KDTree*
+<pyinterp.RTree>`. These trees have better performance than the *KDTree*
 generally found in Python library implementations.
 
 The tree used here is the implementation provided by the `C++ Boost library
@@ -57,3 +57,21 @@ memory, as one more element gets used to index the value of the Cartesian space.
 The management of the ``LLA``/``ECEF`` coordinate conversion is managed to use
 the `Olson, D.K. <https://ieeexplore.ieee.org/document/481290>`_ algorithm. It
 has excellent performance with an accuracy of 1e-8 meters for altitude.
+
+Geohash
+=======
+
+Geohashing is a geocoding method used to encode geographic coordinates
+(latitude and longitude) into a short string of digits and letters delineating
+an area on a map, which is called a cell, with varying resolutions. The more
+characters in the string, the more precise the location.
+
+Geohashes use Base-32 alphabet encoding (characters can be ``0`` to ``9`` and
+``A`` to ``Z``, excl ``A``, ``I``, ``L`` and ``O``).
+
+The figure below illustrates the cells and associated geohash codes for a
+two-character resolution.
+
+This method is used to build a :py:mod:`geographic index
+<pyinterp.geohash.index>`, possibly stored on disk, for the purpose of indexing
+data.

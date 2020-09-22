@@ -2,7 +2,8 @@
 Geographic coordinate system
 ----------------------------
 """
-from typing import Optional, Tuple
+import warnings
+from typing import List, Optional, Tuple
 from ..core import geodetic
 
 
@@ -52,33 +53,82 @@ class Coordinates(geodetic.Coordinates):
         super(Coordinates, self).__init__(system)
 
 
-class Point2D(geodetic.Point2D):
+class Point2D(geodetic.Point):
+    """Deprecated Alias
+    """
+    def __init__(self, lon: float = 0, lat: float = 0):
+        warnings.warn(
+            f"{self.__class__.__name__} will be deprecated in the future. "
+            "Instead, use pyinterp.geodetic.Point",
+            PendingDeprecationWarning,
+            stacklevel=2,
+        )
+        super(Point2D, self).__init__(lon, lat)
+
+
+class Point(geodetic.Point):
     """Handle a point in a equatorial spherical coordinates system in degrees.
     """
     def __init__(self, lon: float = 0, lat: float = 0):
-        """Initialize a new 2D point
+        """Initialize a new point
 
         Args:
             lon (float, optional): Longitude in degrees of the point
             lat (float, optional): Latitude in degrees of the point
         """
-        super(Point2D, self).__init__(lon, lat)
+        super(Point, self).__init__(lon, lat)
 
 
-class Box2D(geodetic.Box2D):
+class Box(geodetic.Box):
     """Defines a box made of two describing points in a spherical coordinates
     system in degrees.
     """
     def __init__(self,
-                 min_corner: Optional[Point2D] = None,
-                 max_corner: Optional[Point2D] = None):
-        """Initialize a new 2D box
+                 min_corner: Optional[Point] = None,
+                 max_corner: Optional[Point] = None):
+        """Initialize a new box
 
         Args:
-            min_corner (pyinterp.geodetic.Point2D, optional): the minimum
+            min_corner (pyinterp.geodetic.Point, optional): the minimum
                 corner point (lower left) of the box
-            max_corner (pyinterp.geodetic.Point2D, optional): the maximum
+            max_corner (pyinterp.geodetic.Point, optional): the maximum
                 corner point (upper right) of the box
         """
-        super(Box2D, self).__init__(min_corner or geodetic.Point2D(),
-                                    max_corner or geodetic.Point2D())
+        super(Box, self).__init__(min_corner or geodetic.Point(), max_corner
+                                  or geodetic.Point())
+
+
+class Box2D(geodetic.Box):
+    """Deprecated Alias.
+    """
+    def __init__(self,
+                 min_corner: Optional[Point] = None,
+                 max_corner: Optional[Point] = None):
+        warnings.warn(
+            f"{self.__class__.__name__} will be deprecated in the future. "
+            "Instead, use pyinterp.geodetic.Box",
+            PendingDeprecationWarning,
+            stacklevel=2,
+        )
+        super(Box2D, self).__init__(min_corner or geodetic.Point(), max_corner
+                                    or geodetic.Point())
+
+
+class Polygon(geodetic.Polygon):
+    """The polygon contains an outer ring and zero or more inner rings
+    """
+    def __init__(self,
+                 outer: List[Point],
+                 inners: Optional[List[List[Point]]] = None) -> None:
+        """Constructor filling the polygon
+
+        Args:
+          outer (list): outer ring
+          inners (list, optional): list of inner rings
+        Raises:
+          ValueError: if outer is not a list of
+            :py:class:`pyinterp.geodetic.Point`
+          ValueError: if inners is not a list of list of
+            :py:class:`pyinterp.geodetic.Point`
+        """
+        super().__init__(outer, inners)  # type: ignore

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <boost/geometry.hpp>
 #include <optional>
+
 #include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/radial_basis_functions.hpp"
@@ -196,7 +197,8 @@ class RTree {
       if (distance <= radius) {
         // If the neighbor found is within an acceptable radius it can be taken
         // into account in the calculation.
-        auto wk = 1 / std::pow(distance, static_cast<Type>(p));
+        auto wk =
+            static_cast<Type>(1 / std::pow(distance, static_cast<Type>(p)));
         total_weight += wk;
         result += item.second * wk;
         ++neighbors;
@@ -223,10 +225,9 @@ class RTree {
   /// be empty if no points are selected.
   auto nearest(const point_t &point, const distance_t radius,
                const uint32_t k) const
-      -> std::tuple<Eigen::Matrix<promotion_t, -1, -1>,
-                    Eigen::Matrix<promotion_t, -1, 1>> {
-    auto coordinates = Eigen::Matrix<promotion_t, -1, -1>(N, k);
-    auto values = Eigen::Matrix<promotion_t, -1, 1>(k);
+      -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
+    auto coordinates = Matrix<promotion_t>(N, k);
+    auto values = Vector<promotion_t>(k);
     auto jx = 0U;
 
     std::for_each(
@@ -260,11 +261,10 @@ class RTree {
   /// be empty if no points are selected.
   auto nearest_within(const point_t &point, const distance_t radius,
                       const uint32_t k) const
-      -> std::tuple<Eigen::Matrix<promotion_t, -1, -1>,
-                    Eigen::Matrix<promotion_t, -1, 1>> {
+      -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
     auto points = boost::geometry::model::multi_point<point_t>();
-    auto coordinates = Eigen::Matrix<promotion_t, -1, -1>(N, k);
-    auto values = Eigen::Matrix<promotion_t, -1, 1>(k);
+    auto coordinates = Matrix<promotion_t>(N, k);
+    auto values = Vector<promotion_t>(k);
     auto jx = 0U;
 
     // List of selected points ()
@@ -303,8 +303,8 @@ class RTree {
                              const math::RBF<promotion_t> &rbf,
                              distance_t radius, uint32_t k, bool within) const
       -> std::pair<promotion_t, uint32_t> {
-    Eigen::Matrix<promotion_t, -1, -1> coordinates;
-    Eigen::Matrix<promotion_t, -1, 1> values;
+    Matrix<promotion_t> coordinates;
+    Vector<promotion_t> values;
     std::tie(coordinates, values) =
         within ? nearest_within(point, radius, k) : nearest(point, radius, k);
     if (values.size() == 0) {
@@ -315,7 +315,8 @@ class RTree {
       xi(ix, 0) = geometry::point::get(point, ix);
     }
     auto interpolated = rbf.interpolate(coordinates, values, xi);
-    return std::make_pair(interpolated(0), values.size());
+    return std::make_pair(interpolated(0),
+                          static_cast<uint32_t>(values.size()));
   }
 
  protected:

@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, Union
+from typing import List, Tuple, Optional, overload
 import numpy
 
 
@@ -92,7 +92,7 @@ class Coordinates:
         ...
 
 
-class Point2D:
+class Point:
     lat: float
     lon: float
 
@@ -110,14 +110,21 @@ class Point2D:
     def __setstate__(self, state: tuple) -> None:
         ...
 
+    def wtk(self) -> str:
+        ...
 
-class Box2D:
-    min_corner: Point2D
-    max_corner: Point2D
+    @staticmethod
+    def read_wkt(wtk: str) -> 'Point':
+        ...
+
+
+class Box:
+    min_corner: Point
+    max_corner: Point
 
     def __init__(self,
-                 min_corner: Optional[Point2D] = None,
-                 max_corner: Optional[Point2D] = None) -> None:
+                 min_corner: Optional[Point] = None,
+                 max_corner: Optional[Point] = None) -> None:
         ...
 
     def __repr__(self) -> str:
@@ -129,12 +136,43 @@ class Box2D:
     def __setstate__(self, state: tuple) -> None:
         ...
 
+    def covered_by(self, point: 'Point') -> bool:
+        ...
+
+    @overload
     def covered_by(self,
                    lon: numpy.ndarray[numpy.float64],
                    lat: numpy.ndarray[numpy.float64],
                    num_theads: int = 1) -> numpy.ndarray[numpy.int8]:
         ...
 
+    def wtk(self) -> str:
+        ...
+
     @staticmethod
-    def entire_earth() -> 'Box2D':
+    def read_wkt(wkt: str) -> 'Box':
+        ...
+
+    @staticmethod
+    def whole_earth() -> 'Box':
+        ...
+
+
+class Polygon:
+    def __init__(self,
+                 outer: List[Point],
+                 inners: Optional[List[List[Point]]] = None) -> None:
+        ...
+
+    def __repr__(self) -> str:
+        ...
+
+    def envelope(self) -> Box:
+        ...
+
+    def wkt(self) -> str:
+        ...
+
+    @staticmethod
+    def read_wkt(wkt: str) -> "Polygon":
         ...
