@@ -2,7 +2,7 @@
 Geogrophic Index
 ----------------
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import json
 import numpy
 from . import lock
@@ -68,9 +68,12 @@ class GeoHash:
             dict: Index properties (number of character used to encode a
             position)
         """
-        return json.loads(store[b'.properties'].pop())
+        return json.loads(store[b'.properties'])
 
-    def encode(self, lon: numpy.ndarray, lat: numpy.ndarray) -> numpy.ndarray:
+    def encode(self,
+               lon: numpy.ndarray,
+               lat: numpy.ndarray,
+               normalize: bool = True) -> numpy.ndarray:
         """Encode points into geohash with the given precision
 
         Args:
@@ -78,11 +81,14 @@ class GeoHash:
                 encoded.
             lat (numpy.ndarray): Latitudes in degrees of the positions to be
                 encoded.
+            normalize (bool): If true, normalize longitude between [-180, 180[
 
         Return:
             numpy.ndarray: geohash code for each coordinates of the points
             read from the vectors provided.
         """
+        if normalize:
+            lon = (lon + 180) % 360 - 180
         return string.encode(lon, lat, precision=self._precision)
 
     def update(self, data: Dict[bytes, object]) -> None:
@@ -122,6 +128,21 @@ class GeoHash:
             list(string.bounding_boxes(box, precision=self._precision)))
         tuple(map(result.extend, values))
         return result
+
+    @staticmethod
+    def where(
+        hash_codes: numpy.ndarray
+    ) -> Dict[int, Tuple[Tuple[int, int], Tuple[int, int]]]:
+        """Returns the start and end indexes of the different GeoHash boxes.
+
+        Args:
+            hash_codes (numpy.ndarray): geohash codes obtained by the `encode`
+            method
+
+        Return:
+            dict: the start and end indexes for each geohash boxes
+        """
+        return string.where(hash_codes)
 
     def __len__(self):
         return len(self._store) - 1
