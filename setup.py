@@ -4,6 +4,7 @@
 # BSD-style license that can be found in the LICENSE file.
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
+from typing import Optional
 import datetime
 import pathlib
 import platform
@@ -32,6 +33,11 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 # OSX deployment target
 OSX_DEPLOYMENT_TARGET = '10.14'
+
+# BLAS implementations
+MKL = "mkl"
+OPENBLAS = "openblas"
+BLAS = [MKL, OPENBLAS]
 
 
 def build_dirname(extname=None):
@@ -228,6 +234,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     #: Run CMake to configure this project
     RECONFIGURE = None
 
+    #: BLAS implementation selected
+    BLAS = None
+
     def run(self):
         """A command's raison d'etre: carry out the action"""
         for ext in self.extensions:
@@ -405,6 +414,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             if self.verbose:
                 build_args += ['/verbosity:n']
 
+        if self.BLAS is not None and self.BLAS == OPENBLAS:
+            cmake_args += ["-DBLA_VENDOR=OpenBLAS"]
+
         if self.verbose:
             build_args.insert(0, "--verbose")
 
@@ -432,6 +444,8 @@ class Build(distutils.command.build.build):
     """Build everything needed to install"""
     user_options = distutils.command.build.build.user_options
     user_options += [
+        ('blas=', None,
+         'BLAS library. List of vendors known: ' + ", ".join(BLAS)),
         ('boost-root=', None, 'Preferred Boost installation prefix'),
         ('build-unittests', None, "Build the unit tests of the C++ extension"),
         ('reconfigure', None, 'Forces CMake to reconfigure this project'),
@@ -446,6 +460,7 @@ class Build(distutils.command.build.build):
     def initialize_options(self):
         """Set default values for all the options that this command supports"""
         super().initialize_options()
+        self.blas: Optional[str] = None
         self.boost_root = None
         self.build_unittests = None
         self.code_coverage = None
@@ -461,6 +476,14 @@ class Build(distutils.command.build.build):
         super().finalize_options()
         if self.code_coverage is not None and platform.system() == 'Windows':
             raise RuntimeError("Code coverage is not supported on Windows")
+        if self.blas is not None:
+            self.blas = self.blas.lower()
+            if self.blas not in BLAS:
+                raise RuntimeError(f"Unknown BLAS implmentation: {self.blas}")
+            if self.mkl_root is not None and self.blas == OPENBLAS:
+                raise RuntimeError(
+                    "argument --mkl_root: not allowed with argument --blas=openblas"
+                )
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
@@ -484,6 +507,8 @@ class Build(distutils.command.build.build):
             BuildExt.SNAPPY_ROOT = self.snappy_root
         if self.reconfigure is not None:
             BuildExt.RECONFIGURE = True
+        if self.blas is not None:
+            BuildExt.BLAS = self.blas
         super().run()
 
 
@@ -587,7 +612,7 @@ def main():
         author='CNES/CLS',
         author_email='fbriol@gmail.com',
         classifiers=[
-            "Development Status :: 3 - Alpha",
+            "Development Status :: 4 - Beta",
             "Topic :: Scientific/Engineering :: Physics",
             "License :: OSI Approved :: BSD License",
             "Natural Language :: English", "Operating System :: POSIX",
