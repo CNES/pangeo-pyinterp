@@ -197,9 +197,16 @@ unset(__CMAKE_FIND_LIBRARY_SUFFIXES)
 
 # Blas
 if (DEFINED ENV{MKLROOT})
-  set(BLA_VENDOR Intel10_64ilp)
+  # First try to use MKL as a single dynamic library (conda-forge)
+  set(BLA_VENDOR Intel10_64_dyn)
 endif()
 find_package(BLAS)
+if (NOT BLAS_FOUND AND DEFINED ENV{MKLROOT})
+  # Otherwise try to use MKL ilp64 model with sequential code
+  set(BLA_VENDOR Intel10_64ilp_seq)
+  find_package(BLAS)
+endif()
+
 if (BLAS_FOUND)
   # MKL
   if (DEFINED ENV{MKLROOT})
