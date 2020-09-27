@@ -24,7 +24,7 @@ def test_index():
                       normalize=True)[0] == b"00u"
     assert idx.encode(numpy.array([185.874942713]),
                       numpy.array([-84.529178182]),
-                      normalize=False)[0] == b"00f"
+                      normalize=False)[0] != b"00u"
 
     box = geodetic.Box(geodetic.Point(-40, -40), geodetic.Point(40, 40))
     boxes = list(geohash.string.bounding_boxes(box, precision=3))
