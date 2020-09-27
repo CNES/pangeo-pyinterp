@@ -68,7 +68,10 @@ class GeoHash:
             dict: Index properties (number of character used to encode a
             position)
         """
-        return json.loads(store[b'.properties'])
+        properties = store[b'.properties']
+        if isinstance(properties, list):
+            properties = properties[0]
+        return json.loads(properties)
 
     def encode(self,
                lon: numpy.ndarray,
