@@ -12,6 +12,7 @@ import time
 
 
 class LockError(Exception):
+    """Exception thrown by this module"""
     pass
 
 
@@ -87,7 +88,7 @@ class Lock:
             self.release()
 
 
-class Synchronizer(abc.ABC):
+class Synchronizer(abc.ABC):  # pragma: no cover
     """Interface of Synchronizer"""
     @abc.abstractclassmethod
     def __enter__(self) -> bool:

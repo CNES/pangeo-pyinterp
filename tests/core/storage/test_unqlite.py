@@ -7,7 +7,7 @@ import pickle
 import shutil
 import pytest
 from pyinterp.core.storage import unqlite
-from pyinterp.geohash import string
+from pyinterp.core.geohash import string
 
 
 def test_interface():

@@ -8,7 +8,7 @@ import os
 from ..core import storage
 
 
-class MutableMapping:
+class MutableMapping:  # pragma: no cover
     """Abstract index storage class"""
     @abc.abstractmethod
     def __contains__(self, key: bytes) -> bool:

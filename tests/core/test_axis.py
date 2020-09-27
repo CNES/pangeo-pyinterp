@@ -3,7 +3,7 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 import pickle
-import unittest
+import pytest
 import numpy as np
 import pyinterp.core as core
 
@@ -30,82 +30,72 @@ MERCATOR_LATITUDES = np.array([
                               dtype=np.float64)
 
 
-class TextAxis(unittest.TestCase):
-    """Test of the C+++/Python interface of the pyinterp::Axis class"""
-    def test_axis_accessor(self):
-        lon = np.linspace(0, 359, 360)
-        a = core.Axis(lon, is_circle=False)
-        b = core.Axis(lon, is_circle=False)
-        self.assertEqual(a, b)
-        self.assertFalse(a != b)
-        self.assertEqual(str(a), str(b))
-        self.assertEqual(str(a),
-                         "Axis([0, 1, 2, ..., 358, 359], is_circle=false)")
-        self.assertEqual(a.increment(), 1)
-        self.assertTrue(a.is_ascending())
-        self.assertEqual(a.front(), 0)
-        self.assertEqual(a.back(), 359)
-        self.assertTrue(
-            np.all(
-                a.find_index(np.arange(0, 359, 1) +
-                             0.01) == np.arange(0, 359, 1)))
-        indexes = a.find_indexes(np.arange(0, 359, 1))
-        self.assertTrue(np.all(indexes[:, 0] == np.arange(0, 359, 1)))
-        self.assertTrue(np.all(indexes[:, 1] == np.arange(1, 360, 1)))
-        self.assertTrue(a.is_regular())
-        self.assertEqual(a.min_value(), 0)
-        self.assertEqual(a.max_value(), 359)
-        self.assertEqual(a[0], 0)
-        self.assertTrue(np.all(a[:] == np.arange(0, 360)))
-        self.assertEqual(len(a), 360)
-        b = a.flip(inplace=True)
-        self.assertEqual(id(a), id(b))
-        self.assertEqual(a.increment(), -1)
-        self.assertFalse(a.is_ascending())
-        self.assertEqual(a.front(), 359)
-        self.assertEqual(a.back(), 0)
-        self.assertTrue(
-            np.all(
-                a.find_index(np.arange(359, -1, -1) +
-                             0.01) == np.arange(0, 360, 1)))
-        self.assertTrue(a.is_regular())
-        self.assertEqual(a.min_value(), 0)
-        self.assertEqual(a.max_value(), 359)
-        self.assertEqual(a[0], 359)
-        self.assertTrue(np.all(a[:] == np.arange(359, -1, -1)))
-        self.assertEqual(len(a), 360)
+def test_axis_accessor():
+    lon = np.linspace(0, 359, 360)
+    a = core.Axis(lon, is_circle=False)
+    b = core.Axis(lon, is_circle=False)
+    assert a == b
+    assert not (a != b)
+    assert str(a) == str(b)
+    assert str(a) == "Axis([0, 1, 2, ..., 358, 359], is_circle=false)"
+    assert a.increment() == 1
+    assert a.is_ascending()
+    assert a.front() == 0
+    assert a.back() == 359
+    assert np.all(
+        a.find_index(np.arange(0, 359, 1) + 0.01) == np.arange(0, 359, 1))
+    indexes = a.find_indexes(np.arange(0, 359, 1))
+    assert np.all(indexes[:, 0] == np.arange(0, 359, 1))
+    assert np.all(indexes[:, 1] == np.arange(1, 360, 1))
+    assert a.is_regular()
+    assert a.min_value() == 0
+    assert a.max_value() == 359
+    assert a[0] == 0
+    assert np.all(a[:] == np.arange(0, 360))
+    assert len(a) == 360
+    b = a.flip(inplace=True)
+    assert id(a) == id(b)
+    assert a.increment() == -1
+    assert not a.is_ascending()
+    assert a.front() == 359
+    assert a.back() == 0
+    assert np.all(
+        a.find_index(np.arange(359, -1, -1) + 0.01) == np.arange(0, 360, 1))
+    assert a.is_regular()
+    assert a.min_value() == 0
+    assert a.max_value() == 359
+    assert a[0] == 359
+    assert np.all(a[:] == np.arange(359, -1, -1))
+    assert len(a) == 360
 
-        frozen = pickle.loads(pickle.dumps(a))
-        b = a.flip(inplace=False)
-        self.assertEqual(a, frozen)
-        self.assertNotEqual(id(a), id(b))
-        self.assertEqual(b, a.flip(inplace=False))
-        b = a.flip(inplace=True)
-        self.assertEqual(id(a), id(b))
-        self.assertEqual(b, a)
-        self.assertNotEqual(a, frozen)
+    frozen = pickle.loads(pickle.dumps(a))
+    b = a.flip(inplace=False)
+    assert a == frozen
+    assert id(a) != id(b)
+    assert b == a.flip(inplace=False)
+    b = a.flip(inplace=True)
+    assert id(a) == id(b)
+    assert b == a
+    assert a != frozen
 
-        with self.assertRaises(ValueError):
-            core.Axis([], is_circle=False)
+    with pytest.raises(ValueError):
+        core.Axis([], is_circle=False)
 
-        with self.assertRaises(ValueError):
-            core.Axis([5, 2, 7], is_circle=False)
+    with pytest.raises(ValueError):
+        core.Axis([5, 2, 7], is_circle=False)
 
-        a = core.Axis(MERCATOR_LATITUDES, is_circle=True)
-        self.assertFalse(a.is_circle)
+    a = core.Axis(MERCATOR_LATITUDES, is_circle=True)
+    assert not a.is_circle
 
-        with self.assertRaises(RuntimeError):
-            a.increment()
-
-    def test_axis_pickle(self):
-        a = core.Axis(np.linspace(0, 359, 360), is_circle=False)
-        b = pickle.loads(pickle.dumps(a))
-        self.assertEqual(a, b)
-
-        a = core.Axis(MERCATOR_LATITUDES, is_circle=False)
-        b = pickle.loads(pickle.dumps(a))
-        self.assertEqual(a, b)
+    with pytest.raises(RuntimeError):
+        a.increment()
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_axis_pickle():
+    a = core.Axis(np.linspace(0, 359, 360), is_circle=False)
+    b = pickle.loads(pickle.dumps(a))
+    assert a == b
+
+    a = core.Axis(MERCATOR_LATITUDES, is_circle=False)
+    b = pickle.loads(pickle.dumps(a))
+    assert a == b
