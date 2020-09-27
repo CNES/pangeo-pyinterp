@@ -1,7 +1,7 @@
 Changelog
 #########
 
-0.4.0 (X X 2020)
+0.4.0 (22 September 2020)
 -------------------------
 * Indexing data with geohash.
 * Parallelize the calculation of Binning with dask.
