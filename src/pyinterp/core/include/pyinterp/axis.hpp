@@ -88,7 +88,8 @@ class Axis : public detail::Axis<T>,
     {
       pybind11::gil_scoped_release release;
       for (size_t ix = 0; ix < slicelength; ++ix) {
-        _result(ix) = (*this)(ix);
+        _result(ix) = (*this)(start);
+        start += step;
       }
     }
     return result;
