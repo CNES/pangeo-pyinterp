@@ -34,19 +34,13 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 # OSX deployment target
 OSX_DEPLOYMENT_TARGET = '10.14'
 
-# BLAS implementations
-MKL = "mkl"
-OPENBLAS = "openblas"
-BLAS = [MKL, OPENBLAS]
-
 
 def build_dirname(extname=None):
     """Returns the name of the build directory"""
     extname = '' if extname is None else os.sep.join(extname.split(".")[:-1])
-    return str(
-        pathlib.Path(WORKING_DIRECTORY, "build",
-                     "lib.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR),
-                     extname))
+    return pathlib.Path(
+        WORKING_DIRECTORY, "build",
+        "lib.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR), extname)
 
 
 def execute(cmd):
@@ -234,8 +228,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     #: Run CMake to configure this project
     RECONFIGURE = None
 
-    #: BLAS implementation selected
-    BLAS = None
+    #: Use of MKL
+    MKL = None
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
@@ -363,7 +357,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         if self.MKL_ROOT is not None:
             os.environ["MKLROOT"] = self.MKL_ROOT
-        elif is_conda:
+        elif is_conda and self.MKL:
             self.mkl()
 
         if self.SNAPPY_ROOT is not None:
@@ -379,7 +373,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         # any python sources to bundle, the dirs will be missing
         build_temp = pathlib.Path(WORKING_DIRECTORY, self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
-        extdir = build_dirname(ext.name)
+        extdir = str(build_dirname(ext.name))
 
         # patch unqlite
         patch_unqlite(
@@ -414,9 +408,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             if self.verbose:
                 build_args += ['/verbosity:n']
 
-        if self.BLAS is not None and self.BLAS == OPENBLAS:
-            cmake_args += ["-DBLA_VENDOR=OpenBLAS"]
-
         if self.verbose:
             build_args.insert(0, "--verbose")
 
@@ -444,8 +435,7 @@ class Build(distutils.command.build.build):
     """Build everything needed to install"""
     user_options = distutils.command.build.build.user_options
     user_options += [
-        ('blas=', None,
-         'BLAS library. List of vendors known: ' + ", ".join(BLAS)),
+        ('mkl=', None, 'Use of MKL'),
         ('boost-root=', None, 'Preferred Boost installation prefix'),
         ('build-unittests', None, "Build the unit tests of the C++ extension"),
         ('reconfigure', None, 'Forces CMake to reconfigure this project'),
@@ -457,10 +447,13 @@ class Build(distutils.command.build.build):
         ('snappy-root=', None, 'Preferred Snappy installation prefix')
     ]
 
+    boolean_options = distutils.command.build.build.boolean_options
+    boolean_options += ["mkl"]
+
     def initialize_options(self):
         """Set default values for all the options that this command supports"""
         super().initialize_options()
-        self.blas: Optional[str] = None
+        self.mkl = None
         self.boost_root = None
         self.build_unittests = None
         self.code_coverage = None
@@ -476,14 +469,11 @@ class Build(distutils.command.build.build):
         super().finalize_options()
         if self.code_coverage is not None and platform.system() == 'Windows':
             raise RuntimeError("Code coverage is not supported on Windows")
-        if self.blas is not None:
-            self.blas = self.blas.lower()
-            if self.blas not in BLAS:
-                raise RuntimeError(f"Unknown BLAS implmentation: {self.blas}")
-            if self.mkl_root is not None and self.blas == OPENBLAS:
-                raise RuntimeError(
-                    "argument --mkl_root: not allowed with argument --blas=openblas"
-                )
+        if self.mkl_root is not None:
+            self.mkl = True
+        if not self.mkl and self.mkl_root:
+            raise RuntimeError(
+                "argument --mkl_root not allowed with argument --mkl=no")
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
@@ -507,12 +497,12 @@ class Build(distutils.command.build.build):
             BuildExt.SNAPPY_ROOT = self.snappy_root
         if self.reconfigure is not None:
             BuildExt.RECONFIGURE = True
-        if self.blas is not None:
-            BuildExt.BLAS = self.blas
+        if self.mkl is not None:
+            BuildExt.MKL = bool(self.mkl)
         super().run()
 
 
-class Test(setuptools.command.test.test):
+class Test(setuptools.Command):
     """Test runner"""
     user_options = [('ext-coverage', None,
                      "Generate C++ extension coverage reports"),
@@ -521,7 +511,6 @@ class Test(setuptools.command.test.test):
     def initialize_options(self):
         """Set default values for all the options that this command
         supports"""
-        super().initialize_options()
         self.ext_coverage = None
         self.pytest_args = None
 
@@ -540,10 +529,14 @@ class Test(setuptools.command.test.test):
             WORKING_DIRECTORY, "build",
             "temp.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR))
 
-    def run_tests(self):
+    def run(self):
         """Run tests"""
         import pytest
-        sys.path.insert(0, build_dirname())
+        build_path = build_dirname()
+        if not build_path.exists():
+            raise RuntimeError(f"The construction directory '{build_path!s}'' "
+                               "doesn't exist. Did you build it?")
+        sys.path.insert(0, str(build_dirname()))
 
         errno = pytest.main(
             shlex.split(self.pytest_args,
@@ -608,6 +601,8 @@ def typehints():
 
 def main():
     """Main function"""
+    install_requires = ["dask", "numpy", "xarray >= 0.13"]
+    tests_require = install_requires + ["NetCDF4", "pytest"]
     setuptools.setup(
         author='CNES/CLS',
         author_email='fbriol@gmail.com',
@@ -630,7 +625,7 @@ def main():
         data_files=typehints(),
         description='Interpolation of geo-referenced data for Python.',
         ext_modules=[CMakeExtension(name="pyinterp.core")],
-        install_requires=["dask", "numpy", "xarray"],
+        install_requires=install_requires,
         license="BSD License",
         long_description=long_description(),
         long_description_content_type='text/markdown',
@@ -643,7 +638,7 @@ def main():
                                                     exclude=['*core*']),
         platforms=['POSIX', 'MacOS', 'Windows'],
         python_requires='>=3.6',
-        tests_require=["netCDF4", "numpy", "pytest", "xarray>=0.13"],
+        tests_require=tests_require,
         url='https://github.com/CNES/pangeo-pyinterp',
         version=revision(),
         zip_safe=False,
