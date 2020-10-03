@@ -72,6 +72,20 @@ Return:
       .def("__repr__", &geodetic::Point::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a point.")
+      .def(
+          "__eq__",
+          [](const geodetic::Point& self, const geodetic::Point& rhs) -> bool {
+            return boost::geometry::equals(self, rhs);
+          },
+          py::arg("other"),
+          "Overrides the default behavior of the ``==`` operator.")
+      .def(
+          "__ne__",
+          [](const geodetic::Point& self, const geodetic::Point& rhs) -> bool {
+            return !boost::geometry::equals(self, rhs);
+          },
+          py::arg("other"),
+          "Overrides the default behavior of the ``!=`` operator.")
       .def(py::pickle(
           [](const geodetic::Point& self) { return self.getstate(); },
           [](const py::tuple& state) {
@@ -177,6 +191,20 @@ Return:
     pyinterp.geodetic.Box: The box defined by the WKT
     representation.
 )__doc__")
+      .def(
+          "__eq__",
+          [](const geodetic::Box& self, const geodetic::Box& rhs) -> bool {
+            return boost::geometry::equals(self, rhs);
+          },
+          py::arg("other"),
+          "Overrides the default behavior of the ``==`` operator.")
+      .def(
+          "__ne__",
+          [](const geodetic::Box& self, const geodetic::Box& rhs) -> bool {
+            return !boost::geometry::equals(self, rhs);
+          },
+          py::arg("other"),
+          "Overrides the default behavior of the ``!=`` operator.")
       .def("__repr__", &geodetic::Box::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a box.")
@@ -192,35 +220,7 @@ static void init_geodetic_polygon(py::module& m) {
       "The polygon contains an outer ring and zero or more inner rings")
       .def(py::init([](const py::list& outer,
                        std::optional<const py::list>& inners) {
-             auto self = std::make_unique<geodetic::Polygon>();
-             try {
-               for (auto& item : outer) {
-                 auto point = item.cast<geodetic::Point>();
-                 boost::geometry::append(self->outer(), point);
-               }
-             } catch (const py::cast_error&) {
-               throw std::invalid_argument(
-                   "outers must be a list of pyinterp.geodetic.Point");
-             }
-             if (inners.has_value()) {
-               try {
-                 auto index = 0;
-                 self->inners().resize(inners->size());
-                 for (auto& inner : *inners) {
-                   auto points = inner.cast<py::list>();
-                   for (auto& item : points) {
-                     auto point = item.cast<geodetic::Point>();
-                     boost::geometry::append(self->inners()[index], point);
-                   }
-                   ++index;
-                 }
-               } catch (const py::cast_error&) {
-                 throw std::invalid_argument(
-                     "inners must be a list of "
-                     "list of pyinterp.geodetic.Point");
-               }
-             }
-             return self;
+             return geodetic::Polygon(outer, inners.value_or(py::list()));
            }),
            py::arg("outer"), py::arg("inners") = py::none(), R"(
 Constructor filling the polygon
@@ -232,12 +232,21 @@ Raises:
   ValueError: if outer is not a list of pyinterp.geodetic.Point
   ValueError: if inners is not a list of list of pyinterp.geodetic.Point
 )")
-      .def("__repr__",
-           [](const geodetic::Polygon& self) -> std::string {
-             auto ss = std::stringstream();
-             ss << boost::geometry::dsv(self);
-             return ss.str();
-           })
+      .def(
+          "__eq__",
+          [](const geodetic::Polygon& self, const geodetic::Polygon& rhs)
+              -> bool { return boost::geometry::equals(self, rhs); },
+          py::arg("other"),
+          "Overrides the default behavior of the ``==`` operator.")
+      .def(
+          "__ne__",
+          [](const geodetic::Polygon& self, const geodetic::Polygon& rhs)
+              -> bool { return !boost::geometry::equals(self, rhs); },
+          py::arg("other"),
+          "Overrides the default behavior of the ``!=`` operator.")
+      .def("__repr__", &geodetic::Polygon::to_string,
+           "Called by the ``repr()`` built-in function to compute the string "
+           "representation of a point.")
       .def(
           "envelope",
           [](const geodetic::Polygon& self) -> geodetic::Box {
@@ -279,7 +288,12 @@ Args:
 Return:
     pyinterp.geodetic.Box: The polygon defined by the WKT
     representation.
-)__doc__");
+)__doc__")
+      .def(py::pickle(
+          [](const geodetic::Polygon& self) { return self.getstate(); },
+          [](const py::tuple& state) {
+            return geodetic::Polygon::setstate(state);
+          }));
 }
 
 void init_geodetic(py::module& m) {

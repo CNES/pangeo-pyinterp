@@ -105,6 +105,7 @@ def test_point():
     assert pt.lon == 12
     assert pt.lat == 24
     assert str(pt) == "(12, 24)"
+    assert repr(pt) == "(12, 24)"
     pt.lon = 55
     assert pt.lon == 55
     pt.lat = 33
@@ -119,6 +120,8 @@ def test_point_pickle():
     b = pickle.loads(pickle.dumps(a))
     assert a.lon == b.lon
     assert a.lat == b.lat
+    assert a == b
+    assert not a != b
     assert id(a) != id(b)
 
 
@@ -152,6 +155,9 @@ def test_box():
     box = core.geodetic.Box.read_wkt("POLYGON((2 3,2 1,0 1,0 3,2 3))")
     assert repr(box) == "((2, 3), (0, 1))"
 
+    box = core.geodetic.Box.whole_earth()
+    assert repr(box) == "((-180, -90), (180, 90))"
+
 
 def test_box_pickle():
     """Serialization tests"""
@@ -163,3 +169,41 @@ def test_box_pickle():
     assert a.min_corner.lat == b.min_corner.lat
     assert a.max_corner.lon == b.max_corner.lon
     assert a.max_corner.lat == b.max_corner.lat
+    assert a == b
+    assert not a != b
+
+
+def test_polygon():
+    polygon = core.geodetic.Polygon.read_wkt("POLYGON((0 0,0 7,4 2,2 0,0 0))")
+    assert repr(polygon) == "(((0, 0), (0, 7), (4, 2), (2, 0), (0, 0)))"
+    assert polygon.envelope() == core.geodetic.Box(core.geodetic.Point(0, 0),
+                                                   core.geodetic.Point(4, 7))
+    polygon = core.geodetic.Polygon([
+        core.geodetic.Point(0, 0),
+        core.geodetic.Point(0, 5),
+        core.geodetic.Point(5, 5),
+        core.geodetic.Point(5, 0),
+        core.geodetic.Point(0, 0)
+    ], [[
+        core.geodetic.Point(1, 1),
+        core.geodetic.Point(4, 1),
+        core.geodetic.Point(4, 4),
+        core.geodetic.Point(1, 4),
+        core.geodetic.Point(1, 1)
+    ]])
+    assert repr(polygon) == "(((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)), " \
+        "((1, 1), (4, 1), (4, 4), (1, 4), (1, 1)))"
+    assert polygon.wkt() == "POLYGON((0 0,0 5,5 5,5 0,0 0)," \
+        "(1 1,4 1,4 4,1 4,1 1))"
+
+
+def test_polygon_pickle():
+    for item in [
+            "POLYGON((0 0,0 7,4 2,2 0,0 0))",
+            "POLYGON((0 0,0 5,5 5,5 0,0 0),(1 1,4 1,4 4,1 4,1 1))"
+    ]:
+        polygon = core.geodetic.Polygon.read_wkt(item)
+        other = pickle.loads(pickle.dumps(polygon))
+        assert polygon == other
+        assert not polygon != other
+        assert id(polygon) != id(other)
