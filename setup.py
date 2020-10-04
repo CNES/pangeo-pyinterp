@@ -4,7 +4,6 @@
 # BSD-style license that can be found in the LICENSE file.
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
-from typing import Optional
 import datetime
 import pathlib
 import platform
@@ -435,7 +434,7 @@ class Build(distutils.command.build.build):
     """Build everything needed to install"""
     user_options = distutils.command.build.build.user_options
     user_options += [
-        ('mkl=', None, 'Use of MKL'),
+        ('mkl=', None, 'Using MKL as BLAS library'),
         ('boost-root=', None, 'Preferred Boost installation prefix'),
         ('build-unittests', None, "Build the unit tests of the C++ extension"),
         ('reconfigure', None, 'Forces CMake to reconfigure this project'),
@@ -502,7 +501,7 @@ class Build(distutils.command.build.build):
         super().run()
 
 
-class Test(setuptools.Command):
+class Test(setuptools.command.test.test):
     """Test runner"""
     user_options = [('ext-coverage', None,
                      "Generate C++ extension coverage reports"),
@@ -511,6 +510,7 @@ class Test(setuptools.Command):
     def initialize_options(self):
         """Set default values for all the options that this command
         supports"""
+        super().initialize_options()
         self.ext_coverage = None
         self.pytest_args = None
 
@@ -529,14 +529,10 @@ class Test(setuptools.Command):
             WORKING_DIRECTORY, "build",
             "temp.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR))
 
-    def run(self):
+    def run_tests(self):
         """Run tests"""
         import pytest
-        build_path = build_dirname()
-        if not build_path.exists():
-            raise RuntimeError(f"The construction directory '{build_path!s}'' "
-                               "doesn't exist. Did you build it?")
-        sys.path.insert(0, str(build_dirname()))
+        sys.path.insert(0, build_dirname())
 
         errno = pytest.main(
             shlex.split(self.pytest_args,
