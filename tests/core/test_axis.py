@@ -33,7 +33,7 @@ MERCATOR_LATITUDES = np.array([
 def test_axis_accessor():
     lon = np.linspace(0, 359, 360)
     a = core.Axis(lon, is_circle=False)
-    b = core.Axis(lon, is_circle=False)
+    b = core.Axis(lon, is_circle=False, epsilon=1e-5)
     assert a == b
     assert not (a != b)
     assert str(a) == str(b)

@@ -124,6 +124,16 @@ def test_rtree_insert():
     assert len(mesh) != 0
 
 
+def test_rtree_query():
+    """Data insertion test"""
+    mesh = load_data(packing=True)
+    assert len(mesh) != 0
+    distances, values = mesh.query(np.vstack((np.array([0]), np.array([0]))).T)
+    assert distances.shape == (1, 4)
+    assert values.shape == (1, 4)
+    assert distances[0, 0] == 0
+
+
 def test_rtree_pickle():
     """Serialization test"""
     interpolator = load_data()

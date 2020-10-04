@@ -32,12 +32,12 @@ def plot(x, y, z, filename):
                    pad_inches=0.4)
 
 
-def load_data():
+def load_data(is_circle=True):
     with netCDF4.Dataset(GRID) as ds:
         z = ds.variables['mss'][:].T
         z[z.mask] = float("nan")
         return core.Grid2DFloat64(
-            core.Axis(ds.variables['lon'][:], is_circle=True),
+            core.Axis(ds.variables['lon'][:], is_circle=is_circle),
             core.Axis(ds.variables['lat'][:]), z.data)
 
 
@@ -154,5 +154,19 @@ def test_bicubic_interpolator():
                              x.flatten(),
                              y.flatten(),
                              fitting_model=core.FittingModel.Akima,
+                             bounds_error=True,
+                             num_threads=0)
+
+def test_bicubic_degraded():
+    """Testing of different bicubic interpolation methods"""
+    grid = load_data(is_circle=False)
+    lon = np.arange(-190, -170, 1 / 3.0)
+    lat = np.arange(-40, 40, 1 / 3.0) + 1 / 3.0
+    x, y = np.meshgrid(lon, lat, indexing="ij")
+
+    with pytest.raises(ValueError):
+        core.bicubic_float64(grid,
+                             x.flatten(),
+                             y.flatten(),
                              bounds_error=True,
                              num_threads=0)
