@@ -85,15 +85,20 @@ TEST(math_descriptive_statistics, univariate) {
 TEST(math_descriptive_statistics, weighted) {
   auto boost_acc = Accumulators();
   auto acc = math::DescriptiveStatistics<double>();
+  auto min = std::numeric_limits<double>::max();
+  auto max = std::numeric_limits<double>::min();
 
   for (auto ix = 0; ix < 20; ++ix) {
     boost_acc(x[ix], boost::accumulators::weight = w[ix]);
     acc(x[ix], w[ix]);
+    auto value = x[ix] * w[ix];
+    min = std::min(min, value);
+    max = std::max(max, value);
   }
 
   EXPECT_EQ(boost::accumulators::count(boost_acc), acc.count());
-  EXPECT_DOUBLE_EQ(boost::accumulators::min(boost_acc), acc.min());
-  EXPECT_DOUBLE_EQ(boost::accumulators::max(boost_acc), acc.max());
+  EXPECT_DOUBLE_EQ(min, acc.min());
+  EXPECT_DOUBLE_EQ(max, acc.max());
   EXPECT_DOUBLE_EQ(boost::accumulators::weighted_mean(boost_acc), acc.mean());
   EXPECT_NEAR(boost::accumulators::weighted_variance(boost_acc), acc.variance(),
               1e-12);
