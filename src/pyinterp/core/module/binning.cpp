@@ -133,8 +133,14 @@ Return:
     numpy.ndarray: skewness of values for points within each bin.
 )__doc__")
       .def("variance", &pyinterp::Binning2D<Type>::variance,
+           py::arg("ddof") = 0,
            R"__doc__(
 Compute the variance of values for points within each bin.
+
+Args:
+    ddof (int, optional): Means Delta Degrees of Freedom. The divisor used in
+        calculations is N - ddof, where N represents the number of elements.
+        By default ddof is zero.
 
 Return:
     numpy.ndarray: variance of values for points within each bin.

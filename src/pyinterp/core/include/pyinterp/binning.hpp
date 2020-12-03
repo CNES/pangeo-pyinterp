@@ -96,8 +96,9 @@ class Binning2D {
   }
 
   /// Compute the variance of values for points within each bin.
-  [[nodiscard]] auto variance() const -> pybind11::array_t<T> {
-    return calculate_statistics(&DescriptiveStatistics::variance);
+  [[nodiscard]] auto variance(const int ddof = 0) const
+      -> pybind11::array_t<T> {
+    return calculate_statistics(&DescriptiveStatistics::variance, ddof);
   }
 
   /// Compute the kurtosis of values for points within each bin.
@@ -167,10 +168,7 @@ class Binning2D {
     }
 
     // Unmarshalling computed statistics
-    auto acc =
-        state[3]
-            .cast<
-                Eigen::Matrix<Accumulators, Eigen::Dynamic, Eigen::Dynamic>>();
+    auto acc = state[3].cast<Matrix<Accumulators>>();
     if (acc.rows() != x->size() || acc.cols() != y->size()) {
       throw std::invalid_argument("invalid state");
     }
@@ -179,11 +177,7 @@ class Binning2D {
     auto result = std::make_unique<Binning2D<T>>(x, y, wgs);
     {
       auto gil = pybind11::gil_scoped_release();
-      for (Eigen::Index ix = 0; ix < result->acc_.rows(); ++ix) {
-        for (Eigen::Index iy = 0; iy < result->acc_.cols(); ++iy) {
-          result->acc_(ix, iy) = std::move(DescriptiveStatistics(acc(ix, iy)));
-        }
-      }
+      result->acc_ = std::move(acc.template cast<DescriptiveStatistics>());
     }
     return result;
   }
@@ -231,8 +225,8 @@ class Binning2D {
   std::optional<geodetic::System> wgs_;
 
   /// Calculation of a given statistical variable.
-  template <typename Func, typename Type = T>
-  [[nodiscard]] auto calculate_statistics(const Func& func) const
+  template <typename Func, typename Type = T, typename... Args>
+  [[nodiscard]] auto calculate_statistics(const Func& func, Args... args) const
       -> pybind11::array_t<Type> {
     pybind11::array_t<Type> z({x_->size(), y_->size()});
     auto _z = z.template mutable_unchecked<2>();
@@ -241,7 +235,7 @@ class Binning2D {
 
       for (Eigen::Index ix = 0; ix < acc_.rows(); ++ix) {
         for (Eigen::Index iy = 0; iy < acc_.cols(); ++iy) {
-          _z(ix, iy) = (acc_(ix, iy).*func)();
+          _z(ix, iy) = (acc_(ix, iy).*func)(args...);
         }
       }
     }

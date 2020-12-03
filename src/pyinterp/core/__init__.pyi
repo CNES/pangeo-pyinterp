@@ -1,4 +1,4 @@
-from typing import Any, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 import numpy
 from . import geodetic
 from . import geohash
@@ -187,7 +187,7 @@ class Binning2DFloat64:
     def sum_of_weights(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def variance(self) -> numpy.ndarray[numpy.float64]:
+    def variance(self, ddof: int = 0) -> numpy.ndarray[numpy.float64]:
         ...
 
     def __iadd__(self, other: "Binning2DFloat64") -> "Binning2DFloat64":

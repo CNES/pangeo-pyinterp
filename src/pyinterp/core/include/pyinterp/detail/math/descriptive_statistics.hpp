@@ -32,13 +32,16 @@ template <typename T>
 class DescriptiveStatistics {
  public:
   /// Default constructor
-  DescriptiveStatistics() { std::memset(&acc_, 0, sizeof(Accumulators<T>)); };
+  DescriptiveStatistics() { clear(); };
 
   /// Create of a new object from statistical incremental values
   explicit DescriptiveStatistics(Accumulators<T> acc) : acc_(std::move(acc)) {}
 
   /// Returns the raw statistical incremental values
   explicit operator const Accumulators<T> &() const { return acc_; }
+
+  /// Reset the accumulator
+  void clear() { std::memset(&acc_, 0, sizeof(Accumulators<T>)); }
 
   /// Push a new value into the accumulator
   void operator()(const T& value) {
@@ -111,20 +114,16 @@ class DescriptiveStatistics {
   }
 
   /// Returns the variance of the samples
-  [[nodiscard]] inline auto unbiased_variance() const -> T {
-    auto cardinal = acc_.sum_of_weights - 1;
-    return cardinal > 0 ? std::numeric_limits<T>::quiet_NaN()
-                        : acc_.mom2 / cardinal;
-  }
-
-  /// Returns the variance of the samples
-  [[nodiscard]] inline auto variance() const -> T {
-    return acc_.sum_of_weights == 0 ? std::numeric_limits<T>::quiet_NaN()
-                                    : acc_.mom2 / acc_.sum_of_weights;
+  [[nodiscard]] inline auto variance(const int ddof = 0) const -> T {
+    auto cardinal = acc_.sum_of_weights - ddof;
+    return cardinal <= 0 ? std::numeric_limits<T>::quiet_NaN()
+                         : acc_.mom2 / cardinal;
   }
 
   /// Returns the standard deviation of the samples
-  [[nodiscard]] inline auto std() const -> T { return std::sqrt(variance()); }
+  [[nodiscard]] inline auto std(const int ddof = 0) const -> T {
+    return std::sqrt(variance(ddof));
+  }
 
   /// Returns the skewness of the samples
   [[nodiscard]] inline auto skewness() const -> T {
@@ -193,8 +192,11 @@ class DescriptiveStatistics {
  private:
   Accumulators<T> acc_{};
 
-  DescriptiveStatistics(const T& value, const T& weight)
-      : acc_{1, weight, value, value, value, weight * value, 0, 0, 0} {}
+  DescriptiveStatistics(const T& value, const T& weight) {
+    auto weighted_value = weight * value;
+    acc_ = std::move(Accumulators<T>{1, weight, value, weighted_value,
+                                     weighted_value, weighted_value, 0, 0, 0});
+  }
 };
 
 }  // namespace pyinterp::detail::math
