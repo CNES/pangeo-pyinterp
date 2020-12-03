@@ -7,11 +7,11 @@ from .axis import TemporalAxis
 from .binning import Binning2D
 from .core import Axis
 from .grid import Grid2D, Grid3D, Grid4D
-from .rtree import RTree
 from .interpolator.bicubic import bicubic
 from .interpolator.bivariate import bivariate
-from .interpolator.trivariate import trivariate
 from .interpolator.quadrivariate import quadrivariate
+from .interpolator.trivariate import trivariate
+from .rtree import RTree
 __version__ = version.release()
 __date__ = version.date()
 del version
