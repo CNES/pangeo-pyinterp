@@ -363,7 +363,7 @@ class Irregular : public Abstract<T> {
 ///
 /// @tparam T type of data handled by this container
 template <typename T>
-class Regular : public Abstract<T> {
+class AbstractRegular : public Abstract<T> {
  public:
   /// Create a container from evenly spaced numbers over a specified
   /// interval.
@@ -371,7 +371,7 @@ class Regular : public Abstract<T> {
   /// @param start the starting value of the sequence
   /// @param stop the end value of the sequence
   /// @param num number of samples in the container
-  Regular(const T start, const T stop, const T num)
+  AbstractRegular(const T start, const T stop, const T num)
       : size_(static_cast<int64_t>(num)), start_(start) {
     if (num == 0) {
       throw std::invalid_argument("unable to create an empty container.");
@@ -379,32 +379,31 @@ class Regular : public Abstract<T> {
     step_ = num == 1 ? stop - start : (stop - start) / (num - 1);
     // The inverse step of this axis is stored in order to optimize the search
     // for an index for a given value by avoiding a division.
-    inv_step_ = 1.0 / step_;
     this->is_ascending_ = this->calculate_is_ascending();
   }
 
   /// Destructor
-  ~Regular() override = default;
+  ~AbstractRegular() override = default;
 
   /// Copy constructor
   ///
   /// @param rhs right value
-  Regular(const Regular& rhs) = default;
+  AbstractRegular(const AbstractRegular& rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Regular(Regular&& rhs) noexcept = default;
+  AbstractRegular(AbstractRegular&& rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Regular& rhs) -> Regular& = default;
+  auto operator=(const AbstractRegular& rhs) -> AbstractRegular& = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Regular&& rhs) noexcept -> Regular& = default;
+  auto operator=(AbstractRegular&& rhs) noexcept -> AbstractRegular& = default;
 
   /// Get the step between two successive values.
   ///
@@ -415,7 +414,6 @@ class Regular : public Abstract<T> {
   auto flip() -> void override {
     start_ = back();
     step_ = -step_;
-    inv_step_ = -inv_step_;
     this->is_ascending_ = !this->is_ascending_;
   }
 
@@ -423,22 +421,6 @@ class Regular : public Abstract<T> {
   [[nodiscard]] inline auto coordinate_value(const size_t index) const noexcept
       -> T override {
     return start_ + index * step_;
-  }
-
-  /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] auto find_index(T coordinate, bool bounded) const noexcept
-      -> int64_t override {
-    auto index =
-        static_cast<int64_t>(std::round((coordinate - start_) * inv_step_));
-
-    if (index < 0) {
-      return bounded ? 0 : -1;
-    }
-
-    if (index >= size_) {
-      return bounded ? size_ - 1 : -1;
-    }
-    return index;
   }
 
   /// @copydoc Abstract::min_value() const
@@ -468,7 +450,7 @@ class Regular : public Abstract<T> {
 
   /// @copydoc Abstract::operator==(const Abstract&) const
   auto operator==(const Abstract<T>& rhs) const noexcept -> bool override {
-    const auto ptr = dynamic_cast<const Regular<T>*>(&rhs);
+    const auto ptr = dynamic_cast<const AbstractRegular<T>*>(&rhs);
     if (ptr != nullptr) {
       return ptr->step_ == step_ && ptr->start_ == start_ &&
              ptr->size_ == size_;
@@ -476,15 +458,94 @@ class Regular : public Abstract<T> {
     return false;
   }
 
- private:
+ protected:
   /// Container size.
   int64_t size_{};
   /// Value of the first item in the container.
   T start_{};
   /// The step between two succeeding values.
   T step_{};
+};
+
+/// Represents a container for an regularly spaced axis
+///
+template <typename T, class Enable = void>
+class Regular : public AbstractRegular<T> {
+ public:
+  using AbstractRegular<T>::AbstractRegular;
+};
+
+/// Represents a container for an regularly spaced axis
+///
+template <typename T>
+class Regular<T, typename std::enable_if<std::is_floating_point_v<T>>::type>
+    : public AbstractRegular<T> {
+ public:
+  Regular(const T start, const T stop, const T num)
+      : AbstractRegular<T>(start, stop, num) {
+    // The inverse step of this axis is stored in order to optimize the search
+    // for an index for a given value by avoiding a division.
+    inv_step_ = 1.0 / this->step_;
+  }
+
+  /// @copydoc Abstract::find_index(double,bool) const
+  [[nodiscard]] auto find_index(T coordinate, bool bounded) const noexcept
+      -> int64_t override {
+    auto index = static_cast<int64_t>(
+        std::round((coordinate - this->start_) * inv_step_));
+
+    if (index < 0) {
+      return bounded ? 0 : -1;
+    }
+
+    if (index >= this->size_) {
+      return bounded ? this->size_ - 1 : -1;
+    }
+    return index;
+  }
+
+  /// @copydoc Abstract::flip()
+  auto flip() -> void override {
+    AbstractRegular<T>::flip();
+    inv_step_ = -inv_step_;
+  }
+
+ private:
   /// The inverse of the step (to avoid a division between real numbers).
   double inv_step_{};
+};
+
+/// Represents a container for an regularly spaced axis
+///
+template <typename T>
+class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
+    : public AbstractRegular<T> {
+ public:
+  using AbstractRegular<T>::AbstractRegular;
+
+  /// @copydoc Abstract::find_index(double,bool) const
+  [[nodiscard]] auto find_index(T coordinate, bool bounded) const noexcept
+      -> int64_t override {
+    auto index = static_cast<int64_t>(
+        Regular<T>::round(coordinate - this->start_, this->step_));
+
+    if (index < 0) {
+      return bounded ? 0 : -1;
+    }
+
+    if (index >= this->size_) {
+      return bounded ? this->size_ - 1 : -1;
+    }
+    return index;
+  }
+
+ private:
+  /// Round for integer division
+  static inline auto round(const T numerator, const T denominator) -> T {
+    return ((numerator << 1) - denominator +
+            (((numerator < 0) ^ (denominator > 0)) << 1) * denominator) /
+           (denominator << 1);
+  }
 };
 
 }  // namespace pyinterp::detail::axis::container

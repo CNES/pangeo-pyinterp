@@ -689,3 +689,12 @@ TYPED_TEST(AxisTest, search_window) {
   indexes = axis.find_indexes(9, 4, pyinterp::axis::kUndef);
   ASSERT_TRUE(indexes.empty());
 }
+
+TEST(axis, timestamp) {
+  auto axis = detail::Axis<int64_t>(946684800, 946771140, 1440, 0, false);
+  EXPECT_EQ(axis.find_index(946684880, true), 1);
+  EXPECT_EQ(axis.find_index(946684900, true), 2);
+  axis.flip();
+  EXPECT_EQ(axis.find_index(946684880, true), 1439 - 1);
+  EXPECT_EQ(axis.find_index(946684900, true), 1439 - 2);
+}
