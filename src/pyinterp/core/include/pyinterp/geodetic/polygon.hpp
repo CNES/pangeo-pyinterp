@@ -14,10 +14,9 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   using boost::geometry::model::polygon<Point>::polygon;
 
   /// Create a new instance from Python
-  Polygon(const pybind11::list& outer, const pybind11::list& inners)
-      : boost::geometry::model::polygon<Point>() {
+  Polygon(const pybind11::list& outer, const pybind11::list& inners) {
     try {
-      for (auto& item : outer) {
+      for (const auto& item : outer) {
         auto point = item.cast<geodetic::Point>();
         boost::geometry::append(this->outer(), point);
       }
@@ -29,9 +28,9 @@ class Polygon : public boost::geometry::model::polygon<Point> {
       try {
         auto index = 0;
         this->inners().resize(inners.size());
-        for (auto& inner : inners) {
+        for (const auto& inner : inners) {
           auto points = inner.cast<pybind11::list>();
-          for (auto& item : points) {
+          for (const auto& item : points) {
             auto point = item.cast<geodetic::Point>();
             boost::geometry::append(this->inners()[index], point);
           }
@@ -50,13 +49,13 @@ class Polygon : public boost::geometry::model::polygon<Point> {
     auto inners = pybind11::list();
     auto outer = pybind11::list();
 
-    for (auto& item : this->outer()) {
+    for (const auto& item : this->outer()) {
       outer.append(item);
     }
 
-    for (auto& inner : this->inners()) {
+    for (const auto& inner : this->inners()) {
       auto buffer = pybind11::list();
-      for (auto& item : inner) {
+      for (const auto& item : inner) {
         buffer.append(item);
       }
       inners.append(buffer);
@@ -111,24 +110,24 @@ struct interior_mutable_type<pg::Polygon> {
 
 template <>
 struct exterior_ring<pg::Polygon> {
-  static model::polygon<pg::Point>::ring_type& get(
-      model::polygon<pg::Point>& p) {
+  static auto get(model::polygon<pg::Point>& p)
+      -> model::polygon<pg::Point>::ring_type& {
     return p.outer();
   }
-  static model::polygon<pg::Point>::ring_type const& get(
-      model::polygon<pg::Point> const& p) {
+  static auto get(model::polygon<pg::Point> const& p)
+      -> model::polygon<pg::Point>::ring_type const& {
     return p.outer();
   }
 };
 
 template <>
 struct interior_rings<pg::Polygon> {
-  static model::polygon<pg::Point>::inner_container_type& get(
-      model::polygon<pg::Point>& p) {
+  static auto get(model::polygon<pg::Point>& p)
+      -> model::polygon<pg::Point>::inner_container_type& {
     return p.inners();
   }
-  static model::polygon<pg::Point>::inner_container_type const& get(
-      model::polygon<pg::Point> const& p) {
+  static auto get(model::polygon<pg::Point> const& p)
+      -> model::polygon<pg::Point>::inner_container_type const& {
     return p.inners();
   }
 };

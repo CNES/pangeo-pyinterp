@@ -42,7 +42,7 @@ class Array {
                            capsule_);
   }
 
-  static auto get_info(const pybind11::array& hash, const ssize_t ndim)
+  static auto get_info(const pybind11::array& hash, ssize_t ndim)
       -> pybind11::buffer_info;
 
  private:
@@ -53,8 +53,8 @@ class Array {
 };
 
 /// Encode a point into geohash with the given bit depth
-auto encode(const geodetic::Point& point, char* const buffer,
-            uint32_t precision) -> void;
+auto encode(const geodetic::Point& point, char* buffer, uint32_t precision)
+    -> void;
 
 /// Encode points into geohash with the given bit depth
 [[nodiscard]] auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
@@ -62,19 +62,19 @@ auto encode(const geodetic::Point& point, char* const buffer,
                           uint32_t precision) -> pybind11::array;
 
 /// Returns the region encoded
-[[nodiscard]] auto bounding_box(const char* const hash, size_t count)
+[[nodiscard]] auto bounding_box(const char* hash, size_t count)
     -> geodetic::Box;
 
 /// Decode a hash into a spherical equatorial point. If round is true, the
 /// coordinates of the points will be rounded to the accuracy defined by the
 /// GeoHash.
-[[nodiscard]] auto decode(const char* const hash, const size_t count,
-                          const bool round) -> geodetic::Point;
+[[nodiscard]] auto decode(const char* hash, size_t count, bool round)
+    -> geodetic::Point;
 
 /// Decode hashes into a spherical equatorial points. If round is true, the
 /// coordinates of the points will be rounded to the accuracy defined by the
 /// GeoHash.
-[[nodiscard]] auto decode(const pybind11::array& hash, const bool center)
+[[nodiscard]] auto decode(const pybind11::array& hash, bool round)
     -> std::tuple<Eigen::VectorXd, Eigen::VectorXd>;
 
 /// Returns all neighbors hash clockwise from north around northwest at the
@@ -82,12 +82,11 @@ auto encode(const geodetic::Point& point, char* const buffer,
 ///   7 0 1
 ///   6 x 2
 ///   5 4 3
-[[nodiscard]] auto neighbors(const char* const hash, const size_t count)
-    -> pybind11::array;
+[[nodiscard]] auto neighbors(const char* hash, size_t count) -> pybind11::array;
 
 /// Returns all GeoHash with the defined box
 [[nodiscard]] auto bounding_boxes(const std::optional<geodetic::Box>& box,
-                                  const uint32_t chars) -> pybind11::array;
+                                  uint32_t precision) -> pybind11::array;
 
 /// Returns the start and end indexes of the different GeoHash boxes.
 [[nodiscard]] auto where(const pybind11::array& hash)

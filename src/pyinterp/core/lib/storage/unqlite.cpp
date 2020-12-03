@@ -133,16 +133,16 @@ static auto decode_mode(const std::string& mode) -> unsigned int {
   }
 
   auto result = static_cast<unsigned int>(0);
-  if (writing) {
+  if (writing != 0) {
     result |= UNQLITE_OPEN_CREATE;
   }
-  if (appending) {
+  if (appending != 0) {
     result |= UNQLITE_OPEN_READWRITE;
   }
-  if (reading) {
+  if (reading != 0) {
     result |= UNQLITE_OPEN_READONLY;
   }
-  if (memory) {
+  if (memory != 0) {
     result |= UNQLITE_OPEN_MMAP;
   }
   return result;
@@ -264,8 +264,7 @@ auto Database::compress(const pybind11::bytes& bytes) const -> pybind11::bytes {
 }
 
 // ---------------------------------------------------------------------------
-auto Database::uncompress(const pybind11::bytes& bytes) const
-    -> pybind11::bytes {
+auto Database::uncompress(const pybind11::bytes& bytes) -> pybind11::bytes {
   auto slice = Slice(bytes);
   if (slice.len < 2) {
     throw OperationalError("unable to uncompress value");

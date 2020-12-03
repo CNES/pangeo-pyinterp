@@ -204,7 +204,7 @@ class XArray3D : public CoordsXY {
 
   /// Creates a new instance
   XArray3D(const size_t x_size, const size_t y_size, const size_t z_size)
-      : CoordsXY(x_size, y_size), z_(), q_() {
+      : CoordsXY(x_size, y_size), z_() {
     auto nz = z_size << 1U;
     z_.resize(nz);
     q_.resize(nz);
@@ -294,7 +294,7 @@ class XArray4D : public CoordsXY {
   /// Creates a new instance
   XArray4D(const size_t x_size, const size_t y_size, const size_t z_size,
            const size_t u_size)
-      : CoordsXY(x_size, y_size), z_(), u_(), q_() {
+      : CoordsXY(x_size, y_size), z_() {
     auto nz = z_size << 1U;
     auto nu = u_size << 1U;
     z_.resize(nz);

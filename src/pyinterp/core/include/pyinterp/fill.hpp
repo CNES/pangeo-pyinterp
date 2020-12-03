@@ -307,7 +307,7 @@ inline auto check_windows_size(const std::string& name1, const uint32_t size)
 
 /// Checking the size of the filter window.
 template <typename... Args>
-inline auto check_windows_size(const std::string& name1, const uint32_t size,
+inline auto check_windows_size(const std::string& name1, uint32_t size,
                                Args... args) -> void {
   check_windows_size(name1, size);
   check_windows_size(args...);

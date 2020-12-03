@@ -21,7 +21,7 @@ namespace pyinterp::geohash::int64 {
 
 /// Returns the precision in longitude/latitude and degrees for the given
 /// precision
-[[nodiscard]] inline auto constexpr error_with_precision(
+[[nodiscard]] inline auto error_with_precision(
     const uint32_t precision) -> std::tuple<double, double> {
   auto lat_bits = static_cast<int32_t>(precision >> 1U);
   auto lng_bits = static_cast<int32_t>(precision - lat_bits);
@@ -83,7 +83,7 @@ namespace pyinterp::geohash::int64 {
 // 7 0 1
 // 6 x 2
 // 5 4 3
-[[nodiscard]] auto neighbors(const uint64_t hash, const uint32_t precision)
+[[nodiscard]] auto neighbors(uint64_t hash, uint32_t precision)
     -> Eigen::Matrix<uint64_t, 8, 1>;
 
 // Returns the property of the grid covering the given box: geohash of the
@@ -93,7 +93,7 @@ namespace pyinterp::geohash::int64 {
 
 // Returns all the GeoHash codes within the box.
 [[nodiscard]] auto bounding_boxes(const std::optional<geodetic::Box>& box,
-                                  uint32_t chars) -> Vector<uint64_t>;
+                                  uint32_t precision) -> Vector<uint64_t>;
 
 // Returns all the GeoHash codes within the polygon.
 [[nodiscard]] inline auto bounding_boxes(const geodetic::Polygon& polygon,

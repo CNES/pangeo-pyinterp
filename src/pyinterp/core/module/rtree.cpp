@@ -224,7 +224,7 @@ void init_rtree(py::module& m) {
       .value("Cubic", pyinterp::RadialBasisFunction::Cubic,
              ":math:`\\varphi(r) = r^3`")
       .value("Gaussian", pyinterp::RadialBasisFunction::Gaussian,
-             ":math:`\\varphi(r) = e^{-(\\dfrac{r}{\\varepsilon})^2}`")
+             R"(:math:`\varphi(r) = e^{-(\dfrac{r}{\varepsilon})^2}`)")
       .value("InverseMultiquadric",
              pyinterp::RadialBasisFunction::InverseMultiquadric,
              ":math:`\\varphi(r) = \\dfrac{1}"
@@ -232,7 +232,7 @@ void init_rtree(py::module& m) {
       .value("Linear", pyinterp::RadialBasisFunction::Linear,
              ":math:`\\varphi(r) = r`")
       .value("Multiquadric", pyinterp::RadialBasisFunction::Multiquadric,
-             ":math:`\\varphi(r) = \\sqrt{1+(\\dfrac{r}{\\varepsilon}^2})`")
+             R"(:math:`\varphi(r) = \sqrt{1+(\dfrac{r}{\varepsilon}^2})`)")
       .value("ThinPlate", pyinterp::RadialBasisFunction::ThinPlate,
              ":math:`\\varphi(r) = r^2 \\ln(r)`.");
 

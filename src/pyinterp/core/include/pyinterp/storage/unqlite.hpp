@@ -118,8 +118,10 @@ class Database {
 
   static auto handle_rc(int rc) -> void;
 
-  auto compress(const pybind11::bytes& bytes) const -> pybind11::bytes;
-  auto uncompress(const pybind11::bytes& bytes) const -> pybind11::bytes;
+  [[nodiscard]] auto compress(const pybind11::bytes& bytes) const
+      -> pybind11::bytes;
+  [[nodiscard]] static auto uncompress(const pybind11::bytes& bytes)
+      -> pybind11::bytes;
 };
 
 }  // namespace pyinterp::storage::unqlite

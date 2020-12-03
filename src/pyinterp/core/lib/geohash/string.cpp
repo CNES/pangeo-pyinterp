@@ -49,7 +49,7 @@ auto Array::get_info(const pybind11::array& hashs, const ssize_t ndim)
 // ---------------------------------------------------------------------------
 auto encode(const geodetic::Point& point, char* const buffer,
             const uint32_t precision) -> void {
-  base32.encode(int64::encode(point, 5 * precision), buffer, precision);
+  Base32::encode(int64::encode(point, 5 * precision), buffer, precision);
 }
 
 // ---------------------------------------------------------------------------
@@ -130,7 +130,7 @@ auto neighbors(const char* const hash, const size_t count) -> pybind11::array {
   {
     auto gil = pybind11::gil_scoped_release();
     for (auto ix = 0; ix < integers.size(); ++ix) {
-      base32.encode(integers(ix), buffer, precision);
+      Base32::encode(integers(ix), buffer, precision);
       buffer += precision;
     }
   }
@@ -176,10 +176,10 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
         for (size_t lon = 0; lon < lon_step; ++lon) {
           const auto lon_shift = lon * std::get<0>(lng_lat_err);
 
-          base32.encode(int64::encode({point_sw.lon() + lon_shift,
-                                       point_sw.lat() + lat_shift},
-                                      bits),
-                        buffer, precision);
+          Base32::encode(int64::encode({point_sw.lon() + lon_shift,
+                                        point_sw.lat() + lat_shift},
+                                       bits),
+                         buffer, precision);
           buffer += precision;
         }
       }

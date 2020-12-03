@@ -71,7 +71,7 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
   /// @returns A tuple that contains the coordinates of the minimum and
   /// maximum corners of the box able to contain all values stored in the
   /// container or an empty tuple if there are no values in the container.
-  auto equatorial_bounds() const -> pybind11::tuple {
+  [[nodiscard]] auto equatorial_bounds() const -> pybind11::tuple {
     if (this->empty()) {
       return pybind11::make_tuple();
     }
