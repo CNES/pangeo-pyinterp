@@ -512,7 +512,7 @@ class Regular<T, typename std::enable_if<std::is_floating_point_v<T>>::type>
 
  private:
   /// The inverse of the step (to avoid a division between real numbers).
-  double inv_step_{};
+  T inv_step_{};
 };
 
 /// Represents a container for an regularly spaced axis
@@ -521,13 +521,17 @@ template <typename T>
 class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
     : public AbstractRegular<T> {
  public:
-  using AbstractRegular<T>::AbstractRegular;
+  Regular(const T start, const T stop, const T num)
+      : AbstractRegular<T>(start, stop, num) {
+    // The inverse step of this axis is stored in order to optimize the search
+    // for an index for a given value by avoiding a division.
+    step_2_ = std::abs(this->step_ >> 1);
+  }
 
   /// @copydoc Abstract::find_index(double,bool) const
   [[nodiscard]] auto find_index(T coordinate, bool bounded) const noexcept
       -> int64_t override {
-    auto index = static_cast<int64_t>(
-        Regular<T>::round(coordinate - this->start_, this->step_));
+    auto index = static_cast<int64_t>(nearest_index(coordinate - this->start_));
 
     if (index < 0) {
       return bounded ? 0 : -1;
@@ -540,11 +544,15 @@ class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
   }
 
  private:
-  /// Round for integer division
-  static inline auto round(const T numerator, const T denominator) -> T {
-    return ((numerator << 1) - denominator +
-            (((numerator < 0) ^ (denominator > 0)) << 1) * denominator) /
-           (denominator << 1);
+  /// The absolute value of half the pitch of this axis. This value is used to
+  /// search for the nearest index.
+  T step_2_{};
+
+  /// Returns the nearest index
+  inline auto nearest_index(const T value) const noexcept -> T {
+    auto quot = value / this->step_;
+    auto shift = std::abs(value % this->step_) > step_2_ ? 1 : 0;
+    return quot + (quot > 0 ? shift : -shift);
   }
 };
 
