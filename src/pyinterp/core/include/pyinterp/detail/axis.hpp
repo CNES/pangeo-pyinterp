@@ -117,9 +117,9 @@ class Axis {
   ///
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
-  /// @throw std::out_of_range if !(index < size()).
-  [[nodiscard]] inline auto coordinate_value(const size_t index) const -> T {
-    if (static_cast<int64_t>(index) >= size()) {
+  /// @throw std::out_of_range if index in not in range [0, size() - 1].
+  [[nodiscard]] inline auto coordinate_value(const int64_t index) const -> T {
+    if (index < 0 || index >= size()) {
       throw std::out_of_range("axis index out of range");
     }
     return axis_->coordinate_value(index);
@@ -215,7 +215,7 @@ class Axis {
   ///
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
-  inline auto operator()(const size_t index) const noexcept -> T {
+  inline auto operator()(const int64_t index) const -> T {
     return axis_->coordinate_value(index);
   }
 
@@ -390,7 +390,9 @@ class Axis {
       for (auto ix = 0; ix < length - 1; ++ix) {
         ss << coordinate_value(ix) << ", ";
       }
-      ss << coordinate_value(length - 1);
+      if (length >= 1) {
+        ss << coordinate_value(length - 1);
+      }
     }
     ss << std::boolalpha << "], is_circle=" << is_angle() << ")";
     return ss.str();

@@ -61,7 +61,7 @@ class Abstract {
   ///
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
-  [[nodiscard]] virtual auto coordinate_value(size_t index) const -> T = 0;
+  [[nodiscard]] virtual auto coordinate_value(int64_t index) const -> T = 0;
 
   /// Get the minimum coordinate value.
   ///
@@ -151,9 +151,9 @@ class Undefined : public Abstract<T> {
   /// @copydoc Abstract::flip()
   auto flip() -> void override {}
 
-  /// @copydoc Abstract::coordinate_value(const size_t) const
+  /// @copydoc Abstract::coordinate_value(const int64_t) const
   [[nodiscard]] inline auto coordinate_value(
-      const size_t /* index */) const noexcept -> T override {
+      const int64_t /* index */) const noexcept -> T override {
     return math::Fill<T>::value();
   }
 
@@ -253,8 +253,8 @@ class Irregular : public Abstract<T> {
                           std::greater<>());
   };
 
-  /// @copydoc Abstract::coordinate_value(const size_t) const
-  [[nodiscard]] inline auto coordinate_value(const size_t index) const
+  /// @copydoc Abstract::coordinate_value(const int64_t) const
+  [[nodiscard]] inline auto coordinate_value(const int64_t index) const
       -> T override {
     return points_[index];
   }
@@ -417,10 +417,10 @@ class AbstractRegular : public Abstract<T> {
     this->is_ascending_ = !this->is_ascending_;
   }
 
-  /// @copydoc Abstract::coordinate_value(const size_t) const
-  [[nodiscard]] inline auto coordinate_value(const size_t index) const noexcept
+  /// @copydoc Abstract::coordinate_value(const int64_t) const
+  [[nodiscard]] inline auto coordinate_value(const int64_t index) const noexcept
       -> T override {
-    return start_ + index * step_;
+    return static_cast<T>(start_ + index * step_);
   }
 
   /// @copydoc Abstract::min_value() const
@@ -481,11 +481,13 @@ template <typename T>
 class Regular<T, typename std::enable_if<std::is_floating_point_v<T>>::type>
     : public AbstractRegular<T> {
  public:
+  /// @copydoc AbstractRegular::AbstractRegular(const T start, const T stop,
+  /// const T num)
   Regular(const T start, const T stop, const T num)
       : AbstractRegular<T>(start, stop, num) {
     // The inverse step of this axis is stored in order to optimize the search
     // for an index for a given value by avoiding a division.
-    inv_step_ = 1.0 / this->step_;
+    inv_step_ = T(1.0) / this->step_;
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
@@ -521,6 +523,8 @@ template <typename T>
 class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
     : public AbstractRegular<T> {
  public:
+  /// @copydoc AbstractRegular::AbstractRegular(const T start, const T stop,
+  /// const T num)
   Regular(const T start, const T stop, const T num)
       : AbstractRegular<T>(start, stop, num) {
     // The inverse step of this axis is stored in order to optimize the search

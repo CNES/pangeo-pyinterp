@@ -46,9 +46,7 @@ TYPED_TEST(AxisTest, default_constructor) {
   EXPECT_EQ(axis.find_index(360, false), -1);
   auto indexes = axis.find_indexes(360);
   EXPECT_FALSE(indexes.has_value());
-  EXPECT_EQ(static_cast<std::string>(axis),
-            "Axis([" + std::to_string(detail::math::Fill<TypeParam>::value()) +
-                "], is_circle=false)");
+  EXPECT_EQ(static_cast<std::string>(axis), "Axis([], is_circle=false)");
 }
 
 TYPED_TEST(AxisTest, singleton) {
@@ -87,14 +85,14 @@ TYPED_TEST(AxisTest, binary) {
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 0);
   EXPECT_EQ(std::get<1>(*indexes), 1);
-  if (std::is_floating_point<TypeParam>::value) {
-    EXPECT_FALSE(axis.find_indexes(-0.1));
-    EXPECT_FALSE(axis.find_indexes(+1.1));
-    indexes = axis.find_indexes(0.4);
+  if (std::is_floating_point_v<TypeParam>) {
+    EXPECT_FALSE(axis.find_indexes(static_cast<TypeParam>(-0.1)));
+    EXPECT_FALSE(axis.find_indexes(static_cast<TypeParam>(+1.1)));
+    indexes = axis.find_indexes(static_cast<TypeParam>(0.4));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 0);
     EXPECT_EQ(std::get<1>(*indexes), 1);
-    indexes = axis.find_indexes(0.6);
+    indexes = axis.find_indexes(static_cast<TypeParam>(0.6));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 0);
     EXPECT_EQ(std::get<1>(*indexes), 1);
@@ -157,8 +155,8 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 10);
   EXPECT_EQ(std::get<1>(*indexes), 11);
-  if (std::is_floating_point<TypeParam>::value) {
-    indexes = a1.find_indexes(-9.5);
+  if (std::is_floating_point_v<TypeParam>) {
+    indexes = a1.find_indexes(static_cast<TypeParam>(-9.5));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 350);
     EXPECT_EQ(std::get<1>(*indexes), 351);
@@ -190,8 +188,8 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_EQ(i1, 0);
   i1 = a1.find_index(359, false);
   EXPECT_EQ(i1, 0);
-  if (std::is_floating_point<TypeParam>::value) {
-    indexes = a1.find_indexes(359.5);
+  if (std::is_floating_point_v<TypeParam>) {
+    indexes = a1.find_indexes(static_cast<TypeParam>(359.5));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
@@ -200,8 +198,8 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 349);
   EXPECT_EQ(std::get<1>(*indexes), 350);
-  if (std::is_floating_point<TypeParam>::value) {
-    indexes = a1.find_indexes(-9.5);
+  if (std::is_floating_point_v<TypeParam>) {
+    indexes = a1.find_indexes(static_cast<TypeParam>(-9.5));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 9);
     EXPECT_EQ(std::get<1>(*indexes), 8);
@@ -240,11 +238,13 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_TRUE(a2.is_circle());
   EXPECT_TRUE(a2.is_regular());
   EXPECT_FALSE(a2.is_ascending());
-  if (std::is_floating_point<TypeParam>::value) {
-    indexes = a2.find_indexes(370.2);
+  if (std::is_floating_point_v<TypeParam>) {
+    indexes = a2.find_indexes(static_cast<TypeParam>(370.2));
     ASSERT_TRUE(indexes);
-    EXPECT_TRUE(a2(std::get<0>(*indexes)) <= a2.normalize_coordinate(370.2) &&
-                a2.normalize_coordinate(370.2) <= a2(std::get<1>(*indexes)));
+    EXPECT_TRUE(a2(std::get<0>(*indexes)) <=
+                    a2.normalize_coordinate(static_cast<TypeParam>(370.2)) &&
+                a2.normalize_coordinate(static_cast<TypeParam>(370.2)) <=
+                    a2(std::get<1>(*indexes)));
   }
   EXPECT_EQ(a2.coordinate_value(190), -10);
   EXPECT_EQ(a2.min_value(), -179);
@@ -261,11 +261,13 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_TRUE(a2.is_circle());
   EXPECT_TRUE(a2.is_regular());
   EXPECT_TRUE(a2.is_ascending());
-  if (std::is_floating_point<TypeParam>::value) {
-    indexes = a2.find_indexes(370.2);
+  if (std::is_floating_point_v<TypeParam>) {
+    indexes = a2.find_indexes(static_cast<TypeParam>(370.2));
     ASSERT_TRUE(indexes);
-    EXPECT_TRUE(a2(std::get<0>(*indexes)) <= a2.normalize_coordinate(370.2) &&
-                a2.normalize_coordinate(370.2) <= a2(std::get<1>(*indexes)));
+    EXPECT_TRUE(a2(std::get<0>(*indexes)) <=
+                    a2.normalize_coordinate(static_cast<TypeParam>(370.2)) &&
+                a2.normalize_coordinate(static_cast<TypeParam>(370.2)) <=
+                    a2(std::get<1>(*indexes)));
   }
   EXPECT_EQ(a2.coordinate_value(190), 11);
   EXPECT_EQ(a2.min_value(), -179);
@@ -465,34 +467,34 @@ TYPED_TEST(AxisTest, search_indexes) {
   this->reset_axis(0, 359, 360, static_cast<TypeParam>(1e-6), true);
   auto& axis = *(this->axis);
 
-  if (std::is_floating_point<TypeParam>::value) {
-    auto indexes = axis.find_indexes(359.4);
+  if (std::is_floating_point_v<TypeParam>) {
+    auto indexes = axis.find_indexes(static_cast<TypeParam>(359.4));
 
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
 
-    indexes = axis.find_indexes(359.6);
+    indexes = axis.find_indexes(static_cast<TypeParam>(359.6));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
 
-    indexes = axis.find_indexes(-0.1);
+    indexes = axis.find_indexes(static_cast<TypeParam>(-0.1));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
 
-    indexes = axis.find_indexes(359.9);
+    indexes = axis.find_indexes(static_cast<TypeParam>(359.9));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
 
-    indexes = axis.find_indexes(0.01);
+    indexes = axis.find_indexes(static_cast<TypeParam>(0.01));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 0);
     EXPECT_EQ(std::get<1>(*indexes), 1);
 
-    indexes = axis.find_indexes(358.9);
+    indexes = axis.find_indexes(static_cast<TypeParam>(358.9));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 358);
     EXPECT_EQ(std::get<1>(*indexes), 359);
@@ -572,8 +574,9 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[8], 2);
   EXPECT_EQ(indexes[9], 3);
 
-  if (std::is_floating_point<TypeParam>::value) {
-    indexes = axis.find_indexes(179.4, 5, pyinterp::axis::kUndef);
+  if (std::is_floating_point_v<TypeParam>) {
+    indexes = axis.find_indexes(static_cast<TypeParam>(179.4), 5,
+                                pyinterp::axis::kUndef);
     ASSERT_EQ(indexes.size(), 10);
     EXPECT_EQ(indexes[0], 355);
     EXPECT_EQ(indexes[1], 356);
@@ -586,7 +589,8 @@ TYPED_TEST(AxisTest, search_window) {
     EXPECT_EQ(indexes[8], 3);
     EXPECT_EQ(indexes[9], 4);
 
-    indexes = axis.find_indexes(179.6, 5, pyinterp::axis::kUndef);
+    indexes = axis.find_indexes(static_cast<TypeParam>(179.6), 5,
+                                pyinterp::axis::kUndef);
     ASSERT_EQ(indexes.size(), 10);
     EXPECT_EQ(indexes[0], 355);
     EXPECT_EQ(indexes[1], 356);
