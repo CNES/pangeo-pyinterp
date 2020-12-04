@@ -69,6 +69,26 @@ class Binning2D {
     }
   }
 
+  /// Copy constructor
+  ///
+  /// @param rhs right value
+  Binning2D(const Binning2D& rhs) = delete;
+
+  /// Move constructor
+  ///
+  /// @param rhs right value
+  Binning2D(Binning2D&& rhs) noexcept = delete;
+
+  /// Copy assignment operator
+  ///
+  /// @param rhs right value
+  auto operator=(const Binning2D& rhs) -> Binning2D& = delete;
+
+  /// Move assignment operator
+  ///
+  /// @param rhs right value
+  auto operator=(Binning2D&& rhs) noexcept -> Binning2D& = delete;
+
   /// Reset the statistics.
   void clear() {
     acc_ = std::move(Matrix<DescriptiveStatistics>(x_->size(), y_->size()));

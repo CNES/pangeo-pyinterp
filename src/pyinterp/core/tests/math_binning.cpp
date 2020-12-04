@@ -144,10 +144,10 @@ TEST(math_binning, binning_spheroid) {
                        boost::geometry::strategy::area::geographic<>, double>(
           p, p0, p1, strategy);
 
-  EXPECT_FLOAT_EQ(std::get<0>(weights), 0.37482309);
-  EXPECT_FLOAT_EQ(std::get<1>(weights), 0.12513892);
-  EXPECT_FLOAT_EQ(std::get<2>(weights), 0.12513892);
-  EXPECT_FLOAT_EQ(std::get<3>(weights), 0.37482309);
+  EXPECT_NEAR(std::get<0>(weights), 0.37482309, 1e-6);
+  EXPECT_NEAR(std::get<1>(weights), 0.12513892, 1e-6);
+  EXPECT_NEAR(std::get<2>(weights), 0.12513892, 1e-6);
+  EXPECT_NEAR(std::get<3>(weights), 0.37482309, 1e-6);
 
   p = geometry::GeographicPoint2D<double>{31.800000000000000711,
                                           45.695000000000000284};
@@ -160,8 +160,8 @@ TEST(math_binning, binning_spheroid) {
                        boost::geometry::strategy::area::geographic<>, double>(
           p, p0, p1, strategy);
 
-  EXPECT_FLOAT_EQ(std::get<0>(weights), 0);
-  EXPECT_FLOAT_EQ(std::get<1>(weights), 0);
-  EXPECT_FLOAT_EQ(std::get<2>(weights), 0);
-  EXPECT_FLOAT_EQ(std::get<3>(weights), 0.9999999999);
+  EXPECT_NEAR(std::get<0>(weights), 0, 1e-6);
+  EXPECT_NEAR(std::get<1>(weights), 0, 1e-6);
+  EXPECT_NEAR(std::get<2>(weights), 0, 1e-6);
+  EXPECT_NEAR(std::get<3>(weights), 0.9999999999, 1e-6);
 }

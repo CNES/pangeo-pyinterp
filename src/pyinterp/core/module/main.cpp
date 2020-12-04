@@ -82,8 +82,10 @@ Index storage support
   init_quadrivariate(m);
   init_bicubic(m);
   init_geodetic(geodetic);
-  init_geohash(geohash);
   init_fill(fill);
-  init_storage(storage);
   init_rtree(m);
+
+  // geohash
+  init_geohash(geohash);
+  init_storage(storage);
 }

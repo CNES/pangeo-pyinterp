@@ -40,15 +40,17 @@ class Interpolate1D {
   }
 
   /// Return the interpolated value of y for a given point x
-  inline auto interpolate(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya,
-                          const double x) -> double {
+  [[nodiscard]] inline auto interpolate(const Eigen::VectorXd& xa,
+                                        const Eigen::VectorXd& ya,
+                                        const double x) -> double {
     init(xa, ya);
     return gsl_interp_eval(workspace_.get(), xa.data(), ya.data(), x, acc_);
   }
 
   /// Return the derivative d of an interpolated function for a given point x
-  inline auto derivative(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya,
-                         const double x) -> double {
+  [[nodiscard]] inline auto derivative(const Eigen::VectorXd& xa,
+                                       const Eigen::VectorXd& ya,
+                                       const double x) -> double {
     init(xa, ya);
     return gsl_interp_eval_deriv(workspace_.get(), xa.data(), ya.data(), x,
                                  acc_);
@@ -56,9 +58,9 @@ class Interpolate1D {
 
   /// Return the second derivative d of an interpolated function for a given
   /// point x
-  inline auto second_derivative(const Eigen::VectorXd& xa,
-                                const Eigen::VectorXd& ya, const double x)
-      -> double {
+  [[nodiscard]] inline auto second_derivative(const Eigen::VectorXd& xa,
+                                              const Eigen::VectorXd& ya,
+                                              const double x) -> double {
     init(xa, ya);
     return gsl_interp_eval_deriv2(workspace_.get(), xa.data(), ya.data(), x,
                                   acc_);
@@ -66,8 +68,9 @@ class Interpolate1D {
 
   /// Return the numerical integral result of an interpolated function over the
   /// range [a, b],
-  inline auto integral(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya,
-                       const double a, const double b) -> double {
+  [[nodiscard]] inline auto integral(const Eigen::VectorXd& xa,
+                                     const Eigen::VectorXd& ya, const double a,
+                                     const double b) -> double {
     init(xa, ya);
     return gsl_interp_eval_integ(workspace_.get(), xa.data(), ya.data(), a, b,
                                  acc_);

@@ -91,15 +91,15 @@ auto binning_2d(const Point<T>& pij, const Point<T>& p00, const Point<T>& p11,
       boost::geometry::model::polygon<Point<T>>{{p00, p01, p11, p10, p00}};
 
   // Area calculation.
-  auto total_area =
+  const auto total_area =
       detail::calculate_area<Point, Strategy, T>(grid_cell, strategy);
-  auto area_a = detail::calculate_and_normalize_area<Point, Strategy, T>(
+  const auto area_a = detail::calculate_and_normalize_area<Point, Strategy, T>(
       polygon_a, strategy, total_area);
-  auto area_b = detail::calculate_and_normalize_area<Point, Strategy, T>(
+  const auto area_b = detail::calculate_and_normalize_area<Point, Strategy, T>(
       polygon_b, strategy, total_area);
-  auto area_c = detail::calculate_and_normalize_area<Point, Strategy, T>(
+  const auto area_c = detail::calculate_and_normalize_area<Point, Strategy, T>(
       polygon_c, strategy, total_area);
-  auto area_d = detail::calculate_and_normalize_area<Point, Strategy, T>(
+  const auto area_d = detail::calculate_and_normalize_area<Point, Strategy, T>(
       polygon_d, strategy, total_area);
 
   return std::make_tuple(area_b / total_area, area_d / total_area,

@@ -32,7 +32,7 @@ class RBF {
  public:
   /// Pointer to the Radial function used
   using PtrRadialBasisFunction =
-      Matrix<T> (*)(const Eigen::Ref<const Matrix<T>>& r, const double);
+      Matrix<T> (*)(const Eigen::Ref<const Matrix<T>>& r, const T);
 
   /// Default constructor
   ///
@@ -82,10 +82,11 @@ class RBF {
                                  const Eigen::Ref<const Matrix<T>>& xi) const
       -> Vector<T> {
     // Matrix of distances between the coordinates provided.
-    auto r = RBF::distance_matrix(xk, xk);
+    const auto r = RBF::distance_matrix(xk, xk);
 
     // Default epsilon to approximate average distance between nodes
-    auto epsilon = std::isnan(epsilon_) ? 1 / RBF<T>::average(r) : epsilon_;
+    const auto epsilon =
+        std::isnan(epsilon_) ? 1 / RBF<T>::average(r) : epsilon_;
 
     // TODO(fbriol)
     auto A = function_(r, epsilon);
@@ -130,37 +131,37 @@ class RBF {
 
   /// Multiquadric
   static auto multiquadric(const Eigen::Ref<const Matrix<T>>& r,
-                           const double epsilon) -> Matrix<T> {
+                           const T epsilon) -> Matrix<T> {
     return ((epsilon * r).array().pow(2) + 1).sqrt();
   }
 
   /// Inverse multiquadric
   static auto inverse_multiquadric(const Eigen::Ref<const Matrix<T>>& r,
-                                   const double epsilon) -> Matrix<T> {
+                                   const T epsilon) -> Matrix<T> {
     return 1.0 / multiquadric(r, epsilon).array();
   }
 
   /// Gauss
-  static auto gaussian(const Eigen::Ref<const Matrix<T>>& r,
-                       const double epsilon) -> Matrix<T> {
+  static auto gaussian(const Eigen::Ref<const Matrix<T>>& r, const T epsilon)
+      -> Matrix<T> {
     return (-(epsilon * r).array().pow(2)).exp();
   }
 
   /// Linear spline
-  static auto linear(const Eigen::Ref<const Matrix<T>>& r,
-                     const double /*epsilon*/) -> Matrix<T> {
+  static auto linear(const Eigen::Ref<const Matrix<T>>& r, const T /*epsilon*/)
+      -> Matrix<T> {
     return r;
   }
 
   /// Cubic spline
-  static auto cubic(const Eigen::Ref<const Matrix<T>>& r,
-                    const double /*epsilon*/) -> Matrix<T> {
+  static auto cubic(const Eigen::Ref<const Matrix<T>>& r, const T /*epsilon*/)
+      -> Matrix<T> {
     return r.array().pow(3);
   }
 
   /// Thin plate spline
   static auto thin_plate(const Eigen::Ref<const Matrix<T>>& r,
-                         const double /*epsilon*/) -> Matrix<T> {
+                         const T /*epsilon*/) -> Matrix<T> {
     return (r.array() == 0).select(0, r.array().pow(2) * r.array().log());
   }
 
