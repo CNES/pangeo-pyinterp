@@ -23,16 +23,12 @@ enum FittingModel {
                      //!< data points.
 };
 
-/// Extension of cubic interpolation for interpolating data points on a
-/// two-dimensional regular grid. The interpolated surface is smoother than
-/// corresponding surfaces obtained by bilinear interpolation or
-/// nearest-neighbor interpolation.
+/// Spline gridded 2D interpolation
 ///
 /// @tparam Type The type of data used by the numerical grid.
 template <typename Type>
-auto bicubic(const Grid2D<Type>& grid, const pybind11::array_t<double>& x,
-             const pybind11::array_t<double>& y, size_t nx, size_t ny,
-             FittingModel fitting_model, axis::Boundary boundary,
-             bool bounds_error, size_t num_threads)
-    -> pybind11::array_t<double>;
+auto spline(const Grid2D<Type>& grid, const pybind11::array_t<double>& x,
+            const pybind11::array_t<double>& y, size_t nx, size_t ny,
+            FittingModel fitting_model, axis::Boundary boundary,
+            bool bounds_error, size_t num_threads) -> pybind11::array_t<double>;
 }  // namespace pyinterp

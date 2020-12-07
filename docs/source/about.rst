@@ -8,7 +8,7 @@ not quite sufficient for our needs. That is why this project started.
 
 With this library, you can interpolate :py:class:`2D <pyinterp.grid.Grid2D>`,
 :py:class:`3D <pyinterp.grid.Grid3D>`, or :py:class:`4D <pyinterp.grid.Grid4D>`,
-fields using ``n-variate`` and ``bicubic`` :ref:`interpolators
+fields using ``n-variate`` and ``spline`` :ref:`interpolators
 <cartesian_interpolators>`, and
 :py:class:`unstructured grids <pyinterp.RTree>`. You can also apply for a data
 :py:class:`binning <pyinterp.Binning2D>` on the bivariate area by simple or

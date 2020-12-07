@@ -39,5 +39,5 @@ linear or spline interpolation. For example:
     mss = interpolator(dict(lon=mx.flatten(), lat=my.flatten()))
     mss = interpolator(
         dict(lon=mx.flatten(), lat=my.flatten()),
-        method='bicubic')
+        method='spline')
     mss = mss.reshape(mx.shape)

@@ -12,17 +12,14 @@
 
 namespace pyinterp::detail::math {
 
-/// Extension of cubic interpolation for interpolating data points on a
-/// two-dimensional regular grid. The interpolated surface is smoother than
-/// corresponding surfaces obtained by bilinear interpolation or
-/// nearest-neighbor interpolation.
-class Bicubic {
+/// Spline gridded 2D interpolation
+class Spline2D {
  public:
   /// Default constructor
   ///
   /// @param xr Calculation window.
   /// @param type method of calculation
-  explicit Bicubic(const XArray2D &xr, const gsl_interp_type *type)
+  explicit Spline2D(const XArray2D &xr, const gsl_interp_type *type)
       : column_(xr.x()->size()),
         interpolator_(std::max(xr.x()->size(), xr.y()->size()), type,
                       gsl::Accelerator()) {}

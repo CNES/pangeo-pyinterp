@@ -113,10 +113,10 @@ def _dims_from_data_array(data_array: xr.DataArray,
     return lon, lat
 
 
-def _coords(coords: dict,
-            dims: Tuple,
-            datetime64: Optional[Tuple[str, axis.TemporalAxis]] = None
-            ) -> Tuple:
+def _coords(
+        coords: dict,
+        dims: Tuple,
+        datetime64: Optional[Tuple[str, axis.TemporalAxis]] = None) -> Tuple:
     """
     Get the list of arguments to provide to the grid interpolation
     functions.
@@ -216,22 +216,22 @@ class Grid2D(grid.Grid2D):
         return interpolator.bivariate(self, *_coords(coords, self._dims),
                                       *args, **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def spline(self, coords: dict, *args, **kwargs) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
             coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
+                method :py:meth:`pyinterp.spline <pyinterp.spline>`
             **kwargs: List of keyword arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
+                method :py:meth:`pyinterp.spline <pyinterp.spline>`
 
         Return:
             np.ndarray: the interpolated values
         """
-        return interpolator.bicubic(self, *_coords(coords, self._dims), *args,
-                                    **kwargs)
+        return interpolator.spline(self, *_coords(coords, self._dims), *args,
+                                   **kwargs)
 
 
 class Grid3D(grid.Grid3D):
@@ -310,21 +310,21 @@ class Grid3D(grid.Grid3D):
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def spline(self, coords: dict, *args, **kwargs) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
             coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
+                method :py:meth:`pyinterp.spline <pyinterp.spline>`
             **kwargs: List of keyword arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
+                method :py:meth:`pyinterp.spline <pyinterp.spline>`
 
         Return:
             np.ndarray: the interpolated values
         """
-        return interpolator.bicubic(
+        return interpolator.spline(
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
 
@@ -418,21 +418,21 @@ class Grid4D(grid.Grid4D):
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def spline(self, coords: dict, *args, **kwargs) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates
 
         Args:
             coords (dict): Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             *args: List of arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
+                method :py:meth:`pyinterp.spline <pyinterp.spline>`
             **kwargs: List of keyword arguments provided to the interpolation
-                method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
+                method :py:meth:`pyinterp.spline <pyinterp.spline>`
 
         Return:
             np.ndarray: the interpolated values
         """
-        return interpolator.bicubic(
+        return interpolator.spline(
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
 
@@ -522,7 +522,7 @@ class RegularGridInterpolator:
                  coords: Dict,
                  method: str = 'bilinear',
                  bounds_error: bool = False,
-                 bicubic_kwargs: Optional[Dict] = None,
+                 spline_kwargs: Optional[Dict] = None,
                  num_threads: int = 0) -> np.ndarray:
         """Interpolation at coordinates
 
@@ -530,14 +530,14 @@ class RegularGridInterpolator:
             coords (dict): Mapping from dimension names to the new coordinates.
                 New coordinate can be an scalar, array-like.
             method (str, optional): The method of interpolation to perform.
-                Supported are ``bicubic``, ``bilinear``, ``nearest``, and
+                Supported are ``spline``, ``bilinear``, ``nearest``, and
                 ``inverse_distance_weighting``. Default to ``bilinear``.
             bounds_error (bool, optional): If True, when interpolated values
                 are requested outside of the domain of the input data, a
                 :py:class:`ValueError` is raised. If False, then `nan` is
                 used.
-            bicubic_kwargs (dict, optional): A dictionary of keyword arguments
-                to pass on to the :py:func:`bicubic <pyinterp.bicubic>`
+            spline_kwargs (dict, optional): A dictionary of keyword arguments
+                to pass on to the :py:func:`spline <pyinterp.spline>`
                 function. This is useful to control the parameters of this
                 interpolator: window size in x, y and the edge control of the
                 calculation windows.
@@ -548,12 +548,12 @@ class RegularGridInterpolator:
         Returns:
             numpy.ndarray: New array on the new coordinates.
         """
-        if method == 'bicubic':
-            bicubic_kwargs = bicubic_kwargs or dict()
-            return self._grid.bicubic(coords,
-                                      bounds_error=bounds_error,
-                                      num_threads=num_threads,
-                                      **bicubic_kwargs)
+        if method == 'spline':
+            spline_kwargs = spline_kwargs or dict()
+            return self._grid.spline(coords,
+                                     bounds_error=bounds_error,
+                                     num_threads=num_threads,
+                                     **spline_kwargs)
         return self._interp(coords,
                             interpolator=method,
                             bounds_error=bounds_error,

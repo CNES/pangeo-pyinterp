@@ -9,7 +9,7 @@
 namespace py = pybind11;
 
 extern void init_axis(py::module&);
-extern void init_bicubic(py::module&);
+extern void init_spline(py::module&);
 extern void init_binning(py::module&);
 extern void init_bivariate_interpolator(py::module&);
 extern void init_bivariate(py::module&);
@@ -80,7 +80,7 @@ Index storage support
   init_bivariate(m);
   init_trivariate(m);
   init_quadrivariate(m);
-  init_bicubic(m);
+  init_spline(m);
   init_geodetic(geodetic);
   init_fill(fill);
   init_rtree(m);

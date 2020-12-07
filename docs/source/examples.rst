@@ -99,13 +99,13 @@ interpolators of the regular grids presented below.
     does not contain geodetic coordinates, set the ``geodetic`` option of the
     constructor to ``False``.
 
-Bicubic
-#######
+Spline
+######
 
 To interpolate data points on a regular two-dimensional grid. The interpolated
 surface is smoother than the corresponding surfaces obtained by bilinear
 interpolation. Spline functions provided by `GSL
-<https://www.gnu.org/software/gsl/>`_ achieve Bicubic interpolation.
+<https://www.gnu.org/software/gsl/>`_ achieve spline interpolation.
 
 .. warning::
 
@@ -116,13 +116,13 @@ interpolation. Spline functions provided by `GSL
     is necessary to :ref:`pre-process <fill_values>` the grid to delete
     undefined values.
 
-The interpolation :py:meth:`pyinterp.bicubic` function has more parameters to
+The interpolation :py:meth:`pyinterp.spline` function has more parameters to
 define the data frame used by the spline functions and how to process the edges
 of the regional grids:
 
 .. code:: python
 
-    mss = pyinterp.bicubic(
+    mss = pyinterp.spline(
         grid, mx.flatten(), my.flatten(), nx=3, ny=3).reshape(mx.shape)
 
 .. warning::
@@ -142,7 +142,7 @@ xarray:
 
 .. code:: python
 
-    mss = interpolator.bicubic(dict(lon=mx.flatten(), lat=my.flatten()))
+    mss = interpolator.spline(dict(lon=mx.flatten(), lat=my.flatten()))
 
 Binning
 #######
@@ -259,13 +259,13 @@ xarray:
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
-Bicubic
+spline
 #######
 
-This :py:func:`function <pyinterp.bicubic>` allows obtaining a value from any
-position in a 3D space by a 2D spatial bicubic interpolation (considering the X
+This :py:func:`function <pyinterp.spline>` allows obtaining a value from any
+position in a 3D space by a 2D spatial spline interpolation (considering the X
 and Y axes of the grid), followed by a linear interpolation along the Z-axis of
-the two values obtained by the bicubic interpolation.
+the two values obtained by the spline interpolation.
 
 The use of this function is identical to the function presented for
 ``bivariate`` interpolations except for the type of grid passed as a parameter,
@@ -279,7 +279,7 @@ requesting axes sorted in ascending order (GSL requirements).
     interpolator = pyinterp.backends.xarray.Grid3D(
         ds.data_vars["tcw"], increasing_axes=True)
 
-    tcw = interpolator.bicubic(
+    tcw = interpolator.spline(
         dict(longitude=mx.flatten(),
              latitude=my.flatten(),
              time=mz.flatten())).reshape(mx.shape)

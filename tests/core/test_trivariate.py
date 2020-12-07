@@ -99,34 +99,34 @@ def run_interpolator(interpolator, filename):
     return z0
 
 
-def test_trivariate_bicubic():
-    """Testing of the bicubic interpolation"""
+def test_trivariate_spline():
+    """Testing of the spline interpolation"""
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-80, 80, 1 / 3.0) + 1 / 3.0
     time = 898524 + 3
     x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
-    z0 = core.bicubic_float64(grid,
-                              x.flatten(),
-                              y.flatten(),
-                              t.flatten(),
-                              fitting_model=core.FittingModel.Akima,
-                              bounds_error=True,
-                              num_threads=0)
-    z1 = core.bicubic_float64(grid,
-                              x.flatten(),
-                              y.flatten(),
-                              t.flatten(),
-                              fitting_model=core.FittingModel.Akima,
-                              bounds_error=True,
-                              num_threads=1)
+    z0 = core.spline_float64(grid,
+                             x.flatten(),
+                             y.flatten(),
+                             t.flatten(),
+                             fitting_model=core.FittingModel.Akima,
+                             bounds_error=True,
+                             num_threads=0)
+    z1 = core.spline_float64(grid,
+                             x.flatten(),
+                             y.flatten(),
+                             t.flatten(),
+                             fitting_model=core.FittingModel.Akima,
+                             bounds_error=True,
+                             num_threads=1)
     shape = (len(lon), len(lat))
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
     if HAVE_PLT:
         plot(x.reshape(shape), y.reshape(shape), z0.reshape(shape),
-             "tcw_bicubic.png")
+             "tcw_spline.png")
 
 
 def test_grid3d_bounds_error():

@@ -4,12 +4,12 @@
 // BSD-style license that can be found in the LICENSE file.
 #include <gtest/gtest.h>
 
-#include "pyinterp/detail/math/bicubic.hpp"
+#include "pyinterp/detail/math/spline2d.hpp"
 
 namespace math = pyinterp::detail::math;
 namespace gsl = pyinterp::detail::gsl;
 
-TEST(math_bicubic, xarray_2d) {
+TEST(math_spline2d, xarray_2d) {
   auto xr = math::XArray2D(3, 4);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
@@ -45,7 +45,7 @@ TEST(math_bicubic, xarray_2d) {
   EXPECT_EQ(xr.normalize_angle(-180), 180);
 }
 
-TEST(math_bicubic, xarray_3d) {
+TEST(math_spline2d, xarray_3d) {
   auto xr = math::XArray3D<int64_t>(3, 4, 1);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
@@ -101,7 +101,7 @@ TEST(math_bicubic, xarray_3d) {
   }
 }
 
-TEST(math_bicubic, xarray_4d) {
+TEST(math_spline2d, xarray_4d) {
   auto xr = math::XArray4D<int64_t>(3, 4, 1, 1);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
@@ -162,7 +162,7 @@ TEST(math_bicubic, xarray_4d) {
   }
 }
 
-TEST(math_bicubic, bicubic) {
+TEST(math_spline2d, spline2d) {
   auto xr = math::XArray2D(3, 3);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 3);
@@ -174,7 +174,7 @@ TEST(math_bicubic, bicubic) {
     }
   }
 
-  auto interpolator = math::Bicubic(xr, gsl_interp_cspline);
+  auto interpolator = math::Spline2D(xr, gsl_interp_cspline);
   auto acc = gsl::Accelerator();
   for (auto ix = 0; ix < 6; ++ix) {
     for (auto iy = 0; iy < 6; ++iy) {

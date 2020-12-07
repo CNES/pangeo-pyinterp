@@ -2,15 +2,15 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/bicubic.hpp"
+#include "pyinterp/spline.hpp"
 
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
 #include <cctype>
 
-#include "pyinterp/detail/math/bicubic.hpp"
 #include "pyinterp/detail/math/linear.hpp"
+#include "pyinterp/detail/math/spline2d.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/xarray.hpp"
 
@@ -44,10 +44,10 @@ static inline auto interp_type(const FittingModel kind)
 
 /// Evaluate the interpolation.
 template <typename DataType>
-auto bicubic(const Grid2D<DataType>& grid, const py::array_t<double>& x,
-             const py::array_t<double>& y, size_t nx, size_t ny,
-             FittingModel fitting_model, const axis::Boundary boundary,
-             const bool bounds_error, size_t num_threads)
+auto spline(const Grid2D<DataType>& grid, const py::array_t<double>& x,
+            const py::array_t<double>& y, size_t nx, size_t ny,
+            FittingModel fitting_model, const axis::Boundary boundary,
+            const bool bounds_error, size_t num_threads)
     -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y);
   detail::check_ndarray_shape("x", x, "y", y);
@@ -73,7 +73,7 @@ auto bicubic(const Grid2D<DataType>& grid, const py::array_t<double>& x,
           try {
             auto frame = detail::math::XArray2D(nx, ny);
             auto interpolator =
-                detail::math::Bicubic(frame, interp_type(fitting_model));
+                detail::math::Spline2D(frame, interp_type(fitting_model));
 
             for (size_t ix = start; ix < end; ++ix) {
               auto xi = _x(ix);
@@ -102,11 +102,11 @@ auto bicubic(const Grid2D<DataType>& grid, const py::array_t<double>& x,
 
 /// Evaluate the interpolation.
 template <typename DataType, typename AxisType>
-auto bicubic_3d(const Grid3D<DataType, AxisType>& grid,
-                const py::array_t<double>& x, const py::array_t<double>& y,
-                const py::array_t<AxisType>& z, size_t nx, size_t ny,
-                FittingModel fitting_model, const axis::Boundary boundary,
-                const bool bounds_error, size_t num_threads)
+auto spline_3d(const Grid3D<DataType, AxisType>& grid,
+               const py::array_t<double>& x, const py::array_t<double>& y,
+               const py::array_t<AxisType>& z, size_t nx, size_t ny,
+               FittingModel fitting_model, const axis::Boundary boundary,
+               const bool bounds_error, size_t num_threads)
     -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
   detail::check_ndarray_shape("x", x, "y", y, "z", z);
@@ -132,7 +132,7 @@ auto bicubic_3d(const Grid3D<DataType, AxisType>& grid,
         [&](const size_t start, const size_t end) {
           try {
             auto frame = detail::math::XArray3D<AxisType>(nx, ny, 1);
-            auto interpolator = detail::math::Bicubic(
+            auto interpolator = detail::math::Spline2D(
                 detail::math::XArray2D(nx, ny), interp_type(fitting_model));
 
             for (size_t ix = start; ix < end; ++ix) {
@@ -166,12 +166,12 @@ auto bicubic_3d(const Grid3D<DataType, AxisType>& grid,
 
 /// Evaluate the interpolation.
 template <typename DataType, typename AxisType>
-auto bicubic_4d(const Grid4D<DataType, AxisType>& grid,
-                const py::array_t<double>& x, const py::array_t<double>& y,
-                const py::array_t<AxisType>& z, const py::array_t<double>& u,
-                size_t nx, size_t ny, FittingModel fitting_model,
-                const axis::Boundary boundary, const bool bounds_error,
-                size_t num_threads) -> py::array_t<double> {
+auto spline_4d(const Grid4D<DataType, AxisType>& grid,
+               const py::array_t<double>& x, const py::array_t<double>& y,
+               const py::array_t<AxisType>& z, const py::array_t<double>& u,
+               size_t nx, size_t ny, FittingModel fitting_model,
+               const axis::Boundary boundary, const bool bounds_error,
+               size_t num_threads) -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z, "u", 1, u);
   detail::check_ndarray_shape("x", x, "y", y, "z", z, "u", u);
 
@@ -197,7 +197,7 @@ auto bicubic_4d(const Grid4D<DataType, AxisType>& grid,
         [&](const size_t start, const size_t end) {
           try {
             auto frame = detail::math::XArray4D<AxisType>(nx, ny, 1, 1);
-            auto interpolator = detail::math::Bicubic(
+            auto interpolator = detail::math::Spline2D(
                 detail::math::XArray2D(nx, ny), interp_type(fitting_model));
 
             for (size_t ix = start; ix < end; ++ix) {
@@ -243,21 +243,18 @@ auto bicubic_4d(const Grid4D<DataType, AxisType>& grid,
 }  // namespace pyinterp
 
 template <typename DataType>
-void implement_bicubic(py::module& m, const std::string& suffix) {
+void implement_spline(py::module& m, const std::string& suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = std::tolower(function_suffix[0]);
 
-  m.def(("bicubic_" + function_suffix).c_str(), &pyinterp::bicubic<DataType>,
+  m.def(("spline_" + function_suffix).c_str(), &pyinterp::spline<DataType>,
         py::arg("grid"), py::arg("x"), py::arg("y"), py::arg("nx") = 3,
         py::arg("ny") = 3,
         py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
         py::arg("boundary") = pyinterp::axis::kUndef,
         py::arg("bounds_error") = false, py::arg("num_threads") = 0,
         (R"__doc__(
-Extension of cubic interpolation for interpolating data points on a
-two-dimensional regular grid. The interpolated surface is smoother than
-corresponding surfaces obtained by bilinear interpolation or
-nearest-neighbor interpolation.
+Spline gridded 2D interpolation.
 
 Args:
     grid (pyinterp.core.Grid2D)__doc__" +
@@ -289,22 +286,22 @@ Return:
 }
 
 template <typename DataType, typename AxisType>
-void implement_bicubic_3d(py::module& m, const std::string& prefix,
-                          const std::string& suffix) {
+void implement_spline_3d(py::module& m, const std::string& prefix,
+                         const std::string& suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = std::tolower(function_suffix[0]);
-  m.def(("bicubic_" + function_suffix).c_str(),
-        &pyinterp::bicubic_3d<DataType, AxisType>, py::arg("grid"),
-        py::arg("x"), py::arg("y"), py::arg("z"), py::arg("nx") = 3,
-        py::arg("ny") = 3,
+  m.def(("spline_" + function_suffix).c_str(),
+        &pyinterp::spline_3d<DataType, AxisType>, py::arg("grid"), py::arg("x"),
+        py::arg("y"), py::arg("z"), py::arg("nx") = 3, py::arg("ny") = 3,
         py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
         py::arg("boundary") = pyinterp::axis::kUndef,
         py::arg("bounds_error") = false, py::arg("num_threads") = 0,
         (R"__doc__(
-Extension of cubic interpolation for interpolating data points on a
-three-dimensional regular grid. A bicubic interpolation is performed along the
-X and Y axes of the 3D grid, and linearly along the Z axis between the two
-values obtained by the spatial bicubic interpolation.
+Spline gridded 3D interpolation.
+
+A spline 2D interpolation is performed along the X and Y axes of the 3D grid,
+and linearly along the Z axis between the two values obtained by the spatial
+spline 2D interpolation.
 
 Args:
     grid (pyinterp.core.)__doc__" +
@@ -337,22 +334,23 @@ Return:
 }
 
 template <typename DataType, typename AxisType>
-void implement_bicubic_4d(py::module& m, const std::string& prefix,
-                          const std::string& suffix) {
+void implement_spline_4d(py::module& m, const std::string& prefix,
+                         const std::string& suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = std::tolower(function_suffix[0]);
-  m.def(("bicubic_" + function_suffix).c_str(),
-        &pyinterp::bicubic_4d<DataType, AxisType>, py::arg("grid"),
-        py::arg("x"), py::arg("y"), py::arg("z"), py::arg("u"),
-        py::arg("nx") = 3, py::arg("ny") = 3,
+  m.def(("spline_" + function_suffix).c_str(),
+        &pyinterp::spline_4d<DataType, AxisType>, py::arg("grid"), py::arg("x"),
+        py::arg("y"), py::arg("z"), py::arg("u"), py::arg("nx") = 3,
+        py::arg("ny") = 3,
         py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
         py::arg("boundary") = pyinterp::axis::kUndef,
         py::arg("bounds_error") = false, py::arg("num_threads") = 0,
         (R"__doc__(
-Extension of cubic interpolation for interpolating data points on a
-three-dimensional regular grid. A bicubic interpolation is performed along the
-X and Y axes of the 4D grid, and linearly along the Z and U axes between the
-four values obtained by the spatial bicubic interpolation.
+Spline gridded 4D interpolation
+
+A spline 2D interpolation is performed along the X and Y axes of the 4D grid,
+and linearly along the Z and U axes between the four values obtained by the
+spatial spline 2D interpolation.
 
 Args:
     grid (pyinterp.core.)__doc__" +
@@ -385,9 +383,9 @@ Return:
             .c_str());
 }
 
-void init_bicubic(py::module& m) {
+void init_spline(py::module& m) {
   py::enum_<pyinterp::FittingModel>(m, "FittingModel", R"__doc__(
-Bicubic fitting model
+Spline fitting model
 )__doc__")
       .value("Linear", pyinterp::FittingModel::kLinear,
              "*Linear interpolation*.")
@@ -406,14 +404,14 @@ Bicubic fitting model
           "*Steffen’s method guarantees the monotonicity of data points. the "
           "interpolating function between the given*.");
 
-  implement_bicubic<double>(m, "Float64");
-  implement_bicubic<float>(m, "Float32");
-  implement_bicubic_3d<double, double>(m, "", "Float64");
-  implement_bicubic_3d<double, int64_t>(m, "Temporal", "Float64");
-  implement_bicubic_3d<float, double>(m, "", "Float32");
-  implement_bicubic_3d<float, int64_t>(m, "Temporal", "Float32");
-  implement_bicubic_4d<double, double>(m, "", "Float64");
-  implement_bicubic_4d<double, int64_t>(m, "Temporal", "Float64");
-  implement_bicubic_4d<float, double>(m, "", "Float32");
-  implement_bicubic_4d<float, int64_t>(m, "Temporal", "Float32");
+  implement_spline<double>(m, "Float64");
+  implement_spline<float>(m, "Float32");
+  implement_spline_3d<double, double>(m, "", "Float64");
+  implement_spline_3d<double, int64_t>(m, "Temporal", "Float64");
+  implement_spline_3d<float, double>(m, "", "Float32");
+  implement_spline_3d<float, int64_t>(m, "Temporal", "Float32");
+  implement_spline_4d<double, double>(m, "", "Float64");
+  implement_spline_4d<double, int64_t>(m, "Temporal", "Float64");
+  implement_spline_4d<float, double>(m, "", "Float32");
+  implement_spline_4d<float, int64_t>(m, "Temporal", "Float32");
 }

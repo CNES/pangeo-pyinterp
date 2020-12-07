@@ -3,8 +3,8 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 """
-Bicubic interpolation
-=====================
+Spline interpolation
+====================
 """
 from typing import Optional, Union
 import numpy as np
@@ -13,28 +13,25 @@ from .. import grid
 from .. import interface
 
 
-def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
-            x: np.ndarray,
-            y: np.ndarray,
-            z: Optional[np.ndarray] = None,
-            u: Optional[np.ndarray] = None,
-            nx: Optional[int] = 3,
-            ny: Optional[int] = 3,
-            fitting_model: str = "c_spline",
-            boundary: str = "undef",
-            bounds_error: bool = False,
-            num_threads: int = 0) -> np.ndarray:
-    """Extension of cubic interpolation for interpolating data points on a
-two-dimensional regular grid. The interpolated surface is smoother than
-corresponding surfaces obtained by bilinear interpolation or nearest-neighbor
-interpolation.
+def spline(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
+           x: np.ndarray,
+           y: np.ndarray,
+           z: Optional[np.ndarray] = None,
+           u: Optional[np.ndarray] = None,
+           nx: Optional[int] = 3,
+           ny: Optional[int] = 3,
+           fitting_model: str = "c_spline",
+           boundary: str = "undef",
+           bounds_error: bool = False,
+           num_threads: int = 0) -> np.ndarray:
+    """Spline gridded interpolator.
 
 Args:
     mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D, pyinterp.grid.Grid4D):
         Function on a uniform grid to be interpolated. If the grid is a ND
-        grid, the cubic interpolation is performed spatially along the X
+        grid, the spline interpolation is performed spatially along the X
         and Y axes of the ND grid and a linear interpolation is performed
-        along the other axes between the values obtained by the bicubic
+        along the other axes between the values obtained by the spline
         interpolation.
 
         .. warning::
@@ -96,7 +93,7 @@ Return:
     boundary = boundary.capitalize()
 
     instance = mesh._instance
-    function = interface._core_function("bicubic", instance)
+    function = interface._core_function("spline", instance)
     args = [
         instance,
         np.asarray(x),

@@ -7,7 +7,7 @@ from .axis import TemporalAxis
 from .binning import Binning2D
 from .core import Axis
 from .grid import Grid2D, Grid3D, Grid4D
-from .interpolator.bicubic import bicubic
+from .interpolator.spline import spline
 from .interpolator.bivariate import bivariate
 from .interpolator.quadrivariate import quadrivariate
 from .interpolator.trivariate import trivariate

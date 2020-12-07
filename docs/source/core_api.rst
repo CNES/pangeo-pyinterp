@@ -15,15 +15,15 @@ Axis
   core.AxisBoundary
   core.TemporalAxis
 
-Bicubic interpolation
----------------------
+Spline interpolation
+--------------------
 
 .. autosummary::
   :toctree: generated/
 
   core.FittingModel
-  core.bicubic_float32
-  core.bicubic_float64
+  core.spline_float32
+  core.spline_float64
 
 Binning
 -------

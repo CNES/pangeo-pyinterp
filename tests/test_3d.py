@@ -42,7 +42,7 @@ def test_3d():
                                 time=t.flatten()))
     assert isinstance(z, np.ndarray)
 
-    z = grid.bicubic(
+    z = grid.spline(
         collections.OrderedDict(longitude=x.flatten()[1:2],
                                 latitude=y.flatten()[1:2],
                                 time=t.flatten()[1:2]))

@@ -120,29 +120,29 @@ def test_bivariate_pickle():
         assert isinstance(pickle.loads(pickle.dumps(obj)), getattr(core, item))
 
 
-def test_bicubic_interpolator():
-    """Testing of different bicubic interpolation methods"""
+def test_spline_interpolator():
+    """Testing of different spline interpolation methods"""
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
-    z0 = core.bicubic_float64(grid,
-                              x.flatten(),
-                              y.flatten(),
-                              fitting_model=core.FittingModel.Akima,
-                              num_threads=0)
-    z1 = core.bicubic_float64(grid,
-                              x.flatten(),
-                              y.flatten(),
-                              fitting_model=core.FittingModel.Akima,
-                              num_threads=1)
+    z0 = core.spline_float64(grid,
+                             x.flatten(),
+                             y.flatten(),
+                             fitting_model=core.FittingModel.Akima,
+                             num_threads=0)
+    z1 = core.spline_float64(grid,
+                             x.flatten(),
+                             y.flatten(),
+                             fitting_model=core.FittingModel.Akima,
+                             num_threads=1)
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
     if HAVE_PLT:
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_akima.png")
 
-    z0 = core.bicubic_float64(grid, x.flatten(), y.flatten())
+    z0 = core.spline_float64(grid, x.flatten(), y.flatten())
     z0 = np.ma.fix_invalid(z0)
     assert not np.all(z1 == z0)
     if HAVE_PLT:
@@ -150,23 +150,24 @@ def test_bicubic_interpolator():
 
     # Out of bounds interpolation
     with pytest.raises(ValueError):
-        core.bicubic_float64(grid,
-                             x.flatten(),
-                             y.flatten(),
-                             fitting_model=core.FittingModel.Akima,
-                             bounds_error=True,
-                             num_threads=0)
+        core.spline_float64(grid,
+                            x.flatten(),
+                            y.flatten(),
+                            fitting_model=core.FittingModel.Akima,
+                            bounds_error=True,
+                            num_threads=0)
 
-def test_bicubic_degraded():
-    """Testing of different bicubic interpolation methods"""
+
+def test_spline_degraded():
+    """Testing of different spline interpolation methods"""
     grid = load_data(is_circle=False)
     lon = np.arange(-190, -170, 1 / 3.0)
     lat = np.arange(-40, 40, 1 / 3.0) + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
 
     with pytest.raises(ValueError):
-        core.bicubic_float64(grid,
-                             x.flatten(),
-                             y.flatten(),
-                             bounds_error=True,
-                             num_threads=0)
+        core.spline_float64(grid,
+                            x.flatten(),
+                            y.flatten(),
+                            bounds_error=True,
+                            num_threads=0)
