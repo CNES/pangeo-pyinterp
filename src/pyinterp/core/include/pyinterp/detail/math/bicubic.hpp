@@ -39,11 +39,11 @@ class Bicubic {
       -> const gsl_interp2d_type* {
     if (kind == "bilinear") {
       return gsl_interp2d_bilinear;
-    } else if (kind == "bicubic") {
-      return gsl_interp2d_bicubic;
-    } else {
-      throw std::invalid_argument("Invalid bicubic type: " + kind);
     }
+    if (kind == "bicubic") {
+      return gsl_interp2d_bicubic;
+    }
+    throw std::invalid_argument("Invalid bicubic type: " + kind);
   }
 };
 
