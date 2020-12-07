@@ -9,7 +9,6 @@
 #include <functional>
 #include <memory>
 
-#include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/gsl/accelerator.hpp"
 
 namespace pyinterp::detail::gsl {

@@ -6,6 +6,7 @@
 
 #include "pyinterp/detail/gsl/error_handler.hpp"
 #include "pyinterp/detail/gsl/interpolate1d.hpp"
+#include "pyinterp/detail/gsl/interpolate2d.hpp"
 
 namespace gsl = pyinterp::detail::gsl;
 
@@ -48,4 +49,31 @@ TEST(gsl, exception) {
 
   EXPECT_THROW(gsl::Interpolate1D(1, gsl_interp_cspline, gsl::Accelerator()),
                std::runtime_error);
+}
+
+TEST(gsl, bicubic) {
+  gsl::set_error_handler();
+
+  auto xarr = std::vector<double>{0.0, 1.0, 2.0, 3.0};
+  auto yarr = std::vector<double>{0.0, 1.0, 2.0, 3.0};
+  auto zarr = std::vector<double>{1.0, 1.1, 1.2, 1.3, 1.1, 1.2, 1.3, 1.4,
+                                  1.2, 1.3, 1.4, 1.5, 1.3, 1.4, 1.5, 1.6};
+  auto xval = std::vector<double>{1.0, 1.5, 2.0};
+  auto yval = std::vector<double>{1.0, 1.5, 2.0};
+  auto zval = std::vector<double>{1.2, 1.3, 1.4};
+
+  auto xacc = gsl::Accelerator();
+  auto yacc = gsl::Accelerator();
+  auto interpolator =
+      gsl::Interpolate2D(xarr.size(), yarr.size(), gsl_interp2d_bicubic,
+                         std::move(xacc), std::move(yacc));
+
+  auto xa = Eigen::Map<Eigen::VectorXd>(xarr.data(), xarr.size());
+  auto ya = Eigen::Map<Eigen::VectorXd>(yarr.data(), yarr.size());
+  auto za = Eigen::Map<Eigen::VectorXd>(zarr.data(), zarr.size());
+
+  for (auto ix = 0; ix < 3; ++ix) {
+    auto z = interpolator.interpolate(xa, ya, za, xval[ix], yval[ix]);
+    EXPECT_NEAR(z, zval[ix], 1e-10);
+  }
 }
