@@ -5,13 +5,6 @@ from . import geohash
 from . import fill
 
 
-class AxisBoundary:
-    Expand: 'AxisBoundary'
-    Sym: 'AxisBoundary'
-    Undef: 'AxisBoundary'
-    Wrap: 'AxisBoundary'
-
-
 class Axis:
     is_circle: bool
 
@@ -559,14 +552,38 @@ class RTree3DFloat32:
         ...
 
 
-class FittingModel:
-    Akima: 'FittingModel'
-    AkimaPeriodic: 'FittingModel'
-    CSpline: 'FittingModel'
-    CSplinePeriodic: 'FittingModel'
-    Linear: 'FittingModel'
-    Polynomial: 'FittingModel'
-    Steffen: 'FittingModel'
+def bicubic_float64(grid: Union[Grid2DFloat64, Grid3DFloat64,
+                                TemporalGrid3DFloat64, Grid4DFloat64,
+                                TemporalGrid4DFloat64],
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: Optional[Union[numpy.ndarray[numpy.float64],
+                                      numpy.ndarray[numpy.int64]]] = None,
+                    u: Optional[numpy.ndarray[numpy.float64]] = None,
+                    nx: int = 3,
+                    ny: int = 3,
+                    fitting_model: str = "bicubic",
+                    boundary: str = "undef",
+                    bounds_error: bool = False,
+                    num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+def bicubic_float32(grid: Union[Grid2DFloat32, Grid3DFloat32,
+                                TemporalGrid3DFloat32, Grid4DFloat32,
+                                TemporalGrid4DFloat32],
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: Optional[Union[numpy.ndarray[numpy.float64],
+                                      numpy.ndarray[numpy.int64]]] = None,
+                    u: Optional[numpy.ndarray[numpy.float64]] = None,
+                    nx: int = 3,
+                    ny: int = 3,
+                    fitting_model: str = "bicubic",
+                    boundary: str = "undef",
+                    bounds_error: bool = False,
+                    num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
+    ...
 
 
 def spline_float64(grid: Union[Grid2DFloat64, Grid3DFloat64,
@@ -579,8 +596,8 @@ def spline_float64(grid: Union[Grid2DFloat64, Grid3DFloat64,
                    u: Optional[numpy.ndarray[numpy.float64]] = None,
                    nx: int = 3,
                    ny: int = 3,
-                   fitting_model: FittingModel = FittingModel.CSpline,
-                   boundary: AxisBoundary = AxisBoundary.Undef,
+                   fitting_model: str = "c_spline",
+                   boundary: str = "undef",
                    bounds_error: bool = False,
                    num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
     ...
@@ -596,8 +613,8 @@ def spline_float32(grid: Union[Grid2DFloat32, Grid3DFloat32,
                    u: Optional[numpy.ndarray[numpy.float64]] = None,
                    nx: int = 3,
                    ny: int = 3,
-                   fitting_model: FittingModel = FittingModel.CSpline,
-                   boundary: AxisBoundary = AxisBoundary.Undef,
+                   fitting_model: str = "c_spline",
+                   boundary: str = "undef",
                    bounds_error: bool = False,
                    num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
     ...

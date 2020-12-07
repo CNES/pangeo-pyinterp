@@ -110,14 +110,14 @@ def test_trivariate_spline():
                              x.flatten(),
                              y.flatten(),
                              t.flatten(),
-                             fitting_model=core.FittingModel.Akima,
+                             fitting_model="akima",
                              bounds_error=True,
                              num_threads=0)
     z1 = core.spline_float64(grid,
                              x.flatten(),
                              y.flatten(),
                              t.flatten(),
-                             fitting_model=core.FittingModel.Akima,
+                             fitting_model="akima",
                              bounds_error=True,
                              num_threads=1)
     shape = (len(lon), len(lat))

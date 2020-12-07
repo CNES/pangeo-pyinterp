@@ -174,7 +174,7 @@ TEST(math_spline2d, spline2d) {
     }
   }
 
-  auto interpolator = math::Spline2D(xr, gsl_interp_cspline);
+  auto interpolator = math::Spline2D(xr, "c_spline");
   auto acc = gsl::Accelerator();
   for (auto ix = 0; ix < 6; ++ix) {
     for (auto iy = 0; iy < 6; ++iy) {

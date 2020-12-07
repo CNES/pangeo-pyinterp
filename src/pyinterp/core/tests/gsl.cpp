@@ -70,10 +70,10 @@ TEST(gsl, bicubic) {
 
   auto xa = Eigen::Map<Eigen::VectorXd>(xarr.data(), xarr.size());
   auto ya = Eigen::Map<Eigen::VectorXd>(yarr.data(), yarr.size());
-  auto za = Eigen::Map<Eigen::VectorXd>(zarr.data(), zarr.size());
+  auto za = Eigen::Map<Eigen::MatrixXd>(zarr.data(), xarr.size(), yarr.size());
 
   for (auto ix = 0; ix < 3; ++ix) {
-    auto z = interpolator.interpolate(xa, ya, za, xval[ix], yval[ix]);
+    auto z = interpolator.evaluate(xa, ya, za, xval[ix], yval[ix]);
     EXPECT_NEAR(z, zval[ix], 1e-10);
   }
 }

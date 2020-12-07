@@ -19,10 +19,10 @@ class Spline2D {
   ///
   /// @param xr Calculation window.
   /// @param type method of calculation
-  explicit Spline2D(const XArray2D &xr, const gsl_interp_type *type)
+  explicit Spline2D(const XArray2D &xr, const std::string &kind)
       : column_(xr.x()->size()),
-        interpolator_(std::max(xr.x()->size(), xr.y()->size()), type,
-                      gsl::Accelerator()) {}
+        interpolator_(std::max(xr.x()->size(), xr.y()->size()),
+                      Spline2D::parse_interp_type(kind), gsl::Accelerator()) {}
 
   /// Return the interpolated value of y for a given point x
   auto interpolate(const double x, const double y, const XArray2D &xr)
@@ -62,6 +62,27 @@ class Spline2D {
       column_(ix) = function(interpolator_, *(xr.y()), xr.q()->row(ix), y);
     }
     return function(interpolator_, *(xr.x()), column_, x);
+  }
+
+  static inline auto parse_interp_type(const std::string &kind)
+      -> const gsl_interp_type * {
+    if (kind == "linear") {
+      return gsl_interp_linear;
+    } else if (kind == "polynomial") {
+      return gsl_interp_polynomial;
+    } else if (kind == "c_spline") {
+      return gsl_interp_cspline;
+    } else if (kind == "c_spline_periodic") {
+      return gsl_interp_cspline_periodic;
+    } else if (kind == "akima") {
+      return gsl_interp_akima;
+    } else if (kind == "akima_periodic") {
+      return gsl_interp_akima_periodic;
+    } else if (kind == "steffen") {
+      return gsl_interp_steffen;
+    } else {
+      throw std::invalid_argument("Invalid spline type: " + kind);
+    }
   }
 };
 

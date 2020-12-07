@@ -45,7 +45,7 @@ def test_4d():
                                 time=t.flatten()))
     assert isinstance(pressure, np.ndarray)
 
-    pressure = grid.spline(
+    pressure = grid.bicubic(
         collections.OrderedDict(longitude=x.flatten(),
                                 latitude=y.flatten(),
                                 level=z.flatten(),
@@ -63,11 +63,11 @@ def test_4d():
                                       bounds_error=True)
 
     with pytest.raises(ValueError):
-        pressure = grid.spline(collections.OrderedDict(longitude=x.flatten(),
-                                                       latitude=y.flatten(),
-                                                       level=z.flatten(),
-                                                       time=t.flatten()),
-                               bounds_error=True)
+        pressure = grid.bicubic(collections.OrderedDict(longitude=x.flatten(),
+                                                        latitude=y.flatten(),
+                                                        level=z.flatten(),
+                                                        time=t.flatten()),
+                                bounds_error=True)
 
     grid = pyinterp.backends.xarray.RegularGridInterpolator(
         xr.load_dataset(GRID).pressure, increasing_axes=True)

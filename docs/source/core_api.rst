@@ -12,16 +12,16 @@ Axis
   :toctree: generated/
 
   core.Axis
-  core.AxisBoundary
   core.TemporalAxis
 
-Spline interpolation
---------------------
+Bicubic interpolation
+---------------------
 
 .. autosummary::
   :toctree: generated/
 
-  core.FittingModel
+  core.bicubic_float32
+  core.bicubic_float64
   core.spline_float32
   core.spline_float64
 

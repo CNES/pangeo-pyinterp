@@ -43,11 +43,10 @@ class Interpolate2D {
   }
 
   /// Return the interpolated value of z for a given point x, y
-  [[nodiscard]] inline auto interpolate(const Eigen::VectorXd& xa,
-                                        const Eigen::VectorXd& ya,
-                                        const Eigen::VectorXd& za,
-                                        const double x, const double y)
-      -> double {
+  [[nodiscard]] inline auto evaluate(const Eigen::VectorXd& xa,
+                                     const Eigen::VectorXd& ya,
+                                     const Eigen::MatrixXd& za, const double x,
+                                     const double y) -> double {
     init(xa, ya, za);
     return gsl_interp2d_eval(workspace_.get(), xa.data(), ya.data(), za.data(),
                              x, y, xacc_, yacc_);
@@ -60,7 +59,7 @@ class Interpolate2D {
 
   /// Initializes the interpolation object
   inline void init(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya,
-                   const Eigen::VectorXd& za) noexcept {
+                   const Eigen::MatrixXd& za) noexcept {
     xacc_.reset();
     xacc_.reset();
     gsl_interp2d_init(workspace_.get(), xa.data(), ya.data(), za.data(),

@@ -74,7 +74,7 @@ Cartesian interpolators
 .. autosummary::
   :toctree: generated/
 
-  spline
+  bicubic
   bivariate
   trivariate
   quadrivariate

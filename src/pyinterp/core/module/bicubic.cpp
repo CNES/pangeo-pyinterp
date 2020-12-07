@@ -2,7 +2,7 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/spline.hpp"
+#include "pyinterp/detail/math/bicubic.hpp"
 
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
@@ -18,40 +18,33 @@ namespace py = pybind11;
 
 namespace pyinterp {
 
-/// Returns the GSL interp type
-static inline auto interp_type(const FittingModel kind)
-    -> const gsl_interp_type* {
-  switch (kind) {
-    case kLinear:
-      return gsl_interp_linear;
-    case kPolynomial:
-      return gsl_interp_polynomial;
-    case kCSpline:
-      return gsl_interp_cspline;
-    case kCSplinePeriodic:
-      return gsl_interp_cspline_periodic;
-    case kAkima:
-      return gsl_interp_akima;
-    case kAkimaPeriodic:
-      return gsl_interp_akima_periodic;
-    case kSteffen:
-      return gsl_interp_steffen;
-    default:
-      throw std::invalid_argument("Invalid interpolation type: " +
-                                  std::to_string(kind));
+/// Parse the requested boundary option
+static inline auto parse_axis_boundary(const std::string& boundary)
+    -> axis::Boundary {
+  if (boundary == "expand") {
+    return axis::kExpand;
+  } else if (boundary == "wrap") {
+    return axis::kWrap;
+  } else if (boundary == "sym") {
+    return axis::kSym;
+  } else if (boundary == "undef") {
+    return axis::kUndef;
+  } else {
+    throw std::invalid_argument("boundary '" + boundary + "' is not defined");
   }
 }
 
 /// Evaluate the interpolation.
-template <typename DataType>
-auto spline(const Grid2D<DataType>& grid, const py::array_t<double>& x,
-            const py::array_t<double>& y, size_t nx, size_t ny,
-            FittingModel fitting_model, const axis::Boundary boundary,
-            const bool bounds_error, size_t num_threads)
+template <typename DataType, typename Interpolator>
+auto bicubic(const Grid2D<DataType>& grid, const py::array_t<double>& x,
+             const py::array_t<double>& y, size_t nx, size_t ny,
+             const std::string& fitting_model, const std::string& boundary,
+             const bool bounds_error, size_t num_threads)
     -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y);
   detail::check_ndarray_shape("x", x, "y", y);
 
+  auto boundary_type = parse_axis_boundary(boundary);
   auto size = x.size();
   auto result = py::array_t<double>(py::array::ShapeContainer{size});
 
@@ -72,8 +65,7 @@ auto spline(const Grid2D<DataType>& grid, const py::array_t<double>& x,
         [&](const size_t start, const size_t end) {
           try {
             auto frame = detail::math::XArray2D(nx, ny);
-            auto interpolator =
-                detail::math::Spline2D(frame, interp_type(fitting_model));
+            auto interpolator = Interpolator(frame, fitting_model);
 
             for (size_t ix = start; ix < end; ++ix) {
               auto xi = _x(ix);
@@ -81,7 +73,7 @@ auto spline(const Grid2D<DataType>& grid, const py::array_t<double>& x,
               _result(ix) =
                   // The grid instance is accessed as a constant reference, no
                   // data race problem here.
-                  load_frame(grid, xi, yi, boundary, bounds_error, frame)
+                  load_frame(grid, xi, yi, boundary_type, bounds_error, frame)
                       ? interpolator.interpolate(
                             is_angle ? frame.normalize_angle(xi) : xi, yi,
                             frame)
@@ -101,15 +93,16 @@ auto spline(const Grid2D<DataType>& grid, const py::array_t<double>& x,
 }
 
 /// Evaluate the interpolation.
-template <typename DataType, typename AxisType>
-auto spline_3d(const Grid3D<DataType, AxisType>& grid,
-               const py::array_t<double>& x, const py::array_t<double>& y,
-               const py::array_t<AxisType>& z, size_t nx, size_t ny,
-               FittingModel fitting_model, const axis::Boundary boundary,
-               const bool bounds_error, size_t num_threads)
+template <typename DataType, typename AxisType, typename Interpolator>
+auto bicubic_3d(const Grid3D<DataType, AxisType>& grid,
+                const py::array_t<double>& x, const py::array_t<double>& y,
+                const py::array_t<AxisType>& z, size_t nx, size_t ny,
+                const std::string& fitting_model, const std::string& boundary,
+                const bool bounds_error, size_t num_threads)
     -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
   detail::check_ndarray_shape("x", x, "y", y, "z", z);
+  auto boundary_type = parse_axis_boundary(boundary);
 
   auto size = x.size();
   auto result = py::array_t<double>(py::array::ShapeContainer{size});
@@ -132,16 +125,16 @@ auto spline_3d(const Grid3D<DataType, AxisType>& grid,
         [&](const size_t start, const size_t end) {
           try {
             auto frame = detail::math::XArray3D<AxisType>(nx, ny, 1);
-            auto interpolator = detail::math::Spline2D(
-                detail::math::XArray2D(nx, ny), interp_type(fitting_model));
+            auto interpolator =
+                Interpolator(detail::math::XArray2D(nx, ny), fitting_model);
 
             for (size_t ix = start; ix < end; ++ix) {
               auto xi = _x(ix);
               auto yi = _y(ix);
               auto zi = _z(ix);
 
-              if (load_frame<DataType, AxisType>(grid, xi, yi, zi, boundary,
-                                                 bounds_error, frame)) {
+              if (load_frame<DataType, AxisType>(
+                      grid, xi, yi, zi, boundary_type, bounds_error, frame)) {
                 xi = is_angle ? frame.normalize_angle(xi) : xi;
                 auto z0 = interpolator.interpolate(xi, yi, frame.xarray_2d(0));
                 auto z1 = interpolator.interpolate(xi, yi, frame.xarray_2d(1));
@@ -165,15 +158,16 @@ auto spline_3d(const Grid3D<DataType, AxisType>& grid,
 }
 
 /// Evaluate the interpolation.
-template <typename DataType, typename AxisType>
-auto spline_4d(const Grid4D<DataType, AxisType>& grid,
-               const py::array_t<double>& x, const py::array_t<double>& y,
-               const py::array_t<AxisType>& z, const py::array_t<double>& u,
-               size_t nx, size_t ny, FittingModel fitting_model,
-               const axis::Boundary boundary, const bool bounds_error,
-               size_t num_threads) -> py::array_t<double> {
+template <typename DataType, typename AxisType, typename Interpolator>
+auto bicubic_4d(const Grid4D<DataType, AxisType>& grid,
+                const py::array_t<double>& x, const py::array_t<double>& y,
+                const py::array_t<AxisType>& z, const py::array_t<double>& u,
+                size_t nx, size_t ny, const std::string& fitting_model,
+                const std::string& boundary, const bool bounds_error,
+                size_t num_threads) -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z, "u", 1, u);
   detail::check_ndarray_shape("x", x, "y", y, "z", z, "u", u);
+  auto boundary_type = parse_axis_boundary(boundary);
 
   auto size = x.size();
   auto result = py::array_t<double>(py::array::ShapeContainer{size});
@@ -197,8 +191,8 @@ auto spline_4d(const Grid4D<DataType, AxisType>& grid,
         [&](const size_t start, const size_t end) {
           try {
             auto frame = detail::math::XArray4D<AxisType>(nx, ny, 1, 1);
-            auto interpolator = detail::math::Spline2D(
-                detail::math::XArray2D(nx, ny), interp_type(fitting_model));
+            auto interpolator =
+                Interpolator(detail::math::XArray2D(nx, ny), fitting_model);
 
             for (size_t ix = start; ix < end; ++ix) {
               auto xi = _x(ix);
@@ -206,8 +200,9 @@ auto spline_4d(const Grid4D<DataType, AxisType>& grid,
               auto zi = _z(ix);
               auto ui = _u(ix);
 
-              if (load_frame<DataType, AxisType>(grid, xi, yi, zi, ui, boundary,
-                                                 bounds_error, frame)) {
+              if (load_frame<DataType, AxisType>(grid, xi, yi, zi, ui,
+                                                 boundary_type, bounds_error,
+                                                 frame)) {
                 xi = is_angle ? frame.normalize_angle(xi) : xi;
                 auto z00 =
                     interpolator.interpolate(xi, yi, frame.xarray_2d(0, 0));
@@ -242,19 +237,22 @@ auto spline_4d(const Grid4D<DataType, AxisType>& grid,
 
 }  // namespace pyinterp
 
-template <typename DataType>
-void implement_spline(py::module& m, const std::string& suffix) {
+template <typename DataType, typename Interpolator>
+void implement_bicubic(py::module& m, const std::string& prefix,
+                       const std::string& suffix,
+                       const std::string& default_fitting_model) {
+  auto function_prefix = prefix;
   auto function_suffix = suffix;
+  function_prefix[0] = std::tolower(function_prefix[0]);
   function_suffix[0] = std::tolower(function_suffix[0]);
 
-  m.def(("spline_" + function_suffix).c_str(), &pyinterp::spline<DataType>,
-        py::arg("grid"), py::arg("x"), py::arg("y"), py::arg("nx") = 3,
-        py::arg("ny") = 3,
-        py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
-        py::arg("boundary") = pyinterp::axis::kUndef,
-        py::arg("bounds_error") = false, py::arg("num_threads") = 0,
-        (R"__doc__(
-Spline gridded 2D interpolation.
+  m.def((function_prefix + "_" + function_suffix).c_str(),
+        &pyinterp::bicubic<DataType, Interpolator>, py::arg("grid"),
+        py::arg("x"), py::arg("y"), py::arg("nx") = 3, py::arg("ny") = 3,
+        py::arg("fitting_model") = default_fitting_model,
+        py::arg("boundary") = "undef", py::arg("bounds_error") = false,
+        py::arg("num_threads") = 0,
+        (prefix + R"__doc__( gridded 2D interpolation.
 
 Args:
     grid (pyinterp.core.Grid2D)__doc__" +
@@ -266,12 +264,11 @@ Args:
         the interpolation. Defaults to ``3``.
     ny (int, optional): The number of Y coordinate values required to perform
         the interpolation. Defaults to ``3``.
-    fitting_model (pyinterp.core.FittingModel, optional): Type of interpolation
-        to be performed. Defaults to
-        :py:data:`pyinterp.core.FittingModel.CSpline`
-    boundary (pyinterp.core.AxisBoundary, optional): Type of axis boundary
-        management. Defaults to
-        :py:data:`pyinterp.core.AxisBoundary.Undef`
+    fitting_model (str, optional): Type of interpolation to be performed.
+        Defaults to `)__doc__" +
+         default_fitting_model + R"__doc__(`
+    boundary (str, optional): Type of axis boundary management. Defaults to
+        `undef`.
     bounds_error (bool, optional): If True, when interpolated values are
         requested outside of the domain of the input axes (x,y), a ValueError
         is raised. If False, then value is set to NaN.
@@ -285,28 +282,36 @@ Return:
             .c_str());
 }
 
-template <typename DataType, typename AxisType>
-void implement_spline_3d(py::module& m, const std::string& prefix,
-                         const std::string& suffix) {
+template <typename DataType, typename AxisType, typename Interpolator>
+void implement_bicubic_3d(py::module& m, const std::string& prefix,
+                          const std::string& suffix,
+                          const std::string& grid_prefix,
+                          const std::string& default_fitting_model) {
+  auto function_prefix = prefix;
   auto function_suffix = suffix;
+  function_prefix[0] = std::tolower(function_prefix[0]);
   function_suffix[0] = std::tolower(function_suffix[0]);
-  m.def(("spline_" + function_suffix).c_str(),
-        &pyinterp::spline_3d<DataType, AxisType>, py::arg("grid"), py::arg("x"),
-        py::arg("y"), py::arg("z"), py::arg("nx") = 3, py::arg("ny") = 3,
-        py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
-        py::arg("boundary") = pyinterp::axis::kUndef,
-        py::arg("bounds_error") = false, py::arg("num_threads") = 0,
-        (R"__doc__(
-Spline gridded 3D interpolation.
 
-A spline 2D interpolation is performed along the X and Y axes of the 3D grid,
+  m.def(
+      (function_prefix + "_" + function_suffix).c_str(),
+      &pyinterp::bicubic_3d<DataType, AxisType, Interpolator>, py::arg("grid"),
+      py::arg("x"), py::arg("y"), py::arg("z"), py::arg("nx") = 3,
+      py::arg("ny") = 3, py::arg("fitting_model") = default_fitting_model,
+      py::arg("boundary") = "undef", py::arg("bounds_error") = false,
+      py::arg("num_threads") = 0,
+      (prefix + R"__doc__( gridded 3D interpolation.
+
+A )__doc__" +
+       function_prefix +
+       R"__doc__( 2D interpolation is performed along the X and Y axes of the 3D grid,
 and linearly along the Z axis between the two values obtained by the spatial
-spline 2D interpolation.
+)__doc__" +
+       function_prefix + R"__doc__( 2D interpolation.
 
 Args:
     grid (pyinterp.core.)__doc__" +
-         prefix + "Grid3D" + suffix +
-         R"__doc__(): Grid containing the values to be interpolated.
+       grid_prefix + "Grid3D" + suffix +
+       R"__doc__(): Grid containing the values to be interpolated.
     x (numpy.ndarray): X-values
     y (numpy.ndarray): Y-values
     z (numpy.ndarray): Z-values
@@ -314,12 +319,11 @@ Args:
         the interpolation. Defaults to ``3``.
     ny (int, optional): The number of Y coordinate values required to perform
         the interpolation. Defaults to ``3``.
-    fitting_model (pyinterp.core.FittingModel, optional): Type of interpolation
-        to be performed. Defaults to
-        :py:data:`pyinterp.core.FittingModel.CSpline`
-    boundary (pyinterp.core.AxisBoundary, optional): Type of axis boundary
-        management. Defaults to
-        :py:data:`pyinterp.core.AxisBoundary.Undef`
+    fitting_model (str, optional): Type of interpolation to be performed.
+        Defaults to `)__doc__" +
+       default_fitting_model + R"__doc__(`
+    boundary (str, optional): Type of axis boundary management. Defaults to
+        `undef`.
     bounds_error (bool, optional): If True, when interpolated values are
         requested outside of the domain of the input axes (x,y), a ValueError
         is raised. If False, then value is set to NaN.
@@ -330,32 +334,39 @@ Args:
 Return:
     numpy.ndarray: Values interpolated
   )__doc__")
-            .c_str());
+          .c_str());
 }
 
-template <typename DataType, typename AxisType>
-void implement_spline_4d(py::module& m, const std::string& prefix,
-                         const std::string& suffix) {
+template <typename DataType, typename AxisType, typename Interpolator>
+void implement_bicubic_4d(py::module& m, const std::string& prefix,
+                          const std::string& suffix,
+                          const std::string& grid_prefix,
+                          const std::string& default_fitting_model) {
+  auto function_prefix = prefix;
   auto function_suffix = suffix;
+  function_prefix[0] = std::tolower(function_prefix[0]);
   function_suffix[0] = std::tolower(function_suffix[0]);
-  m.def(("spline_" + function_suffix).c_str(),
-        &pyinterp::spline_4d<DataType, AxisType>, py::arg("grid"), py::arg("x"),
-        py::arg("y"), py::arg("z"), py::arg("u"), py::arg("nx") = 3,
-        py::arg("ny") = 3,
-        py::arg("fitting_model") = pyinterp::FittingModel::kCSpline,
-        py::arg("boundary") = pyinterp::axis::kUndef,
-        py::arg("bounds_error") = false, py::arg("num_threads") = 0,
-        (R"__doc__(
-Spline gridded 4D interpolation
 
-A spline 2D interpolation is performed along the X and Y axes of the 4D grid,
+  m.def(
+      (function_prefix + "_" + function_suffix).c_str(),
+      &pyinterp::bicubic_4d<DataType, AxisType, Interpolator>, py::arg("grid"),
+      py::arg("x"), py::arg("y"), py::arg("z"), py::arg("u"), py::arg("nx") = 3,
+      py::arg("ny") = 3, py::arg("fitting_model") = default_fitting_model,
+      py::arg("boundary") = "undef", py::arg("bounds_error") = false,
+      py::arg("num_threads") = 0,
+      (prefix + R"__doc__( gridded 4D interpolation
+
+A )__doc__" +
+       function_prefix +
+       R"__doc__( 2D interpolation is performed along the X and Y axes of the 4D grid,
 and linearly along the Z and U axes between the four values obtained by the
-spatial spline 2D interpolation.
+spatial )__doc__" +
+       function_prefix + R"__doc__( 2D interpolation.
 
 Args:
-    grid (pyinterp.core.)__doc__" +
-         prefix + "Grid4D" + suffix +
-         R"__doc__(): Grid containing the values to be interpolated.
+    (pyinterp.core.)__doc__" +
+       grid_prefix + "Grid4D" + suffix +
+       R"__doc__(): Grid containing the values to be interpolated.
     x (numpy.ndarray): X-values
     y (numpy.ndarray): Y-values
     z (numpy.ndarray): Z-values
@@ -364,12 +375,11 @@ Args:
         the interpolation. Defaults to ``3``.
     ny (int, optional): The number of Y coordinate values required to perform
         the interpolation. Defaults to ``3``.
-    fitting_model (pyinterp.core.FittingModel, optional): Type of interpolation
-        to be performed. Defaults to
-        :py:data:`pyinterp.core.FittingModel.CSpline`
-    boundary (pyinterp.core.AxisBoundary, optional): Type of axis boundary
-        management. Defaults to
-        :py:data:`pyinterp.core.AxisBoundary.Undef`
+    fitting_model (str, optional): Type of interpolation to be performed.
+        Defaults to `)__doc__" +
+       default_fitting_model + R"__doc__(`
+    boundary (str, optional): Type of axis boundary management. Defaults to
+        `undef`.
     bounds_error (bool, optional): If True, when interpolated values are
         requested outside of the domain of the input axes (x,y), a ValueError
         is raised. If False, then value is set to NaN.
@@ -380,38 +390,57 @@ Args:
 Return:
     numpy.ndarray: Values interpolated
   )__doc__")
-            .c_str());
+          .c_str());
 }
 
-void init_spline(py::module& m) {
-  py::enum_<pyinterp::FittingModel>(m, "FittingModel", R"__doc__(
-Spline fitting model
-)__doc__")
-      .value("Linear", pyinterp::FittingModel::kLinear,
-             "*Linear interpolation*.")
-      .value("Polynomial", pyinterp::FittingModel::kPolynomial,
-             "*Polynomial interpolation*.")
-      .value("CSpline", pyinterp::FittingModel::kCSpline,
-             "*Cubic spline with natural boundary conditions*.")
-      .value("CSplinePeriodic", pyinterp::FittingModel::kCSplinePeriodic,
-             "*Cubic spline with periodic boundary conditions*.")
-      .value("Akima", pyinterp::FittingModel::kAkima,
-             "*Non-rounded Akima spline with natural boundary conditions*.")
-      .value("AkimaPeriodic", pyinterp::FittingModel::kAkimaPeriodic,
-             "*Non-rounded Akima spline with periodic boundary conditions*.")
-      .value(
-          "Steffen", pyinterp::FittingModel::kSteffen,
-          "*Steffen’s method guarantees the monotonicity of data points. the "
-          "interpolating function between the given*.");
+void init_bicubic(py::module& m) {
+  implement_bicubic<double, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float64", "bicubic");
+  implement_bicubic<float, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float32", "bicubic");
 
-  implement_spline<double>(m, "Float64");
-  implement_spline<float>(m, "Float32");
-  implement_spline_3d<double, double>(m, "", "Float64");
-  implement_spline_3d<double, int64_t>(m, "Temporal", "Float64");
-  implement_spline_3d<float, double>(m, "", "Float32");
-  implement_spline_3d<float, int64_t>(m, "Temporal", "Float32");
-  implement_spline_4d<double, double>(m, "", "Float64");
-  implement_spline_4d<double, int64_t>(m, "Temporal", "Float64");
-  implement_spline_4d<float, double>(m, "", "Float32");
-  implement_spline_4d<float, int64_t>(m, "Temporal", "Float32");
+  implement_bicubic_3d<double, double, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float64", "", "bicubic");
+  implement_bicubic_3d<double, int64_t, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float64", "Temporal", "bicubic");
+
+  implement_bicubic_3d<float, double, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float32", "", "bicubic");
+  implement_bicubic_3d<float, int64_t, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float32", "Temporal", "bicubic");
+
+  implement_bicubic_4d<double, double, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float64", "", "bicubic");
+  implement_bicubic_4d<double, int64_t, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float64", "Temporal", "bicubic");
+
+  implement_bicubic_4d<float, double, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float32", "", "bicubic");
+  implement_bicubic_4d<float, int64_t, pyinterp::detail::math::Bicubic>(
+      m, "Bicubic", "Float32", "Temporal", "bicubic");
+
+  implement_bicubic<double, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float64", "c_spline");
+  implement_bicubic<float, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float32", "c_spline");
+
+  implement_bicubic_3d<double, double, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float64", "", "c_spline");
+  implement_bicubic_3d<double, int64_t, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float64", "Temporal", "c_spline");
+
+  implement_bicubic_3d<float, double, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float32", "", "c_spline");
+  implement_bicubic_3d<float, int64_t, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float32", "Temporal", "c_spline");
+
+  implement_bicubic_4d<double, double, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float64", "", "c_spline");
+  implement_bicubic_4d<double, int64_t, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float64", "Temporal", "c_spline");
+
+  implement_bicubic_4d<float, double, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float32", "", "c_spline");
+  implement_bicubic_4d<float, int64_t, pyinterp::detail::math::Spline2D>(
+      m, "Spline", "Float32", "Temporal", "c_spline");
 }

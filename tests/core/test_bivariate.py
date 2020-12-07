@@ -129,12 +129,12 @@ def test_spline_interpolator():
     z0 = core.spline_float64(grid,
                              x.flatten(),
                              y.flatten(),
-                             fitting_model=core.FittingModel.Akima,
+                             fitting_model="akima",
                              num_threads=0)
     z1 = core.spline_float64(grid,
                              x.flatten(),
                              y.flatten(),
-                             fitting_model=core.FittingModel.Akima,
+                             fitting_model="akima",
                              num_threads=1)
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
@@ -153,7 +153,7 @@ def test_spline_interpolator():
         core.spline_float64(grid,
                             x.flatten(),
                             y.flatten(),
-                            fitting_model=core.FittingModel.Akima,
+                            fitting_model="akima",
                             bounds_error=True,
                             num_threads=0)
 
