@@ -23,15 +23,17 @@ static inline auto parse_axis_boundary(const std::string& boundary)
     -> axis::Boundary {
   if (boundary == "expand") {
     return axis::kExpand;
-  } else if (boundary == "wrap") {
-    return axis::kWrap;
-  } else if (boundary == "sym") {
-    return axis::kSym;
-  } else if (boundary == "undef") {
-    return axis::kUndef;
-  } else {
-    throw std::invalid_argument("boundary '" + boundary + "' is not defined");
   }
+  if (boundary == "wrap") {
+    return axis::kWrap;
+  }
+  if (boundary == "sym") {
+    return axis::kSym;
+  }
+  if (boundary == "undef") {
+    return axis::kUndef;
+  }
+  throw std::invalid_argument("boundary '" + boundary + "' is not defined");
 }
 
 /// Evaluate the interpolation.

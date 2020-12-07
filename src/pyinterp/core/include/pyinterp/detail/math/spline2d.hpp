@@ -20,7 +20,7 @@ class Spline2D {
   /// @param xr Calculation window.
   /// @param type method of calculation
   explicit Spline2D(const XArray2D &xr, const std::string &kind)
-      : column_(xr.x()->size()),
+      : column_(xr.y()->size()),
         interpolator_(std::max(xr.x()->size(), xr.y()->size()),
                       Spline2D::parse_interp_type(kind), gsl::Accelerator()) {}
 
@@ -57,32 +57,37 @@ class Spline2D {
                                  const Eigen::VectorXd &, const double)>
           &function,
       const double x, const double y, const XArray2D &xr) -> double {
-    // Spline interpolation as function of Y-coordinate
-    for (Eigen::Index ix = 0; ix < xr.x()->size(); ++ix) {
-      column_(ix) = function(interpolator_, *(xr.y()), xr.q()->row(ix), y);
+    // Spline interpolation as function of X-coordinate
+    for (Eigen::Index ix = 0; ix < xr.y()->size(); ++ix) {
+      column_(ix) = function(interpolator_, *(xr.x()), xr.q()->col(ix), x);
     }
-    return function(interpolator_, *(xr.x()), column_, x);
+    return function(interpolator_, *(xr.y()), column_, y);
   }
 
   static inline auto parse_interp_type(const std::string &kind)
       -> const gsl_interp_type * {
     if (kind == "linear") {
       return gsl_interp_linear;
-    } else if (kind == "polynomial") {
-      return gsl_interp_polynomial;
-    } else if (kind == "c_spline") {
-      return gsl_interp_cspline;
-    } else if (kind == "c_spline_periodic") {
-      return gsl_interp_cspline_periodic;
-    } else if (kind == "akima") {
-      return gsl_interp_akima;
-    } else if (kind == "akima_periodic") {
-      return gsl_interp_akima_periodic;
-    } else if (kind == "steffen") {
-      return gsl_interp_steffen;
-    } else {
-      throw std::invalid_argument("Invalid spline type: " + kind);
     }
+    if (kind == "polynomial") {
+      return gsl_interp_polynomial;
+    }
+    if (kind == "c_spline") {
+      return gsl_interp_cspline;
+    }
+    if (kind == "c_spline_periodic") {
+      return gsl_interp_cspline_periodic;
+    }
+    if (kind == "akima") {
+      return gsl_interp_akima;
+    }
+    if (kind == "akima_periodic") {
+      return gsl_interp_akima_periodic;
+    }
+    if (kind == "steffen") {
+      return gsl_interp_steffen;
+    }
+    throw std::invalid_argument("Invalid spline type: " + kind);
   }
 };
 
