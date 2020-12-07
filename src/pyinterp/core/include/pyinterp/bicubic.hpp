@@ -3,9 +3,7 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include "pyinterp/detail/broadcast.hpp"
-#include "pyinterp/detail/math/bicubic.hpp"
-#include "pyinterp/detail/thread.hpp"
+#include "pyinterp/detail/axis.hpp"
 #include "pyinterp/grid.hpp"
 
 namespace pyinterp {
