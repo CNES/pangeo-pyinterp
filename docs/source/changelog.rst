@@ -1,6 +1,11 @@
 Changelog
 #########
 
+0.5.0 (XX December 2020)
+-------------------------
+* Bicubic interpolation.
+* Corrections of various problems
+
 0.4.0 (22 September 2020)
 -------------------------
 * Indexing data with geohash.
