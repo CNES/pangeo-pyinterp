@@ -32,16 +32,15 @@ TYPED_TEST(AxisTest, default_constructor) {
   EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.back()));
   EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.min_value()));
   EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.max_value()));
-  TypeParam inc;
-  EXPECT_THROW(inc = axis.increment(), std::logic_error);
+  EXPECT_THROW((void)axis.increment(), std::logic_error);
   EXPECT_FALSE(axis.is_circle());
   EXPECT_TRUE(axis.is_ascending());
   EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.front()));
   EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.back()));
-  EXPECT_THROW(inc = axis.increment(), std::logic_error);
+  EXPECT_THROW((void)axis.increment(), std::logic_error);
   EXPECT_EQ(axis.is_regular(), false);
   EXPECT_EQ(axis.size(), 0);
-  EXPECT_THROW(inc = axis.coordinate_value(0), std::out_of_range);
+  EXPECT_THROW((void)axis.coordinate_value(0), std::out_of_range);
   EXPECT_EQ(axis.find_index(360, true), -1);
   EXPECT_EQ(axis.find_index(360, false), -1);
   auto indexes = axis.find_indexes(360);
@@ -68,8 +67,7 @@ TYPED_TEST(AxisTest, singleton) {
   EXPECT_EQ(axis.is_regular(), true);
   EXPECT_EQ(axis.size(), 1);
   EXPECT_EQ(axis.coordinate_value(0), 0);
-  TypeParam value;
-  EXPECT_THROW(value = axis.coordinate_value(1), std::exception);
+  EXPECT_THROW((void)axis.coordinate_value(1), std::exception);
   EXPECT_EQ(static_cast<std::string>(axis), "Axis([0], is_circle=false)");
 }
 
@@ -139,8 +137,7 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_EQ(a1.size(), 360);
   EXPECT_EQ(a1.coordinate_value(0), 0);
   EXPECT_EQ(a1.coordinate_value(180), 180);
-  TypeParam value;
-  EXPECT_THROW(value = a1.coordinate_value(520), std::exception);
+  EXPECT_THROW((void)a1.coordinate_value(520), std::exception);
   i1 = a1.find_index(0, false);
   EXPECT_EQ(i1, 0);
   i1 = a1.find_index(360, true);
@@ -181,7 +178,7 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_EQ(a1.size(), 360);
   EXPECT_EQ(a1.coordinate_value(0), 359);
   EXPECT_EQ(a1.coordinate_value(180), 179);
-  EXPECT_THROW(value = a1.coordinate_value(520), std::exception);
+  EXPECT_THROW((void)a1.coordinate_value(520), std::exception);
   i1 = a1.find_index(0, false);
   EXPECT_EQ(i1, 359);
   i1 = a1.find_index(359, true);
@@ -395,8 +392,7 @@ TEST(axis, irregular) {
   detail::Axis<double> axis(
       Eigen::Map<Eigen::VectorXd>(values.data(), values.size()), 1e-6, false);
   EXPECT_EQ(axis.front(), -89);
-  double inc;
-  EXPECT_THROW(inc = axis.increment(), std::logic_error);
+  EXPECT_THROW((void)axis.increment();, std::logic_error);
   EXPECT_FALSE(axis.is_circle());
   EXPECT_TRUE(axis.is_ascending());
   EXPECT_EQ(axis.is_regular(), false);
@@ -407,8 +403,7 @@ TEST(axis, irregular) {
   EXPECT_EQ(axis.size(), values.size());
   EXPECT_EQ(axis.coordinate_value(0), -89);
   EXPECT_EQ(axis.coordinate_value(108), 88.940374);
-  double value;
-  EXPECT_THROW(value = axis.coordinate_value(360), std::exception);
+  EXPECT_THROW((void)axis.coordinate_value(360), std::exception);
   i1 = axis.find_index(-1.659041, false);
   EXPECT_EQ(i1, 54);
   i1 = axis.find_index(-88.700757, false);
@@ -432,7 +427,7 @@ TEST(axis, irregular) {
 
   axis.flip();
   EXPECT_EQ(axis.front(), 88.940374);
-  EXPECT_THROW(inc = axis.increment(), std::logic_error);
+  EXPECT_THROW((void)axis.increment(), std::logic_error);
   EXPECT_FALSE(axis.is_circle());
   EXPECT_EQ(axis.is_regular(), false);
   EXPECT_EQ(axis.min_value(), -89);
