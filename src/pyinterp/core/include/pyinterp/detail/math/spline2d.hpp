@@ -21,8 +21,10 @@ class Spline2D {
   /// @param type method of calculation
   explicit Spline2D(const XArray2D &xr, const std::string &kind)
       : column_(xr.y()->size()),
-        interpolator_(std::max(xr.x()->size(), xr.y()->size()),
-                      Spline2D::parse_interp_type(kind), gsl::Accelerator()) {}
+        x_interpolator_(xr.x()->size(), Spline2D::parse_interp_type(kind),
+                        gsl::Accelerator()),
+        y_interpolator_(xr.y()->size(), Spline2D::parse_interp_type(kind),
+                        gsl::Accelerator()) {}
 
   /// Return the interpolated value of y for a given point x
   auto interpolate(const double x, const double y, const XArray2D &xr)
@@ -48,8 +50,10 @@ class Spline2D {
   /// Column of the interpolation window (interpolation according to Y
   /// coordinates)
   Eigen::VectorXd column_;
-  /// GSL interpolator
-  gsl::Interpolate1D interpolator_;
+
+  /// GSL interpolators
+  gsl::Interpolate1D x_interpolator_;
+  gsl::Interpolate1D y_interpolator_;
 
   /// Evaluation of the GSL function performing the calculation.
   auto evaluate(
@@ -59,9 +63,9 @@ class Spline2D {
       const double x, const double y, const XArray2D &xr) -> double {
     // Spline interpolation as function of X-coordinate
     for (Eigen::Index ix = 0; ix < xr.y()->size(); ++ix) {
-      column_(ix) = function(interpolator_, *(xr.x()), xr.q()->col(ix), x);
+      column_(ix) = function(x_interpolator_, *(xr.x()), xr.q()->col(ix), x);
     }
-    return function(interpolator_, *(xr.y()), column_, y);
+    return function(y_interpolator_, *(xr.y()), column_, y);
   }
 
   static inline auto parse_interp_type(const std::string &kind)
