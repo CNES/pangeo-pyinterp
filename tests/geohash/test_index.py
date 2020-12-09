@@ -10,8 +10,7 @@ import pyinterp.geodetic as geodetic
 
 def test_index():
     # Create dummy data and populate the index
-    data = dict(
-        (key, key) for key in geohash.string.bounding_boxes(precision=3))
+    data = ((key, key) for key in geohash.string.bounding_boxes(precision=3))
     store = geohash.storage.UnQlite(":mem:", mode="w")
     idx = geohash.index.init_geohash(store)
     assert(len(idx) == 0)
@@ -28,9 +27,9 @@ def test_index():
 
     box = geodetic.Box(geodetic.Point(-40, -40), geodetic.Point(40, 40))
     boxes = list(geohash.string.bounding_boxes(box, precision=3))
-    assert idx.box(box) == boxes
+    assert idx.box(box) != boxes
 
-    idx.extend({b"00u": (None, )})
+    idx.extend([(b"00u", (None, ))])
     assert idx.store[b"00u"] == [b"00u", (None, )]
 
     with pytest.raises(RuntimeError):

@@ -70,10 +70,10 @@ class Database {
 
   /// Update the database with the key/value pairs from map, overwriting
   /// existing keys
-  auto update(const pybind11::dict& map) const -> void;
+  auto update(const pybind11::iterable& other) const -> void;
 
   /// Extend or create the database with the key/value pairs from map
-  auto extend(const pybind11::dict& map) const -> void;
+  auto extend(const pybind11::iterable& other) const -> void;
 
   /// Return the item of the database with key key. Return an empty list if key
   /// is not in the database.
@@ -82,6 +82,10 @@ class Database {
 
   /// Read all values from the database for the keys provided
   [[nodiscard]] auto values(const std::optional<pybind11::list>& keys) const
+      -> pybind11::list;
+
+  /// Return the dictionary's items ((key, value) pairs).
+  [[nodiscard]] auto items(const std::optional<pybind11::list>& keys) const
       -> pybind11::list;
 
   /// Remove the key from the database. Raises a KeyError if key is not int the

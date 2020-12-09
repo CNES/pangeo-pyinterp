@@ -132,5 +132,17 @@ Return:
     list: The values associated with the keys read.
 Raises:
     ValueError: if the keys are not bytes
+)__doc__")
+      .def("items", &storage::Database::items, py::arg("keys") = py::none(),
+           R"__doc__(
+Return the dictionary's items ((key, value) pairs).
+
+Args:
+    keys (list, optional): The keys to be read. If None, all keys stored in
+        the database are read.
+Return:
+    tuple: dictionnary's items.
+Raises:
+    ValueError: if the keys are not bytes
 )__doc__");
 }

@@ -42,7 +42,7 @@ def test_interface():
             data[str(item).encode()] = item
 
         # update
-        handler.update(data)
+        handler.update(data.items())
         assert len(handler) == 256
 
         # populate DB with test set
@@ -50,7 +50,7 @@ def test_interface():
             assert handler[str(item).encode()] == [item]
 
         # extend
-        handler.extend(data)
+        handler.extend(data.items())
         for item in range(256):
             assert handler[str(item).encode()] == [item, item]
 
@@ -86,9 +86,9 @@ def test_big_data():
     """Simulation of a GeoHash grid database. The database contains for each
     box a list of 10 dummy filenames.
     """
-    data = dict(
+    data = tuple(
         (key, ["#" * 256] * 9) for key in string.bounding_boxes(precision=3))
-    subsample = list(data.keys())[256:512]
+    subsample = [item[0] for item in data[256:512]]
     path = tempfile.NamedTemporaryFile().name
     try:
         handler = unqlite.Database(path, mode="w")
@@ -97,12 +97,13 @@ def test_big_data():
         handler.update(data)
 
         # Extend all boxes
-        data = dict(
+        data = tuple(
             (key, "#" * 256) for key in string.bounding_boxes(precision=3))
         handler.extend(data)
 
         # Check all values
         for items in handler.values(subsample):
+            print(items)
             assert len(items) == 10
             for item in items:
                 assert len(item) == 256

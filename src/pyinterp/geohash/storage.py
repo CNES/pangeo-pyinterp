@@ -2,13 +2,13 @@
 Index storage support
 ---------------------
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 import abc
 import os
 from ..core import storage
 
 
-class MutableMapping:  # pragma: no cover
+class AbstractMutableMapping:  # pragma: no cover
     """Abstract index storage class"""
     @abc.abstractmethod
     def __contains__(self, key: bytes) -> bool:
@@ -35,19 +35,24 @@ class MutableMapping:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def extend(self, map: dict) -> None:
+    def extend(self, other: Iterable[Tuple[bytes, Any]]) -> None:
         ...
 
     @abc.abstractmethod
-    def keys(self) -> list:
+    def keys(self) -> List[bytes]:
         ...
 
     @abc.abstractmethod
-    def update(self, map: Dict[bytes, Any]) -> None:
+    def update(self, other: Iterable[Tuple[bytes, Any]]) -> None:
         ...
 
     @abc.abstractmethod
     def values(self, keys: Optional[List[bytes]] = None) -> List[Any]:
+        ...
+
+    @abc.abstractmethod
+    def items(self,
+              keys: Optional[List[bytes]] = None) -> List[Tuple[bytes, Any]]:
         ...
 
     @abc.abstractmethod
@@ -62,7 +67,7 @@ class MutableMapping:  # pragma: no cover
         return self.keys()
 
 
-class UnQlite(storage.unqlite.Database, MutableMapping):
+class UnQlite(storage.unqlite.Database, AbstractMutableMapping):
     """Storage class using UnQlite.
     """
     def __init__(self, name: str, **kwargs):
@@ -76,3 +81,9 @@ class UnQlite(storage.unqlite.Database, MutableMapping):
 
     def __exit__(self, type, value, tb):
         self.commit()
+
+
+class MutableMapping(UnQlite):
+    """Shortcut for a memory container."""
+    def __init__(self):
+        super().__init__(":mem:", mode="w")

@@ -302,15 +302,16 @@ auto Database::setitem(const pybind11::bytes& key,
 }
 
 // ---------------------------------------------------------------------------
-auto Database::update(const pybind11::dict& map) const -> void {
-  for (auto& item : map) {
-    const auto key = item.first;
-    if (!PyBytes_Check(item.first.ptr())) {
-      throw std::invalid_argument("key must be bytes: " +
-                                  std::string(pybind11::repr(key)));
+auto Database::update(const pybind11::iterable& other) const -> void {
+  try {
+    for (auto& item : other) {
+      auto pair = item.cast<std::pair<pybind11::bytes, pybind11::object>>();
+      setitem(pybind11::reinterpret_borrow<pybind11::object>(pair.first),
+              pybind11::reinterpret_borrow<pybind11::object>(pair.second));
     }
-    setitem(pybind11::reinterpret_borrow<pybind11::object>(key),
-            pybind11::reinterpret_borrow<pybind11::object>(item.second));
+  } catch (pybind11::cast_error) {
+    throw std::invalid_argument(
+        "other must by an iterable of Tuple[bytes, Any]");
   }
 }
 
@@ -340,34 +341,37 @@ auto Database::getitem(const pybind11::bytes& key) const -> pybind11::list {
 }
 
 // ---------------------------------------------------------------------------
-auto Database::extend(const pybind11::dict& map) const -> void {
-  for (auto& item : map) {
-    const auto key = item.first;
-    if (!PyBytes_Check(item.first.ptr())) {
-      throw std::invalid_argument("key must be bytes: " +
-                                  std::string(pybind11::repr(key)));
-    }
-    auto existing_value =
-        getitem(pybind11::reinterpret_borrow<pybind11::object>(key));
-    // The key does not exist, so an insertion is made.
-    if (pybind11::len(existing_value) == 0) {
-      setitem(pybind11::reinterpret_borrow<pybind11::object>(key),
-              pybind11::reinterpret_borrow<pybind11::object>(item.second));
-    } else {
-      if (PyList_Check(item.second.ptr())) {
-        // If the value to be inserted is a list, it's concatenated with the
-        // existing data.
-        auto cat = pybind11::reinterpret_steal<pybind11::object>(
-            PySequence_InPlaceConcat(existing_value.ptr(), item.second.ptr()));
-        setitem(pybind11::reinterpret_borrow<pybind11::object>(key),
-                pybind11::reinterpret_borrow<pybind11::object>(cat));
+auto Database::extend(const pybind11::iterable& other) const -> void {
+  try {
+    for (auto& item : other) {
+      auto& pair = item.cast<std::pair<pybind11::bytes, pybind11::object>>();
+      auto existing_value =
+          getitem(pybind11::reinterpret_borrow<pybind11::object>(pair.first));
+      // The key does not exist, so an insertion is made.
+      if (pybind11::len(existing_value) == 0) {
+        setitem(pybind11::reinterpret_borrow<pybind11::object>(pair.first),
+                pybind11::reinterpret_borrow<pybind11::object>(pair.second));
       } else {
-        // Otherwise the new data is inserted in the existing list.
-        existing_value.append(item.second);
-        setitem(pybind11::reinterpret_borrow<pybind11::object>(key),
-                pybind11::reinterpret_borrow<pybind11::object>(existing_value));
+        if (PyList_Check(pair.second.ptr())) {
+          // If the value to be inserted is a list, it's concatenated with the
+          // existing data.
+          auto cat = pybind11::reinterpret_steal<pybind11::object>(
+              PySequence_InPlaceConcat(existing_value.ptr(),
+                                       pair.second.ptr()));
+          setitem(pybind11::reinterpret_borrow<pybind11::object>(pair.first),
+                  pybind11::reinterpret_borrow<pybind11::object>(cat));
+        } else {
+          // Otherwise the new data is inserted in the existing list.
+          existing_value.append(pair.second);
+          setitem(
+              pybind11::reinterpret_borrow<pybind11::object>(pair.first),
+              pybind11::reinterpret_borrow<pybind11::object>(existing_value));
+        }
       }
     }
+  } catch (pybind11::cast_error) {
+    throw std::invalid_argument(
+        "other must by an iterable of Tuple[bytes, Any]");
   }
 }
 
@@ -381,6 +385,21 @@ auto Database::values(const std::optional<pybind11::list>& keys) const
                                   std::string(pybind11::repr(key)));
     }
     result.append(getitem(pybind11::reinterpret_borrow<pybind11::bytes>(key)));
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+auto Database::items(const std::optional<pybind11::list>& keys) const
+    -> pybind11::list {
+  auto result = pybind11::list();
+  for (auto& key : keys.has_value() ? keys.value() : this->keys()) {
+    if (!PyBytes_Check(key.ptr())) {
+      throw std::invalid_argument("key must be bytes: " +
+                                  std::string(pybind11::repr(key)));
+    }
+    result.append(pybind11::make_tuple(
+        key, getitem(pybind11::reinterpret_borrow<pybind11::bytes>(key))));
   }
   return result;
 }

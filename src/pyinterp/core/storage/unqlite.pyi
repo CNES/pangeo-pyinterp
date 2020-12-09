@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 
 class DatabaseError(RuntimeError):
@@ -61,7 +61,11 @@ class Database:
     def error_log(self) -> str:
         ...
 
-    def extend(self, map: Dict[bytes, Any]) -> None:
+    def extend(self, other: Iterable[Tuple[bytes, Any]]) -> None:
+        ...
+
+    def items(self,
+              keys: Optional[List[bytes]] = None) -> List[Tuple[bytes, Any]]:
         ...
 
     def keys(self) -> List[bytes]:
@@ -70,7 +74,7 @@ class Database:
     def rollback(self) -> None:
         ...
 
-    def update(self, map: Dict[bytes, Any]) -> None:
+    def update(self, other: Iterable[Tuple[bytes, Any]]) -> None:
         ...
 
     def values(self, keys: Optional[List[bytes]] = None) -> List[Any]:
