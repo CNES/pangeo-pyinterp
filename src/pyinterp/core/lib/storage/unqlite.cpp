@@ -344,7 +344,7 @@ auto Database::getitem(const pybind11::bytes& key) const -> pybind11::list {
 auto Database::extend(const pybind11::iterable& other) const -> void {
   try {
     for (auto& item : other) {
-      auto& pair = item.cast<std::pair<pybind11::bytes, pybind11::object>>();
+      auto pair = item.cast<std::pair<pybind11::bytes, pybind11::object>>();
       auto existing_value =
           getitem(pybind11::reinterpret_borrow<pybind11::object>(pair.first));
       // The key does not exist, so an insertion is made.
