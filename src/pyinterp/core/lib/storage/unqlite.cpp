@@ -309,7 +309,7 @@ auto Database::update(const pybind11::iterable& other) const -> void {
       setitem(pybind11::reinterpret_borrow<pybind11::object>(pair.first),
               pybind11::reinterpret_borrow<pybind11::object>(pair.second));
     }
-  } catch (pybind11::cast_error) {
+  } catch (pybind11::cast_error&) {
     throw std::invalid_argument(
         "other must by an iterable of Tuple[bytes, Any]");
   }
@@ -369,7 +369,7 @@ auto Database::extend(const pybind11::iterable& other) const -> void {
         }
       }
     }
-  } catch (pybind11::cast_error) {
+  } catch (pybind11::cast_error&) {
     throw std::invalid_argument(
         "other must by an iterable of Tuple[bytes, Any]");
   }
