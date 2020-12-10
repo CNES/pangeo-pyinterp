@@ -15,7 +15,7 @@ namespace pyinterp::geohash {
 class Base32 {
  public:
   // Default constructor
-  Base32() {
+  Base32() noexcept {
     decode_.fill(Base32::kInvalid_);
     for (size_t ix = 0; ix < encode_.size(); ++ix) {
       decode_[static_cast<size_t>(encode_[ix])] = static_cast<char>(ix);

@@ -1,5 +1,7 @@
 #pragma once
+#include <boost/geometry/algorithms/area.hpp>
 #include <boost/geometry/srs/spheroid.hpp>
+#include <boost/geometry/strategies/area.hpp>
 #include <boost/geometry/strategies/area.hpp>
 #include <boost/geometry/strategies/geographic/area.hpp>
 
