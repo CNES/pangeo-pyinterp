@@ -138,6 +138,29 @@ auto neighbors(const char* const hash, const size_t count) -> pybind11::array {
 }
 
 // ---------------------------------------------------------------------------
+auto area(const pybind11::array& hash,
+          const std::optional<geodetic::System>& wgs) -> Eigen::MatrixXd {
+  auto info = Array::get_info(hash, 1);
+  auto count = info.strides[0];
+  auto result = Eigen::VectorXd(info.shape[0]);
+  auto ptr = static_cast<char*>(info.ptr);
+  auto spheroid = wgs.has_value()
+                      ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
+                                                       wgs->semi_minor_axis())
+                      : boost::geometry::srs::spheroid<double>();
+  auto strategy = boost::geometry::strategy::area::geographic<>(spheroid);
+  {
+    auto gil = pybind11::gil_scoped_release();
+    for (auto ix = 0LL; ix < info.shape[0]; ++ix) {
+      result[ix] = boost::geometry::area(
+          static_cast<geodetic::Polygon>(bounding_box(ptr, count)), strategy);
+      ptr += count;
+    }
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
 auto bounding_boxes(const std::optional<geodetic::Box>& box,
                     const uint32_t precision) -> pybind11::array {
   size_t lat_step;

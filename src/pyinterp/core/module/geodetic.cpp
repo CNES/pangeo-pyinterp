@@ -159,8 +159,19 @@ Args:
         computing code is used at all, which is useful for debugging.
         Default to 1.
 Return:
-    (numpy.ndarray): a vector containing a flag equal to 1 if the coordinate
+    numpy.ndarray: a vector containing a flag equal to 1 if the coordinate
     is located in the box or at the edge otherwise 0.
+)__doc__")
+      .def("area", &geodetic::Box::area, py::arg("wgs") = py::none(),
+           R"__doc__(
+Calculates the area.
+          
+Args:
+    (pyinterp.core.geodetic.System, optional): WGS system used for the
+        calculation, default to WGS84
+
+Return:
+    float: The calculated area
 )__doc__")
       .def(
           "wkt",
@@ -259,6 +270,18 @@ Calculates the envelope of this polygon.
 
 Return:
   pyinterp.geodetic.Box: The envelope of this instance
+)__doc__")
+      .def(
+          "area", &geodetic::Polygon::area, py::arg("wgs") = py::none(),
+          R"__doc__(
+Calculates the area.
+          
+Args:
+    (pyinterp.core.geodetic.System, optional): WGS system used for the
+        calculation, default to WGS84
+
+Return:
+    float: The calculated area
 )__doc__")
       .def(
           "wkt",

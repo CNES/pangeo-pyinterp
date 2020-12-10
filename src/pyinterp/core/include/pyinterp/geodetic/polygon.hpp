@@ -5,6 +5,7 @@
 #pragma once
 #include <boost/geometry.hpp>
 
+#include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/point.hpp"
 
 namespace pyinterp::geodetic {
@@ -61,6 +62,11 @@ class Polygon : public boost::geometry::model::polygon<Point> {
       inners.append(buffer);
     }
     return pybind11::make_tuple(outer, inners);
+  }
+
+  /// Calculate the area
+  [[nodiscard]] auto area(const std::optional<System>& wgs) const -> double {
+    return geodetic::area(*this, wgs);
   }
 
   /// Create a new instance from a registered state of an instance of this

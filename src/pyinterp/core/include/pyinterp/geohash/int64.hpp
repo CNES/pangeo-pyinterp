@@ -21,8 +21,8 @@ namespace pyinterp::geohash::int64 {
 
 /// Returns the precision in longitude/latitude and degrees for the given
 /// precision
-[[nodiscard]] inline auto error_with_precision(
-    const uint32_t precision) -> std::tuple<double, double> {
+[[nodiscard]] inline auto error_with_precision(const uint32_t precision)
+    -> std::tuple<double, double> {
   auto lat_bits = static_cast<int32_t>(precision >> 1U);
   auto lng_bits = static_cast<int32_t>(precision - lat_bits);
 
@@ -64,9 +64,9 @@ namespace pyinterp::geohash::int64 {
 // Decode hashes into a geographic points with the given bit depth.
 // If round is true, the coordinates of the points will be rounded to the
 // accuracy defined by the GeoHash.
-[[nodiscard]] inline auto decode(
-    const Eigen::Ref<const Vector<uint64_t>>& hash, const uint32_t precision,
-    const bool center) -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
+[[nodiscard]] inline auto decode(const Eigen::Ref<const Vector<uint64_t>>& hash,
+                                 const uint32_t precision, const bool center)
+    -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
   auto lon = Eigen::VectorXd(hash.size());
   auto lat = Eigen::VectorXd(hash.size());
   auto point = geodetic::Point();
@@ -101,6 +101,13 @@ namespace pyinterp::geohash::int64 {
   auto box = geodetic::Box();
   boost::geometry::envelope<geodetic::Polygon, geodetic::Box>(polygon, box);
   return bounding_boxes(box, chars);
+}
+
+// Returns the area covered by the GeoHash
+[[nodiscard]] inline auto area(uint64_t hash, uint32_t precision,
+                               const std::optional<geodetic::System>& wgs)
+    -> double {
+  return bounding_box(hash, precision).area(wgs);
 }
 
 // Returns the start and end indexes of the different GeoHash boxes.

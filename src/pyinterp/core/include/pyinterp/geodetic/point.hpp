@@ -82,7 +82,7 @@ struct coordinate_type<pg::Point> {
 template <>
 struct coordinate_system<pg::Point> {
   /// Typedef for type
-  using type = cs::spherical_equatorial<degree>;
+  using type = cs::geographic<degree>;
 };
 
 template <>

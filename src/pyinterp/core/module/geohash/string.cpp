@@ -132,6 +132,42 @@ Return:
   tuple: longitudes/latitudes of the decoded points.
 )__doc__")
       .def(
+          "area",
+          [](const py::str& hash,
+             const std::optional<geodetic::System>& wgs) -> double {
+            auto buffer = parse_str(hash);
+            return geohash::string::area(buffer.data(), buffer.length(), wgs);
+          },
+          py::arg("hash"), py::arg("wgs") = py::none(),
+          R"__doc__(
+Calculate the area covered by the GeoHash.
+
+Args:
+  hash (str): Geohash.
+  wgs (optional, pyinterp.geodetic.System): WGS used to calculate the area.
+    Default to WGS84.
+Return:
+  double: calculated area
+)__doc__")
+      .def(
+          "area",
+          [](const pybind11::array& hash,
+             const std::optional<geodetic::System>& wgs) -> Eigen::VectorXd {
+            return geohash::string::area(hash, wgs);
+          },
+          py::arg("hash"), py::arg("wgs") = py::none(),
+          R"__doc__(
+Calculated the area caovered by the GeoHash codes.
+
+Args:
+  hash (numpy.ndarray): Geohash codes.
+  wgs (optional, pyinterp.geodetic.System): WGS used to calculate the area.
+    Default to WGS84.
+
+Return:
+  double: calculated areas
+)__doc__")
+      .def(
           "bounding_box",
           [](const py::str& hash) -> geodetic::Box {
             auto buffer = parse_str(hash);

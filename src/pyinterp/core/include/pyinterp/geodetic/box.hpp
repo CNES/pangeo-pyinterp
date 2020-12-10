@@ -11,7 +11,10 @@
 #include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/detail/thread.hpp"
+#include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/point.hpp"
+#include "pyinterp/geodetic/polygon.hpp"
+#include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -135,6 +138,11 @@ class Box : public boost::geometry::model::box<Point> {
     return ss.str();
   }
 
+  /// Calculate the area
+  [[nodiscard]] auto area(const std::optional<System>& wgs) const -> double {
+    return static_cast<Polygon>(*this).area(wgs);
+  }
+
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple(this->min_corner().getstate(),
@@ -149,6 +157,13 @@ class Box : public boost::geometry::model::box<Point> {
     }
     return Box(Point::setstate(state[0].cast<pybind11::tuple>()),
                Point::setstate(state[1].cast<pybind11::tuple>()));
+  }
+
+  /// Converts this instance into a polygon
+  explicit operator Polygon() const {
+    Polygon result;
+    boost::geometry::convert(*this, result);
+    return result;
   }
 
  private:
