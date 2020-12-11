@@ -11,7 +11,6 @@
 #include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/detail/thread.hpp"
-#include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geodetic/system.hpp"

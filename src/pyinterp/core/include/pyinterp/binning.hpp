@@ -60,12 +60,14 @@ class Binning2D {
           x, y, z, boost::geometry::strategy::area::cartesian<>());
     } else {
       // Geographic linear
-      auto strategy = boost::geometry::strategy::area::geographic<>(
+      auto strategy = boost::geometry::strategy::area::geographic<
+          boost::geometry::strategy::vincenty, 5>(
           boost::geometry::srs::spheroid(wgs_->semi_major_axis(),
                                          wgs_->semi_minor_axis()));
       push_linear<detail::geometry::GeographicPoint2D,
-                  boost::geometry::strategy::area::geographic<>>(x, y, z,
-                                                                 strategy);
+                  boost::geometry::strategy::area::geographic<
+                      boost::geometry::strategy::vincenty, 5>>(x, y, z,
+                                                               strategy);
     }
   }
 

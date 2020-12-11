@@ -17,7 +17,8 @@ template <typename Geometry>
                       ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
                                                        wgs->semi_minor_axis())
                       : boost::geometry::srs::spheroid<double>();
-  auto strategy = boost::geometry::strategy::area::geographic<>(spheroid);
+  auto strategy = boost::geometry::strategy::area::geographic<
+      boost::geometry::strategy::vincenty, 5>(spheroid);
   return boost::geometry::area(geometry, strategy);
 }
 

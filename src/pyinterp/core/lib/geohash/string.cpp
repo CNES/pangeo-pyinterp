@@ -148,7 +148,8 @@ auto area(const pybind11::array& hash,
                       ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
                                                        wgs->semi_minor_axis())
                       : boost::geometry::srs::spheroid<double>();
-  auto strategy = boost::geometry::strategy::area::geographic<>(spheroid);
+  auto strategy = boost::geometry::strategy::area::geographic<
+      boost::geometry::strategy::vincenty, 5>(spheroid);
   {
     auto gil = pybind11::gil_scoped_release();
     for (auto ix = 0LL; ix < info.shape[0]; ++ix) {
