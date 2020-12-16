@@ -125,45 +125,45 @@ class CoordsXY {
 /// Array2D({{x1, x2, ..., xn}, {y1, y2, ..., yn}},
 ///         {q11, q12, ..., q21, q22, ...., qnn})
 /// @endcode
-class XArray2D : public CoordsXY {
+class Frame2D : public CoordsXY {
  public:
   /// Default constructor
-  XArray2D() = delete;
+  Frame2D() = delete;
 
   /// Creates a new Array
-  XArray2D(const size_t x_size, const size_t y_size)
+  Frame2D(const size_t x_size, const size_t y_size)
       : CoordsXY(x_size, y_size), q_(new Eigen::MatrixXd) {
     q_->resize(x()->size(), y()->size());
   }
 
   /// Creates a new Array from existing coordinates/values
-  XArray2D(std::shared_ptr<Eigen::VectorXd> x,
-           std::shared_ptr<Eigen::VectorXd> y,
-           std::shared_ptr<Eigen::MatrixXd> q)
+  Frame2D(std::shared_ptr<Eigen::VectorXd> x,
+          std::shared_ptr<Eigen::VectorXd> y,
+          std::shared_ptr<Eigen::MatrixXd> q)
       : CoordsXY(std::move(x), std::move(y)), q_(std::move(q)) {}
 
   /// Default destructor
-  ~XArray2D() override = default;
+  ~Frame2D() override = default;
 
   /// Copy constructor
   ///
   /// @param rhs right value
-  XArray2D(const XArray2D &rhs) = default;
+  Frame2D(const Frame2D &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  XArray2D(XArray2D &&rhs) noexcept = default;
+  Frame2D(Frame2D &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const XArray2D &rhs) -> XArray2D & = default;
+  auto operator=(const Frame2D &rhs) -> Frame2D & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(XArray2D &&rhs) noexcept -> XArray2D & = default;
+  auto operator=(Frame2D &&rhs) noexcept -> Frame2D & = default;
 
   /// Get the values from the array for all x and y coordinates.
   inline auto q() noexcept -> std::shared_ptr<Eigen::MatrixXd> & { return q_; }
@@ -197,13 +197,13 @@ class XArray2D : public CoordsXY {
 ///
 /// @tparam Z-Axis type
 template <typename T>
-class XArray3D : public CoordsXY {
+class Frame3D : public CoordsXY {
  public:
   /// Default constructor
-  XArray3D() = delete;
+  Frame3D() = delete;
 
   /// Creates a new instance
-  XArray3D(const size_t x_size, const size_t y_size, const size_t z_size)
+  Frame3D(const size_t x_size, const size_t y_size, const size_t z_size)
       : CoordsXY(x_size, y_size), z_() {
     auto nz = z_size << 1U;
     z_.resize(nz);
@@ -215,32 +215,32 @@ class XArray3D : public CoordsXY {
   }
 
   /// Get the set of coordinates/values for the ith z-layer
-  [[nodiscard]] auto xarray_2d(const Eigen::Index iz) const -> XArray2D {
-    return XArray2D(x(), y(), q_(iz));
+  [[nodiscard]] auto frame_2d(const Eigen::Index iz) const -> Frame2D {
+    return Frame2D(x(), y(), q_(iz));
   }
 
   /// Default destructor
-  ~XArray3D() override = default;
+  ~Frame3D() override = default;
 
   /// Copy constructor
   ///
   /// @param rhs right value
-  XArray3D(const XArray3D &rhs) = default;
+  Frame3D(const Frame3D &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  XArray3D(XArray3D &&rhs) noexcept = default;
+  Frame3D(Frame3D &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const XArray3D &rhs) -> XArray3D & = default;
+  auto operator=(const Frame3D &rhs) -> Frame3D & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(XArray3D &&rhs) noexcept -> XArray3D & = default;
+  auto operator=(Frame3D &&rhs) noexcept -> Frame3D & = default;
 
   /// Get the half size of the window in z.
   [[nodiscard]] inline auto nz() const noexcept -> size_t {
@@ -286,14 +286,14 @@ class XArray3D : public CoordsXY {
 ///
 /// @tparam Z-Axis type
 template <typename T>
-class XArray4D : public CoordsXY {
+class Frame4D : public CoordsXY {
  public:
   /// Default constructor
-  XArray4D() = delete;
+  Frame4D() = delete;
 
   /// Creates a new instance
-  XArray4D(const size_t x_size, const size_t y_size, const size_t z_size,
-           const size_t u_size)
+  Frame4D(const size_t x_size, const size_t y_size, const size_t z_size,
+          const size_t u_size)
       : CoordsXY(x_size, y_size), z_() {
     auto nz = z_size << 1U;
     auto nu = u_size << 1U;
@@ -310,33 +310,33 @@ class XArray4D : public CoordsXY {
   }
 
   /// Get the set of coordinates/values for the ith z-layer
-  [[nodiscard]] auto xarray_2d(const Eigen::Index iz,
-                               const Eigen::Index iu) const -> XArray2D {
-    return XArray2D(x(), y(), q_(iz, iu));
+  [[nodiscard]] auto frame_2d(const Eigen::Index iz,
+                              const Eigen::Index iu) const -> Frame2D {
+    return Frame2D(x(), y(), q_(iz, iu));
   }
 
   /// Default destructor
-  ~XArray4D() override = default;
+  ~Frame4D() override = default;
 
   /// Copy constructor
   ///
   /// @param rhs right value
-  XArray4D(const XArray4D &rhs) = default;
+  Frame4D(const Frame4D &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  XArray4D(XArray4D &&rhs) noexcept = default;
+  Frame4D(Frame4D &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const XArray4D &rhs) -> XArray4D & = default;
+  auto operator=(const Frame4D &rhs) -> Frame4D & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(XArray4D &&rhs) noexcept -> XArray4D & = default;
+  auto operator=(Frame4D &&rhs) noexcept -> Frame4D & = default;
 
   /// Get the half size of the window in z.
   [[nodiscard]] inline auto nz() const noexcept -> size_t {
@@ -378,7 +378,7 @@ class XArray4D : public CoordsXY {
   /// Set the ith u-axis.
   inline auto u(const size_t ix) -> double & { return u_(ix); }
 
-  /// Get the value at coordinate (ix, jx, kx).
+  /// Get the value at coordinate (ix, jx, kx, lx).
   inline auto q(const size_t ix, const size_t jx, const size_t kx,
                 const size_t lx) -> double & {
     return (*q_(kx, lx))(ix, jx);

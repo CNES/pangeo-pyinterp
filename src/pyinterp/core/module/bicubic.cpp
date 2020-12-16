@@ -12,7 +12,7 @@
 #include "pyinterp/detail/math/linear.hpp"
 #include "pyinterp/detail/math/spline2d.hpp"
 #include "pyinterp/detail/thread.hpp"
-#include "pyinterp/xarray.hpp"
+#include "pyinterp/frame.hpp"
 
 namespace py = pybind11;
 
@@ -66,7 +66,7 @@ auto bicubic(const Grid2D<DataType>& grid, const py::array_t<double>& x,
     detail::dispatch(
         [&](const size_t start, const size_t end) {
           try {
-            auto frame = detail::math::XArray2D(nx, ny);
+            auto frame = detail::math::Frame2D(nx, ny);
             auto interpolator = Interpolator(frame, fitting_model);
 
             for (size_t ix = start; ix < end; ++ix) {
@@ -126,9 +126,9 @@ auto bicubic_3d(const Grid3D<DataType, AxisType>& grid,
     detail::dispatch(
         [&](const size_t start, const size_t end) {
           try {
-            auto frame = detail::math::XArray3D<AxisType>(nx, ny, 1);
+            auto frame = detail::math::Frame3D<AxisType>(nx, ny, 1);
             auto interpolator =
-                Interpolator(detail::math::XArray2D(nx, ny), fitting_model);
+                Interpolator(detail::math::Frame2D(nx, ny), fitting_model);
 
             for (size_t ix = start; ix < end; ++ix) {
               auto xi = _x(ix);
@@ -138,8 +138,8 @@ auto bicubic_3d(const Grid3D<DataType, AxisType>& grid,
               if (load_frame<DataType, AxisType>(
                       grid, xi, yi, zi, boundary_type, bounds_error, frame)) {
                 xi = is_angle ? frame.normalize_angle(xi) : xi;
-                auto z0 = interpolator.interpolate(xi, yi, frame.xarray_2d(0));
-                auto z1 = interpolator.interpolate(xi, yi, frame.xarray_2d(1));
+                auto z0 = interpolator.interpolate(xi, yi, frame.frame_2d(0));
+                auto z1 = interpolator.interpolate(xi, yi, frame.frame_2d(1));
                 _result(ix) = detail::math::linear<AxisType, double>(
                     zi, frame.z(0), frame.z(1), z0, z1);
               } else {
@@ -192,9 +192,9 @@ auto bicubic_4d(const Grid4D<DataType, AxisType>& grid,
     detail::dispatch(
         [&](const size_t start, const size_t end) {
           try {
-            auto frame = detail::math::XArray4D<AxisType>(nx, ny, 1, 1);
+            auto frame = detail::math::Frame4D<AxisType>(nx, ny, 1, 1);
             auto interpolator =
-                Interpolator(detail::math::XArray2D(nx, ny), fitting_model);
+                Interpolator(detail::math::Frame2D(nx, ny), fitting_model);
 
             for (size_t ix = start; ix < end; ++ix) {
               auto xi = _x(ix);
@@ -207,13 +207,13 @@ auto bicubic_4d(const Grid4D<DataType, AxisType>& grid,
                                                  frame)) {
                 xi = is_angle ? frame.normalize_angle(xi) : xi;
                 auto z00 =
-                    interpolator.interpolate(xi, yi, frame.xarray_2d(0, 0));
+                    interpolator.interpolate(xi, yi, frame.frame_2d(0, 0));
                 auto z10 =
-                    interpolator.interpolate(xi, yi, frame.xarray_2d(1, 0));
+                    interpolator.interpolate(xi, yi, frame.frame_2d(1, 0));
                 auto z01 =
-                    interpolator.interpolate(xi, yi, frame.xarray_2d(0, 1));
+                    interpolator.interpolate(xi, yi, frame.frame_2d(0, 1));
                 auto z11 =
-                    interpolator.interpolate(xi, yi, frame.xarray_2d(1, 1));
+                    interpolator.interpolate(xi, yi, frame.frame_2d(1, 1));
                 _result(ix) = detail::math::linear<double>(
                     ui, frame.u(0), frame.u(1),
                     detail::math::linear<AxisType, double>(

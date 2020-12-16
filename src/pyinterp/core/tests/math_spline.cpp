@@ -9,8 +9,8 @@
 namespace math = pyinterp::detail::math;
 namespace gsl = pyinterp::detail::gsl;
 
-TEST(math_spline2d, xarray_2d) {
-  auto xr = math::XArray2D(3, 4);
+TEST(math_spline2d, frame_2d) {
+  auto xr = math::Frame2D(3, 4);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
 
@@ -46,7 +46,7 @@ TEST(math_spline2d, xarray_2d) {
 }
 
 TEST(math_spline2d, xarray_3d) {
-  auto xr = math::XArray3D<int64_t>(3, 4, 1);
+  auto xr = math::Frame3D<int64_t>(3, 4, 1);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
   ASSERT_EQ(xr.nz(), 1);
@@ -83,7 +83,7 @@ TEST(math_spline2d, xarray_3d) {
     }
   }
 
-  auto xr0 = xr.xarray_2d(0);
+  auto xr0 = xr.frame_2d(0);
   EXPECT_EQ(xr0.x(), xr.x());
   EXPECT_EQ(xr0.y(), xr.y());
 
@@ -93,7 +93,7 @@ TEST(math_spline2d, xarray_3d) {
     }
   }
 
-  auto xr1 = xr.xarray_2d(1);
+  auto xr1 = xr.frame_2d(1);
   for (auto ix = 0; ix < 6; ++ix) {
     for (auto iy = 0; iy < 8; ++iy) {
       EXPECT_EQ(xr1.q(ix, iy), ix * iy * 2);
@@ -102,7 +102,7 @@ TEST(math_spline2d, xarray_3d) {
 }
 
 TEST(math_spline2d, xarray_4d) {
-  auto xr = math::XArray4D<int64_t>(3, 4, 1, 1);
+  auto xr = math::Frame4D<int64_t>(3, 4, 1, 1);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
   ASSERT_EQ(xr.nz(), 1);
@@ -144,7 +144,7 @@ TEST(math_spline2d, xarray_4d) {
     }
   }
 
-  auto xr0 = xr.xarray_2d(0, 0);
+  auto xr0 = xr.frame_2d(0, 0);
   EXPECT_EQ(xr0.x(), xr.x());
   EXPECT_EQ(xr0.y(), xr.y());
 
@@ -154,7 +154,7 @@ TEST(math_spline2d, xarray_4d) {
     }
   }
 
-  auto xr1 = xr.xarray_2d(1, 1);
+  auto xr1 = xr.frame_2d(1, 1);
   for (auto ix = 0; ix < 6; ++ix) {
     for (auto iy = 0; iy < 8; ++iy) {
       EXPECT_EQ(xr1.q(ix, iy), ix * iy * 2 * 2);
@@ -163,7 +163,7 @@ TEST(math_spline2d, xarray_4d) {
 }
 
 TEST(math_spline2d, spline2d) {
-  auto xr = math::XArray2D(3, 3);
+  auto xr = math::Frame2D(3, 3);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 3);
 

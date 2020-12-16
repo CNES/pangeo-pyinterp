@@ -3,7 +3,7 @@
 #include <string>
 
 #include "pyinterp/axis.hpp"
-#include "pyinterp/detail/math/xarray.hpp"
+#include "pyinterp/detail/math/frame.hpp"
 #include "pyinterp/grid.hpp"
 
 namespace pyinterp {
@@ -20,7 +20,7 @@ auto index_error(const std::string& axis, T value, size_t n) -> void {
 template <typename DataType>
 auto load_frame(const Grid2D<DataType>& grid, const double x, const double y,
                 const axis::Boundary boundary, const bool bounds_error,
-                detail::math::XArray2D& frame) -> bool {
+                detail::math::Frame2D& frame) -> bool {
   const auto& x_axis = *grid.x();
   const auto& y_axis = *grid.y();
   const auto y_indexes =
@@ -62,8 +62,8 @@ auto load_frame(const Grid2D<DataType>& grid, const double x, const double y,
 template <typename DataType, typename AxisType>
 auto load_frame(const Grid3D<DataType, AxisType>& grid, const double x,
                 const double y, const AxisType z, const axis::Boundary boundary,
-                const bool bounds_error,
-                detail::math::XArray3D<AxisType>& frame) -> bool {
+                const bool bounds_error, detail::math::Frame3D<AxisType>& frame)
+    -> bool {
   const auto& x_axis = *grid.x();
   const auto& y_axis = *grid.y();
   const auto& z_axis = *grid.z();
@@ -120,7 +120,7 @@ template <typename DataType, typename AxisType>
 auto load_frame(const Grid4D<DataType, AxisType>& grid, const double x,
                 const double y, const AxisType z, const double u,
                 const axis::Boundary boundary, const bool bounds_error,
-                detail::math::XArray4D<AxisType>& frame) -> bool {
+                detail::math::Frame4D<AxisType>& frame) -> bool {
   const auto& x_axis = *grid.x();
   const auto& y_axis = *grid.y();
   const auto& z_axis = *grid.z();

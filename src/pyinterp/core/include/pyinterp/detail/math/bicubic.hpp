@@ -9,7 +9,7 @@
 #include <string>
 
 #include "pyinterp/detail/gsl/interpolate2d.hpp"
-#include "pyinterp/detail/math/xarray.hpp"
+#include "pyinterp/detail/math/frame.hpp"
 
 namespace pyinterp::detail::math {
 
@@ -20,13 +20,13 @@ class Bicubic {
   ///
   /// @param xr Calculation window.
   /// @param kind method of calculation
-  explicit Bicubic(const XArray2D& xr, const std::string& kind)
+  explicit Bicubic(const Frame2D& xr, const std::string& kind)
       : interpolator_(xr.x()->size(), xr.y()->size(),
                       Bicubic::parse_interp2d_type(kind), gsl::Accelerator(),
                       gsl::Accelerator()) {}
 
   /// Return the interpolated value of y for a given point x
-  auto interpolate(const double x, const double y, const XArray2D& xr)
+  auto interpolate(const double x, const double y, const Frame2D& xr)
       -> double {
     return interpolator_.evaluate(*(xr.x()), *(xr.y()), *(xr.q()), x, y);
   }

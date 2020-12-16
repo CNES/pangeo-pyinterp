@@ -10,7 +10,7 @@ namespace math = pyinterp::detail::math;
 namespace gsl = pyinterp::detail::gsl;
 
 TEST(math_bicubic, bicubic) {
-  auto xr = math::XArray2D(2, 2);
+  auto xr = math::Frame2D(2, 2);
 
   auto xarr = std::vector<double>{0.0, 1.0, 2.0, 3.0};
   auto yarr = std::vector<double>{0.0, 1.0, 2.0, 3.0};

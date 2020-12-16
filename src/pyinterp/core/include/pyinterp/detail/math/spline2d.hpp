@@ -8,7 +8,7 @@
 #include <Eigen/Core>
 
 #include "pyinterp/detail/gsl/interpolate1d.hpp"
-#include "pyinterp/detail/math/xarray.hpp"
+#include "pyinterp/detail/math/frame.hpp"
 
 namespace pyinterp::detail::math {
 
@@ -19,7 +19,7 @@ class Spline2D {
   ///
   /// @param xr Calculation window.
   /// @param type method of calculation
-  explicit Spline2D(const XArray2D &xr, const std::string &kind)
+  explicit Spline2D(const Frame2D &xr, const std::string &kind)
       : column_(xr.y()->size()),
         x_interpolator_(xr.x()->size(), Spline2D::parse_interp_type(kind),
                         gsl::Accelerator()),
@@ -27,19 +27,18 @@ class Spline2D {
                         gsl::Accelerator()) {}
 
   /// Return the interpolated value of y for a given point x
-  auto interpolate(const double x, const double y, const XArray2D &xr)
+  auto interpolate(const double x, const double y, const Frame2D &xr)
       -> double {
     return evaluate(&gsl::Interpolate1D::interpolate, x, y, xr);
   }
 
   /// Return the derivative for a given point x
-  auto derivative(const double x, const double y, const XArray2D &xr)
-      -> double {
+  auto derivative(const double x, const double y, const Frame2D &xr) -> double {
     return evaluate(&gsl::Interpolate1D::derivative, x, y, xr);
   }
 
   /// Return the second derivative for a given point x
-  auto second_derivative(const double x, const double y, const XArray2D &xr)
+  auto second_derivative(const double x, const double y, const Frame2D &xr)
       -> double {
     return evaluate(&gsl::Interpolate1D::second_derivative, x, y, xr);
   }
@@ -60,7 +59,7 @@ class Spline2D {
       const std::function<double(gsl::Interpolate1D &, const Eigen::VectorXd &,
                                  const Eigen::VectorXd &, const double)>
           &function,
-      const double x, const double y, const XArray2D &xr) -> double {
+      const double x, const double y, const Frame2D &xr) -> double {
     // Spline interpolation as function of X-coordinate
     for (Eigen::Index ix = 0; ix < xr.y()->size(); ++ix) {
       column_(ix) = function(x_interpolator_, *(xr.x()), xr.q()->col(ix), x);
