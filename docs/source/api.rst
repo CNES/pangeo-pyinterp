@@ -19,6 +19,7 @@ geohash
 .. autosummary::
   :toctree: generated/
 
+  geohash.area
   geohash.bounding_box
   geohash.bounding_boxes
   geohash.decode

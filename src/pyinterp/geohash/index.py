@@ -8,6 +8,7 @@ import numpy
 import xarray
 from . import lock
 from . import storage
+from . import converter
 from .. import core
 from .. import geodetic
 from ..core import geohash
@@ -114,7 +115,9 @@ class GeoHash:
                 stored in the database.
         """
         with self._synchronizer:
-            self._store.update(other)
+            geohash_map = dict()
+            geohash.update_dict(geohash_map, other)
+            self._store.update(geohash_map.items())
 
     def extend(self, other: Iterable[Tuple[bytes, Any]]) -> None:
         """Update the index with the key/value pairs from data, appending
@@ -125,7 +128,9 @@ class GeoHash:
                 updated in the database.
         """
         with self._synchronizer:
-            self._store.extend(other)
+            geohash_map = dict()
+            geohash.update_dict(geohash_map, other)
+            self._store.extend(geohash_map.items())
 
     def keys(self, box: Optional[geodetic.Box] = None) -> Iterable[bytes]:
         """Returns all hash defined in the index
@@ -210,7 +215,7 @@ class GeoHash:
             hashs = numpy.array(keys)
             data = numpy.array(self.values(keys), dtype=object)
 
-        return to_xarray(hashs, data.squeeze())
+        return converter.to_xarray(hashs, data.squeeze())
 
     @staticmethod
     def where(
@@ -269,45 +274,3 @@ def open_geohash(store: storage.AbstractMutableMapping,
                      synchronizer=synchronizer,
                      **GeoHash.get_properties(store))
     return result
-
-
-def to_xarray(hashs: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
-    """Get the XArray grid representing the GeoHash grid.
-
-    Args:
-        hashs (numpy.ndarray): Geohash codes
-        data (numpy.ndarray): The data associated with the codes provided.
-        data (numpy.ndarray): The data associated with the codes provided.
-
-    Return:
-        GeoHash: index handler
-    """
-    if hashs.shape != data.shape:
-        raise ValueError(
-            "hashs, data could not be broadcast together with shape "
-            f"{hashs.shape}, f{data.shape}")
-    if hashs.dtype.kind != 'S':
-        raise TypeError("hashs must be a string array")
-    lon, lat = geohash.decode(
-        geohash.bounding_boxes(precision=hashs.dtype.itemsize))
-    x_axis = core.Axis(numpy.unique(lon), is_circle=True)
-    y_axis = core.Axis(numpy.unique(lat))
-
-    dtype = numpy.dtype(type(data[0]))
-    if numpy.issubdtype(dtype, numpy.dtype("object")):
-        grid = numpy.empty((len(y_axis), len(x_axis)), dtype)
-    else:
-        grid = numpy.zeros((len(y_axis), len(x_axis)), dtype)
-
-    lon, lat = geohash.decode(hashs)
-    grid[y_axis.find_index(lat), x_axis.find_index(lon)] = data
-
-    return xarray.DataArray(
-        grid,
-        dims=('lat', 'lon'),
-        coords=dict(lon=xarray.DataArray(x_axis,
-                                         dims=("lon", ),
-                                         attrs=dict(units="degrees_north")),
-                    lat=xarray.DataArray(y_axis,
-                                         dims=("lat", ),
-                                         attrs=dict(units="degrees_east"))))

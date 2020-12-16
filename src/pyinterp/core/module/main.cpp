@@ -17,6 +17,7 @@ extern void init_fill(py::module&);
 extern void init_geodetic(py::module&);
 extern void init_geohash_int64(py::module&);
 extern void init_geohash_string(py::module&);
+extern void init_geohash_utility(py::module&);
 extern void init_grid(py::module&);
 extern void init_quadrivariate(py::module&);
 extern void init_rtree(py::module&);
@@ -33,6 +34,7 @@ GeoHash encoded as integer 64 bits
 
   init_geohash_int64(int64);
   init_geohash_string(m);
+  init_geohash_utility(m);
 }
 
 static void init_storage(py::module& m) {

@@ -1,6 +1,17 @@
-from typing import Dict, Optional, Tuple, overload
+from typing import Any, Dict, Iterable, Optional, Tuple, overload
 import numpy
 from .. import geodetic
+
+
+def area(hash: str, wgs: Optional[geodetic.System] = None) -> float:
+    ...
+
+
+@overload
+def area(
+        hash: numpy.ndarray,
+        wgs: Optional[geodetic.System] = None) -> numpy.ndarray[numpy.float64]:
+    ...
 
 
 def bounding_box(hash: str) -> geodetic.Box:
@@ -51,4 +62,8 @@ def neighbors(hash: str) -> numpy.ndarray[numpy.bytes_]:
 def where(
     hash: numpy.ndarray[numpy.bytes_]
 ) -> Dict[int, Tuple[Tuple[int, int], Tuple[int, int]]]:
+    ...
+
+
+def update_dict(dictionnary: Dict, others: Iterable[Tuple[Any, Any]]) -> None:
     ...
