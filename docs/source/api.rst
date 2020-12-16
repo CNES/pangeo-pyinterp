@@ -19,9 +19,17 @@ geohash
 .. autosummary::
   :toctree: generated/
 
+  geohash.bounding_box
+  geohash.bounding_boxes
+  geohash.decode
+  geohash.encode
+  geohash.error
+  geohash.grid_properties
   geohash.index
   geohash.lock
+  geohash.neighbors
   geohash.storage
+  geohash.where
 
 Binning
 =======

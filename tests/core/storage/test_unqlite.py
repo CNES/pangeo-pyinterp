@@ -7,7 +7,7 @@ import pickle
 import shutil
 import pytest
 from pyinterp.core.storage import unqlite
-from pyinterp.core.geohash import string
+from pyinterp.core import geohash
 
 
 def test_interface():
@@ -87,7 +87,7 @@ def test_big_data():
     box a list of 10 dummy filenames.
     """
     data = tuple(
-        (key, ["#" * 256] * 9) for key in string.bounding_boxes(precision=3))
+        (key, ["#" * 256] * 9) for key in geohash.bounding_boxes(precision=3))
     subsample = [item[0] for item in data[256:512]]
     path = tempfile.NamedTemporaryFile().name
     try:
@@ -98,7 +98,7 @@ def test_big_data():
 
         # Extend all boxes
         data = tuple(
-            (key, "#" * 256) for key in string.bounding_boxes(precision=3))
+            (key, "#" * 256) for key in geohash.bounding_boxes(precision=3))
         handler.extend(data)
 
         # Check all values

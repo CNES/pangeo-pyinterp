@@ -9,9 +9,8 @@
 namespace py = pybind11;
 
 extern void init_axis(py::module&);
-extern void init_spline(py::module&);
-extern void init_binning(py::module&);
 extern void init_bicubic(py::module&);
+extern void init_binning(py::module&);
 extern void init_bivariate_interpolator(py::module&);
 extern void init_bivariate(py::module&);
 extern void init_fill(py::module&);
@@ -21,6 +20,7 @@ extern void init_geohash_string(py::module&);
 extern void init_grid(py::module&);
 extern void init_quadrivariate(py::module&);
 extern void init_rtree(py::module&);
+extern void init_spline(py::module&);
 extern void init_storage_marshaller(py::module&);
 extern void init_storage_unqlite(py::module&);
 extern void init_trivariate(py::module&);
@@ -31,13 +31,8 @@ GeoHash encoded as integer 64 bits
 ----------------------------------
 )__doc__");
 
-  auto string = m.def_submodule("string", R"__doc__(
-GeoHash encoded as bytes
-------------------------
-)__doc__");
-
   init_geohash_int64(int64);
-  init_geohash_string(string);
+  init_geohash_string(m);
 }
 
 static void init_storage(py::module& m) {

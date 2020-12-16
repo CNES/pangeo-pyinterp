@@ -20,7 +20,7 @@ testcases = [["77mkh2hcj7mz", -26.015434642, -26.173663656],
 
 def test_string_numpy():
     strs = numpy.array([item[0] for item in testcases], dtype="S")
-    lons, lats = geohash.string.decode(strs, round=True)
+    lons, lats = geohash.decode(strs, round=True)
     assert numpy.all(
         numpy.abs(lons - numpy.array([item[2] for item in testcases])) < 1e-6)
     assert numpy.all(
@@ -28,23 +28,23 @@ def test_string_numpy():
 
     strs = numpy.array([item[0] for item in testcases], dtype="U")
     with pytest.raises(ValueError):
-        geohash.string.decode(strs, round=True)
+        geohash.decode(strs, round=True)
     strs = numpy.array([item[0] for item in testcases],
                        dtype="S").reshape(5, 2)
     with pytest.raises(ValueError):
-        geohash.string.decode(strs, round=True)
+        geohash.decode(strs, round=True)
     strs = numpy.array([b"0" * 24], dtype="S")
     with pytest.raises(ValueError):
-        geohash.string.decode(strs, round=True)
+        geohash.decode(strs, round=True)
     strs = numpy.array([item[0] for item in testcases], dtype="S")
     strs = numpy.vstack((strs[:5], strs[5:]))
-    indexes = geohash.string.where(strs)
+    indexes = geohash.where(strs)
     assert isinstance(indexes, dict)
 
     with pytest.raises(ValueError):
-        indexes = geohash.string.where(strs.astype("U"))
+        indexes = geohash.where(strs.astype("U"))
 
     strs = numpy.array([item[0] for item in testcases], dtype="S")
     strs.reshape(1, 2, 5)
     with pytest.raises(ValueError):
-        indexes = geohash.string.where(strs)
+        indexes = geohash.where(strs)

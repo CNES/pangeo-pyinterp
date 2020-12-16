@@ -8946,6 +8946,6 @@ decodecases = [
 
 def test_bbox():
     for hash_str, (min_lat, max_lat, min_lng, max_lng) in decodecases:
-        point = geohash.string.decode(hash_str)
+        point = geohash.decode(hash_str)
         assert geodetic.Box(geodetic.Point(min_lng, min_lat),
                             geodetic.Point(max_lng, max_lat)).covered_by(point)

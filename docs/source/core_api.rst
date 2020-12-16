@@ -100,14 +100,14 @@ Geohash bytes
 .. autosummary::
   :toctree: generated/
 
-  core.geohash.string.bounding_box
-  core.geohash.string.bounding_boxes
-  core.geohash.string.decode
-  core.geohash.string.encode
-  core.geohash.string.error
-  core.geohash.string.grid_properties
-  core.geohash.string.neighbors
-  core.geohash.string.where
+  core.geohash.bounding_box
+  core.geohash.bounding_boxes
+  core.geohash.decode
+  core.geohash.encode
+  core.geohash.error
+  core.geohash.grid_properties
+  core.geohash.neighbors
+  core.geohash.where
 
 UnQLite Key/Value storage
 -------------------------

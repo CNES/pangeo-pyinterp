@@ -10340,7 +10340,7 @@ def test_neighbors():
         assert list(geohash.int64.neighbors(hash_int,
                                             bits)) == hash_int_neighbors
 
-        hash = geohash.string.encode(point, len(hash_str))
+        hash = geohash.encode(point, len(hash_str))
         assert isinstance(hash, bytes)
-        assert list(item.decode() for item in geohash.string.neighbors(
+        assert list(item.decode() for item in geohash.neighbors(
             hash_str)) == hash_str_neighbors

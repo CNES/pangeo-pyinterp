@@ -4117,8 +4117,8 @@ def test_encoding_decoding():
     assert numpy.all(numpy.abs(lat - decoded_lat) < 1e-7)
     assert numpy.all(numpy.abs(lon - decoded_lon) < 1e-7)
 
-    str_hashs = geohash.string.encode(lon, lat)
+    str_hashs = geohash.encode(lon, lat)
     assert numpy.all([item[1] for item in testcases] == str_hashs.astype("U"))
-    decoded_lon, decoded_lat = geohash.string.decode(str_hashs, round=True)
+    decoded_lon, decoded_lat = geohash.decode(str_hashs, round=True)
     assert numpy.all(numpy.abs(lat - decoded_lat) < 1e-6)
     assert numpy.all(numpy.abs(lon - decoded_lon) < 1e-6)

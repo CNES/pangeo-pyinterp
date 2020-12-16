@@ -10,7 +10,7 @@ from . import lock
 from . import storage
 from .. import core
 from .. import geodetic
-from ..core.geohash import string
+from ..core import geohash
 
 
 class GeoHash:
@@ -100,7 +100,7 @@ class GeoHash:
         """
         if normalize:
             lon = (lon + 180) % 360 - 180
-        result = string.encode(lon, lat, precision=self._precision)
+        result = geohash.encode(lon, lat, precision=self._precision)
         if unicode:
             return result.astype('U')
         return result
@@ -142,7 +142,7 @@ class GeoHash:
                         self._store.keys())
         if box is None:
             return result
-        return set(string.bounding_boxes(
+        return set(geohash.bounding_boxes(
             box, precision=self._precision)).intersection(set(result))
 
     def box(self, box: Optional[geodetic.Box] = None) -> List[Any]:
@@ -159,8 +159,8 @@ class GeoHash:
             filter(
                 lambda item: len(item) != 0,
                 self._store.values(
-                    list(string.bounding_boxes(box,
-                                               precision=self._precision)))))
+                    list(geohash.bounding_boxes(box,
+                                                precision=self._precision)))))
 
     def values(self, keys: Optional[Iterable[bytes]] = None) -> List[Any]:
         """Returns the list of values defined in the index
@@ -225,7 +225,7 @@ class GeoHash:
         Return:
             dict: the start and end indexes for each geohash boxes
         """
-        return string.where(hash_codes)
+        return geohash.where(hash_codes)
 
     def __len__(self):
         return len(self._store) - 1
@@ -271,8 +271,7 @@ def open_geohash(store: storage.AbstractMutableMapping,
     return result
 
 
-def to_xarray(hashs: numpy.ndarray,
-              data: numpy.ndarray) -> xarray.DataArray:
+def to_xarray(hashs: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
     """Get the XArray grid representing the GeoHash grid.
 
     Args:
@@ -289,8 +288,8 @@ def to_xarray(hashs: numpy.ndarray,
             f"{hashs.shape}, f{data.shape}")
     if hashs.dtype.kind != 'S':
         raise TypeError("hashs must be a string array")
-    lon, lat = string.decode(
-        string.bounding_boxes(precision=hashs.dtype.itemsize))
+    lon, lat = geohash.decode(
+        geohash.bounding_boxes(precision=hashs.dtype.itemsize))
     x_axis = core.Axis(numpy.unique(lon), is_circle=True)
     y_axis = core.Axis(numpy.unique(lat))
 
@@ -300,7 +299,7 @@ def to_xarray(hashs: numpy.ndarray,
     else:
         grid = numpy.zeros((len(y_axis), len(x_axis)), dtype)
 
-    lon, lat = string.decode(hashs)
+    lon, lat = geohash.decode(hashs)
     grid[y_axis.find_index(lat), x_axis.find_index(lon)] = data
 
     return xarray.DataArray(
