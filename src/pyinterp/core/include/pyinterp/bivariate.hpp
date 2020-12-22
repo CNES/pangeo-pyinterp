@@ -27,7 +27,7 @@ class Bilinear : public detail::math::Bilinear<Point, T> {
     return pybind11::make_tuple();
   }
 
-  static auto setstate(const pybind11::tuple & /*tuple*/) -> Bilinear {
+  static auto setstate(const pybind11::tuple& /*tuple*/) -> Bilinear {
     return Bilinear();
   }
 };
@@ -40,7 +40,7 @@ class Nearest : public detail::math::Nearest<Point, T> {
     return pybind11::make_tuple();
   }
 
-  static auto setstate(const pybind11::tuple & /*tuple*/) -> Nearest {
+  static auto setstate(const pybind11::tuple& /*tuple*/) -> Nearest {
     return Nearest();
   }
 };

@@ -59,7 +59,7 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
   detail::check_eigen_shape("lon", lon, "lat", lat);
   auto size = lon.size();
   auto array = Array(size, precision);
-  auto *buffer = array.buffer();
+  auto* buffer = array.buffer();
 
   {
     auto gil = pybind11::gil_scoped_release();
@@ -104,7 +104,7 @@ auto decode(const pybind11::array& hashs, const bool round)
   auto count = info.strides[0];
   auto lon = Eigen::VectorXd(info.shape[0]);
   auto lat = Eigen::VectorXd(info.shape[0]);
-  auto *ptr = static_cast<char*>(info.ptr);
+  auto* ptr = static_cast<char*>(info.ptr);
   {
     auto gil = pybind11::gil_scoped_release();
     for (auto ix = 0LL; ix < info.shape[0]; ++ix) {
@@ -125,7 +125,7 @@ auto neighbors(const char* const hash, const size_t count) -> pybind11::array {
 
   const auto integers = int64::neighbors(integer_encoded, precision * 5);
   auto array = Array(integers.size(), precision);
-  auto *buffer = array.buffer();
+  auto* buffer = array.buffer();
 
   {
     auto gil = pybind11::gil_scoped_release();
@@ -143,7 +143,7 @@ auto area(const pybind11::array& hash,
   auto info = Array::get_info(hash, 1);
   auto count = info.strides[0];
   auto result = Eigen::VectorXd(info.shape[0]);
-  auto *ptr = static_cast<char*>(info.ptr);
+  auto* ptr = static_cast<char*>(info.ptr);
   auto spheroid = wgs.has_value()
                       ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
                                                        wgs->semi_minor_axis())
@@ -184,7 +184,7 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
 
   // Allocation of the vector storing the different codes of the matrix created
   auto result = Array(size, precision);
-  auto *buffer = result.buffer();
+  auto* buffer = result.buffer();
 
   {
     auto gil = pybind11::gil_scoped_release();
@@ -230,7 +230,7 @@ auto where(const pybind11::array& hashs)
   auto rows = info.shape[0];
   auto cols = info.shape[1];
   auto chars = info.strides[1];
-  auto *ptr = static_cast<char*>(info.ptr);
+  auto* ptr = static_cast<char*>(info.ptr);
   std::string current_code;
   std::string neighboring_code;
 

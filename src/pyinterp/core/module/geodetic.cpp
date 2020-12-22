@@ -271,9 +271,8 @@ Calculates the envelope of this polygon.
 Return:
   pyinterp.geodetic.Box: The envelope of this instance
 )__doc__")
-      .def(
-          "area", &geodetic::Polygon::area, py::arg("wgs") = py::none(),
-          R"__doc__(
+      .def("area", &geodetic::Polygon::area, py::arg("wgs") = py::none(),
+           R"__doc__(
 Calculates the area.
           
 Args:

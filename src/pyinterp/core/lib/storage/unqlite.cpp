@@ -172,7 +172,7 @@ Database::~Database() {
 static auto no_compress(const Slice& slice) -> pybind11::bytes {
   auto result = pybind11::reinterpret_steal<pybind11::bytes>(
       PyBytes_FromStringAndSize(nullptr, slice.len + 1));
-  auto *buffer = PyBytes_AS_STRING(result.ptr());
+  auto* buffer = PyBytes_AS_STRING(result.ptr());
 
   // We store the type of compression used
   buffer[0] = kNoCompression;
@@ -206,7 +206,7 @@ static auto snappy_compress(const Slice& slice) -> pybind11::bytes {
   auto compressed_len = snappy::MaxCompressedLength(slice.len);
   auto result = pybind11::reinterpret_steal<pybind11::bytes>(
       PyBytes_FromStringAndSize(nullptr, compressed_len + 1));
-  auto *buffer = PyBytes_AS_STRING(result.ptr());
+  auto* buffer = PyBytes_AS_STRING(result.ptr());
 
   // We store the type of compression used
   buffer[0] = kSnappyCompression;
@@ -243,7 +243,7 @@ static auto snappy_uncompress(const Slice& slice) -> pybind11::bytes {
 static auto no_uncompress(const Slice& slice) -> pybind11::bytes {
   auto result = pybind11::reinterpret_steal<pybind11::bytes>(
       PyBytes_FromStringAndSize(nullptr, slice.len - 1));
-  auto *buffer = PyBytes_AS_STRING(result.ptr());
+  auto* buffer = PyBytes_AS_STRING(result.ptr());
   memcpy(buffer, slice.ptr + 1, slice.len - 1);
   return result;
 }
@@ -317,7 +317,7 @@ auto Database::update(const pybind11::iterable& other) const -> void {
 
 // ---------------------------------------------------------------------------
 auto Database::getitem(const pybind11::bytes& key) const -> pybind11::list {
-  auto *const ptr_key = PyBytes_AS_STRING(key.ptr());
+  auto* const ptr_key = PyBytes_AS_STRING(key.ptr());
   unqlite_int64 size;
 
   auto rc = unqlite_kv_fetch(handle_, ptr_key, -1, nullptr, &size);
@@ -332,7 +332,7 @@ auto Database::getitem(const pybind11::bytes& key) const -> pybind11::list {
   if (data.ptr() == nullptr) {
     throw std::runtime_error("out of memory");
   }
-  auto *buffer = PyBytes_AS_STRING(data.ptr());
+  auto* buffer = PyBytes_AS_STRING(data.ptr());
   {
     auto gil = pybind11::gil_scoped_release();
     handle_rc(unqlite_kv_fetch(handle_, ptr_key, -1, buffer, &size));
