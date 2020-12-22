@@ -16,6 +16,6 @@ values.
 
 Args:
     dictionary (dict): Dictionnary to update.
-    others (tuple): Tuple that contains Key/value to process.
+    others (iterable): Iterable of tuples that contains Key/value to process.
 )__doc__");
 }

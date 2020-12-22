@@ -22,7 +22,7 @@ With this library, you can interpolate
 [3D](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.grid.Grid3D.html#pyinterp.grid.Grid3D),
 or
 [4D](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.grid.Grid4D.html#pyinterp.grid.Grid4D)
-fields using `n-variate` and `spline`
+fields using `n-variate` and `bicubic`
 [interpolators](https://pangeo-pyinterp.readthedocs.io/en/latest/api.html#cartesian-interpolators)
 and [unstructured
 grids](https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.RTree.html).

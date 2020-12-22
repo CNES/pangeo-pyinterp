@@ -104,7 +104,7 @@ Bicubic
 
 To interpolate data points on a regular two-dimensional grid. The interpolated
 surface is smoother than the corresponding surfaces obtained by bilinear
-interpolation. Bicubic functions provided by `GSL
+interpolation. Spline functions provided by `GSL
 <https://www.gnu.org/software/gsl/>`_ achieve bicubic interpolation.
 
 .. warning::
@@ -117,7 +117,7 @@ interpolation. Bicubic functions provided by `GSL
     undefined values.
 
 The interpolation :py:meth:`pyinterp.bicubic` function has more parameters to
-define the data frame used by the bicubic functions and how to process the edges
+define the data frame used by the spline functions and how to process the edges
 of the regional grids:
 
 .. code:: python
@@ -259,7 +259,7 @@ xarray:
     tcw = interpolator.trivariate(
         dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
 
-bicubic
+Bicubic
 #######
 
 This :py:func:`function <pyinterp.bicubic>` allows obtaining a value from any

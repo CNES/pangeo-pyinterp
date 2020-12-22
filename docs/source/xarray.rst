@@ -21,7 +21,7 @@ The module ``pyinterp.backends.xarray`` provides the class
 the interpolator compatible with the Xarray, i.e. the 2D, 3D, or 4D grid
 depending on the number of dimensions of the array. A :py:meth:`unique method
 <pyinterp.backends.xarray.RegularGridInterpolator.__call__>` allows performing a
-linear or bicubic interpolation. For example:
+linear or spline interpolation. For example:
 
 .. code:: python
 
