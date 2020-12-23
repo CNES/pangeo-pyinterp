@@ -210,7 +210,7 @@ class GeoHash:
         keys = list(self.keys(box))
         if len(keys) == 0:
             hashs = numpy.array([], dtype="S1")
-            data = numpy.hstack([])
+            data = numpy.array([])
         else:
             hashs = numpy.array(keys)
             data = numpy.array(self.values(keys), dtype=object)
