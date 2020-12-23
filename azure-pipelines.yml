@@ -3,9 +3,9 @@ trigger:
  - develop
 jobs:
 - job:
-  displayName: Ubuntu-16.04
+  displayName: Ubuntu-20.04
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-20.04'
   strategy:
     matrix:
       Python37:
@@ -18,7 +18,7 @@ jobs:
   - script: |
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
       sudo apt-get update
-      sudo apt-get install -y libc++-dev libc++abi-dev libc++abi1 libstdc++-7-dev gcc-7 g++-7
+      sudo apt-get install -y libc++-dev libc++abi-dev libc++abi1 libstdc++-dev gcc g++
     displayName: Install GCC
   - bash: echo "##vso[task.prependpath]$CONDA/bin"
     displayName: Add conda to PATH
@@ -47,9 +47,9 @@ jobs:
       summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
       reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
 - job:
-  displayName: macOS-10.14
+  displayName: macOS-10.15
   pool:
-    vmImage: 'macOS-10.14'
+    vmImage: 'macOS-10.15'
   strategy:
     matrix:
       Python37:
