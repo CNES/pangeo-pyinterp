@@ -44,6 +44,29 @@ class Binning2D {
         acc_(x_->size(), y_->size()),
         wgs_(std::move(wgs)) {}
 
+  /// Default destructor
+  virtual ~Binning2D() = default;
+
+  /// Copy constructor
+  ///
+  /// @param rhs right value
+  Binning2D(const Binning2D& rhs) = delete;
+
+  /// Move constructor
+  ///
+  /// @param rhs right value
+  Binning2D(Binning2D&& rhs) noexcept = delete;
+
+  /// Copy assignment operator
+  ///
+  /// @param rhs right value
+  auto operator=(const Binning2D& rhs) -> Binning2D& = delete;
+
+  /// Move assignment operator
+  ///
+  /// @param rhs right value
+  auto operator=(Binning2D&& rhs) noexcept -> Binning2D& = delete;
+
   /// Inserts new values in the grid from Z values for X, Y data coordinates.
   void push(const pybind11::array_t<T>& x, const pybind11::array_t<T>& y,
             const pybind11::array_t<T>& z, const bool simple) {
@@ -70,26 +93,6 @@ class Binning2D {
                                                                strategy);
     }
   }
-
-  /// Copy constructor
-  ///
-  /// @param rhs right value
-  Binning2D(const Binning2D& rhs) = delete;
-
-  /// Move constructor
-  ///
-  /// @param rhs right value
-  Binning2D(Binning2D&& rhs) noexcept = delete;
-
-  /// Copy assignment operator
-  ///
-  /// @param rhs right value
-  auto operator=(const Binning2D& rhs) -> Binning2D& = delete;
-
-  /// Move assignment operator
-  ///
-  /// @param rhs right value
-  auto operator=(Binning2D&& rhs) noexcept -> Binning2D& = delete;
 
   /// Reset the statistics.
   void clear() {

@@ -18,7 +18,7 @@ namespace geohash = pyinterp::geohash;
 namespace geodetic = pyinterp::geodetic;
 
 // Parsing of the string defining a GeoHash.
-static inline auto parse_str = [](const py::str& hash) -> auto {
+static inline const auto parse_str = [](const py::str& hash) -> auto {
   auto result = std::string(hash);
   if (result.length() < 1 || result.length() > 12) {
     throw std::invalid_argument("Geohash length must be within [1, 12]");

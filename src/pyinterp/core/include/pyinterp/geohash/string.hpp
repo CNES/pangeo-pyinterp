@@ -24,10 +24,9 @@ class Array {
   /// "precision"
   Array(const size_t size, const uint32_t precision)
       : array_(new std::vector<char>(size * precision, '\0')),
-        capsule_(array_,
-                 [](void* ptr) {
-                   delete reinterpret_cast<std::vector<char>*>(ptr);
-                 }),
+        capsule_(
+            array_,
+            [](void* ptr) { delete static_cast<std::vector<char>*>(ptr); }),
         chars_(precision),
         size_(size) {}
 

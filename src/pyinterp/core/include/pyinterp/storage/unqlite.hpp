@@ -57,6 +57,16 @@ class Database {
   /// Copy assignment operator
   auto operator=(const Database&) -> Database& = delete;
 
+  /// Move constructor
+  ///
+  /// @param rhs right value
+  Database(Database&& rhs) noexcept = default;
+
+  /// Move assignment operator
+  ///
+  /// @param rhs right value
+  auto operator=(Database&& rhs) noexcept -> Database& = default;
+
   /// Get state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple;
 

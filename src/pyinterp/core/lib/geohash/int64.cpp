@@ -183,8 +183,9 @@ using deinterleaver_t = std::tuple<uint32_t, uint32_t> (*)(uint64_t);
 static const bool have_bim2 = detail::has_bmi2();
 
 // Sets the encoding/decoding functions according to the CPU capacity
-static encoder_t encoder = have_bim2 ? detail::encode_bim2 : detail::encode;
-static deinterleaver_t deinterleaver =
+static encoder_t const encoder =
+    have_bim2 ? detail::encode_bim2 : detail::encode;
+static deinterleaver_t const deinterleaver =
     have_bim2 ? detail::deinterleave_bim2 : detail::deinterleave;
 
 // ---------------------------------------------------------------------------

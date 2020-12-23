@@ -8,11 +8,11 @@
 
 namespace pyinterp {
 
-auto update_dict(pybind11::dict& dict, const pybind11::iterable& other)
+auto inline update_dict(pybind11::dict &dict, const pybind11::iterable &other)
     -> void {
   try {
     pybind11::list new_value;
-    for (const auto& item : other) {
+    for (const auto &item : other) {
       auto pair = item.cast<std::pair<pybind11::object, pybind11::object>>();
       if (PyList_Check(pair.second.ptr())) {
         new_value = pair.second;
@@ -31,7 +31,7 @@ auto update_dict(pybind11::dict& dict, const pybind11::iterable& other)
       }
       dict[pair.first] = new_value;
     }
-  } catch (pybind11::cast_error&) {
+  } catch (pybind11::cast_error &) {
     throw std::invalid_argument("other must by an iterable of Tuple[Any, Any]");
   }
 }
