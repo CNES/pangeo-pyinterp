@@ -209,7 +209,7 @@ class GeoHash:
         """
         keys = list(self.keys(box))
         if len(keys) == 0:
-            hashs = numpy.array([])
+            hashs = numpy.array([], dtype="S1")
             data = numpy.hstack([])
         else:
             hashs = numpy.array(keys)

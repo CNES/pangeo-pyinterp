@@ -30,7 +30,7 @@ def to_xarray(hashs: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
     x_axis = core.Axis(numpy.unique(lon), is_circle=True)
     y_axis = core.Axis(numpy.unique(lat))
 
-    dtype = numpy.dtype(type(data[0]))
+    dtype = data.dtype
     if numpy.issubdtype(dtype, numpy.dtype("object")):
         grid = numpy.empty((len(y_axis), len(x_axis)), dtype)
     else:

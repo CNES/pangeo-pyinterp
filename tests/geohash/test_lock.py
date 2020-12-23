@@ -9,6 +9,20 @@ import pytest
 import pyinterp.geohash as geohash
 
 
+def test_lock_lock():
+    path = tempfile.NamedTemporaryFile().name
+    assert not os.path.exists(path)
+    lck = geohash.lock.Lock(path)
+    assert not os.path.exists(path)
+    assert not lck.locked()
+    with lck:
+        assert lck.locked()
+        assert os.path.exists(path)
+    assert not os.path.exists(path)
+    assert isinstance(pickle.loads(pickle.dumps(lck)), geohash.lock.Lock)
+    assert isinstance(str(lck), str)
+
+
 def test_lock_thread():
     lck = geohash.lock.ThreadSynchronizer()
     assert not lck.lock.locked()

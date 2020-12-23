@@ -18,3 +18,9 @@ def test_unqlite(unqlite_db):
     with storage.UnQlite(unqlite_db, mode="w") as db:
         db[b'0'] = 1
     assert os.path.exists(unqlite_db)
+
+
+def test_memory():
+    with storage.MutableMapping() as db:
+        db[b'0'] = 1
+        assert db[b'0'] == [1]
