@@ -1,4 +1,4 @@
-# Copyright (c) 2020 CNES
+# Copyright (c) 2021 CNES
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
@@ -57,6 +57,7 @@ def run(program, fix, path, options=""):
         '-cppcoreguidelines-pro-type-vararg,'
         '-cppcoreguidelines-pro-bounds-constant-array-index,'
         '-cppcoreguidelines-owning-memory,'
+        '-llvmlibc-*,'
         '-hicpp-*,'
         '-*-non-private-member-variables-in-classes', '-format-style=Google',
         path, '--', options
@@ -86,6 +87,7 @@ def main():
 
     # Directories to include in search path
     includes = [] if args.include is None else args.include
+    includes.insert(0, "/Library/Developer/CommandLineTools/usr/include/c++/v1")
     includes.insert(0, sysconfig.get_config_var('INCLUDEPY'))
     includes.insert(0, f"{sys.prefix}/include/eigen3")
     includes.insert(0, f"{sys.prefix}/include")
@@ -93,11 +95,12 @@ def main():
     includes.insert(0, f"{root}/src/pyinterp/core/include")
 
     # Enumerates files to be processed
-    for dirname in [f"{root}/src/pyinterp/core"]:
+    for dirname in [f"{root}/src/pyinterp/core/lib/storage"]:
         for root, dirs, files in os.walk(dirname):
             if 'tests' in dirs:
                 dirs.remove('tests')
             for item in files:
+                print(item)
                 if item.endswith(".cpp") or item.endswith(".hpp"):
                     target.append(os.path.join(root, item))
 
