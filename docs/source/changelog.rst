@@ -1,10 +1,12 @@
 Changelog
 #########
 
-0.5.0 (XX December 2020)
+0.5.0 (1 January 2021)
 -------------------------
 * Bicubic interpolation.
-* Corrections of various problems
+* Corrections of various problems.
+* Modification of the geohash interface.
+* Optimization of temporal axes.
 
 0.4.0 (22 September 2020)
 -------------------------

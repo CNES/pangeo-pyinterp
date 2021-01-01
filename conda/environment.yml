@@ -1,7 +1,7 @@
 name: RTD
 dependencies:
   - numpy
-  - pyinterp>=0.4.0
+  - pyinterp>=0.5.0
   - python=3.7
   - mkl
   - xarray
