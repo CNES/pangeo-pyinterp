@@ -304,7 +304,7 @@ auto Database::setitem(const pybind11::bytes& key,
 // ---------------------------------------------------------------------------
 auto Database::update(const pybind11::iterable& other) const -> void {
   try {
-    for (const auto& item : other) {
+    for (const auto item : other) {
       auto pair = item.cast<std::pair<pybind11::bytes, pybind11::object>>();
       setitem(pybind11::reinterpret_borrow<pybind11::object>(pair.first),
               pybind11::reinterpret_borrow<pybind11::object>(pair.second));
@@ -343,7 +343,7 @@ auto Database::getitem(const pybind11::bytes& key) const -> pybind11::list {
 // ---------------------------------------------------------------------------
 auto Database::extend(const pybind11::iterable& other) const -> void {
   try {
-    for (const auto& item : other) {
+    for (const auto item : other) {
       auto pair = item.cast<std::pair<pybind11::bytes, pybind11::object>>();
       auto existing_value =
           getitem(pybind11::reinterpret_borrow<pybind11::object>(pair.first));
@@ -379,7 +379,7 @@ auto Database::extend(const pybind11::iterable& other) const -> void {
 auto Database::values(const std::optional<pybind11::list>& keys) const
     -> pybind11::list {
   auto result = pybind11::list();
-  for (const auto& key : keys.has_value() ? keys.value() : this->keys()) {
+  for (const auto key : keys.has_value() ? keys.value() : this->keys()) {
     if (!PyBytes_Check(key.ptr())) {
       throw std::invalid_argument("key must be bytes: " +
                                   std::string(pybind11::repr(key)));
@@ -393,7 +393,7 @@ auto Database::values(const std::optional<pybind11::list>& keys) const
 auto Database::items(const std::optional<pybind11::list>& keys) const
     -> pybind11::list {
   auto result = pybind11::list();
-  for (const auto& key : keys.has_value() ? keys.value() : this->keys()) {
+  for (const auto key : keys.has_value() ? keys.value() : this->keys()) {
     if (!PyBytes_Check(key.ptr())) {
       throw std::invalid_argument("key must be bytes: " +
                                   std::string(pybind11::repr(key)));

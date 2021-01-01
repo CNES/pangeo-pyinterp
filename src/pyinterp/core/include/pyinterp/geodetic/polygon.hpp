@@ -17,7 +17,7 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   /// Create a new instance from Python
   Polygon(const pybind11::list& outer, const pybind11::list& inners) {
     try {
-      for (const auto& item : outer) {
+      for (const auto item : outer) {
         auto point = item.cast<geodetic::Point>();
         boost::geometry::append(this->outer(), point);
       }
@@ -29,9 +29,9 @@ class Polygon : public boost::geometry::model::polygon<Point> {
       try {
         auto index = 0;
         this->inners().resize(inners.size());
-        for (const auto& inner : inners) {
+        for (const auto inner : inners) {
           auto points = inner.cast<pybind11::list>();
-          for (const auto& item : points) {
+          for (const auto item : points) {
             auto point = item.cast<geodetic::Point>();
             boost::geometry::append(this->inners()[index], point);
           }
