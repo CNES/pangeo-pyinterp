@@ -15,7 +15,7 @@ def _sort_colors(colors):
 
 def _plot_box(ax, code, color, caption=True):
     """Plot a GeoHash bounding box"""
-    box = geohash.string.bounding_box(code)
+    box = geohash.bounding_box(code)
     x0 = box.min_corner.lon
     x1 = box.max_corner.lon
     y0 = box.min_corner.lat
@@ -71,7 +71,7 @@ def grid(precision, points=None, box=None, color_list=None, inc=7):
                 transform=ccrs.PlateCarree())
     colors = _sort_colors(color_list)
     ic = 0
-    codes = geohash.string.bounding_boxes(box, precision=precision)
+    codes = geohash.bounding_boxes(box, precision=precision)
     color_codes = {codes[0][0]: colors[ic]}
     for item in codes:
         prefix = item[precision - 1]
