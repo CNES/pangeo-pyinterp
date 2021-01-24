@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.5.1 (24 January 2021)
+-------------------------
+* Fixed a bug in TemporalAxis.
+
 0.5.0 (1 January 2021)
 -------------------------
 * Bicubic interpolation.

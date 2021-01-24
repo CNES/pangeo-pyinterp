@@ -529,13 +529,14 @@ class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
       : AbstractRegular<T>(start, stop, num) {
     // The inverse step of this axis is stored in order to optimize the search
     // for an index for a given value by avoiding a division.
-    step_2_ = std::abs(this->step_ >> 1);
+    step_2_ = this->step_ >> 1;
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
   [[nodiscard]] auto find_index(T coordinate, bool bounded) const noexcept
       -> int64_t override {
-    auto index = static_cast<int64_t>(nearest_index(coordinate - this->start_));
+    auto index =
+        static_cast<int64_t>(round((coordinate - this->start_), this->step_));
 
     if (index < 0) {
       return bounded ? 0 : -1;
@@ -552,11 +553,11 @@ class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
   /// search for the nearest index.
   T step_2_{};
 
-  /// Returns the nearest index
-  inline auto nearest_index(const T value) const noexcept -> T {
-    auto quot = value / this->step_;
-    auto shift = std::abs(value % this->step_) > step_2_ ? 1 : 0;
-    return quot + (quot > 0 ? shift : -shift);
+  /// Divide positive or negative dividend by positive divisor and round to
+  /// closest integer
+  inline auto round(int64_t numerator, int64_t denominator) const -> int64_t {
+    return numerator > 0 ? (numerator + step_2_) / denominator
+                         : (numerator - step_2_) / denominator;
   }
 };
 
