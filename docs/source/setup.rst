@@ -143,3 +143,12 @@ an alternate installation path, with:
 .. code-block:: bash
 
     python setup.py install --prefix=/opt/local
+
+
+Install with pip
+################
+
+Be sure you have the required dependencies installed first. Then, install
+pyinterp with pip:
+
+$ pip install pyinterp
