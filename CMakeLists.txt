@@ -177,8 +177,10 @@ find_package(Boost 1.63 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # We prefer the use of static libraries for the GSL and Snappy modules.
-set(__CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
-set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so" ".dylib" ".lib")
+if (CONDA_FORGE)
+  set(__CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so" ".dylib" ".lib")
+endif()
 
 # GSL
 find_package(GSL 2.0 REQUIRED)
@@ -192,8 +194,10 @@ find_package(Snappy REQUIRED)
 include_directories(${SNAPPY_INCLUDE_DIR})
 
 # We restore the suffixes of the libraries to be found.
-set(CMAKE_FIND_LIBRARY_SUFFIXES ${__CMAKE_FIND_LIBRARY_SUFFIXES})
-unset(__CMAKE_FIND_LIBRARY_SUFFIXES)
+if (CONDA_FORGE)
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ${__CMAKE_FIND_LIBRARY_SUFFIXES})
+  unset(__CMAKE_FIND_LIBRARY_SUFFIXES)
+endif()
 
 # Blas
 if (DEFINED ENV{MKLROOT})

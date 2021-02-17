@@ -5,18 +5,18 @@
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
 import datetime
+import os
 import pathlib
 import platform
 import re
-import subprocess
-import os
-import shlex
-import sys
-import sysconfig
 import setuptools
 import setuptools.command.build_ext
 import setuptools.command.install
 import setuptools.command.test
+import shlex
+import subprocess
+import sys
+import sysconfig
 # Setuptools must be imported first
 import distutils.command.build
 
@@ -209,6 +209,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     #: Enable coverage reporting
     CODE_COVERAGE = None
 
+    #: Generation of the conda-forge package
+    CONDA_FORGE = None
+
     #: Preferred C++ compiler
     CXX_COMPILER = None
 
@@ -236,21 +239,23 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             self.build_cmake(ext)
         super().run()
 
-    @staticmethod
-    def gsl():
+    @classmethod
+    def gsl(cls):
         """Get the default boost path in Anaconda's environnement."""
         gsl_root = sys.prefix
         if pathlib.Path(gsl_root, "include", "gsl").exists():
             return "-DGSL_ROOT_DIR=" + gsl_root
         gsl_root = pathlib.Path(sys.prefix, "Library")
         if not gsl_root.joinpath("include", "gsl").exists():
-            raise RuntimeError(
-                "Unable to find the GSL library in the conda distribution "
-                "used.")
+            if cls.CONDA_FORGE:
+                raise RuntimeError(
+                    "Unable to find the GSL library in the conda distribution "
+                    "used.")
+            return None
         return "-DGSL_ROOT_DIR=" + str(gsl_root)
 
-    @staticmethod
-    def boost():
+    @classmethod
+    def boost(cls):
         """Get the default boost path in Anaconda's environnement."""
         # Do not search system for Boost & disable the search for boost-cmake
         boost_option = "-DBoost_NO_SYSTEM_PATHS=TRUE " \
@@ -261,14 +266,16 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                 boost_root=boost_root, boost_option=boost_option).split()
         boost_root = pathlib.Path(sys.prefix, "Library", "include")
         if not boost_root.exists():
-            raise RuntimeError(
-                "Unable to find the Boost library in the conda distribution "
-                "used.")
+            if cls.CONDA_FORGE:
+                raise RuntimeError(
+                    "Unable to find the Boost library in the conda distribution "
+                    "used.")
+            return None
         return "{boost_option} -DBoost_INCLUDE_DIR={boost_root}".format(
             boost_root=boost_root, boost_option=boost_option).split()
 
-    @staticmethod
-    def eigen():
+    @classmethod
+    def eigen(cls):
         """Get the default Eigen3 path in Anaconda's environnement."""
         eigen_include_dir = pathlib.Path(sys.prefix, "include", "eigen3")
         if eigen_include_dir.exists():
@@ -278,13 +285,15 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if not eigen_include_dir.exists():
             eigen_include_dir = eigen_include_dir.parent
         if not eigen_include_dir.exists():
-            raise RuntimeError(
-                "Unable to find the Eigen3 library in the conda distribution "
-                "used.")
+            if cls.CONDA_FORGE:
+                raise RuntimeError(
+                    "Unable to find the Eigen3 library in the conda distribution "
+                    "used.")
+            return None
         return "-DEIGEN3_INCLUDE_DIR=" + str(eigen_include_dir)
 
-    @staticmethod
-    def snappy():
+    @classmethod
+    def snappy(cls):
         """Get the default Snappy path in Anaconda's environnement."""
         snappy_header = pathlib.Path(sys.prefix, "include", "snappy.h")
         if snappy_header.exists():
@@ -292,9 +301,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         snappy_header = pathlib.Path(sys.prefix, "Library", "include",
                                      "snappy.h")
         if not snappy_header.exists():
-            raise RuntimeError(
-                "Unable to find the Snappy library in the conda distribution "
-                "used.")
+            if cls.CONDA_FORGE:
+                raise RuntimeError(
+                    "Unable to find the Snappy library in the conda distribution "
+                    "used.")
+            return None
         return f"-DSNAPPY_ROOT_DIR={snappy_header.parent.parent}"
 
     @staticmethod
@@ -339,20 +350,29 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if self.CXX_COMPILER is not None:
             result.append("-DCMAKE_CXX_COMPILER=" + self.CXX_COMPILER)
 
+        if self.CONDA_FORGE:
+            result.append("-DCONDA_FORGE=ON")
+
         if self.BOOST_ROOT is not None:
             result.append("-DBOOSTROOT=" + self.BOOST_ROOT)
         elif is_conda:
-            result += self.boost()
+            cmake_variable = self.boost()
+            if cmake_variable:
+                result += cmake_variable
 
         if self.GSL_ROOT is not None:
             result.append("-DGSL_ROOT_DIR=" + self.GSL_ROOT)
         elif is_conda:
-            result.append(self.gsl())
+            cmake_variable = self.gsl()
+            if cmake_variable:
+                result.append(cmake_variable)
 
         if self.EIGEN3_INCLUDE_DIR is not None:
             result.append("-DEIGEN3_INCLUDE_DIR=" + self.EIGEN3_INCLUDE_DIR)
         elif is_conda:
-            result.append(self.eigen())
+            cmake_variable = self.eigen()
+            if cmake_variable:
+                result.append(cmake_variable)
 
         if self.MKL_ROOT is not None:
             os.environ["MKLROOT"] = self.MKL_ROOT
@@ -362,7 +382,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if self.SNAPPY_ROOT is not None:
             result.append("-DSNAPPY_ROOT_DIR=" + self.SNAPPY_ROOT)
         else:
-            result.append(self.snappy())
+            cmake_variable = self.snappy()
+            if cmake_variable:
+                result.append(cmake_variable)
 
         return result
 
@@ -434,34 +456,37 @@ class Build(distutils.command.build.build):
     """Build everything needed to install"""
     user_options = distutils.command.build.build.user_options
     user_options += [
-        ('mkl=', None, 'Using MKL as BLAS library'),
         ('boost-root=', None, 'Preferred Boost installation prefix'),
         ('build-unittests', None, "Build the unit tests of the C++ extension"),
-        ('reconfigure', None, 'Forces CMake to reconfigure this project'),
+        ('conda-forge', None, "Generation of the conda-forge package"),
         ('code-coverage', None, 'Enable coverage reporting'),
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
         ('eigen-root=', None, 'Preferred Eigen3 include directory'),
         ('gsl-root=', None, 'Preferred GSL installation prefix'),
         ('mkl-root=', None, 'Preferred MKL installation prefix'),
+        ('mkl=', None, 'Using MKL as BLAS library'),
+        ('reconfigure', None, 'Forces CMake to reconfigure this project'),
         ('snappy-root=', None, 'Preferred Snappy installation prefix')
     ]
 
     boolean_options = distutils.command.build.build.boolean_options
     boolean_options += ["mkl"]
+    boolean_options += ["conda-forge"]
 
     def initialize_options(self):
         """Set default values for all the options that this command supports"""
         super().initialize_options()
-        self.mkl = None
         self.boost_root = None
         self.build_unittests = None
+        self.conda_forge = None
         self.code_coverage = None
         self.cxx_compiler = None
         self.eigen_root = None
         self.gsl_root = None
+        self.mkl = None
         self.mkl_root = None
-        self.snappy_root = None
         self.reconfigure = None
+        self.snappy_root = None
 
     def finalize_options(self):
         """Set final values for all the options that this command supports"""
@@ -480,12 +505,14 @@ class Build(distutils.command.build.build):
             BuildExt.BOOST_ROOT = self.boost_root
         if self.build_unittests is not None:
             BuildExt.BUILD_INITTESTS = self.build_unittests
-        if self.cxx_compiler is not None:
-            BuildExt.CXX_COMPILER = self.cxx_compiler
         if self.code_coverage is not None:
             if platform.system() == 'Windows':
                 raise RuntimeError("Code coverage is not supported on Windows")
             BuildExt.CODE_COVERAGE = self.code_coverage
+        if self.conda_forge is not None:
+            BuildExt.CONDA_FORGE = bool(self.conda_forge)
+        if self.cxx_compiler is not None:
+            BuildExt.CXX_COMPILER = self.cxx_compiler
         if self.eigen_root is not None:
             BuildExt.EIGEN3_INCLUDE_DIR = self.eigen_root
         if self.gsl_root is not None:
