@@ -624,7 +624,7 @@ def typehints():
 
 def main():
     """Main function"""
-    install_requires = ["dask", "numpy", "xarray >= 0.13"]
+    install_requires = ["dask", "numpy", "toolz", "xarray >= 0.13"]
     tests_require = install_requires + ["NetCDF4", "pytest"]
     setuptools.setup(
         author='CNES/CLS',
