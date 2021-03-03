@@ -60,9 +60,9 @@ struct Time {
 };
 
 /// Represents an ISO calandar
-struct ISOCalandar {
+struct ISOCalendar {
   int year;
-  unsigned week_number;
+  unsigned week;
   unsigned weekday;
 };
 
@@ -181,7 +181,7 @@ inline auto weekday(const int64_t epoch) noexcept -> unsigned {
 /// from that.
 ///
 ///  The first week is 1; Monday is 1 ... Sunday is 7.
-auto isocalendar(const int64_t epoch) -> ISOCalandar {
+auto isocalendar(const int64_t epoch) -> ISOCalendar {
   auto date = year_month_day(epoch);
   auto yday = days_since_january(date);
   auto wday = weekday(epoch);

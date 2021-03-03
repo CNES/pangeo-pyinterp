@@ -14,6 +14,19 @@ Axis
   core.Axis
   core.TemporalAxis
 
+numpy datetime utilities
+------------------------
+
+.. autosummary::
+  :toctree: generated/
+
+  core.dateutils.date
+  core.dateutils.datetime
+  core.dateutils.days_since_january
+  core.dateutils.isocalendar
+  core.dateutils.time
+  core.dateutils.weekday
+
 Bicubic interpolation
 ---------------------
 
