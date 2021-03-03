@@ -189,7 +189,7 @@ Return:
     ``minute`` and ``second``.
 )__doc__")
       .def("weekday", &detail::weekday, py::arg("array"), R"__doc__(
-Return the weekday of the dates.
+Return the weekday of the dates; Sunday is 0 ... Saturday is 6.
 
 Args:
     array (numpy.ndarray): Numpy array of datetime64 to process
