@@ -13,6 +13,7 @@ extern void init_bicubic(py::module&);
 extern void init_binning(py::module&);
 extern void init_bivariate_interpolator(py::module&);
 extern void init_bivariate(py::module&);
+extern void init_dateutils(py::module&);
 extern void init_fill(py::module&);
 extern void init_geodetic(py::module&);
 extern void init_geohash_int64(py::module&);
@@ -48,6 +49,12 @@ Core module
 -----------
 )__doc__";
 
+  auto dateutils = m.def_submodule("dateutils", R"__doc__(
+numpy datetime utilities
+------------------------
+)__doc__");
+
+
   auto geodetic = m.def_submodule("geodetic", R"__doc__(
 Geographic coordinate system
 ----------------------------
@@ -70,6 +77,8 @@ Index storage support
 )__doc__");
 
   pyinterp::detail::gsl::set_error_handler();
+
+  init_dateutils(dateutils);
 
   init_axis(m);
   init_binning(m);
