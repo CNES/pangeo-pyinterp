@@ -96,9 +96,9 @@ static auto datetime(const py::array& array) -> py::array {
     auto time = dateutils::hour_minute_second(epoch);
     auto msec = frac.microsecond(_array[ix]);
 
-    buffer[ix] =
-        PyDateTime_FromDateAndTime(date.year, date.month, date.day, time.hour,
-                                   time.minute, time.second, msec);
+    buffer[ix] = PyDateTime_FromDateAndTime(date.year, date.month, date.day,
+                                            time.hour, time.minute, time.second,
+                                            static_cast<int>(msec));
   }
   auto capsule = py::capsule(
       buffer, [](void* ptr) { delete[] static_cast<PyObject*>(ptr); });
