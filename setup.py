@@ -607,7 +607,7 @@ class Test(setuptools.command.test.test):
 
 def long_description():
     """Reads the README file"""
-    with open(pathlib.Path(WORKING_DIRECTORY, "README.md")) as stream:
+    with open(pathlib.Path(WORKING_DIRECTORY, "README.rst")) as stream:
         return stream.read()
 
 
@@ -652,7 +652,7 @@ def main():
         install_requires=install_requires,
         license="BSD License",
         long_description=long_description(),
-        long_description_content_type='text/markdown',
+        long_description_content_type='text/x-rst',
         name='pyinterp',
         package_data={
             'pyinterp': ['py.typed'],

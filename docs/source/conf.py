@@ -7,8 +7,10 @@
 # http://www.sphinx-doc.org/en/master/config
 
 # -- Path setup --------------------------------------------------------------
-
 import os
+import pathlib
+
+HERE = pathlib.Path(__file__).absolute().parent
 
 # -- Project information -----------------------------------------------------
 
@@ -31,12 +33,9 @@ release = '0.5.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.viewcode',
+    'sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.autosummary',
+    'sphinx.ext.mathjax', 'sphinx.ext.napoleon', 'sphinx.ext.viewcode',
+    'sphinx_gallery.gen_gallery', 'sphinx_inline_tabs'
 ]
 
 autosummary_generate = True
@@ -76,16 +75,8 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if on_rtd:
-    html_context = {
-        'css_files': [
-            '//media.readthedocs.org/css/sphinx_rtd_theme.css',
-            '//media.readthedocs.org/css/readthedocs-doc-embed.css',
-        ]
-    }
-else:
-    html_theme = 'nature'
+html_theme = 'furo'
+html_title = 'pyinterp'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -174,6 +165,10 @@ epub_title = project
 epub_exclude_files = ['search.html']
 
 # -- Extension configuration -------------------------------------------------
+sphinx_gallery_conf = {
+    'examples_dirs': [HERE.joinpath("examples")],
+    'filename_pattern': '/ex_'
+}
 
 # -- Options for intersphinx extension ---------------------------------------
 
@@ -184,3 +179,14 @@ intersphinx_mapping = {
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'xarray': ('http://xarray.pydata.org/en/stable/', None),
 }
+
+README = HERE.joinpath("readme.rst")
+os.environ['DATASET'] = os.path.normpath(
+    HERE.joinpath("..", "..", "tests", "dataset"))
+
+if not README.exists():
+    with HERE.joinpath("..", "..", "README.rst").open() as stream:
+        contents = stream.read()
+
+    with README.open("w") as stream:
+        stream.write(contents)

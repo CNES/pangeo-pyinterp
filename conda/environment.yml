@@ -1,9 +1,13 @@
 name: RTD
 dependencies:
+  - cartopy
+  - furo
+  - mkl
   - numpy
+  - pandas
   - pyinterp>=0.5.1
   - python=3.7
-  - mkl
+  - sphinx-gallery
   - xarray
 channels:
   - conda-forge

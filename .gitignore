@@ -111,6 +111,10 @@ venv.bak/
 # Figures generated
 tests/**/*.png
 
-# Generated files
+# Generated doc files
+docs/source/auto_examples
+docs/source/readme.rst
+
+# Generated source files
 src/pyinterp/core/include/unqlite.h
 src/pyinterp/version.py

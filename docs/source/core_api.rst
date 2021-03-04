@@ -22,7 +22,7 @@ numpy datetime utilities
 
   core.dateutils.date
   core.dateutils.datetime
-  core.dateutils.days_since_january
+  core.dateutils.timedelta_since_january
   core.dateutils.isocalendar
   core.dateutils.time
   core.dateutils.weekday
