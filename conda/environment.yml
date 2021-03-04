@@ -3,6 +3,7 @@ dependencies:
   - cartopy
   - furo
   - mkl
+  - netcdf4
   - numpy
   - pandas
   - pyinterp>=0.5.1
