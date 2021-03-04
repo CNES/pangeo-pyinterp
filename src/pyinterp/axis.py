@@ -6,6 +6,7 @@
 Axis
 ====
 """
+from typing import Type, Union
 import re
 import warnings
 import numpy as np
@@ -35,8 +36,8 @@ class TemporalAxis(core.TemporalAxis):
         Create a coordinate axis from values.
 
         Args:
-            values (numpy.ndarray): Dates representing the dates of the time
-                axis.
+            values (numpy.ndarray): Items representing the datetimes or
+            timedeltas of the axis.
 
         Raises:
             TypeError: if the array data type is not a datetime64 subtype.
@@ -45,6 +46,7 @@ class TemporalAxis(core.TemporalAxis):
 
             >>> import datetime
             >>> import numpy as np
+            >>> import pyinterp
             >>> start = datetime.datetime(2000, 1, 1)
             >>> values = np.array([
             ...     start + datetime.timedelta(hours=index)
@@ -61,12 +63,40 @@ class TemporalAxis(core.TemporalAxis):
                                 '2009-11-08T22:00:00.000000',
                                 '2009-11-08T23:00:00.000000'],
                             dtype='datetime64[us]'))
+            >>> values = np.array([
+            ...     datetime.timedelta(hours=index)
+            ...     for index in range(86400)
+            ... ],
+            ...                   dtype="timedelta64[us]")
+            >>> axis = pyinterp.TemporalAxis(values)
+            >>> axis
+            TemporalAxis(array([0,
+                                3600000000,
+                                7200000000,
+                                ...,
+                                311029200000000,
+                                311032800000000,
+                                311036400000000],
+                         dtype='timedelta64[us]'))
         """
-        if not np.issubdtype(values.dtype, np.dtype("datetime64")):
-            raise TypeError("values must be a datetime64 array")
+        self._assert_issubdtype(values.dtype)
         super().__init__(values.astype("int64"))
         self.dtype = values.dtype
-        self.resolution = self._datetime64_resolution(str(self.dtype))
+        self.object = self._object(self.dtype)
+        self.resolution = self._npdate_resolution(str(self.dtype))
+
+    @staticmethod
+    def _assert_issubdtype(dtype: np.dtype) -> None:
+        if not np.issubdtype(dtype,
+                             np.dtype("datetime64")) and not np.issubdtype(
+                                 dtype, np.dtype("timedelta64")):
+            raise TypeError("values must be a numpy datetime/timedelta array")
+
+    @staticmethod
+    def _object(dtype: np.dtype) -> Type:
+        """Get the object type handled by this class"""
+        data_type = str(dtype)
+        return getattr(np, data_type[:data_type.index('64') + 2])
 
     def safe_cast(self, values: np.ndarray) -> np.ndarray:
         """Convert the dates of the vector in the same unit as the time axis
@@ -83,9 +113,8 @@ class TemporalAxis(core.TemporalAxis):
                 provided to the unit of the axis, truncates the dates
                 (e.g. converting microseconds to seconds).
         """
-        if not np.issubdtype(values.dtype, np.dtype("datetime64")):
-            raise TypeError("values must be a datetime64 array")
-        resolution = self._datetime64_resolution(str(values.dtype))
+        self._assert_issubdtype(values.dtype)
+        resolution = self._npdate_resolution(str(values.dtype))
         source_idx = self.RESOLUTION.index(resolution)
         target_idx = self.RESOLUTION.index(self.resolution)
         if source_idx != target_idx:
@@ -95,19 +124,20 @@ class TemporalAxis(core.TemporalAxis):
                 warnings.warn(
                     "implicit conversion turns "
                     f"{source} into {target}", UserWarning)
-            return values.astype(f"datetime64[{self.resolution}]").astype(
-                "int64")
+            return values.astype(
+                f"{self.object.__name__}[{self.resolution}]").astype("int64")
         return values.astype("int64")
 
-    def back(self) -> np.datetime64:
+    def back(self) -> Union[np.datetime64, np.timedelta64]:
         """Get the last value of this axis
 
         Return:
-            numpy.datetime64: The last value
+            numpy.datetime64, numpy.timedelta64: The last value
         """
-        return np.datetime64(super().back(), self.resolution)
+        return self.object(super().back(), self.resolution)
 
-    def find_index(self, coordinates: np.ndarray,
+    def find_index(self,
+                   coordinates: np.ndarray,
                    bounded: bool = False) -> np.ndarray:
         """Given coordinate positions, find what grid elements contains them,
         or is closest to them.
@@ -148,17 +178,17 @@ class TemporalAxis(core.TemporalAxis):
         return super().find_indexes(
             coordinates.astype(self.dtype).astype("int64"))
 
-    def front(self) -> np.datetime64:
+    def front(self) -> Union[np.datetime64, np.timedelta64]:
         """Get the first value of this axis
 
         Return:
-            numpy.datetime64: The first value
+            numpy.datetime64, numpy.timedelta64: The first value
         """
-        return np.datetime64(super().front(), self.resolution)
+        return self.object(super().front(), self.resolution)
 
     @classmethod
-    def _datetime64_resolution(cls, dtype) -> str:
-        """Gets the date time resolution"""
+    def _npdate_resolution(cls, dtype) -> str:
+        """Gets the numpy date time resolution"""
         match = cls.PATTERN(dtype)
         assert match is not None
         return match.group(1)
@@ -174,21 +204,21 @@ class TemporalAxis(core.TemporalAxis):
         """
         return np.timedelta64(super().increment(), self.resolution)
 
-    def max_value(self) -> np.datetime64:
+    def max_value(self) -> Union[np.datetime64, np.timedelta64]:
         """Get the maximum value of this axis
 
         Return:
-            numpy.datetime64: The maximum value
+            numpy.datetime64, numpy.timedelta64: The maximum value
         """
-        return np.datetime64(super().max_value(), self.resolution)
+        return self.object(super().max_value(), self.resolution)
 
-    def min_value(self) -> np.datetime64:
+    def min_value(self) -> Union[np.datetime64, np.timedelta64]:
         """Get the minimum value of this axis
 
         Return:
-            numpy.datetime64: The minimum value
+            numpy.datetime64, numpy.timedelta64 : The minimum value
         """
-        return np.datetime64(super().min_value(), self.resolution)
+        return self.object(super().min_value(), self.resolution)
 
     def __repr__(self):
         array = repr(self[:]).split("\n")
@@ -200,7 +230,8 @@ class TemporalAxis(core.TemporalAxis):
             raise ValueError("invalid state")
         super().__setstate__(state[1])
         self.dtype = state[0]
-        self.resolution = self._datetime64_resolution(str(self.dtype))
+        self.object = self._object(self.dtype)
+        self.resolution = self._npdate_resolution(str(self.dtype))
 
     def __getstate__(self):
         return (self.dtype, super().__getstate__())
@@ -208,5 +239,5 @@ class TemporalAxis(core.TemporalAxis):
     def __getitem__(self, *args):
         result = super().__getitem__(*args)
         if isinstance(result, int):
-            return np.datetime64(result, self.resolution)
+            return self.object(result, self.resolution)
         return result.astype(self.dtype)
