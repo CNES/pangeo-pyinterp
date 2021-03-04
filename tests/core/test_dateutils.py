@@ -47,7 +47,7 @@ def test_timedelta_since_january():
         expected = pydates[ix].utctimetuple().tm_yday
         yday = item.astype("timedelta64[D]").astype("int")
         assert yday + 1 == expected
-        microseconds = int(item.astype("timedelta64[us]").astype("int"))
+        microseconds = int(item.astype("timedelta64[us]").astype("int64"))
         dt = datetime.timedelta(microseconds=microseconds)
         minute, second = divmod(dt.seconds, 60)
         hour, minute = divmod(minute, 60)
