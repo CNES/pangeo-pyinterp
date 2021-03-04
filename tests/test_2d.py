@@ -29,9 +29,9 @@ def test_dims_from_data_array():
     with pytest.raises(ValueError):
         pyinterp.backends.xarray._dims_from_data_array(array, True, 2)
     array = xr.DataArray(data=np.zeros((2, 2), dtype="float64"),
-                         coords=[("lon", xr.DataArray(data=np.arange(2)),
+                         coords=[("lon", np.arange(2),
                                   dict(units="degrees_east")),
-                                 ("lat", xr.DataArray(data=np.arange(2)))],
+                                 ("lat", np.arange(2))],
                          dims=['lon', 'lat'])
     with pytest.raises(ValueError):
         pyinterp.backends.xarray._dims_from_data_array(array, True, 2)

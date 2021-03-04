@@ -23,7 +23,7 @@ def test_core_class_suffix():
             pyinterp.Grid2D)
 
     with pytest.raises(ValueError):
-        pyinterp.Grid2D(lon, lat, matrix.astype(np.complex))
+        pyinterp.Grid2D(lon, lat, matrix.astype(complex))
 
 
 def test__core_function_suffix():
