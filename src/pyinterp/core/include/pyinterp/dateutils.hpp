@@ -7,6 +7,8 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
+#include <string>
+
 // Algorithms are extracted from the documentation of Howard Hinnant
 // cf. http://howardhinnant.github.io/date_algorithms.html
 
@@ -80,19 +82,19 @@ class FractionalSeconds {
     auto units =
         std::string(pybind11::str(static_cast<pybind11::handle>(dtype)));
     if (units == "datetime64[as]") {
-      power_ = 1'000'000'000'000'000'000;
+      scale_ = 1'000'000'000'000'000'000;
     } else if (units == "datetime64[fs]") {
-      power_ = 1'000'000'000'000'000;
+      scale_ = 1'000'000'000'000'000;
     } else if (units == "datetime64[ps]") {
-      power_ = 1'000'000'000'000;
+      scale_ = 1'000'000'000'000;
     } else if (units == "datetime64[ns]") {
-      power_ = 1'000'000'000;
+      scale_ = 1'000'000'000;
     } else if (units == "datetime64[us]") {
-      power_ = 1'000'000;
+      scale_ = 1'000'000;
     } else if (units == "datetime64[ms]") {
-      power_ = 1'000;
+      scale_ = 1'000;
     } else if (units == "datetime64[s]") {
-      power_ = 1;
+      scale_ = 1;
     } else {
       throw std::invalid_argument(
           "array has wrong datetime unit, expected datetime64[as], "
@@ -102,25 +104,48 @@ class FractionalSeconds {
     }
   }
 
+  /// Gets the numpy units
+  inline auto units() const -> std::string {
+    switch(scale_) {
+      case 1'000'000'000'000'000'000:
+        return "as";
+      case 1'000'000'000'000'000:
+        return "fs";
+      case 1'000'000'000'000:
+        return "ps";
+      case 1'000'000'000:
+        return "ns";
+      case 1'000'000:
+        return "us";
+      case 1'000:
+        return "ms";
+      default:
+        return "s";
+    }
+  }
+
   /// Gets the number of seconds elpased since 1970
   inline auto seconds(const int64_t datetime64) const noexcept -> int64_t {
-    return datetime64 / power_;
+    return datetime64 / scale_;
   }
 
   /// Gets the fractional part of the date
   inline auto fractional(const int64_t datetime64) const noexcept -> int64_t {
-    return datetime64 % power_;
+    return datetime64 % scale_;
   }
 
   /// Get the number of microseconds contained in the date.
   inline auto microsecond(const int64_t datetime64) const noexcept -> int64_t {
     auto frac = fractional(datetime64);
-    return power_ <= 1'000'000 ? (1'000'000 / power_) * frac
-                               : frac / (power_ / 1'000'000);
+    return scale_ <= 1'000'000 ? (1'000'000 / scale_) * frac
+                               : frac / (scale_ / 1'000'000);
   }
 
+  /// Get the numpy scale
+  inline auto scale() const noexcept -> int64_t { return scale_; }
+
  private:
-  int64_t power_;
+  int64_t scale_;
 };
 
 /// Gets year, month, day in civil calendar

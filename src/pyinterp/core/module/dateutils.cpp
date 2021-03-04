@@ -82,20 +82,25 @@ static auto weekday(const py::array& array) -> py::array_t<unsigned> {
   return result;
 }
 
-static auto days_since_january(const py::array& array)
-    -> py::array_t<unsigned> {
+static auto timedelta_since_january(const py::array& array) -> py::array {
   auto frac = dateutils::FractionalSeconds(array.dtype());
-  auto result =
-      py::array_t<unsigned>(py::array::ShapeContainer({array.size()}));
+  auto result = py::array(py::dtype("timedelta64[" + frac.units() + "]"),
+                          py::array::ShapeContainer({array.size()}), nullptr);
   auto _array = array.unchecked<int64_t, 1>();
-  auto _result = result.mutable_unchecked<1>();
+  auto _result = result.mutable_unchecked<int64_t, 1>();
 
   {
     auto gil = py::gil_scoped_release();
 
     for (auto ix = 0; ix < array.size(); ++ix) {
-      _result[ix] = dateutils::days_since_january(
-          dateutils::year_month_day(frac.seconds(_array[ix])));
+      auto epoch = frac.seconds(_array[ix]);
+      auto days_since_january =
+          dateutils::days_since_january(dateutils::year_month_day(epoch));
+      auto hms = dateutils::hour_minute_second(epoch);
+      _result[ix] = (days_since_january * 86400LL + hms.hour * 3600LL +
+                     hms.minute * 60LL + hms.second) *
+                        frac.scale() +
+                    frac.fractional(_array[ix]);
     }
   }
   return result;
@@ -154,15 +159,16 @@ Args:
 Return:
     numpy.ndarray: Object dtype array containing native Python datetime objects.
 )__doc__")
-      .def("days_since_january", &detail::days_since_january, py::arg("array"),
+      .def("timedelta_since_january", &detail::timedelta_since_january,
+           py::arg("array"),
            R"__doc__(
-Return the number of days since the first January.
+Return the number the timedelta since the first January.
 
 Args:
     array (numpy.ndarray): Numpy array of datetime64 to process
 
 Return:
-    numpy.ndarray: integer dtype array containing the number of days since the
+    numpy.ndarray: timedelta64 dtype array containing the time delta since the
     first January.
 )__doc__")
       .def("isocalendar", &detail::isocalendar, py::arg("array"),

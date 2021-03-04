@@ -9,7 +9,7 @@ def datetime(array: numpy.ndarray) -> numpy.ndarray:
     ...
 
 
-def days_since_january(array: numpy.ndarray) -> numpy.ndarray:
+def timedelta_since_january(array: numpy.ndarray) -> numpy.ndarray:
     ...
 
 
