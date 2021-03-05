@@ -167,7 +167,7 @@ epub_exclude_files = ['search.html']
 # -- Extension configuration -------------------------------------------------
 sphinx_gallery_conf = {
     'examples_dirs': [HERE.joinpath("examples")],
-    'filename_pattern': '/ex_'
+    'filename_pattern': r'[\\\/]ex_'
 }
 
 # -- Options for intersphinx extension ---------------------------------------
