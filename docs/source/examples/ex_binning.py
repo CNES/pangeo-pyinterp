@@ -76,6 +76,7 @@ linear = binning.variable('mean')
 #%%
 # We visualize our result
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
+fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(211, projection=cartopy.crs.PlateCarree())
 lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
 pcm = ax1.pcolormesh(lon,

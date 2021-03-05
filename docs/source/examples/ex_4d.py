@@ -103,6 +103,7 @@ lats = my[0, :].squeeze()
 #   therefore the calculation window cannot find the required pixels at the
 #   edges to calculate the interpolation correctly.
 fig = matplotlib.pyplot.figure(figsize=(5, 4))
+fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 pcm = ax1.pcolormesh(lons,

@@ -67,6 +67,7 @@ mss = interpolator.bivariate(
 #%%
 # Let's visualize the original grid and the result of the interpolation.
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
+fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 lons, lats = numpy.meshgrid(ds.lon, ds.lat, indexing='ij')
@@ -135,6 +136,7 @@ mss = interpolator.bicubic(coords=dict(lon=mx.flatten(), lat=my.flatten()),
 #        interpolator = pyinterp.backends.xarray.Grid2D(
 #            ds.mss, increasing_axes=True)
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
+fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 pcm = ax1.pcolormesh(lons,

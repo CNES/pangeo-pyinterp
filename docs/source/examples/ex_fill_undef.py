@@ -41,6 +41,7 @@ filled = pyinterp.fill.loess(grid, nx=3, ny=3)
 #%%
 # The image below illustrates the result:
 fig = matplotlib.pyplot.figure(figsize=(10, 10))
+fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 lons, lats = numpy.meshgrid(grid.x, grid.y, indexing='ij')
@@ -81,6 +82,7 @@ has_converged, filled = pyinterp.fill.gauss_seidel(grid)
 #%%
 # The image below illustrates the result:
 fig = matplotlib.pyplot.figure(figsize=(10, 10))
+fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 pcm = ax1.pcolormesh(lons,
