@@ -33,7 +33,13 @@ import pyinterp
 import pyinterp.backends.xarray
 import xarray
 
-DATASET = pathlib.Path(os.environ['DATASET'])
+try:
+    # When generating the documentation the variable DATASET points to the data
+    # path.
+    DATASET = pathlib.Path(os.environ['DATASET'])
+except KeyError:
+    # Otherwise, the relative folder path is used.
+    DATASET = pathlib.Path("..", "..", "tests", "dataset")
 PRES_TEMP = DATASET.joinpath("pres_temp_4D.nc")
 
 #%%
@@ -99,9 +105,11 @@ lats = my[0, :].squeeze()
 # Let's visualize our results.
 #
 # .. note::
+#
 #   The resolution of the example grid is very low (one pixel every one degree)
 #   therefore the calculation window cannot find the required pixels at the
-#   edges to calculate the interpolation correctly.
+#   edges to calculate the interpolation correctly. See Chapter
+#   :doc:`ex_fill_undef` to see how to address this issue.
 fig = matplotlib.pyplot.figure(figsize=(5, 4))
 fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(

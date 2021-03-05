@@ -22,7 +22,13 @@ import pyinterp
 import pyinterp.backends.xarray
 import xarray
 
-DATASET = pathlib.Path(os.environ['DATASET'])
+try:
+    # When generating the documentation the variable DATASET points to the data
+    # path.
+    DATASET = pathlib.Path(os.environ['DATASET'])
+except KeyError:
+    # Otherwise, the relative folder path is used.
+    DATASET = pathlib.Path("..", "..", "tests", "dataset")
 AOML = DATASET.joinpath("aoml_v2019.nc")
 
 #%%

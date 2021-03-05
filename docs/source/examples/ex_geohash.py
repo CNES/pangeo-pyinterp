@@ -175,4 +175,8 @@ df["density"] = df["count"] / (
     pyinterp.geohash.area(df.index.values.astype('S')) / 1e6)
 array = pyinterp.geohash.to_xarray(df.index.values.astype('S'), df.density)
 array = array.where(array != 0, numpy.nan)
-_ = array.plot()
+
+fig = matplotlib.pyplot.figure()
+fig.patch.set_alpha(0.0)
+ax = fig.add_subplot(111)
+_ = array.plot(ax=ax)
