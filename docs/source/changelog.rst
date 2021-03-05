@@ -1,6 +1,11 @@
 Changelog
 #########
 
+0.6.0 (5 March 2021)
+--------------------
+* Added utilities for numpy dates
+* Modification of the documentation
+
 0.5.1 (24 January 2021)
 -------------------------
 * Fixed a bug in TemporalAxis.
