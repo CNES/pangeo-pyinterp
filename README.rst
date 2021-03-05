@@ -150,4 +150,4 @@ possibly stored on disk, for the purpose of indexing data.
 .. |License| image:: https://anaconda.org/conda-forge/pyinterp/badges/license.svg?service=github
     :target: https://opensource.org/licenses/BSD-3-Clause
 .. |Binder| image:: https://binder.pangeo.io/badge_logo.svg
-    :target: https://binder.pangeo.io/v2/gh/CNES/pangeo-pyinterp/master?filepath=notebooks
+    :target: https://binder.pangeo.io/v2/gh/CNES/pangeo-pyinterp/master?filepath=notebooks/auto_examples/
