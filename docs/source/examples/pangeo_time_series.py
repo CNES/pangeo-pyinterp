@@ -21,9 +21,9 @@ import pandas
 import intake
 import pyinterp.backends.xarray
 
-cat = intake.Catalog("https://raw.githubusercontent.com/pangeo-data"
-                     "/pangeo-datastore/master/intake-catalogs/"
-                     "ocean.yaml")
+cat = intake.open_catalog("https://raw.githubusercontent.com/pangeo-data"
+                          "/pangeo-datastore/master/intake-catalogs/"
+                          "ocean.yaml")
 ds = cat["sea_surface_height"].to_dask()
 
 
@@ -81,6 +81,7 @@ class TimeSeries:
 
 
 time_series = TimeSeries(ds)
+
 
 #%%
 # The test data set containing a set of positions of different floats is then
@@ -165,14 +166,14 @@ import cartopy.crs
 import cartopy.feature
 
 fig = matplotlib.pyplot.figure(figsize=(10, 5))
-ax = fig.add_subplot(111, projection=cartopy.crs.PlateCarree(central_longitude=180))
-sc = ax.scatter(
-    selected_float.lon,
-    selected_float.lat,
-    s=size*100,
-    c=selected_float.sla,
-    transform=cartopy.crs.PlateCarree(),
-    cmap='jet')
+ax = fig.add_subplot(111,
+                     projection=cartopy.crs.PlateCarree(central_longitude=180))
+sc = ax.scatter(selected_float.lon,
+                selected_float.lat,
+                s=size * 100,
+                c=selected_float.sla,
+                transform=cartopy.crs.PlateCarree(),
+                cmap='jet')
 ax.coastlines()
 ax.set_title("Time series of SLA "
              "(larger points are closer to the last date)")

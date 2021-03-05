@@ -24,11 +24,11 @@ mesh = pyinterp.RTree()
 #%%
 # Then, we will insert points into the tree. The class allows you to add points
 # using two algorithms. The first one, called :py:meth:`packing
-# <pyinterp.RTree.packing>`, will enable you to enter the values in the tree
-# at once. This mechanism is the recommended solution to create an optimized
+# <pyinterp.RTree.packing>`, will enable you to enter the values in the tree at
+# once. This mechanism is the recommended solution to create an optimized
 # in-memory structure, both in terms of construction time and queries. When this
 # is not possible, you can insert new information into the tree as you go along
-# using the insert method.
+# using the :py:meth:`insert <pyinterp.RTree.insert>` method.
 cat_url = "https://raw.githubusercontent.com/pangeo-data/pangeo-datastore" \
     "/master/intake-catalogs/ocean/llc4320.yaml"
 cat = intake.open_catalog(cat_url)

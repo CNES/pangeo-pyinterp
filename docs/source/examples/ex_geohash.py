@@ -118,11 +118,11 @@ plot_geohash_grid(1)
 plot_geohash_grid(2, box=pyinterp.geohash.bounding_box('d'))
 
 #%%
-# Bounds of the geohash `dd` with a precision of three characters.
+# Bounds of the geohash ``dd`` with a precision of three characters.
 plot_geohash_grid(3, box=pyinterp.geohash.bounding_box('dd'))
 
 #%%
-# Bounds of the geohash `dds` with a precision of four characters.
+# Bounds of the geohash ``dds`` with a precision of four characters.
 plot_geohash_grid(4, box=pyinterp.geohash.bounding_box('dds'))
 
 #%%

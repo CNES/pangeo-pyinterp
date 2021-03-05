@@ -8,7 +8,8 @@ Interpolation of a two-dimensional regular grid.
 Bivariate
 #########
 
-Perform a bivariate interpolation of gridded data points.
+Perform a :py:func:`bivariate <pyinterp.bivariate>` interpolation of gridded
+data points.
 
 The distribution contains a 2D field ``mss.nc`` that will be used in this help.
 This file is located in the ``tests/dataset`` directory at the root of the
@@ -119,7 +120,7 @@ fig.show()
 #     as long as the calculation window uses an indefinite point, the interpolator
 #     will compute indeterminate values. In other words, this interpolator
 #     increases the area covered by the masked values. To avoid this behavior, it
-#     is necessary to :ref:`pre-process <fill_values>` the grid to delete
+#     is necessary to :doc:`pre-process <ex_fill_undef>` the grid to delete
 #     undefined values.
 #
 # The interpolation :py:meth:`bicubic <pyinterp.backends.xarray.Grid2D.bicubic>`

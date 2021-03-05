@@ -26,7 +26,7 @@ mesh = pyinterp.RTree()
 # once. This mechanism is the recommended solution to create an optimized
 # in-memory structure, both in terms of construction time and queries. When this
 # is not possible, you can insert new information into the tree as you go along
-# using the insert method.
+# using the :py:meth:`insert <pyinterp.RTree.insert>` method.
 SIZE = 2000
 X0, X1 = 80, 170
 Y0, Y1 = -45, 30
