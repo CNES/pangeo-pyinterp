@@ -11,7 +11,7 @@ source:
 
 build:
   number: 0
-  script: {{ PYTHON }} -m pip install . -vv
+  script: {{ PYTHON }} -m pip install . -vv --global-option=build --global-option="--mkl=yes" --global-option="--conda-forge"
   skip: true  # [linux32 or win32 or py<36]
 
 requirements:

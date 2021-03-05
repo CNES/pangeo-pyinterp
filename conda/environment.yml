@@ -12,4 +12,5 @@ dependencies:
   - sphinx-gallery
   - xarray
 channels:
+  - fbriol
   - conda-forge
