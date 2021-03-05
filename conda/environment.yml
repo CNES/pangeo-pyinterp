@@ -7,6 +7,7 @@ dependencies:
   - numpy
   - pandas
   - pyinterp>=0.5.1
+  - pypandoc
   - python=3.7
   - sphinx-gallery
   - xarray

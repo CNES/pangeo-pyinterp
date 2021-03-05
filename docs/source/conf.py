@@ -167,7 +167,16 @@ epub_exclude_files = ['search.html']
 # -- Extension configuration -------------------------------------------------
 sphinx_gallery_conf = {
     'examples_dirs': [HERE.joinpath("examples")],
-    'filename_pattern': r'[\\\/]ex_'
+    'filename_pattern': r'[\\\/]ex_',
+    'pypandoc': True,
+    'binder': {
+        'org': 'CNES',
+        'repo': 'pangeo-pyinterp',
+        'branch': 'master',
+        'binderhub_url': 'https://binder.pangeo.io',
+        'dependencies':
+        [HERE.joinpath("..", "..", "binder", "environment.yml")]
+    }
 }
 
 # -- Options for intersphinx extension ---------------------------------------

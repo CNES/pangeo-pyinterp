@@ -31,7 +31,8 @@ You can install these packages on Ubuntu by typing the following command:
 
 You need, also, to install Python libraries before configuring and installing
 this software:
-    * `numpy <https://www.numpy.org/>`_
+
+* `numpy <https://www.numpy.org/>`_
 
 You can install these packages on Ubuntu by typing the following command:
 
