@@ -54,7 +54,7 @@ binning.push(ds.lon, ds.lat, norm, True)
 #   If the processed data is larger than the available RAM, it's possible to use
 #   Dask to parallel the calculation. To do this, an instance must be built,
 #   then the data must be added using the :py:meth:`push_delayed
-#   <pyinterp.Binning.push_delayed>` method. This method will return a graph,
+#   <pyinterp.Binning2D.push_delayed>` method. This method will return a graph,
 #   which when executed will return a new instance containing the calculated
 #   statics.
 #

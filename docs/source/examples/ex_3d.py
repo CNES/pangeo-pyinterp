@@ -3,6 +3,8 @@
 3D interpolation
 ****************
 
+Interpolation of a three-dimensional regular grid.
+
 Trivariate
 ==========
 
@@ -47,7 +49,9 @@ interpolator = pyinterp.backends.xarray.Grid3D(ds.tcw)
 
 #%%
 # We will build a new grid that will be used to build a new interpolated grid.
+#
 # .. note ::
+#
 #   The coordinates used for interpolation are shifted to avoid using the
 #   points of the trivariate function.
 #
@@ -64,7 +68,7 @@ mx, my, mz = numpy.meshgrid(numpy.arange(-180, 180, 0.25) + 1 / 3.0,
                             indexing='ij')
 
 #%%
-# We interpolate our grid using a py:meth:`classical
+# We interpolate our grid using a :py:meth:`classical
 # <pyinterp.backends.xarray.Grid3D.trivariate>`:
 trivariate = interpolator.trivariate(
     dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
@@ -81,7 +85,7 @@ interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars["tcw"],
                                                increasing_axes=True)
 
 #%%
-# We interpolate our grid using a py:meth:`bicubic
+# We interpolate our grid using a :py:meth:`bicubic
 # <pyinterp.backends.xarray.Grid3D.bicubic>` interpolation in space followed by
 # a linear interpolation in the temporal axis:
 bicubic = interpolator.bicubic(

@@ -3,6 +3,8 @@
 4D interpolation
 ****************
 
+Interpolation of a four-dimensional regular grid.
+
 Quadrivariate
 =============
 
@@ -56,7 +58,7 @@ mx, my, mz, mu = numpy.meshgrid(numpy.arange(-125, -70, 0.5),
                                 indexing="ij")
 
 #%%
-# We interpolate our grid using a py:meth:`classical
+# We interpolate our grid using a :py:meth:`classical
 # <pyinterp.backends.xarray.Grid4D.quadrivariate>`:
 quadrivariate = interpolator.quadrivariate(
     dict(longitude=mx.flatten(),
@@ -76,7 +78,7 @@ interpolator = pyinterp.backends.xarray.Grid4D(ds.pressure,
                                                increasing_axes=True)
 
 #%%
-# We interpolate our grid using a py:meth:`bicubic
+# We interpolate our grid using a :py:meth:`bicubic
 # <pyinterp.backends.xarray.Grid4D.bicubic>` interpolation in space followed by
 # a linear interpolation in the temporal axis:
 bicubic = interpolator.bicubic(dict(longitude=mx.flatten(),

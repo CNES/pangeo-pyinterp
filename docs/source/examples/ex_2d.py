@@ -3,6 +3,8 @@
 2D interpolation
 ****************
 
+Interpolation of a two-dimensional regular grid.
+
 Bivariate
 #########
 

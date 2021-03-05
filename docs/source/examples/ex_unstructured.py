@@ -3,6 +3,8 @@
 Unstructured grid
 *****************
 
+Interpolation of unstructured grids.
+
 The interpolation of this object is based on a :py:class:`R*Tree
 <pyinterp.RTree>` structure. To begin with, we start by building this
 object. By default, this object considers the WGS-84 geodetic coordinate system.

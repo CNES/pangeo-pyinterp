@@ -38,6 +38,7 @@ with netCDF4.Dataset(TCW) as ds:
 
 #%%
 # This regular 3-dimensional grid is associated with three axes:
+#
 # * longitudes,
 # * latitudes and
 # * time.
@@ -113,8 +114,9 @@ grid_3d
 # xarray backend
 # ##############
 #
-# The construction of these objects manipulating the regular grids can be done
-# more easily using the `xarray <http://xarray.pydata.org/>`_ library and `CF
+# The construction of these objects manipulating the :py:class:`regular grids
+# <pyinterp.backends.xarray.RegularGridInterpolator>` can be done more easily
+# using the `xarray <http://xarray.pydata.org/>`_ library and `CF
 # <https://cfconventions.org/>`_ convention usually found in NetCDF files.
 interpolator = pyinterp.backends.xarray.RegularGridInterpolator(
     xarray.open_dataset(TCW).tcw)

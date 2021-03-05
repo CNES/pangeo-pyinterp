@@ -11,7 +11,6 @@ the string, the more precise the location.
 Geohash Grid
 ============
 """
-from itertools import repeat
 import timeit
 import cartopy.crs
 import matplotlib.colors
@@ -156,7 +155,8 @@ len(index)
 
 #%%
 # Let's imagine that we want to retrieve the data in the following polygon:
-#     * ``POLYGON((-33.75 39.375,-33.75 45,-22.5 45,-22.5 39.375,-33.75 39.375))``
+#
+# * ``POLYGON((-33.75 39.375,-33.75 45,-22.5 45,-22.5 39.375,-33.75 39.375))``
 polygon = pyinterp.geodetic.Polygon.read_wkt(
     "POLYGON((-33.75 39.375,-33.75 45,-22.5 45,-22.5 39.375,-33.75 39.375))")
 items = index.items(index.keys(polygon.envelope()))
