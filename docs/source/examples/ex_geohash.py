@@ -72,7 +72,6 @@ def plot_geohash_grid(precision,
     """Plot geohash bounding boxes"""
     color_list = color_list or matplotlib.colors.CSS4_COLORS
     fig = matplotlib.pyplot.figure(figsize=(24, 12))
-    fig.patch.set_alpha(0.0)
     ax = fig.add_subplot(1, 1, 1, projection=cartopy.crs.PlateCarree())
     if box is not None:
         ax.set_extent([
@@ -177,6 +176,5 @@ array = pyinterp.geohash.to_xarray(df.index.values.astype('S'), df.density)
 array = array.where(array != 0, numpy.nan)
 
 fig = matplotlib.pyplot.figure()
-fig.patch.set_alpha(0.0)
 ax = fig.add_subplot(111)
 _ = array.plot(ax=ax)

@@ -35,7 +35,6 @@ MSS = DATASET.joinpath("mss.nc")
 # equal to NaN is NaN). On the other hand, the green point can be interpolated
 # normally because the 4 surrounding points are defined.
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
-fig.patch.set_alpha(0.0)
 ax = fig.add_subplot(111, projection=cartopy.crs.PlateCarree())
 ax.set_extent([-6, 1, 47.5, 51.5], crs=cartopy.crs.PlateCarree())
 ax.add_feature(cartopy.feature.LAND.with_scale('110m'))
@@ -90,7 +89,6 @@ filled = pyinterp.fill.loess(grid, nx=3, ny=3)
 #%%
 # The image below illustrates the result:
 fig = matplotlib.pyplot.figure()
-fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 lons, lats = numpy.meshgrid(grid.x, grid.y, indexing='ij')
@@ -132,7 +130,6 @@ has_converged, filled = pyinterp.fill.gauss_seidel(grid)
 #%%
 # The image below illustrates the result:
 fig = matplotlib.pyplot.figure(figsize=(10, 10))
-fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 pcm = ax1.pcolormesh(lons,

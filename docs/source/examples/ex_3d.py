@@ -107,7 +107,6 @@ lats = my[0, :].squeeze()
 #%%
 # Let's visualize our results.
 fig = matplotlib.pyplot.figure(figsize=(5, 8))
-fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 pcm = ax1.pcolormesh(lons,

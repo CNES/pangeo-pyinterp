@@ -103,7 +103,6 @@ rbf_eta = rbf_eta.reshape(mx.shape)
 #%%
 # Let's visualize our interpolated data
 fig = matplotlib.pyplot.figure(figsize=(18, 9))
-fig.patch.set_alpha(0.0)
 lon_formatter = cartopy.mpl.ticker.LongitudeFormatter(
     zero_direction_label=True)
 lat_formatter = cartopy.mpl.ticker.LatitudeFormatter()

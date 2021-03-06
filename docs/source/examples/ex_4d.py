@@ -111,7 +111,6 @@ lats = my[0, :].squeeze()
 #   edges to calculate the interpolation correctly. See Chapter
 #   :doc:`ex_fill_undef` to see how to address this issue.
 fig = matplotlib.pyplot.figure(figsize=(5, 4))
-fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 pcm = ax1.pcolormesh(lons,

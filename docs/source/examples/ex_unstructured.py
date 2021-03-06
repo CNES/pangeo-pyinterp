@@ -79,7 +79,6 @@ rbf = rbf.reshape(mx.shape)
 #%%
 # Let's visualize our interpolated data
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
-fig.patch.set_alpha(0.0)
 ax1 = fig.add_subplot(211)
 pcm = ax1.pcolormesh(mx, my, idw, cmap='jet', shading='auto', vmin=0, vmax=1)
 ax1.set_title("IDW interpolation")
