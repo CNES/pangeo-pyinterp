@@ -90,6 +90,9 @@ def test_axis_accessor():
     with pytest.raises(RuntimeError):
         a.increment()
 
+    with pytest.raises(ValueError):
+        a = core.Axis(np.full((10, ), 1))
+
 
 def test_axis_pickle():
     a = core.Axis(np.linspace(0, 359, 360), is_circle=False)

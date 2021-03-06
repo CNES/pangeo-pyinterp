@@ -22,7 +22,6 @@ Regular axis
 For example, let's construct an axis representing a regular axis.
 """
 #%%
-import datetime
 import numpy
 import pyinterp
 
@@ -136,5 +135,5 @@ axis.find_index(numpy.array([numpy.datetime64('2020-01-01')]))
 
 #%%
 # This object also makes it possible to manipulate timedeltas.
-axis = pyinterp.TemporalAxis(numpy.diff(dates))
+axis = pyinterp.TemporalAxis(dates - numpy.datetime64('2020-01-01'))
 axis
