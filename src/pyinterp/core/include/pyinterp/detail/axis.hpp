@@ -513,6 +513,11 @@ class Axis {
     T increment =
         (points[points.size() - 1] - points[0]) / static_cast<T>(n - 1);
 
+    // If the first two values are constant, the values are not evenly spaced.
+    if (increment <= epsilon) {
+      return {};
+    }
+
     for (size_t ix = 1; ix < n; ++ix) {
       if (!math::is_same(points[ix] - points[ix - 1], increment, epsilon)) {
         return {};

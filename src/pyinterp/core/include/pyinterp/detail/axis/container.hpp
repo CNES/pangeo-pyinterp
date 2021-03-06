@@ -246,11 +246,15 @@ class Irregular : public Abstract<T> {
 
   /// @copydoc Abstract::is_monotonic() const
   [[nodiscard]] inline auto is_monotonic() const noexcept -> bool override {
-    if (this->is_ascending_) {
-      return std::is_sorted(points_.data(), points_.data() + points_.size());
+    auto start = points_.data();
+    auto end = points_.data() + points_.size();
+    if (std::adjacent_find(start, end) != end) {
+      return false;
     }
-    return std::is_sorted(points_.data(), points_.data() + points_.size(),
-                          std::greater<>());
+    if (this->is_ascending_) {
+      return std::is_sorted(start, end);
+    }
+    return std::is_sorted(start, end, std::greater<>());
   };
 
   /// @copydoc Abstract::coordinate_value(const int64_t) const

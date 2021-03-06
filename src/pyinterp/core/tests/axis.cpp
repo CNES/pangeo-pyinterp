@@ -21,6 +21,11 @@ class AxisTest : public testing::Test {
     axis.release();
     axis.reset(new detail::Axis<T>(start, stop, num, epsilon, is_circle));
   }
+  void reset_axis(Eigen::Ref<pyinterp::Vector<T>> values, T epsilon,
+                  bool is_circle) {
+    axis.release();
+    axis.reset(new detail::Axis<T>(values, epsilon, is_circle));
+  }
   std::unique_ptr<detail::Axis<T>> axis{};
 };
 TYPED_TEST_SUITE(AxisTest, Implementations);
@@ -273,6 +278,20 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_EQ(a2.back(), 180);
   EXPECT_EQ(a2.coordinate_value(0), -179);
   EXPECT_EQ(a2.coordinate_value(180), 1);
+}
+
+TYPED_TEST(AxisTest, constant_values) {
+  auto values = pyinterp::Vector<TypeParam>(5);
+  values[0] = 0;
+  values[1] = 1;
+  values[2] = 5;
+  values[3] = 5;
+  values[4] = 5;
+  EXPECT_THROW(this->reset_axis(values, 0, false), std::invalid_argument);
+
+  values[0] = 5;
+  values[1] = 5;
+  EXPECT_THROW(this->reset_axis(values, 0, false), std::invalid_argument);
 }
 
 TEST(axis, irregular) {
