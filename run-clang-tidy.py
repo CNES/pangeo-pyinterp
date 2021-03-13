@@ -7,6 +7,7 @@ import concurrent.futures
 import multiprocessing
 import os
 import platform
+import re
 import subprocess
 import sys
 import sysconfig
@@ -39,6 +40,9 @@ def usage():
     parser.add_argument("--log",
                         type=argparse.FileType("w"),
                         help="path to the file containing the execution log.")
+    parser.add_argument("--pattern",
+                        help="Pattern to select files to be taken into "
+                        "account in the processing.")
     parser.add_argument(
         "--clang-tidy",
         help='path to the "clang-tidy" program to be executed.',
@@ -97,15 +101,19 @@ def main():
     includes.insert(0, f"{root}/third_party/pybind11/include")
     includes.insert(0, f"{root}/src/pyinterp/core/include")
 
+    pattern = re.compile(args.pattern).search if args.pattern else None
+
     # Enumerates files to be processed
-    for dirname in [f"{root}/src/pyinterp/core/lib/storage"]:
+    for dirname in [f"{root}/src/pyinterp/core"]:
         for root, dirs, files in os.walk(dirname):
             if 'tests' in dirs:
                 dirs.remove('tests')
             for item in files:
-                print(item)
+                path = os.path.join(root, item)
+                if pattern is not None and pattern(path) is None:
+                    continue
                 if item.endswith(".cpp") or item.endswith(".hpp"):
-                    target.append(os.path.join(root, item))
+                    target.append(path)
 
     # Compiler options
     options = "-std=c++17 " + " ".join((f"-I{item}" for item in includes))
