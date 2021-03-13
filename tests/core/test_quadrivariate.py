@@ -113,15 +113,15 @@ def test_interpolator():
 
     with pytest.raises(ValueError):
         other = core.quadrivariate_float64(grid,
-                                        mx.flatten(),
-                                        my.flatten(),
-                                        mz.flatten(),
-                                        None,
-                                        interpolator,
-                                        num_threads=0,
-                                        z_method="linear",
-                                        u_method="nearest",
-                                        bounds_error=False)
+                                           mx.flatten(),
+                                           my.flatten(),
+                                           mz.flatten(),
+                                           None,
+                                           interpolator,
+                                           num_threads=0,
+                                           z_method="linear",
+                                           u_method="nearest",
+                                           bounds_error=False)
 
     with pytest.raises(ValueError):
         other = core.quadrivariate_float64(grid,

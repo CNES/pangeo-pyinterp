@@ -12,6 +12,7 @@ import random
 import numpy
 import pyinterp
 
+
 def make_date(samples=10000):
     """Generates random dates."""
     epoch = datetime.datetime(1970, 1, 1)
@@ -21,6 +22,8 @@ def make_date(samples=10000):
     npdates = numpy.array(pydates).astype("datetime64[ns]")
 
     return npdates
+
+
 # %%
 dates = make_date()
 dates

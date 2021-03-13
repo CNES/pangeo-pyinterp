@@ -231,7 +231,7 @@ class Grid2D(grid.Grid2D):
             np.ndarray: the interpolated values
         """
         return interpolator.bicubic(self, *_coords(coords, self._dims), *args,
-                                   **kwargs)
+                                    **kwargs)
 
 
 class Grid3D(grid.Grid3D):

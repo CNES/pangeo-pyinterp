@@ -12,6 +12,7 @@ from .interpolator.bivariate import bivariate
 from .interpolator.quadrivariate import quadrivariate
 from .interpolator.trivariate import trivariate
 from .rtree import RTree
+
 __version__ = version.release()
 __date__ = version.date()
 del version

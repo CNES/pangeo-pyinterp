@@ -52,7 +52,6 @@ def test_index():
     assert idx.precision == 3
 
 
-
 def test_xarray():
     # Create dummy data and populate the index
     data = ((key, key) for key in geohash.bounding_boxes(precision=1))
@@ -64,8 +63,8 @@ def test_xarray():
 
     array = idx.to_xarray()
     assert isinstance(array, xarray.DataArray)
-    assert(len(array) == 4)
+    assert (len(array) == 4)
 
     array = idx.to_xarray(box)
     assert isinstance(array, xarray.DataArray)
-    assert(len(array) < 128)
+    assert (len(array) < 128)

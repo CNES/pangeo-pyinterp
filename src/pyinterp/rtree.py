@@ -133,14 +133,14 @@ class RTree:
         """
         return self._instance.query(coordinates, k, within, num_threads)
 
-    def inverse_distance_weighting(self,
-                                   coordinates: np.ndarray,
-                                   radius: Optional[float] = None,
-                                   k: Optional[int] = 9,
-                                   p: Optional[int] = 2,
-                                   within: Optional[bool] = True,
-                                   num_threads: Optional[int] = 0
-                                   ) -> Tuple[np.ndarray, np.ndarray]:
+    def inverse_distance_weighting(
+            self,
+            coordinates: np.ndarray,
+            radius: Optional[float] = None,
+            k: Optional[int] = 9,
+            p: Optional[int] = 2,
+            within: Optional[bool] = True,
+            num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
         """Interpolation of the value at the requested position by inverse
         distance weighting method.
 
@@ -172,16 +172,16 @@ class RTree:
         return self._instance.inverse_distance_weighting(
             coordinates, radius, k, p, within, num_threads)
 
-    def radial_basis_function(self,
-                              coordinates: np.ndarray,
-                              radius: Optional[float] = None,
-                              k: Optional[int] = 9,
-                              rbf: Optional[str] = None,
-                              epsilon: Optional[float] = None,
-                              smooth: Optional[float] = 0,
-                              within: Optional[bool] = True,
-                              num_threads: Optional[int] = 0
-                              ) -> Tuple[np.ndarray, np.ndarray]:
+    def radial_basis_function(
+            self,
+            coordinates: np.ndarray,
+            radius: Optional[float] = None,
+            k: Optional[int] = 9,
+            rbf: Optional[str] = None,
+            epsilon: Optional[float] = None,
+            smooth: Optional[float] = 0,
+            within: Optional[bool] = True,
+            num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
         """Interpolation of the value at the requested position by radial
         basis function interpolation.
 

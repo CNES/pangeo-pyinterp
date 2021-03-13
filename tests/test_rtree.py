@@ -55,6 +55,7 @@ def test_init():
     with pytest.raises(ValueError):
         pyinterp.RTree(ndims=1)
 
+
 def load_data():
     ds = xr.load_dataset(GRID)
     z = ds.mss.T
