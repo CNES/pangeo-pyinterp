@@ -166,8 +166,9 @@ void implement_bivariate_interpolator(pybind11::module& m,
     auto evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
                   const T& q00, const T& q01, const T& q10, const T& q11) const
         -> T override {
-      PYBIND11_OVERLOAD_PURE(T, CoordinateSystem, "evaluate", p, p0, p1, q00,
-                             q01, q10, q11);
+      PYBIND11_OVERLOAD_PURE(T, CoordinateSystem, "evaluate", p, p0,  // NOLINT
+                             p1,                                      // NOLINT
+                             q00, q01, q10, q11);                     // NOLINT
     }
   };
 

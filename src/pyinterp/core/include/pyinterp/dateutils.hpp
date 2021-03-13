@@ -12,8 +12,7 @@
 // Algorithms are extracted from the documentation of Howard Hinnant
 // cf. http://howardhinnant.github.io/date_algorithms.html
 
-namespace pyinterp {
-namespace dateutils {
+namespace pyinterp::dateutils {
 namespace detail {
 
 constexpr int ISO_WEEK_START_WDAY = 1;  // Monday
@@ -26,7 +25,7 @@ constexpr std::array<int, 13> DAYS_IN_MONTH({-1, 31, 28, 31, 30, 31, 30, 31, 31,
 // the year day *yday* with week day *wday*.  ISO weeks start on Monday; the
 // first ISO week has the year's first Thursday. *yday* may be as small as
 // *YDAY_MINIMUM*.
-auto iso_week_days(int yday, int wday) -> int {
+inline auto iso_week_days(int yday, int wday) -> int {
   const int big_enough_multiple_of_7 = (-YDAY_MINIMUM / 7 + 2) * 7;
   return yday - (yday - wday + ISO_WEEK1_WDAY + big_enough_multiple_of_7) % 7 +
          ISO_WEEK1_WDAY - ISO_WEEK_START_WDAY;
@@ -72,7 +71,7 @@ struct ISOCalendar {
 class FractionalSeconds {
  public:
   /// Default constructor
-  FractionalSeconds(const pybind11::dtype& dtype) {
+  explicit FractionalSeconds(const pybind11::dtype& dtype) {
     auto type_num =
         pybind11::detail::array_descriptor_proxy(dtype.ptr())->type_num;
     if (type_num != 21 /* NPY_DATETIME */) {
@@ -105,7 +104,7 @@ class FractionalSeconds {
   }
 
   /// Gets the numpy units
-  inline auto units() const -> std::string {
+  [[nodiscard]] inline auto units() const -> std::string {
     switch (scale_) {
       case 1'000'000'000'000'000'000:
         return "as";
@@ -125,47 +124,60 @@ class FractionalSeconds {
   }
 
   /// Gets the number of seconds elpased since 1970
-  inline auto seconds(const int64_t datetime64) const noexcept -> int64_t {
+  [[nodiscard]] inline auto seconds(const int64_t datetime64) const noexcept
+      -> int64_t {
     return datetime64 / scale_;
   }
 
   /// Gets the fractional part of the date
-  inline auto fractional(const int64_t datetime64) const noexcept -> int64_t {
+  [[nodiscard]] inline auto fractional(const int64_t datetime64) const noexcept
+      -> int64_t {
     return datetime64 % scale_;
   }
 
   /// Get the number of microseconds contained in the date.
-  inline auto microsecond(const int64_t datetime64) const noexcept -> int64_t {
+  [[nodiscard]] inline auto microsecond(const int64_t datetime64) const noexcept
+      -> int64_t {
     auto frac = fractional(datetime64);
     return scale_ <= 1'000'000 ? (1'000'000 / scale_) * frac
                                : frac / (scale_ / 1'000'000);
   }
 
   /// Get the numpy scale
-  inline auto scale() const noexcept -> int64_t { return scale_; }
+  [[nodiscard]] inline auto scale() const noexcept -> int64_t { return scale_; }
 
  private:
   int64_t scale_;
 };
 
 /// Gets year, month, day in civil calendar
-auto year_month_day(const int64_t epoch) noexcept -> Date {
-  const auto z =
+inline auto year_month_day(const int64_t epoch) noexcept -> Date {
+  // number of days since 1970-01-01
+  const auto days_since_epoch =
       epoch / 86400LL + 719468LL - static_cast<int64_t>((epoch % 86400LL) < 0);
-  const auto era = static_cast<int>((z >= 0 ? z : z - 146096LL) / 146097LL);
-  const auto doe = static_cast<unsigned>(z - era * 146097LL);  // [0, 146096]
+  // era : 400 year period
+  const auto era = static_cast<int>(
+      (days_since_epoch >= 0 ? days_since_epoch : days_since_epoch - 146096LL) /
+      146097LL);
+  // day of era
+  const auto doe =
+      static_cast<unsigned>(days_since_epoch - era * 146097LL);  // [0, 146096]
+  // year of era
   const auto yoe =
       (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;  // [0, 399]
-  const auto doy = doe - (365 * yoe + yoe / 4 - yoe / 100);   // [0, 365]
-  const auto mp = (5 * doy + 2) / 153;                        // [0, 11]
-  const auto d = doy - (153 * mp + 2) / 5 + 1;                // [1, 31]
-  const auto m = mp < 10 ? mp + 3 : mp - 9;                   // [1, 12]
+  // day of year
+  const auto doy = doe - (365 * yoe + yoe / 4 - yoe / 100);  // [0, 365]
+  // month number (March=0, April=1, May=2, ..., January=10, February=11)
+  const auto mon = (5 * doy + 2) / 153;             // [0, 11]
+  const auto day = doy - (153 * mon + 2) / 5 + 1;   // [1, 31]
+  const auto month = mon < 10 ? mon + 3 : mon - 9;  // [1, 12]
 
-  return {(static_cast<int>(yoe) + era * 400) + static_cast<int>(m <= 2), m, d};
+  return {(static_cast<int>(yoe) + era * 400) + static_cast<int>(month <= 2),
+          month, day};
 }
 
 /// Gets the number of hours, minutes and seconds elapsed in the day
-auto hour_minute_second(const int64_t epoch) noexcept -> Time {
+inline auto hour_minute_second(const int64_t epoch) noexcept -> Time {
   auto seconds_within_day = epoch % 86400;
   if (seconds_within_day < 0) {
     seconds_within_day += 86400;
@@ -178,7 +190,7 @@ auto hour_minute_second(const int64_t epoch) noexcept -> Time {
 }
 
 /// Gets the number of days since the first January
-auto days_since_january(const Date& date) -> unsigned {
+inline auto days_since_january(const Date& date) -> unsigned {
   unsigned result = date.day - 1;
 
   if (date.month > 2) {
@@ -206,7 +218,7 @@ inline auto weekday(const int64_t epoch) noexcept -> unsigned {
 /// from that.
 ///
 ///  The first week is 1; Monday is 1 ... Sunday is 7.
-auto isocalendar(const int64_t epoch) -> ISOCalendar {
+inline auto isocalendar(const int64_t epoch) -> ISOCalendar {
   auto date = year_month_day(epoch);
   auto yday = days_since_january(date);
   auto wday = weekday(epoch);
@@ -215,11 +227,12 @@ auto isocalendar(const int64_t epoch) -> ISOCalendar {
   // This ISO week belongs to the previous year ?
   if (days < 0) {
     date.year--;
-    days = detail::iso_week_days(yday + (365 + detail::is_leap_year(date.year)),
-                                 wday);
+    days = detail::iso_week_days(
+        static_cast<int>(yday) + (365 + detail::is_leap_year(date.year)),
+        static_cast<int>(wday));
   } else {
     int week_days = detail::iso_week_days(
-        yday - (365 + detail::is_leap_year(date.year)), wday);
+        static_cast<int>(yday) - (365 + detail::is_leap_year(date.year)), wday);
 
     // This ISO week belongs to the next year ?
     if (0 <= week_days) {
@@ -231,5 +244,4 @@ auto isocalendar(const int64_t epoch) -> ISOCalendar {
           (wday - 1 + 7) % 7 + 1};
 }
 
-}  // namespace dateutils
-}  // namespace pyinterp
+}  // namespace pyinterp::dateutils

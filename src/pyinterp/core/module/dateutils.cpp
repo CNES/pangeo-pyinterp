@@ -111,7 +111,7 @@ static auto datetime(const py::array& array) -> py::array {
   auto* buffer = new PyObject*[array.size()];
   auto _array = array.unchecked<int64_t, 1>();
 
-  if (!PyDateTimeAPI) {
+  if (PyDateTimeAPI == nullptr) {
     PyDateTime_IMPORT;
   }
 

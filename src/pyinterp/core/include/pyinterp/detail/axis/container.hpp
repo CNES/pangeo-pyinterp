@@ -559,7 +559,8 @@ class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
 
   /// Divide positive or negative dividend by positive divisor and round to
   /// closest integer
-  inline auto round(int64_t numerator, int64_t denominator) const -> int64_t {
+  [[nodiscard]] inline auto round(int64_t numerator, int64_t denominator) const
+      -> int64_t {
     return numerator > 0 ? (numerator + step_2_) / denominator
                          : (numerator - step_2_) / denominator;
   }
