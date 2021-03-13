@@ -165,7 +165,7 @@ Return:
       .def("area", &geodetic::Box::area, py::arg("wgs") = py::none(),
            R"__doc__(
 Calculates the area.
-          
+
 Args:
     (pyinterp.core.geodetic.System, optional): WGS system used for the
         calculation, default to WGS84
@@ -274,7 +274,7 @@ Return:
       .def("area", &geodetic::Polygon::area, py::arg("wgs") = py::none(),
            R"__doc__(
 Calculates the area.
-          
+
 Args:
     (pyinterp.core.geodetic.System, optional): WGS system used for the
         calculation, default to WGS84

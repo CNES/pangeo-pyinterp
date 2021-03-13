@@ -134,12 +134,12 @@ class GeoHash:
 
     def keys(self, box: Optional[geodetic.Box] = None) -> Iterable[bytes]:
         """Returns all hash defined in the index
-        
+
         Args:
             box (pyinterp.geodetic.Box, optional): If true, the method returns
                 the codes defined in the supplied area, otherwise all the codes
                 stored in the index.
-        
+
         Return:
             iterable: keys selected in the index.
         """
@@ -174,7 +174,7 @@ class GeoHash:
             keys (iterable, optional): The list of keys to be selected. If
                 this parameter is undefined, the method returns all values
                 defined in the index.
-        
+
         Return:
             list: values selected in the index.
         """
@@ -190,7 +190,7 @@ class GeoHash:
             keys (iterable, optional): The list of keys to be selected. If
                 this parameter is undefined, the method returns all items
                 defined in the index.
-        
+
         Return:
             list: items selected in the index.
         """
@@ -203,7 +203,7 @@ class GeoHash:
 
         Args:
             box (pyinterp.geodetic.Box): Bounding box used for data selection.
-        
+
         Return:
             list: items selected in the index.
         """
