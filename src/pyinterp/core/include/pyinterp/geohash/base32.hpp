@@ -18,7 +18,7 @@ class Base32 {
   Base32() noexcept {
     decode_.fill(Base32::kInvalid_);
     for (size_t ix = 0; ix < encode_.size(); ++ix) {
-      decode_[static_cast<size_t>(encode_[ix])] = static_cast<char>(ix);
+      decode_[static_cast<unsigned char>(encode_[ix])] = static_cast<char>(ix);
     }
   }
 
@@ -42,8 +42,8 @@ class Base32 {
     auto hash = static_cast<uint64_t>(0);
     const auto* it = buffer;
     while (it != buffer + count && *it != 0) {
-      hash = (hash << 5U) |
-             static_cast<uint64_t>(decode_[static_cast<size_t>(*(it++))]);
+      hash = (hash << 5U) | static_cast<uint64_t>(
+                                decode_[static_cast<unsigned char>(*(it++))]);
     }
     return std::make_tuple(hash, static_cast<uint32_t>(it - buffer));
   }
@@ -65,7 +65,7 @@ class Base32 {
 
   // Reports whether byte is part of the encoding.
   [[nodiscard]] inline auto validate_byte(const char byte) const -> bool {
-    return decode_[static_cast<size_t>(byte)] != Base32::kInvalid_;
+    return decode_[static_cast<unsigned char>(byte)] != Base32::kInvalid_;
   }
 };
 
