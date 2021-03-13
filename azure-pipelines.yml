@@ -49,6 +49,44 @@ jobs:
       summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
       reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
 - job:
+  displayName: Ubuntu-20.04
+  pool:
+    vmImage: 'ubuntu-20.04'
+  strategy:
+    matrix:
+      Python38:
+        python.version: '3.8'
+      Python39:
+        python.version: '3.9'
+  steps:
+  - checkout: self
+    fetchDepth: 1
+  - bash: git submodule update --init --recursive
+    displayName: Initialize the submodules
+  - script: |
+      sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+      sudo apt-get update
+      sudo apt-get install -y libc++-dev libc++abi-dev libc++abi1 libstdc++-10-dev gcc-10 g++-10
+      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+      sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+    displayName: Install GCC
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+  - bash: conda create --yes --quiet --name Build
+    displayName: Create Anaconda environment
+  - bash: |
+      source activate Build
+      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
+    displayName: Install build requirements
+  - bash: |
+      source activate Build
+      python setup.py build
+    displayName: Build package
+  - bash: |
+      source activate Build
+      python setup.py test
+    displayName: Test cases
+- job:
   displayName: macOS-10.15
   pool:
     vmImage: 'macOS-10.15'
@@ -56,6 +94,10 @@ jobs:
     matrix:
       Python37:
         python.version: '3.7'
+      Python38:
+        python.version: '3.8'
+      Python39:
+        python.version: '3.9'
   steps:
   - checkout: self
     fetchDepth: 1
@@ -87,6 +129,10 @@ jobs:
     matrix:
       Python37:
         python.version: '3.7'
+      Python38:
+        python.version: '3.8'
+      Python39:
+        python.version: '3.9'
   steps:
   - checkout: self
     fetchDepth: 1
