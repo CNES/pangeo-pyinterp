@@ -530,7 +530,7 @@ class Build(distutils.command.build.build):
 
 class Test(setuptools.Command):
     """Test runner"""
-    description = "run pytest after in-place build"
+    description = "run pytest"
     user_options = [('ext-coverage', None,
                      "Generate C++ extension coverage reports"),
                     ("pytest-args=", None, "Arguments to pass to pytest")]
@@ -560,8 +560,6 @@ class Test(setuptools.Command):
         """Run tests"""
         import pytest
         sys.path.insert(0, str(build_dirname()))
-
-        self.run_command('build')
 
         errno = pytest.main(
             shlex.split(self.pytest_args,
