@@ -28,8 +28,8 @@ constexpr std::array<int, 13> DAYS_IN_MONTH({-1, 31, 28, 31, 30, 31, 30, 31, 31,
 // *YDAY_MINIMUM*.
 auto iso_week_days(int yday, int wday) -> int {
   const int big_enough_multiple_of_7 = (-YDAY_MINIMUM / 7 + 2) * 7;
-  return (yday - (yday - wday + ISO_WEEK1_WDAY + big_enough_multiple_of_7) % 7 +
-          ISO_WEEK1_WDAY - ISO_WEEK_START_WDAY);
+  return yday - (yday - wday + ISO_WEEK1_WDAY + big_enough_multiple_of_7) % 7 +
+         ISO_WEEK1_WDAY - ISO_WEEK_START_WDAY;
 }
 
 // True if leap year, else false.
@@ -106,7 +106,7 @@ class FractionalSeconds {
 
   /// Gets the numpy units
   inline auto units() const -> std::string {
-    switch(scale_) {
+    switch (scale_) {
       case 1'000'000'000'000'000'000:
         return "as";
       case 1'000'000'000'000'000:

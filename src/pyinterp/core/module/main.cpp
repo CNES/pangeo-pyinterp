@@ -54,7 +54,6 @@ numpy datetime utilities
 ------------------------
 )__doc__");
 
-
   auto geodetic = m.def_submodule("geodetic", R"__doc__(
 Geographic coordinate system
 ----------------------------
