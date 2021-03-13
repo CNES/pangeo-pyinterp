@@ -6,14 +6,15 @@ jobs:
   displayName: Ubuntu-20.04
   pool:
     vmImage: 'ubuntu-20.04'
-  strategy:
+  strategy: &matrix
     matrix:
       Python37:
         python.version: '3.7'
   steps:
   - checkout: self
     fetchDepth: 1
-  - bash: git submodule update --init --recursive
+  - &initialize_submodules
+    bash: git submodule update --init --recursive
     displayName: Initialize the submodules
   - script: |
       sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -22,15 +23,20 @@ jobs:
       sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
       sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
     displayName: Install GCC
-  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+  - &add_conda_to_path
+    bash: echo "##vso[task.prependpath]$CONDA/bin"
     displayName: Add conda to PATH
-  - bash: conda create --yes --quiet --name Build
+  - &create_anaconda_environment
+    bash: conda create --yes --quiet --name Build
     displayName: Create Anaconda environment
-  - bash: |
+  - &install_build_requirements
+    bash: |
       source activate Build
-      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy
+      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage \
+        eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
     displayName: Install build requirements
-  - bash: |
+  - &build_package
+    bash: |
       source activate Build
       python setup.py build
     displayName: Build package
@@ -53,29 +59,19 @@ jobs:
   pool:
     vmImage: 'macOS-10.15'
   strategy:
-    matrix:
-      Python37:
-        python.version: '3.7'
+    *matrix
   steps:
   - checkout: self
     fetchDepth: 1
-  - bash: git submodule update --init --recursive
-    displayName: Initialize the submodules
-  - bash: echo "##vso[task.prependpath]$CONDA/bin"
-    displayName: Add conda to PATH
+  - *initialize_submodules
+  - *add_conda_to_path
   - bash: sudo chown -R $USER $CONDA
     displayName: Take ownership of conda installation
-  - bash: conda create --yes --quiet --name Build
-    displayName: Create Anaconda environment
-  - bash: |
-      source activate Build
-      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy
-    displayName: Install build requirements
-  - bash: |
-      source activate Build
-      python setup.py build
-    displayName: Build package
-  - bash: |
+  - *create_anaconda_environment
+  - *install_build_requirements
+  - *build_package
+  - &test_cases
+    bash: |
       source activate Build
       python setup.py test
     displayName: Test cases
@@ -84,29 +80,16 @@ jobs:
   pool:
     vmImage: 'vs2017-win2016'
   strategy:
-    matrix:
-      Python37:
-        python.version: '3.7'
+    *matrix
   steps:
   - checkout: self
     fetchDepth: 1
-  - script: git submodule update --init --recursive
-    displayName: Initialize the submodules
+  - *initialize_submodules
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
     displayName: Add conda to PATH
   - bash: echo "##vso[task.prependpath]$CONDA/bin"
     displayName: Add conda to PATH
-  - script: conda create --yes --quiet --name Build
-    displayName: Create Anaconda environment
-  - script: |
-      call activate Build
-      conda install --yes --quiet --name Build python=%PYTHON_VERSION% dask cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy
-    displayName: Install build requirements
-  - script: |
-      call activate Build
-      python setup.py build
-    displayName: Build package
-  - script: |
-      call activate Build
-      python setup.py test
-    displayName: Test cases
+  - *create_anaconda_environment
+  - *install_build_requirements
+  - *build_package
+  - *test_cases
