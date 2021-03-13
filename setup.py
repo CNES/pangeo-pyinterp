@@ -528,8 +528,9 @@ class Build(distutils.command.build.build):
         super().run()
 
 
-class Test(setuptools.command.test.test):
+class Test(setuptools.Command):
     """Test runner"""
+    description = "run pytest after in-place build"
     user_options = [('ext-coverage', None,
                      "Generate C++ extension coverage reports"),
                     ("pytest-args=", None, "Arguments to pass to pytest")]
@@ -537,7 +538,6 @@ class Test(setuptools.command.test.test):
     def initialize_options(self):
         """Set default values for all the options that this command
         supports"""
-        super().initialize_options()
         self.ext_coverage = None
         self.pytest_args = None
 
@@ -556,10 +556,12 @@ class Test(setuptools.command.test.test):
             WORKING_DIRECTORY, "build",
             "temp.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR))
 
-    def run_tests(self):
+    def run(self):
         """Run tests"""
         import pytest
-        sys.path.insert(0, build_dirname())
+        sys.path.insert(0, str(build_dirname()))
+
+        self.run_command('build')
 
         errno = pytest.main(
             shlex.split(self.pytest_args,
