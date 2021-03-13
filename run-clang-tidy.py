@@ -6,6 +6,7 @@ import argparse
 import concurrent.futures
 import multiprocessing
 import os
+import platform
 import subprocess
 import sys
 import sysconfig
@@ -87,7 +88,9 @@ def main():
 
     # Directories to include in search path
     includes = [] if args.include is None else args.include
-    includes.insert(0, "/Library/Developer/CommandLineTools/usr/include/c++/v1")
+    if platform.system() == 'Darwin':
+        includes.insert(
+            0, "/Library/Developer/CommandLineTools/usr/include/c++/v1")
     includes.insert(0, sysconfig.get_config_var('INCLUDEPY'))
     includes.insert(0, f"{sys.prefix}/include/eigen3")
     includes.insert(0, f"{sys.prefix}/include")
