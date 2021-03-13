@@ -1,8 +1,13 @@
 #pragma once
 #include <boost/geometry/algorithms/area.hpp>
 #include <boost/geometry/srs/spheroid.hpp>
+#if BOOST_VERSION >= 107500
+#include <boost/geometry/strategy/area.hpp>
+#include <boost/geometry/strategy/geographic/area.hpp>
+#else
 #include <boost/geometry/strategies/area.hpp>
 #include <boost/geometry/strategies/geographic/area.hpp>
+#endif
 #include <optional>
 
 #include "pyinterp/geodetic/system.hpp"
