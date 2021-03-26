@@ -181,7 +181,7 @@ class RTree {
     Type total_weight = 0;
 
     // We're looking for the nearest k points.
-    auto nearest = within ? query(point, k) : query_within(point, k);
+    auto nearest = within ? query_within(point, k) : query(point, k);
     uint32_t neighbors = 0;
 
     // For each point, the distance between the point requested and the point
