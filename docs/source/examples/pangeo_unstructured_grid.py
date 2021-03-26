@@ -86,7 +86,7 @@ mx, my = numpy.meshgrid(numpy.arange(x0, x1, res),
 # IDW interpolation
 idw_eta, neighbors = mesh.inverse_distance_weighting(
     numpy.vstack((mx.flatten(), my.flatten())).T,
-    within=False,  # Extrapolation is forbidden
+    within=True,  # Extrapolation is forbidden
     radius=55000,  # In a radius of 5.5 Km
     k=8,  # We are looking for at most 8 neighbours
     num_threads=0)
@@ -96,7 +96,7 @@ idw_eta = idw_eta.reshape(mx.shape)
 # RBF interpolation
 rbf_eta, neighbors = mesh.radial_basis_function(
     numpy.vstack((mx.flatten(), my.flatten())).T,
-    within=False,  # Extrapolation is forbidden
+    within=True,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbours
     num_threads=0)
 rbf_eta = rbf_eta.reshape(mx.shape)

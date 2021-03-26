@@ -61,7 +61,7 @@ mx, my = numpy.meshgrid(numpy.arange(X0, X1 + STEP, STEP),
 
 idw, neighbors = mesh.inverse_distance_weighting(
     numpy.vstack((mx.flatten(), my.flatten())).T,
-    within=False,  # Extrapolation is forbidden
+    within=True,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbours
     num_threads=0)
 idw = idw.reshape(mx.shape)
@@ -70,7 +70,7 @@ idw = idw.reshape(mx.shape)
 # The with the RBF method
 rbf, neighbors = mesh.radial_basis_function(
     numpy.vstack((mx.flatten(), my.flatten())).T,
-    within=False,  # Extrapolation is forbidden
+    within=True,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbours
     rbf="linear",
     num_threads=0)
