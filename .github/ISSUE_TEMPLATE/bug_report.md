@@ -25,7 +25,7 @@ A clear and concise description of what you expected to happen.
 Output from
 ```python
 import sys, numpy, pyinterp.version
-print(pyinterp.version.release(True))
+print(pyinterp.__version__)
 print(numpy.__version__)
 print(sys.version)
 ```

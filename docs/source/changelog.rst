@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.6.2 (X Y 2021)
+--------------------
+* Within functionality flipped for IDW
+
 0.6.1 (6 March 2021)
 --------------------
 * An axis can be constructed from constant values.
