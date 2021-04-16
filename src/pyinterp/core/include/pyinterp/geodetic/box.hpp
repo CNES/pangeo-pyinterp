@@ -82,7 +82,6 @@ class Box : public boost::geometry::model::box<Point> {
   //  @return True if the given point is inside or on border of this Box
   [[nodiscard]] auto covered_by(const Point& point) const -> bool {
     return boost::geometry::covered_by(point, *this);
-    ;
   }
 
   /// @brief Test if the coordinates of the points provided are located inside
