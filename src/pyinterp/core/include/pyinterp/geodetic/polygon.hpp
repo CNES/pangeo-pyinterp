@@ -79,6 +79,58 @@ class Polygon : public boost::geometry::model::polygon<Point> {
                    state[1].cast<pybind11::list>());
   }
 
+  /// @brief Test if the given point is inside or on border of this instance
+  ///
+  /// @param pt Point to test
+  //  @return True if the given point is inside or on border of this Polygon
+  [[nodiscard]] auto covered_by(const Point& point) const -> bool {
+    return boost::geometry::covered_by(point, *this);
+  }
+
+  /// @brief Test if the coordinates of the points provided are located inside
+  /// or at the edge of this Polygon.
+  ///
+  /// @param lon Longitudes coordinates in degrees to check
+  /// @param lat Latitude coordinates in degrees to check
+  /// @return Returns a vector containing a flag equal to 1 if the coordinate is
+  /// located in the Polygon or at the edge otherwise 0.
+  [[nodiscard]] auto covered_by(const Eigen::Ref<const Eigen::VectorXd>& lon,
+                                const Eigen::Ref<const Eigen::VectorXd>& lat,
+                                const size_t num_threads) const
+      -> pybind11::array_t<int8_t> {
+    detail::check_eigen_shape("lon", lon, "lat", lat);
+    auto size = lon.size();
+    auto result =
+        pybind11::array_t<int8_t>(pybind11::array::ShapeContainer{{size}});
+    auto _result = result.template mutable_unchecked<1>();
+
+    {
+      pybind11::gil_scoped_release release;
+
+      // Captures the detected exceptions in the calculation function
+      // (only the last exception captured is kept)
+      auto except = std::exception_ptr(nullptr);
+
+      detail::dispatch(
+          [&](size_t start, size_t end) {
+            try {
+              for (size_t ix = start; ix < end; ++ix) {
+                _result(ix) =
+                    static_cast<int8_t>(covered_by({lon(ix), lat(ix)}));
+              }
+            } catch (...) {
+              except = std::current_exception();
+            }
+          },
+          size, num_threads);
+
+      if (except != nullptr) {
+        std::rethrow_exception(except);
+      }
+    }
+    return result;
+  }
+
   /// Converts a Polygon into a string with the same meaning as that of this
   /// instance.
   [[nodiscard]] auto to_string() const -> std::string {

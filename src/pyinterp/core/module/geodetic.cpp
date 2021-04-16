@@ -271,6 +271,42 @@ Calculates the envelope of this polygon.
 Return:
   pyinterp.geodetic.Box: The envelope of this instance
 )__doc__")
+      .def(
+          "covered_by",
+          [](const geodetic::Polygon& self, const geodetic::Point& point) -> bool {
+            return self.covered_by(point);
+          },
+          py::arg("point"), R"__doc__(
+Test if the given point is inside or on border of this polygon
+
+Args:
+    point (pyinterp.geodectic.Point2D): point to test
+Return:
+    bool: True if the given point is inside or on border of this box
+)__doc__")
+      .def(
+          "covered_by",
+          [](const geodetic::Polygon& self,
+             const Eigen::Ref<const Eigen::VectorXd>& lon,
+             const Eigen::Ref<const Eigen::VectorXd>& lat,
+             const size_t num_threads) -> py::array_t<int8_t> {
+            return self.covered_by(lon, lat, num_threads);
+          },
+          py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
+Test if the coordinates of the points provided are located inside or at the
+edge of this polygon.
+
+Args:
+    lon (numpy.ndarray): Longitudes coordinates in degrees to check
+    lat (numpy.ndarray): Latitude coordinates in degrees to check
+    num_threads (int, optional): The number of threads to use for the
+        computation. If 0 all CPUs are used. If 1 is given, no parallel
+        computing code is used at all, which is useful for debugging.
+        Default to 1.
+Return:
+    numpy.ndarray: a vector containing a flag equal to 1 if the coordinate
+    is located in the box or at the edge otherwise 0.
+)__doc__")
       .def("area", &geodetic::Polygon::area, py::arg("wgs") = py::none(),
            R"__doc__(
 Calculates the area.

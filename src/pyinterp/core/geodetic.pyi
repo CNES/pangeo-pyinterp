@@ -136,6 +136,9 @@ class Box:
     def __setstate__(self, state: tuple) -> None:
         ...
 
+    def area(self, wgs: Optional[System] = None) -> float:
+        ...
+
     def covered_by(self, point: 'Point') -> bool:
         ...
 
@@ -167,6 +170,19 @@ class Polygon:
     def __repr__(self) -> str:
         ...
 
+    def area(self, wgs: Optional[System] = None) -> float:
+        ...
+
+    def covered_by(self, point: 'Point') -> bool:
+        ...
+
+    @overload
+    def covered_by(self,
+                   lon: numpy.ndarray[numpy.float64],
+                   lat: numpy.ndarray[numpy.float64],
+                   num_theads: int = 1) -> numpy.ndarray[numpy.int8]:
+        ...
+        
     def envelope(self) -> Box:
         ...
 
