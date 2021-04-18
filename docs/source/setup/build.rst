@@ -52,6 +52,7 @@ You can specify, among other things, the following options:
     * ``--conda-forge`` to use the generation parameters of the conda-forge
       package.
     * ``--code-coverage`` to enable coverage reporting on the C++ extension.
+    * ``--c-compiler`` to select the C compiler to use.
     * ``--cxx-compiler`` to select the C++ compiler to use.
     * ``--debug`` to compile the C++ library in Debug mode.
     * ``--eigen-root`` to specify the Eigen3 include directory.

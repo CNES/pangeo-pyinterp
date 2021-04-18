@@ -212,6 +212,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     #: Generation of the conda-forge package
     CONDA_FORGE = None
 
+    #: Preferred C compiler
+    C_COMPILER = None
+
     #: Preferred C++ compiler
     CXX_COMPILER = None
 
@@ -347,6 +350,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         is_conda = self.is_conda()
         result = []
 
+        if self.C_COMPILER is not None:
+            result.append("-DCMAKE_C_COMPILER=" + self.C_COMPILER)
+
         if self.CXX_COMPILER is not None:
             result.append("-DCMAKE_CXX_COMPILER=" + self.CXX_COMPILER)
 
@@ -460,6 +466,7 @@ class Build(distutils.command.build.build):
         ('build-unittests', None, "Build the unit tests of the C++ extension"),
         ('conda-forge', None, "Generation of the conda-forge package"),
         ('code-coverage', None, 'Enable coverage reporting'),
+        ('c-compiler=', None, 'Preferred C++ compiler'),
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
         ('eigen-root=', None, 'Preferred Eigen3 include directory'),
         ('gsl-root=', None, 'Preferred GSL installation prefix'),
@@ -480,6 +487,7 @@ class Build(distutils.command.build.build):
         self.build_unittests = None
         self.conda_forge = None
         self.code_coverage = None
+        self.c_compiler = None
         self.cxx_compiler = None
         self.eigen_root = None
         self.gsl_root = None
@@ -511,6 +519,8 @@ class Build(distutils.command.build.build):
             BuildExt.CODE_COVERAGE = self.code_coverage
         if self.conda_forge is not None:
             BuildExt.CONDA_FORGE = bool(self.conda_forge)
+        if self.c_compiler is not None:
+            BuildExt.C_COMPILER = self.c_compiler
         if self.cxx_compiler is not None:
             BuildExt.CXX_COMPILER = self.cxx_compiler
         if self.eigen_root is not None:
