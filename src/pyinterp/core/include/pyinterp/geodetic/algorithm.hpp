@@ -16,6 +16,7 @@
 #include <optional>
 
 #include "pyinterp/detail/broadcast.hpp"
+#include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp::geodetic {
