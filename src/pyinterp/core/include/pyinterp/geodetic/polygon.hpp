@@ -3,6 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/eigen.h>
+#include <pybind11/numpy.h>
+
+#include <Eigen/Core>
 #include <boost/geometry.hpp>
 
 #include "pyinterp/geodetic/algorithm.hpp"
@@ -98,37 +102,7 @@ class Polygon : public boost::geometry::model::polygon<Point> {
                                 const Eigen::Ref<const Eigen::VectorXd>& lat,
                                 const size_t num_threads) const
       -> pybind11::array_t<int8_t> {
-    detail::check_eigen_shape("lon", lon, "lat", lat);
-    auto size = lon.size();
-    auto result =
-        pybind11::array_t<int8_t>(pybind11::array::ShapeContainer{{size}});
-    auto _result = result.template mutable_unchecked<1>();
-
-    {
-      pybind11::gil_scoped_release release;
-
-      // Captures the detected exceptions in the calculation function
-      // (only the last exception captured is kept)
-      auto except = std::exception_ptr(nullptr);
-
-      detail::dispatch(
-          [&](size_t start, size_t end) {
-            try {
-              for (size_t ix = start; ix < end; ++ix) {
-                _result(ix) =
-                    static_cast<int8_t>(covered_by({lon(ix), lat(ix)}));
-              }
-            } catch (...) {
-              except = std::current_exception();
-            }
-          },
-          size, num_threads);
-
-      if (except != nullptr) {
-        std::rethrow_exception(except);
-      }
-    }
-    return result;
+    return geodetic::covered_by<Point, Polygon>(*this, lon, lat, num_threads);
   }
 
   /// Converts a Polygon into a string with the same meaning as that of this

@@ -11,6 +11,7 @@
 #include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/detail/thread.hpp"
+#include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geodetic/system.hpp"
@@ -95,37 +96,7 @@ class Box : public boost::geometry::model::box<Point> {
                                 const Eigen::Ref<const Eigen::VectorXd>& lat,
                                 const size_t num_threads) const
       -> pybind11::array_t<int8_t> {
-    detail::check_eigen_shape("lon", lon, "lat", lat);
-    auto size = lon.size();
-    auto result =
-        pybind11::array_t<int8_t>(pybind11::array::ShapeContainer{{size}});
-    auto _result = result.template mutable_unchecked<1>();
-
-    {
-      pybind11::gil_scoped_release release;
-
-      // Captures the detected exceptions in the calculation function
-      // (only the last exception captured is kept)
-      auto except = std::exception_ptr(nullptr);
-
-      detail::dispatch(
-          [&](size_t start, size_t end) {
-            try {
-              for (size_t ix = start; ix < end; ++ix) {
-                _result(ix) =
-                    static_cast<int8_t>(covered_by({lon(ix), lat(ix)}));
-              }
-            } catch (...) {
-              except = std::current_exception();
-            }
-          },
-          size, num_threads);
-
-      if (except != nullptr) {
-        std::rethrow_exception(except);
-      }
-    }
-    return result;
+    return geodetic::covered_by<Point, Box>(*this, lon, lat, num_threads);
   }
 
   /// Converts a Box into a string with the same meaning as that of this
