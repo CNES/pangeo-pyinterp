@@ -466,7 +466,7 @@ class Build(distutils.command.build.build):
         ('build-unittests', None, "Build the unit tests of the C++ extension"),
         ('conda-forge', None, "Generation of the conda-forge package"),
         ('code-coverage', None, 'Enable coverage reporting'),
-        ('c-compiler=', None, 'Preferred C++ compiler'),
+        ('c-compiler=', None, 'Preferred C compiler'),
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
         ('eigen-root=', None, 'Preferred Eigen3 include directory'),
         ('gsl-root=', None, 'Preferred GSL installation prefix'),
