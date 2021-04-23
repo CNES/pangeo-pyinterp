@@ -1,7 +1,7 @@
 Changelog
 #########
 
-0.6.2 (23 April 2021)
+0.7.0 (23 April 2021)
 ---------------------
 * Within functionality flipped for IDW
 * Checks if the coordinates are covered by a polygon

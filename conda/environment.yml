@@ -6,7 +6,7 @@ dependencies:
   - netcdf4
   - numpy
   - pandas
-  - pyinterp>=0.5.1
+  - pyinterp>=0.7.0
   - pypandoc
   - python=3.7
   - sphinx-gallery
