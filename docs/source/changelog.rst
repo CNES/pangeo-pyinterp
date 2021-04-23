@@ -1,9 +1,11 @@
 Changelog
 #########
 
-0.6.2 (X Y 2021)
---------------------
+0.6.2 (23 April 2021)
+---------------------
 * Within functionality flipped for IDW
+* Checks if the coordinates are covered by a polygon
+* Calculates distance between geodetic objects
 
 0.6.1 (6 March 2021)
 --------------------
