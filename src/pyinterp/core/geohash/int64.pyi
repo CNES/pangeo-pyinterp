@@ -12,6 +12,7 @@ def bounding_boxes(box: Optional[geodetic.Box] = None,
     ...
 
 
+@overload
 def decode(hash: int,
            precision: int = 64,
            round: bool = False) -> geodetic.Point:

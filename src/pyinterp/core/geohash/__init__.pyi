@@ -3,6 +3,7 @@ import numpy
 from .. import geodetic
 
 
+@overload
 def area(hash: str, wgs: Optional[geodetic.System] = None) -> float:
     ...
 
@@ -23,6 +24,7 @@ def bounding_boxes(box: Optional[geodetic.Box] = None,
     ...
 
 
+@overload
 def decode(hash: str, round: bool = False) -> geodetic.Point:
     ...
 
@@ -35,6 +37,7 @@ def decode(
     ...
 
 
+@overload
 def encode(point: geodetic.Point, precision: int = 12) -> bytes:
     ...
 
