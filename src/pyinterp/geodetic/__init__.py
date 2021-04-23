@@ -2,10 +2,10 @@
 Geographic coordinate system
 ----------------------------
 """
-import warnings
 from typing import List, Optional, Tuple
+import warnings
 from ..core import geodetic
-
+from ..core.geodetic import coordinate_distances
 
 class System(geodetic.System):
     """World Geodetic System (WGS).
