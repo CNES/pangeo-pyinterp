@@ -73,6 +73,16 @@ class Polygon : public boost::geometry::model::polygon<Point> {
     return geodetic::area(*this, wgs);
   }
 
+  /// Calculate the distance between two polygons
+  [[nodiscard]] auto distance(const Polygon& other) const -> double {
+    return geodetic::distance(*this, other);
+  }
+
+  /// Calculate the distance between this instance and a point
+  [[nodiscard]] auto distance(const Point& other) const -> double {
+    return geodetic::distance(*this, other);
+  }
+
   /// Create a new instance from a registered state of an instance of this
   /// object.
   static auto setstate(const pybind11::tuple& state) -> Polygon {

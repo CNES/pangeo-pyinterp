@@ -7,6 +7,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geodetic/coordinates.hpp"
 #include "pyinterp/geodetic/point.hpp"
@@ -15,6 +16,20 @@
 
 namespace geodetic = pyinterp::geodetic;
 namespace py = pybind11;
+
+static inline auto parse_distance_strategy(const std::string& strategy)
+    -> geodetic::DistanceStrategy {
+  if (strategy == "andoyer") {
+    return geodetic::kAndoyer;
+  }
+  if (strategy == "thomas") {
+    return geodetic::kThomas;
+  }
+  if (strategy == "vincenty") {
+    return geodetic::kVincenty;
+  }
+  throw std::invalid_argument("Invalid strategy: " + strategy);
+}
 
 static void init_geodetic_point(py::module& m) {
   py::class_<geodetic::Point>(m, "Point", R"__doc__(
@@ -41,6 +56,28 @@ Args:
                     static_cast<void (geodetic::Point::*)(const double)>(
                         &geodetic::Point::lat),
                     "Latitude coordinate in degrees")
+      .def(
+          "distance",
+          [](const geodetic::Point& self, const geodetic::Point& other,
+             const std::string& strategy,
+             const std::optional<geodetic::System>& wgs) -> double {
+            return self.distance(other, parse_distance_strategy(strategy), wgs);
+          },
+          py::arg("other"), py::arg("strategy") = "thomas",
+          py::arg("wgs") = py::none(),
+          R"__doc__(
+Calculate the distance between the two points.
+
+Args:
+    other (pyinterp.core.geodetic.Point): The other point to consider.
+    strategy (str): The calculation method used to calculate the distance. This
+        parameter can take the values "andoyer", "thomas" or "vincenty".
+    wgs (pyinterp.core.geodetic.System, optional): WGS system used for the
+        calculation, default to WGS84
+
+Return:
+    float: the distance between the two points in meters.
+)__doc__")
       .def(
           "wkt",
           [](const geodetic::Point& self) -> std::string {
@@ -174,6 +211,36 @@ Return:
     float: The calculated area
 )__doc__")
       .def(
+          "distance",
+          [](const geodetic::Box& self, const geodetic::Box& other) -> double {
+            return self.distance(other);
+          },
+          py::arg("other"),
+          R"__doc__(
+Calculate the distance between the two boxes.
+
+Args:
+    other (pyinterp.core.geodetic.Box): The other box to consider.
+
+Return:
+    float: the distance between the two boxes in meters.
+)__doc__")
+      .def(
+          "distance",
+          [](const geodetic::Box& self, const geodetic::Point& point) -> double {
+            return self.distance(point);
+          },
+          py::arg("point"),
+          R"__doc__(
+Calculate the distance between this instance and a point.
+
+Args:
+    point (pyinterp.core.geodetic.Point): The point to consider.
+
+Return:
+    float: the distance between this box and the provided point.
+)__doc__")
+      .def(
           "wkt",
           [](const geodetic::Box& self) -> std::string {
             auto ss = std::stringstream();
@@ -273,9 +340,8 @@ Return:
 )__doc__")
       .def(
           "covered_by",
-          [](const geodetic::Polygon& self, const geodetic::Point& point) -> bool {
-            return self.covered_by(point);
-          },
+          [](const geodetic::Polygon& self, const geodetic::Point& point)
+              -> bool { return self.covered_by(point); },
           py::arg("point"), R"__doc__(
 Test if the given point is inside or on border of this polygon
 
@@ -317,6 +383,36 @@ Args:
 
 Return:
     float: The calculated area
+)__doc__")
+      .def(
+          "distance",
+          [](const geodetic::Polygon& self, const geodetic::Polygon& other) -> double {
+            return self.distance(other);
+          },
+          py::arg("other"),
+          R"__doc__(
+Calculate the distance between the two polygons.
+
+Args:
+    other (pyinterp.core.geodetic.Polygon): The other polygon to consider.
+
+Return:
+    float: the distance between the two polygons in meters.
+)__doc__")
+      .def(
+          "distance",
+          [](const geodetic::Polygon& self, const geodetic::Point& point) -> double {
+            return self.distance(point);
+          },
+          py::arg("point"),
+          R"__doc__(
+Calculate the distance between this instance and a point.
+
+Args:
+    point (pyinterp.core.geodetic.Point): The point to consider.
+
+Return:
+    float: the distance between this polygon and the provided point.
 )__doc__")
       .def(
           "wkt",
@@ -550,4 +646,41 @@ Return:
   init_geodetic_point(m);
   init_geodetic_box(m);
   init_geodetic_polygon(m);
+
+  m.def(
+      "coordinate_distances",
+      [](const Eigen::Ref<const Eigen::VectorXd>& lon1,
+         const Eigen::Ref<const Eigen::VectorXd>& lat1,
+         const Eigen::Ref<const Eigen::VectorXd>& lon2,
+         const Eigen::Ref<const Eigen::VectorXd>& lat2,
+         const std::string& strategy,
+         const std::optional<geodetic::System>& wgs,
+         const size_t num_threads) -> py::array_t<double> {
+        return geodetic::coordinate_distances<geodetic::Point>(
+            lon1, lat1, lon2, lat2, parse_distance_strategy(strategy), wgs,
+            num_threads);
+      },
+      py::arg("lon1"), py::arg("lat1"), py::arg("lon2"), py::arg("lat2"),
+      py::arg("strategy") = "thomas", py::arg("wgs") = py::none(),
+      py::arg("num_threads") = 0, R"__doc__(
+Returns the distance between the given coordinates.
+
+Args:
+    lon1 (numpy.ndarray): Longitudes in degrees
+    lat1 (numpy.ndarray): Latitudes in degrees
+    lon2 (numpy.ndarray): Longitudes in degrees
+    lat2 (numpy.ndarray): Latitudes in degrees
+    strategy (str): The calculation method used to calculate the distance. This
+        parameter can take the values "andoyer", "thomas" or "vincenty".
+    wgs (pyinterp.core.geodetic.System, optional): WGS system used for the
+        calculation, default to WGS84
+    num_threads (int, optional): The number of threads to use for the
+        computation. If 0 all CPUs are used. If 1 is given, no parallel
+        computing code is used at all, which is useful for debugging.
+        Defaults to ``0``.
+Return:
+    numpy.ndarray: an array containing the distances ``[..., distance_i, ...]``,
+        corresponding to the distances between the coordinates
+        ``[..., (Point(lon1_i, lat1_i), Point(lon2_i, lat2_i)), ...]``.
+)__doc__");
 }

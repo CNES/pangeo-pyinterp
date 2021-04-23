@@ -8,6 +8,8 @@
 #include <boost/geometry/geometries/register/point.hpp>
 
 #include "pyinterp/detail/geometry/point.hpp"
+#include "pyinterp/geodetic/algorithm.hpp"
+#include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -32,6 +34,14 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
 
   /// Set latitude value in degrees
   inline void lat(double const v) { this->set<1>(v); }
+
+  /// Calculate the distance between the two points
+  [[nodiscard]] auto distance(const Point& other,
+                              const DistanceStrategy strategy,
+                              const std::optional<System>& wgs) const
+      -> double {
+    return geodetic::distance(*this, other, strategy, wgs);
+  }
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {

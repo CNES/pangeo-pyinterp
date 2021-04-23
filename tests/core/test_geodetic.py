@@ -7,6 +7,7 @@ import pytest
 import math
 import numpy as np
 from pyinterp import core
+from pyinterp.core import geodetic
 
 POINTS = [(-36.25, -54.9238), (-36.5, -54.9238), (-36.75, -54.9238),
           (-37, -54.9238), (-37.25, -54.9238), (-37.5, -54.9238),
@@ -413,6 +414,25 @@ def test_point():
     assert point.wkt() == "POINT(-2 2)"
 
 
+def test_point_distance():
+    acropolis = core.geodetic.Point(23.725750, 37.971536)
+    ulb = core.geodetic.Point(4.3826169, 50.8119483)
+    assert 2088389.07865908 == pytest.approx(acropolis.distance(
+        ulb, strategy="andoyer"),
+                                             abs=1e-6)
+    assert 2088384.36439399 == pytest.approx(acropolis.distance(
+        ulb, strategy="thomas"),
+                                             abs=1e-6)
+    assert 2088384.36606831 == pytest.approx(acropolis.distance(
+        ulb, strategy="vincenty"),
+                                             abs=1e-6)
+    assert acropolis.distance(ulb,
+                              strategy="thomas") == acropolis.distance(ulb)
+    with pytest.raises(ValueError):
+        acropolis.distance(ulb, strategy="Thomas")
+
+
+
 def test_point_pickle():
     """Serialization tests"""
     a = core.geodetic.Point(1, 2)
@@ -435,6 +455,10 @@ def test_box():
     assert box.min_corner.lat == 1
     assert box.max_corner.lon == 2
     assert box.max_corner.lat == 3
+
+    assert box.distance(box) == 0
+    assert box.distance(min_corner) == 0
+    assert box.distance(core.geodetic.Point(1, 1)) != 0
 
     assert box.covered_by(min_corner)
     assert box.covered_by(max_corner)
@@ -490,6 +514,10 @@ def test_polygon():
         core.geodetic.Point(1, 4),
         core.geodetic.Point(1, 1)
     ]])
+    assert polygon.distance(polygon) == 0
+    assert polygon.distance(core.geodetic.Point(0, 0)) == 0
+    assert polygon.distance(core.geodetic.Point(10, 10)) != 0
+
     assert repr(polygon) == "(((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)), " \
         "((1, 1), (4, 1), (4, 4), (1, 4), (1, 1)))"
     assert polygon.wkt() == "POLYGON((0 0,0 5,5 5,5 0,0 0)," \
@@ -531,3 +559,25 @@ def test_polygon_covered_by():
     mx = (mx + 180) % 360 - 180
     mask2 = polygon.covered_by(mx.flatten(), my.flatten()).reshape(mx.shape)
     assert np.all(mask2 == mask1)
+
+
+def test_coordinate_distance():
+    lon = np.arange(0, 360, 10)
+    lat = np.arange(-90, 90.5, 10)
+    mx, my = np.meshgrid(lon, lat)
+    d1 = core.geodetic.coordinate_distances(mx.flatten(), my.flatten(),
+                                       mx.flatten() + 1,
+                                       my.flatten() + 1,
+                                       strategy="vincenty", num_threads=1)
+    d0 = core.geodetic.coordinate_distances(mx.flatten(), my.flatten(),
+                                       mx.flatten() + 1,
+                                       my.flatten() + 1,
+                                       strategy="vincenty", num_threads=0)
+    assert np.all(d0 == d1)
+    d0 = d0.reshape(mx.shape)
+    for iy in range(d0.shape[0]):
+        assert np.all(np.abs((d0[iy, :] - d0[iy, 0]) <= 1e-6))
+    for ix in range(d0.shape[1]):
+        print(d0[:, ix], d0[0, ix])
+        delta = np.abs(d0[:, ix] - d0[0, ix])
+        assert np.all(delta[delta != 0] > 1e3)

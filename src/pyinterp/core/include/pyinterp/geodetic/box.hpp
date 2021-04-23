@@ -112,6 +112,16 @@ class Box : public boost::geometry::model::box<Point> {
     return static_cast<Polygon>(*this).area(wgs);
   }
 
+  /// Calculate the distance between two boxes
+  [[nodiscard]] auto distance(const Box& other) const -> double {
+    return static_cast<Polygon>(*this).distance(static_cast<Polygon>(other));
+  }
+
+  /// Calculate the distance between this instance and a point
+  [[nodiscard]] auto distance(const Point& other) const -> double {
+    return static_cast<Polygon>(*this).distance(other);
+  }
+
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple(this->min_corner().getstate(),

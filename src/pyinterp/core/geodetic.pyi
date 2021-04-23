@@ -110,6 +110,12 @@ class Point:
     def __setstate__(self, state: tuple) -> None:
         ...
 
+    def distance(self,
+                 other: "Point",
+                 strategy: str = 'thomas',
+                 wgs: Optional[System] = None) -> float:
+        ...
+
     def wtk(self) -> str:
         ...
 
@@ -139,7 +145,16 @@ class Box:
     def area(self, wgs: Optional[System] = None) -> float:
         ...
 
-    def covered_by(self, point: 'Point') -> bool:
+    @overload
+    def distance(self, other: 'Box') -> float:
+        ...
+
+    @overload
+    def distance(self, other: Point) -> float:
+        ...
+
+    @overload
+    def covered_by(self, point: Point) -> bool:
         ...
 
     @overload
@@ -173,7 +188,8 @@ class Polygon:
     def area(self, wgs: Optional[System] = None) -> float:
         ...
 
-    def covered_by(self, point: 'Point') -> bool:
+    @overload
+    def covered_by(self, point: Point) -> bool:
         ...
 
     @overload
@@ -182,7 +198,15 @@ class Polygon:
                    lat: numpy.ndarray[numpy.float64],
                    num_theads: int = 1) -> numpy.ndarray[numpy.int8]:
         ...
-        
+
+    @overload
+    def distance(self, other: 'Polygon') -> float:
+        ...
+
+    @overload
+    def distance(self, other: Point) -> float:
+        ...
+
     def envelope(self) -> Box:
         ...
 
@@ -192,3 +216,13 @@ class Polygon:
     @staticmethod
     def read_wkt(wkt: str) -> "Polygon":
         ...
+
+
+def coordinate_distances(lon1: numpy.ndarray,
+                         lat1: numpy.ndarray,
+                         lon2: numpy.ndarray,
+                         lat2: numpy.ndarray,
+                         strategy: str = 'thomas',
+                         wgs: Optional[System] = None,
+                         num_threads: int = 0) -> numpy.ndarray:
+    ...

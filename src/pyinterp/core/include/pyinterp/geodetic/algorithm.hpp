@@ -13,6 +13,9 @@
 #include <boost/geometry/strategies/area.hpp>
 #include <boost/geometry/strategies/geographic/area.hpp>
 #endif
+#include <boost/geometry/strategies/geographic/distance_andoyer.hpp>
+#include <boost/geometry/strategies/geographic/distance_thomas.hpp>
+#include <boost/geometry/strategies/geographic/distance_vincenty.hpp>
 #include <optional>
 
 #include "pyinterp/detail/broadcast.hpp"
@@ -20,6 +23,16 @@
 #include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp::geodetic {
+
+/// Distance calculation strategy.
+enum DistanceStrategy { kAndoyer = 0x0, kThomas = 0x1, kVincenty = 0x2 };
+
+using Andoyer = boost::geometry::strategy::distance::andoyer<
+    boost::geometry::srs::spheroid<double>>;
+using Thomas = boost::geometry::strategy::distance::thomas<
+    boost::geometry::srs::spheroid<double>>;
+using Vincenty = boost::geometry::strategy::distance::vincenty<
+    boost::geometry::srs::spheroid<double>>;
 
 /// Calculate the area
 template <typename Geometry>
@@ -72,6 +85,113 @@ template <typename Geometry1, typename Geometry2>
     }
   }
   return result;
+}
+
+/// Calculate the distance between two geometries.
+template <typename Geometry1, typename Geometry2>
+[[nodiscard]] inline auto distance(const Geometry1 &geometry1,
+                                   const Geometry2 &geometry2,
+                                   const DistanceStrategy strategy,
+                                   const std::optional<System> &wgs) -> double {
+  auto spheroid = wgs.has_value()
+                      ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
+                                                       wgs->semi_minor_axis())
+                      : boost::geometry::srs::spheroid<double>();
+  switch (strategy) {
+    case kAndoyer:
+      return boost::geometry::distance(geometry1, geometry2, Andoyer(spheroid));
+      break;
+    case kThomas:
+      return boost::geometry::distance(geometry1, geometry2, Thomas(spheroid));
+      break;
+    case kVincenty:
+      return boost::geometry::distance(geometry1, geometry2,
+                                       Vincenty(spheroid));
+      break;
+  }
+  throw std::invalid_argument("unknown strategy: " +
+                              std::to_string(static_cast<int>(strategy)));
+}
+
+/// Calculate the distance between two geometries.
+template <typename Geometry1, typename Geometry2>
+[[nodiscard]] inline auto distance(const Geometry1 &geometry1,
+                                   const Geometry2 &geometry2) -> double {
+  return boost::geometry::distance(geometry1, geometry2);
+}
+
+/// Calculate the distance between coordinates.
+template <typename Geometry, typename Strategy>
+[[nodiscard]] inline auto coordinate_distances(
+    const Eigen::Ref<const Eigen::VectorXd> &lon1,
+    const Eigen::Ref<const Eigen::VectorXd> &lat1,
+    const Eigen::Ref<const Eigen::VectorXd> &lon2,
+    const Eigen::Ref<const Eigen::VectorXd> &lat2, const Strategy &strategy,
+    const size_t num_threads) -> pybind11::array_t<double> {
+  auto size = lon1.size();
+  auto result =
+      pybind11::array_t<double>(pybind11::array::ShapeContainer{{size}});
+  auto _result = result.template mutable_unchecked<1>();
+
+  {
+    pybind11::gil_scoped_release release;
+
+    // Captures the detected exceptions in the calculation function
+    // (only the last exception captured is kept)
+    auto except = std::exception_ptr(nullptr);
+
+    detail::dispatch(
+        [&](size_t start, size_t end) {
+          try {
+            for (size_t ix = start; ix < end; ++ix) {
+              _result(ix) = boost::geometry::distance(
+                  Geometry(lon1(ix), lat1(ix)), Geometry(lon2(ix), lat2(ix)),
+                  strategy);
+            }
+          } catch (...) {
+            except = std::current_exception();
+          }
+        },
+        size, num_threads);
+
+    if (except != nullptr) {
+      std::rethrow_exception(except);
+    }
+  }
+  return result;
+}
+
+/// Calculate the distance between coordinates.
+template <typename Geometry>
+[[nodiscard]] inline auto coordinate_distances(
+    const Eigen::Ref<const Eigen::VectorXd> &lon1,
+    const Eigen::Ref<const Eigen::VectorXd> &lat1,
+    const Eigen::Ref<const Eigen::VectorXd> &lon2,
+    const Eigen::Ref<const Eigen::VectorXd> &lat2,
+    const DistanceStrategy strategy, const std::optional<System> &wgs,
+    const size_t num_threads) -> pybind11::array_t<double> {
+  detail::check_eigen_shape("lon1", lon1, "lat1", lat1, "lon2", lon2, "lat2",
+                            lat2);
+  auto spheroid = wgs.has_value()
+                      ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
+                                                       wgs->semi_minor_axis())
+                      : boost::geometry::srs::spheroid<double>();
+  switch (strategy) {
+    case kAndoyer:
+      return coordinate_distances<Geometry, Andoyer>(
+          lon1, lat1, lon2, lat2, Andoyer(spheroid), num_threads);
+      break;
+    case kThomas:
+      return coordinate_distances<Geometry, Thomas>(
+          lon1, lat1, lon2, lat2, Thomas(spheroid), num_threads);
+      break;
+    case kVincenty:
+      return coordinate_distances<Geometry, Vincenty>(
+          lon1, lat1, lon2, lat2, Vincenty(spheroid), num_threads);
+      break;
+  }
+  throw std::invalid_argument("unknown strategy: " +
+                              std::to_string(static_cast<int>(strategy)));
 }
 
 }  // namespace pyinterp::geodetic
