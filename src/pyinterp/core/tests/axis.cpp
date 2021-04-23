@@ -716,3 +716,21 @@ TEST(axis, timestamp) {
   EXPECT_EQ(axis.find_index(946684880, true), 1439 - 1);
   EXPECT_EQ(axis.find_index(946684900, true), 1439 - 2);
 }
+
+TYPED_TEST(AxisTest, find_nearest_index) {
+  this->reset_axis(0, 355, 72, static_cast<TypeParam>(1e-6), true);
+  auto& axis = *(this->axis);
+
+  EXPECT_EQ(axis.find_nearest_index(356, false), 71);
+  EXPECT_EQ(axis.find_nearest_index(358, false), 0);
+  EXPECT_EQ(axis.find_nearest_index(-2, false), 0);
+  EXPECT_EQ(axis.find_nearest_index(-4, false), 71);
+
+  this->reset_axis(-180, 175, 72, static_cast<TypeParam>(1e-6), true);
+  axis = *(this->axis);
+
+  EXPECT_EQ(axis.find_nearest_index(176, false), 71);
+  EXPECT_EQ(axis.find_nearest_index(178, false), 0);
+  EXPECT_EQ(axis.find_nearest_index(-182, false), 0);
+  EXPECT_EQ(axis.find_nearest_index(-184, false), 71);
+}

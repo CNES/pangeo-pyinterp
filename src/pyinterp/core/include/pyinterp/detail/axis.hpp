@@ -240,6 +240,31 @@ class Axis {
     return axis_->find_index(normalize_coordinate(coordinate), bounded);
   }
 
+  /// Given a coordinate position, find what axis element contains it.
+  ///
+  /// This function is identical to the "index_function" except that the values
+  /// located between the last and the first point of the axis representing a
+  /// circle will not return the value -1.
+  ///
+  /// @param coordinate position in this coordinate system
+  /// @param bounded if true, returns "-1" if the value is located outside this
+  /// coordinate system, otherwise the value of the first element if the value
+  /// is located before, or the value of the last element of this container if
+  /// the requested value is located after.
+  /// @return index of the grid point containing it or -1 if outside grid area
+  [[nodiscard]] inline auto find_nearest_index(T coordinate,
+                                               const bool bounded) const
+      -> int64_t {
+    coordinate = normalize_coordinate(coordinate);
+    auto result = axis_->find_index(coordinate, bounded);
+    if (result == -1 && is_circle_) {
+      result = (coordinate - max_value()) < (min_value() + 360 - coordinate)
+                   ? this->size() - 1
+                   : 0;
+    }
+    return result;
+  }
+
   /// Given a coordinate position, find grids elements around it.
   /// This mean that
   /// @code
