@@ -89,7 +89,7 @@ Return:
 Gets the OGC Well-Known Text (WKT) representation of this instance
 
 Return:
-    str: the WTK representation
+    str: the WKT representation
 )__doc__")
       .def_static(
           "read_wkt",
@@ -251,7 +251,7 @@ Return:
 Gets the OGC Well-Known Text (WKT) representation of this instance
 
 Return:
-    str: the WTK representation
+    str: the WKT representation
 )__doc__")
       .def_static(
           "read_wkt",
@@ -425,7 +425,7 @@ Return:
 Gets the OGC Well-Known Text (WKT) representation of this instance
 
 Return:
-    str: the WTK representation
+    str: the WKT representation
 )__doc__")
       .def_static(
           "read_wkt",

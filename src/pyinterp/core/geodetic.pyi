@@ -116,11 +116,11 @@ class Point:
                  wgs: Optional[System] = None) -> float:
         ...
 
-    def wtk(self) -> str:
+    def wkt(self) -> str:
         ...
 
     @staticmethod
-    def read_wkt(wtk: str) -> 'Point':
+    def read_wkt(wkt: str) -> 'Point':
         ...
 
 
@@ -164,7 +164,7 @@ class Box:
                    num_theads: int = 1) -> numpy.ndarray[numpy.int8]:
         ...
 
-    def wtk(self) -> str:
+    def wkt(self) -> str:
         ...
 
     @staticmethod
