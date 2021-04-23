@@ -116,7 +116,8 @@ class Axis : public detail::Axis<T>,
     {
       pybind11::gil_scoped_release release;
       for (pybind11::ssize_t ix = 0; ix < size; ++ix) {
-        _result(ix) = detail::Axis<T>::find_index(_coordinates(ix), bounded);
+        _result(ix) =
+            detail::Axis<T>::find_nearest_index(_coordinates(ix), bounded);
       }
     }
     return result;
