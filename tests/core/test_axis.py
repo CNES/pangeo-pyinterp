@@ -102,3 +102,13 @@ def test_axis_pickle():
     a = core.Axis(MERCATOR_LATITUDES, is_circle=False)
     b = pickle.loads(pickle.dumps(a))
     assert a == b
+
+
+def test_find_index_circular():
+    a = core.Axis(np.arange(0, 360, 5), is_circle=True)
+    assert np.all(
+        a.find_index(np.array([356, 358, -2, -4])) == np.array([71, 0, 0, 71]))
+    a = core.Axis(np.arange(-180, 180, 5), is_circle=True)
+    assert np.all(
+        a.find_index(np.array([176, 178, -182, -184])) == np.array(
+            [71, 0, 0, 71]))
