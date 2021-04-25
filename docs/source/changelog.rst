@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.7.1 (25 April 2021)
+---------------------
+* find_index does not handle circles
+
 0.7.0 (23 April 2021)
 ---------------------
 * Within functionality flipped for IDW
