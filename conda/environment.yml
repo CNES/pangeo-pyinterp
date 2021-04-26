@@ -1,16 +1,16 @@
 name: RTD
 dependencies:
   - cartopy
-  - furo
-  - mkl
   - netcdf4
-  - numpy
   - pandas
   - pyinterp>=0.7.0
   - pypandoc
   - python=3.7
-  - sphinx-gallery
-  - xarray
+  - pip
+  - pip:
+    - furo
+    - sphinx-gallery
+    - sphinx_inline_tabs
 channels:
   - main
-  - conda-forge
+  - fbriol

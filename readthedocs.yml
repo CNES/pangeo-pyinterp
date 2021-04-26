@@ -11,4 +11,4 @@ conda:
   environment: conda/environment.yml
 
 build:
-  image: stable
+  image: latest
