@@ -26,7 +26,6 @@ requirements:
     - boost-cpp
     - mkl
     - mkl-devel
-    - numpy
     - pip
     - pytest
     - python
@@ -34,7 +33,6 @@ requirements:
     - snappy
     - xarray
   run:
-    - {{ pin_compatible('numpy') }}
     - python
     - mkl
     - dask
