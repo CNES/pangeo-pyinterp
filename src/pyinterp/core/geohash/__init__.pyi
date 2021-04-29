@@ -64,7 +64,7 @@ def neighbors(hash: str) -> numpy.ndarray[numpy.bytes_]:
 
 def where(
     hash: numpy.ndarray[numpy.bytes_]
-) -> Dict[int, Tuple[Tuple[int, int], Tuple[int, int]]]:
+) -> Dict[bytes, Tuple[Tuple[int, int], Tuple[int, int]]]:
     ...
 
 
