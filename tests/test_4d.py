@@ -73,3 +73,11 @@ def test_4d():
         xr.load_dataset(GRID).pressure, increasing_axes=True)
     assert grid.ndim, 4
     assert isinstance(grid.grid, pyinterp.backends.xarray.Grid4D)
+
+
+def test_4d_degraded():
+    grid = pyinterp.backends.xarray.Grid4D(xr.load_dataset(GRID).pressure,
+                                           increasing_axes=True)
+    zero = np.array([0])
+    with pytest.raises(ValueError):
+        pyinterp.bicubic(grid, zero, zero, zero)

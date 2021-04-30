@@ -21,7 +21,7 @@ class AbstractLock:
     """Abstract class implementing an exclusive lock.
     """
     @abc.abstractmethod
-    def _acquire(self):
+    def _acquire(self):  # pragma: no cover
         """Virtual function to implement the locking process."""
         ...
 
@@ -51,7 +51,7 @@ class AbstractLock:
                     time.sleep(delay)
 
     @abc.abstractmethod
-    def locked(self) -> bool:
+    def locked(self) -> bool:  # pragma: no cover
         """Test the existence of the lock.
 
         Returns:
@@ -60,7 +60,7 @@ class AbstractLock:
         ...
 
     @abc.abstractmethod
-    def release(self) -> None:
+    def release(self) -> None:  # pragma: no cover
         """Release the lock."""
         ...
 

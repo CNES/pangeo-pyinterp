@@ -68,3 +68,9 @@ def test_xarray():
     array = idx.to_xarray(box)
     assert isinstance(array, xarray.DataArray)
     assert (len(array) < 128)
+
+    with pytest.raises(ValueError):
+        geohash.converter.to_xarray(numpy.empty((2, 2)), numpy.empty((2, )))
+
+    with pytest.raises(TypeError):
+        geohash.converter.to_xarray(numpy.empty((2, 2)), numpy.empty((2, 2)))

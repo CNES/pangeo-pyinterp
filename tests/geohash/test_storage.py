@@ -36,18 +36,28 @@ def test_memory():
 def test_file_system(temp_root):
     fs = fsspec.filesystem("file")
     with storage.FileSystem(fs, str(temp_root)) as db:
+        assert list(db.keys()) == []
         db[b'0'] = 1
         assert db[b'0'] == [1]
         assert b'0' in db
+        assert list(db.keys()) == [b'0']
         db.rollback()
         assert b'0' not in db
+        assert list(db.keys()) == []
 
         db[b'0'] = 1
         db[b'0'] = [2, 3, 4]
         assert db[b'0'] == [2, 3, 4]
-        db.extend(((b'0', [5, 6]), ))
+        db.extend(((b'0', [5]), ))
+        db.extend(((b'0', 6), ))
         assert db[b'0'] == [2, 3, 4, 5, 6]
+        assert list(db.values()) == [[2, 3, 4, 5, 6]]
+        assert list(db.items()) == [(b'0', [2, 3, 4, 5, 6])]
         db.commit()
+        assert list(db.keys()) == [b'0']
+
+        db.update(((b'0', [0, 1]), ))
+        assert db[b'0'] == [0, 1]
 
         del db[b'0']
         assert b'0' not in db

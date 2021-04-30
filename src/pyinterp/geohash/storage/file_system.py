@@ -34,6 +34,11 @@ class FileSystem:
 
     def __delitem__(self, key: bytes) -> None:
         self._deleted.add(key)
+        if key in self._transactions:
+            self._transactions.remove(key)
+            entry = self.fs.sep.join(
+                (self.root, self._pending_key(key).decode()))
+            self.fs.rm(entry)
 
     def _read(self, entry: str) -> List[Any]:
         with self.fs.open(entry, mode="rb") as stream:
@@ -65,9 +70,6 @@ class FileSystem:
         for key, value in other:
             self[key] = value
 
-    def _keys(self) -> List[str]:
-        return self.fs.listdir(self.root, detail=False)
-
     def keys(self) -> Iterable[bytes]:
         for item in self.fs.listdir(self.root, detail=False):
             yield item.split(self.fs.sep)[-1].lstrip("_").encode()
@@ -87,23 +89,20 @@ class FileSystem:
         for item in self._transactions:
             entry = self.fs.sep.join(
                 (self.root, self._pending_key(item).decode()))
-            self.fs.rm(entry, recursive=True)
+            self.fs.rm(entry)
         self._transactions.clear()
         self._deleted.clear()
 
     def commit(self):
         for item in self._deleted:
-            self.fs.delete(self.fs.sep.join((self.root, item.decode())),
-                           recursive=True)
+            self.fs.rm(self.fs.sep.join((self.root, item.decode())))
         self._deleted.clear()
 
         for item in self._transactions:
             new_entry = self.fs.sep.join(
                 (self.root, self._pending_key(item).decode()))
             old_entry = self.fs.sep.join((self.root, item.decode()))
-            if self.fs.exists(old_entry):
-                self.fs.rm(old_entry, recursive=True)
-            self.fs.mv(new_entry, old_entry, recursive=True)
+            self.fs.mv(new_entry, old_entry)
         self._transactions.clear()
 
     def __enter__(self) -> "FileSystem":
