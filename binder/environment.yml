@@ -3,11 +3,11 @@ channels:
   - conda-forge
 dependencies:
   - cartopy
-  - fsspec
   - gcsfs
   - intake
   - intake-xarray
   - jupyter
   - netCDF4
+  - numcodecs
   - pandas
   - pyinterp>=0.7.1

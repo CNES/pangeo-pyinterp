@@ -28,7 +28,7 @@ jobs:
     displayName: Create Anaconda environment
   - bash: |
       source activate Build
-      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
+      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage eigen gsl boost-cpp fsspec netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
     displayName: Install build requirements
   - bash: |
       source activate Build
@@ -76,7 +76,7 @@ jobs:
     displayName: Create Anaconda environment
   - bash: |
       source activate Build
-      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
+      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage eigen fsspec gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
     displayName: Install build requirements
   - bash: |
       source activate Build
@@ -111,7 +111,7 @@ jobs:
     displayName: Create Anaconda environment
   - bash: |
       source activate Build
-      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
+      conda install --yes --quiet --name Build python=$PYTHON_VERSION dask cmake coverage eigen fsspec gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
     displayName: Install build requirements
   - bash: |
       source activate Build
@@ -146,7 +146,7 @@ jobs:
     displayName: Create Anaconda environment
   - script: |
       call activate Build
-      conda install --yes --quiet --name Build python=%PYTHON_VERSION% dask cmake coverage eigen gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
+      conda install --yes --quiet --name Build python=%PYTHON_VERSION% dask cmake coverage eigen fsspec gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools snappy xarray
     displayName: Install build requirements
   - script: |
       call activate Build
