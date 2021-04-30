@@ -1,11 +1,13 @@
+# Copyright (c) 2021 CNES
+#
+# All rights reserved. Use of this source code is governed by a
+# BSD-style license that can be found in the LICENSE file.
 """
-Index storage support
----------------------
+Abstract index storage class
+----------------------------
 """
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Iterable, List, Optional, Tuple
 import abc
-import os
-from ..core import storage
 
 
 class AbstractMutableMapping:  # pragma: no cover
@@ -65,25 +67,3 @@ class AbstractMutableMapping:  # pragma: no cover
 
     def __iter__(self):
         return self.keys()
-
-
-class UnQlite(storage.unqlite.Database, AbstractMutableMapping):
-    """Storage class using UnQlite.
-    """
-    def __init__(self, name: str, **kwargs):
-        # normalize path
-        if name != ':mem:':
-            name = os.path.abspath(name)
-        super().__init__(name, **kwargs)
-
-    def __enter__(self) -> 'UnQlite':
-        return self
-
-    def __exit__(self, type, value, tb):
-        self.commit()
-
-
-class MutableMapping(UnQlite):
-    """Shortcut for a memory container."""
-    def __init__(self):
-        super().__init__(":mem:", mode="w")

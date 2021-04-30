@@ -3,6 +3,7 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 import os
+import fsspec
 import pytest
 import pyinterp.geohash.storage as storage
 
@@ -10,6 +11,12 @@ import pyinterp.geohash.storage as storage
 @pytest.fixture(scope="session")
 def unqlite_db(tmpdir_factory):
     fn = tmpdir_factory.mktemp("data").join("database.unqlite")
+    return fn
+
+
+@pytest.fixture(scope="session")
+def temp_root(tmpdir_factory):
+    fn = tmpdir_factory.mktemp("data")
     return fn
 
 
@@ -24,3 +31,31 @@ def test_memory():
     with storage.MutableMapping() as db:
         db[b'0'] = 1
         assert db[b'0'] == [1]
+
+
+def test_file_system(temp_root):
+    fs = fsspec.filesystem("file")
+    with storage.FileSystem(fs, str(temp_root)) as db:
+        db[b'0'] = 1
+        assert db[b'0'] == [1]
+        assert b'0' in db
+        db.rollback()
+        assert b'0' not in db
+
+        db[b'0'] = 1
+        db[b'0'] = [2, 3, 4]
+        assert db[b'0'] == [2, 3, 4]
+        db.extend(((b'0', [5, 6]), ))
+        assert db[b'0'] == [2, 3, 4, 5, 6]
+        db.commit()
+
+        del db[b'0']
+        assert b'0' not in db
+        db[b'0'] = 9
+        assert b'0' in db
+        db.rollback()
+        assert db[b'0'] == [2, 3, 4, 5, 6]
+        del db[b'0']
+        assert b'0' not in db
+        db.commit()
+        assert b'0' not in db
