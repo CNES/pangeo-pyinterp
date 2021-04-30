@@ -1,9 +1,10 @@
 name: RTD
 dependencies:
   - cartopy
+  - fsspec
   - netcdf4
   - pandas
-  - pyinterp>=0.7.0
+  - pyinterp>=0.7.1
   - pypandoc
   - python=3.7
   - pip

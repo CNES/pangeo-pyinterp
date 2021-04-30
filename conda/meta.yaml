@@ -33,9 +33,10 @@ requirements:
     - snappy
     - xarray
   run:
-    - python
-    - mkl
     - dask
+    - fsspec
+    - mkl
+    - python
     - xarray
 
 test:

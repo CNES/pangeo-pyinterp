@@ -2,11 +2,12 @@ name: pyinterp
 channels:
   - conda-forge
 dependencies:
-  - jupyter
-  - netCDF4
   - cartopy
-  - pandas
-  - pyinterp>=0.7.0
+  - fsspec
+  - gcsfs
   - intake
   - intake-xarray
-  - gcsfs
+  - jupyter
+  - netCDF4
+  - pandas
+  - pyinterp>=0.7.1

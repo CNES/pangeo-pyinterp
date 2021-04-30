@@ -2,13 +2,14 @@
 Lock handling used to synchronize resources
 -------------------------------------------
 """
-from typing import Optional, Union
+from typing import Any, Optional, Tuple, Union
 import abc
 import os
 import pathlib
 import sys
 import threading
 import time
+import fsspec
 
 
 class LockError(Exception):
@@ -16,24 +17,13 @@ class LockError(Exception):
     pass
 
 
-class Lock:
-    """Handle a lock file by opening the file in exclusive mode: if the file
-    already exists, access to this file will fail.
-
-    Args:
-        path (str): Path to the lock
+class AbstractLock:
+    """Abstract class implementing an exclusive lock.
     """
-    OPEN_MODE = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_TRUNC
-
-    def __init__(self, path: str) -> None:
-        self.path = path
-        self.stream = None
-
-    def __getstate__(self):
-        return self.path
-
-    def __setstate__(self, path):
-        self.__init__(path)
+    @abc.abstractmethod
+    def _acquire(self):
+        """Virtual function to implement the locking process."""
+        ...
 
     def acquire(self,
                 timeout: Optional[float] = None,
@@ -52,13 +42,55 @@ class Lock:
         delay = delay or 0.1
         while True:
             try:
-                self.stream = os.open(self.path, self.OPEN_MODE)
+                self._acquire()
                 return
             except (IOError, OSError):
                 if time.time() > end_time:
                     raise LockError
                 else:
                     time.sleep(delay)
+
+    @abc.abstractmethod
+    def locked(self) -> bool:
+        """Test the existence of the lock.
+
+        Returns:
+            bool: True if the lock exists
+        """
+        ...
+
+    @abc.abstractmethod
+    def release(self) -> None:
+        """Release the lock."""
+        ...
+
+    def __enter__(self) -> bool:
+        self.acquire()
+        return True
+
+    def __exit__(self, *args) -> None:
+        if self.locked():
+            self.release()
+
+
+class Lock(AbstractLock):
+    """Handle a lock file by opening the file in exclusive mode: if the file
+    already exists, access to this file will fail.
+
+    Args:
+        path (str): Path to the lock
+    """
+    OPEN_MODE = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_TRUNC
+
+    def __init__(self, path: str) -> None:
+        self.path = path
+        self.stream = None
+
+    def __reduce__(self) -> Union[str, Tuple[Any, ...]]:
+        return self.__class__, (self.path, )
+
+    def _acquire(self):
+        self.stream = os.open(self.path, self.OPEN_MODE)
 
     def locked(self) -> bool:
         """Test the existence of the lock.
@@ -79,13 +111,41 @@ class Lock:
         except OSError:
             pass
 
-    def __enter__(self) -> bool:
-        self.acquire()
-        return True
 
-    def __exit__(self, *args) -> None:
+class ObjectStorageLock(AbstractLock):
+    """Manages a lock on a remote file system. The creation of the lock is done
+    by creating a directory which must be an atomic operation on the remote file
+    system.
+
+    Args:
+        path (str): Path to the lock
+        file_system (fsspec.AbstractFileSystem, optional): File system used
+    """
+    def __init__(
+            self,
+            path: str,
+            file_system: Optional[fsspec.AbstractFileSystem] = None) -> None:
+        fs = file_system or 'file'
+        self.fs = fsspec.filesystem(fs) if isinstance(fs, str) else fs
+        self.path = path
+
+    def __reduce__(self) -> Union[str, Tuple[Any, ...]]:
+        return self.__class__, (self.path, self.fs)
+
+    def _acquire(self):
+        self.fs.mkdirs(self.path, exist_ok=False)
+
+    def locked(self) -> bool:
+        """Test the existence of the lock.
+        Returns:
+            bool: True if the lock exists
+        """
+        return self.fs.exists(self.path)
+
+    def release(self) -> None:
+        """Release the lock."""
         if self.locked():
-            self.release()
+            self.fs.rm(self.path, recursive=True)
 
 
 class Synchronizer(abc.ABC):  # pragma: no cover
@@ -100,7 +160,7 @@ class Synchronizer(abc.ABC):  # pragma: no cover
 
 
 class PuppetSynchronizer(Synchronizer):
-    """Provides synchronization using thread locks."""
+    """Simulates a synchronization."""
     def __enter__(self) -> bool:
         return True
 
@@ -121,18 +181,21 @@ class ThreadSynchronizer(Synchronizer):
 
 
 class ProcessSynchronizer(Synchronizer):
-    """Provides synchronization using file locks
+    """Provides synchronization using locks handled by the file system.
 
     Args:
         path (pathlib.Path, str): The file used for locking/unlocking
+        timeout (float, optional): Maximum timeout for a lock acquisition.
+        lock (AbstractLock, optional): Instance handling the lock.
     """
     def __init__(self,
                  path: Union[pathlib.Path, str],
-                 timeout: Optional[float] = None):
+                 timeout: Optional[float] = None,
+                 lock: Optional[AbstractLock] = None):
         if isinstance(path, str):
             path = pathlib.Path(path)
         self.path = path
-        self.lock = Lock(str(path))
+        self.lock = lock or Lock(str(path))
         self.timeout = timeout
 
     def __repr__(self) -> str:
