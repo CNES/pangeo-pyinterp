@@ -6,7 +6,7 @@
 #include <pybind11/eigen.h>
 
 #include <Eigen/Core>
-#include <map>
+#include <unordered_map>
 #include <optional>
 #include <tuple>
 
@@ -113,7 +113,7 @@ namespace pyinterp::geohash::int64 {
 // Returns the start and end indexes of the different GeoHash boxes.
 [[nodiscard]] auto where(
     const pybind11::EigenDRef<const Eigen::Matrix<uint64_t, -1, -1>>& hash)
-    -> std::map<uint64_t, std::tuple<std::tuple<int64_t, int64_t>,
+    -> std::unordered_map<uint64_t, std::tuple<std::tuple<int64_t, int64_t>,
                                      std::tuple<int64_t, int64_t>>>;
 
 }  // namespace pyinterp::geohash::int64
