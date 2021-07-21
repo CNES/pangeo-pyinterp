@@ -127,7 +127,10 @@ def revision():
         sha1 = match.group(1)
     else:
         version = match.group(1)
+        commits = int(match.group(2))
         sha1 = match.group(3)
+        if commits != 0:
+            version += f".dev{commits}"
 
     stdout = execute("git log  %s -1 --format=\"%%H %%at\"" % sha1)
     stdout = stdout.strip().split()

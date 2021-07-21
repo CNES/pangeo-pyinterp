@@ -6,7 +6,7 @@
 #include <pybind11/numpy.h>
 
 #include <Eigen/Core>
-#include <map>
+#include <unordered_map>
 #include <optional>
 #include <tuple>
 #include <vector>
@@ -100,8 +100,8 @@ auto encode(const geodetic::Point& point, char* buffer, uint32_t precision)
                                   uint32_t precision) -> pybind11::array;
 
 /// Returns the start and end indexes of the different GeoHash boxes.
-[[nodiscard]] auto where(const pybind11::array& hash)
-    -> std::map<std::string, std::tuple<std::tuple<int64_t, int64_t>,
-                                        std::tuple<int64_t, int64_t>>>;
+[[nodiscard]] auto where(const pybind11::array& hash) -> std::unordered_map<
+    std::string,
+    std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>;
 
 }  // namespace pyinterp::geohash::string

@@ -220,7 +220,7 @@ class GeoHash:
     @staticmethod
     def where(
         hash_codes: numpy.ndarray
-    ) -> Dict[int, Tuple[Tuple[int, int], Tuple[int, int]]]:
+    ) -> Dict[bytes, Tuple[Tuple[int, int], Tuple[int, int]]]:
         """Returns the start and end indexes of the different GeoHash boxes.
 
         Args:

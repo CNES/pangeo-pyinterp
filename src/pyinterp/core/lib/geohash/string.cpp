@@ -213,18 +213,18 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
 }
 
 // ---------------------------------------------------------------------------
-auto where(const pybind11::array& hashs)
-    -> std::map<std::string, std::tuple<std::tuple<int64_t, int64_t>,
-                                        std::tuple<int64_t, int64_t>>> {
+auto where(const pybind11::array& hashs) -> std::unordered_map<
+    std::string,
+    std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>> {
   // Index shifts of neighboring pixels
   static const auto shift_row =
       std::array<int64_t, 8>{-1, -1, -1, 0, 1, 0, 1, 1};
   static const auto shift_col =
       std::array<int64_t, 8>{-1, 1, 0, -1, -1, 1, 0, 1};
 
-  auto result =
-      std::map<std::string, std::tuple<std::tuple<int64_t, int64_t>,
-                                       std::tuple<int64_t, int64_t>>>();
+  auto result = std::unordered_map<
+      std::string,
+      std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>();
 
   auto info = Array::get_info(hashs, 2);
   auto rows = info.shape[0];

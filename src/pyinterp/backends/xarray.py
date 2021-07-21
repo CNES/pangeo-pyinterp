@@ -277,7 +277,7 @@ class Grid3D(grid.Grid3D):
         self._dims = (x, y, z)
         # Should the grid manage a time axis?
         dtype = data_array.coords[z].dtype
-        if "datetime64" in dtype.name:
+        if "datetime64" in dtype.name or "timedelta64" in dtype.name:
             self._datetime64 = z, axis.TemporalAxis(
                 data_array.coords[z].values)
         else:
