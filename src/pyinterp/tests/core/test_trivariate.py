@@ -13,9 +13,7 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 import pyinterp.core as core
-
-GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                    "dataset", "tcw.nc")
+from .. import grid3d_path
 
 
 def plot(x, y, z, filename):
@@ -33,7 +31,7 @@ def plot(x, y, z, filename):
 
 
 def load_data(temporal_axis=False):
-    with netCDF4.Dataset(GRID) as ds:
+    with netCDF4.Dataset(grid3d_path()) as ds:
         z = np.flip(ds.variables['tcw'][:].T, axis=1)
         z[z.mask] = float("nan")
         z_axis = core.TemporalAxis(

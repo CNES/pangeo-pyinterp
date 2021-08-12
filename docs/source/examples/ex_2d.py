@@ -12,8 +12,8 @@ Perform a :py:func:`bivariate <pyinterp.bivariate>` interpolation of gridded
 data points.
 
 The distribution contains a 2D field ``mss.nc`` that will be used in this help.
-This file is located in the ``tests/dataset`` directory at the root of the
-project.
+This file is located in the ``src/pyinterp/tests/dataset`` directory at the root
+of the project.
 
 .. warning ::
 
@@ -22,24 +22,14 @@ project.
     high-resolution version instead `here
     <https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/mss.html>`_.
 """
-import os
-import pathlib
 import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
 import pyinterp
 import pyinterp.backends.xarray
+import pyinterp.tests
 import xarray
-
-try:
-    # When generating the documentation the variable DATASET points to the data
-    # path.
-    DATASET = pathlib.Path(os.environ['DATASET'])
-except KeyError:
-    # Otherwise, the relative folder path is used.
-    DATASET = pathlib.Path("..", "..", "tests", "dataset")
-MSS = DATASET.joinpath("mss.nc")
 
 #%%
 # The first step is to load the data into memory and create the interpolator
@@ -52,7 +42,7 @@ MSS = DATASET.joinpath("mss.nc")
 #     ``degrees_east`` and ``degrees_north`` attribute ``units``. If your grid
 #     does not contain geodetic coordinates, set the ``geodetic`` option of the
 #     constructor to ``False``.
-ds = xarray.open_dataset(MSS)
+ds = xarray.open_dataset(pyinterp.tests.grid2d_path())
 interpolator = pyinterp.backends.xarray.Grid2D(ds.mss)
 
 #%%

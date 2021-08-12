@@ -23,19 +23,12 @@ import netCDF4
 import pandas
 import pyinterp
 import pyinterp.backends.xarray
+import pyinterp.tests
 import numpy
 import xarray
 
-try:
-    # When generating the documentation the variable DATASET points to the data
-    # path.
-    DATASET = pathlib.Path(os.environ['DATASET'])
-except KeyError:
-    # Otherwise, the relative folder path is used.
-    DATASET = pathlib.Path("..", "..", "tests", "dataset")
-TCW = DATASET.joinpath("tcw.nc")
 
-with netCDF4.Dataset(TCW) as ds:
+with netCDF4.Dataset(pyinterp.tests.grid3d_path()) as ds:
     lon, lat, time, time_units, tcw = ds.variables[
         "longitude"][:], ds.variables["latitude"][:], ds.variables[
             "time"][:], ds.variables["time"].units, ds.variables["tcw"][:]
@@ -125,5 +118,5 @@ grid_3d
 # using the `xarray <http://xarray.pydata.org/>`_ library and `CF
 # <https://cfconventions.org/>`_ convention usually found in NetCDF files.
 interpolator = pyinterp.backends.xarray.RegularGridInterpolator(
-    xarray.open_dataset(TCW).tcw)
+    xarray.open_dataset(pyinterp.tests.grid3d_path()).tcw)
 interpolator.grid

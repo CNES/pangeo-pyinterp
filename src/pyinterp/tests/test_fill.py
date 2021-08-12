@@ -8,13 +8,11 @@ import numpy as np
 import pytest
 import pyinterp
 import pyinterp.fill
-
-GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
-                    "mss.nc")
+from . import grid2d_path
 
 
 def load_data(cube=False):
-    ds = netCDF4.Dataset(GRID)
+    ds = netCDF4.Dataset(grid2d_path())
     x_axis = pyinterp.Axis(ds.variables["lon"][::5], is_circle=True)
     y_axis = pyinterp.Axis(ds.variables["lat"][::5])
     mss = ds.variables["mss"][::5, ::5].T

@@ -20,6 +20,7 @@ import numpy
 import pandas
 import intake
 import pyinterp.backends.xarray
+import pyinterp.tests
 
 cat = intake.open_catalog("https://raw.githubusercontent.com/pangeo-data"
                           "/pangeo-datastore/master/intake-catalogs/"
@@ -95,7 +96,7 @@ def cnes_jd_to_datetime(seconds):
 
 def load_positions():
     """Loading and formatting the dataset."""
-    df = pandas.read_csv("tests/dataset/positions.csv",
+    df = pandas.read_csv(pyinterp.tests.positions_path(),
                          header=None,
                          sep=r";",
                          usecols=[0, 1, 2, 3],

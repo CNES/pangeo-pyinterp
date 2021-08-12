@@ -8,8 +8,6 @@ in the neighborhood. This behavior is a concern when you need to interpolate
 values near the land/sea mask of some maps.
 """
 #%%
-import os
-import pathlib
 import cartopy.crs
 import cartopy.feature
 import matplotlib.pyplot
@@ -17,16 +15,9 @@ import numpy
 import pyinterp.backends.xarray
 # Module that handles the filling of undefined values.
 import pyinterp.fill
+import pyinterp.tests
 import xarray
 
-try:
-    # When generating the documentation the variable DATASET points to the data
-    # path.
-    DATASET = pathlib.Path(os.environ['DATASET'])
-except KeyError:
-    # Otherwise, the relative folder path is used.
-    DATASET = pathlib.Path("..", "..", "tests", "dataset")
-MSS = DATASET.joinpath("mss.nc")
 
 #%%
 # For example, in the figure above, if you want to interpolate the gray point
@@ -79,7 +70,7 @@ fig.show()
 # the calculation.
 #
 # Let's start by building the object handling our grid.
-ds = xarray.open_dataset(MSS)
+ds = xarray.open_dataset(pyinterp.tests.grid2d_path())
 grid = pyinterp.backends.xarray.Grid2D(ds.mss)
 
 #%%

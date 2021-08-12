@@ -10,9 +10,7 @@ import numpy as np
 import xarray as xr
 import pyinterp.backends.xarray
 import pyinterp
-
-GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
-                    "mss.nc")
+from . import grid2d_path
 
 
 def test_axis_identifier():
@@ -38,7 +36,7 @@ def test_dims_from_data_array():
 
 
 def test_biavariate():
-    grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(GRID).mss)
+    grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(grid2d_path()).mss)
 
     assert isinstance(grid, pyinterp.backends.xarray.Grid2D)
     assert isinstance(grid, pyinterp.Grid2D)
@@ -68,7 +66,7 @@ def test_biavariate():
                        interpolator="inverse_distance_weighting")
     assert isinstance(z, np.ndarray)
 
-    grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(GRID).mss,
+    grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(grid2d_path()).mss,
                                            geodetic=False)
 
     assert isinstance(grid, pyinterp.backends.xarray.Grid2D)
@@ -78,7 +76,7 @@ def test_biavariate():
     assert np.ma.fix_invalid(z).mean() != np.ma.fix_invalid(w).mean()
 
     with pytest.raises(TypeError):
-        grid.bivariate((x.flatten(), y.flatten()))
+        grid.bivariate((x.flatten(), y.flatten()))  # type: ignore
 
     with pytest.raises(IndexError):
         grid.bivariate(
@@ -111,14 +109,14 @@ def test_biavariate():
         pyinterp.Grid2D(lon, lat, array, increasing_axes='_')
 
     grid = pyinterp.backends.xarray.RegularGridInterpolator(
-        xr.load_dataset(GRID).mss)
+        xr.load_dataset(grid2d_path()).mss)
     z = grid(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),
              method="bilinear")
     assert isinstance(z, np.ndarray)
 
 
 def test_bicubic():
-    grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(GRID).mss)
+    grid = pyinterp.backends.xarray.Grid2D(xr.load_dataset(grid2d_path()).mss)
 
     lon = np.arange(-180, 180, 1) + 1 / 3.0
     lat = np.arange(-90, 90, 1) + 1 / 3.0
@@ -170,7 +168,7 @@ def test_bicubic():
         pyinterp.bicubic(grid, x.flatten(), y.flatten())
 
     grid = pyinterp.backends.xarray.RegularGridInterpolator(
-        xr.load_dataset(GRID).mss)
+        xr.load_dataset(grid2d_path()).mss)
     assert grid.ndim == 2
     assert isinstance(grid.grid, pyinterp.backends.xarray.Grid2D)
     z = grid(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),

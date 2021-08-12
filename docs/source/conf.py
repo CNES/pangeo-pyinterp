@@ -19,9 +19,9 @@ copyright = '(2021, CNES/CLS)'
 author = 'CNES/CLS'
 
 # The short X.Y version
-version = '0.7.1'
+version = '0.7.1.dev21'
 # The full version, including alpha/beta/rc tags
-release = '0.7.1'
+release = '0.7.1.dev21'
 
 # -- General configuration ---------------------------------------------------
 
@@ -195,8 +195,6 @@ intersphinx_mapping = {
 }
 
 README = HERE.joinpath("readme.rst")
-os.environ['DATASET'] = os.path.normpath(
-    HERE.joinpath("..", "..", "tests", "dataset"))
 
 if not README.exists():
     with HERE.joinpath("..", "..", "README.rst").open() as stream:

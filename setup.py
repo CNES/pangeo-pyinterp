@@ -545,8 +545,7 @@ class Test(setuptools.Command):
     """Test runner"""
     description = "run pytest"
     user_options = [('ext-coverage', None,
-                     "Generate C++ extension coverage reports"),
-                    ("pytest-args=", None, "Arguments to pass to pytest")]
+                     "Generate C++ extension coverage reports")]
 
     def initialize_options(self):
         """Set default values for all the options that this command
@@ -556,11 +555,9 @@ class Test(setuptools.Command):
 
     def finalize_options(self):
         """Set final values for all the options that this command supports"""
-        dirname = pathlib.Path(pathlib.Path(__file__).absolute().parent)
-        rootdir = "--rootdir=" + str(dirname)
         if self.pytest_args is None:
             self.pytest_args = ''
-        self.pytest_args = rootdir + " tests " + self.pytest_args
+        self.pytest_args += "--pyargs pyinterp"
 
     @staticmethod
     def tempdir():
@@ -671,10 +668,11 @@ def main():
         name='pyinterp',
         package_data={
             'pyinterp': ['py.typed'],
+            'pyinterp.tests': ["dataset/*"],
         },
         package_dir={'': 'src'},
         packages=setuptools.find_namespace_packages(where='src',
-                                                    exclude=['*core*']),
+                                                    exclude=['pyinterp.core*']),
         platforms=['POSIX', 'MacOS', 'Windows'],
         python_requires='>=3.6',
         tests_require=tests_require,

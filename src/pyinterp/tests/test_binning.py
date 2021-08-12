@@ -14,13 +14,11 @@ import numpy as np
 import xarray as xr
 import pyinterp
 import pyinterp.geodetic
-
-GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
-                    "mss.nc")
+from . import grid2d_path
 
 
 def build_instance(dtype):
-    ds = xr.load_dataset(GRID)
+    ds = xr.load_dataset(grid2d_path())
 
     x_axis = pyinterp.Axis(np.arange(-180, 180, 5), is_circle=True)
     y_axis = pyinterp.Axis(np.arange(-90, 95, 5))

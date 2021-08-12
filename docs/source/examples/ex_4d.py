@@ -13,8 +13,8 @@ obtaining values at arbitrary points in a 4D space of a function defined on a
 grid.
 
 The distribution contains a 4D field ``pres_temp_4D.nc`` that will be used in
-this help. This file is located in the ``tests/dataset`` directory at the root
-of the project.
+this help. This file is located in the ``src/pyinterp/tests/dataset`` directory
+at the root of the project.
 
 This method performs a bilinear interpolation in 2D space by considering the
 axes of longitude and latitude of the grid, then performs a linear interpolation
@@ -23,29 +23,19 @@ in the third and fourth dimensions. Its interface is similar to the
 fourth axis, which is handled by this object.
 
 """
-import os
-import pathlib
 import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
 import pyinterp
 import pyinterp.backends.xarray
+import pyinterp.tests
 import xarray
-
-try:
-    # When generating the documentation the variable DATASET points to the data
-    # path.
-    DATASET = pathlib.Path(os.environ['DATASET'])
-except KeyError:
-    # Otherwise, the relative folder path is used.
-    DATASET = pathlib.Path("..", "..", "tests", "dataset")
-PRES_TEMP = DATASET.joinpath("pres_temp_4D.nc")
 
 #%%
 # The first step is to load the data into memory and create the interpolator
 # object:
-ds = xarray.open_dataset(PRES_TEMP)
+ds = xarray.open_dataset(pyinterp.tests.grid4d_path())
 interpolator = pyinterp.backends.xarray.Grid4D(ds.pressure)
 
 #%%

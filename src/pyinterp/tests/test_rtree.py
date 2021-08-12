@@ -9,9 +9,7 @@ import numpy as np
 import xarray as xr
 import pyinterp.backends.xarray
 import pyinterp
-
-GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
-                    "mss.nc")
+from . import grid2d_path
 
 
 def build_rtree(dtype):
@@ -57,7 +55,7 @@ def test_init():
 
 
 def load_data():
-    ds = xr.load_dataset(GRID)
+    ds = xr.load_dataset(grid2d_path())
     z = ds.mss.T
     x, y = np.meshgrid(ds.lon.values, ds.lat.values, indexing='ij')
     mesh = pyinterp.RTree()

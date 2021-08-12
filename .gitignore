@@ -109,7 +109,7 @@ venv.bak/
 .vscode/
 
 # Figures generated
-tests/**/*.png
+src/pyinterp/tests/**/*.png
 
 # Generated doc files
 docs/source/auto_examples

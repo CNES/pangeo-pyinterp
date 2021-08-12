@@ -11,13 +11,11 @@ import numpy as np
 import xarray as xr
 import pyinterp.backends.xarray
 import pyinterp
-
-GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
-                    "tcw.nc")
+from . import grid3d_path
 
 
 def test_3d():
-    grid = pyinterp.backends.xarray.Grid3D(xr.load_dataset(GRID).tcw,
+    grid = pyinterp.backends.xarray.Grid3D(xr.load_dataset(grid3d_path()).tcw,
                                            increasing_axes=True)
 
     assert isinstance(grid, pyinterp.backends.xarray.Grid3D)
@@ -57,7 +55,7 @@ def test_3d():
                                                 time=t.flatten()),
                         bounds_error=True)
 
-    array = xr.load_dataset(GRID).tcw
+    array = xr.load_dataset(grid3d_path()).tcw
     grid = pyinterp.backends.xarray.Grid3D(array, increasing_axes=True)
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z = grid.trivariate(
@@ -67,7 +65,7 @@ def test_3d():
     assert isinstance(z, np.ndarray)
 
     grid = pyinterp.backends.xarray.RegularGridInterpolator(
-        xr.load_dataset(GRID).tcw, increasing_axes=True)
+        xr.load_dataset(grid3d_path()).tcw, increasing_axes=True)
     assert grid.ndim == 3
     assert isinstance(grid.grid, pyinterp.backends.xarray.Grid3D)
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")

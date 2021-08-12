@@ -11,13 +11,12 @@ import numpy as np
 import xarray as xr
 import pyinterp.backends.xarray
 import pyinterp
-
-GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dataset",
-                    "pres_temp_4D.nc")
+from . import grid4d_path
 
 
 def test_4d():
-    grid = pyinterp.backends.xarray.Grid4D(xr.load_dataset(GRID).pressure,
+    grid = pyinterp.backends.xarray.Grid4D(xr.load_dataset(
+        grid4d_path()).pressure,
                                            increasing_axes=True)
 
     assert isinstance(grid, pyinterp.backends.xarray.Grid4D)
@@ -70,13 +69,14 @@ def test_4d():
                                 bounds_error=True)
 
     grid = pyinterp.backends.xarray.RegularGridInterpolator(
-        xr.load_dataset(GRID).pressure, increasing_axes=True)
+        xr.load_dataset(grid4d_path()).pressure, increasing_axes=True)
     assert grid.ndim, 4
     assert isinstance(grid.grid, pyinterp.backends.xarray.Grid4D)
 
 
 def test_4d_degraded():
-    grid = pyinterp.backends.xarray.Grid4D(xr.load_dataset(GRID).pressure,
+    grid = pyinterp.backends.xarray.Grid4D(xr.load_dataset(
+        grid4d_path()).pressure,
                                            increasing_axes=True)
     zero = np.array([0])
     with pytest.raises(ValueError):

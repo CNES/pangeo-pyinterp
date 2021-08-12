@@ -12,29 +12,20 @@ degrees into latitudes and longitudes).
 In this example, we will calculate drifter velocity statistics on the Black Sea
 over a period of 9 years.
 """
-import os
-import pathlib
 import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
 import pyinterp
 import pyinterp.backends.xarray
+import pyinterp.tests
 import xarray
 
-try:
-    # When generating the documentation the variable DATASET points to the data
-    # path.
-    DATASET = pathlib.Path(os.environ['DATASET'])
-except KeyError:
-    # Otherwise, the relative folder path is used.
-    DATASET = pathlib.Path("..", "..", "tests", "dataset")
-AOML = DATASET.joinpath("aoml_v2019.nc")
 
 #%%
 # The first step is to load the data into memory and create the interpolator
 # object:
-ds = xarray.open_dataset(AOML)
+ds = xarray.open_dataset(pyinterp.tests.aoml_path())
 
 #%%
 # Let's start by calculating the standard for vectors u and v.

@@ -13,10 +13,7 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 import pyinterp.core as core
-
-GRID = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                    "dataset", "mss.nc")
-
+from .. import grid2d_path
 
 def plot(x, y, z, filename):
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
@@ -33,7 +30,7 @@ def plot(x, y, z, filename):
 
 
 def load_data(is_circle=True):
-    with netCDF4.Dataset(GRID) as ds:
+    with netCDF4.Dataset(grid2d_path()) as ds:
         z = ds.variables['mss'][:].T
         z[z.mask] = float("nan")
         return core.Grid2DFloat64(
