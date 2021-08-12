@@ -545,7 +545,8 @@ class Test(setuptools.Command):
     """Test runner"""
     description = "run pytest"
     user_options = [('ext-coverage', None,
-                     "Generate C++ extension coverage reports")]
+                     "Generate C++ extension coverage reports"),
+                    ("pytest-args=", None, "Arguments to pass to pytest")]
 
     def initialize_options(self):
         """Set default values for all the options that this command
@@ -557,7 +558,7 @@ class Test(setuptools.Command):
         """Set final values for all the options that this command supports"""
         if self.pytest_args is None:
             self.pytest_args = ''
-        self.pytest_args += "--pyargs pyinterp"
+        self.pytest_args = " --pyargs pyinterp " + self.pytest_args
 
     @staticmethod
     def tempdir():
