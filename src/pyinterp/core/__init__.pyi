@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union
 import numpy
 from . import geodetic
 from . import geohash
@@ -738,3 +738,89 @@ def quadrivariate_float32(
         bounds_error: bool = False,
         num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
     ...
+
+
+class DescriptiveStatisticsFloat64:
+    def __init__(self,
+                 values: numpy.ndarray[numpy.float64],
+                 weights: Optional[numpy.ndarray[numpy.float64]] = None,
+                 axis: Optional[Iterable[int]] = None) -> None:
+        ...
+
+    def __getstate__(self) -> Tuple:
+        ...
+
+    def __iadd__(
+        self, other: "DescriptiveStatisticsFloat64"
+    ) -> "DescriptiveStatisticsFloat64":
+        ...
+
+    def count(self) -> numpy.ndarray[numpy.uint64]:
+        ...
+
+    def kurtosis(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def max(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def mean(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def min(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def skewness(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def sum(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def sum_of_weights(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def variance(self, ddof: int = 0) -> numpy.ndarray[numpy.float64]:
+        ...
+
+
+class DescriptiveStatisticsFloat32:
+    def __init__(self,
+                 values: numpy.ndarray[numpy.float32],
+                 weights: Optional[numpy.ndarray[numpy.float32]] = None,
+                 axis: Optional[Iterable[int]] = None) -> None:
+        ...
+
+    def __getstate__(self) -> Tuple:
+        ...
+
+    def __iadd__(
+        self, other: "DescriptiveStatisticsFloat32"
+    ) -> "DescriptiveStatisticsFloat32":
+        ...
+
+    def count(self) -> numpy.ndarray[numpy.uint32]:
+        ...
+
+    def kurtosis(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def max(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def mean(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def min(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def skewness(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def sum(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def sum_of_weights(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def variance(self, ddof: int = 0) -> numpy.ndarray[numpy.float32]:
+        ...

@@ -14,6 +14,7 @@ extern void init_binning(py::module&);
 extern void init_bivariate_interpolator(py::module&);
 extern void init_bivariate(py::module&);
 extern void init_dateutils(py::module&);
+extern void init_descriptive_statistics(py::module&);
 extern void init_fill(py::module&);
 extern void init_geodetic(py::module&);
 extern void init_geohash_int64(py::module&);
@@ -82,6 +83,7 @@ Index storage support
   init_axis(m);
   init_binning(m);
   init_bivariate_interpolator(m);
+  init_descriptive_statistics(m);
   init_grid(m);
   init_bivariate(m);
   init_trivariate(m);

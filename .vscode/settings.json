@@ -93,12 +93,30 @@
         "xhash": "cpp",
         "xtree": "cpp",
         "xstring": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "any": "cpp",
+        "codecvt": "cpp",
+        "filesystem": "cpp",
+        "xthread": "cpp",
+        "xfacet": "cpp",
+        "xiosbase": "cpp",
+        "xlocale": "cpp",
+        "xlocbuf": "cpp",
+        "xlocinfo": "cpp",
+        "xlocmes": "cpp",
+        "xlocmon": "cpp",
+        "xlocnum": "cpp",
+        "xloctime": "cpp",
+        "xmemory": "cpp",
+        "xmemory0": "cpp",
+        "xstddef": "cpp",
+        "xtr1common": "cpp"
     },
     "python.testing.pytestArgs": [
-        "tests"
+        "."
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "restructuredtext.languageServer.disabled": true
 }
