@@ -33,8 +33,8 @@ class DescriptiveStatistics {
 
   /// Constructor.
   DescriptiveStatistics(
-      pybind11::array_t<T, pybind11::array::c_style> values,
-      std::optional<pybind11::array_t<T, pybind11::array::c_style>> weights,
+      pybind11::array_t<T, pybind11::array::c_style>& values,
+      std::optional<pybind11::array_t<T, pybind11::array::c_style>>& weights,
       std::optional<std::list<pybind11::ssize_t>>& axis) {
     // If no axes are specified, we compute the statistics on the whole array.
     if (!axis) {
@@ -150,7 +150,6 @@ class DescriptiveStatistics {
   }
 
   /// Push values and weights to the accumulators.
-  template <typename T>
   auto push(pybind11::array_t<T, pybind11::array::c_style>& arr,
             pybind11::array_t<T, pybind11::array::c_style>& weights,
             const Vector<pybind11::ssize_t>& strides,

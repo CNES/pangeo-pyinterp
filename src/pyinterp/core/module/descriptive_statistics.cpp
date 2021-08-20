@@ -17,9 +17,9 @@ void implement_descriptive_statistics(py::module& m,
   py::class_<pyinterp::DescriptiveStatistics<Type>>(
       m, ("DescriptiveStatistics" + suffix).c_str(),
       "Univariate descriptive statistics.")
-      .def(py::init<py::array_t<Type, py::array::c_style>,
-                    std::optional<py::array_t<Type, py::array::c_style>>,
-                    std::optional<std::list<py::ssize_t>>>(),
+      .def(py::init<py::array_t<Type, py::array::c_style>&,
+                    std::optional<py::array_t<Type, py::array::c_style>>&,
+                    std::optional<std::list<py::ssize_t>>&>(),
            py::arg("values"), py::arg("weights") = py::none(),
            py::arg("axis") = py::none(), R"__doc__(
 Default constructor
