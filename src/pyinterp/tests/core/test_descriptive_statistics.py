@@ -121,6 +121,9 @@ def test_weighted():
     assert ds.kurtosis() == pytest.approx(weighted_mom4(values, weights))
     assert ds.skewness() == pytest.approx(weighted_mom3(values, weights))
 
+    with pytest.raises(ValueError):
+        core.DescriptiveStatisticsFloat64(values, weights=weights[:100])
+
 
 def test_axis():
     """Test axes along which the statistics are computed"""

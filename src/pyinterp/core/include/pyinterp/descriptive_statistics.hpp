@@ -10,6 +10,7 @@
 #include <memory>
 #include <optional>
 
+#include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/math/descriptive_statistics.hpp"
 #include "pyinterp/detail/numpy.hpp"
 #include "pyinterp/eigen.hpp"
@@ -52,8 +53,10 @@ class DescriptiveStatistics {
           reinterpret_cast<T*>(pybind11::detail::array_proxy(ones.ptr())->data);
       std::fill(ptr_ones, ptr_ones + values.size(), T(1));
       weights = std::move(ones);
+    } else {
+      detail::check_ndarray_shape("values", values, "weights", *weights);
     }
-  
+
     auto [shape, strides, adjusted_strides] =
         detail::numpy::reduced_properties(values, *axis);
     shape_ = std::move(shape);
