@@ -50,7 +50,7 @@ class DescriptiveStatistics {
           pybind11::array::ShapeContainer{values.size()});
       auto ptr_ones =
           reinterpret_cast<T*>(pybind11::detail::array_proxy(ones.ptr())->data);
-      std::fill(ptr_ones, ptr_ones + values.size(), 1);
+      std::fill(ptr_ones, ptr_ones + values.size(), T(1));
       weights = std::move(ones);
     }
   
