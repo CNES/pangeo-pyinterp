@@ -169,3 +169,7 @@ class DescriptiveStatistics:
             numpy.ndarray: Returns the variance of samples.
         """
         return self._instance.variance()
+
+    def __str__(self) -> str:
+        array, shape = self._instance.__getstate__()
+        return str(array.reshape(shape))

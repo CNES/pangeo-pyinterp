@@ -46,6 +46,8 @@ def test_descriptive_statistics_1d(dtype, error):
     ds = pyinterp.DescriptiveStatistics(da.asarray(values))
     check_stats(ds, values)
 
+    assert isinstance(str(ds), str)
+
 
 def test_axis():
     """Test the computation of descriptive statistics for a reduced tensor."""
