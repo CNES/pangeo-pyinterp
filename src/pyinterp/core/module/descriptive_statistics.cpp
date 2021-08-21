@@ -33,7 +33,6 @@ Args:
         statistics. If not provided, the statistics are computed over the
         flattened array.
 )__doc__")
-
       .def("count", &pyinterp::DescriptiveStatistics<Type>::count,
            R"__doc__(
 Returns the count of samples.
