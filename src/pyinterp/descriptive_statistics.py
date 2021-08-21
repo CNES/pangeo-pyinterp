@@ -156,7 +156,7 @@ class DescriptiveStatistics:
         """
         return self._instance.sum_of_weights()
 
-    def variance(self, ddof: int = 0) -> np.ndarray:
+    def var(self, ddof: int = 0) -> np.ndarray:
         """
         Returns the variance of samples.
         
@@ -169,6 +169,53 @@ class DescriptiveStatistics:
             numpy.ndarray: Returns the variance of samples.
         """
         return self._instance.variance()
+
+    def std(self, ddof: int = 0) -> np.ndarray:
+        """
+        Returns the standard deviation of samples.
+
+        Args:
+            ddof (int, optional): Means Delta Degrees of Freedom. The divisor
+                used in calculations is N - ddof, where N represents the number
+                of elements. By default ddof is zero.
+
+        Returns:
+            numpy.ndarray: Returns the standard deviation of samples.
+        """
+        return self.var(ddof=ddof)**0.5
+
+    def array(self) -> np.ndarray:
+        """Returns the different statistical variables calculated in a numpy
+        structured table with the following fields:
+
+        - count: Number of samples.
+        - kurtosis: Kurtosis of samples.
+        - max: Maximum of samples.
+        - mean: Mean of samples.
+        - min: Minimum of samples.
+        - skewness: Skewness of samples.
+        - sum_of_weights: Sum of weights.
+        - sum: Sum of samples.
+        - var: Variance of samples (ddof is equal to zero).
+
+        Returns:
+            numpy.ndarray: Returns the different statistical variables
+                calculated in a numpy structured table.
+        """
+        dreal = 'f8' if isinstance(self._instance,
+                                   core.DescriptiveStatisticsFloat64) else 'f4'
+        dtype = [('count', 'u8'), ('kurtosis', dreal), ('max', dreal),
+                 ('mean', dreal), ('min', dreal), ('skewness', dreal),
+                 ('sum_of_weights', dreal), ('sum', dreal),
+                 ('var', dreal)]
+        fields = [item[0] for item in dtype]
+        field = fields.pop()
+        buffer = getattr(self, field)()
+        result = np.empty(buffer.shape, dtype=dtype)
+        result[field] = buffer
+        for field in fields:
+            result[field] = getattr(self, field)()
+        return result
 
     def __str__(self) -> str:
         array, shape = self._instance.__getstate__()

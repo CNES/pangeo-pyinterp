@@ -27,7 +27,8 @@ def test_descriptive_statistics_1d(dtype, error):
         assert ds.min() == np.min(values)
         assert ds.sum_of_weights() == values.size
         assert ds.sum() == pytest.approx(np.sum(values), rel=error)
-        assert ds.variance() == pytest.approx(np.var(values), rel=error)
+        assert ds.var() == pytest.approx(np.var(values), rel=error)
+        assert ds.std() == pytest.approx(np.std(values), rel=error)
         assert ds.kurtosis() == pytest.approx(weighted_mom4(
             values, np.ones(values.size)),
                                               rel=error)
@@ -49,6 +50,25 @@ def test_descriptive_statistics_1d(dtype, error):
     assert isinstance(str(ds), str)
 
 
+def test_array():
+    """Test the computation of descriptive statistics for a tensor."""
+    values = np.random.random_sample((2, 20, 30))
+    ds = pyinterp.DescriptiveStatistics(values, axis=(0, ))
+
+    array = ds.array()
+    assert array.shape == (20, 30)
+
+    assert np.all(ds.count() == array["count"])
+    assert np.all(ds.max() == array["max"])
+    assert np.all(ds.mean() == array["mean"])
+    assert np.all(ds.min() == array["min"])
+    assert np.all(ds.sum() == array["sum"])
+    assert np.all(ds.sum_of_weights() == array["sum_of_weights"])
+    assert np.all(ds.var() == array["var"])
+    assert np.all(ds.kurtosis() == array["kurtosis"])
+    assert np.all(ds.skewness() == array["skewness"])
+
+
 def test_axis():
     """Test the computation of descriptive statistics for a reduced tensor."""
     values = np.random.random_sample((2, 3, 4, 5, 6, 7))
@@ -62,7 +82,7 @@ def test_axis():
         assert np.all(ds.min() == np.min(values, axis=axis))
         assert np.all(ds.sum_of_weights() == np.sum(values * 0 + 1, axis=axis))
         assert ds.sum() == pytest.approx(np.sum(values, axis=axis))
-        assert ds.variance() == pytest.approx(np.var(values, axis=axis))
+        assert ds.var() == pytest.approx(np.var(values, axis=axis))
 
     check_axis(values, None)
     check_axis(values, (1, ))
