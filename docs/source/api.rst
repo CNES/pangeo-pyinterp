@@ -97,6 +97,14 @@ Fill undefined values
   fill.loess
   fill.gauss_seidel
 
+Univariate statistics
+=====================
+
+.. autosummary::
+  :toctree: generated/
+
+  DescriptiveStatistics
+
 Xarray
 ======
 
