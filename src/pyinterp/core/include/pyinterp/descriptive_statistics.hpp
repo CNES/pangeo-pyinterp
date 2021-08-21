@@ -37,31 +37,33 @@ class DescriptiveStatistics {
       pybind11::array_t<T, pybind11::array::c_style>& values,
       std::optional<pybind11::array_t<T, pybind11::array::c_style>>& weights,
       std::optional<std::list<pybind11::ssize_t>>& axis) {
-    // If no axes are specified, we compute the statistics on the whole array.
-    if (!axis) {
-      auto range = std::list<pybind11::ssize_t>(values.ndim());
-      std::iota(range.begin(), range.end(), 0);
-      axis = std::move(range);
+    // Check if the given axis is valid.
+    if (axis) {
+      detail::numpy::check_axis_bounds(values, *axis);
     }
-    detail::numpy::check_bounds(values, *axis);
 
-    // If no weights are specified, we use ones.
-    if (!weights) {
-      auto ones = pybind11::array_t<T, pybind11::array::c_style>(
-          pybind11::array::ShapeContainer{values.size()});
-      auto ptr_ones =
-          reinterpret_cast<T*>(pybind11::detail::array_proxy(ones.ptr())->data);
-      std::fill(ptr_ones, ptr_ones + values.size(), T(1));
-      weights = std::move(ones);
-    } else {
+    // If weights are given, values and weights must have the same shape.
+    if (weights) {
       detail::check_ndarray_shape("values", values, "weights", *weights);
     }
 
-    auto [shape, strides, adjusted_strides] =
-        detail::numpy::reduced_properties(values, *axis);
-    shape_ = std::move(shape);
-    accumulators_ =
-        std::move(push(values, *weights, strides, adjusted_strides));
+    if (!axis) {
+      // Compute the statistics for the whole array.
+      shape_ = {1};
+      accumulators_ =
+          std::move(weights ? push(values, *weights) : push(values));
+    } else {
+      // Compute the statistics on a reduced dimension.
+      if (!weights) {
+        // If no weights are specified, the weights are set to ones.
+        weights = std::move(detail::numpy::ones_like(values));
+      }
+      auto [shape, strides, adjusted_strides] =
+          detail::numpy::reduced_properties(values, *axis);
+      shape_ = std::move(shape);
+      accumulators_ =
+          std::move(push(values, *weights, strides, adjusted_strides));
+    }
   }
 
   /// Returns the count of samples.
@@ -128,7 +130,7 @@ class DescriptiveStatistics {
   }
 
   /// Pickle support: set state of this instance
-  static auto setstate(pybind11::tuple state)
+  static auto setstate(const pybind11::tuple& state)
       -> std::unique_ptr<DescriptiveStatistics<T>> {
     if (state.size() != 2) {
       throw std::invalid_argument("invalid state");
@@ -149,19 +151,56 @@ class DescriptiveStatistics {
   [[nodiscard]] inline auto size() const -> pybind11::ssize_t {
     return std::accumulate(shape_.begin(), shape_.end(),
                            static_cast<pybind11::ssize_t>(1),
-                           std::multiplies<pybind11::ssize_t>());
+                           std::multiplies<>());
   }
 
-  /// Push values and weights to the accumulators.
+  /// Push values to the accumulators when the user wants to
+  /// calculate statistics on the whole array.
+  auto push(pybind11::array_t<T, pybind11::array::c_style>& arr)
+      -> Vector<Accumulators> {
+    auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
+    auto result = Vector<Accumulators>(1);
+    auto& item = result[0];
+
+    {
+      pybind11::gil_scoped_release release;
+
+      for (auto ix = 0; ix < arr.size(); ++ix) {
+        item(ptr_arr[ix]);
+      }
+    }
+    return result;
+  }
+
+  /// Push values and weights to the accumulators when the user wants to
+  /// calculate statistics on the whole array.
+  auto push(pybind11::array_t<T, pybind11::array::c_style>& arr,
+            pybind11::array_t<T, pybind11::array::c_style>& weights)
+      -> Vector<Accumulators> {
+    auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
+    auto* ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
+    auto result = Vector<Accumulators>(1);
+    auto& item = result[0];
+
+    {
+      pybind11::gil_scoped_release release;
+
+      for (auto ix = 0; ix < arr.size(); ++ix) {
+        item(ptr_arr[ix], ptr_weights[ix]);
+      }
+    }
+    return result;
+  }
+
+  /// Push values and weights to the accumulators when the user wants to
+  /// calculate statistics on a reduced array.
   auto push(pybind11::array_t<T, pybind11::array::c_style>& arr,
             pybind11::array_t<T, pybind11::array::c_style>& weights,
             const Vector<pybind11::ssize_t>& strides,
             const Vector<pybind11::ssize_t>& adjusted_strides)
       -> Vector<Accumulators> {
-    auto ptr_arr = reinterpret_cast<T*>(  //
-        pybind11::detail::array_proxy(arr.ptr())->data);
-    auto ptr_weights = reinterpret_cast<T*>(
-        pybind11::detail::array_proxy(weights.ptr())->data);
+    auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
+    auto* ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
     auto result = Vector<Accumulators>(size());
     auto indexes = Eigen::Matrix<pybind11::ssize_t, -1, 1>(arr.ndim());
 
