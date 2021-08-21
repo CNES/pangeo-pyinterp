@@ -105,6 +105,15 @@ Return:
 )__doc__")
       .def("__iadd__", &pyinterp::DescriptiveStatistics<Type>::operator+=,
            py::arg("other"), py::call_guard<py::gil_scoped_release>())
+      .def(
+          "__add__",
+          [](const pyinterp::DescriptiveStatistics<Type>& self,
+             const pyinterp::DescriptiveStatistics<Type>& other) {
+            auto result = pyinterp::DescriptiveStatistics<Type>(self);
+            result += other;
+            return result;
+          },
+          py::arg("other"), py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const pyinterp::DescriptiveStatistics<Type>& self) {
             return self.getstate();

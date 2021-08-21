@@ -44,7 +44,7 @@ def test_descriptive_statistics_1d(dtype, error):
     ds = pyinterp.DescriptiveStatistics(values, weights=np.ones(values.size))
     check_stats(ds, values)
 
-    ds = pyinterp.DescriptiveStatistics(da.asarray(values))
+    ds = pyinterp.DescriptiveStatistics(da.from_array(values, chunks=(1000, )))
     check_stats(ds, values)
 
     assert isinstance(str(ds), str)
