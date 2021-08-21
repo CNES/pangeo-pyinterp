@@ -52,8 +52,8 @@ def test_axis():
     values = np.random.random_sample((2, 3, 4, 5, 6, 7))
 
     def check_axis(values, axis, delayed=False):
-        ds = DescriptiveStatistics(da.asarray(values) if delayed else values,
-                                   axis=axis)
+        ds = pyinterp.DescriptiveStatistics(
+            da.asarray(values) if delayed else values, axis=axis)
         assert np.all(ds.count() == np.sum(values * 0 + 1, axis=axis))
         assert np.all(ds.max() == np.max(values, axis=axis))
         assert ds.mean() == pytest.approx(np.mean(values, axis=axis))
