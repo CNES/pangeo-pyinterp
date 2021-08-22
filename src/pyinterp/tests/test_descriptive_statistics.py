@@ -13,8 +13,9 @@ import xarray as xr
 from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 from . import grid2d_path, grid3d_path, grid4d_path
 
-@pytest.mark.parametrize("dtype, error", [(np.float32, 1e-4),
-                                          (np.float64, 1e-6)])
+
+@pytest.mark.parametrize("dtype,error", [(np.float32, 1e-4),
+                                         (np.float64, 1e-6)])
 def test_descriptive_statistics_1d(dtype, error):
     """Test the computation of descriptive statistics for a 1D array."""
     values = np.random.random_sample((10000, )).astype(dtype)
@@ -24,18 +25,18 @@ def test_descriptive_statistics_1d(dtype, error):
         assert isinstance(ds, pyinterp.DescriptiveStatistics)
         assert ds.count() == values.size
         assert ds.max() == np.max(values)
-        assert ds.mean() == pytest.approx(np.mean(values), rel=error)
+        assert ds.mean() == pytest.approx(np.mean(values),
+                                          rel=error,
+                                          abs=error)
         assert ds.min() == np.min(values)
         assert ds.sum_of_weights() == values.size
-        assert ds.sum() == pytest.approx(np.sum(values), rel=error)
-        assert ds.var() == pytest.approx(np.var(values), rel=error)
-        assert ds.std() == pytest.approx(np.std(values), rel=error)
-        assert ds.kurtosis() == pytest.approx(weighted_mom4(
-            values, np.ones(values.size, dtype=dtype)),
-                                              rel=error)
-        assert ds.skewness() == pytest.approx(weighted_mom3(
-            values, np.ones(values.size, dtype=dtype)),
-                                              rel=error)
+        assert ds.sum() == pytest.approx(np.sum(values), rel=error, abs=error)
+        assert ds.var() == pytest.approx(np.var(values), rel=error, abs=error)
+        assert ds.std() == pytest.approx(np.std(values), rel=error, abs=error)
+        kurtosis = weighted_mom4(values, np.ones(values.size, dtype=dtype))
+        assert ds.kurtosis() == pytest.approx(kurtosis, abs=error)
+        skewness = weighted_mom3(values, np.ones(values.size, dtype=dtype))
+        assert ds.skewness() == pytest.approx(skewness, rel=error, abs=error)
 
     check_stats(ds, values)
 
@@ -103,7 +104,7 @@ def test_grid():
     assert ds.mean()[0] == pytest.approx(data.mean())
 
     data = xr.load_dataset(grid3d_path()).tcw
-    ds = pyinterp.DescriptiveStatistics(data, axis=(0,))
+    ds = pyinterp.DescriptiveStatistics(data, axis=(0, ))
     assert ds.mean() == pytest.approx(data.mean(axis=0))
 
     data = xr.load_dataset(grid4d_path()).pressure
