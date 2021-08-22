@@ -8,9 +8,10 @@ import dask.array as da
 import numpy as np
 import pytest
 import pyinterp
+import xarray as xr
 #
 from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
-
+from . import grid2d_path, grid3d_path, grid4d_path
 
 @pytest.mark.parametrize("dtype, error", [(np.float32, 1e-4),
                                           (np.float64, 1e-6)])
@@ -93,3 +94,18 @@ def test_axis():
     check_axis(values, (1, ), delayed=True)
     check_axis(values, (2, 3), delayed=True)
     check_axis(values, (1, 3, 5), delayed=True)
+
+
+def test_grid():
+    """Test the computation of descriptive statistics for a grid."""
+    data = xr.load_dataset(grid2d_path()).mss
+    ds = pyinterp.DescriptiveStatistics(data)
+    assert ds.mean()[0] == pytest.approx(data.mean())
+
+    data = xr.load_dataset(grid3d_path()).tcw
+    ds = pyinterp.DescriptiveStatistics(data, axis=(0,))
+    assert ds.mean() == pytest.approx(data.mean(axis=0))
+
+    data = xr.load_dataset(grid4d_path()).pressure
+    ds = pyinterp.DescriptiveStatistics(data, axis=(0, 1))
+    assert ds.mean() == pytest.approx(data.mean(axis=(0, 1)))

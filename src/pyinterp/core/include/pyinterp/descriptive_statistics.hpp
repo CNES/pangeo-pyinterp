@@ -155,7 +155,7 @@ class DescriptiveStatistics {
   }
 
   /// Push values to the accumulators when the user wants to
-  /// calculate statistics on the whole array.
+  /// calculate statistics on the whole array. NaNs are ignored.
   auto push(pybind11::array_t<T, pybind11::array::c_style>& arr)
       -> Vector<Accumulators> {
     auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
@@ -166,14 +166,17 @@ class DescriptiveStatistics {
       pybind11::gil_scoped_release release;
 
       for (auto ix = 0; ix < arr.size(); ++ix) {
-        item(ptr_arr[ix]);
+        const auto xi = ptr_arr[ix];
+        if (!std::isnan(xi)) {
+          item(xi);
+        }
       }
     }
     return result;
   }
 
   /// Push values and weights to the accumulators when the user wants to
-  /// calculate statistics on the whole array.
+  /// calculate statistics on the whole array. NaNs are ignored.
   auto push(pybind11::array_t<T, pybind11::array::c_style>& arr,
             pybind11::array_t<T, pybind11::array::c_style>& weights)
       -> Vector<Accumulators> {
@@ -186,14 +189,17 @@ class DescriptiveStatistics {
       pybind11::gil_scoped_release release;
 
       for (auto ix = 0; ix < arr.size(); ++ix) {
-        item(ptr_arr[ix], ptr_weights[ix]);
+        const auto xi = ptr_arr[ix];
+        if (!std::isnan(xi)) {
+          item(xi, ptr_weights[ix]);
+        }
       }
     }
     return result;
   }
 
   /// Push values and weights to the accumulators when the user wants to
-  /// calculate statistics on a reduced array.
+  /// calculate statistics on a reduced array. NaNs are ignored.
   auto push(pybind11::array_t<T, pybind11::array::c_style>& arr,
             pybind11::array_t<T, pybind11::array::c_style>& weights,
             const Vector<pybind11::ssize_t>& strides,
@@ -208,9 +214,12 @@ class DescriptiveStatistics {
       pybind11::gil_scoped_release release;
 
       for (auto ix = 0; ix < arr.size(); ++ix) {
-        detail::numpy::unravel(ix, strides, indexes);
-        auto jx = (indexes.array() * adjusted_strides.array()).sum();
-        result[jx](ptr_arr[ix], ptr_weights[ix]);
+        const auto xi = ptr_arr[ix];
+        if (!std::isnan(xi)) {
+          detail::numpy::unravel(ix, strides, indexes);
+          auto jx = (indexes.array() * adjusted_strides.array()).sum();
+          result[jx](xi, ptr_weights[ix]);
+        }
       }
     }
     return result;

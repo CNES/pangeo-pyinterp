@@ -52,6 +52,11 @@ class DescriptiveStatistics:
     Args:
         values (numpy.ndarray, dask.Array): Array containing numbers whose
             statistics are desired.
+
+            .. note::
+
+                NaNs are automatically ignored.
+
         weights (numpy.ndarray, dask.Array, optional): An array of weights
             associated with the values. If not provided, all values are assumed
             to have equal weight.
