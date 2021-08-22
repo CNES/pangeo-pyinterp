@@ -31,10 +31,10 @@ def test_descriptive_statistics_1d(dtype, error):
         assert ds.var() == pytest.approx(np.var(values), rel=error)
         assert ds.std() == pytest.approx(np.std(values), rel=error)
         assert ds.kurtosis() == pytest.approx(weighted_mom4(
-            values, np.ones(values.size)),
+            values, np.ones(values.size, dtype=dtype)),
                                               rel=error)
         assert ds.skewness() == pytest.approx(weighted_mom3(
-            values, np.ones(values.size)),
+            values, np.ones(values.size, dtype=dtype)),
                                               rel=error)
 
     check_stats(ds, values)
