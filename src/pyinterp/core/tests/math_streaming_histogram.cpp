@@ -209,7 +209,7 @@ TEST(math_streaming_histogram, quantile_normal) {
     acc(item.value, item.count);
   }
   EXPECT_NEAR(acc.mean(), instance.mean(), 1e-6);
-  EXPECT_NEAR(acc.std(), instance.std(), 1e-6);
+  EXPECT_NEAR(acc.variance(), instance.variance(), 1e-6);
 }
 
 TEST(math_streaming_histogram, merge) {
@@ -254,7 +254,7 @@ TEST(math_streaming_histogram, merge) {
     acc(item.value, item.count);
   }
   EXPECT_NEAR(acc.mean(), instance1.mean(), 1e-6);
-  EXPECT_NEAR(acc.std(), instance1.std(), 1e-6);
+  EXPECT_NEAR(acc.variance(), instance1.variance(), 1e-6);
 }
 
 TEST(math_streaming_histogram, quantile_out_of_bounds) {
@@ -314,11 +314,8 @@ TEST(math_streaming_histogram, weighted) {
     instance.push(x[ix], w[ix]);
   }
 
-  auto [min, max] = instance.weighted_minmax();
   EXPECT_EQ(instance.bins().size(), acc.count());
   EXPECT_EQ(instance.count(), acc.sum_of_weights());
-  EXPECT_DOUBLE_EQ(min, acc.min());
-  EXPECT_DOUBLE_EQ(max, acc.max());
   EXPECT_DOUBLE_EQ(instance.mean(), acc.mean());
   EXPECT_NEAR(instance.variance(), acc.variance(),
               1e-12);
