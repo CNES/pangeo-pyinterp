@@ -21,6 +21,7 @@ extern void init_geohash_int64(py::module&);
 extern void init_geohash_string(py::module&);
 extern void init_geohash_utility(py::module&);
 extern void init_grid(py::module&);
+extern void init_histogram2d(py::module&);
 extern void init_quadrivariate(py::module&);
 extern void init_rtree(py::module&);
 extern void init_spline(py::module&);
@@ -82,6 +83,7 @@ Index storage support
 
   init_axis(m);
   init_binning(m);
+  init_histogram2d(m);
   init_bivariate_interpolator(m);
   init_descriptive_statistics(m);
   init_grid(m);
