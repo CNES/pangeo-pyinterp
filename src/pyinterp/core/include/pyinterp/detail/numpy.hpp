@@ -5,6 +5,8 @@
 #pragma once
 #include <pybind11/numpy.h>
 
+#include <list>
+
 #include "pyinterp/eigen.hpp"
 
 namespace pyinterp::detail::numpy {
@@ -30,8 +32,9 @@ void check_axis_bounds(
 
 /// Converts a flat index into a vector of indices for each dimension of the
 /// tensor.
-auto unravel(pybind11::ssize_t index, const Vector<pybind11::ssize_t>& strides,
-             Vector<pybind11::ssize_t>& indexes) -> void {
+inline auto unravel(pybind11::ssize_t index,
+                    const Vector<pybind11::ssize_t>& strides,
+                    Vector<pybind11::ssize_t>& indexes) -> void {
   for (pybind11::ssize_t ix = 0; ix < strides.size(); ++ix) {
     indexes[ix] = index / strides[ix];
     index -= indexes[ix] * strides[ix];

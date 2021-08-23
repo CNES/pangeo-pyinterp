@@ -36,7 +36,7 @@ class Histogram2D {
               const std::optional<size_t>& bin_count)
       : x_(std::move(x)), y_(std::move(y)), histogram_(x_->size(), y_->size()) {
     if (bin_count) {
-      histogram_.unaryExpr([bin_count](const StreamingHistogram& item) {
+      histogram_.unaryExpr([bin_count](const StreamingHistogram& /*item*/) {
         return StreamingHistogram(*bin_count, false);
       });
     }
@@ -223,7 +223,7 @@ class Histogram2D {
     return z;
   }
 
-  auto marshal() const -> pybind11::bytes {
+  [[nodiscard]] auto marshal() const -> pybind11::bytes {
     auto gil = pybind11::gil_scoped_release();
     auto ss = std::stringstream();
     ss.exceptions(std::stringstream::failbit);

@@ -149,7 +149,9 @@ class StreamingHistogram {
   }
 
   /// Returns the number of bins in the histogram.
-  inline auto size() const noexcept -> size_t { return bins_.size(); }
+  [[nodiscard]] inline auto size() const noexcept -> size_t {
+    return bins_.size();
+  }
 
   /// Calculate the quantile of the distribution
   auto quantile(const T& quantile) const -> T {

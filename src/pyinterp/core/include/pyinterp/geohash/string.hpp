@@ -6,9 +6,9 @@
 #include <pybind11/numpy.h>
 
 #include <Eigen/Core>
-#include <unordered_map>
 #include <optional>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 #include "pyinterp/eigen.hpp"

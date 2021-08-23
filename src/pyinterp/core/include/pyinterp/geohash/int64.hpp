@@ -6,9 +6,9 @@
 #include <pybind11/eigen.h>
 
 #include <Eigen/Core>
-#include <unordered_map>
 #include <optional>
 #include <tuple>
+#include <unordered_map>
 
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/math.hpp"

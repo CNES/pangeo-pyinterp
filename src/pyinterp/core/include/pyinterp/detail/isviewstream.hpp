@@ -18,15 +18,14 @@ namespace pyinterp::detail {
 class sviewbuf : public std::streambuf {
  protected:
   auto seekoff(off_type off, std::ios_base::seekdir dir,
-               std::ios_base::openmode which = std::ios_base::in |
-                                               std::ios_base::out)
-      -> pos_type override {
-    if (dir == std::ios_base::cur)
+               std::ios_base::openmode /*which*/) -> pos_type override {
+    if (dir == std::ios_base::cur) {
       gbump(static_cast<int>(off));
-    else if (dir == std::ios_base::end)
+    } else if (dir == std::ios_base::end) {
       setg(eback(), egptr() + off, egptr());
-    else if (dir == std::ios_base::beg)
+    } else if (dir == std::ios_base::beg) {
       setg(eback(), eback() + off, egptr());
+    }
     return gptr() - eback();
   }
 
@@ -37,11 +36,12 @@ class sviewbuf : public std::streambuf {
 
  public:
   sviewbuf(const char* s, std::size_t count) {
-    auto begin = const_cast<char*>(s);
+    auto* begin = const_cast<char*>(s);
     this->setg(begin, begin, begin + count);
   }
 
-  sviewbuf(const std::string_view& str) : sviewbuf(str.data(), str.size()) {}
+  explicit sviewbuf(const std::string_view& str)
+      : sviewbuf(str.data(), str.size()) {}
 };
 
 /// A std::stringstream analog for string_view.
@@ -52,7 +52,7 @@ class sviewbuf : public std::streambuf {
 /// ends before this stream, reading from it invokes undefined behavior.
 class isviewstream : private virtual sviewbuf, public std::istream {
  public:
-  isviewstream(const std::string_view& str)
+  explicit isviewstream(const std::string_view& str)
       : sviewbuf(str), std::istream(static_cast<std::streambuf*>(this)) {}
 };
 
