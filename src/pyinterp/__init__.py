@@ -8,6 +8,7 @@ from .binning import Binning2D
 from .core import Axis, dateutils
 from .descriptive_statistics import DescriptiveStatistics
 from .grid import Grid2D, Grid3D, Grid4D
+from .hisogram2d import Histogram2D
 from .interpolator.bicubic import bicubic
 from .interpolator.bivariate import bivariate
 from .interpolator.quadrivariate import quadrivariate

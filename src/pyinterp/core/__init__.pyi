@@ -867,6 +867,14 @@ class Histogram2DFloat64:
     def variance(self) -> numpy.ndarray[float64]:
         ...
 
+    @property
+    def x(self) -> "Axis":
+        ...
+
+    @property
+    def y(self) -> "Axis":
+        ...
+
 
 class Histogram2DFloat32:
     def __getstate__(self) -> tuple:
@@ -907,4 +915,12 @@ class Histogram2DFloat32:
         ...
 
     def variance(self) -> numpy.ndarray[float32]:
+        ...
+
+    @property
+    def x(self) -> "Axis":
+        ...
+
+    @property
+    def y(self) -> "Axis":
         ...
