@@ -13,6 +13,7 @@
 
 #include "pyinterp/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"
+#include "pyinterp/detail/isviewstream.hpp"
 #include "pyinterp/detail/math/binning.hpp"
 #include "pyinterp/detail/math/streaming_histogram.hpp"
 #include "pyinterp/eigen.hpp"
@@ -167,7 +168,9 @@ class Histogram2D {
 
     // Unmarshalling instance
     auto result = std::make_unique<Histogram2D<T>>(x, y, 40);
-    Histogram2D::unmarshal(state[2].cast<pybind11::bytes>(), result->histogram_);
+    auto marshal_data = state[2].cast<pybind11::bytes>();
+    Histogram2D::unmarshal(marshal_data.cast<std::string_view>(),
+                           result->histogram_);
     return result;
   }
 
@@ -239,10 +242,10 @@ class Histogram2D {
     return ss.str();
   }
 
-  static auto unmarshal(const std::string& data,
+  static auto unmarshal(const std::string_view& data,
                         Matrix<StreamingHistogram>& histogram) -> void {
     auto gil = pybind11::gil_scoped_release();
-    auto ss = std::stringstream(data);
+    auto ss = detail::isviewstream(data);
     ss.exceptions(std::stringstream::failbit);
 
     try {

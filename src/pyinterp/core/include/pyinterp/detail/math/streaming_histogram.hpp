@@ -1,3 +1,7 @@
+// Copyright (c) 2021 CNES
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <cmath>
 #include <functional>
@@ -5,6 +9,8 @@
 #include <optional>
 #include <sstream>
 #include <vector>
+
+#include "pyinterp/detail/isviewstream.hpp"
 
 namespace pyinterp::detail::math {
 
@@ -78,8 +84,8 @@ class StreamingHistogram {
       : weighted_diff_(weighted_diff), bin_count_(bin_count) {}
 
   /// Create of a new object from serialized data.
-  explicit StreamingHistogram(const std::string& state) {
-    auto ss = std::stringstream(state);
+  explicit StreamingHistogram(const std::string_view& state) {
+    auto ss = isviewstream(state);
     ss.exceptions(std::stringstream::failbit);
     auto size = size_t(0);
 
