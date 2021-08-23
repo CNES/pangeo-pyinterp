@@ -824,3 +824,87 @@ class DescriptiveStatisticsFloat32:
 
     def variance(self, ddof: int = 0) -> numpy.ndarray[numpy.float32]:
         ...
+
+
+class Histogram2DFloat64:
+    def __init__(self,
+                 x: "Axis",
+                 y: "Axis",
+                 bins: Optional[int] = None) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __iadd__(self, arg0: "Histogram2DFloat64") -> "Histogram2DFloat64":
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    def clear(self) -> None:
+        ...
+
+    def count(self) -> numpy.ndarray[float64]:
+        ...
+
+    def max(self) -> numpy.ndarray[float64]:
+        ...
+
+    def mean(self) -> numpy.ndarray[float64]:
+        ...
+
+    def min(self) -> numpy.ndarray[float64]:
+        ...
+
+    def push(self, x: numpy.ndarray[float64], y: numpy.ndarray[float64],
+             z: numpy.ndarray[float64]) -> None:
+        ...
+
+    def quantile(self, q: float = 0.5) -> numpy.ndarray[float64]:
+        ...
+
+    def variance(self) -> numpy.ndarray[float64]:
+        ...
+
+
+class Histogram2DFloat32:
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __iadd__(self, arg0: "Histogram2DFloat32") -> "Histogram2DFloat32":
+        ...
+
+    def __init__(self,
+                 x: "Axis",
+                 y: "Axis",
+                 bins: Optional[int] = None) -> None:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    def clear(self) -> None:
+        ...
+
+    def count(self) -> numpy.ndarray[float32]:
+        ...
+
+    def max(self) -> numpy.ndarray[float32]:
+        ...
+
+    def mean(self) -> numpy.ndarray[float32]:
+        ...
+
+    def min(self) -> numpy.ndarray[float32]:
+        ...
+
+    def push(self, x: numpy.ndarray[float32], y: numpy.ndarray[float32],
+             z: numpy.ndarray[float32]) -> None:
+        ...
+
+    def quantile(self, q: float = 0.5) -> numpy.ndarray[float32]:
+        ...
+
+    def variance(self) -> numpy.ndarray[float32]:
+        ...

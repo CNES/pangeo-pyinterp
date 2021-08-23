@@ -154,7 +154,7 @@ class StreamingHistogram {
   /// Calculate the quantile of the distribution
   auto quantile(const T& quantile) const -> T {
     if (bins_.empty()) {
-      throw std::invalid_argument("quantile from empty histogram");
+      return std::numeric_limits<T>::quiet_NaN();
     }
 
     if (quantile < 0.0 || quantile > 1.0) {

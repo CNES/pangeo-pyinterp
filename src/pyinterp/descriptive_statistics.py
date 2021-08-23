@@ -1,5 +1,4 @@
 from typing import Any, Iterable, Optional, Union
-from numpy.typing import DTypeLike
 import dask.array as da
 import numpy as np
 from . import core
@@ -60,15 +59,17 @@ class DescriptiveStatistics:
         weights (numpy.ndarray, dask.Array, optional): An array of weights
             associated with the values. If not provided, all values are assumed
             to have equal weight.
-        axes (iterable, optional): Axis or axes along which to compute the
+        axis (iterable, optional): Axis or axes along which to compute the
             statistics. If not provided, the statistics are computed over the
             flattened array.    
+        dtype (numpy.dtype, optional): Data type of the returned array. By
+            default, the data type is numpy.float64.
     """
     def __init__(self,
                  values: Union[da.Array, np.ndarray],
                  weights: Optional[Union[da.Array, np.ndarray]] = None,
                  axis: Optional[Iterable[int]] = None,
-                 dtype: Optional[DTypeLike] = None) -> None:
+                 dtype: Optional[np.dtype] = None) -> None:
         dtype = dtype or np.dtype("float64")
         if dtype == np.dtype("float64"):
             attr = f"DescriptiveStatisticsFloat64"
@@ -187,7 +188,7 @@ class DescriptiveStatistics:
         Returns:
             numpy.ndarray: Returns the standard deviation of samples.
         """
-        return self.var(ddof=ddof)**0.5
+        return np.sqrt(self.var(ddof=ddof))
 
     def array(self) -> np.ndarray:
         """Returns the different statistical variables calculated in a numpy
