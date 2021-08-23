@@ -27,7 +27,7 @@ class Histogram2D:
     calculated statistics will be an approximate value of the exact statistical
     variable. This algorithm is useful if you want to know the statistical
     distribution per pixel or the value of a quantile, like the median.
-    Otherwise, use the py:class:`pyinterp.Binning2D` class.
+    Otherwise, use the :py:class:`pyinterp.Binning2D` class.
 
     .. note ::
 

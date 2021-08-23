@@ -3,6 +3,10 @@
 Binning
 *******
 
+=========
+Binning2D
+=========
+
 Statistical data binning is a way to group several more or less continuous
 values into a smaller number of *bins*. For example, if you have irregularly
 distributed data over the oceans, you can organize these observations into a
@@ -96,5 +100,59 @@ pcm = ax2.pcolormesh(lon,
                      transform=cartopy.crs.PlateCarree())
 ax2.coastlines()
 ax2.set_title("Linear binning.")
+fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
+fig.show()
+
+#%%
+# ===========
+# Histogram2D
+# ===========
+#
+# :py:class:`This class<pyinterp.Histogram2D>`, like the previous one, allows
+# calculating a binning using distribution and obtains the median value of the
+# pixels. histograms. In addition, this approach calculates the quantiles of the
+# 
+# Note that the algorithm used defines a maximum size of the number of bins
+# handled by each histogram. If the number of observations is greater than the
+# capacity of the histogram, the histogram will be compressed to best present
+# this distribution in limited memory size. The description of the exact
+# algorithm is in the article `A Streaming Parallel Decision Tree Algorithm
+# <http://jmlr.org/papers/v11/ben-haim10a.html>`_.
+hist2d = pyinterp.Histogram2D(
+    pyinterp.Axis(numpy.arange(27, 42, 0.3), is_circle=True),
+    pyinterp.Axis(numpy.arange(40, 47, 0.3)))
+hist2d
+
+#%%
+# We push the loaded data into the different defined bins using the method
+# :py:meth:`push <pyinterp.Histogram2D.push>`.
+hist2d.push(ds.lon, ds.lat, norm)
+
+#%%
+# We visualize the mean vs median of the distribution.
+fig = matplotlib.pyplot.figure(figsize=(10, 8))
+ax1 = fig.add_subplot(211, projection=cartopy.crs.PlateCarree())
+lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
+pcm = ax1.pcolormesh(lon,
+                     lat,
+                     nearest,
+                     cmap='jet',
+                     vmin=0,
+                     vmax=1,
+                     transform=cartopy.crs.PlateCarree())
+ax1.coastlines()
+ax1.set_title("Mean")
+
+ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
+lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
+pcm = ax2.pcolormesh(lon,
+                     lat,
+                     hist2d.variable("quantile", 0.5),
+                     cmap='jet',
+                     vmin=0,
+                     vmax=1,
+                     transform=cartopy.crs.PlateCarree())
+ax2.coastlines()
+ax2.set_title("Median")
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()

@@ -14,8 +14,8 @@ numerically stable.
 
     Pébay, P., Terriberry, T.B., Kolla, H. et al.
     Numerically stable, scalable formulas for parallel and online
-        computation of higher-order multivariate central moments
-        with arbitrary weights.
+    computation of higher-order multivariate central moments
+    with arbitrary weights.
     Comput Stat 31, 1305–1325,
     2016,
     https://doi.org/10.1007/s00180-015-0637-z

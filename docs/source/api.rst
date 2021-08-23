@@ -39,6 +39,7 @@ Binning
   :toctree: generated/
 
   Binning2D
+  Histogram2D
 
 Cartesian Grids
 ===============

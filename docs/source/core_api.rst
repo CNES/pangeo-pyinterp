@@ -46,6 +46,8 @@ Binning
 
   core.Binning2DFloat64
   core.Binning2DFloat32
+  core.Histogram2DFloat64
+  core.Histogram2DFloat32
 
 Bivariate interpolators
 -----------------------
@@ -79,6 +81,15 @@ Cartesian Grids
   core.Grid3DFloat64
   core.Grid4DFloat32
   core.Grid4DFloat64
+
+Univariate Descriptive Statistics
+---------------------------------
+
+.. autosummary::
+  :toctree: generated/
+
+  core.DescriptiveStatisticsFloat32
+  core.DescriptiveStatisticsFloat64
 
 Geodetic System
 ---------------

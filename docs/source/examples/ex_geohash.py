@@ -35,7 +35,7 @@ def _sort_colors(colors):
 
 def _plot_box(ax, code, color, caption=True):
     """Plot a GeoHash bounding box"""
-    box = pyinterp.geohash.bounding_box(code)
+    box = pyinterp.geohash.bounding_box(code.decode())
     x0 = box.min_corner.lon
     x1 = box.max_corner.lon
     y0 = box.min_corner.lat
@@ -96,6 +96,7 @@ def plot_geohash_grid(precision,
     colors = _sort_colors(color_list)
     ic = 0
     codes = pyinterp.geohash.bounding_boxes(box, precision=precision)
+
     color_codes = {codes[0][0]: colors[ic]}
     for item in codes:
         prefix = item[precision - 1]
