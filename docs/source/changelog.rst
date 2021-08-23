@@ -1,15 +1,24 @@
 Changelog
 #########
 
+0.8.0 (XX YY 2021)
+------------------
+* Calculates univariate statistics.
+* Binning using streaming histogram to evaluate quantiles.
+* Refactoring of the tests to include them in the distribution.
+* Using unordered_map instead of map to optimize geohash queries.
+* Store the geohash index on fs mapping.
+* Timedelta64 are also temporel axes.
+
 0.7.1 (25 April 2021)
 ---------------------
-* find_index does not handle circles
+* find_index does not handle circles.
 
 0.7.0 (23 April 2021)
 ---------------------
-* Within functionality flipped for IDW
-* Checks if the coordinates are covered by a polygon
-* Calculates distance between geodetic objects
+* Within functionality flipped for IDW.
+* Checks if the coordinates are covered by a polygon.
+* Calculates distance between geodetic objects.
 
 0.6.1 (6 March 2021)
 --------------------
@@ -57,18 +66,18 @@ Changelog
 
 0.1.1 (17 January 2020)
 -------------------------
-* Use of MKL in the Conda package
+* Use of MKL in the Conda package.
 
 0.1.0 (4 January 2020)
 -------------------------
-* Simplification of interpolations with Xarray
-* Support for numpy datetime64
-* Added 4D interpolation
+* Simplification of interpolations with Xarray.
+* Support for numpy datetime64.
+* Added 4D interpolation.
 
 0.0.8 (7 December 2019)
 -------------------------
-* Added interpolation by RBF in RTree
-* Improvement of RTree class performance
+* Added interpolation by RBF in RTree.
+* Improvement of RTree class performance.
 
 0.0.7 (13 November 2019)
 -------------------------
@@ -88,26 +97,26 @@ Changelog
 
 0.0.5 (19 September 2019)
 -------------------------
-* Use of the conda-forge channel
+* Use of the conda-forge channel.
 
 0.0.4 (16 September 2019)
 -------------------------
-* Simplification of the Xarray backend
-* Merging of the conda-forge recipe
-* Fix documentation issues
+* Simplification of the Xarray backend.
+* Merging of the conda-forge recipe.
+* Fix documentation issues.
 
 0.0.3 (29 July, 2019)
 ---------------------
-* Optimization of memory management
-* Improving bicubic interpolation performance
+* Optimization of memory management.
+* Improving bicubic interpolation performance.
 * Addition of methods to fill undefined values to solve interpolation problems
   near the coasts.
 * Major redesign to separate grid management from interpolation routines.
 
 0.0.2 (12 July, 2019)
 ---------------------
-* Handle bounds error on structured grid interpolation
+* Handle bounds error on structured grid interpolation.
 
 0.0.1 (8 July, 2019)
 --------------------
-* Initial release
+* Initial release.
