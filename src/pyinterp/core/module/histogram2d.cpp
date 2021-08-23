@@ -12,6 +12,7 @@ namespace py = pybind11;
 
 template <typename Type>
 void implement_histogram_2d(py::module& m, const std::string& suffix) {
+  PYBIND11_NUMPY_DTYPE(pyinterp::detail::math::Bin<Type>, value, count);
   py::class_<pyinterp::Histogram2D<Type>>(m, ("Histogram2D" + suffix).c_str(),
                                           R"__doc__(
 Group a number of more or less continuous values into a smaller number of
@@ -103,6 +104,13 @@ Compute the variance of values for points within each bin.
 
 Return:
     numpy.ndarray: variance of values for points within each bin.
+)__doc__")
+      .def("histograms", &pyinterp::Histogram2D<Type>::histograms,
+           R"__doc__(
+Compute the histograms for each bin.
+
+Return:
+    numpy.ndarray: histograms for each bin.
 )__doc__")
       .def("__iadd__", &pyinterp::Histogram2D<Type>::operator+=,
            py::call_guard<py::gil_scoped_release>())

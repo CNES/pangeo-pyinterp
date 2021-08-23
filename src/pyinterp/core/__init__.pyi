@@ -848,6 +848,9 @@ class Histogram2DFloat64:
     def count(self) -> numpy.ndarray[float64]:
         ...
 
+    def histograms(self) -> numpy.ndarray:
+        ...
+
     def max(self) -> numpy.ndarray[float64]:
         ...
 
@@ -896,6 +899,9 @@ class Histogram2DFloat32:
         ...
 
     def count(self) -> numpy.ndarray[float32]:
+        ...
+
+    def histograms(self) -> numpy.ndarray:
         ...
 
     def max(self) -> numpy.ndarray[float32]:

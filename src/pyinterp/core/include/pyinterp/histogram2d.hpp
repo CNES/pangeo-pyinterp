@@ -197,6 +197,39 @@ class Histogram2D {
     return *this;
   }
 
+  /// Returns the histogram for each bin.
+  auto histograms() const -> pybind11::array_t<detail::math::Bin<T>> {
+    auto bins_count = size_t(0);
+    for (Eigen::Index ix = 0; ix < histogram_.rows(); ++ix) {
+      for (Eigen::Index iy = 0; iy < histogram_.cols(); ++iy) {
+        bins_count = std::max(bins_count, histogram_(ix, iy).size());
+      }
+    }
+    auto result =
+        pybind11::array_t<detail::math::Bin<T>>(pybind11::array::ShapeContainer(
+            {x_->size(), y_->size(),
+             static_cast<pybind11::ssize_t>(bins_count)}));
+    auto _result = result.template mutable_unchecked<3>();
+    {
+      auto gil = pybind11::gil_scoped_release();
+
+      for (Eigen::Index ix = 0; ix < histogram_.rows(); ++ix) {
+        for (Eigen::Index iy = 0; iy < histogram_.cols(); ++iy) {
+          auto iz = Eigen::Index(0);
+          auto& bins = histogram_(ix, iy).bins();
+          for (iz = 0; iz < bins.size(); ++iz) {
+            _result(ix, iy, iz) = bins[iz];
+          }
+          for (; iz < bins_count; ++iz) {
+            _result(ix, iy, iz) =
+                detail::math::Bin<T>{std::numeric_limits<T>::quiet_NaN(), T(0)};
+          }
+        }
+      }
+    }
+    return result;
+  }
+
  private:
   /// Grid axis
   std::shared_ptr<Axis<double>> x_;

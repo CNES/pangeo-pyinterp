@@ -5,7 +5,6 @@
 import copy
 import os
 import pickle
-import pytest
 import netCDF4
 try:
     import matplotlib.pyplot
@@ -83,6 +82,11 @@ def test_binning2d_methods():
     if HAVE_PLT:
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
         plot(mx, my, median, "hist2d_median.png")
+
+    histograms = hist2d.histograms()
+    assert isinstance(histograms, np.ndarray)
+    assert histograms.ndim == 3
+    assert histograms.dtype == np.dtype([("value", "f8"), ("count", "f8")])
 
 
 def test_binning2d_pickle():
