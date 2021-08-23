@@ -166,8 +166,7 @@ class Binning2D {
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple(
         x_->getstate(), y_->getstate(),
-        wgs_.has_value() ? wgs_->getstate() : pybind11::make_tuple(),
-        acc_.template cast<Accumulators>());
+        wgs_.has_value() ? wgs_->getstate() : pybind11::make_tuple(), acc());
   }
 
   /// Pickle support: set state of this instance
@@ -355,6 +354,12 @@ class Binning2D {
         }
       }
     }
+  }
+
+  /// Returns the matrix of raw statistics.
+  inline auto acc() const -> Matrix<Accumulators> {
+    auto gil = pybind11::gil_scoped_release();
+    return acc_.template cast<Accumulators>();
   }
 };
 
