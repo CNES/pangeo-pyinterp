@@ -56,12 +56,13 @@ def run(program, fix, path, options=""):
         program, '-checks=*,-llvm-header-guard,-fuchsia-*,-android-*,'
         '-*-magic-numbers,-google-runtime-references,'
         '-cppcoreguidelines-init-variables,'
-        '-cppcoreguidelines-pro-bounds-pointer-arithmetic,'
-        '-cppcoreguidelines-pro-bounds-array-to-pointer-decay,'
-        '-cppcoreguidelines-pro-type-cstyle-cast,'
-        '-cppcoreguidelines-pro-type-vararg,'
-        '-cppcoreguidelines-pro-bounds-constant-array-index,'
         '-cppcoreguidelines-owning-memory,'
+        '-cppcoreguidelines-pro-bounds-array-to-pointer-decay,'
+        '-cppcoreguidelines-pro-bounds-constant-array-index,'
+        '-cppcoreguidelines-pro-bounds-pointer-arithmetic,'
+        '-cppcoreguidelines-pro-type-cstyle-cast,'
+        '-cppcoreguidelines-pro-type-reinterpret-cast,'
+        '-cppcoreguidelines-pro-type-vararg,'
         '-llvmlibc-*,'
         '-hicpp-*,'
         '-*-non-private-member-variables-in-classes', '-format-style=Google',
@@ -93,8 +94,10 @@ def main():
     # Directories to include in search path
     includes = [] if args.include is None else args.include
     if platform.system() == 'Darwin':
-        includes.insert(
-            0, "/Library/Developer/CommandLineTools/usr/include/c++/v1")
+        sysroot = (" -isysroot "
+                   "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk")
+    else:
+        sysroot = ""
     includes.insert(0, sysconfig.get_config_var('INCLUDEPY'))
     includes.insert(0, f"{sys.prefix}/include/eigen3")
     includes.insert(0, f"{sys.prefix}/include")
@@ -116,7 +119,8 @@ def main():
                     target.append(path)
 
     # Compiler options
-    options = "-std=c++17 " + " ".join((f"-I{item}" for item in includes))
+    options = "-std=c++17 " + " ".join(
+        (f"-I{item}" for item in includes)) + sysroot
 
     # Stream used to write in the logbook
     stream = sys.stderr if args.log is None else args.log
