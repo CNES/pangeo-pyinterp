@@ -157,7 +157,7 @@ class StreamingHistogram {
       throw std::invalid_argument("quantile from empty histogram");
     }
 
-    if (quantile < 0.0 or quantile > 1.0) {
+    if (quantile < 0.0 || quantile > 1.0) {
       throw std::invalid_argument("Quantile must be in the range [0, 1]");
     }
 

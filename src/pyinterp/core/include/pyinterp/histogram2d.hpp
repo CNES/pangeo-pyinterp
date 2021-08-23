@@ -265,7 +265,7 @@ class Histogram2D {
           histogram(ix, jx) = std::move(StreamingHistogram(marshal_hist));
         }
       }
-    } catch (std::ios_base::failure& e) {
+    } catch (std::ios_base::failure) {
       throw std::invalid_argument("invalid state");
     }
   }

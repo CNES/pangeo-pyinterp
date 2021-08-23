@@ -22,7 +22,7 @@ class sviewbuf : public std::streambuf {
                                                std::ios_base::out)
       -> pos_type override {
     if (dir == std::ios_base::cur)
-      gbump(off);
+      gbump(static_cast<int>(off));
     else if (dir == std::ios_base::end)
       setg(eback(), egptr() + off, egptr());
     else if (dir == std::ios_base::beg)
