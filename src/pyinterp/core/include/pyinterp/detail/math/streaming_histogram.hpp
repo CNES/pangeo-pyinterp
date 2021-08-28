@@ -119,6 +119,12 @@ class StreamingHistogram {
     return ss.str();
   }
 
+  /// Set the maximum number of bins in the histogram.
+  inline auto resize(const size_t bin_count) -> void {
+    bin_count_ = bin_count;
+    trim();
+  }
+
   /// Get the bins that compose the histogram.
   inline auto bins() const noexcept -> const std::vector<Bin<T>>& {
     return bins_;
@@ -132,8 +138,13 @@ class StreamingHistogram {
   /// Push a new value into the histogram.
   inline auto operator()(const T& value, const T& weight = T(1)) -> void {
     ++count_;
-    min_ = std::min(min_, value);
-    max_ = std::max(max_, value);
+    auto weighted_value = weight * value;
+    if (weighted_value < min_) {
+      min_ = weighted_value;
+    }
+    if (weighted_value > max_) {
+      max_ = weighted_value;
+    }
     update_bins(value, weight);
     trim();
   }
@@ -141,8 +152,12 @@ class StreamingHistogram {
   /// Merges the provided histogram into the current one.
   inline auto operator+=(const StreamingHistogram<T>& other) -> void {
     count_ += other.count_;
-    min_ = std::min(min_, other.min_);
-    max_ = std::max(max_, other.max_);
+    if (other.min_ < min_) {
+      min_ = other.min_;
+    }
+    if (other.max_ > max_) {
+      max_ = other.max_;
+    }
     for (const auto& item : other.bins_) {
       update_bins(item.value, item.weight);
     }
@@ -150,10 +165,10 @@ class StreamingHistogram {
   }
 
   /// Returns the number of samples pushed into the histogram.
-  inline auto count() const -> uint64_t { return count_; }
+  [[nodiscard]] inline auto count() const -> uint64_t { return count_; }
 
   /// Returns the sum of weights pushed into the histogram.
-  inline auto sum_of_weights() const -> T {
+  [[nodiscard]] inline auto sum_of_weights() const -> T {
     return std::accumulate(
         bins_.begin(), bins_.end(), T(0),
         [](T a, const Bin<T>& b) -> T { return a + b.weight; });
@@ -165,7 +180,7 @@ class StreamingHistogram {
   }
 
   /// Calculate the quantile of the distribution
-  auto quantile(const T& quantile) const -> T {
+  [[nodiscard]] auto quantile(const T& quantile) const -> T {
     if (bins_.empty()) {
       return std::numeric_limits<T>::quiet_NaN();
     }
@@ -200,28 +215,32 @@ class StreamingHistogram {
   }
 
   /// Calculates the mean of the distribution.
-  auto mean() const -> T { return moment(0, 1); }
+  [[nodiscard]] auto mean() const -> T { return moment(0, 1); }
 
   /// Calculates the variance of the distribution.
-  auto variance() const -> T { return moment(mean(), 2); }
+  [[nodiscard]] auto variance() const -> T { return moment(mean(), 2); }
 
   /// Calculates the skewness of the distribution.
-  auto skewness() const -> T {
+  [[nodiscard]] auto skewness() const -> T {
     const auto average = mean();
     return moment(average, 3) / std::pow(moment(average, 2), 1.5);
   }
 
   /// Calculates the kurtosis of the distribution.
-  auto kurtosis() const -> T {
+  [[nodiscard]] auto kurtosis() const -> T {
     const auto average = mean();
     return moment(average, 4) / std::pow(moment(average, 2), 2) - 3.0;
   }
 
   /// Returns the minimum of the distribution.
-  auto min() const noexcept -> T { return min_; }
+  [[nodiscard]] auto min() const noexcept -> T {
+    return count_ ? min_ : std::numeric_limits<T>::quiet_NaN();
+  }
 
   /// Returns the maximum of the distribution.
-  auto max() const noexcept -> T { return max_; }
+  [[nodiscard]] auto max() const noexcept -> T {
+    return count_ ? max_ : std::numeric_limits<T>::quiet_NaN();
+  }
 
  private:
   bool weighted_diff_{false};

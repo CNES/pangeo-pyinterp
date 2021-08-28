@@ -36,9 +36,11 @@ class Histogram2D {
               const std::optional<size_t>& bin_count)
       : x_(std::move(x)), y_(std::move(y)), histogram_(x_->size(), y_->size()) {
     if (bin_count) {
-      histogram_.unaryExpr([bin_count](const StreamingHistogram& /*item*/) {
-        return StreamingHistogram(*bin_count, false);
-      });
+      for (int ix = 0; ix < histogram_.rows(); ++ix) {
+        for (int jx = 0; jx < histogram_.cols(); ++jx) {
+          histogram_(ix, jx).resize(*bin_count);
+        }
+      }
     }
   }
 

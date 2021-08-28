@@ -331,6 +331,7 @@ TEST(math_streaming_histogram, weighted) {
   EXPECT_EQ(instance.sum_of_weights(), acc.sum_of_weights());
   EXPECT_DOUBLE_EQ(instance.mean(), acc.mean());
   EXPECT_NEAR(instance.variance(), acc.variance(), 1e-12);
+  EXPECT_NEAR(instance.quantile(0.5), 0.5716742560345885, 1e-12);
 
   instance = math::StreamingHistogram<double>(10, false);
 
@@ -343,4 +344,5 @@ TEST(math_streaming_histogram, weighted) {
   EXPECT_NEAR(instance.sum_of_weights(), acc.sum_of_weights(), 1e-6);
   EXPECT_NEAR(instance.mean(), acc.mean(), 1e-6);
   EXPECT_NEAR(instance.variance(), acc.variance(), 1e-3);
+  EXPECT_NEAR(instance.quantile(0.5), 0.5716742560345885, 1e-1);
 }
