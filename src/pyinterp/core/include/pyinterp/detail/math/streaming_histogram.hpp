@@ -195,6 +195,18 @@ class StreamingHistogram {
   /// Calculates the variance
   auto variance() const -> T { return moment(mean(), 2); }
 
+  /// Calculates the skewness
+  auto skewness() const -> T {
+    const auto average = mean();
+    return moment(average, 3) / std::pow(moment(average, 2), 1.5);
+  }
+
+  /// Calculates the kurtosis
+  auto kurtosis() const -> T {
+    const auto average = mean();
+    return moment(average, 4) / std::pow(moment(average, 2), 2) - 3.0;
+  }
+
   /// Return the minimum
   auto min() const noexcept -> T { return min_; }
 

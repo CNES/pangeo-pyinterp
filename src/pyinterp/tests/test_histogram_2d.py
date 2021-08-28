@@ -27,6 +27,10 @@ def build_instance(dtype):
     assert isinstance(mean, np.ndarray)
     median = hist2d.variable('quantile', 0.5)
     assert isinstance(median, np.ndarray)
+    kurtosis = hist2d.variable('kurtosis')
+    assert isinstance(kurtosis, np.ndarray)
+    skewness = hist2d.variable('skewness')
+    assert isinstance(skewness, np.ndarray)
 
     hist2d.clear()
     assert np.all(hist2d.variable('count') == 0)

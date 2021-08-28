@@ -77,6 +77,8 @@ def test_binning2d_methods():
     assert isinstance(hist2d.max(), np.ndarray)
     assert isinstance(hist2d.min(), np.ndarray)
     assert isinstance(hist2d.variance(), np.ndarray)
+    assert isinstance(hist2d.skewness(), np.ndarray)
+    assert isinstance(hist2d.kurtosis(), np.ndarray)
     median = np.ma.fix_invalid(hist2d.quantile())
     assert isinstance(median, np.ndarray)
     if HAVE_PLT:
@@ -101,7 +103,9 @@ def test_binning2d_pickle():
     assert np.all(hist2d.min() == np.pi)
     assert np.all(hist2d.max() == np.pi)
     assert np.all(hist2d.variance() == 0)
-    
+    assert np.all(np.isnan(hist2d.skewness()))
+    assert np.all(np.isnan(hist2d.kurtosis()))
+
     other = pickle.loads(pickle.dumps(hist2d))
 
     assert np.all(other.count() == 1)
@@ -109,6 +113,8 @@ def test_binning2d_pickle():
     assert np.all(other.min() == np.pi)
     assert np.all(other.max() == np.pi)
     assert np.all(other.variance() == 0)
+    assert np.all(np.isnan(hist2d.skewness()))
+    assert np.all(np.isnan(hist2d.kurtosis()))
 
 
 def test_binning2d_iadd():
@@ -126,9 +132,13 @@ def test_binning2d_iadd():
     assert np.all(hist2d.min() == np.pi)
     assert np.all(hist2d.max() == np.pi)
     assert np.all(hist2d.variance() == 0)
+    assert np.all(np.isnan(hist2d.skewness()))
+    assert np.all(np.isnan(hist2d.kurtosis()))
 
     assert np.all(other.count() == 2)
     assert np.all(other.mean() == np.pi)
     assert np.all(other.min() == np.pi)
     assert np.all(other.max() == np.pi)
     assert np.all(other.variance() == 0)
+    assert np.all(np.isnan(other.skewness()))
+    assert np.all(np.isnan(other.kurtosis()))

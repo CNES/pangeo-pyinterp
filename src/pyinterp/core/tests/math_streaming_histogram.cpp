@@ -210,6 +210,8 @@ TEST(math_streaming_histogram, quantile_normal) {
   }
   EXPECT_NEAR(acc.mean(), instance.mean(), 1e-6);
   EXPECT_NEAR(acc.variance(), instance.variance(), 1e-6);
+  EXPECT_NEAR(acc.skewness(), instance.skewness(), 1e-6);
+  EXPECT_NEAR(acc.kurtosis(), instance.kurtosis(), 1e-6);
 }
 
 TEST(math_streaming_histogram, merge) {
@@ -259,7 +261,7 @@ TEST(math_streaming_histogram, merge) {
 
 TEST(math_streaming_histogram, quantile_out_of_bounds) {
   auto instance = math::StreamingHistogram<double>(6, false);
-  EXPECT_THROW(instance.quantile(-0.2), std::invalid_argument);
+  EXPECT_TRUE(std::isnan(instance.quantile(-0.2)));
 
   for (const auto& item : std::vector<double>({1, 2, 3, 4, 5, 6, 6.1, 6.2})) {
     instance.push(item);

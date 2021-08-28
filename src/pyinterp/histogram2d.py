@@ -167,12 +167,15 @@ class Histogram2D:
                 The following statistics are available:
 
                     * ``count`` : compute the count of points within each bin.
+                    * ``kurtosis`` : compute the kurtosis of values for points
+                      within each bin.
                     * ``max`` : compute the maximum of values for point within
                       each bin.
                     * ``mean`` : compute the mean of values for points within
                       each bin.
                     * ``min`` : compute the minimum of values for points within
                       each bin.
+                    * ``skewness`` : compute the skewness of values for points
                     * ``variance`` : compute the variance within each bin.
             args (list): Additional arguments to pass to the statistics
                 function. For example, ``quantile`` requires a ``q``

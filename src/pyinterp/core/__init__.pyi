@@ -851,6 +851,9 @@ class Histogram2DFloat64:
     def histograms(self) -> numpy.ndarray:
         ...
 
+    def kurtosis(self) -> numpy.ndarray[float64]:
+        ...
+
     def max(self) -> numpy.ndarray[float64]:
         ...
 
@@ -865,6 +868,9 @@ class Histogram2DFloat64:
         ...
 
     def quantile(self, q: float = 0.5) -> numpy.ndarray[float64]:
+        ...
+
+    def skewness(self) -> numpy.ndarray[float64]:
         ...
 
     def variance(self) -> numpy.ndarray[float64]:
@@ -904,6 +910,9 @@ class Histogram2DFloat32:
     def histograms(self) -> numpy.ndarray:
         ...
 
+    def kurtosis(self) -> numpy.ndarray[float32]:
+        ...
+
     def max(self) -> numpy.ndarray[float32]:
         ...
 
@@ -918,6 +927,9 @@ class Histogram2DFloat32:
         ...
 
     def quantile(self, q: float = 0.5) -> numpy.ndarray[float32]:
+        ...
+
+    def skewness(self) -> numpy.ndarray[float32]:
         ...
 
     def variance(self) -> numpy.ndarray[float32]:
