@@ -128,13 +128,13 @@ class StreamingHistogram {
   }
 
   /// Push a new value into the histogram (update procedure in the paper).
-  inline auto push(const T& value, const T& count = T(1)) -> void {
+  inline auto operator()(const T& value, const T& count = T(1)) -> void {
     update(value, count);
     trim();
   }
 
   /// Merges the provided histogram into the current one.
-  inline auto merge(const StreamingHistogram<T>& other) -> void {
+  inline auto operator+=(const StreamingHistogram<T>& other) -> void {
     for (const auto& item : other.bins_) {
       update(item.value, item.count);
     }

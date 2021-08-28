@@ -90,7 +90,7 @@ class Histogram2D {
           auto iy = y_axis.find_index(_y(idx), true);
 
           if (ix != -1 && iy != -1) {
-            histogram_(ix, iy).push(value);
+            histogram_(ix, iy)(value);
           }
         }
       }
@@ -200,7 +200,7 @@ class Histogram2D {
           // If the statistics are defined in both instances they can be
           // combined.
         } else if (lhs.size() != 0 && rhs.size() != 0) {
-          lhs.merge(rhs);
+          lhs += rhs;
         }
       }
     }

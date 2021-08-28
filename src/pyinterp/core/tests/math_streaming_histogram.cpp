@@ -28,20 +28,20 @@ auto quantile(const std::vector<double>& x, double q) {
 TEST(math_streaming_histogram, push) {
   auto instance = math::StreamingHistogram<double>(3, false);
 
-  instance.push(10);
+  instance(10);
   const auto& bins = instance.bins();
   ASSERT_EQ(bins.size(), 1);
   EXPECT_EQ(bins[0].value, 10);
   EXPECT_EQ(bins[0].count, 1);
 
-  instance.push(13);
+  instance(13);
   ASSERT_EQ(bins.size(), 2);
   EXPECT_EQ(bins[0].value, 10);
   EXPECT_EQ(bins[0].count, 1);
   EXPECT_EQ(bins[1].value, 13);
   EXPECT_EQ(bins[1].count, 1);
 
-  instance.push(3);
+  instance(3);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
   EXPECT_EQ(bins[0].count, 1);
@@ -50,7 +50,7 @@ TEST(math_streaming_histogram, push) {
   EXPECT_EQ(bins[2].value, 13);
   EXPECT_EQ(bins[2].count, 1);
 
-  instance.push(13);
+  instance(13);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
   EXPECT_EQ(bins[0].count, 1);
@@ -59,7 +59,7 @@ TEST(math_streaming_histogram, push) {
   EXPECT_EQ(bins[2].value, 13);
   EXPECT_EQ(bins[2].count, 2);
 
-  instance.push(3);
+  instance(3);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
   EXPECT_EQ(bins[0].count, 2);
@@ -68,7 +68,7 @@ TEST(math_streaming_histogram, push) {
   EXPECT_EQ(bins[2].value, 13);
   EXPECT_EQ(bins[2].count, 2);
 
-  instance.push(10);
+  instance(10);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
   EXPECT_EQ(bins[0].count, 2);
@@ -77,7 +77,7 @@ TEST(math_streaming_histogram, push) {
   EXPECT_EQ(bins[2].value, 13);
   EXPECT_EQ(bins[2].count, 2);
 
-  instance.push(11);
+  instance(11);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
   EXPECT_EQ(bins[0].count, 2);
@@ -91,13 +91,13 @@ TEST(math_streaming_histogram, count) {
   auto instance = math::StreamingHistogram<double>(3, false);
   EXPECT_EQ(instance.count(), 0);
 
-  instance.push(0, 4);
+  instance(0, 4);
   EXPECT_EQ(instance.count(), 4);
 
-  instance.push(1, 3);
+  instance(1, 3);
   EXPECT_EQ(instance.count(), 7);
 
-  instance.push(2, 5);
+  instance(2, 5);
   EXPECT_EQ(instance.count(), 12);
 }
 
@@ -111,7 +111,7 @@ TEST(math_streaming_histogram, bounds) {
 
   for (auto ix = 0; ix < POINTS; ++ix) {
     auto value = normal(gen);
-    instance.push(value);
+    instance(value);
     min = std::min(min, value);
     max = std::max(max, value);
   }
@@ -121,9 +121,9 @@ TEST(math_streaming_histogram, bounds) {
 
 TEST(math_streaming_histogram, quantile) {
   auto instance = math::StreamingHistogram<double>(3, false);
-  instance.push(1, 4);
-  instance.push(5, 3);
-  instance.push(10, 5);
+  instance(1, 4);
+  instance(5, 3);
+  instance(10, 5);
 
   auto expected = instance.quantile(0.5);
   EXPECT_NEAR(expected, 5.625, 1e-9);
@@ -132,7 +132,7 @@ TEST(math_streaming_histogram, quantile) {
 TEST(math_streaming_histogram, quantile_not_enough_elements) {
   auto instance = math::StreamingHistogram<double>(10, false);
   for (const auto& item : std::vector<double>({31, 56, 40, 39, 82, 17})) {
-    instance.push(item);
+    instance(item);
   }
 
   auto expected = instance.quantile(0.5);
@@ -143,7 +143,7 @@ TEST(math_streaming_histogram, quantile_on_left) {
   auto instance = math::StreamingHistogram<double>(6, false);
   for (const auto& item : std::vector<double>(
            {3.075, 1.3, 1.35, 1.225, 1.375, 1.4, 2.05, 7.6325, 5.875, 3.495})) {
-    instance.push(item);
+    instance(item);
   }
 
   auto expected = instance.quantile(0.01);
@@ -164,7 +164,7 @@ TEST(math_streaming_histogram, quantile_on_right) {
   for (const auto& item :
        std::vector<double>({3.075, 2.05, 25.1325, 5.875, 3.495, 50., 50.05,
                             50.2, 50.1, 50.025})) {
-    instance.push(item);
+    instance(item);
   }
 
   auto expected = instance.quantile(0.99);
@@ -186,7 +186,7 @@ TEST(math_streaming_histogram, quantile_normal) {
 
   for (auto ix = 0; ix < POINTS; ++ix) {
     auto value = normal(gen);
-    instance.push(value);
+    instance(value);
     acc(value);
     values.push_back(value);
   }
@@ -225,20 +225,20 @@ TEST(math_streaming_histogram, merge) {
 
   for (auto ix = 0; ix < POINTS / 2; ++ix) {
     auto value = normal(gen);
-    instance1.push(value);
+    instance1(value);
     acc(value);
     values.push_back(value);
   }
 
   for (auto ix = 0; ix < POINTS / 2; ++ix) {
     auto value = normal(gen);
-    instance2.push(value);
+    instance2(value);
     acc(value);
     values.push_back(value);
   }
 
   std::sort(values.begin(), values.end());
-  instance1.merge(instance2);
+  instance1 += instance2;
 
   auto expected = instance1.quantile(0.5);
   auto exact = quantile(values, 0.5);
@@ -264,7 +264,7 @@ TEST(math_streaming_histogram, quantile_out_of_bounds) {
   EXPECT_TRUE(std::isnan(instance.quantile(-0.2)));
 
   for (const auto& item : std::vector<double>({1, 2, 3, 4, 5, 6, 6.1, 6.2})) {
-    instance.push(item);
+    instance(item);
   }
 
   EXPECT_THROW(instance.quantile(-0.2), std::invalid_argument);
@@ -281,7 +281,7 @@ TEST(math_streaming_histogram, serialization) {
 
   for (const auto& item :
        std::vector<double>({1, 2, 3, 4, 5, 6, 7, 8, 9, 10})) {
-    instance.push(item);
+    instance(item);
   }
 
   dump = static_cast<std::string>(instance);
@@ -313,7 +313,7 @@ TEST(math_streaming_histogram, weighted) {
 
   for (auto ix = 0; ix < 20; ++ix) {
     acc(x[ix], w[ix]);
-    instance.push(x[ix], w[ix]);
+    instance(x[ix], w[ix]);
   }
 
   EXPECT_EQ(instance.bins().size(), acc.count());
