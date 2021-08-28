@@ -106,6 +106,12 @@ class Histogram2D {
     }
   }
 
+  /// Compute the count of points within each bin.
+  [[nodiscard]] auto count() const -> pybind11::array_t<uint64_t> {
+    return calculate_statistics<decltype(&StreamingHistogram::count),
+                                uint64_t>(&StreamingHistogram::count);
+  }
+
   /// Compute the minimum of values for points within each bin.
   [[nodiscard]] auto min() const -> pybind11::array_t<T> {
     return calculate_statistics(&StreamingHistogram::min);
@@ -126,16 +132,6 @@ class Histogram2D {
     return calculate_statistics(&StreamingHistogram::variance);
   }
 
-  /// Compute the number of values for points within each bin.
-  [[nodiscard]] auto count() const -> pybind11::array_t<T> {
-    return calculate_statistics(&StreamingHistogram::count);
-  }
-
-  /// Compute the skewness of values for points within each bin.
-  [[nodiscard]] auto skewness() const -> pybind11::array_t<T> {
-    return calculate_statistics(&StreamingHistogram::skewness);
-  }
-
   /// Compute the kurtosis of values for points within each bin.
   [[nodiscard]] auto kurtosis() const -> pybind11::array_t<T> {
     return calculate_statistics(&StreamingHistogram::kurtosis);
@@ -144,6 +140,15 @@ class Histogram2D {
   /// Compute the quantile of values for points within each bin.
   [[nodiscard]] auto quantile(const T& q) const -> pybind11::array_t<T> {
     return calculate_statistics(&StreamingHistogram::quantile, q);
+  }
+
+  /// Compute the skewness of values for points within each bin.
+  [[nodiscard]] auto skewness() const -> pybind11::array_t<T> {
+    return calculate_statistics(&StreamingHistogram::skewness);
+  }
+  /// Compute the sum of weights within each bin.
+  [[nodiscard]] auto sum_of_weights() const -> pybind11::array_t<T> {
+    return calculate_statistics(&StreamingHistogram::sum_of_weights);
   }
 
   /// Gets the X-Axis

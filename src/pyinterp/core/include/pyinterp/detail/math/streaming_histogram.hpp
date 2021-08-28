@@ -20,11 +20,11 @@ namespace pyinterp::detail::math {
 /// Journal of Machine Learning Research, 11, 28, 849-872
 /// http://jmlr.org/papers/v11/ben-haim10a.html
 
-/// Handle a bin (pair between value/count)
+/// Handle a bin (pair between value/weight)
 template <typename T>
 struct Bin {
   T value;
-  T count;
+  T weight;
 };
 
 /// Handle the calculation of differences between bins
@@ -63,7 +63,7 @@ class BinDifferences {
   /// Weighted difference calculation.
   static inline auto weighted(const Bin<T>& lhs, const Bin<T>& rhs) -> T {
     return BinDifferences::simple(lhs, rhs) *
-           std::log(1e-5 + std::min(lhs.count, rhs.count));
+           std::log(1e-5 + std::min(lhs.weight, rhs.weight));
   }
 
   /// Get the difference between the provided bins.
@@ -92,6 +92,7 @@ class StreamingHistogram {
     try {
       ss.read(reinterpret_cast<char*>(&weighted_diff_), sizeof(bool));
       ss.read(reinterpret_cast<char*>(&bin_count_), sizeof(size_t));
+      ss.read(reinterpret_cast<char*>(&count_), sizeof(uint64_t));
       ss.read(reinterpret_cast<char*>(&min_), sizeof(T));
       ss.read(reinterpret_cast<char*>(&max_), sizeof(T));
       ss.read(reinterpret_cast<char*>(&size), sizeof(size_t));
@@ -108,6 +109,7 @@ class StreamingHistogram {
     ss.exceptions(std::stringstream::failbit);
     ss.write(reinterpret_cast<const char*>(&weighted_diff_), sizeof(bool));
     ss.write(reinterpret_cast<const char*>(&bin_count_), sizeof(size_t));
+    ss.write(reinterpret_cast<const char*>(&count_), sizeof(uint64_t));
     ss.write(reinterpret_cast<const char*>(&min_), sizeof(T));
     ss.write(reinterpret_cast<const char*>(&max_), sizeof(T));
     auto size = bins_.size();
@@ -117,7 +119,7 @@ class StreamingHistogram {
     return ss.str();
   }
 
-  /// Get the bins
+  /// Get the bins that compose the histogram.
   inline auto bins() const noexcept -> const std::vector<Bin<T>>& {
     return bins_;
   }
@@ -127,25 +129,34 @@ class StreamingHistogram {
     *this = std::move(StreamingHistogram(bin_count_, weighted_diff_));
   }
 
-  /// Push a new value into the histogram (update procedure in the paper).
-  inline auto operator()(const T& value, const T& count = T(1)) -> void {
-    update(value, count);
+  /// Push a new value into the histogram.
+  inline auto operator()(const T& value, const T& weight = T(1)) -> void {
+    ++count_;
+    min_ = std::min(min_, value);
+    max_ = std::max(max_, value);
+    update_bins(value, weight);
     trim();
   }
 
   /// Merges the provided histogram into the current one.
   inline auto operator+=(const StreamingHistogram<T>& other) -> void {
+    count_ += other.count_;
+    min_ = std::min(min_, other.min_);
+    max_ = std::max(max_, other.max_);
     for (const auto& item : other.bins_) {
-      update(item.value, item.count);
+      update_bins(item.value, item.weight);
     }
     trim();
   }
 
-  /// Counts samples stored into the histogram
-  inline auto count() const -> T {
+  /// Returns the number of samples pushed into the histogram.
+  inline auto count() const -> uint64_t { return count_; }
+
+  /// Returns the sum of weights pushed into the histogram.
+  inline auto sum_of_weights() const -> T {
     return std::accumulate(
         bins_.begin(), bins_.end(), T(0),
-        [](T a, const Bin<T>& b) -> T { return a + b.count; });
+        [](T a, const Bin<T>& b) -> T { return a + b.weight; });
   }
 
   /// Returns the number of bins in the histogram.
@@ -163,75 +174,67 @@ class StreamingHistogram {
       throw std::invalid_argument("Quantile must be in the range [0, 1]");
     }
 
-    auto total_count = count();
-    auto quantile_count = total_count * quantile;
+    auto weights = sum_of_weights();
+    auto qw = weights * quantile;
 
-    if (quantile_count <= (bins_.front().count * 0.5)) {  // left values
-      auto ratio = quantile_count / (bins_.front().count * 0.5);
+    if (qw <= (bins_.front().weight * 0.5)) {  // left values
+      auto ratio = qw / (bins_.front().weight * 0.5);
       return min_ + (ratio * (bins_.front().value - min_));
     }
 
-    if (quantile_count >=
-        (total_count - (bins_.back().count * 0.5))) {  // right values
-      auto base = quantile_count - (total_count - (bins_.back().count * 0.5));
-      auto ratio = base / (bins_.back().count * 0.5);
+    if (qw >= (weights - (bins_.back().weight * 0.5))) {  // right values
+      auto base = qw - (weights - (bins_.back().weight * 0.5));
+      auto ratio = base / (bins_.back().weight * 0.5);
       return bins_.back().value + (ratio * (max_ - bins_.back().value));
     }
 
     auto ix = size_t(0);
-    auto mb = quantile_count - bins_.front().count * 0.5;
-    while (mb - (bins_[ix].count + bins_[ix + 1].count) * 0.5 > 0 &&
+    auto mb = qw - bins_.front().weight * 0.5;
+    while (mb - (bins_[ix].weight + bins_[ix + 1].weight) * 0.5 > 0 &&
            ix < bins_.size() - 1) {
-      mb -= (bins_[ix].count + bins_[ix + 1].count) * 0.5;
+      mb -= (bins_[ix].weight + bins_[ix + 1].weight) * 0.5;
       ix += 1;
     }
-    auto ratio = mb / ((bins_[ix].count + bins_[ix + 1].count) * 0.5);
+    auto ratio = mb / ((bins_[ix].weight + bins_[ix + 1].weight) * 0.5);
     return bins_[ix].value + (ratio * (bins_[ix + 1].value - bins_[ix].value));
   }
 
-  /// Calculates the mean
+  /// Calculates the mean of the distribution.
   auto mean() const -> T { return moment(0, 1); }
 
-  /// Calculates the variance
+  /// Calculates the variance of the distribution.
   auto variance() const -> T { return moment(mean(), 2); }
 
-  /// Calculates the skewness
+  /// Calculates the skewness of the distribution.
   auto skewness() const -> T {
     const auto average = mean();
     return moment(average, 3) / std::pow(moment(average, 2), 1.5);
   }
 
-  /// Calculates the kurtosis
+  /// Calculates the kurtosis of the distribution.
   auto kurtosis() const -> T {
     const auto average = mean();
     return moment(average, 4) / std::pow(moment(average, 2), 2) - 3.0;
   }
 
-  /// Return the minimum
+  /// Returns the minimum of the distribution.
   auto min() const noexcept -> T { return min_; }
 
-  /// Return the maximum
+  /// Returns the maximum of the distribution.
   auto max() const noexcept -> T { return max_; }
 
  private:
   bool weighted_diff_{false};
   size_t bin_count_{100};
+  uint64_t count_{0};
   T min_{std::numeric_limits<T>::max()};
   T max_{std::numeric_limits<T>::min()};
   std::vector<Bin<T>> bins_{};
 
   /// Update the histogram with the provided value.
-  auto update(const T& value, const T& count) -> void {
+  auto update_bins(const T& value, const T& weight) -> void {
     auto append = false;
     auto index = size_t(0);
-
-    // Update min/max values.
-    if (min_ > value) {
-      min_ = value;
-    }
-    if (max_ < value) {
-      max_ = value;
-    }
 
     // If the histogram is not empty, the insertion index is calculated.
     if (!bins_.empty()) {
@@ -248,10 +251,10 @@ class StreamingHistogram {
         index = std::distance(bins_.begin(), it);
       }
 
-      // If the value is already in the histogram, the count is updated.
+      // If the value is already in the histogram, the weight is updated.
       auto& bin = bins_[index];
       if (bin.value == value) {
-        bin.count += count;
+        bin.weight += weight;
         return;
       }
     }
@@ -259,10 +262,10 @@ class StreamingHistogram {
     if (append) {
       // If the new value is greater than the last value inserted in the
       // histogram, the bins is extended.
-      bins_.emplace_back(Bin<T>{value, count});
+      bins_.emplace_back(Bin<T>{value, weight});
     } else {
       // Otherwise, the new value is inserted.
-      bins_.insert(bins_.begin() + index, {value, count});
+      bins_.insert(bins_.begin() + index, {value, weight});
     }
   }
 
@@ -277,9 +280,9 @@ class StreamingHistogram {
       const auto& item1 = bins_[++ix];
 
       // by the bin ((qi * ki + qi+1 * ki+1) / (ki + ki+1), ki + ki+1)
-      item0 = {(item0.value * item0.count + item1.value * item1.count) /
-                   (item0.count + item1.count),
-               item0.count + item1.count};
+      item0 = {(item0.value * item0.weight + item1.value * item1.weight) /
+                   (item0.weight + item1.weight),
+               item0.weight + item1.weight};
       bins_.erase(bins_.begin() + ix);
     }
   }
@@ -287,12 +290,12 @@ class StreamingHistogram {
   /// Calculates a moment of order n
   constexpr auto moment(const T& c, const T& n) const -> T {
     auto sum_m = T(0);
-    auto sum_counts = T(0);
+    auto sum_weights = T(0);
     for (const auto& item : bins_) {
-      sum_m += item.count * std::pow((item.value - c), n);
-      sum_counts += item.count;
+      sum_m += item.weight * std::pow((item.value - c), n);
+      sum_weights += item.weight;
     }
-    return sum_m / sum_counts;
+    return sum_m / sum_weights;
   }
 };
 

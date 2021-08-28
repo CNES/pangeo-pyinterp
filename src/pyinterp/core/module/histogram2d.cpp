@@ -12,7 +12,7 @@ namespace py = pybind11;
 
 template <typename Type>
 void implement_histogram_2d(py::module& m, const std::string& suffix) {
-  PYBIND11_NUMPY_DTYPE(pyinterp::detail::math::Bin<Type>, value, count);
+  PYBIND11_NUMPY_DTYPE(pyinterp::detail::math::Bin<Type>, value, weight);
   py::class_<pyinterp::Histogram2D<Type>>(m, ("Histogram2D" + suffix).c_str(),
                                           R"__doc__(
 Group a number of more or less continuous values into a smaller number of
@@ -57,6 +57,20 @@ Compute the count of points within each bin.
 Return:
     numpy.ndarray: count of points within each bin.
 )__doc__")
+      .def("histograms", &pyinterp::Histogram2D<Type>::histograms,
+           R"__doc__(
+Compute the histograms for each bin.
+
+Return:
+    numpy.ndarray: histograms for each bin.
+)__doc__")
+      .def("kurtosis", &pyinterp::Histogram2D<Type>::kurtosis,
+           R"__doc__(
+Compute the kurtosis of values for points within each bin.
+
+Return:
+    numpy.ndarray: kurtosis of values for points within each bin.
+)__doc__")
       .def("quantile", &pyinterp::Histogram2D<Type>::quantile,
            R"__doc__(
 Compute the quantile of points within each bin.
@@ -98,12 +112,12 @@ Args:
     y (numpy.ndarray): Y coordinates of the values to push.
     z (numpy.ndarray): New samples to push
 )__doc__")
-      .def("variance", &pyinterp::Histogram2D<Type>::variance,
+      .def("sum_of_weights", &pyinterp::Histogram2D<Type>::sum_of_weights,
            R"__doc__(
-Compute the variance of values for points within each bin.
+Compute the sum of weights for points within each bin.
 
 Return:
-    numpy.ndarray: variance of values for points within each bin.
+    numpy.ndarray: sum of weights for points within each bin.
 )__doc__")
       .def("skewness", &pyinterp::Histogram2D<Type>::skewness,
            R"__doc__(
@@ -112,19 +126,12 @@ Compute the skewness of values for points within each bin.
 Return:
     numpy.ndarray: skewness of values for points within each bin.
 )__doc__")
-      .def("kurtosis", &pyinterp::Histogram2D<Type>::kurtosis,
+      .def("variance", &pyinterp::Histogram2D<Type>::variance,
            R"__doc__(
-Compute the kurtosis of values for points within each bin.
+Compute the variance of values for points within each bin.
 
 Return:
-    numpy.ndarray: kurtosis of values for points within each bin.
-)__doc__")
-      .def("histograms", &pyinterp::Histogram2D<Type>::histograms,
-           R"__doc__(
-Compute the histograms for each bin.
-
-Return:
-    numpy.ndarray: histograms for each bin.
+    numpy.ndarray: variance of values for points within each bin.
 )__doc__")
       .def("__iadd__", &pyinterp::Histogram2D<Type>::operator+=,
            py::call_guard<py::gil_scoped_release>())

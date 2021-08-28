@@ -32,73 +32,81 @@ TEST(math_streaming_histogram, push) {
   const auto& bins = instance.bins();
   ASSERT_EQ(bins.size(), 1);
   EXPECT_EQ(bins[0].value, 10);
-  EXPECT_EQ(bins[0].count, 1);
+  EXPECT_EQ(bins[0].weight, 1);
 
   instance(13);
   ASSERT_EQ(bins.size(), 2);
   EXPECT_EQ(bins[0].value, 10);
-  EXPECT_EQ(bins[0].count, 1);
+  EXPECT_EQ(bins[0].weight, 1);
   EXPECT_EQ(bins[1].value, 13);
-  EXPECT_EQ(bins[1].count, 1);
+  EXPECT_EQ(bins[1].weight, 1);
 
   instance(3);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
-  EXPECT_EQ(bins[0].count, 1);
+  EXPECT_EQ(bins[0].weight, 1);
   EXPECT_EQ(bins[1].value, 10);
-  EXPECT_EQ(bins[1].count, 1);
+  EXPECT_EQ(bins[1].weight, 1);
   EXPECT_EQ(bins[2].value, 13);
-  EXPECT_EQ(bins[2].count, 1);
+  EXPECT_EQ(bins[2].weight, 1);
 
   instance(13);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
-  EXPECT_EQ(bins[0].count, 1);
+  EXPECT_EQ(bins[0].weight, 1);
   EXPECT_EQ(bins[1].value, 10);
-  EXPECT_EQ(bins[1].count, 1);
+  EXPECT_EQ(bins[1].weight, 1);
   EXPECT_EQ(bins[2].value, 13);
-  EXPECT_EQ(bins[2].count, 2);
+  EXPECT_EQ(bins[2].weight, 2);
 
   instance(3);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
-  EXPECT_EQ(bins[0].count, 2);
+  EXPECT_EQ(bins[0].weight, 2);
   EXPECT_EQ(bins[1].value, 10);
-  EXPECT_EQ(bins[1].count, 1);
+  EXPECT_EQ(bins[1].weight, 1);
   EXPECT_EQ(bins[2].value, 13);
-  EXPECT_EQ(bins[2].count, 2);
+  EXPECT_EQ(bins[2].weight, 2);
 
   instance(10);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
-  EXPECT_EQ(bins[0].count, 2);
+  EXPECT_EQ(bins[0].weight, 2);
   EXPECT_EQ(bins[1].value, 10);
-  EXPECT_EQ(bins[1].count, 2);
+  EXPECT_EQ(bins[1].weight, 2);
   EXPECT_EQ(bins[2].value, 13);
-  EXPECT_EQ(bins[2].count, 2);
+  EXPECT_EQ(bins[2].weight, 2);
 
   instance(11);
   ASSERT_EQ(bins.size(), 3);
   EXPECT_EQ(bins[0].value, 3);
-  EXPECT_EQ(bins[0].count, 2);
+  EXPECT_EQ(bins[0].weight, 2);
   EXPECT_NEAR(bins[1].value, 10 + 1.0 / 3.0, 1e-9);
-  EXPECT_EQ(bins[1].count, 3);
+  EXPECT_EQ(bins[1].weight, 3);
   EXPECT_EQ(bins[2].value, 13);
-  EXPECT_EQ(bins[2].count, 2);
+  EXPECT_EQ(bins[2].weight, 2);
 }
 
-TEST(math_streaming_histogram, count) {
+TEST(math_streaming_histogram, sum_of_weights) {
   auto instance = math::StreamingHistogram<double>(3, false);
   EXPECT_EQ(instance.count(), 0);
+  EXPECT_EQ(instance.size(), 0);
+  EXPECT_EQ(instance.sum_of_weights(), 0);
 
   instance(0, 4);
-  EXPECT_EQ(instance.count(), 4);
+  EXPECT_EQ(instance.count(), 1);
+  EXPECT_EQ(instance.size(), 1);
+  EXPECT_EQ(instance.sum_of_weights(), 4);
 
   instance(1, 3);
-  EXPECT_EQ(instance.count(), 7);
+  EXPECT_EQ(instance.count(), 2);
+  EXPECT_EQ(instance.size(), 2);
+  EXPECT_EQ(instance.sum_of_weights(), 7);
 
   instance(2, 5);
-  EXPECT_EQ(instance.count(), 12);
+  EXPECT_EQ(instance.count(), 3);
+  EXPECT_EQ(instance.size(), 3);
+  EXPECT_EQ(instance.sum_of_weights(), 12);
 }
 
 TEST(math_streaming_histogram, bounds) {
@@ -176,7 +184,7 @@ TEST(math_streaming_histogram, quantile_on_right) {
   EXPECT_NEAR(expected, exact, exact * 0.01);
 }
 
-TEST(math_streaming_histogram, quantile_normal) {
+TEST(math_streaming_histogram, stats) {
   auto rd = std::random_device();
   auto gen = std::mt19937(rd());
   auto normal = std::normal_distribution<>();
@@ -201,12 +209,13 @@ TEST(math_streaming_histogram, quantile_normal) {
   exact = quantile(values, 0.8);
   ASSERT_NEAR(std::abs(expected - exact), 0, 0.2);
 
+  EXPECT_EQ(acc.count(), instance.count());
   EXPECT_EQ(acc.min(), instance.min());
   EXPECT_EQ(acc.max(), instance.max());
-  EXPECT_EQ(acc.count(), instance.count());
+  EXPECT_EQ(acc.sum_of_weights(), instance.sum_of_weights());
   acc.clear();
   for (const auto& item : instance.bins()) {
-    acc(item.value, item.count);
+    acc(item.value, item.weight);
   }
   EXPECT_NEAR(acc.mean(), instance.mean(), 1e-6);
   EXPECT_NEAR(acc.variance(), instance.variance(), 1e-6);
@@ -248,12 +257,13 @@ TEST(math_streaming_histogram, merge) {
   exact = quantile(values, 0.8);
   ASSERT_NEAR(std::abs(expected - exact), 0, 0.2);
 
+  EXPECT_EQ(acc.count(), instance1.count());
   EXPECT_NEAR(acc.min(), instance1.min(), 1e-6);
   EXPECT_NEAR(acc.max(), instance1.max(), 1e-6);
-  EXPECT_EQ(acc.count(), instance1.count());
+  EXPECT_EQ(acc.sum_of_weights(), instance1.sum_of_weights());
   acc.clear();
   for (const auto& item : instance1.bins()) {
-    acc(item.value, item.count);
+    acc(item.value, item.weight);
   }
   EXPECT_NEAR(acc.mean(), instance1.mean(), 1e-6);
   EXPECT_NEAR(acc.variance(), instance1.variance(), 1e-6);
@@ -277,6 +287,7 @@ TEST(math_streaming_histogram, serialization) {
   auto dump = static_cast<std::string>(instance);
   auto instance2 = math::StreamingHistogram<double>(dump);
   ASSERT_EQ(instance.count(), instance2.count());
+  ASSERT_EQ(instance.sum_of_weights(), instance2.sum_of_weights());
   ASSERT_EQ(instance.bins().size(), instance2.bins().size());
 
   for (const auto& item :
@@ -287,15 +298,15 @@ TEST(math_streaming_histogram, serialization) {
   dump = static_cast<std::string>(instance);
   instance2 = math::StreamingHistogram<double>(dump);
   ASSERT_EQ(instance.count(), instance2.count());
-  ASSERT_EQ(instance.bins().size(), instance2.bins().size());
-  for (size_t ix = 0; ix < instance.bins().size(); ++ix) {
+  ASSERT_EQ(instance.sum_of_weights(), instance2.sum_of_weights());
+  ASSERT_EQ(instance.size(), instance2.size());
+  for (size_t ix = 0; ix < instance.size(); ++ix) {
     ASSERT_EQ(instance.bins()[ix].value, instance2.bins()[ix].value);
   }
 
   ASSERT_THROW(math::StreamingHistogram<double>("AZERTYUIOP"),
                std::invalid_argument);
 }
-
 
 TEST(math_streaming_histogram, weighted) {
   static double x[20] = {0.00402322, 0.19509434, 0.6425439,  0.66463742,
@@ -309,16 +320,27 @@ TEST(math_streaming_histogram, weighted) {
                          0.28808939, 0.69961506, 0.97369255, 0.98436659,
                          0.05230501, 0.8073624,  0.40509977, 0.6325752};
   auto acc = math::DescriptiveStatistics<double>();
-  auto instance = math::StreamingHistogram<double>(40, false);
+  auto instance = math::StreamingHistogram<double>(20, false);
 
   for (auto ix = 0; ix < 20; ++ix) {
     acc(x[ix], w[ix]);
     instance(x[ix], w[ix]);
   }
 
-  EXPECT_EQ(instance.bins().size(), acc.count());
-  EXPECT_EQ(instance.count(), acc.sum_of_weights());
+  EXPECT_EQ(instance.count(), acc.count());
+  EXPECT_EQ(instance.sum_of_weights(), acc.sum_of_weights());
   EXPECT_DOUBLE_EQ(instance.mean(), acc.mean());
-  EXPECT_NEAR(instance.variance(), acc.variance(),
-              1e-12);
+  EXPECT_NEAR(instance.variance(), acc.variance(), 1e-12);
+
+  instance = math::StreamingHistogram<double>(10, false);
+
+  for (auto ix = 0; ix < 20; ++ix) {
+    instance(x[ix], w[ix]);
+  }
+
+  EXPECT_EQ(instance.count(), acc.count());
+  EXPECT_TRUE(instance.count() > instance.size());
+  EXPECT_NEAR(instance.sum_of_weights(), acc.sum_of_weights(), 1e-6);
+  EXPECT_NEAR(instance.mean(), acc.mean(), 1e-6);
+  EXPECT_NEAR(instance.variance(), acc.variance(), 1e-3);
 }

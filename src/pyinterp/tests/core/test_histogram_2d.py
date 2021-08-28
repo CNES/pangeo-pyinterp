@@ -88,7 +88,7 @@ def test_binning2d_methods():
     histograms = hist2d.histograms()
     assert isinstance(histograms, np.ndarray)
     assert histograms.ndim == 3
-    assert histograms.dtype == np.dtype([("value", "f8"), ("count", "f8")])
+    assert histograms.dtype == np.dtype([("value", "f8"), ("weight", "f8")])
 
 
 def test_binning2d_pickle():
