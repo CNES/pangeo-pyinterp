@@ -70,7 +70,7 @@ class StreamingHistogram:
         weights (numpy.ndarray, dask.Array, optional): An array of weights
             associated with the values. If not provided, all values are assumed
             to have equal weight.
-        axis (iterable, optional): Axis or axes along which to compute the
+        axis (int, iterable, optional): Axis or axes along which to compute the
             statistics. If not provided, the statistics are computed over the
             flattened array.
         bin_count (int, optional): The maximum number of bins to use in the
@@ -83,9 +83,11 @@ class StreamingHistogram:
     def __init__(self,
                  values: Union[da.Array, np.ndarray],
                  weights: Optional[Union[da.Array, np.ndarray]] = None,
-                 axis: Optional[Iterable[int]] = None,
+                 axis: Optional[Union[int, Iterable[int]]] = None,
                  bin_count: Optional[int] = None,
                  dtype: Optional[np.dtype] = None) -> None:
+        if isinstance(axis, int):
+            axis = (axis, )
         dtype = dtype or np.dtype("float64")
         if dtype == np.dtype("float64"):
             attr = f"StreamingHistogramFloat64"
