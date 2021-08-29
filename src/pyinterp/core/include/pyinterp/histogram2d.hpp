@@ -216,10 +216,11 @@ class Histogram2D {
 
   /// Returns the histogram for each bin.
   auto histograms() const -> pybind11::array_t<detail::math::Bin<T>> {
-    auto bins_count = size_t(0);
+    auto bins_count = Eigen::Index(0);
     for (Eigen::Index ix = 0; ix < histogram_.rows(); ++ix) {
       for (Eigen::Index iy = 0; iy < histogram_.cols(); ++iy) {
-        bins_count = std::max(bins_count, histogram_(ix, iy).size());
+        bins_count = std::max(
+            bins_count, static_cast<Eigen::Index>(histogram_(ix, iy).size()));
       }
     }
     auto result =
