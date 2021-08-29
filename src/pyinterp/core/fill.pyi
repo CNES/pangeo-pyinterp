@@ -10,9 +10,9 @@ class FirstGuess:
 
 
 class ValueType:
-    Undefined: 'Undefined'
-    Defined: 'Defined'
-    All: 'All'
+    Undefined: 'ValueType'
+    Defined: 'ValueType'
+    All: 'ValueType'
 
 
 def loess_float64(
