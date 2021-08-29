@@ -165,12 +165,11 @@ class DescriptiveStatistics {
     {
       pybind11::gil_scoped_release release;
 
-      for (auto ix = 0; ix < arr.size(); ++ix) {
-        const auto xi = ptr_arr[ix];
-        if (!std::isnan(xi)) {
-          item(xi);
+      std::for_each(ptr_arr, ptr_arr + arr.size(), [&item](const T& value) {
+        if (!std::isnan(value)) {
+          item(value);
         }
-      }
+      });
     }
     return result;
   }
