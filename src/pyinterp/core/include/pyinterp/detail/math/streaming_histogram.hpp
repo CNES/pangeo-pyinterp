@@ -234,12 +234,12 @@ class StreamingHistogram {
 
   /// Returns the minimum of the distribution.
   [[nodiscard]] auto min() const noexcept -> T {
-    return count_ ? min_ : std::numeric_limits<T>::quiet_NaN();
+    return count_ != 0U ? min_ : std::numeric_limits<T>::quiet_NaN();
   }
 
   /// Returns the maximum of the distribution.
   [[nodiscard]] auto max() const noexcept -> T {
-    return count_ ? max_ : std::numeric_limits<T>::quiet_NaN();
+    return count_ != 0U ? max_ : std::numeric_limits<T>::quiet_NaN();
   }
 
  private:
