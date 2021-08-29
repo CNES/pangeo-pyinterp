@@ -233,7 +233,7 @@ class Histogram2D {
 
       for (Eigen::Index ix = 0; ix < histogram_.rows(); ++ix) {
         for (Eigen::Index iy = 0; iy < histogram_.cols(); ++iy) {
-          auto iz = Eigen::Index(0);
+          auto iz = size_t(0);
           auto& bins = histogram_(ix, iy).bins();
           for (iz = 0; iz < bins.size(); ++iz) {
             _result(ix, iy, iz) = bins[iz];
