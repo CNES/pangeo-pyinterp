@@ -878,6 +878,9 @@ class StreamingHistogramFloat32:
                  bin_count: Optional[int] = ...) -> None:
         ...
 
+    def bins(self, *args, **kwargs) -> Any:
+        ...
+
     def count(self) -> numpy.ndarray[numpy.uint64]:
         ...
 
@@ -933,6 +936,9 @@ class StreamingHistogramFloat64:
                  weights: Optional[numpy.ndarray[numpy.float64]] = ...,
                  axis: Optional[List[int]] = ...,
                  bin_count: Optional[int] = ...) -> None:
+        ...
+
+    def bins(self, *args, **kwargs) -> Any:
         ...
 
     def count(self) -> numpy.ndarray[numpy.uint64]:

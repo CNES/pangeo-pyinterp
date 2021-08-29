@@ -14,6 +14,7 @@ from .interpolator.bivariate import bivariate
 from .interpolator.quadrivariate import quadrivariate
 from .interpolator.trivariate import trivariate
 from .rtree import RTree
+from .streaming_histogram import StreamingHistogram
 
 __version__ = version.release()
 __date__ = version.date()

@@ -21,6 +21,7 @@ template <typename T>
 class StreamingHistogram {
  public:
   using Accumulators = detail::math::StreamingHistogram<T>;
+  using Bin = detail::math::Bin<T>;
 
   /// Constructucts a new DescriptiveStatistics object from serialized state.
   StreamingHistogram(Vector<Accumulators> accumulators,
@@ -133,6 +134,39 @@ class StreamingHistogram {
     }
     accumulators_ += other.accumulators_;
     return *this;
+  }
+
+  /// Returns the histogram bins
+  [[nodiscard]] auto bins() const -> pybind11::array_t<Bin> {
+    auto max_size = std::numeric_limits<size_t>::min();
+    std::for_each(accumulators_.data(),
+                  accumulators_.data() + accumulators_.size(),
+                  [&max_size](const auto& item) {
+                    max_size = std::max(max_size, item.size());
+                  });
+    auto shape = std::vector<size_t>(shape_.begin(), shape_.end());
+    shape.push_back(max_size);
+    auto result = pybind11::array_t<Bin>(shape);
+    auto ptr_result = reinterpret_cast<Bin*>(
+        pybind11::detail::array_proxy(result.ptr())->data);
+    {
+      pybind11::gil_scoped_release release;
+
+      for (auto ix = 0; ix < accumulators_.size(); ++ix) {
+        auto& item = accumulators_[ix];
+        auto& bins = item.bins();
+
+        auto jx = size_t(0);
+        auto shift = ix * max_size;
+        for (; jx < bins.size(); ++jx) {
+          ptr_result[shift + jx] = bins[jx];
+        }
+        for (; jx < max_size; ++jx) {
+          ptr_result[shift + jx] = {std::numeric_limits<T>::quiet_NaN(), 0};
+        }
+      }
+    }
+    return result;
   }
 
   /// Pickle support: get state of this instance

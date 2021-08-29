@@ -33,6 +33,13 @@ Args:
         statistics. If not provided, the statistics are computed over the
         flattened array.
 )__doc__")
+      .def("bins", &pyinterp::StreamingHistogram<Type>::bins,
+            R"__doc__(
+Returns the histogram bins.
+
+Returns:
+    numpy.ndarray: The histogram bins.
+)__doc__")
       .def("count", &pyinterp::StreamingHistogram<Type>::count,
            R"__doc__(
 Returns the count of samples.

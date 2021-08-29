@@ -105,6 +105,7 @@ Univariate statistics
   :toctree: generated/
 
   DescriptiveStatistics
+  StreamingHistogram
 
 Xarray
 ======

@@ -161,6 +161,9 @@ def test_axis():
         assert np.all(ds.min() == np.min(values, axis=axis))
         assert np.all(ds.sum_of_weights() == np.sum(values * 0 + 1, axis=axis))
         assert ds.variance() == pytest.approx(np.var(values, axis=axis))
+        size = ds.size().max()
+        assert np.squeeze(
+            ds.bins()).shape == values.sum(axis=axis).shape + (size, )
 
     check_axis(values, None)
     check_axis(values, (1, ))
