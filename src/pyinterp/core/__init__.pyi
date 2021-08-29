@@ -1,4 +1,4 @@
-from typing import Iterable, Optional, Tuple, Union
+from typing import overload, Any, ClassVar, List, Optional
 import numpy
 from . import geodetic
 from . import geohash
@@ -6,39 +6,40 @@ from . import fill
 
 
 class Axis:
-    is_circle: bool
+    __hash__: ClassVar[None] = ...
 
     def __init__(self,
                  values: numpy.ndarray[numpy.float64],
-                 epsilon: float = 1e-6,
-                 is_circle: bool = False) -> None:
-        ...
-
-    def __eq__(self, other: 'Axis') -> bool:
-        ...
-
-    def __getstate__(self) -> Tuple:
-        ...
-
-    def __ne__(self, other: 'Axis') -> bool:
-        ...
-
-    def __repr__(self) -> str:
-        ...
-
-    def __setstate__(self, state: Tuple) -> None:
-        ...
-
-    def __getitem__(
-            self,
-            arg0: Union[int,
-                        slice]) -> Union[float, numpy.ndarray[numpy.float64]]:
+                 epsilon: float = ...,
+                 is_circle: bool = ...) -> None:
         ...
 
     def back(self) -> float:
         ...
 
+    def find_index(self,
+                   coordinates: numpy.ndarray[numpy.float64],
+                   bounded: bool = ...) -> numpy.ndarray[numpy.int64]:
+        ...
+
+    def find_indexes(
+        self, coordinates: numpy.ndarray[numpy.float64]
+    ) -> numpy.ndarray[numpy.int64]:
+        ...
+
+    def flip(self, inplace: bool = ...) -> Axis:
+        ...
+
     def front(self) -> float:
+        ...
+
+    def increment(self) -> float:
+        ...
+
+    def is_ascending(self) -> bool:
+        ...
+
+    def is_regular(self) -> bool:
         ...
 
     def max_value(self) -> float:
@@ -47,116 +48,169 @@ class Axis:
     def min_value(self) -> float:
         ...
 
-    def flip(self, inplace: bool = False) -> 'Axis':
+    def __eq__(self, other: Axis) -> bool:
         ...
 
-    def is_ascending(self) -> bool:
+    @overload
+    def __getitem__(self, arg0: int) -> float:
         ...
 
-    def is_regular(self) -> bool:
+    @overload
+    def __getitem__(self, arg0: slice) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def find_index(self,
-                   coordinates: numpy.ndarray[numpy.float64],
-                   bounded: bool = False) -> numpy.ndarray[numpy.float64]:
-        ...
-
-    def find_indexes(
-        self, coordinates: numpy.ndarray[numpy.float64]
-    ) -> numpy.ndarray[numpy.float64]:
-        ...
-
-    def increment(self) -> float:
+    def __getstate__(self) -> tuple:
         ...
 
     def __len__(self) -> int:
         ...
 
-
-class TemporalAxis:
-    is_circle: bool
-
-    def __init__(self,
-                 values: numpy.ndarray[numpy.int64],
-                 epsilon: int = 0,
-                 is_circle: bool = False) -> None:
+    def __ne__(self, other: Axis) -> bool:
         ...
 
-    def back(self) -> int:
+    def __setstate__(self, arg0: tuple) -> None:
         ...
 
-    def front(self) -> int:
-        ...
-
-    def max_value(self) -> int:
-        ...
-
-    def min_value(self) -> int:
-        ...
-
-    def flip(self, inplace: bool = False) -> 'Axis':
-        ...
-
-    def is_ascending(self) -> bool:
-        ...
-
-    def is_regular(self) -> bool:
-        ...
-
-    def find_index(self,
-                   coordinates: numpy.ndarray[numpy.int64],
-                   bounded: bool = False) -> numpy.ndarray[numpy.int64]:
-        ...
-
-    def increment(self) -> int:
-        ...
-
-    def __setstate__(self, state: Tuple) -> None:
-        ...
-
-    def __eq__(self, other: 'Axis') -> bool:
-        ...
-
-    def __ne__(self, other: 'Axis') -> bool:
-        ...
-
-    def __getitem__(
-            self,
-            arg0: Union[int, slice]) -> Union[int, numpy.ndarray[numpy.int64]]:
-        ...
-
-    def __getstate__(self) -> Tuple:
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __repr__(self) -> str:
+    @property
+    def is_circle(self) -> bool:
         ...
 
 
-class Binning2DFloat64:
-    x: Axis
-    y: Axis
-    wgs: geodetic.System
+class AxisBoundary:
+    __doc__: ClassVar[str] = ...  # read-only
+    __members__: ClassVar[dict] = ...  # read-only
+    Expand: ClassVar[AxisBoundary] = ...
+    Sym: ClassVar[AxisBoundary] = ...
+    Undef: ClassVar[AxisBoundary] = ...
+    Wrap: ClassVar[AxisBoundary] = ...
+    __entries: ClassVar[dict] = ...
 
-    def __init__(self,
-                 x: Axis,
-                 y: Axis,
-                 wgs: Optional[geodetic.System] = None) -> None:
+    def __init__(self, value: int) -> None:
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        ...
+
+    def __getstate__(self) -> int:
+        ...
+
+    def __hash__(self) -> int:
+        ...
+
+    def __index__(self) -> int:
+        ...
+
+    def __int__(self) -> int:
+        ...
+
+    def __ne__(self, other: object) -> bool:
+        ...
+
+    def __setstate__(self, state: int) -> None:
+        ...
+
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def value(self) -> int:
+        ...
+
+
+class Bilinear2D(BivariateInterpolator2D):
+    def __init__(self) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Bilinear3D(BivariateInterpolator3D):
+    def __init__(self) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Binning2DFloat32:
+    def __init__(self, x: Axis, y: Axis, wgs=...) -> None:
         ...
 
     def clear(self) -> None:
         ...
 
-    def push(self,
-             x: numpy.ndarray[numpy.float64],
-             y: numpy.ndarray[numpy.float64],
-             z: numpy.ndarray[numpy.float64],
-             simple: Optional[bool] = True) -> None:
+    def count(self) -> numpy.ndarray[numpy.uint64]:
         ...
 
-    def count(self) -> numpy.ndarray[numpy.float64]:
+    def kurtosis(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def max(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def mean(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def min(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def push(self,
+             x: numpy.ndarray[numpy.float32],
+             y: numpy.ndarray[numpy.float32],
+             z: numpy.ndarray[numpy.float32],
+             simple: bool = ...) -> None:
+        ...
+
+    def skewness(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def sum(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def sum_of_weights(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def variance(self, ddof: int = ...) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __iadd__(self, arg0: Binning2DFloat32) -> Binning2DFloat32:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def wgs(self) -> Any:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+
+class Binning2DFloat64:
+    def __init__(self, x: Axis, y: Axis, wgs=...) -> None:
+        ...
+
+    def clear(self) -> None:
+        ...
+
+    def count(self) -> numpy.ndarray[numpy.uint64]:
         ...
 
     def kurtosis(self) -> numpy.ndarray[numpy.float64]:
@@ -171,6 +225,13 @@ class Binning2DFloat64:
     def min(self) -> numpy.ndarray[numpy.float64]:
         ...
 
+    def push(self,
+             x: numpy.ndarray[numpy.float64],
+             y: numpy.ndarray[numpy.float64],
+             z: numpy.ndarray[numpy.float64],
+             simple: bool = ...) -> None:
+        ...
+
     def skewness(self) -> numpy.ndarray[numpy.float64]:
         ...
 
@@ -180,41 +241,49 @@ class Binning2DFloat64:
     def sum_of_weights(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def variance(self, ddof: int = 0) -> numpy.ndarray[numpy.float64]:
+    def variance(self, ddof: int = ...) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def __iadd__(self, other: "Binning2DFloat64") -> "Binning2DFloat64":
+    def __getstate__(self) -> tuple:
         ...
 
-    def __getstate__(self) -> Tuple:
+    def __iadd__(self, arg0: Binning2DFloat64) -> Binning2DFloat64:
         ...
 
-    def __setstate__(self, state: Tuple) -> "Binning2DFloat64":
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def wgs(self) -> Any:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
         ...
 
 
-class Binning2DFloat32:
-    x: Axis
-    y: Axis
-    wgs: geodetic.System
+class BivariateInterpolator2D:
+    def __init__(self, *args, **kwargs) -> None:
+        ...
 
+
+class BivariateInterpolator3D:
+    def __init__(self, *args, **kwargs) -> None:
+        ...
+
+
+class DescriptiveStatisticsFloat32:
     def __init__(self,
-                 x: Axis,
-                 y: Axis,
-                 wgs: Optional[geodetic.System] = None) -> None:
+                 values: numpy.ndarray[numpy.float32],
+                 weights: Optional[numpy.ndarray[numpy.float32]] = ...,
+                 axis: Optional[List[int]] = ...) -> None:
         ...
 
-    def clear(self) -> None:
-        ...
-
-    def push(self,
-             x: numpy.ndarray[numpy.float32],
-             y: numpy.ndarray[numpy.float32],
-             z: numpy.ndarray[numpy.float32],
-             simple: Optional[bool] = True) -> None:
-        ...
-
-    def count(self) -> numpy.ndarray[numpy.float32]:
+    def count(self) -> numpy.ndarray[numpy.uint64]:
         ...
 
     def kurtosis(self) -> numpy.ndarray[numpy.float32]:
@@ -238,521 +307,31 @@ class Binning2DFloat32:
     def sum_of_weights(self) -> numpy.ndarray[numpy.float32]:
         ...
 
-    def variance(self) -> numpy.ndarray[numpy.float32]:
+    def variance(self, ddof: int = ...) -> numpy.ndarray[numpy.float32]:
         ...
 
-    def __iadd__(self, other: "Binning2DFloat32") -> "Binning2DFloat32":
+    def __add__(
+            self, other: DescriptiveStatisticsFloat32
+    ) -> DescriptiveStatisticsFloat32:
         ...
-
-    def __getstate__(self) -> Tuple:
-        ...
-
-    def __setstate__(self, state: Tuple) -> "Binning2DFloat32":
-        ...
-
-
-class Grid2DFloat64:
-    array: numpy.ndarray[numpy.float64]
-    x: Axis
-    y: Axis
 
     def __getstate__(self) -> tuple:
         ...
 
-    def __init__(self, x: Axis, y: Axis,
-                 array: numpy.ndarray[numpy.float64]) -> None:
+    def __iadd__(
+            self, other: DescriptiveStatisticsFloat32
+    ) -> DescriptiveStatisticsFloat32:
         ...
 
-    def __setstate__(self, state: tuple) -> None:
+    def __setstate__(self, arg0: tuple) -> None:
         ...
-
-
-class Grid2DFloat32:
-    array: numpy.ndarray[numpy.float32]
-    x: Axis
-    y: Axis
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __init__(self, x: Axis, y: Axis,
-                 array: numpy.ndarray[numpy.float32]) -> None:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Grid3DFloat64:
-    array: numpy.ndarray[numpy.float64]
-    x: Axis
-    y: Axis
-    z: Axis
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __init__(self, x: Axis, y: Axis, z: Axis,
-                 array: numpy.ndarray[numpy.float64]) -> None:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Grid3DFloat32:
-    array: numpy.ndarray[numpy.float32]
-    x: Axis
-    y: Axis
-    z: Axis
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __init__(self, x: Axis, y: Axis, z: Axis,
-                 array: numpy.ndarray[numpy.float32]) -> None:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Grid4DFloat64:
-    array: numpy.ndarray[numpy.float64]
-    x: Axis
-    y: Axis
-    z: Axis
-    u: Axis
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
-                 array: numpy.ndarray[numpy.float64]) -> None:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Grid4DFloat32:
-    array: numpy.ndarray[numpy.float32]
-    x: Axis
-    y: Axis
-    z: Axis
-    u: Axis
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
-                 array: numpy.ndarray[numpy.float32]) -> None:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class TemporalGrid3DFloat64:
-    array: numpy.ndarray[numpy.float64]
-    x: Axis
-    y: Axis
-    z: TemporalAxis
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis,
-                 array: numpy.ndarray[numpy.float64]) -> None:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class TemporalGrid3DFloat32:
-    array: numpy.ndarray[numpy.float32]
-    x: Axis
-    y: Axis
-    z: TemporalAxis
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis,
-                 array: numpy.ndarray[numpy.float32]) -> None:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class TemporalGrid4DFloat64:
-    array: numpy.ndarray[numpy.float64]
-    x: Axis
-    y: Axis
-    z: TemporalAxis
-    u: Axis
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, u: Axis,
-                 array: numpy.ndarray[numpy.float64]) -> None:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class TemporalGrid4DFloat32:
-    array: numpy.ndarray[numpy.float32]
-    x: Axis
-    y: Axis
-    z: TemporalAxis
-    u: Axis
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, u: Axis,
-                 array: numpy.ndarray[numpy.float32]) -> None:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class RadialBasisFunction:
-    Cubic: 'RadialBasisFunction'
-    Gaussian: 'RadialBasisFunction'
-    InverseMultiquadric: 'RadialBasisFunction'
-    Linear: 'RadialBasisFunction'
-    Multiquadric: 'RadialBasisFunction'
-    ThinPlate: 'RadialBasisFunction'
-
-
-class RTree3DFloat64:
-    def __init__(self, system: Optional[geodetic.System]) -> None:
-        ...
-
-    def bounds(
-            self
-    ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
-        ...
-
-    def clear(self) -> None:
-        ...
-
-    def insert(self, coordinates: numpy.ndarray[numpy.float64],
-               values: numpy.ndarray[numpy.float64]) -> None:
-        ...
-
-    def inverse_distance_weighting(
-        self,
-        coordinates: numpy.ndarray[numpy.float64],
-        radius: Optional[float],
-        k: int = 9,
-        p: int = 2,
-        within: bool = True,
-        num_threads: int = 0
-    ) -> Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64]]:
-        ...
-
-    def radial_basis_function(
-        self,
-        coordinates: numpy.ndarray[numpy.float64],
-        radius: Optional[float],
-        k: int = 9,
-        rbf: RadialBasisFunction = RadialBasisFunction.Multiquadric,
-        epsilon: Optional[float] = None,
-        smooth: float = 0,
-        within: bool = True,
-        num_threads: int = 0
-    ) -> Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64]]:
-        ...
-
-    def query(
-        self,
-        coordinates: numpy.ndarray[numpy.float64],
-        k: int = 4,
-        within: bool = False,
-        num_threads: int = 0
-    ) -> Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64]]:
-        ...
-
-    def packing(self, coordinates: numpy.ndarray[numpy.float64],
-                values: numpy.ndarray[numpy.float64]) -> None:
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __bool__(self) -> bool:
-        ...
-
-
-class RTree3DFloat32:
-    def __init__(self, system: Optional[geodetic.System]) -> None:
-        ...
-
-    def bounds(
-            self
-    ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
-        ...
-
-    def clear(self) -> None:
-        ...
-
-    def insert(self, coordinates: numpy.ndarray[numpy.float32],
-               values: numpy.ndarray[numpy.float32]) -> None:
-        ...
-
-    def inverse_distance_weighting(
-        self,
-        coordinates: numpy.ndarray[numpy.float32],
-        radius: Optional[float],
-        k: int = 9,
-        p: int = 2,
-        within: bool = True,
-        num_threads: int = 0
-    ) -> Tuple[numpy.ndarray[numpy.float32], numpy.ndarray[numpy.float32]]:
-        ...
-
-    def radial_basis_function(
-        self,
-        coordinates: numpy.ndarray[numpy.float32],
-        radius: Optional[float],
-        k: int = 9,
-        rbf: RadialBasisFunction = RadialBasisFunction.Multiquadric,
-        epsilon: Optional[float] = None,
-        smooth: float = 0,
-        within: bool = True,
-        num_threads: int = 0
-    ) -> Tuple[numpy.ndarray[numpy.float32], numpy.ndarray[numpy.float32]]:
-        ...
-
-    def query(
-        self,
-        coordinates: numpy.ndarray[numpy.float32],
-        k: int = 4,
-        within: bool = False,
-        num_threads: int = 0
-    ) -> Tuple[numpy.ndarray[numpy.float32], numpy.ndarray[numpy.float32]]:
-        ...
-
-    def packing(self, coordinates: numpy.ndarray[numpy.float32],
-                values: numpy.ndarray[numpy.float32]) -> None:
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __bool__(self) -> bool:
-        ...
-
-
-def bicubic_float64(grid: Union[Grid2DFloat64, Grid3DFloat64,
-                                TemporalGrid3DFloat64, Grid4DFloat64,
-                                TemporalGrid4DFloat64],
-                    x: numpy.ndarray[numpy.float64],
-                    y: numpy.ndarray[numpy.float64],
-                    z: Optional[Union[numpy.ndarray[numpy.float64],
-                                      numpy.ndarray[numpy.int64]]] = None,
-                    u: Optional[numpy.ndarray[numpy.float64]] = None,
-                    nx: int = 3,
-                    ny: int = 3,
-                    fitting_model: str = "bicubic",
-                    boundary: str = "undef",
-                    bounds_error: bool = False,
-                    num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-def bicubic_float32(grid: Union[Grid2DFloat32, Grid3DFloat32,
-                                TemporalGrid3DFloat32, Grid4DFloat32,
-                                TemporalGrid4DFloat32],
-                    x: numpy.ndarray[numpy.float64],
-                    y: numpy.ndarray[numpy.float64],
-                    z: Optional[Union[numpy.ndarray[numpy.float64],
-                                      numpy.ndarray[numpy.int64]]] = None,
-                    u: Optional[numpy.ndarray[numpy.float64]] = None,
-                    nx: int = 3,
-                    ny: int = 3,
-                    fitting_model: str = "bicubic",
-                    boundary: str = "undef",
-                    bounds_error: bool = False,
-                    num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-def spline_float64(grid: Union[Grid2DFloat64, Grid3DFloat64,
-                               TemporalGrid3DFloat64, Grid4DFloat64,
-                               TemporalGrid4DFloat64],
-                   x: numpy.ndarray[numpy.float64],
-                   y: numpy.ndarray[numpy.float64],
-                   z: Optional[Union[numpy.ndarray[numpy.float64],
-                                     numpy.ndarray[numpy.int64]]] = None,
-                   u: Optional[numpy.ndarray[numpy.float64]] = None,
-                   nx: int = 3,
-                   ny: int = 3,
-                   fitting_model: str = "c_spline",
-                   boundary: str = "undef",
-                   bounds_error: bool = False,
-                   num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-def spline_float32(grid: Union[Grid2DFloat32, Grid3DFloat32,
-                               TemporalGrid3DFloat32, Grid4DFloat32,
-                               TemporalGrid4DFloat32],
-                   x: numpy.ndarray[numpy.float64],
-                   y: numpy.ndarray[numpy.float64],
-                   z: Optional[Union[numpy.ndarray[numpy.float64],
-                                     numpy.ndarray[numpy.int64]]] = None,
-                   u: Optional[numpy.ndarray[numpy.float64]] = None,
-                   nx: int = 3,
-                   ny: int = 3,
-                   fitting_model: str = "c_spline",
-                   boundary: str = "undef",
-                   bounds_error: bool = False,
-                   num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-class BivariateInterpolator2D:
-    ...
-
-
-class Bilinear2D(BivariateInterpolator2D):
-    ...
-
-
-class InverseDistanceWeighting2D(BivariateInterpolator2D):
-    ...
-
-
-class Nearest2D(BivariateInterpolator2D):
-    ...
-
-
-def bivariate_float64(grid: Grid2DFloat64,
-                      x: numpy.ndarray[numpy.float64],
-                      y: numpy.ndarray[numpy.float64],
-                      interpolator: BivariateInterpolator2D,
-                      bounds_error: bool = False,
-                      num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-def bivariate_float32(grid: Grid2DFloat32,
-                      x: numpy.ndarray[numpy.float32],
-                      y: numpy.ndarray[numpy.float32],
-                      interpolator: BivariateInterpolator2D,
-                      bounds_error: bool = False,
-                      num_threads: int = 0) -> numpy.ndarray[numpy.float32]:
-    ...
-
-
-class BivariateInterpolator3D:
-    ...
-
-
-class Bilinear3D(BivariateInterpolator3D):
-    ...
-
-
-class InverseDistanceWeighting3D(BivariateInterpolator3D):
-    ...
-
-
-class Nearest3D(BivariateInterpolator3D):
-    ...
-
-
-class TemporalBivariateInterpolator3D:
-    ...
-
-
-class TemporalBilinear3D(TemporalBivariateInterpolator3D):
-    ...
-
-
-class TemporalInverseDistanceWeighting3D(TemporalBivariateInterpolator3D):
-    ...
-
-
-class TemporalNearest3D(TemporalBivariateInterpolator3D):
-    ...
-
-
-def trivariate_float64(grid: Union[Grid3DFloat64, TemporalGrid3DFloat64],
-                       x: numpy.ndarray[numpy.float64],
-                       y: numpy.ndarray[numpy.float64],
-                       z: numpy.ndarray[numpy.float64],
-                       interpolator: Union[BivariateInterpolator3D,
-                                           TemporalBivariateInterpolator3D],
-                       z_method: Optional[str] = None,
-                       bounds_error: bool = False,
-                       num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-def trivariate_float32(grid: Union[Grid3DFloat32, TemporalGrid3DFloat32],
-                       x: numpy.ndarray[numpy.float64],
-                       y: numpy.ndarray[numpy.float64],
-                       z: numpy.ndarray[numpy.float64],
-                       interpolator: Union[BivariateInterpolator3D,
-                                           TemporalBivariateInterpolator3D],
-                       z_method: Optional[str] = None,
-                       bounds_error: bool = False,
-                       num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-def quadrivariate_float64(
-        grid: Union[Grid4DFloat64, TemporalGrid4DFloat64],
-        x: numpy.ndarray[numpy.float64],
-        y: numpy.ndarray[numpy.float64],
-        z: numpy.ndarray[numpy.float64],
-        u: numpy.ndarray[numpy.float64],
-        interpolator: Union[BivariateInterpolator3D,
-                            TemporalBivariateInterpolator3D],
-        z_method: Optional[str] = None,
-        u_method: Optional[str] = None,
-        bounds_error: bool = False,
-        num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-def quadrivariate_float32(
-        grid: Union[Grid4DFloat64, TemporalGrid4DFloat64],
-        x: numpy.ndarray[numpy.float64],
-        y: numpy.ndarray[numpy.float64],
-        z: numpy.ndarray[numpy.float64],
-        u: numpy.ndarray[numpy.float64],
-        interpolator: Union[BivariateInterpolator3D,
-                            TemporalBivariateInterpolator3D],
-        z_method: Optional[str] = None,
-        u_method: Optional[str] = None,
-        bounds_error: bool = False,
-        num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
 
 
 class DescriptiveStatisticsFloat64:
     def __init__(self,
                  values: numpy.ndarray[numpy.float64],
-                 weights: Optional[numpy.ndarray[numpy.float64]] = None,
-                 axis: Optional[Iterable[int]] = None) -> None:
-        ...
-
-    def __getstate__(self) -> Tuple:
-        ...
-
-    def __iadd__(
-        self, other: "DescriptiveStatisticsFloat64"
-    ) -> "DescriptiveStatisticsFloat64":
+                 weights: Optional[numpy.ndarray[numpy.float64]] = ...,
+                 axis: Optional[List[int]] = ...) -> None:
         ...
 
     def count(self) -> numpy.ndarray[numpy.uint64]:
@@ -779,26 +358,205 @@ class DescriptiveStatisticsFloat64:
     def sum_of_weights(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def variance(self, ddof: int = 0) -> numpy.ndarray[numpy.float64]:
+    def variance(self, ddof: int = ...) -> numpy.ndarray[numpy.float64]:
         ...
 
-
-class DescriptiveStatisticsFloat32:
-    def __init__(self,
-                 values: numpy.ndarray[numpy.float32],
-                 weights: Optional[numpy.ndarray[numpy.float32]] = None,
-                 axis: Optional[Iterable[int]] = None) -> None:
+    def __add__(
+            self, other: DescriptiveStatisticsFloat64
+    ) -> DescriptiveStatisticsFloat64:
         ...
 
-    def __getstate__(self) -> Tuple:
+    def __getstate__(self) -> tuple:
         ...
 
     def __iadd__(
-        self, other: "DescriptiveStatisticsFloat32"
-    ) -> "DescriptiveStatisticsFloat32":
+            self, other: DescriptiveStatisticsFloat64
+    ) -> DescriptiveStatisticsFloat64:
         ...
 
-    def count(self) -> numpy.ndarray[numpy.uint32]:
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Grid2DFloat32:
+    def __init__(self, x: Axis, y: Axis,
+                 array: numpy.ndarray[numpy.float32]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+
+class Grid2DFloat64:
+    def __init__(self, x: Axis, y: Axis,
+                 array: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+
+class Grid3DFloat32:
+    def __init__(self, x: Axis, y: Axis, z: Axis,
+                 array: numpy.ndarray[numpy.float32]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> Axis:
+        ...
+
+
+class Grid3DFloat64:
+    def __init__(self, x: Axis, y: Axis, z: Axis,
+                 array: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> Axis:
+        ...
+
+
+class Grid4DFloat32:
+    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
+                 array: numpy.ndarray[numpy.float32]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    @property
+    def u(self) -> Axis:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> Axis:
+        ...
+
+
+class Grid4DFloat64:
+    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
+                 array: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    @property
+    def u(self) -> Axis:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> Axis:
+        ...
+
+
+class Histogram2DFloat32:
+    def __init__(self, x: Axis, y: Axis, bins: Optional[int] = ...) -> None:
+        ...
+
+    def clear(self) -> None:
+        ...
+
+    def count(self) -> numpy.ndarray[numpy.uint64]:
+        ...
+
+    def histograms(self, *args, **kwargs) -> Any:
         ...
 
     def kurtosis(self) -> numpy.ndarray[numpy.float32]:
@@ -813,132 +571,1053 @@ class DescriptiveStatisticsFloat32:
     def min(self) -> numpy.ndarray[numpy.float32]:
         ...
 
-    def skewness(self) -> numpy.ndarray[numpy.float32]:
+    def push(self, x: numpy.ndarray[numpy.float32],
+             y: numpy.ndarray[numpy.float32],
+             z: numpy.ndarray[numpy.float32]) -> None:
         ...
 
-    def sum(self) -> numpy.ndarray[numpy.float32]:
+    def quantile(self, q: float = ...) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def skewness(self) -> numpy.ndarray[numpy.float32]:
         ...
 
     def sum_of_weights(self) -> numpy.ndarray[numpy.float32]:
         ...
 
-    def variance(self, ddof: int = 0) -> numpy.ndarray[numpy.float32]:
+    def variance(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __iadd__(self, arg0: Histogram2DFloat32) -> Histogram2DFloat32:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
         ...
 
 
 class Histogram2DFloat64:
-    def __init__(self,
-                 x: "Axis",
-                 y: "Axis",
-                 bins: Optional[int] = None) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iadd__(self, arg0: "Histogram2DFloat64") -> "Histogram2DFloat64":
-        ...
-
-    def __setstate__(self, arg0: tuple) -> None:
+    def __init__(self, x: Axis, y: Axis, bins: Optional[int] = ...) -> None:
         ...
 
     def clear(self) -> None:
         ...
 
-    def count(self) -> numpy.ndarray[float64]:
+    def count(self) -> numpy.ndarray[numpy.uint64]:
         ...
 
-    def histograms(self) -> numpy.ndarray:
+    def histograms(self, *args, **kwargs) -> Any:
         ...
 
-    def kurtosis(self) -> numpy.ndarray[float64]:
+    def kurtosis(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def max(self) -> numpy.ndarray[float64]:
+    def max(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def mean(self) -> numpy.ndarray[float64]:
+    def mean(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def min(self) -> numpy.ndarray[float64]:
+    def min(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def push(self, x: numpy.ndarray[float64], y: numpy.ndarray[float64],
-             z: numpy.ndarray[float64]) -> None:
+    def push(self, x: numpy.ndarray[numpy.float64],
+             y: numpy.ndarray[numpy.float64],
+             z: numpy.ndarray[numpy.float64]) -> None:
         ...
 
-    def quantile(self, q: float = 0.5) -> numpy.ndarray[float64]:
+    def quantile(self, q: float = ...) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def skewness(self) -> numpy.ndarray[float64]:
+    def skewness(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    def variance(self) -> numpy.ndarray[float64]:
+    def sum_of_weights(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    @property
-    def x(self) -> "Axis":
+    def variance(self) -> numpy.ndarray[numpy.float64]:
         ...
 
-    @property
-    def y(self) -> "Axis":
-        ...
-
-
-class Histogram2DFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(self, arg0: "Histogram2DFloat32") -> "Histogram2DFloat32":
-        ...
-
-    def __init__(self,
-                 x: "Axis",
-                 y: "Axis",
-                 bins: Optional[int] = None) -> None:
+    def __iadd__(self, arg0: Histogram2DFloat64) -> Histogram2DFloat64:
         ...
 
     def __setstate__(self, arg0: tuple) -> None:
         ...
 
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+
+class InverseDistanceWeighting2D(BivariateInterpolator2D):
+    def __init__(self, p: int = ...) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class InverseDistanceWeighting3D(BivariateInterpolator3D):
+    def __init__(self, p: int = ...) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Nearest2D(BivariateInterpolator2D):
+    def __init__(self) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Nearest3D(BivariateInterpolator3D):
+    def __init__(self) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class RTree3DFloat32:
+    def __init__(self, system: Optional[geodetic.System]) -> None:
+        ...
+
+    def bounds(self) -> tuple:
+        ...
+
     def clear(self) -> None:
         ...
 
-    def count(self) -> numpy.ndarray[float32]:
+    def insert(self, coordinates: numpy.ndarray[numpy.float32],
+               values: numpy.ndarray[numpy.float32]) -> None:
         ...
 
-    def histograms(self) -> numpy.ndarray:
+    def inverse_distance_weighting(self,
+                                   coordinates: numpy.ndarray[numpy.float32],
+                                   radius: Optional[float],
+                                   k: int = ...,
+                                   p: int = ...,
+                                   within: bool = ...,
+                                   num_threads: int = ...) -> tuple:
         ...
 
-    def kurtosis(self) -> numpy.ndarray[float32]:
+    def packing(self, coordinates: numpy.ndarray[numpy.float32],
+                values: numpy.ndarray[numpy.float32]) -> None:
         ...
 
-    def max(self) -> numpy.ndarray[float32]:
+    def query(self,
+              coordinates: numpy.ndarray[numpy.float32],
+              k: int = ...,
+              within: bool = ...,
+              num_threads: int = ...) -> tuple:
         ...
 
-    def mean(self) -> numpy.ndarray[float32]:
+    def radial_basis_function(self,
+                              coordinates: numpy.ndarray[numpy.float32],
+                              radius: Optional[float],
+                              k: int = ...,
+                              rbf: RadialBasisFunction = ...,
+                              epsilon: Optional[float] = ...,
+                              smooth: float = ...,
+                              within: bool = ...,
+                              num_threads: int = ...) -> tuple:
         ...
 
-    def min(self) -> numpy.ndarray[float32]:
+    def __bool__(self) -> bool:
         ...
 
-    def push(self, x: numpy.ndarray[float32], y: numpy.ndarray[float32],
-             z: numpy.ndarray[float32]) -> None:
+    def __getstate__(self) -> tuple:
         ...
 
-    def quantile(self, q: float = 0.5) -> numpy.ndarray[float32]:
+    def __len__(self) -> int:
         ...
 
-    def skewness(self) -> numpy.ndarray[float32]:
+    def __setstate__(self, arg0: tuple) -> None:
         ...
 
-    def variance(self) -> numpy.ndarray[float32]:
+
+class RTree3DFloat64:
+    def __init__(self, system: Optional[geodetic.System]) -> None:
+        ...
+
+    def bounds(self) -> tuple:
+        ...
+
+    def clear(self) -> None:
+        ...
+
+    def insert(self, coordinates: numpy.ndarray[numpy.float64],
+               values: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def inverse_distance_weighting(self,
+                                   coordinates: numpy.ndarray[numpy.float64],
+                                   radius: Optional[float],
+                                   k: int = ...,
+                                   p: int = ...,
+                                   within: bool = ...,
+                                   num_threads: int = ...) -> tuple:
+        ...
+
+    def packing(self, coordinates: numpy.ndarray[numpy.float64],
+                values: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def query(self,
+              coordinates: numpy.ndarray[numpy.float64],
+              k: int = ...,
+              within: bool = ...,
+              num_threads: int = ...) -> tuple:
+        ...
+
+    def radial_basis_function(self,
+                              coordinates: numpy.ndarray[numpy.float64],
+                              radius: Optional[float],
+                              k: int = ...,
+                              rbf: RadialBasisFunction = ...,
+                              epsilon: Optional[float] = ...,
+                              smooth: float = ...,
+                              within: bool = ...,
+                              num_threads: int = ...) -> tuple:
+        ...
+
+    def __bool__(self) -> bool:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class RadialBasisFunction:
+    __doc__: ClassVar[str] = ...  # read-only
+    __members__: ClassVar[dict] = ...  # read-only
+    Cubic: ClassVar[RadialBasisFunction] = ...
+    Gaussian: ClassVar[RadialBasisFunction] = ...
+    InverseMultiquadric: ClassVar[RadialBasisFunction] = ...
+    Linear: ClassVar[RadialBasisFunction] = ...
+    Multiquadric: ClassVar[RadialBasisFunction] = ...
+    ThinPlate: ClassVar[RadialBasisFunction] = ...
+    __entries: ClassVar[dict] = ...
+
+    def __init__(self, value: int) -> None:
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        ...
+
+    def __getstate__(self) -> int:
+        ...
+
+    def __hash__(self) -> int:
+        ...
+
+    def __index__(self) -> int:
+        ...
+
+    def __int__(self) -> int:
+        ...
+
+    def __ne__(self, other: object) -> bool:
+        ...
+
+    def __setstate__(self, state: int) -> None:
         ...
 
     @property
-    def x(self) -> "Axis":
+    def name(self) -> str:
         ...
 
     @property
-    def y(self) -> "Axis":
+    def value(self) -> int:
         ...
+
+
+class StreamingHistogramFloat32:
+    def __init__(self,
+                 values: numpy.ndarray[numpy.float32],
+                 weights: Optional[numpy.ndarray[numpy.float32]] = ...,
+                 axis: Optional[List[int]] = ...,
+                 bin_count: Optional[int] = ...) -> None:
+        ...
+
+    def count(self) -> numpy.ndarray[numpy.uint64]:
+        ...
+
+    def kurtosis(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def max(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def mean(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def min(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def quantile(self, q: float = ...) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def resize(self, arg0: int) -> None:
+        ...
+
+    def size(self) -> numpy.ndarray[numpy.uint64]:
+        ...
+
+    def skewness(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def sum_of_weights(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def variance(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    def __add__(self,
+                other: StreamingHistogramFloat32) -> StreamingHistogramFloat32:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __iadd__(
+            self,
+            other: StreamingHistogramFloat32) -> StreamingHistogramFloat32:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class StreamingHistogramFloat64:
+    def __init__(self,
+                 values: numpy.ndarray[numpy.float64],
+                 weights: Optional[numpy.ndarray[numpy.float64]] = ...,
+                 axis: Optional[List[int]] = ...,
+                 bin_count: Optional[int] = ...) -> None:
+        ...
+
+    def count(self) -> numpy.ndarray[numpy.uint64]:
+        ...
+
+    def kurtosis(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def max(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def mean(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def min(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def quantile(self, q: float = ...) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def resize(self, arg0: int) -> None:
+        ...
+
+    def size(self) -> numpy.ndarray[numpy.uint64]:
+        ...
+
+    def skewness(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def sum_of_weights(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def variance(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    def __add__(self,
+                other: StreamingHistogramFloat64) -> StreamingHistogramFloat64:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __iadd__(
+            self,
+            other: StreamingHistogramFloat64) -> StreamingHistogramFloat64:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class TemporalAxis:
+    __hash__: ClassVar[None] = ...
+
+    def __init__(self,
+                 values: numpy.ndarray[numpy.int64],
+                 epsilon: int = ...,
+                 is_circle: bool = ...) -> None:
+        ...
+
+    def back(self) -> int:
+        ...
+
+    def find_index(self,
+                   coordinates: numpy.ndarray[numpy.int64],
+                   bounded: bool = ...) -> numpy.ndarray[numpy.int64]:
+        ...
+
+    def find_indexes(
+            self, coordinates: numpy.ndarray[numpy.int64]
+    ) -> numpy.ndarray[numpy.int64]:
+        ...
+
+    def flip(self, inplace: bool = ...) -> TemporalAxis:
+        ...
+
+    def front(self) -> int:
+        ...
+
+    def increment(self) -> int:
+        ...
+
+    def is_ascending(self) -> bool:
+        ...
+
+    def is_regular(self) -> bool:
+        ...
+
+    def max_value(self) -> int:
+        ...
+
+    def min_value(self) -> int:
+        ...
+
+    def __eq__(self, other: TemporalAxis) -> bool:
+        ...
+
+    @overload
+    def __getitem__(self, arg0: int) -> int:
+        ...
+
+    @overload
+    def __getitem__(self, arg0: slice) -> numpy.ndarray[numpy.int64]:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __ne__(self, other: TemporalAxis) -> bool:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def is_circle(self) -> bool:
+        ...
+
+
+class TemporalBilinear3D(TemporalBivariateInterpolator3D):
+    def __init__(self) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class TemporalBivariateInterpolator3D:
+    def __init__(self, *args, **kwargs) -> None:
+        ...
+
+
+class TemporalGrid3DFloat32:
+    def __init__(self, x: Axis, y: Axis, z: TemporalAxis,
+                 array: numpy.ndarray[numpy.float32]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> TemporalAxis:
+        ...
+
+
+class TemporalGrid3DFloat64:
+    def __init__(self, x: Axis, y: Axis, z: TemporalAxis,
+                 array: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> TemporalAxis:
+        ...
+
+
+class TemporalGrid4DFloat32:
+    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, u: Axis,
+                 array: numpy.ndarray[numpy.float32]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float32]:
+        ...
+
+    @property
+    def u(self) -> Axis:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> TemporalAxis:
+        ...
+
+
+class TemporalGrid4DFloat64:
+    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, u: Axis,
+                 array: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    @property
+    def u(self) -> Axis:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> TemporalAxis:
+        ...
+
+
+class TemporalInverseDistanceWeighting3D(TemporalBivariateInterpolator3D):
+    def __init__(self, p: int = ...) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class TemporalNearest3D(TemporalBivariateInterpolator3D):
+    def __init__(self) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+@overload
+def bicubic_float32(grid: Grid2DFloat32,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def bicubic_float32(grid: Grid3DFloat32,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: numpy.ndarray[numpy.float64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def bicubic_float32(grid: TemporalGrid3DFloat32,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: numpy.ndarray[numpy.int64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def bicubic_float32(grid: Grid4DFloat32,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: numpy.ndarray[numpy.float64],
+                    u: numpy.ndarray[numpy.float64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def bicubic_float32(grid: TemporalGrid4DFloat32,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: numpy.ndarray[numpy.int64],
+                    u: numpy.ndarray[numpy.float64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def bicubic_float64(grid: Grid2DFloat64,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def bicubic_float64(grid: Grid3DFloat64,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: numpy.ndarray[numpy.float64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def bicubic_float64(grid: TemporalGrid3DFloat64,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: numpy.ndarray[numpy.int64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def bicubic_float64(grid: Grid4DFloat64,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: numpy.ndarray[numpy.float64],
+                    u: numpy.ndarray[numpy.float64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def bicubic_float64(grid: TemporalGrid4DFloat64,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: numpy.ndarray[numpy.int64],
+                    u: numpy.ndarray[numpy.float64],
+                    nx: int = ...,
+                    ny: int = ...,
+                    fitting_model: str = ...,
+                    boundary: str = ...,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+def bivariate_float32(grid: Grid2DFloat32,
+                      x: numpy.ndarray[numpy.float64],
+                      y: numpy.ndarray[numpy.float64],
+                      interpolator: BivariateInterpolator2D,
+                      bounds_error: bool = ...,
+                      num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+def bivariate_float64(grid: Grid2DFloat64,
+                      x: numpy.ndarray[numpy.float64],
+                      y: numpy.ndarray[numpy.float64],
+                      interpolator: BivariateInterpolator2D,
+                      bounds_error: bool = ...,
+                      num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def quadrivariate_float32(
+        grid: Grid4DFloat32,
+        x: numpy.ndarray[numpy.float64],
+        y: numpy.ndarray[numpy.float64],
+        z: numpy.ndarray[numpy.float64],
+        u: numpy.ndarray[numpy.float64],
+        interpolator: BivariateInterpolator3D,
+        z_method: Optional[str] = ...,
+        u_method: Optional[str] = ...,
+        bounds_error: bool = ...,
+        num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def quadrivariate_float32(
+        grid: TemporalGrid4DFloat32,
+        x: numpy.ndarray[numpy.float64],
+        y: numpy.ndarray[numpy.float64],
+        z: numpy.ndarray[numpy.int64],
+        u: numpy.ndarray[numpy.float64],
+        interpolator: TemporalBivariateInterpolator3D,
+        z_method: Optional[str] = ...,
+        u_method: Optional[str] = ...,
+        bounds_error: bool = ...,
+        num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def quadrivariate_float64(
+        grid: Grid4DFloat64,
+        x: numpy.ndarray[numpy.float64],
+        y: numpy.ndarray[numpy.float64],
+        z: numpy.ndarray[numpy.float64],
+        u: numpy.ndarray[numpy.float64],
+        interpolator: BivariateInterpolator3D,
+        z_method: Optional[str] = ...,
+        u_method: Optional[str] = ...,
+        bounds_error: bool = ...,
+        num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def quadrivariate_float64(
+        grid: TemporalGrid4DFloat64,
+        x: numpy.ndarray[numpy.float64],
+        y: numpy.ndarray[numpy.float64],
+        z: numpy.ndarray[numpy.int64],
+        u: numpy.ndarray[numpy.float64],
+        interpolator: TemporalBivariateInterpolator3D,
+        z_method: Optional[str] = ...,
+        u_method: Optional[str] = ...,
+        bounds_error: bool = ...,
+        num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float32(grid: Grid2DFloat32,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float32(grid: Grid3DFloat32,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   z: numpy.ndarray[numpy.float64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float32(grid: TemporalGrid3DFloat32,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   z: numpy.ndarray[numpy.int64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float32(grid: Grid4DFloat32,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   z: numpy.ndarray[numpy.float64],
+                   u: numpy.ndarray[numpy.float64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float32(grid: TemporalGrid4DFloat32,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   z: numpy.ndarray[numpy.int64],
+                   u: numpy.ndarray[numpy.float64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float64(grid: Grid2DFloat64,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float64(grid: Grid3DFloat64,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   z: numpy.ndarray[numpy.float64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float64(grid: TemporalGrid3DFloat64,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   z: numpy.ndarray[numpy.int64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float64(grid: Grid4DFloat64,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   z: numpy.ndarray[numpy.float64],
+                   u: numpy.ndarray[numpy.float64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def spline_float64(grid: TemporalGrid4DFloat64,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   z: numpy.ndarray[numpy.int64],
+                   u: numpy.ndarray[numpy.float64],
+                   nx: int = ...,
+                   ny: int = ...,
+                   fitting_model: str = ...,
+                   boundary: str = ...,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def trivariate_float32(grid: Grid3DFloat32,
+                       x: numpy.ndarray[numpy.float64],
+                       y: numpy.ndarray[numpy.float64],
+                       z: numpy.ndarray[numpy.float64],
+                       interpolator: BivariateInterpolator3D,
+                       z_method: Optional[str] = ...,
+                       bounds_error: bool = ...,
+                       num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def trivariate_float32(grid: TemporalGrid3DFloat32,
+                       x: numpy.ndarray[numpy.float64],
+                       y: numpy.ndarray[numpy.float64],
+                       z: numpy.ndarray[numpy.int64],
+                       interpolator: TemporalBivariateInterpolator3D,
+                       z_method: Optional[str] = ...,
+                       bounds_error: bool = ...,
+                       num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def trivariate_float64(grid: Grid3DFloat64,
+                       x: numpy.ndarray[numpy.float64],
+                       y: numpy.ndarray[numpy.float64],
+                       z: numpy.ndarray[numpy.float64],
+                       interpolator: BivariateInterpolator3D,
+                       z_method: Optional[str] = ...,
+                       bounds_error: bool = ...,
+                       num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def trivariate_float64(grid: TemporalGrid3DFloat64,
+                       x: numpy.ndarray[numpy.float64],
+                       y: numpy.ndarray[numpy.float64],
+                       z: numpy.ndarray[numpy.int64],
+                       interpolator: TemporalBivariateInterpolator3D,
+                       z_method: Optional[str] = ...,
+                       bounds_error: bool = ...,
+                       num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...

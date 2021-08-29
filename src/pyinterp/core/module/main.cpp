@@ -25,6 +25,7 @@ extern void init_histogram2d(py::module&);
 extern void init_quadrivariate(py::module&);
 extern void init_rtree(py::module&);
 extern void init_spline(py::module&);
+extern void init_streaming_histogram(py::module&);
 extern void init_storage_marshaller(py::module&);
 extern void init_storage_unqlite(py::module&);
 extern void init_trivariate(py::module&);
@@ -94,6 +95,7 @@ Index storage support
   init_geodetic(geodetic);
   init_fill(fill);
   init_rtree(m);
+  init_streaming_histogram(m);
 
   // geohash
   init_geohash(geohash);
