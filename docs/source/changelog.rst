@@ -1,7 +1,7 @@
 Changelog
 #########
 
-0.8.0 (XX YY 2021)
+0.8.0 (30 August 2021)
 ------------------
 * Calculates univariate statistics.
 * Binning using streaming histogram to evaluate quantiles.

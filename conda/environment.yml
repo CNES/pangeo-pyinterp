@@ -4,7 +4,7 @@ dependencies:
   - netcdf4
   - numcodecs
   - pandas
-  - pyinterp>=0.7.1.dev21
+  - pyinterp>=0.8.0
   - pypandoc
   - python=3.7
   - pip
