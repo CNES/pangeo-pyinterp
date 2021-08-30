@@ -6,7 +6,6 @@ from . import version
 from .axis import TemporalAxis
 from .binning import Binning2D
 from .core import Axis, dateutils
-from .descriptive_statistics import DescriptiveStatistics
 from .grid import Grid2D, Grid3D, Grid4D
 from .histogram2d import Histogram2D
 from .interpolator.bicubic import bicubic
@@ -14,7 +13,7 @@ from .interpolator.bivariate import bivariate
 from .interpolator.quadrivariate import quadrivariate
 from .interpolator.trivariate import trivariate
 from .rtree import RTree
-from .streaming_histogram import StreamingHistogram
+from .statistics import DescriptiveStatistics, StreamingHistogram
 
 __version__ = version.release()
 __date__ = version.date()
