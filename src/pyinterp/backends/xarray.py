@@ -33,7 +33,7 @@ class AxisIdentifier:
             array : xarray.DataArray
                 The array defining the regular grid in n dimensions.
 
-        Return:
+        Returns:
             str, optional:
                 The name of the coordinate
         """
@@ -50,7 +50,7 @@ class AxisIdentifier:
             array : xarray.DataArray
                 The array defining the regular grid in n dimensions.
 
-        Return:
+        Returns:
             str, optional:
                 The name of the longitude coordinate
         """
@@ -64,7 +64,7 @@ class AxisIdentifier:
             array : xarray.DataArray
                 The array defining the regular grid in n dimensions.
 
-        Return:
+        Returns:
             str, optional:
                 The name of the latitude coordinate
         """
@@ -74,10 +74,8 @@ class AxisIdentifier:
 def _dims_from_data_array(data_array: xr.DataArray,
                           geodetic: bool,
                           ndims: Optional[int] = 2) -> Tuple[str, str]:
-    """
-    Gets the name of the dimensions that define the grid axes.
-    the longitudes and latitudes
-    of the data array.
+    """Gets the name of the dimensions that define the grid axes. the longitudes
+    and latitudes of the data array.
 
     Args:
         data_array (xarray.DataArray): Provided data array
@@ -85,7 +83,7 @@ def _dims_from_data_array(data_array: xr.DataArray,
             longitudes and latitudes otherwise Cartesian
         ndims (int, optional): Number of dimension expected for the variable
 
-    Return:
+    Returns:
         tuple: longitude and latitude names
 
     Raises:
@@ -117,9 +115,7 @@ def _coords(
         coords: dict,
         dims: Tuple,
         datetime64: Optional[Tuple[str, axis.TemporalAxis]] = None) -> Tuple:
-    """
-    Get the list of arguments to provide to the grid interpolation
-    functions.
+    """Get the list of arguments to provide to the grid interpolation functions.
 
     Args:
         coords (dict): Mapping from dimension names to the
@@ -127,7 +123,7 @@ def _coords(
         dims (tuple): List of dimensions handled by the grid
         datetime64 (tuple, optional): Properties of the axis used
 
-    Return:
+    Returns:
         tuple: the tuple of arguments decoded.
 
     Raises:
@@ -159,8 +155,7 @@ class Grid2D(grid.Grid2D):
                  data_array: xr.DataArray,
                  increasing_axes: bool = False,
                  geodetic: bool = True):
-        """
-        Initialize a new 2D Cartesian Grid.
+        """Initialize a new 2D Cartesian Grid.
 
         Args:
             data_array (xarray.DataArray): Provided data
@@ -210,7 +205,7 @@ class Grid2D(grid.Grid2D):
             **kwargs: List of keywords arguments provided to the interpolation
                 method :py:meth:`pyinterp.bivariate <pyinterp.bivariate>`
 
-        Return:
+        Returns:
             np.ndarray: the interpolated values
         """
         return interpolator.bivariate(self, *_coords(coords, self._dims),
@@ -227,7 +222,7 @@ class Grid2D(grid.Grid2D):
             **kwargs: List of keyword arguments provided to the interpolation
                 method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
 
-        Return:
+        Returns:
             np.ndarray: the interpolated values
         """
         return interpolator.bicubic(self, *_coords(coords, self._dims), *args,
@@ -303,7 +298,7 @@ class Grid3D(grid.Grid3D):
                 method :py:meth:`pyinterp.trivariate
                 <pyinterp.trivariate>`
 
-        Return:
+        Returns:
             np.ndarray: the interpolated values
         """
         return interpolator.trivariate(
@@ -321,7 +316,7 @@ class Grid3D(grid.Grid3D):
             **kwargs: List of keyword arguments provided to the interpolation
                 method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
 
-        Return:
+        Returns:
             np.ndarray: the interpolated values
         """
         return interpolator.bicubic(
@@ -336,8 +331,7 @@ class Grid4D(grid.Grid4D):
                  data_array: xr.DataArray,
                  increasing_axes: bool = False,
                  geodetic: bool = True):
-        """
-        Initialize a new 4D Cartesian Grid.
+        """Initialize a new 4D Cartesian Grid.
 
         Args:
             data_array (xarray.DataArray): Provided data array
@@ -411,7 +405,7 @@ class Grid4D(grid.Grid4D):
                 method :py:meth:`pyinterp.quadrivariate
                 <pyinterp.quadrivariate>`
 
-        Return:
+        Returns:
             np.ndarray: the interpolated values
         """
         return interpolator.quadrivariate(
@@ -429,7 +423,7 @@ class Grid4D(grid.Grid4D):
             **kwargs: List of keyword arguments provided to the interpolation
                 method :py:meth:`pyinterp.bicubic <pyinterp.bicubic>`
 
-        Return:
+        Returns:
             np.ndarray: the interpolated values
         """
         return interpolator.bicubic(
@@ -448,8 +442,7 @@ class RegularGridInterpolator:
                  array: xr.DataArray,
                  increasing_axes: bool = True,
                  geodetic: bool = True):
-        """
-        Initialize a new RegularGridInterpolator.
+        """Initialize a new RegularGridInterpolator.
 
         Args:
             array (xarray.DataArray): The array defining the regular grid in n

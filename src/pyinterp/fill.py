@@ -17,7 +17,7 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
           num_threads: int = 0):
     """Filter values using a locally weighted regression function or LOESS.
     The weight function used for LOESS is the tri-cube weight function,
-    :math:`w(x)=(1-|d|^3)^3`
+    :math:`w(x)=(1-|d|^3)^3`.
 
     Args:
         mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D): Grid function on
@@ -34,7 +34,7 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
             computing code is used at all, which is useful for debugging.
             Defaults to ``0``.
 
-    Return:
+    Returns:
         numpy.ndarray: the grid will have NaN filled with extrapolated values.
     """
     value_type = value_type or "undefined"
@@ -95,7 +95,7 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
             computing code is used at all, which is useful for debugging.
             Defaults to ``0``.
 
-    Return:
+    Returns:
         tuple: a boolean indicating if the calculation has converged, i. e. if
         the value of the residues is lower than the ``epsilon`` limit set, and
         the the grid will have the all NaN filled with extrapolated values.

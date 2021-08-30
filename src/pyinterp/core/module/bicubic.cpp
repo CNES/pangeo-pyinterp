@@ -260,8 +260,8 @@ Args:
     grid (pyinterp.core.Grid2D)__doc__" +
          suffix +
          R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values
-    y (numpy.ndarray): Y-values
+    x (numpy.ndarray): X-values.
+    y (numpy.ndarray): Y-values.
     nx (int, optional): The number of X coordinate values required to perform
         the interpolation. Defaults to ``3``.
     ny (int, optional): The number of Y coordinate values required to perform
@@ -278,7 +278,7 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
-Return:
+Returns:
     numpy.ndarray: Values interpolated
   )__doc__")
             .c_str());
@@ -314,9 +314,9 @@ Args:
     grid (pyinterp.core.)__doc__" +
        grid_prefix + "Grid3D" + suffix +
        R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values
-    y (numpy.ndarray): Y-values
-    z (numpy.ndarray): Z-values
+    x (numpy.ndarray): X-values.
+    y (numpy.ndarray): Y-values.
+    z (numpy.ndarray): Z-values.
     nx (int, optional): The number of X coordinate values required to perform
         the interpolation. Defaults to ``3``.
     ny (int, optional): The number of Y coordinate values required to perform
@@ -333,8 +333,8 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
-Return:
-    numpy.ndarray: Values interpolated
+Returns:
+    numpy.ndarray: Values interpolated.
   )__doc__")
           .c_str());
 }
@@ -369,10 +369,10 @@ Args:
     (pyinterp.core.)__doc__" +
        grid_prefix + "Grid4D" + suffix +
        R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values
-    y (numpy.ndarray): Y-values
-    z (numpy.ndarray): Z-values
-    u (numpy.ndarray): U-values
+    x (numpy.ndarray): X-values.
+    y (numpy.ndarray): Y-values.
+    z (numpy.ndarray): Z-values.
+    u (numpy.ndarray): U-values.
     nx (int, optional): The number of X coordinate values required to perform
         the interpolation. Defaults to ``3``.
     ny (int, optional): The number of Y coordinate values required to perform
@@ -389,8 +389,8 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
-Return:
-    numpy.ndarray: Values interpolated
+Returns:
+    numpy.ndarray: Values interpolated.
   )__doc__")
           .c_str());
 }

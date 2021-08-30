@@ -41,7 +41,7 @@ used to encode the GeoHash.
 
 Args:
     precision (int): Number of bits used to encode the geohash code.
-Return:
+Returns:
     tuple: Accuracy in longitude/latitude and degrees.
 Raises:
     ValueError: If the given precision is not within [1, 64].
@@ -54,12 +54,12 @@ Raises:
           },
           py::arg("point"), py::arg("precision") = 64,
           R"__doc__(
-Encode a point into geohash code with the given precision
+Encode a point into geohash code with the given precision.
 
 Args:
   point (pyinterp.geodetic.Point) Point to encode.
   precision (int, optional) Number of bits used to encode the geohash code.
-Return:
+Returns:
   int: geohash code.
 Raises:
   ValueError: If the given precision is not within [1, 64].
@@ -74,13 +74,13 @@ Raises:
           },
           py::arg("lon"), py::arg("lat"), py::arg("precision") = 64,
           R"__doc__(
-Encode coordinates into geohash with the given precision
+Encode coordinates into geohash with the given precision.
 
 Args:
   lon (numpy.ndarray) Longitudes in degrees.
   lat (numpy.ndarray) Latitudes in degrees.
   precision (int, optional) Number of bits used to encode the geohash code.
-Return:
+Returns:
   numpy.ndarray: geohash codes.
 Raises:
   ValueError: If the given precision is not within [1, 64].
@@ -102,7 +102,7 @@ Args:
   precision (int, optional): Required accuracy.
   round (optional, bool): If true, the coordinates of the point will be
     rounded to the accuracy defined by the GeoHash.
-Return:
+Returns:
   pyinterp.geodetic.Point: decoded geographic point.
 Raises:
     ValueError: If the given precision is not within [1, 64].
@@ -124,7 +124,7 @@ Args:
   precision (int, optional): Required accuracy.
   round (optional, bool): If true, the coordinates of the point will be
     rounded to the accuracy defined by the GeoHash."
-Return:
+Returns:
   tuple: longitudes/latitudes of the decoded points.
 Raises:
     ValueError: If the given precision is not within [1, 64].
@@ -142,7 +142,7 @@ Returns the bounding box encoded by the geohash with the specified precision.
 Args:
   hash (int): Geohash.
   precision (int, optional): Required accuracy.
-Return:
+Returns:
   pyinterp.geodetic.Box: Bounding box.
 Raises:
     ValueError: If the given precision is not within [1, 64].
@@ -161,7 +161,7 @@ Returns all geohash codes contained in the defined bounding box.
 Args:
   box (pyinterp.geohash.Box, optional): Bounding box.
   precision (int, optional): Required accuracy.
-Return:
+Returns:
   numpy.ndarray: Geohash codes.
 Raises:
     ValueError: If the given precision is not within [1, 64].
@@ -181,7 +181,7 @@ at the given precision.
 Args:
   hash (int): Geohash code.
   precision (int, optional): Required accuracy.
-Return:
+Returns:
   numpy.ndarray: Geohash codes.
 Raises:
   ValueError: If the given precision is not within [1, 64].
@@ -200,7 +200,7 @@ Returns the property of the grid covering the given bounding box.
 Args:
   box (pyinterp.geodetic.Box, optional): Bounding box.
   precision (int, optional): Required accuracy.
-Return:
+Returns:
   tuple:: geohash of the minimum corner point, number of boxes in longitudes
     and latitudes.
 Raises:
@@ -211,8 +211,8 @@ Raises:
 Returns the start and end indexes of the different GeoHash boxes.
 
 Args:
-  hash (numpy.ndarray): Geohash codes
-Return:
+  hash (numpy.ndarray): Geohash codes.
+Returns:
   dict: dictionary between successive identical geohash codes and start and
     end indexes in the table provided as input.
 )__doc__");

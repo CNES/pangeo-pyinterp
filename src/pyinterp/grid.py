@@ -13,7 +13,7 @@ from . import interface
 
 
 class Grid2D:
-    """2D Cartesian Grid
+    """2D Cartesian Grid.
     """
     #: The number of grid dimensions handled by this object
     _DIMENSIONS = 2
@@ -23,8 +23,8 @@ class Grid2D:
         Initialize a new 2D Cartesian Grid.
 
         Args:
-            x (pyinterp.Axis): X-Axis
-            y (pyinterp.Axis): Y-Axis
+            x (pyinterp.Axis): X-Axis.
+            y (pyinterp.Axis): Y-Axis.
             array (numpy.ndarray): Discrete representation of a continuous
                 function on a uniform 2-dimensional grid.
             increasing_axes ({'inplace', 'copy'}, optional): Optional string
@@ -82,7 +82,7 @@ class Grid2D:
 
     def __repr__(self):
         """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance
+        representation of this instance.
         """
         result = [
             "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
@@ -98,37 +98,34 @@ class Grid2D:
 
     @property
     def x(self) -> core.Axis:
-        """
-        Gets the X-Axis handled by this instance
+        """Gets the X-Axis handled by this instance.
 
-        Return:
-            pyinterp.Axis: X-Axis
+        Returns:
+            pyinterp.Axis: X-Axis.
         """
         return self._instance.x
 
     @property
     def y(self) -> core.Axis:
-        """
-        Gets the Y-Axis handled by this instance
+        """Gets the Y-Axis handled by this instance
 
-        Return:
-            pyinterp.Axis: Y-Axis
+        Returns:
+            pyinterp.Axis: Y-Axis.
         """
         return self._instance.y
 
     @property
     def array(self) -> np.ndarray:
-        """
-        Gets the values handled by this instance
+        """Gets the values handled by this instance.
 
-        Return:
-            numpy.ndarray: values
+        Returns:
+            numpy.ndarray: values.
         """
         return self._instance.array
 
 
 class Grid3D(Grid2D):
-    """3D Cartesian Grid
+    """3D Cartesian Grid.
     """
     _DIMENSIONS = 3
 
@@ -137,9 +134,9 @@ class Grid3D(Grid2D):
         Initialize a new 3D Cartesian Grid.
 
         Args:
-            x (pyinterp.Axis): X-Axis
-            y (pyinterp.Axis): Y-Axis
-            z (pyinterp.Axis, pyinterp.TemporalAxis): Z-Axis
+            x (pyinterp.Axis): X-Axis.
+            y (pyinterp.Axis): Y-Axis.
+            z (pyinterp.Axis, pyinterp.TemporalAxis): Z-Axis.
             array (numpy.ndarray): Discrete representation of a continuous
                 function on a uniform 3-dimensional grid.
             increasing_axes (bool, optional): Ensure that the axes of the grid
@@ -170,16 +167,16 @@ class Grid3D(Grid2D):
     @property
     def z(self) -> Union[core.Axis, core.TemporalAxis]:
         """
-        Gets the Z-Axis handled by this instance
+        Gets the Z-Axis handled by this instance.
 
-        Return:
-            pyinterp.Axis, pyinterp.TemporalAxis: Z-Axis
+        Returns:
+            pyinterp.Axis, pyinterp.TemporalAxis: Z-Axis.
         """
         return self._instance.z
 
 
 class Grid4D(Grid3D):
-    """4D Cartesian Grid
+    """4D Cartesian Grid.
     """
     _DIMENSIONS = 4
 
@@ -188,10 +185,10 @@ class Grid4D(Grid3D):
         Initialize a new 4D Cartesian Grid.
 
         Args:
-            x (pyinterp.Axis): X-Axis
-            y (pyinterp.Axis): Y-Axis
-            z (pyinterp.Axis, pyinterp.TemporalAxis): Z-Axis
-            u (pyinterp.Axis): U-Axis
+            x (pyinterp.Axis): X-Axis.
+            y (pyinterp.Axis): Y-Axis.
+            z (pyinterp.Axis, pyinterp.TemporalAxis): Z-Axis.
+            u (pyinterp.Axis): U-Axis.
             array (numpy.ndarray): Discrete representation of a continuous
                 function on a uniform 4-dimensional grid.
             increasing_axes (bool, optional): Ensure that the axes of the grid
@@ -207,11 +204,10 @@ class Grid4D(Grid3D):
 
     @property
     def u(self) -> core.Axis:
-        """
-        Gets the U-Axis handled by this instance
+        """Gets the U-Axis handled by this instance.
 
-        Return:
-            pyinterp.Axis: U-Axis
+        Returns:
+            pyinterp.Axis: U-Axis.
         """
         return self._instance.u
 

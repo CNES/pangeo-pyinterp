@@ -23,7 +23,7 @@ Group a number of more or less continuous values into a smaller number of
                     const std::optional<size_t>&>(),
            py::arg("x"), py::arg("y"), py::arg("bins") = py::none(),
            R"__doc__(
-Default constructor
+Default constructor.
 
 Args:
     x (pyinterp.core.Axis): Definition of the bin centers for the X axis of
@@ -36,39 +36,39 @@ Args:
       .def_property_readonly(
           "x", [](const pyinterp::Histogram2D<Type>& self) { return self.x(); },
           R"__doc__(
-Gets the bin centers for the X Axis of the grid
+Gets the bin centers for the X Axis of the grid.
 
-Return:
-    pyinterp.core.Axis: X-Axis
+Returns:
+    pyinterp.core.Axis: X-Axis.
 )__doc__")
       .def_property_readonly(
           "y", [](const pyinterp::Histogram2D<Type>& self) { return self.y(); },
           R"__doc__(
-Gets the bin centers for the Y Axis of the grid
+Gets the bin centers for the Y Axis of the grid.
 
-Return:
-    pyinterp.core.Axis: Y-Axis
+Returns:
+    pyinterp.core.Axis: Y-Axis.
 )__doc__")
       .def("clear", &pyinterp::Histogram2D<Type>::clear, "Reset the statistics")
       .def("count", &pyinterp::Histogram2D<Type>::count,
            R"__doc__(
 Compute the count of points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: count of points within each bin.
 )__doc__")
       .def("histograms", &pyinterp::Histogram2D<Type>::histograms,
            R"__doc__(
 Compute the histograms for each bin.
 
-Return:
+Returns:
     numpy.ndarray: histograms for each bin.
 )__doc__")
       .def("kurtosis", &pyinterp::Histogram2D<Type>::kurtosis,
            R"__doc__(
 Compute the kurtosis of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: kurtosis of values for points within each bin.
 )__doc__")
       .def("quantile", &pyinterp::Histogram2D<Type>::quantile,
@@ -78,7 +78,7 @@ Compute the quantile of points within each bin.
 Args:
     q (float): Quantile to compute.
 
-Return:
+Returns:
     numpy.ndarray: quantile of points within each bin.
 )__doc__",
            py::arg("q") = 0.5)
@@ -86,21 +86,21 @@ Return:
            R"__doc__(
 Compute the maximum of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: maximum of values for points within each bin.
 )__doc__")
       .def("mean", &pyinterp::Histogram2D<Type>::mean,
            R"__doc__(
 Compute the mean of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: mean of values for points within each bin.
 )__doc__")
       .def("min", &pyinterp::Histogram2D<Type>::min,
            R"__doc__(
 Compute the minimum of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: minimum of values for points within each bin.
 )__doc__")
       .def("push", &pyinterp::Histogram2D<Type>::push, py::arg("x"),
@@ -110,27 +110,27 @@ Push new samples into the defined bins.
 Args:
     x (numpy.ndarray): X coordinates of the values to push.
     y (numpy.ndarray): Y coordinates of the values to push.
-    z (numpy.ndarray): New samples to push
+    z (numpy.ndarray): New samples to push.
 )__doc__")
       .def("sum_of_weights", &pyinterp::Histogram2D<Type>::sum_of_weights,
            R"__doc__(
 Compute the sum of weights for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: sum of weights for points within each bin.
 )__doc__")
       .def("skewness", &pyinterp::Histogram2D<Type>::skewness,
            R"__doc__(
 Compute the skewness of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: skewness of values for points within each bin.
 )__doc__")
       .def("variance", &pyinterp::Histogram2D<Type>::variance,
            R"__doc__(
 Compute the variance of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: variance of values for points within each bin.
 )__doc__")
       .def("__iadd__", &pyinterp::Histogram2D<Type>::operator+=,

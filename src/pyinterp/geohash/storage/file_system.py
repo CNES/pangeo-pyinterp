@@ -9,10 +9,21 @@ import numcodecs
 
 
 class FileSystem:
+    """Store a GeoHash index in a file system.
+    """
     def __init__(self,
                  fs: fsspec.AbstractFileSystem,
                  root: str,
                  compressor: Optional[numcodecs.Blosc] = None):
+        """Create a new FileSystem instance.
+
+
+        Args:
+            fs (fsspec.filesystem): A file system to use to store the index.
+            root (str): The root directory of the index.
+            compressor (numcodecs.Blosc): A compressor to use to compress the
+                index.
+        """
         self.fs = fs
         self.compressor = compressor or numcodecs.Blosc()
         self.root = root
@@ -58,6 +69,11 @@ class FileSystem:
         self._write(self._entry(key), value)
 
     def extend(self, other: Iterable[Tuple[bytes, Any]]) -> None:
+        """Extend the index with the items.
+
+        Args:
+            other (iterable): An iterable of items to add.
+        """
         for key, value in other:
             if not isinstance(value, list):
                 value = [value]
@@ -67,14 +83,32 @@ class FileSystem:
             self._write(entry, value)
 
     def update(self, other: Iterable[Tuple[bytes, Any]]) -> None:
+        """Update the index with the items.
+
+        Args:
+            other (iterable): An iterable of items to add.
+        """
         for key, value in other:
             self[key] = value
 
     def keys(self) -> Iterable[bytes]:
+        """Returns the keys (GeoHash codes) of the index.
+
+        Returns:
+            iterable: The keys of the index.
+        """
         for item in self.fs.listdir(self.root, detail=False):
             yield item.split(self.fs.sep)[-1].lstrip("_").encode()
 
     def values(self, keys: Optional[Iterable[bytes]] = None) -> List[Any]:
+        """Returns the values of the index.
+
+        Args:
+            keys (iterable, optional): The keys of the index to read.
+
+        Returns:
+            list: The values of the index.
+        """
         keys = keys or self.keys()
         return [self[key] for key in keys]
 
@@ -82,10 +116,20 @@ class FileSystem:
         self,
         keys: Optional[Iterable[bytes]] = None
     ) -> List[Tuple[bytes, List[Any]]]:
+        """Returns the items of the index.
+
+        Args:
+            keys (iterable, optional): The keys of the index to read.
+
+        Returns:
+            list: The items of the index.
+        """
         keys = keys or self.keys()
         return [(key, self[key]) for key in keys]
 
     def rollback(self):
+        """Revert all changes done to the index.
+        """
         for item in self._transactions:
             entry = self.fs.sep.join(
                 (self.root, self._pending_key(item).decode()))
@@ -94,6 +138,8 @@ class FileSystem:
         self._deleted.clear()
 
     def commit(self):
+        """Commit all changes done to the index.
+        """
         for item in self._deleted:
             self.fs.rm(self.fs.sep.join((self.root, item.decode())))
         self._deleted.clear()

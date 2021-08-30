@@ -28,10 +28,10 @@ def quadrivariate(grid4d: grid.Grid4D,
     Args:
         grid4d (pyinterp.grid.Grid4D): Function on a uniform 4-dimensional
             grid to be interpolated.
-        x (numpy.ndarray): X-values
-        y (numpy.ndarray): Y-values
-        z (numpy.ndarray): Z-values
-        u (numpy.ndarray): U-values
+        x (numpy.ndarray): X-values.
+        y (numpy.ndarray): Y-values.
+        z (numpy.ndarray): Z-values.
+        u (numpy.ndarray): U-values.
         interpolator (str, optional): The interpolation method to be performed
             on the surface defined by the Y and Y axes. Supported are
             ``bilinear`` and ``nearest``, and ``inverse_distance_weighting``.
@@ -45,15 +45,15 @@ def quadrivariate(grid4d: grid.Grid4D,
         bounds_error (bool, optional): If True, when interpolated values
             are requested outside of the domain of the input axes (x,y), a
             :py:class:`ValueError` is raised. If False, then value is set
-            to NaN. Default to ``False``
+            to NaN. Default to ``False``.
         num_threads (int, optional): The number of threads to use for the
             computation. If 0 all CPUs are used. If 1 is given, no parallel
             computing code is used at all, which is useful for debugging.
             Defaults to ``0``.
         p (int, optional): The power to be used by the interpolator
             inverse_distance_weighting. Default to ``2``.
-    Return:
-        numpy.ndarray: Values interpolated
+    Returns:
+        numpy.ndarray: Values interpolated.
     """
     instance = grid4d._instance
     function = interface._core_function("quadrivariate", instance)

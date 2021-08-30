@@ -22,7 +22,7 @@ void implement_streaming_histogram(py::module& m, const std::string& suffix) {
            py::arg("values"), py::arg("weights") = py::none(),
            py::arg("axis") = py::none(), py::arg("bin_count") = py::none(),
            R"__doc__(
-Default constructor
+Default constructor.
 
 Args:
     values (numpy.ndarray): Array containing numbers whose statistics are
@@ -44,35 +44,35 @@ Returns:
            R"__doc__(
 Returns the count of samples.
 
-Return:
+Returns:
     numpy.ndarray: count of samples.
       )__doc__")
       .def("kurtosis", &pyinterp::StreamingHistogram<Type>::kurtosis,
            R"__doc__(
 Returns the kurtosis of samples.
 
-Return:
+Returns:
     numpy.ndarray: kurtosis of samples.
       )__doc__")
       .def("max", &pyinterp::StreamingHistogram<Type>::max,
            R"__doc__(
 Returns maximum of samples.
 
-Return:
+Returns:
     numpy.ndarray: maximum of samples.
       )__doc__")
       .def("mean", &pyinterp::StreamingHistogram<Type>::mean,
            R"__doc__(
 Returns the mean of samples.
 
-Return:
+Returns:
     numpy.ndarray: mean of samples.
       )__doc__")
       .def("min", &pyinterp::StreamingHistogram<Type>::min,
            R"__doc__(
 Returns the minimum of samples.
 
-Return:
+Returns:
     numpy.ndarray: minimum of samples.
       )__doc__")
       .def("quantile", &pyinterp::StreamingHistogram<Type>::quantile,
@@ -82,7 +82,7 @@ Returns the quantile of samples.
 
 Args:
     q (float): Quantile to compute.
-Return:
+Returns:
     numpy.ndarray: sum of samples.
       )__doc__")
       .def("resize", &pyinterp::StreamingHistogram<Type>::resize,
@@ -91,7 +91,7 @@ Return:
            R"__doc__(
 Returns the number of bins.
 
-Return:
+Returns:
     numpy.ndarray: sum of bins.
       )__doc__")
       .def("sum_of_weights",
@@ -99,21 +99,21 @@ Return:
            R"__doc__(
 Returns the sum of samples.
 
-Return:
+Returns:
     numpy.ndarray: sum of samples.
       )__doc__")
       .def("skewness", &pyinterp::StreamingHistogram<Type>::skewness,
            R"__doc__(
 Returns the skewness of samples.
 
-Return:
+Returns:
     numpy.ndarray: skewness of samples.
       )__doc__")
       .def("variance", &pyinterp::StreamingHistogram<Type>::variance,
            R"__doc__(
 Returns the variance of samples.
 
-Return:
+Returns:
     numpy.ndarray: variance of samples.
       )__doc__")
       .def("__iadd__", &pyinterp::StreamingHistogram<Type>::operator+=,

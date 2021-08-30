@@ -8,7 +8,7 @@ import numpy as np
 from .. import core
 
 
-def delayed(
+def _delayed(
     attr: str,
     values: da.Array,
     weights: Optional[da.Array] = None,
@@ -39,8 +39,7 @@ def delayed(
 
 
 class StreamingHistogram:
-    """
-    Streaming histogram.
+    """Streaming histogram.
 
     The bins in the histogram have no predefined size, so that as values are
     pushed into the histogram, bins are added and merged as soon as their
@@ -62,27 +61,6 @@ class StreamingHistogram:
         If you do not want to estimate the quantiles of the dataset, use the
         class :py:class:`DescriptiveStatistics`<pyinterp.DescriptiveStatistics>`
         which will give you more accurate results.
-
-    Args:
-        values (numpy.ndarray, dask.Array): Array containing numbers whose
-            statistics are desired.
-
-            .. note::
-
-                NaNs are automatically ignored.
-
-        weights (numpy.ndarray, dask.Array, optional): An array of weights
-            associated with the values. If not provided, all values are assumed
-            to have equal weight.
-        axis (int, iterable, optional): Axis or axes along which to compute the
-            statistics. If not provided, the statistics are computed over the
-            flattened array.
-        bin_count (int, optional): The maximum number of bins to use in the
-            histogram. If the number of bins exceeds the number of values,
-            the histogram will be trimed. Default is ``None``, which will
-            set the number of bins to 100.
-        dtype (numpy.dtype, optional): Data type of the returned array. By
-            default, the data type is numpy.float64.
     """
     def __init__(self,
                  values: Union[da.Array, np.ndarray],
@@ -90,6 +68,29 @@ class StreamingHistogram:
                  axis: Optional[Union[int, Iterable[int]]] = None,
                  bin_count: Optional[int] = None,
                  dtype: Optional[np.dtype] = None) -> None:
+        """Initializes a new histogram.
+
+        Args:
+            values (numpy.ndarray, dask.Array): Array containing numbers whose
+                statistics are desired.
+
+                .. note::
+
+                    NaNs are automatically ignored.
+
+            weights (numpy.ndarray, dask.Array, optional): An array of weights
+                associated with the values. If not provided, all values are
+                assumed to have equal weight.
+            axis (int, iterable, optional): Axis or axes along which to compute
+                the statistics. If not provided, the statistics are computed
+                over the flattened array.
+            bin_count (int, optional): The maximum number of bins to use in the
+                histogram. If the number of bins exceeds the number of values,
+                the histogram will be trimed. Default is ``None``, which will
+                set the number of bins to 100.
+            dtype (numpy.dtype, optional): Data type of the returned array. By
+                default, the data type is numpy.float64.
+        """
         if isinstance(axis, int):
             axis = (axis, )
         dtype = dtype or np.dtype("float64")
@@ -100,7 +101,7 @@ class StreamingHistogram:
         else:
             raise ValueError(f"dtype {dtype} not handled by the object")
         if isinstance(values, da.Array) or isinstance(weights, da.Array):
-            self._instance = delayed(
+            self._instance = _delayed(
                 attr,
                 da.asarray(values),
                 weights=da.asarray(weights) if weights is not None else None,
@@ -115,12 +116,19 @@ class StreamingHistogram:
                                                   bin_count=bin_count)
 
     def __iadd__(self, other: Any) -> "StreamingHistogram":
+        """Adds a new histogram to the current one.
+
+        Args:
+            other (object): The histogram to add to the current one.
+        
+        Returns:
+            StreamingHistogram: Returns itself.
+        """
         self._instance += other
         return self
 
     def bins(self) -> np.ndarray:
-        """
-        Returns the histogram bins.
+        """Returns the histogram bins.
         
         Returns:
             numpy.ndarray: The histogram bins.
@@ -128,8 +136,7 @@ class StreamingHistogram:
         return self._instance.bins()
 
     def size(self) -> np.ndarray:
-        """
-        Returns the number of bins allocated to calculate the histogram.
+        """Returns the number of bins allocated to calculate the histogram.
 
         If :py:meth:`size() <pyinterp.StreamingHistogram.size>` is equal to
         :py:meth:`count() <pyinterp.StreamingHistogram.count>` then the
@@ -144,8 +151,7 @@ class StreamingHistogram:
         return self._instance.size()
 
     def count(self) -> np.ndarray:
-        """
-        Returns the count of samples.
+        """Returns the count of samples.
         
         Returns:
             numpy.ndarray: Returns the count of samples.
@@ -153,8 +159,7 @@ class StreamingHistogram:
         return self._instance.count()
 
     def kurtosis(self) -> np.ndarray:
-        """
-        Returns the kurtosis of samples.
+        """Returns the kurtosis of samples.
         
         Returns:
             numpy.ndarray: Returns the kurtosis of samples.
@@ -162,8 +167,7 @@ class StreamingHistogram:
         return self._instance.kurtosis()
 
     def max(self) -> np.ndarray:
-        """
-        Returns the maximum of samples.
+        """Returns the maximum of samples.
         
         Returns:
             numpy.ndarray: Returns the maximum of samples.
@@ -171,8 +175,7 @@ class StreamingHistogram:
         return self._instance.max()
 
     def mean(self) -> np.ndarray:
-        """
-        Returns the mean of samples.
+        """Returns the mean of samples.
         
         Returns:
             numpy.ndarray: Returns the mean of samples.
@@ -180,8 +183,7 @@ class StreamingHistogram:
         return self._instance.mean()
 
     def min(self) -> np.ndarray:
-        """
-        Returns the minimum of samples.
+        """Returns the minimum of samples.
         
         Returns:
             numpy.ndarray: Returns the minimum of samples.
@@ -189,8 +191,7 @@ class StreamingHistogram:
         return self._instance.min()
 
     def skewness(self) -> np.ndarray:
-        """
-        Returns the skewness of samples.
+        """Returns the skewness of samples.
         
         Returns:
             numpy.ndarray: Returns the skewness of samples.
@@ -198,8 +199,7 @@ class StreamingHistogram:
         return self._instance.skewness()
 
     def sum_of_weights(self) -> np.ndarray:
-        """
-        Returns the sum of weights.
+        """Returns the sum of weights.
         
         Returns:
             numpy.ndarray: Returns the sum of weights.
@@ -207,8 +207,7 @@ class StreamingHistogram:
         return self._instance.sum_of_weights()
 
     def var(self) -> np.ndarray:
-        """
-        Returns the variance of samples.
+        """Returns the variance of samples.
         
         Returns:
             numpy.ndarray: Returns the variance of samples.
@@ -216,8 +215,7 @@ class StreamingHistogram:
         return self._instance.variance()
 
     def std(self) -> np.ndarray:
-        """
-        Returns the standard deviation of samples.
+        """Returns the standard deviation of samples.
 
         Returns:
             numpy.ndarray: Returns the standard deviation of samples.
@@ -225,8 +223,7 @@ class StreamingHistogram:
         return np.sqrt(self.var())
 
     def quantile(self, q: float = 0.5) -> np.ndarray:
-        """
-        Returns the q quantile of samples.
+        """Returns the q quantile of samples.
 
         Args:
             q (float): Quantile to compute. Default is ``0.5`` (median).

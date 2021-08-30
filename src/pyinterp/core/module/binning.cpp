@@ -42,62 +42,62 @@ Args:
       .def_property_readonly(
           "x", [](const pyinterp::Binning2D<Type>& self) { return self.x(); },
           R"__doc__(
-Gets the bin centers for the X Axis of the grid
+Gets the bin centers for the X Axis of the grid.
 
-Return:
-    pyinterp.core.Axis: X-Axis
+Returns:
+    pyinterp.core.Axis: X-Axis.
 )__doc__")
       .def_property_readonly(
           "y", [](const pyinterp::Binning2D<Type>& self) { return self.y(); },
           R"__doc__(
-Gets the bin centers for the Y Axis of the grid
+Gets the bin centers for the Y Axis of the grid.
 
-Return:
-    pyinterp.core.Axis: Y-Axis
+Returns:
+    pyinterp.core.Axis: Y-Axis.
 )__doc__")
       .def_property_readonly(
           "wgs",
           [](const pyinterp::Binning2D<Type>& self) { return self.wgs(); },
           R"__doc__(
-Gets the WGS system handled by this instance
+Gets the WGS system handled by this instance.
 
-Return:
-    pyinterp.core.geodetic.System: Geodetic system
+Returns:
+    pyinterp.core.geodetic.System: Geodetic system.
 )__doc__")
       .def("clear", &pyinterp::Binning2D<Type>::clear, "Reset the statistics")
       .def("count", &pyinterp::Binning2D<Type>::count,
            R"__doc__(
 Compute the count of points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: count of points within each bin.
 )__doc__")
       .def("kurtosis", &pyinterp::Binning2D<Type>::kurtosis,
            R"__doc__(
 Compute the kurtosis of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: kurtosis of values for points within each bin.
 )__doc__")
       .def("max", &pyinterp::Binning2D<Type>::max,
            R"__doc__(
 Compute the maximum of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: maximum of values for points within each bin.
 )__doc__")
       .def("mean", &pyinterp::Binning2D<Type>::mean,
            R"__doc__(
 Compute the mean of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: mean of values for points within each bin.
 )__doc__")
       .def("min", &pyinterp::Binning2D<Type>::min,
            R"__doc__(
 Compute the minimum of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: minimum of values for points within each bin.
 )__doc__")
       .def("push", &pyinterp::Binning2D<Type>::push, py::arg("x"), py::arg("y"),
@@ -107,7 +107,7 @@ Push new samples into the defined bins.
 Args:
     x (numpy.ndarray): X coordinates of the values to push.
     y (numpy.ndarray): Y coordinates of the values to push.
-    z (numpy.ndarray): New samples to push
+    z (numpy.ndarray): New samples to push.
     simple (bool, optional):  If true, a simple binning 2D is used
     otherwise a linear binning 2d is applied.
 )__doc__")
@@ -115,21 +115,21 @@ Args:
            R"__doc__(
 Compute the sum of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: sum of values for points within each bin.
 )__doc__")
       .def("sum_of_weights", &pyinterp::Binning2D<Type>::sum_of_weights,
            R"__doc__(
 Compute the sum of weights for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: sum of weights for points within each bin.
 )__doc__")
       .def("skewness", &pyinterp::Binning2D<Type>::skewness,
            R"__doc__(
 Compute the skewness of values for points within each bin.
 
-Return:
+Returns:
     numpy.ndarray: skewness of values for points within each bin.
 )__doc__")
       .def("variance", &pyinterp::Binning2D<Type>::variance,
@@ -142,7 +142,7 @@ Args:
         calculations is N - ddof, where N represents the number of elements.
         By default ddof is zero.
 
-Return:
+Returns:
     numpy.ndarray: variance of values for points within each bin.
 )__doc__")
       .def("__iadd__", &pyinterp::Binning2D<Type>::operator+=,

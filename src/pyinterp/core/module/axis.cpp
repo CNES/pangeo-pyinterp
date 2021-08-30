@@ -41,13 +41,13 @@ Args:
       .def("min_value", &pyinterp::Axis<T>::min_value, R"__doc__(
 Get the minimum coordinate value.
 
-Return:
+Returns:
     float: The minimum coordinate value.
 )__doc__")
       .def("max_value", &pyinterp::Axis<T>::max_value, R"__doc__(
 Get the maximum coordinate value.
 
-Return:
+Returns:
     float: The maximum coordinate value.
 )__doc__")
       .def(
@@ -56,10 +56,10 @@ Return:
             return self.is_regular();
           },
           R"__doc__(
-Check if this axis values are spaced regularly
+Check if this axis values are spaced regularly.
 
-Return:
-  bool: True if this axis values are spaced regularly
+Returns:
+  bool: True if this axis values are spaced regularly.
 )__doc__")
       .def(
           "flip",
@@ -76,17 +76,17 @@ Return:
           },
           py::arg("inplace") = false,
           (R"__doc__(
-Reverse the order of elements in this axis
+Reverse the order of elements in this axis.
 
 Args:
     inplace (bool, optional): If true, this instance will be modified,
         otherwise the modification will be made on a copy. Default to
         ``False``.
 
-Return:
+Returns:
     pyinterp.core.)__doc__" +
            class_name +
-           R"__doc__(: The flipped axis
+           R"__doc__(: The flipped axis.
 )__doc__")
               .c_str())
       .def(
@@ -100,10 +100,10 @@ Given coordinate positions, find what grid elements contains them, or is
 closest to them.
 
 Args:
-    coordinates (numpy.ndarray): Positions in this coordinate system
+    coordinates (numpy.ndarray): Positions in this coordinate system.
     bounded (bool, optional): True if you want to obtain the closest value to
         a coordinate outside the axis definition range.
-Return:
+Returns:
     numpy.ndarray: index of the grid points containing them or -1 if the
     ``bounded`` parameter is set to false and if one of the searched indexes
     is out of the definition range of the axis, otherwise the index of the
@@ -128,37 +128,37 @@ The provided coordinates located outside the axis definition range are set to
 ``-1``.
 
 Args:
-    coordinates (numpy.ndarray): Positions in this coordinate system
-Return:
+    coordinates (numpy.ndarray): Positions in this coordinate system.
+Returns:
     numpy.ndarray: A matrix of shape ``(n, 2)``. The first column of the
     matrix contains the indexes ``i0`` and the second column the indexes
     ``i1`` found.
 )__doc__")
       .def("front", &pyinterp::Axis<T>::front, R"__doc__(
-Get the first value of this axis
+Get the first value of this axis.
 
-Return:
-    float: The first value
+Returns:
+    float: The first value.
 )__doc__")
       .def("back", &pyinterp::Axis<T>::back, R"__doc__(
-Get the last value of this axis
+Get the last value of this axis.
 
-Return:
-    float: The last value
+Returns:
+    float: The last value.
 )__doc__")
       .def("is_ascending", &pyinterp::Axis<T>::is_ascending, R"__doc__(
 Test if the data is sorted in ascending order.
 
-Return:
+Returns:
     bool: True if the data is sorted in ascending order.
 )__doc__")
       .def("increment", &pyinterp::Axis<T>::increment, R"__doc__(
-Get increment value if is_regular()
+Get increment value if is_regular().
 
 Raises:
-    RuntimeError: if this instance does not represent a regular axis
-Return:
-    float: Increment value
+    RuntimeError: if this instance does not represent a regular axis.
+Returns:
+    float: Increment value.
 )__doc__")
       .def_property_readonly(
           "is_circle",
@@ -168,8 +168,8 @@ Return:
           R"__doc__(
 Test if this axis represents a circle.
 
-Return:
-    bool: True if this axis represents a circle
+Returns:
+    bool: True if this axis represents a circle.
 )__doc__")
       .def(
           "__eq__",

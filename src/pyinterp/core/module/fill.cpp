@@ -22,7 +22,7 @@ void implement_fill_functions(py::module& m, const std::string& suffix) {
         (R"__doc__(
 Fills undefined values using a locally weighted regression function or
 LOESS. The weight function used for LOESS is the tri-cube weight function,
-:math:`w(x)=(1-|d|^3)^3`
+:math:`w(x)=(1-|d|^3)^3`.
 
 Args:
     grid (pyinterp.core.Grid2D)__doc__" +
@@ -40,7 +40,7 @@ Args:
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
 
-Return:
+Returns:
     numpy.ndarray: the grid will have all the NaN filled with extrapolated
     values.
 )__doc__")
@@ -71,7 +71,7 @@ Args:
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
 
-Return:
+Returns:
     tuple: the number of iterations performed and the maximum residual value.
 )__doc__",
         py::call_guard<py::gil_scoped_release>());
@@ -91,7 +91,7 @@ void implement_loess_3d(py::module& m, const std::string& prefix,
         (R"__doc__(
 Fills undefined values using a locally weighted regression function or
 LOESS. The weight function used for LOESS is the tri-cube weight function,
-:math:`w(x)=(1-|d|^3)^3`
+:math:`w(x)=(1-|d|^3)^3`.
 
 Args:
     grid (pyinterp.core.)__doc__" +
@@ -108,7 +108,7 @@ Args:
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
 
-Return:
+Returns:
     numpy.ndarray: the grid will have all the NaN filled with extrapolated
     values.
 )__doc__")

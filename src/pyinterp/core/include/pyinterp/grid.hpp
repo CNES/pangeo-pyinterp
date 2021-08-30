@@ -261,7 +261,7 @@ Args:
           R"__doc__(
 Gets the X-Axis handled by this instance
 
-Return:
+Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
       .def_property_readonly(
@@ -269,7 +269,7 @@ Return:
           R"__doc__(
 Gets the Y-Axis handled by this instance
 
-Return:
+Returns:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
       .def_property_readonly(
@@ -277,7 +277,7 @@ Return:
           (R"__doc__(
 Gets the Z-Axis handled by this instance
 
-Return:
+Returns:
     pyinterp.core.)__doc__" +
            prefix +
            R"__doc__(Axis: Z-Axis
@@ -289,7 +289,7 @@ Return:
           R"__doc__(
 Gets the values handled by this instance
 
-Return:
+Returns:
     numpy.ndarray: values
 )__doc__")
       .def(pybind11::pickle(
@@ -329,7 +329,7 @@ Args:
           R"__doc__(
 Gets the X-Axis handled by this instance
 
-Return:
+Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
       .def_property_readonly(
@@ -337,7 +337,7 @@ Return:
           R"__doc__(
 Gets the Y-Axis handled by this instance
 
-Return:
+Returns:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
       .def_property_readonly(
@@ -345,7 +345,7 @@ Return:
           (R"__doc__(
 Gets the Z-Axis handled by this instance
 
-Return:
+Returns:
     pyinterp.core.)__doc__" +
            prefix + R"__doc__(Axis: Z-Axis
 )__doc__")
@@ -355,7 +355,7 @@ Return:
           R"__doc__(
 Gets the U-Axis handled by this instance
 
-Return:
+Returns:
     pyinterp.core.Axis: U-Axis
 )__doc__")
       .def_property_readonly(
@@ -364,7 +364,7 @@ Return:
           R"__doc__(
 Gets the values handled by this instance
 
-Return:
+Returns:
     numpy.ndarray: values
 )__doc__")
       .def(pybind11::pickle(
@@ -400,7 +400,7 @@ Args:
           R"__doc__(
 Gets the X-Axis handled by this instance
 
-Return:
+Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
       .def_property_readonly(
@@ -408,7 +408,7 @@ Return:
           R"__doc__(
 Gets the Y-Axis handled by this instance
 
-Return:
+Returns:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
       .def_property_readonly(
@@ -416,7 +416,7 @@ Return:
           R"__doc__(
 Gets the values handled by this instance
 
-Return:
+Returns:
     numpy.ndarray: values
 )__doc__")
       .def(pybind11::pickle(

@@ -15,7 +15,7 @@ def _core_class_suffix(x: np.ndarray) -> str:
 
     Args:
         x (numpy.ndarray): array to process
-    Return:
+    Returns:
         str: the class suffix
     """
     dtype = x.dtype.type
@@ -48,7 +48,7 @@ def _core_function(function: str, instance: object) -> str:
     Args:
         function (str): TODO
         instance (object): grid instance
-    Return:
+    Returns:
         str: the class suffix
     """
     if not isinstance(

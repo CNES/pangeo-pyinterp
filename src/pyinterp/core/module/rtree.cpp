@@ -66,7 +66,7 @@ Args:
            R"__doc__(
 Returns the box able to contain all values stored in the container.
 
-Return:
+Returns:
     tuple: A tuple that contains the coordinates of the minimum and
     maximum corners of the box able to contain all values stored in the
     container or an empty tuple if there are no values in the container.
@@ -79,7 +79,7 @@ Return:
             return !self.empty();
           },
           "Called to implement truth value testing and the built-in operation "
-          "``bool()``")
+          "``bool()``.")
       .def("clear", &pyinterp::RTree<CoordinateType, Type, N>::clear,
            "Removes all values stored in the container.")
       .def("packing", &pyinterp::RTree<CoordinateType, Type, N>::packing,
@@ -92,7 +92,7 @@ Args:
     )__doc__" +
             coordinates_help<N>() + R"__doc__(
     values (numpy.ndarray): An array of size ``(n)`` containing the values
-        associated with the coordinates provided
+        associated with the coordinates provided.
 )__doc__")
                .c_str(),
            py::call_guard<py::gil_scoped_release>())
@@ -105,7 +105,7 @@ Args:
     )__doc__" +
             coordinates_help<N>() + R"__doc__(
     values (numpy.ndarray): An array of size ``(n)`` containing the values
-        associated with the coordinates provided
+        associated with the coordinates provided.
 )__doc__")
                .c_str(),
            py::call_guard<py::gil_scoped_release>())
@@ -133,7 +133,7 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
-Return:
+Returns:
     tuple: A tuple containing a matrix describing for each provided position,
     the distance, in meters, between the provided position and the found
     neighbors and a matrix containing the value of the different neighbors
@@ -166,7 +166,7 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
-Return:
+Returns:
     tuple: The interpolated value and the number of neighbors used in the
     calculation.
 )__doc__")
@@ -191,9 +191,9 @@ Args:
         Default to the largest value that can be represented on a float.
     k (int, optional): The number of nearest neighbors to be used for
         calculating the interpolated value. Defaults to ``9``.
-    rbf (pyinterp.core.RadialBasisFunction, optional): The radial basis function, based
-        on the radius, r, given by the distance between points. Default to
-        :py:attr:`pyinterp.core.RadialBasisFunction.Multiquadric`
+    rbf (pyinterp.core.RadialBasisFunction, optional): The radial basis
+        function, based on the radius, r, given by the distance between points.
+        Default to :py:attr:`pyinterp.core.RadialBasisFunction.Multiquadric`.
     epsilon (float, optional): Adjustable constant for gaussian or
         multiquadrics functions. Default to the average distance between nodes.
     smooth (float, optional): Values greater than zero increase the smoothness
@@ -204,7 +204,7 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
-Return:
+Returns:
     tuple: The interpolated value and the number of neighbors used for the
     calculation.
 )__doc__")

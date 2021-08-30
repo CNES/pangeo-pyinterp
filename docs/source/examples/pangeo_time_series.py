@@ -63,7 +63,7 @@ class TimeSeries:
             start (datetime.datetime): Date of the first map to be loaded.
             end (datetime.datetime): Date of the last map to be loaded.
 
-        Return:
+        Returns:
             pyinterp.backends.xarray.Grid3D: The interpolator handling the
             interpolation of the grid series.
         """

@@ -11,6 +11,13 @@ class UnQlite(storage.unqlite.Database, AbstractMutableMapping):
     """Storage class using UnQlite.
     """
     def __init__(self, name: str, **kwargs):
+        """Initialize UnQlite storage.
+
+        Args:
+            name (str): Path to the database file.
+            kwargs: Additional keyword arguments are passed to the underlying
+                UnQlite class.
+        """
         # normalize path
         if name != ':mem:':
             name = os.path.abspath(name)

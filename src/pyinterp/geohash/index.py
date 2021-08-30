@@ -9,18 +9,16 @@ import xarray
 from . import lock
 from . import storage
 from . import converter
-from .. import core
 from .. import geodetic
 from ..core import geohash
 
 
 class GeoHash:
-    """
-    Geogrophic index based on GeoHash encoding.
+    """Geogrophic index based on GeoHash encoding.
 
     Args:
         store (AbstractMutableMapping): Object managing the storage of the
-            index
+            index.
         precision (int): Accuracy of the index. By default the precision is 3
             characters. The table below gives the correspondence between the
             number of characters (i.e. the ``precision`` parameter of this
@@ -37,7 +35,7 @@ class GeoHash:
             5          4.83/4.83        33554432
             6          0.60/1.21        1073741824
             =========  ===============  ==========
-        synchronizer (lock.Synchronizer, optional): Write synchronizer
+        synchronizer (lock.Synchronizer, optional): Write synchronizer.
     """
     PROPERTIES = b'.properties'
 
@@ -51,16 +49,16 @@ class GeoHash:
 
     @property
     def store(self) -> storage.AbstractMutableMapping:
-        """Gets the object hndling the storage of this instance"""
+        """Gets the object hndling the storage of this instance."""
         return self._store
 
     @property
     def precision(self) -> int:
-        """Accuracy of this instance"""
+        """Accuracy of this instance."""
         return self._precision
 
     def set_properties(self) -> None:
-        """Definition of index properties"""
+        """Definition of index properties."""
         if self.PROPERTIES in self._store:
             raise RuntimeError("index already initialized")
         self._store[self.PROPERTIES] = json.dumps(
@@ -68,11 +66,11 @@ class GeoHash:
 
     @classmethod
     def get_properties(cls, store) -> Dict[str, Any]:
-        """Reading index properties
+        """Reading index properties.
 
-        Return:
+        Returns:
             dict: Index properties (number of character used to encode a
-            position)
+            position).
         """
         precision = store[cls.PROPERTIES]
         if isinstance(precision, list):
@@ -95,7 +93,7 @@ class GeoHash:
             unicode (bool): If true, transforms GeoHash codes into unicode
                 strings.
 
-        Return:
+        Returns:
             numpy.ndarray: geohash code for each coordinates of the points
             read from the vectors provided.
         """
@@ -133,14 +131,14 @@ class GeoHash:
             self._store.extend(geohash_map.items())
 
     def keys(self, box: Optional[geodetic.Box] = None) -> Iterable[bytes]:
-        """Returns all hash defined in the index
+        """Returns all hash defined in the index.
 
         Args:
             box (pyinterp.geodetic.Box, optional): If true, the method returns
                 the codes defined in the supplied area, otherwise all the codes
                 stored in the index.
 
-        Return:
+        Returns:
             iterable: keys selected in the index.
         """
         result = filter(lambda item: item != self.PROPERTIES,
@@ -151,12 +149,12 @@ class GeoHash:
             box, precision=self._precision)).intersection(set(result))
 
     def box(self, box: Optional[geodetic.Box] = None) -> List[Any]:
-        """Selection of all data within the defined geographical area
+        """Selection of all data within the defined geographical area.
 
         Args:
             box (pyinterp.geodetic.Box): Bounding box used for data selection.
 
-        Return:
+        Returns:
             list: List of data contained in the database for all positions
             located in the selected geographic region.
         """
@@ -168,14 +166,14 @@ class GeoHash:
                                                 precision=self._precision)))))
 
     def values(self, keys: Optional[Iterable[bytes]] = None) -> List[Any]:
-        """Returns the list of values defined in the index
+        """Returns the list of values defined in the index.
 
         Args:
             keys (iterable, optional): The list of keys to be selected. If
                 this parameter is undefined, the method returns all values
                 defined in the index.
 
-        Return:
+        Returns:
             list: values selected in the index.
         """
         keys = keys or self.keys()
@@ -184,14 +182,14 @@ class GeoHash:
     def items(
             self,
             keys: Optional[Iterable[bytes]] = None) -> List[Tuple[bytes, Any]]:
-        """Returns the list of pair (key, value) defined in the index
+        """Returns the list of pair (key, value) defined in the index.
 
         Args:
             keys (iterable, optional): The list of keys to be selected. If
                 this parameter is undefined, the method returns all items
                 defined in the index.
 
-        Return:
+        Returns:
             list: items selected in the index.
         """
         keys = keys or self.keys()
@@ -204,7 +202,7 @@ class GeoHash:
         Args:
             box (pyinterp.geodetic.Box): Bounding box used for data selection.
 
-        Return:
+        Returns:
             list: items selected in the index.
         """
         keys = list(self.keys(box))
@@ -225,9 +223,9 @@ class GeoHash:
 
         Args:
             hash_codes (numpy.ndarray): geohash codes obtained by the `encode`
-            method
+                method.
 
-        Return:
+        Returns:
             dict: the start and end indexes for each geohash boxes
         """
         return geohash.where(hash_codes)
@@ -242,17 +240,17 @@ class GeoHash:
 def init_geohash(store: storage.AbstractMutableMapping,
                  precision: int = 3,
                  synchronizer: Optional[lock.Synchronizer] = None) -> GeoHash:
-    """Creation of a GeoHash index
+    """Creation of a GeoHash index.
 
     Args:
         store (AbstractMutableMapping): Object managing the storage of the
-            index
+            index.
         precision (int): Accuracy of the index. By default the precision is 3
             characters.
         synchronizer (lock.Synchronizer, optional): Write synchronizer
 
-    Return:
-        GeoHash: index handler
+    Returns:
+        GeoHash: index handler.
     """
     result = GeoHash(store, precision, synchronizer)
     result.set_properties()
@@ -261,14 +259,15 @@ def init_geohash(store: storage.AbstractMutableMapping,
 
 def open_geohash(store: storage.AbstractMutableMapping,
                  synchronizer: Optional[lock.Synchronizer] = None) -> GeoHash:
-    """Open of a GeoHash index
+    """Open of a GeoHash index.
 
     Args:
-        store (AbstractMutableMapping): Object managing the storage of the index
-        synchronizer (lock.Synchronizer, optional): Write synchronizer
+        store (AbstractMutableMapping): Object managing the storage of the
+            index.
+        synchronizer (lock.Synchronizer, optional): Write synchronizer.
 
-    Return:
-        GeoHash: index handler
+    Returns:
+        GeoHash: index handler.
     """
     result = GeoHash(store,
                      synchronizer=synchronizer,

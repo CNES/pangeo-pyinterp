@@ -175,11 +175,11 @@ void implement_bivariate_interpolator(pybind11::module& m,
   /// BivariateInterpolator implemented here
   auto interpolator = pybind11::class_<CoordinateSystem, PyInterpolator>(
       m, (prefix + "BivariateInterpolator" + suffix).c_str(),
-      ("Bilinear interpolation in a " + suffix + " space").c_str());
+      ("Bilinear interpolation in a " + suffix + " space.").c_str());
 
   pybind11::class_<Bilinear<Point, T>>(
       m, (prefix + "Bilinear" + suffix).c_str(), interpolator,
-      ("Bilinear interpolation in a " + suffix + " space").c_str())
+      ("Bilinear interpolation in a " + suffix + " space.").c_str())
       .def(pybind11::init<>())
       .def(pybind11::pickle(
           [](const Bilinear<Point, T>& self) { return self.getstate(); },
@@ -189,7 +189,7 @@ void implement_bivariate_interpolator(pybind11::module& m,
 
   pybind11::class_<Nearest<Point, T>>(
       m, (prefix + "Nearest" + suffix).c_str(), interpolator,
-      ("Nearest interpolation in a " + suffix + " space").c_str())
+      ("Nearest interpolation in a " + suffix + " space.").c_str())
       .def(pybind11::init<>())
       .def(pybind11::pickle(
           [](const Nearest<Point, T>& self) { return self.getstate(); },
@@ -199,7 +199,7 @@ void implement_bivariate_interpolator(pybind11::module& m,
 
   pybind11::class_<InverseDistanceWeighting<Point, T>>(
       m, (prefix + "InverseDistanceWeighting" + suffix).c_str(), interpolator,
-      ("Inverse distance weighting interpolation in a " + suffix + " space")
+      ("Inverse distance weighting interpolation in a " + suffix + " space.")
           .c_str())
       .def(pybind11::init<int>(), pybind11::arg("p") = 2)
       .def(pybind11::pickle(
@@ -226,8 +226,8 @@ Args:
     grid (pyinterp.core.Grid2D)__doc__" +
          suffix +
          R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values
-    y (numpy.ndarray): Y-values
+    x (numpy.ndarray): X-values.
+    y (numpy.ndarray): Y-values.
     interpolator (pyinterp.core.BivariateInterpolator2D): 2D interpolator
       used to interpolate.
     bounds_error (bool, optional): If True, when interpolated values are
@@ -237,8 +237,8 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
-Return:
-    numpy.ndarray: Values interpolated
+Returns:
+    numpy.ndarray: Values interpolated.
 )__doc__")
             .c_str());
 }

@@ -158,14 +158,14 @@ class Binning2D:
         """Push new samples into the defined bins from dask array.
 
         Args:
-            x (numpy.ndarray, dask.Array): X coordinates of the samples
-            y (numpy.ndarray, dask.Array): Y coordinates of the samples
+            x (numpy.ndarray, dask.Array): X coordinates of the samples.
+            y (numpy.ndarray, dask.Array): Y coordinates of the samples.
             z (numpy.ndarray, dask.Array): New samples to push into the
                 defined bins.
             simple (bool, optional): If true, a simple binning 2D is used
                 otherwise a linear binning 2d is applied. See the full
                 description of the algorithm :ref:`here <bilinear_binning>`.
-        Return:
+        Returns:
             The calculation graph producing the update of the grid from the
             provided samples. Running the graph will return an instance of this
             class containing the statistics calculated for all processed
@@ -217,7 +217,7 @@ class Binning2D:
                       each bin.
                     * ``variance`` : compute the variance within each bin.
 
-        Return:
+        Returns:
             numpy.ndarray: The dataset representing the calculated
             statistical variable.
         """

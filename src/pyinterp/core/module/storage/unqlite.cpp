@@ -30,9 +30,9 @@ UnQLite Key/Value Storage
 Known compression algorithms used to compress the values stored in the
 database.
 )__doc__")
-      .value("none", storage::kNoCompression, "No commpression")
+      .value("none", storage::kNoCompression, "No compression.")
       .value("snappy", storage::kSnappyCompression,
-             "Compress values with Snappy");
+             "Compress values with Snappy.");
 
   py::class_<storage::Database, std::shared_ptr<storage::Database>>(
       submodule, "Database", "Key/Value store")
@@ -40,11 +40,11 @@ database.
                     storage::CompressionType>(),
            py::arg("name"), py::arg("mode") = py::none(),
            py::arg("compression_type") = storage::kSnappyCompression,
-           R"(Opening a database
+           R"(Opening a database.
 
 Args:
      name (str): path to the target database file. If name is ":mem:" then
-          a private, in-memory database is created
+          a private, in-memory database is created.
      mode (str, optional): optional string that specifies the mode in which
           the database is opened. Default to ``r`` which means open for
           readind. The available mode are:
@@ -79,10 +79,10 @@ Args:
       .def("__contains__", &storage::Database::contains, py::arg("key"))
       .def("error_log", &storage::Database::error_log,
            R"__doc__(
-Reads the contents of the database error log
+Reads the contents of the database error log.
 
-Return:
-  str: The contents of the error log
+Returns:
+  str: The contents of the error log.
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
       .def("commit", &storage::Database::commit,
@@ -98,7 +98,7 @@ Return:
            R"__doc__(
 Return a list containing all the keys from the database.
 
-Return:
+Returns:
     list: Keys registered in the database.
 )__doc__")
       .def("update", &storage::Database::update, py::arg("map"),
@@ -109,7 +109,7 @@ existing keys.
 Args:
     map (dict): The keys associated with the values to be stored.
 Raises:
-    ValueError: if the keys are not bytes
+    ValueError: if the keys are not bytes..
 )__doc__")
 
       .def("extend", &storage::Database::extend, py::arg("map"),
@@ -128,10 +128,10 @@ Read all values from the database for the keys provided
 Args:
     keys (list, optional): The keys to be read. If None, all keys stored in
         the database are read.
-Return:
+Returns:
     list: The values associated with the keys read.
 Raises:
-    ValueError: if the keys are not bytes
+    ValueError: if the keys are not bytes.
 )__doc__")
       .def("items", &storage::Database::items, py::arg("keys") = py::none(),
            R"__doc__(
@@ -140,9 +140,9 @@ Return the dictionary's items ((key, value) pairs).
 Args:
     keys (list, optional): The keys to be read. If None, all keys stored in
         the database are read.
-Return:
+Returns:
     tuple: dictionnary's items.
 Raises:
-    ValueError: if the keys are not bytes
+    ValueError: if the keys are not bytes.
 )__doc__");
 }

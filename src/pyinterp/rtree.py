@@ -13,14 +13,14 @@ from . import geodetic
 
 
 class RTree:
-    """R*Tree spatial index for geodetic scalar values
+    """R*Tree spatial index for geodetic scalar values.
     """
     def __init__(self,
                  system: Optional[geodetic.System] = None,
                  dtype: Optional[np.dtype] = None,
                  ndims: int = 3):
         """
-        Initialize a new R*Tree
+        Initialize a new R*Tree.
 
         Args:
             system (pyinterp.geodetic.System, optional): WGS of the
@@ -49,7 +49,7 @@ class RTree:
     ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
         """Returns the box able to contain all values stored in the container.
 
-        Return:
+        Returns:
             tuple: A tuple that contains the coordinates of the minimum and
             maximum corners of the box able to contain all values stored in
             the container or an empty tuple if there are no values in the
@@ -63,9 +63,11 @@ class RTree:
         return self._instance.clear()
 
     def __len__(self):
+        """Returns the number of values stored in the tree."""
         return self._instance.__len__()
 
     def __bool__(self):
+        """Returns true if the tree is not empty."""
         return self._instance.__bool__()
 
     def packing(self, coordinates: np.ndarray, values: np.ndarray) -> None:
@@ -81,7 +83,7 @@ class RTree:
                 ``(n, ndims)`` then the method considers the altitude constant
                 and equal to zero.
             values (numpy.ndarray): An array of size ``(n)`` containing the
-                values associated with the coordinates provided
+                values associated with the coordinates provided.
         """
         self._instance.packing(coordinates, values)
 
@@ -97,7 +99,7 @@ class RTree:
                 ``(n, ndims)`` then the method considers the altitude constant
                 and equal to zero.
             values (numpy.ndarray): An array of size ``(n)`` containing the
-                values associated with the coordinates provided
+                values associated with the coordinates provided.
         """
         self._instance.insert(coordinates, values)
 
@@ -125,7 +127,7 @@ class RTree:
                 computation. If 0 all CPUs are used. If 1 is given, no parallel
                 computing code is used at all, which is useful for debugging.
                 Defaults to ``0``.
-        Return:
+        Returns:
             tuple: A tuple containing a matrix describing for each provided
             position, the distance, in meters, between the provided position
             and the found neighbors and a matrix containing the value of the
@@ -165,7 +167,7 @@ class RTree:
                 computation. If 0 all CPUs are used. If 1 is given, no parallel
                 computing code is used at all, which is useful for debugging.
                 Defaults to ``0``.
-        Return:
+        Returns:
             tuple: The interpolated value and the number of neighbors used in
             the calculation.
         """
@@ -216,7 +218,7 @@ class RTree:
                 multiquadrics functions. Default to the average distance
                 between nodes.
             smooth (float, optional): values greater than zero increase the
-                smoothness of the approximation. Default to 0 (interpolation)
+                smoothness of the approximation. Default to 0 (interpolation).
             within (bool, optional): If true, the method ensures that the
                 neighbors found are located around the point of interest. In
                 other words, this parameter ensures that the calculated values
@@ -225,7 +227,7 @@ class RTree:
                 computation. If 0 all CPUs are used. If 1 is given, no parallel
                 computing code is used at all, which is useful for debugging.
                 Defaults to ``0``.
-        Return:
+        Returns:
             tuple: The interpolated value and the number of neighbors used in
             the calculation.
         """
@@ -244,9 +246,19 @@ class RTree:
             epsilon, smooth, within, num_threads)
 
     def __getstate__(self) -> Tuple:
+        """Return the state of the object for pickling purposes.
+
+        Returns:
+            tuple: The state of the object for pickling purposes.
+        """
         return (self.dtype, self._instance.__getstate__())
 
     def __setstate__(self, state: Tuple):
+        """Set the state of the object from pickling.
+
+        Args:
+            state (tuple): The state of the object for pickling purposes.
+        """
         if len(state) != 2:
             raise ValueError("invalid state")
         _class = RTree(None, state[0])

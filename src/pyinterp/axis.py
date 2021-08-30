@@ -14,7 +14,7 @@ from . import core
 
 
 class TemporalAxis(core.TemporalAxis):
-    """Time axis
+    """Time axis.
     """
     #: Pattern to parse numpy time units
     PATTERN = re.compile(r"\[([^\]]*)\]").search
@@ -94,7 +94,7 @@ class TemporalAxis(core.TemporalAxis):
 
     @staticmethod
     def _object(dtype: np.dtype) -> Type:
-        """Get the object type handled by this class"""
+        """Get the object type handled by this class."""
         data_type = str(dtype)
         return getattr(np, data_type[:data_type.index('64') + 2])
 
@@ -103,10 +103,10 @@ class TemporalAxis(core.TemporalAxis):
         defined in this instance.
 
         Args:
-            values (numpy.ndarray): Values to convert
+            values (numpy.ndarray): Values to convert.
 
-        Return:
-            numpy.ndarray: values converted
+        Returns:
+            numpy.ndarray: values converted.
 
         Raises:
             UserWarning: if the implicit conversion from the unit of dates
@@ -129,10 +129,10 @@ class TemporalAxis(core.TemporalAxis):
         return values.astype("int64")
 
     def back(self) -> Union[np.datetime64, np.timedelta64]:
-        """Get the last value of this axis
+        """Get the last value of this axis.
 
-        Return:
-            numpy.datetime64, numpy.timedelta64: The last value
+        Returns:
+            numpy.datetime64, numpy.timedelta64: The last value.
         """
         return self.object(super().back(), self.resolution)
 
@@ -147,7 +147,7 @@ class TemporalAxis(core.TemporalAxis):
             bounded (bool, optional): True if you want to obtain the closest
                 value to a coordinate outside the axis definition range.
 
-        Return:
+        Returns:
             numpy.ndarray: index of the grid points containing them or -1 if
             the bounded parameter is set to false and if one of the searched
             indexes is out of the definition range of the axis, otherwise the
@@ -169,8 +169,8 @@ class TemporalAxis(core.TemporalAxis):
         set to ``-1``.
 
         Args:
-            coordinates (numpy.ndarray): Positions in this coordinate system
-        Return:
+            coordinates (numpy.ndarray): Positions in this coordinate system.
+        Returns:
             numpy.ndarray: A matrix of shape ``(n, 2)``. The first column of
             the matrix contains the indexes ``i0`` and the second column the
             indexes ``i1`` found.
@@ -179,44 +179,44 @@ class TemporalAxis(core.TemporalAxis):
             coordinates.astype(self.dtype).astype("int64"))
 
     def front(self) -> Union[np.datetime64, np.timedelta64]:
-        """Get the first value of this axis
+        """Get the first value of this axis.
 
-        Return:
-            numpy.datetime64, numpy.timedelta64: The first value
+        Returns:
+            numpy.datetime64, numpy.timedelta64: The first value.
         """
         return self.object(super().front(), self.resolution)
 
     @classmethod
     def _npdate_resolution(cls, dtype) -> str:
-        """Gets the numpy date time resolution"""
+        """Gets the numpy date time resolution."""
         match = cls.PATTERN(dtype)
         assert match is not None
         return match.group(1)
 
     def increment(self) -> np.timedelta64:
-        """Get increment value if is_regular()
+        """Get increment value if is_regular().
 
         Returns
-            numpy.timedelta64: Increment value
+            numpy.timedelta64: Increment value.
 
         Raises:
-            RuntimeError: if this instance does not represent a regular axis
+            RuntimeError: if this instance does not represent a regular axis.
         """
         return np.timedelta64(super().increment(), self.resolution)
 
     def max_value(self) -> Union[np.datetime64, np.timedelta64]:
-        """Get the maximum value of this axis
+        """Get the maximum value of this axis.
 
-        Return:
-            numpy.datetime64, numpy.timedelta64: The maximum value
+        Returns:
+            numpy.datetime64, numpy.timedelta64: The maximum value.
         """
         return self.object(super().max_value(), self.resolution)
 
     def min_value(self) -> Union[np.datetime64, np.timedelta64]:
-        """Get the minimum value of this axis
+        """Get the minimum value of this axis.
 
-        Return:
-            numpy.datetime64, numpy.timedelta64 : The minimum value
+        Returns:
+            numpy.datetime64, numpy.timedelta64 : The minimum value.
         """
         return self.object(super().min_value(), self.resolution)
 
@@ -226,6 +226,11 @@ class TemporalAxis(core.TemporalAxis):
         return "TemporalAxis(" + "\n".join(array) + ")"
 
     def __setstate__(self, state):
+        """Restore the state of this object.
+
+        Args:
+            state (tuple): State of the object.
+        """
         if not isinstance(state, tuple) or len(state) != 2:
             raise ValueError("invalid state")
         super().__setstate__(state[1])
@@ -234,9 +239,22 @@ class TemporalAxis(core.TemporalAxis):
         self.resolution = self._npdate_resolution(str(self.dtype))
 
     def __getstate__(self):
+        """Returns the state of this object.
+
+        Returns:
+            tuple: The state of this object.
+        """
         return (self.dtype, super().__getstate__())
 
     def __getitem__(self, *args):
+        """Get the values of this axis.
+        
+        Args:
+            *args: Variable length argument list.
+
+        Returns:
+            numpy.ndarray: Values of this axis.
+        """
         result = super().__getitem__(*args)
         if isinstance(result, int):
             return self.object(result, self.resolution)

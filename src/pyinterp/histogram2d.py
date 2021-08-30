@@ -41,8 +41,7 @@ class Histogram2D:
                  y: core.Axis,
                  bin_counts: Optional[Union[int]] = None,
                  dtype: Optional[np.dtype] = np.dtype("float64")):
-        """
-        Initializes the grid used to calculate the statistics.
+        """Initializes the grid used to calculate the statistics.
 
         Args:
             x (pyinterp.Axis): Definition of the bin centers for the X axis
@@ -76,12 +75,12 @@ class Histogram2D:
 
     @property
     def x(self) -> core.Axis:
-        """Gets the bin centers for the X Axis of the grid"""
+        """Gets the bin centers for the X Axis of the grid."""
         return self._instance.x
 
     @property
     def y(self) -> core.Axis:
-        """Gets the bin centers for the Y Axis of the grid"""
+        """Gets the bin centers for the Y Axis of the grid."""
         return self._instance.y
 
     def clear(self) -> None:
@@ -90,7 +89,7 @@ class Histogram2D:
 
     def __repr__(self) -> str:
         """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance
+        representation of this instance.
         """
         result = [
             "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
@@ -111,8 +110,8 @@ class Histogram2D:
         """Push new samples into the defined bins.
 
         Args:
-            x (numpy.ndarray): X coordinates of the samples
-            y (numpy.ndarray): Y coordinates of the samples
+            x (numpy.ndarray): X coordinates of the samples.
+            y (numpy.ndarray): Y coordinates of the samples.
             z (numpy.ndarray): New samples to push into the
                 defined bins.
         """
@@ -127,11 +126,11 @@ class Histogram2D:
         """Push new samples into the defined bins from dask array.
 
         Args:
-            x (numpy.ndarray, dask.Array): X coordinates of the samples
-            y (numpy.ndarray, dask.Array): Y coordinates of the samples
+            x (numpy.ndarray, dask.Array): X coordinates of the samples.
+            y (numpy.ndarray, dask.Array): Y coordinates of the samples.
             z (numpy.ndarray, dask.Array): New samples to push into the
                 defined bins.
-        Return:
+        Returns:
             The calculation graph producing the update of the grid from the
             provided samples. Running the graph will return an instance of this
             class containing the statistics calculated for all processed
@@ -181,7 +180,7 @@ class Histogram2D:
                 function. For example, ``quantile`` requires a ``q``
                 argument that specifies the quantile to compute.
 
-        Return:
+        Returns:
             numpy.ndarray: The dataset representing the calculated
             statistical variable.
         """

@@ -18,8 +18,8 @@ void init_storage_marshaller(py::module& m) {
 Return the pickled representation of an object as a bytes object.
 
 Args:
-  obj (object): Object to process
-Return:
+  obj (object): Object to process.
+Returns:
   bytes: The pickled representation of the object.
 )__doc__")
       .def("loads", &storage::Marshaller::loads, py::arg("bytes_object"),
@@ -27,8 +27,8 @@ Return:
 Return the reconstituted object hierarchy of a pickled representation.
 
 Args:
-  bytes_object (bytes): Pickled representation
-Return:
+  bytes_object (bytes): Pickled representation.
+Returns:
   object: The reconstituted object.
 )__doc__");
 }

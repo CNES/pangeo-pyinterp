@@ -201,10 +201,10 @@ Args:
     grid (pyinterp.core.)__doc__" +
          prefix + "Grid4D" + suffix +
          R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values
-    y (numpy.ndarray): Y-values
-    z (numpy.ndarray): Z-values
-    u (numpy.ndarray): U-values
+    x (numpy.ndarray): X-values.
+    y (numpy.ndarray): Y-values.
+    z (numpy.ndarray): Z-values.
+    u (numpy.ndarray): U-values.
     interpolator (pyinterp.core.)__doc__" +
          prefix + R"__doc__(BivariateInterpolator3D): 3D interpolator
         used to interpolate values on the surface (x, y, z). A linear
@@ -222,8 +222,8 @@ Args:
         computation. If 0 all CPUs are used. If 1 is given, no parallel
         computing code is used at all, which is useful for debugging.
         Defaults to ``0``.
-Return:
-    numpy.ndarray: Values interpolated
+Returns:
+    numpy.ndarray: Values interpolated.
 )__doc__")
             .c_str());
 }

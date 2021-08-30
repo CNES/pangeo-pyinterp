@@ -13,7 +13,7 @@ import fsspec
 
 
 class LockError(Exception):
-    """Exception thrown by this module"""
+    """Exception thrown by this module."""
     pass
 
 
@@ -28,7 +28,7 @@ class AbstractLock:
     def acquire(self,
                 timeout: Optional[float] = None,
                 delay: Optional[float] = None):
-        """Acquire a lock
+        """Acquire a lock.
 
         Args:
             timeout (float, optional): Maximum timeout for a lock acquisition.
@@ -36,7 +36,7 @@ class AbstractLock:
 
         Raises:
             LockError: If a lock has not been obtained before the specified
-                timeout
+                timeout.
         """
         end_time = time.time() + (timeout or sys.maxsize)
         delay = delay or 0.1
@@ -55,7 +55,7 @@ class AbstractLock:
         """Test the existence of the lock.
 
         Returns:
-            bool: True if the lock exists
+            bool: True if the lock exists.
         """
         ...
 
@@ -78,7 +78,7 @@ class Lock(AbstractLock):
     already exists, access to this file will fail.
 
     Args:
-        path (str): Path to the lock
+        path (str): Path to the lock.
     """
     OPEN_MODE = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_TRUNC
 
@@ -96,7 +96,7 @@ class Lock(AbstractLock):
         """Test the existence of the lock.
 
         Returns:
-            bool: True if the lock exists
+            bool: True if the lock exists.
         """
         return self.stream is not None
 
@@ -118,8 +118,8 @@ class ObjectStorageLock(AbstractLock):
     system.
 
     Args:
-        path (str): Path to the lock
-        file_system (fsspec.AbstractFileSystem, optional): File system used
+        path (str): Path to the lock.
+        file_system (fsspec.AbstractFileSystem, optional): File system used.
     """
     def __init__(
             self,
@@ -137,8 +137,9 @@ class ObjectStorageLock(AbstractLock):
 
     def locked(self) -> bool:
         """Test the existence of the lock.
+        
         Returns:
-            bool: True if the lock exists
+            bool: True if the lock exists.
         """
         return self.fs.exists(self.path)
 
@@ -149,7 +150,7 @@ class ObjectStorageLock(AbstractLock):
 
 
 class Synchronizer(abc.ABC):  # pragma: no cover
-    """Interface of Synchronizer"""
+    """Interface of Synchronizer."""
     @abc.abstractclassmethod
     def __enter__(self) -> bool:
         ...
@@ -184,7 +185,7 @@ class ProcessSynchronizer(Synchronizer):
     """Provides synchronization using locks handled by the file system.
 
     Args:
-        path (pathlib.Path, str): The file used for locking/unlocking
+        path (pathlib.Path, str): The file used for locking/unlocking.
         timeout (float, optional): Maximum timeout for a lock acquisition.
         lock (AbstractLock, optional): Instance handling the lock.
     """

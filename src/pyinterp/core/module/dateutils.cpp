@@ -144,9 +144,9 @@ void init_dateutils(py::module& m) {
 Return the date part of the dates.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process
+    array (numpy.ndarray): Numpy array of datetime64 to process.
 
-Return:
+Returns:
     numpy.ndarray: A structured numpy array containing three fields: ``year``,
     ``month`` and ``day``.
 )__doc__")
@@ -154,9 +154,9 @@ Return:
 Return the data as an array of native Python datetime objects.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process
+    array (numpy.ndarray): Numpy array of datetime64 to process.
 
-Return:
+Returns:
     numpy.ndarray: Object dtype array containing native Python datetime objects.
 )__doc__")
       .def("timedelta_since_january", &detail::timedelta_since_january,
@@ -165,9 +165,9 @@ Return:
 Return the number the timedelta since the first January.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process
+    array (numpy.ndarray): Numpy array of datetime64 to process.
 
-Return:
+Returns:
     numpy.ndarray: timedelta64 dtype array containing the time delta since the
     first January.
 )__doc__")
@@ -176,21 +176,21 @@ Return:
 Return the ISO calendar of dates.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process
+    array (numpy.ndarray): Numpy array of datetime64 to process.
 
-Return:
+Returns:
     numpy.ndarray: A structured numpy array containing three fields: ``year``,
     ``week`` and ``weekday``.
 
-.. seealso:: datetime.date.isocalendar
+.. seealso:: datetime.date.isocalendar.
 )__doc__")
       .def("time", &detail::time, py::arg("array"), R"__doc__(
 Return the time part of the dates.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process
+    array (numpy.ndarray): Numpy array of datetime64 to process.
 
-Return:
+Returns:
     numpy.ndarray: A structured numpy array containing three fields: ``hour``,
     ``minute`` and ``second``.
 )__doc__")
@@ -198,9 +198,9 @@ Return:
 Return the weekday of the dates; Sunday is 0 ... Saturday is 6.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process
+    array (numpy.ndarray): Numpy array of datetime64 to process.
 
-Return:
+Returns:
     numpy.ndarray: int dtype array containing weekday of the dates.
 )__doc__");
 }
