@@ -59,7 +59,7 @@ class StreamingHistogram:
     .. note::
 
         If you do not want to estimate the quantiles of the dataset, use the
-        class :py:class:`DescriptiveStatistics`<pyinterp.DescriptiveStatistics>`
+        class :py:class:`DescriptiveStatistics <pyinterp.DescriptiveStatistics>`
         which will give you more accurate results.
     """
     def __init__(self,
