@@ -14,4 +14,4 @@ dependencies:
     - sphinx_inline_tabs
 channels:
   - main
-  - conda-forge
+  - fbriol
