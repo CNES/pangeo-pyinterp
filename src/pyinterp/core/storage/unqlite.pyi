@@ -1,4 +1,100 @@
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import ClassVar, Iterable, Optional
+
+
+class CompressionType:
+    __doc__: ClassVar[str] = ...  # read-only
+    __members__: ClassVar[dict] = ...  # read-only
+    __entries: ClassVar[dict] = ...
+    none: ClassVar[CompressionType] = ...
+    snappy: ClassVar[CompressionType] = ...
+
+    def __init__(self, value: int) -> None:
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        ...
+
+    def __getstate__(self) -> int:
+        ...
+
+    def __hash__(self) -> int:
+        ...
+
+    def __index__(self) -> int:
+        ...
+
+    def __int__(self) -> int:
+        ...
+
+    def __ne__(self, other: object) -> bool:
+        ...
+
+    def __setstate__(self, state: int) -> None:
+        ...
+
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def value(self) -> int:
+        ...
+
+
+class Database:
+    def __init__(self,
+                 name: str,
+                 mode: Optional[str] = ...,
+                 compression_type: CompressionType = ...) -> None:
+        ...
+
+    def clear(self) -> None:
+        ...
+
+    def commit(self) -> None:
+        ...
+
+    def error_log(self) -> str:
+        ...
+
+    def extend(self, map: Iterable) -> None:
+        ...
+
+    def items(self, keys: Optional[list] = ...) -> list:
+        ...
+
+    def keys(self) -> list:
+        ...
+
+    def rollback(self) -> None:
+        ...
+
+    def update(self, map: Iterable) -> None:
+        ...
+
+    def values(self, keys: Optional[list] = ...) -> list:
+        ...
+
+    def __contains__(self, key: bytes) -> bool:
+        ...
+
+    def __delitem__(self, key: bytes) -> None:
+        ...
+
+    def __getitem__(self, key: bytes) -> list:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __setitem__(self, key: bytes, value: object) -> None:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
 
 
 class DatabaseError(RuntimeError):
@@ -15,67 +111,3 @@ class OperationalError(RuntimeError):
 
 class ProgrammingError(RuntimeError):
     ...
-
-
-class CompressionType:
-    none: 'CompressionType'
-    snappy: 'CompressionType'
-
-
-class Database:
-    def __init__(
-            self,
-            name: str,
-            mode: Optional[str] = None,
-            compression_type: CompressionType = CompressionType.snappy
-    ) -> None:
-        ...
-
-    def __contains__(self, key: bytes) -> bool:
-        ...
-
-    def __delitem__(self, key: bytes) -> None:
-        ...
-
-    def __getitem__(self, key: bytes) -> List[Any]:
-        ...
-
-    def __getstate__(self) -> Tuple:
-        ...
-
-    def __setstate__(self, state: Tuple) -> None:
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __setitem__(self, key: bytes, value: Any) -> None:
-        ...
-
-    def clear(self) -> None:
-        ...
-
-    def commit(self) -> None:
-        ...
-
-    def error_log(self) -> str:
-        ...
-
-    def extend(self, other: Iterable[Tuple[bytes, Any]]) -> None:
-        ...
-
-    def items(self,
-              keys: Optional[List[bytes]] = None) -> List[Tuple[bytes, Any]]:
-        ...
-
-    def keys(self) -> List[bytes]:
-        ...
-
-    def rollback(self) -> None:
-        ...
-
-    def update(self, other: Iterable[Tuple[bytes, Any]]) -> None:
-        ...
-
-    def values(self, keys: Optional[List[bytes]] = None) -> List[Any]:
-        ...

@@ -1,53 +1,165 @@
-from typing import Optional, Tuple, Union
+from typing import ClassVar, Tuple, overload
 import numpy
-from . import (Grid2DFloat32, Grid2DFloat64, Grid3DFloat32, Grid3DFloat32,
-               Grid3DFloat64, TemporalGrid3DFloat64, TemporalGrid3DFloat32)
+from . import (
+    Grid2DFloat32,
+    Grid2DFloat64,
+    Grid3DFloat32,
+    Grid3DFloat64,
+    TemporalGrid3DFloat32,
+    TemporalGrid3DFloat64,
+)
 
 
 class FirstGuess:
-    Zero: 'FirstGuess'
-    ZonalAverage: 'FirstGuess'
+    __doc__: ClassVar[str] = ...  # read-only
+    __members__: ClassVar[dict] = ...  # read-only
+    Zero: ClassVar[FirstGuess] = ...
+    ZonalAverage: ClassVar[FirstGuess] = ...
+    __entries: ClassVar[dict] = ...
+
+    def __init__(self, value: int) -> None:
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        ...
+
+    def __getstate__(self) -> int:
+        ...
+
+    def __hash__(self) -> int:
+        ...
+
+    def __index__(self) -> int:
+        ...
+
+    def __int__(self) -> int:
+        ...
+
+    def __ne__(self, other: object) -> bool:
+        ...
+
+    def __setstate__(self, state: int) -> None:
+        ...
+
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def value(self) -> int:
+        ...
 
 
 class ValueType:
-    Undefined: 'ValueType'
-    Defined: 'ValueType'
-    All: 'ValueType'
+    __doc__: ClassVar[str] = ...  # read-only
+    __members__: ClassVar[dict] = ...  # read-only
+    All: ClassVar[ValueType] = ...
+    Defined: ClassVar[ValueType] = ...
+    Undefined: ClassVar[ValueType] = ...
+    __entries: ClassVar[dict] = ...
+
+    def __init__(self, value: int) -> None:
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        ...
+
+    def __getstate__(self) -> int:
+        ...
+
+    def __hash__(self) -> int:
+        ...
+
+    def __index__(self) -> int:
+        ...
+
+    def __int__(self) -> int:
+        ...
+
+    def __ne__(self, other: object) -> bool:
+        ...
+
+    def __setstate__(self, state: int) -> None:
+        ...
+
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def value(self) -> int:
+        ...
 
 
-def loess_float64(
-        grid: Union[Grid2DFloat64, Grid3DFloat64, TemporalGrid3DFloat64],
-        nx: int = 3,
-        ny: int = 3,
-        processing_mode: Optional[str] = None,
-        num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-def loess_float32(
-        grid: Union[Grid2DFloat32, Grid3DFloat32, TemporalGrid3DFloat32],
-        nx: int = 3,
-        ny: int = 3,
-        processing_mode: Optional[str] = None,
-        num_threads: int = 0) -> numpy.ndarray[numpy.float64]:
+def gauss_seidel_float32(grid: numpy.ndarray[numpy.float32],
+                         first_guess: FirstGuess = ...,
+                         is_circle: bool = ...,
+                         max_iterations: int = ...,
+                         epsilon: float = ...,
+                         relaxation: float = ...,
+                         num_thread: int = ...) -> Tuple[int, float]:
     ...
 
 
 def gauss_seidel_float64(grid: numpy.ndarray[numpy.float64],
-                         first_guess: FirstGuess = FirstGuess.ZonalAverage,
-                         is_circle: bool = True,
-                         max_iterations: int = 2000,
-                         epsilon: float = 0.0001,
-                         relaxation: float = 1.0,
-                         num_thread: int = 0) -> Tuple[int, float]:
+                         first_guess: FirstGuess = ...,
+                         is_circle: bool = ...,
+                         max_iterations: int = ...,
+                         epsilon: float = ...,
+                         relaxation: float = ...,
+                         num_thread: int = ...) -> Tuple[int, float]:
     ...
 
 
-def gauss_seidel_float32(grid: numpy.ndarray[numpy.float32],
-                         first_guess: FirstGuess = FirstGuess.ZonalAverage,
-                         is_circle: bool = True,
-                         max_iterations: int = 2000,
-                         epsilon: float = 0.0001,
-                         relaxation: float = 1.0,
-                         num_thread: int = 0) -> Tuple[int, float]:
+@overload
+def loess_float32(grid: Grid2DFloat32,
+                  nx: int = ...,
+                  ny: int = ...,
+                  value_type: ValueType = ...,
+                  num_threads: int = ...) -> numpy.ndarray[numpy.float32]:
+    ...
+
+
+@overload
+def loess_float32(grid: Grid3DFloat32,
+                  nx: int = ...,
+                  ny: int = ...,
+                  value_type: ValueType = ...,
+                  num_threads: int = ...) -> numpy.ndarray[numpy.float32]:
+    ...
+
+
+@overload
+def loess_float32(grid: TemporalGrid3DFloat32,
+                  nx: int = ...,
+                  ny: int = ...,
+                  value_type: ValueType = ...,
+                  num_threads: int = ...) -> numpy.ndarray[numpy.float32]:
+    ...
+
+
+@overload
+def loess_float64(grid: Grid2DFloat64,
+                  nx: int = ...,
+                  ny: int = ...,
+                  value_type: ValueType = ...,
+                  num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def loess_float64(grid: Grid3DFloat64,
+                  nx: int = ...,
+                  ny: int = ...,
+                  value_type: ValueType = ...,
+                  num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def loess_float64(grid: TemporalGrid3DFloat64,
+                  nx: int = ...,
+                  ny: int = ...,
+                  value_type: ValueType = ...,
+                  num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
     ...

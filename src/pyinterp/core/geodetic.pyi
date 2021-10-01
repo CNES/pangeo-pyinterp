@@ -1,26 +1,195 @@
-from typing import List, Tuple, Optional, overload
+from typing import Any, ClassVar, Optional, overload
 import numpy
+from .. import geodetic
 
 
-class System:
-    flattening: float
-    semi_major_axis: float
+class Box:
+    __hash__: ClassVar[None] = ...
+    max_corner: Point
+    min_corner: Point
 
-    def __init__(self,
-                 semi_major_axis: Optional[float] = None,
-                 flattening: Optional[float] = None) -> None:
+    @overload
+    def __init__(self) -> None:
         ...
 
-    def __eq__(self, arg0: 'System') -> bool:
+    @overload
+    def __init__(self, min_corner: Point, max_corner: Point) -> None:
+        ...
+
+    def area(self, wgs: Optional[System] = ...) -> float:
+        ...
+
+    @overload
+    def covered_by(self, point: Point) -> bool:
+        ...
+
+    @overload
+    def covered_by(self,
+                   lon: numpy.ndarray[numpy.float64],
+                   lat: numpy.ndarray[numpy.float64],
+                   num_theads: int = ...) -> numpy.ndarray[numpy.int8]:
+        ...
+
+    @overload
+    def distance(self, other: Box) -> float:
+        ...
+
+    @overload
+    def distance(self, point: Point) -> float:
+        ...
+
+    def read_wkt(self, *args, **kwargs) -> Any:
+        ...
+
+    def whole_earth(self, *args, **kwargs) -> Any:
+        ...
+
+    def wkt(self) -> str:
+        ...
+
+    def __eq__(self, other: Box) -> bool:
         ...
 
     def __getstate__(self) -> tuple:
         ...
 
-    def __ne__(self, arg0: 'System') -> bool:
+    def __ne__(self, other: Box) -> bool:
         ...
 
-    def __setstate__(self, state: tuple) -> None:
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Coordinates:
+    def __init__(self, system: Optional[System]) -> None:
+        ...
+
+    def ecef_to_lla(self,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    z: numpy.ndarray[numpy.float64],
+                    num_threads: int = ...) -> tuple:
+        ...
+
+    def lla_to_ecef(self,
+                    lon: numpy.ndarray[numpy.float64],
+                    lat: numpy.ndarray[numpy.float64],
+                    alt: numpy.ndarray[numpy.float64],
+                    num_threads: int = ...) -> tuple:
+        ...
+
+    def transform(self,
+                  target: Coordinates,
+                  lon: numpy.ndarray[numpy.float64],
+                  lat: numpy.ndarray[numpy.float64],
+                  alt: numpy.ndarray[numpy.float64],
+                  num_threads: int = ...) -> tuple:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Point:
+    __hash__: ClassVar[None] = ...
+    lat: float
+    lon: float
+
+    @overload
+    def __init__(self) -> None:
+        ...
+
+    @overload
+    def __init__(self, lon: float, lat: float) -> None:
+        ...
+
+    def distance(self,
+                 other: Point,
+                 strategy: str = ...,
+                 wgs: Optional[System] = ...) -> float:
+        ...
+
+    def read_wkt(self, *args, **kwargs) -> Any:
+        ...
+
+    def wkt(self) -> str:
+        ...
+
+    def __eq__(self, other: Point) -> bool:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __ne__(self, other: Point) -> bool:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Polygon:
+    __hash__: ClassVar[None] = ...
+
+    def __init__(self, outer: list, inners: Optional[list] = ...) -> None:
+        ...
+
+    def area(self, wgs: Optional[System] = ...) -> float:
+        ...
+
+    @overload
+    def covered_by(self, point: Point) -> bool:
+        ...
+
+    @overload
+    def covered_by(self,
+                   lon: numpy.ndarray[numpy.float64],
+                   lat: numpy.ndarray[numpy.float64],
+                   num_theads: int = ...) -> numpy.ndarray[numpy.int8]:
+        ...
+
+    @overload
+    def distance(self, other: Polygon) -> float:
+        ...
+
+    @overload
+    def distance(self, point: Point) -> float:
+        ...
+
+    def envelope(self) -> Box:
+        ...
+
+    def read_wkt(self, *args, **kwargs) -> Any:
+        ...
+
+    def wkt(self) -> str:
+        ...
+
+    def __eq__(self, other: Polygon) -> bool:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __ne__(self, other: Polygon) -> bool:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class System(_System):
+    __hash__: ClassVar[None] = ...
+
+    @overload
+    def __init__(self) -> None:
+        ...
+
+    @overload
+    def __init__(self, semi_major_axis: float, flattening: float) -> None:
         ...
 
     def authalic_radius(self) -> float:
@@ -29,7 +198,7 @@ class System:
     def axis_ratio(self) -> float:
         ...
 
-    def equatorial_circumference(self, semi_major_axis: bool = True) -> float:
+    def equatorial_circumference(self, semi_major_axis: bool = ...) -> float:
         ...
 
     def equatorial_radius_of_curvature(self) -> float:
@@ -56,173 +225,38 @@ class System:
     def volumetric_radius(self) -> float:
         ...
 
-
-class Coordinates:
-    ...
-
-    def __getstate__(self) -> Tuple:
-        ...
-
-    def __init__(self, system: Optional[System]) -> None:
-        ...
-
-    def __setstate__(self, tuple: tuple) -> None:
-        ...
-
-    def ecef_to_lla(self,
-                    x: numpy.ndarray[numpy.float64],
-                    y: numpy.ndarray[numpy.float64],
-                    z: numpy.ndarray[numpy.float64],
-                    num_threads: int = 0) -> tuple:
-        ...
-
-    def lla_to_ecef(self,
-                    lon: numpy.ndarray[numpy.float64],
-                    lat: numpy.ndarray[numpy.float64],
-                    alt: numpy.ndarray[numpy.float64],
-                    num_threads: int = 0) -> tuple:
-        ...
-
-    def transform(self,
-                  target: 'Coordinates',
-                  lon: numpy.ndarray[numpy.float64],
-                  lat: numpy.ndarray[numpy.float64],
-                  alt: numpy.ndarray[numpy.float64],
-                  num_threads: int = 0) -> tuple:
-        ...
-
-
-class Point:
-    lat: float
-    lon: float
-
-    def __init__(self,
-                 lon: Optional[float] = None,
-                 lat: Optional[float] = None) -> None:
-        ...
-
-    def __repr__(self) -> str:
+    def __eq__(self, other: _System) -> bool:
         ...
 
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, state: tuple) -> None:
+    def __ne__(self, other: _System) -> bool:
         ...
 
-    def distance(self,
-                 other: "Point",
-                 strategy: str = 'thomas',
-                 wgs: Optional[System] = None) -> float:
+    def __setstate__(self, arg0: tuple) -> None:
         ...
 
-    def wkt(self) -> str:
+    @property
+    def flattening(self) -> float:
         ...
 
-    @staticmethod
-    def read_wkt(wkt: str) -> 'Point':
-        ...
-
-
-class Box:
-    min_corner: Point
-    max_corner: Point
-
-    def __init__(self,
-                 min_corner: Optional[Point] = None,
-                 max_corner: Optional[Point] = None) -> None:
-        ...
-
-    def __repr__(self) -> str:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    def area(self, wgs: Optional[System] = None) -> float:
-        ...
-
-    @overload
-    def distance(self, other: 'Box') -> float:
-        ...
-
-    @overload
-    def distance(self, other: Point) -> float:
-        ...
-
-    @overload
-    def covered_by(self, point: Point) -> bool:
-        ...
-
-    @overload
-    def covered_by(self,
-                   lon: numpy.ndarray[numpy.float64],
-                   lat: numpy.ndarray[numpy.float64],
-                   num_theads: int = 1) -> numpy.ndarray[numpy.int8]:
-        ...
-
-    def wkt(self) -> str:
-        ...
-
-    @staticmethod
-    def read_wkt(wkt: str) -> 'Box':
-        ...
-
-    @staticmethod
-    def whole_earth() -> 'Box':
+    @property
+    def semi_major_axis(self) -> float:
         ...
 
 
-class Polygon:
-    def __init__(self,
-                 outer: List[Point],
-                 inners: Optional[List[List[Point]]] = None) -> None:
-        ...
-
-    def __repr__(self) -> str:
-        ...
-
-    def area(self, wgs: Optional[System] = None) -> float:
-        ...
-
-    @overload
-    def covered_by(self, point: Point) -> bool:
-        ...
-
-    @overload
-    def covered_by(self,
-                   lon: numpy.ndarray[numpy.float64],
-                   lat: numpy.ndarray[numpy.float64],
-                   num_theads: int = 1) -> numpy.ndarray[numpy.int8]:
-        ...
-
-    @overload
-    def distance(self, other: 'Polygon') -> float:
-        ...
-
-    @overload
-    def distance(self, other: Point) -> float:
-        ...
-
-    def envelope(self) -> Box:
-        ...
-
-    def wkt(self) -> str:
-        ...
-
-    @staticmethod
-    def read_wkt(wkt: str) -> "Polygon":
+class _System:
+    def __init__(self, *args, **kwargs) -> None:
         ...
 
 
-def coordinate_distances(lon1: numpy.ndarray,
-                         lat1: numpy.ndarray,
-                         lon2: numpy.ndarray,
-                         lat2: numpy.ndarray,
-                         strategy: str = 'thomas',
-                         wgs: Optional[System] = None,
-                         num_threads: int = 0) -> numpy.ndarray:
+def coordinate_distances(
+        lon1: numpy.ndarray[numpy.float64],
+        lat1: numpy.ndarray[numpy.float64],
+        lon2: numpy.ndarray[numpy.float64],
+        lat2: numpy.ndarray[numpy.float64],
+        strategy: str = ...,
+        wgs: Optional[System] = ...,
+        num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
     ...

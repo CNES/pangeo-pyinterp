@@ -1,4 +1,4 @@
-from typing import overload, Any, ClassVar, List, Optional
+from typing import Any, ClassVar, List, Optional, overload
 import numpy
 from . import dateutils
 from . import geodetic
@@ -142,7 +142,10 @@ class Bilinear3D(BivariateInterpolator3D):
 
 
 class Binning2DFloat32:
-    def __init__(self, x: Axis, y: Axis, wgs=...) -> None:
+    def __init__(self,
+                 x: Axis,
+                 y: Axis,
+                 wgs: Optional[geodetic.System] = ...) -> None:
         ...
 
     def clear(self) -> None:
@@ -192,7 +195,7 @@ class Binning2DFloat32:
         ...
 
     @property
-    def wgs(self) -> Any:
+    def wgs(self) -> Optional[geodetic.System]:
         ...
 
     @property
@@ -205,7 +208,10 @@ class Binning2DFloat32:
 
 
 class Binning2DFloat64:
-    def __init__(self, x: Axis, y: Axis, wgs=...) -> None:
+    def __init__(self,
+                 x: Axis,
+                 y: Axis,
+                 wgs: Optional[geodetic.System] = ...) -> None:
         ...
 
     def clear(self) -> None:
@@ -255,7 +261,7 @@ class Binning2DFloat64:
         ...
 
     @property
-    def wgs(self) -> Any:
+    def wgs(self) -> Optional[geodetic.System]:
         ...
 
     @property
