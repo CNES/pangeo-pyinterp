@@ -81,6 +81,7 @@ Index storage support
   pyinterp::detail::gsl::set_error_handler();
 
   init_dateutils(dateutils);
+  init_geodetic(geodetic);
 
   init_axis(m);
   init_binning(m);
@@ -92,7 +93,6 @@ Index storage support
   init_trivariate(m);
   init_quadrivariate(m);
   init_bicubic(m);
-  init_geodetic(geodetic);
   init_fill(fill);
   init_rtree(m);
   init_streaming_histogram(m);
