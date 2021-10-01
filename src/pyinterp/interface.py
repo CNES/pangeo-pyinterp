@@ -6,15 +6,20 @@
 Interface with the library core
 ===============================
 """
+import re
 import numpy as np
 from . import core
 
+#: Regular expression to extract the grid type from the class name.
+PATTERN = re.compile(r"((?:Float|Int)\d+)").search
 
-def _core_class_suffix(x: np.ndarray) -> str:
+
+def _core_class_suffix(x: np.ndarray, handle_integer: bool = False) -> str:
     """Get the suffix of the class handling the numpy data type.
 
     Args:
         x (numpy.ndarray): array to process
+        handle_integer (bool): if True, the integer type is handled
     Returns:
         str: the class suffix
     """
@@ -36,7 +41,7 @@ def _core_class_suffix(x: np.ndarray) -> str:
     if dtype == np.uint16:
         return 'Float32'
     if dtype == np.int8:
-        return 'Float32'
+        return 'Float32' if not handle_integer else 'Int8'
     if dtype == np.uint8:
         return 'Float32'
     raise ValueError("Unhandled dtype: " + str(dtype))
@@ -53,11 +58,14 @@ def _core_function(function: str, instance: object) -> str:
     """
     if not isinstance(
             instance,
-        (core.Grid2DFloat64, core.Grid2DFloat32, core.Grid3DFloat64,
-         core.Grid3DFloat32, core.Grid4DFloat64, core.Grid4DFloat32,
-         core.TemporalGrid3DFloat64, core.TemporalGrid3DFloat32,
-         core.TemporalGrid4DFloat64, core.TemporalGrid4DFloat32)):
+        (core.Grid2DFloat64, core.Grid2DFloat32, core.Grid2DInt8,
+         core.Grid3DFloat64, core.Grid3DFloat32, core.Grid4DFloat64,
+         core.Grid4DFloat32, core.TemporalGrid3DFloat64,
+         core.TemporalGrid3DFloat32, core.TemporalGrid4DFloat64,
+         core.TemporalGrid4DFloat32)):
         raise TypeError("instance is not an object handling a grid.")
     name = instance.__class__.__name__
-    suffix = "float64" if name.endswith("Float64") else "float32"
+    match = PATTERN(name)
+    assert match is not None
+    suffix = match.group(1).lower()
     return f"{function}_{suffix}"

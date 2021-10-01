@@ -63,7 +63,7 @@ class Grid2D:
                 prefix = "Temporal"
                 break
         _class = f"{prefix}Grid{self._DIMENSIONS}D" + \
-            interface._core_class_suffix(args[-1])
+            interface._core_class_suffix(args[-1], handle_integer=True)
         if increasing_axes is not None:
             if increasing_axes not in ['inplace', 'copy']:
                 raise ValueError("increasing_axes "

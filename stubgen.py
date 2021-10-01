@@ -151,7 +151,7 @@ def main():
     grids = fix_core(out)
     fix_core_fill(
         out,
-        [grid for grid in grids if re.compile(r'Grid[2-3]D').search(grid)])
+        [grid for grid in grids if re.compile(r'Grid[2-3]DFloat').search(grid)])
     fix_core_geodetic(out)
     fix_core_geohash(out)
     fix_core_storage(out)

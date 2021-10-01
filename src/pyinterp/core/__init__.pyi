@@ -433,6 +433,30 @@ class Grid2DFloat64:
         ...
 
 
+class Grid2DInt8:
+    def __init__(self, x: Axis, y: Axis,
+                 array: numpy.ndarray[numpy.int8]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.int8]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+
 class Grid3DFloat32:
     def __init__(self, x: Axis, y: Axis, z: Axis,
                  array: numpy.ndarray[numpy.float32]) -> None:
@@ -474,6 +498,34 @@ class Grid3DFloat64:
 
     @property
     def array(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> Axis:
+        ...
+
+
+class Grid3DInt8:
+    def __init__(self, x: Axis, y: Axis, z: Axis,
+                 array: numpy.ndarray[numpy.int8]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.int8]:
         ...
 
     @property
@@ -534,6 +586,38 @@ class Grid4DFloat64:
 
     @property
     def array(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    @property
+    def u(self) -> Axis:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> Axis:
+        ...
+
+
+class Grid4DInt8:
+    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
+                 array: numpy.ndarray[numpy.int8]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.int8]:
         ...
 
     @property
@@ -1140,6 +1224,34 @@ class TemporalGrid3DFloat64:
         ...
 
 
+class TemporalGrid3DInt8:
+    def __init__(self, x: Axis, y: Axis, z: TemporalAxis,
+                 array: numpy.ndarray[numpy.int8]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.int8]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> TemporalAxis:
+        ...
+
+
 class TemporalGrid4DFloat32:
     def __init__(self, x: Axis, y: Axis, z: TemporalAxis, u: Axis,
                  array: numpy.ndarray[numpy.float32]) -> None:
@@ -1185,6 +1297,38 @@ class TemporalGrid4DFloat64:
 
     @property
     def array(self) -> numpy.ndarray[numpy.float64]:
+        ...
+
+    @property
+    def u(self) -> Axis:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> TemporalAxis:
+        ...
+
+
+class TemporalGrid4DInt8:
+    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, u: Axis,
+                 array: numpy.ndarray[numpy.int8]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.int8]:
         ...
 
     @property
@@ -1383,6 +1527,15 @@ def bivariate_float64(grid: Grid2DFloat64,
                       interpolator: BivariateInterpolator2D,
                       bounds_error: bool = ...,
                       num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+def bivariate_int8(grid: Grid2DInt8,
+                   x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64],
+                   interpolator: BivariateInterpolator2D,
+                   bounds_error: bool = ...,
+                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
     ...
 
 

@@ -175,3 +175,23 @@ def test_bicubic():
              method="bicubic",
              bicubic_kwargs=dict(nx=3, ny=3))
     assert isinstance(z, np.ndarray)
+
+
+def test_grid_2d_int8():
+    mss = grid2d_path()
+
+    grid = xr.load_dataset(grid2d_path()).mss
+    grid.values[~np.isnan(grid.values)] = 0
+    grid.values[np.isnan(grid.values)] = 1
+    grid = grid.astype(np.int8)
+
+    interpolator = pyinterp.backends.xarray.RegularGridInterpolator(grid)
+    assert isinstance(interpolator.grid._instance, pyinterp.core.Grid2DInt8)
+
+    lon = np.arange(-180, 180, 1) + 1 / 3.0
+    lat = np.arange(-90, 90, 1) + 1 / 3.0
+    x, y = np.meshgrid(lon, lat, indexing="ij")
+
+    z = interpolator(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),
+                     method="nearest")
+    assert np.mean(z) != 0
