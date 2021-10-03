@@ -4,10 +4,11 @@ dependencies:
   - netcdf4
   - numcodecs
   - pandas
+  - pip
   - pyinterp>=0.8.1
   - pypandoc
+  - pytest
   - python=3.7
-  - pip
   - pip:
     - furo
     - sphinx-gallery
