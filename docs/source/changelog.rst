@@ -1,8 +1,13 @@
 Changelog
 #########
 
+0.8.1 (3 October 2021)
+----------------------
+* Handling interpolation of a mask.
+* Generates stubs for the core modules.
+
 0.8.0 (30 August 2021)
-------------------
+----------------------
 * Calculates univariate statistics.
 * Binning using streaming histogram to evaluate quantiles.
 * Refactoring of the tests to include them in the distribution.

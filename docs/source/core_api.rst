@@ -66,6 +66,7 @@ Bivariate interpolations
 .. autosummary::
   :toctree: generated/
 
+  core.bivariate_int8
   core.bivariate_float32
   core.bivariate_float64
 
@@ -75,10 +76,13 @@ Cartesian Grids
 .. autosummary::
   :toctree: generated/
 
+  core.Grid2DInt8
   core.Grid2DFloat32
   core.Grid2DFloat64
+  core.Grid3DInt8
   core.Grid3DFloat32
   core.Grid3DFloat64
+  core.Grid4DInt8
   core.Grid4DFloat32
   core.Grid4DFloat64
 
