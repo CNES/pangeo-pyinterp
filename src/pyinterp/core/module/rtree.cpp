@@ -209,6 +209,34 @@ Returns:
     calculation.
 )__doc__")
               .c_str())
+      .def("window_function",
+           &pyinterp::RTree<CoordinateType, Type, N>::window_function,
+           py::arg("coordinates"), py::arg("radius"), py::arg("k") = 9,
+           py::arg("wf") = pyinterp::WindowFunction::Hamming,
+           py::arg("within") = true, py::arg("num_threads") = 0,
+           (R"__doc__(
+Interpolation of the value at the requested position by window function.
+
+Args:
+    )__doc__" +
+            coordinates_help<N>() + R"__doc__(
+    radius (float, optional): The maximum radius of the search (m).
+        Default to the largest value that can be represented on a float.
+    k (int, optional): The number of nearest neighbors to be used for
+        calculating the interpolated value. Defaults to ``9``.
+    wf (pyinterp.core.WindowFunction, optional): The window function to be
+        used. Defaults to :py:attr:`pyinterp.core.WindowFunction.Hamming`.
+    within (bool, optional): If true, the method ensures that the neighbors
+        found are located around the point of interest. Defaults to ``true``.
+    num_threads (int, optional): The number of threads to use for the
+        computation. If 0 all CPUs are used. If 1 is given, no parallel
+        computing code is used at all, which is useful for debugging.
+        Defaults to ``0``.
+Returns:
+    tuple: The interpolated value and the number of neighbors used for the
+    calculation.
+)__doc__")
+               .c_str())
       .def(py::pickle(
           [](const pyinterp::RTree<CoordinateType, Type, N>& self) {
             return self.getstate();
@@ -235,6 +263,36 @@ void init_rtree(py::module& m) {
              R"(:math:`\varphi(r) = \sqrt{1+(\dfrac{r}{\varepsilon}^2})`)")
       .value("ThinPlate", pyinterp::RadialBasisFunction::ThinPlate,
              ":math:`\\varphi(r) = r^2 \\ln(r)`.");
+
+  py::enum_<pyinterp::WindowFunction>(m, "WindowFunction", "Window functions")
+      .value("Blackman", pyinterp::WindowFunction::Blackman,
+             ":math:`w(d) = 0.42659 - 0.49656 \\cos(\\frac{\\pi (d + r)}{r}) + "
+             "0.076849 \\cos(\\frac{2 \\pi (d + r)}{r})`")
+      .value("BlackmanHarris", pyinterp::WindowFunction::BlackmanHarris,
+             ":math:`w(d) = 0.35875 - 0.48829 \\cos(\\frac{\\pi (d + r)}{r}) + "
+             "0.14128 \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.01168 "
+             "\\cos(\\frac{3 \\pi (d + r)}{r})`")
+      .value("BlackmanNuttall", pyinterp::WindowFunction::BlackmanNuttall,
+             ":math:`w(d) = 0.3635819 - 0.4891775 \\cos(\\frac{\\pi (d + "
+             "r)}{r}) + 0.1365995 \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.0106411 "
+             "\\cos(\\frac{3 \\pi (d + r)}{r})`")
+      .value("FlatTop", pyinterp::WindowFunction::FlatTop,
+             ":math:`w(d) = 0.21557895 - 0.41663158 \\cos(\\frac{\\pi (d + "
+             "r)}{r}) + 0.277263158 \\cos(\\frac{2 \\pi n}{N}) - 0.083578947 "
+             "\\cos(\\frac{3 \\pi (d + r)}{r}) + 0.006947368 \\cos(\\frac{4 "
+             "\\pi (d + r)}{r})`")
+      .value("Hamming", pyinterp::WindowFunction::Hamming,
+             ":math:`w(d) = 0.53836 - 0.46164 \\cos(\\frac{\\pi (d + r)}{r})`")
+      .value("Nuttall", pyinterp::WindowFunction::Nuttall,
+             ":math:`w(d) = 0.355768 - 0.487396 \\cos(\\frac{\\pi (d + r)}{r}) "
+             "+ 0.144232 \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.012604 "
+             "\\cos(\\frac{3 \\pi (d + r)}{r})`")
+      .value("Parzen", pyinterp::WindowFunction::Parzen,
+             ":math:`w(d) = \\left\\{ \\begin{array}{ll} 1 - 6 "
+             "\\left(\\frac{2*d}{2*r}\\right)^2 \\left(1 - "
+             "\\frac{2*d}{2*r}\\right), & 0 \\le d \\le \\frac{r}{2} 2 \\\\ "
+             "\\left(1 - \\frac{2*d}{2*r}\\right)^3 & \\frac{r}{2} < d \\le r "
+             "\\end{array} \\right\\}`");
 
   implement_rtree<double, double, 3>(m, "Float64");
   implement_rtree<float, float, 3>(m, "Float32");

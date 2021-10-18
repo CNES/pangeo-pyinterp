@@ -846,6 +846,15 @@ class RTree3DFloat32:
                               num_threads: int = ...) -> tuple:
         ...
 
+    def window_function(self,
+                        coordinates: numpy.ndarray[numpy.float32],
+                        radius: Optional[float],
+                        k: int = ...,
+                        wf: WindowFunction = ...,
+                        within: bool = ...,
+                        num_threads: int = ...) -> tuple:
+        ...
+
     def __bool__(self) -> bool:
         ...
 
@@ -902,6 +911,15 @@ class RTree3DFloat64:
                               smooth: float = ...,
                               within: bool = ...,
                               num_threads: int = ...) -> tuple:
+        ...
+
+    def window_function(self,
+                        coordinates: numpy.ndarray[numpy.float64],
+                        radius: Optional[float],
+                        k: int = ...,
+                        wf: WindowFunction = ...,
+                        within: bool = ...,
+                        num_threads: int = ...) -> tuple:
         ...
 
     def __bool__(self) -> bool:
@@ -1367,6 +1385,51 @@ class TemporalNearest3D(TemporalBivariateInterpolator3D):
         ...
 
     def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class WindowFunction:
+    __doc__: ClassVar[str] = ...  # read-only
+    __members__: ClassVar[dict] = ...  # read-only
+    Blackman: ClassVar[WindowFunction] = ...
+    BlackmanHarris: ClassVar[WindowFunction] = ...
+    BlackmanNuttall: ClassVar[WindowFunction] = ...
+    FlatTop: ClassVar[WindowFunction] = ...
+    Hamming: ClassVar[WindowFunction] = ...
+    Nuttall: ClassVar[WindowFunction] = ...
+    Parzen: ClassVar[WindowFunction] = ...
+    __entries: ClassVar[dict] = ...
+
+    def __init__(self, value: int) -> None:
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        ...
+
+    def __getstate__(self) -> int:
+        ...
+
+    def __hash__(self) -> int:
+        ...
+
+    def __index__(self) -> int:
+        ...
+
+    def __int__(self) -> int:
+        ...
+
+    def __ne__(self, other: object) -> bool:
+        ...
+
+    def __setstate__(self, state: int) -> None:
+        ...
+
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def value(self) -> int:
         ...
 
 

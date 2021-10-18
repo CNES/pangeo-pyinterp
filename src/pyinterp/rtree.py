@@ -245,6 +245,90 @@ class RTree:
             coordinates, radius, k, getattr(core.RadialBasisFunction, rbf),
             epsilon, smooth, within, num_threads)
 
+    def window_function(
+            self,
+            coordinates: np.ndarray,
+            radius: Optional[float] = None,
+            k: Optional[int] = 9,
+            wf: Optional[str] = None,
+            within: Optional[bool] = True,
+            num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
+        """Interpolation of the value at the requested position by window
+        function.
+
+        Args:
+            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
+                the number of observations and ``ndims`` is the number of
+                coordinates in order: longitude and latitude in degrees,
+                altitude in meters and then the other coordinates defined in
+                Euclidean space if ``dims`` > 3. If the shape of the matrix is
+                ``(n, ndims)`` then the method considers the altitude constant
+                and equal to zero.
+            radius (float, optional): The maximum radius of the search (m).
+                Defaults The maximum distance between two points.
+            k (int, optional): The number of nearest neighbors to be used for
+                calculating the interpolated value. Defaults to ``9``.
+            wf (str, optional): The window function, based on the distance the
+                distance between points (:math:`d`) and the radius (:math:`r`).
+                This parameter can take one of the following values:
+
+                * ``blackman``: :math:`w(d) = 0.42659 - 0.49656 \\cos(
+                  \\frac{\\pi (d + r)}{r}) + 0.076849 \\cos(
+                  \\frac{2 \\pi (d + r)}{r})`
+                * ``blackman_harris``: :math:`w(d) = 0.35875 - 0.48829
+                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.14128
+                  \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.01168
+                  \\cos(\\frac{3 \\pi (d + r)}{r})`
+                * ``blackman_nuttall``: :math:`w(d) = 0.3635819 - 0.4891775
+                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.1365995
+                  \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.0106411
+                  \\cos(\\frac{3 \\pi (d + r)}{r})`
+                * ``flat_top``: :math:`w(d) = 0.21557895 - 0.41663158
+                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.277263158
+                  \\cos(\\frac{2 \\pi n}{N}) - 0.083578947
+                  \\cos(\\frac{3 \\pi (d + r)}{r}) + 0.006947368
+                  \\cos(\\frac{4 \\pi (d + r)}{r})`
+                * ``hamming``: :math:`w(d) = 0.53836 - 0.46164
+                  \\cos(\\frac{\\pi (d + r)}{r})`
+                * ``nuttall``: :math:`w(d) = 0.355768 - 0.487396
+                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.144232
+                  \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.012604
+                  \\cos(\\frac{3 \\pi (d + r)}{r})`
+                * ``parzen``: :math:`w(d) = \\left\\{ \\begin{array}{ll} 1 - 6
+                  \\left(\\frac{2*d}{2*r}\\right)^2
+                  \\left(1 - \\frac{2*d}{2*r}\\right), & 0
+                  \\le d \\le \\frac{r}{2} 2 \\\\
+                  \\left(1 - \\frac{2*d}{2*r}\\right)^3 &
+                  \\frac{r}{2} < d \\le r \\end{array} \\right\\}`
+            within (bool, optional): If true, the method ensures that the
+                neighbors found are located around the point of interest. In
+                other words, this parameter ensures that the calculated values
+                will not be extrapolated. Defaults to ``true``.
+            num_threads (int, optional): The number of threads to use for the
+                computation. If 0 all CPUs are used. If 1 is given, no parallel
+                computing code is used at all, which is useful for debugging.
+                Defaults to ``0``.
+        Returns:
+            tuple: The interpolated value and the number of neighbors used in
+            the calculation.
+        """
+        wf = wf or "blackman"
+        if wf not in [
+                "blackman",
+                "blackman_harris",
+                "blackman_nuttall",
+                "flat_top",
+                "hamming",
+                "nuttall",
+                "parzen"
+        ]:
+            raise ValueError(f"Window function {wf!r} is not defined")
+        wf = "".join(item.capitalize() for item in wf.split("_"))
+
+        return self._instance.window_function(coordinates, radius, k,
+                                              getattr(core.WindowFunction, wf),
+                                              within, num_threads)
+
     def __getstate__(self) -> Tuple:
         """Return the state of the object for pickling purposes.
 

@@ -176,6 +176,7 @@ R*Tree
   :toctree: generated/
 
   core.RadialBasisFunction
+  core.WindowFunction
   core.RTree3DFloat32
   core.RTree3DFloat64
 

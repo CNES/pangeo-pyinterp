@@ -11,6 +11,7 @@
 #include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/radial_basis_functions.hpp"
+#include "pyinterp/detail/math/window_functions.hpp"
 
 namespace pyinterp::detail::geometry {
 
@@ -299,6 +300,18 @@ class RTree {
     return std::make_tuple(coordinates, values);
   }
 
+  /// Interpolate the value of a point using a Radial Basis Function.
+  ///
+  /// @param point Point of interest
+  /// @param rbf The radial basis function to be used.
+  /// @param radius The maximum radius of the search.
+  /// @param k The number of nearest neighbors to be used for calculating the
+  /// interpolated value.
+  /// @param within If true, the method ensures that the neighbors found are
+  /// located around the point of interest. In other words, this parameter
+  /// ensures that the calculated values will not be extrapolated.
+  /// @return A pair containing the interpolated value and the number of
+  /// neighbors used in the calculation.
   auto radial_basis_function(const point_t &point,
                              const math::RBF<promotion_t> &rbf,
                              distance_t radius, uint32_t k, bool within) const
@@ -317,6 +330,44 @@ class RTree {
     auto interpolated = rbf.interpolate(coordinates, values, xi);
     return std::make_pair(interpolated(0),
                           static_cast<uint32_t>(values.size()));
+  }
+
+  /// Interpolate the value of a point using a Window Function.
+  ///
+  /// @param point Point of interest
+  /// @param wf The window function to be used.
+  /// @param radius The maximum radius of the search.
+  /// @param k The number of nearest neighbors to be used for calculating the
+  /// interpolated value.
+  /// @param within If true, the method ensures that the neighbors found are
+  /// located around the point of interest. In other words, this parameter
+  /// ensures that the calculated values will not be extrapolated.
+  /// @return A pair containing the interpolated value and the number of
+  /// neighbors used in the calculation.
+  auto window_function(const point_t &point,
+                       const math::WindowFunction<promotion_t> &wf,
+                       distance_t radius, uint32_t k, bool within) const
+      -> std::pair<promotion_t, uint32_t> {
+    Type result = 0;
+    Type total_weight = 0;
+
+    auto nearest = within ? query_within(point, k) : query(point, k);
+    uint32_t neighbors = 0;
+
+    for (const auto &item : nearest) {
+      const auto distance = item.first;
+
+      auto wk = wf(distance, radius);
+      total_weight += wk;
+      result += item.second * wk;
+      ++neighbors;
+    }
+
+    return total_weight != 0
+               ? std::make_pair(static_cast<Type>(result / total_weight),
+                                neighbors)
+               : std::make_pair(std::numeric_limits<Type>::quiet_NaN(),
+                                static_cast<uint32_t>(0));
   }
 
  protected:

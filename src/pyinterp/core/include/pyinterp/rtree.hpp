@@ -21,6 +21,9 @@ namespace pyinterp {
 /// Type of radial functions exposed in the Python module.
 using RadialBasisFunction = detail::math::RadialBasisFunction;
 
+/// Type of window functions exposed in the Python module.
+using WindowFunction = detail::math::window::Function;
+
 /// RTree spatial index for geodetic point
 ///
 /// @note
@@ -223,6 +226,31 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
             radius.value_or(std::numeric_limits<distance_t>::max()), k, rbf,
             epsilon.value_or(std::numeric_limits<promotion_t>::quiet_NaN()),
             smooth, within, num_threads);
+      default:
+        throw std::invalid_argument(
+            RTree<CoordinateType, Type, N>::invalid_shape());
+    }
+  }
+
+  /// TODO
+  auto window_function(
+      const pybind11::array_t<CoordinateType, pybind11::array::c_style>
+          &coordinates,
+      const std::optional<distance_t> &radius, const uint32_t k,
+      const WindowFunction wf, const bool within,
+      const size_t num_threads) const -> pybind11::tuple {
+    detail::check_array_ndim("coordinates", 2, coordinates);
+    switch (coordinates.shape(1)) {
+      case N - 1:
+        return _window_function<N - 1>(
+            &RTree<CoordinateType, Type, N>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<distance_t>::max()), k, wf,
+            within, num_threads);
+      case N:
+        return _window_function<N>(
+            &RTree<CoordinateType, Type, N>::from_lon_lat_alt, coordinates,
+            radius.value_or(std::numeric_limits<distance_t>::max()), k, wf,
+            within, num_threads);
       default:
         throw std::invalid_argument(
             RTree<CoordinateType, Type, N>::invalid_shape());
@@ -518,7 +546,7 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     return pybind11::make_tuple(data, neighbors);
   }
 
-  /// Inverse distance weighting interpolation
+  /// Radial basis function interpolation
   template <size_t M>
   auto _rbf(Converter converter,
             const pybind11::array_t<CoordinateType> &coordinates,
@@ -564,6 +592,67 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
                                                                     rbf_handler,
                                                                     radius, k,
                                                                     within);
+                _data(ix) = result.first;
+                _neighbors(ix) = result.second;
+              }
+            } catch (...) {
+              except = std::current_exception();
+            }
+          },
+          size, num_threads);
+
+      if (except != nullptr) {
+        std::rethrow_exception(except);
+      }
+    }
+    return pybind11::make_tuple(data, neighbors);
+  }
+
+  /// Window function interpolation
+  template <size_t M>
+  auto _window_function(Converter converter,
+                        const pybind11::array_t<CoordinateType> &coordinates,
+                        const distance_t radius, const uint32_t k,
+                        const WindowFunction wf, const bool within,
+                        const size_t num_threads) const -> pybind11::tuple {
+    auto _coordinates = coordinates.template unchecked<2>();
+    auto size = coordinates.shape(0);
+
+    // Allocation of result vectors.
+    auto data =
+        pybind11::array_t<distance_t>(pybind11::array::ShapeContainer{size});
+    auto neighbors =
+        pybind11::array_t<uint32_t>(pybind11::array::ShapeContainer{size});
+
+    auto wf_handler = detail::math::WindowFunction<promotion_t>(wf);
+
+    auto _data = data.template mutable_unchecked<1>();
+    auto _neighbors = neighbors.template mutable_unchecked<1>();
+
+    {
+      pybind11::gil_scoped_release release;
+
+      // Captures the detected exceptions in the calculation function
+      // (only the last exception captured is kept)
+      auto except = std::exception_ptr(nullptr);
+
+      detail::dispatch(
+          [&](size_t start, size_t end) {
+            try {
+              auto point = point_t();
+
+              for (size_t ix = start; ix < end; ++ix) {
+                point = std::move(
+                    std::invoke(converter, *this,
+                                Eigen::Map<const Vector<CoordinateType>>(
+                                    &_coordinates(ix, 0), M)));
+
+                auto result =
+                    detail::geometry::RTree<CoordinateType, Type,
+                                            N>::window_function(point,
+                                                                wf_handler,
+                                                                radius, k,
+                                                                within);
                 _data(ix) = result.first;
                 _neighbors(ix) = result.second;
               }
