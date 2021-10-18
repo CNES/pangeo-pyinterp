@@ -1,17 +1,18 @@
 name: RTD
 dependencies:
-  - cartopy
+  - cartopy>=0.20.0
   - netcdf4
   - numcodecs
   - pandas
-  - pyinterp>=0.8.0
-  - pypandoc
-  - python=3.7
   - pip
+  - pyinterp>=0.8.1
+  - pypandoc
+  - pytest
+  - python=3.7
   - pip:
     - furo
     - sphinx-gallery
     - sphinx_inline_tabs
 channels:
   - main
-  - fbriol
+  - conda-forge
