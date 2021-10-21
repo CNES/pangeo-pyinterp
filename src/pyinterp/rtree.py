@@ -256,6 +256,19 @@ class RTree:
         """Interpolation of the value at the requested position by window
         function.
 
+        The interpolated value will be equal to the expression:
+
+        .. math::
+
+            \\frac{\\sum_{i=1}^{k} \\omega(d_i,r)x_i}
+            {\\sum_{i=1}^{k} \\omega(d_i,r)} 
+
+        where :math:`d_i` is the distance between the point of interest and
+        the :math:`i`-th neighbor, :math:`r` is the radius of the search,
+        :math:`x_i` is the value of the :math:`i`-th neighbor, and
+        :math:`\\omega(d_i,r)` is weight calculated by the window function
+        describe above.
+
         Args:
             coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
                 the number of observations and ``ndims`` is the number of
@@ -279,27 +292,30 @@ class RTree:
                   \\cos(\\frac{\\pi (d + r)}{r}) + 0.14128
                   \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.01168
                   \\cos(\\frac{3 \\pi (d + r)}{r})`
-                * ``blackman_nuttall``: :math:`w(d) = 0.3635819 - 0.4891775
-                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.1365995
-                  \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.0106411
-                  \\cos(\\frac{3 \\pi (d + r)}{r})`
-                * ``flat_top``: :math:`w(d) = 0.21557895 - 0.41663158
-                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.277263158
-                  \\cos(\\frac{2 \\pi n}{N}) - 0.083578947
-                  \\cos(\\frac{3 \\pi (d + r)}{r}) + 0.006947368
-                  \\cos(\\frac{4 \\pi (d + r)}{r})`
+                * ``flat_top``: :math:`w(d) = 0.21557895 -
+                  0.41663158 \\cos(\\frac{\\pi (d + r)}{r}) +
+                  0.277263158 \\cos(\\frac{2 \\pi (d + r)}{r}) -
+                  0.083578947 \\cos(\\frac{3 \\pi (d + r)}{r}) +
+                  0.006947368 \\cos(\\frac{4 \\pi (d + r)}{r})`
+                * ``lanczos``: :math:`w(d) = sinc(\\frac{2(d + r)}{2r} - 1)`
                 * ``hamming``: :math:`w(d) = 0.53836 - 0.46164
                   \\cos(\\frac{\\pi (d + r)}{r})`
-                * ``nuttall``: :math:`w(d) = 0.355768 - 0.487396
-                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.144232
-                  \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.012604
-                  \\cos(\\frac{3 \\pi (d + r)}{r})`
+                * ``nuttall``: :math:`w(d) = 0.3635819 - 0.4891775
+                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.1365995
+                  \\cos(\\frac{2 \\pi (d + r)}{r})`
                 * ``parzen``: :math:`w(d) = \\left\\{ \\begin{array}{ll} 1 - 6
                   \\left(\\frac{2*d}{2*r}\\right)^2
                   \\left(1 - \\frac{2*d}{2*r}\\right), & 0
                   \\le d \\le \\frac{r}{2} \\\\
-                  \\left(1 - \\frac{2*d}{2*r}\\right)^3 &
+                  2\\left(1 - \\frac{2*d}{2*r}\\right)^3 &
                   \\frac{r}{2} < d \\le r \\end{array} \\right\\}`
+                * ``parzen_swot``: :math:`w(d) = \\left\\{\\begin{array}{ll}
+                  1 - 6\\left(\\frac{2 * d}{2 * r}\\right)^2
+                  + 6\\left(1 - \\frac{2 * d}{2 * r}\\right), &
+                  d \\le \\frac{2r}{4} \\\\
+                  2\\left(1 - \\frac{2 * d}{2 * r}\\right)^3 &
+                  \\frac{2r}{2} \\ge d \\gt \\frac{2r}{4} \\end{array}
+                  \\right\\}`
             within (bool, optional): If true, the method ensures that the
                 neighbors found are located around the point of interest. In
                 other words, this parameter ensures that the calculated values
@@ -316,11 +332,12 @@ class RTree:
         if wf not in [
                 "blackman",
                 "blackman_harris",
-                "blackman_nuttall",
-                "flat_top",
+                "flattop",
                 "hamming",
+                "lanczos",
                 "nuttall",
-                "parzen"
+                "parzen",
+                "parzen_swot",
         ]:
             raise ValueError(f"Window function {wf!r} is not defined")
         wf = "".join(item.capitalize() for item in wf.split("_"))

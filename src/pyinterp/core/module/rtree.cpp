@@ -212,7 +212,7 @@ Returns:
       .def("window_function",
            &pyinterp::RTree<CoordinateType, Type, N>::window_function,
            py::arg("coordinates"), py::arg("radius"), py::arg("k") = 9,
-           py::arg("wf") = pyinterp::WindowFunction::Hamming,
+           py::arg("wf") = pyinterp::WindowFunction::kHamming,
            py::arg("within") = true, py::arg("num_threads") = 0,
            (R"__doc__(
 Interpolation of the value at the requested position by window function.
@@ -265,34 +265,41 @@ void init_rtree(py::module& m) {
              ":math:`\\varphi(r) = r^2 \\ln(r)`.");
 
   py::enum_<pyinterp::WindowFunction>(m, "WindowFunction", "Window functions")
-      .value("Blackman", pyinterp::WindowFunction::Blackman,
+      .value("Blackman", pyinterp::WindowFunction::kBlackman,
              ":math:`w(d) = 0.42659 - 0.49656 \\cos(\\frac{\\pi (d + r)}{r}) + "
              "0.076849 \\cos(\\frac{2 \\pi (d + r)}{r})`")
-      .value("BlackmanHarris", pyinterp::WindowFunction::BlackmanHarris,
+      .value("BlackmanHarris", pyinterp::WindowFunction::kBlackmanHarris,
              ":math:`w(d) = 0.35875 - 0.48829 \\cos(\\frac{\\pi (d + r)}{r}) + "
              "0.14128 \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.01168 "
              "\\cos(\\frac{3 \\pi (d + r)}{r})`")
-      .value("BlackmanNuttall", pyinterp::WindowFunction::BlackmanNuttall,
-             ":math:`w(d) = 0.3635819 - 0.4891775 \\cos(\\frac{\\pi (d + "
-             "r)}{r}) + 0.1365995 \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.0106411 "
-             "\\cos(\\frac{3 \\pi (d + r)}{r})`")
-      .value("FlatTop", pyinterp::WindowFunction::FlatTop,
-             ":math:`w(d) = 0.21557895 - 0.41663158 \\cos(\\frac{\\pi (d + "
-             "r)}{r}) + 0.277263158 \\cos(\\frac{2 \\pi n}{N}) - 0.083578947 "
-             "\\cos(\\frac{3 \\pi (d + r)}{r}) + 0.006947368 \\cos(\\frac{4 "
-             "\\pi (d + r)}{r})`")
-      .value("Hamming", pyinterp::WindowFunction::Hamming,
+      .value("FlatTop", pyinterp::WindowFunction::kFlatTop,
+             ":math:`w(d) = 0.21557895 - "
+             "0.41663158 \\cos(\\frac{\\pi (d + r)}{r}) + "
+             "0.277263158 \\cos(\\frac{2 \\pi (d + r)}{r}) - "
+             "0.083578947 \\cos(\\frac{3 \\pi (d + r)}{r}) + "
+             "0.006947368 \\cos(\\frac{4 \\pi (d + r)}{r})`")
+      .value("Hamming", pyinterp::WindowFunction::kHamming,
              ":math:`w(d) = 0.53836 - 0.46164 \\cos(\\frac{\\pi (d + r)}{r})`")
-      .value("Nuttall", pyinterp::WindowFunction::Nuttall,
-             ":math:`w(d) = 0.355768 - 0.487396 \\cos(\\frac{\\pi (d + r)}{r}) "
-             "+ 0.144232 \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.012604 "
-             "\\cos(\\frac{3 \\pi (d + r)}{r})`")
-      .value("Parzen", pyinterp::WindowFunction::Parzen,
+      .value("Lanczos", pyinterp::WindowFunction::kLanczos,
+             ":math:`w(d) = sinc(\\frac{2(d + r)}{2r} - 1)`")
+      .value("Nuttall", pyinterp::WindowFunction::kNuttall,
+             ":math:`w(d) = 0.3635819 - 0.4891775 "
+             "\\cos(\\frac{\\pi (d + r)}{r}) + 0.1365995 "
+             "\\cos(\\frac{2 \\pi (d + r)}{r})`")
+      .value("Parzen", pyinterp::WindowFunction::kParzen,
              ":math:`w(d) = \\left\\{ \\begin{array}{ll} 1 - 6 "
              "\\left(\\frac{2*d}{2*r}\\right)^2 \\left(1 - "
              "\\frac{2*d}{2*r}\\right), & 0 \\le d \\le \\frac{r}{2} \\\\ "
-             "\\left(1 - \\frac{2*d}{2*r}\\right)^3 & \\frac{r}{2} < d \\le r "
-             "\\end{array} \\right\\}`");
+             "2\\left(1 - \\frac{2*d}{2*r}\\right)^3 & \\frac{r}{2} < d \\le r "
+             "\\end{array} \\right\\}`")
+      .value("ParzenSWOT", pyinterp::WindowFunction::kParzenSWOT,
+             ":math:`w(d) = w(d) = \\left\\{\\begin{array}{ll} "
+             "1 - 6\\left(\\frac{2 * d}{2 * r}\\right)^2 + "
+             "6\\left(1 - \\frac{2 * d}{2 * r}\\right), & "
+             "d \\le \\frac{2r}{4} \\\\ "
+             "2\\left(1 - \\frac{2 * d}{2 * r}\\right)^3 & "
+             "\\frac{2r}{2} \\ge d \\gt \\frac{2r}{4} \\end{array} "
+             "\\right\\}`");
 
   implement_rtree<double, double, 3>(m, "Float64");
   implement_rtree<float, float, 3>(m, "Float32");
