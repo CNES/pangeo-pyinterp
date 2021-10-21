@@ -261,6 +261,12 @@ inline constexpr auto is_almost_zero(const T& a, const T& epsilon) noexcept
   return std::fabs(a) < epsilon;
 }
 
+/// Return the normalized sinc function
+template <typename T>
+inline constexpr auto sinc(const T& x) noexcept -> T {
+  return x == 0 ? T(1) : std::sin(pi<T>() * x) / (pi<T>() * x);
+}
+
 /// True if a and b are two values identical to an epsilon.
 template <typename T, typename std::enable_if<std::is_integral<T>::value,
                                               T>::type* = nullptr>

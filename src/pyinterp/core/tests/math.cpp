@@ -142,10 +142,17 @@ TEST(math, is_within) {
   EXPECT_FALSE(math::is_within(from, to, 2));
   EXPECT_TRUE(math::is_within(from, to, 3));
 }
+
 TEST(math, is_almost_zero) {
   EXPECT_TRUE(
       math::is_almost_zero(0.0, std::numeric_limits<double>::epsilon()));
   EXPECT_FALSE(
       math::is_almost_zero(0.0 + std::numeric_limits<double>::epsilon(),
                            std::numeric_limits<double>::epsilon()));
+}
+
+TEST(math, sinc) {
+  EXPECT_FLOAT_EQ(math::sinc(0.0), 1.0);
+  EXPECT_NEAR(math::sinc(0.1), 0.983631643083466, 1e-6);
+  EXPECT_NEAR(math::sinc(0.5), 0.6366197723675814, 1e-6);
 }
