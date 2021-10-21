@@ -290,7 +290,7 @@ void init_rtree(py::module& m) {
       .value("Parzen", pyinterp::WindowFunction::Parzen,
              ":math:`w(d) = \\left\\{ \\begin{array}{ll} 1 - 6 "
              "\\left(\\frac{2*d}{2*r}\\right)^2 \\left(1 - "
-             "\\frac{2*d}{2*r}\\right), & 0 \\le d \\le \\frac{r}{2} 2 \\\\ "
+             "\\frac{2*d}{2*r}\\right), & 0 \\le d \\le \\frac{r}{2} \\\\ "
              "\\left(1 - \\frac{2*d}{2*r}\\right)^3 & \\frac{r}{2} < d \\le r "
              "\\end{array} \\right\\}`");
 
