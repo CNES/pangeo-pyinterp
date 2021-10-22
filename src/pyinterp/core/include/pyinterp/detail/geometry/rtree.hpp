@@ -177,9 +177,9 @@ class RTree {
   /// neighbors used in the calculation.
   auto inverse_distance_weighting(const point_t &point, distance_t radius,
                                   uint32_t k, uint32_t p, bool within) const
-      -> std::pair<Type, uint32_t> {
-    Type result = 0;
-    Type total_weight = 0;
+      -> std::pair<distance_t, uint32_t> {
+    distance_t result = 0;
+    distance_t total_weight = 0;
 
     // We're looking for the nearest k points.
     auto nearest = within ? query_within(point, k) : query(point, k);
@@ -209,9 +209,9 @@ class RTree {
     // Finally the interpolated value is returned if there are selected points
     // otherwise one returns an undefined value.
     return total_weight != 0
-               ? std::make_pair(static_cast<Type>(result / total_weight),
+               ? std::make_pair(static_cast<distance_t>(result / total_weight),
                                 neighbors)
-               : std::make_pair(std::numeric_limits<Type>::quiet_NaN(),
+               : std::make_pair(std::numeric_limits<distance_t>::quiet_NaN(),
                                 static_cast<uint32_t>(0));
   }
 
@@ -345,11 +345,11 @@ class RTree {
   /// @return A pair containing the interpolated value and the number of
   /// neighbors used in the calculation.
   auto window_function(const point_t &point,
-                       const math::WindowFunction<promotion_t> &wf,
+                       const math::WindowFunction<distance_t> &wf,
                        distance_t radius, uint32_t k, bool within) const
-      -> std::pair<promotion_t, uint32_t> {
-    Type result = 0;
-    Type total_weight = 0;
+      -> std::pair<distance_t, uint32_t> {
+    distance_t result = 0;
+    distance_t total_weight = 0;
 
     auto nearest = within ? query_within(point, k) : query(point, k);
     uint32_t neighbors = 0;
@@ -364,9 +364,9 @@ class RTree {
     }
 
     return total_weight != 0
-               ? std::make_pair(static_cast<Type>(result / total_weight),
+               ? std::make_pair(static_cast<distance_t>(result / total_weight),
                                 neighbors)
-               : std::make_pair(std::numeric_limits<Type>::quiet_NaN(),
+               : std::make_pair(std::numeric_limits<distance_t>::quiet_NaN(),
                                 static_cast<uint32_t>(0));
   }
 

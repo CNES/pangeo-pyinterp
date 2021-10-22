@@ -621,7 +621,7 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     auto neighbors =
         pybind11::array_t<uint32_t>(pybind11::array::ShapeContainer{size});
 
-    auto wf_handler = detail::math::WindowFunction<promotion_t>(wf);
+    auto wf_handler = detail::math::WindowFunction<distance_t>(wf);
 
     auto _data = data.template mutable_unchecked<1>();
     auto _neighbors = neighbors.template mutable_unchecked<1>();
