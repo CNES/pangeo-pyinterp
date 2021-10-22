@@ -236,21 +236,18 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
   auto window_function(
       const pybind11::array_t<CoordinateType, pybind11::array::c_style>
           &coordinates,
-      const std::optional<distance_t> &radius, const uint32_t k,
-      const WindowFunction wf, const bool within,
-      const size_t num_threads) const -> pybind11::tuple {
+      const distance_t &radius, const uint32_t k, const WindowFunction wf,
+      const bool within, const size_t num_threads) const -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case N - 1:
         return _window_function<N - 1>(
-            &RTree<CoordinateType, Type, N>::from_lon_lat, coordinates,
-            radius.value_or(std::numeric_limits<distance_t>::max()), k, wf,
-            within, num_threads);
+            &RTree<CoordinateType, Type, N>::from_lon_lat, coordinates, radius,
+            k, wf, within, num_threads);
       case N:
         return _window_function<N>(
             &RTree<CoordinateType, Type, N>::from_lon_lat_alt, coordinates,
-            radius.value_or(std::numeric_limits<distance_t>::max()), k, wf,
-            within, num_threads);
+            radius, k, wf, within, num_threads);
       default:
         throw std::invalid_argument(
             RTree<CoordinateType, Type, N>::invalid_shape());

@@ -848,7 +848,7 @@ class RTree3DFloat32:
 
     def window_function(self,
                         coordinates: numpy.ndarray[numpy.float32],
-                        radius: Optional[float],
+                        radius: float,
                         k: int = ...,
                         wf: WindowFunction = ...,
                         within: bool = ...,
@@ -915,7 +915,7 @@ class RTree3DFloat64:
 
     def window_function(self,
                         coordinates: numpy.ndarray[numpy.float64],
-                        radius: Optional[float],
+                        radius: float,
                         k: int = ...,
                         wf: WindowFunction = ...,
                         within: bool = ...,

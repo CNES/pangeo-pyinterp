@@ -248,7 +248,7 @@ class RTree:
     def window_function(
             self,
             coordinates: np.ndarray,
-            radius: Optional[float] = None,
+            radius: float,
             k: Optional[int] = 9,
             wf: Optional[str] = None,
             within: Optional[bool] = True,
@@ -277,8 +277,7 @@ class RTree:
                 Euclidean space if ``dims`` > 3. If the shape of the matrix is
                 ``(n, ndims)`` then the method considers the altitude constant
                 and equal to zero.
-            radius (float, optional): The maximum radius of the search (m).
-                Defaults The maximum distance between two points.
+            radius (float): The maximum radius of the search (m).
             k (int, optional): The number of nearest neighbors to be used for
                 calculating the interpolated value. Defaults to ``9``.
             wf (str, optional): The window function, based on the distance the
