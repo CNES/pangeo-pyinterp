@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.9.0 (22 October 2021)
+-----------------------
+* Smoothing of an unstructured interpolated mesh with a window function.
+
 0.8.1 (3 October 2021)
 ----------------------
 * Handling interpolation of a mask.
