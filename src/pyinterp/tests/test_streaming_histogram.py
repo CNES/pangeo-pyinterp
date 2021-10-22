@@ -7,9 +7,9 @@ import pickle
 import dask.array as da
 import numpy as np
 import pytest
-import pyinterp
 import xarray as xr
 #
+from .. import StreamingHistogram
 from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 from . import grid2d_path, grid3d_path, grid4d_path
 
@@ -19,12 +19,10 @@ from . import grid2d_path, grid3d_path, grid4d_path
 def test_streaming_histogram_1d(dtype, error):
     """Test the computation of streaming histogram for a 1D array."""
     values = np.random.random_sample((10000, )).astype(dtype)
-    hist = pyinterp.StreamingHistogram(values,
-                                       dtype=dtype,
-                                       bin_count=values.size)
+    hist = StreamingHistogram(values, dtype=dtype, bin_count=values.size)
 
     def check_stats(hist, values):
-        assert isinstance(hist, pyinterp.StreamingHistogram)
+        assert isinstance(hist, StreamingHistogram)
         assert hist.count() == values.size
         assert hist.size() == values.size
         assert hist.max() == np.max(values)
@@ -52,13 +50,13 @@ def test_streaming_histogram_1d(dtype, error):
     other = pickle.loads(pickle.dumps(hist))
     check_stats(other, values)
 
-    hist = pyinterp.StreamingHistogram(values,
-                                       weights=np.ones(values.size),
-                                       bin_count=values.size)
+    hist = StreamingHistogram(values,
+                              weights=np.ones(values.size),
+                              bin_count=values.size)
     check_stats(hist, values)
 
-    hist = pyinterp.StreamingHistogram(da.from_array(values, chunks=(1000, )),
-                                       bin_count=values.size)
+    hist = StreamingHistogram(da.from_array(values, chunks=(1000, )),
+                              bin_count=values.size)
     check_stats(hist, values)
 
     assert isinstance(str(hist), str)
@@ -69,10 +67,9 @@ def test_axis():
     values = np.random.random_sample((2, 3, 4, 5, 6, 7))
 
     def check_axis(values, axis, delayed=False):
-        hist = pyinterp.StreamingHistogram(
-            da.asarray(values) if delayed else values,
-            axis=axis,
-            bin_count=values.size)
+        hist = StreamingHistogram(da.asarray(values) if delayed else values,
+                                  axis=axis,
+                                  bin_count=values.size)
         assert np.all(hist.count() == np.sum(values * 0 + 1, axis=axis))
         assert np.all(hist.max() == np.max(values, axis=axis))
         assert hist.mean() == pytest.approx(np.mean(values, axis=axis))
@@ -97,13 +94,13 @@ def test_axis():
 def test_grid():
     """Test the computation of streaming histogram for a grid."""
     data = xr.load_dataset(grid2d_path()).mss
-    hist = pyinterp.StreamingHistogram(data)
+    hist = StreamingHistogram(data)
     assert hist.mean()[0] == pytest.approx(data.mean(), abs=1e-4)
 
     data = xr.load_dataset(grid3d_path()).tcw
-    hist = pyinterp.StreamingHistogram(data, axis=(0, ))
+    hist = StreamingHistogram(data, axis=(0, ))
     assert hist.mean() == pytest.approx(data.mean(axis=0), abs=1e-4)
 
     data = xr.load_dataset(grid4d_path()).pressure
-    hist = pyinterp.StreamingHistogram(data, axis=(0, 1))
+    hist = StreamingHistogram(data, axis=(0, 1))
     assert hist.mean() == pytest.approx(data.mean(axis=(0, 1)), abs=1e-4)

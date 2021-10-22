@@ -2,16 +2,16 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-import pyinterp.cf
+from .. import cf
 
 
 def test_longitude():
-    assert isinstance(pyinterp.cf.AxisLongitudeUnit().units, list)
+    assert isinstance(cf.AxisLongitudeUnit().units, list)
 
 
 def test_latitude():
-    assert isinstance(pyinterp.cf.AxisLatitudeUnit().units, list)
+    assert isinstance(cf.AxisLatitudeUnit().units, list)
 
 
 def test_time():
-    assert isinstance(pyinterp.cf.AxisTimeUnit().units, list)
+    assert isinstance(cf.AxisTimeUnit().units, list)

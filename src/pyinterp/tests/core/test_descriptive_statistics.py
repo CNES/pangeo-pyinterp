@@ -5,7 +5,7 @@
 import pickle
 import numpy as np
 import pytest
-import pyinterp.core as core
+from ... import core
 
 
 def weighted_mom1(values, weights):
@@ -145,6 +145,6 @@ def test_axis():
     check_axis(values, (1, 3, 5))
 
     with pytest.raises(ValueError):
-        core.DescriptiveStatisticsFloat64(values, axis=(12, ))
+        core.DescriptiveStatisticsFloat64(values, axis=(12, ))  # type: ignore
     with pytest.raises(ValueError):
-        core.DescriptiveStatisticsFloat64(values, axis=(-1, ))
+        core.DescriptiveStatisticsFloat64(values, axis=(-1, ))  # type: ignore

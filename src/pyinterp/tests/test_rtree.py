@@ -72,11 +72,11 @@ def test_interpolate():
     mesh.query(coordinates)
     mesh.inverse_distance_weighting(coordinates)
     mesh.radial_basis_function(coordinates)
-    mesh.window_function(coordinates)
+    mesh.window_function(coordinates, radius=2_000_000)
 
     with pytest.raises(ValueError):
         mesh.radial_basis_function(coordinates, epsilon=1, rbf="cubic")
     with pytest.raises(ValueError):
         mesh.radial_basis_function(coordinates, rbf="X")
     with pytest.raises(ValueError):
-        mesh.window_function(coordinates, wf="cubic")
+        mesh.window_function(coordinates, radius=1, wf="cubic")

@@ -6,7 +6,7 @@ import datetime
 import pickle
 import pytest
 import numpy as np
-import pyinterp
+from .. import TemporalAxis
 
 
 def new_axis(timedelta: bool = False):
@@ -20,7 +20,7 @@ def new_axis(timedelta: bool = False):
             start + datetime.timedelta(seconds=index) for index in range(86400)
         ],
                           dtype="datetime64[us]")
-    return values, pyinterp.TemporalAxis(values)
+    return values, TemporalAxis(values)
 
 
 def test_datetime64_constructor():
@@ -61,7 +61,7 @@ def test_datetime64_constructor():
             np.array(['2000-01-01', '2000-02-01'], dtype="datetime64")) ==
         [[86398, 86399], [-1, -1]])
 
-    axis = pyinterp.TemporalAxis(values.astype("datetime64[s]"))
+    axis = TemporalAxis(values.astype("datetime64[s]"))
     with pytest.warns(UserWarning):
         axis.safe_cast(values)
 
@@ -99,16 +99,16 @@ def test_timedelta64_constructor():
         axis.find_indexes(np.array([0, 86400], dtype="timedelta64[s]")) ==
         [[86398, 86399], [-1, -1]])
 
-    axis = pyinterp.TemporalAxis(values.astype("timedelta64[s]"))
+    axis = TemporalAxis(values.astype("timedelta64[s]"))
     with pytest.warns(UserWarning):
         axis.safe_cast(values)
 
 
 def test_temporal_axis_degraded():
     with pytest.raises(TypeError):
-        pyinterp.TemporalAxis(np.arange(10))
+        TemporalAxis(np.arange(10))
 
-    axis = pyinterp.TemporalAxis(
+    axis = TemporalAxis(
         np.array(['2000-01-01', '2000-02-01'], dtype="datetime64[s]"))
     with pytest.raises(TypeError):
         axis.safe_cast(np.arange(2))

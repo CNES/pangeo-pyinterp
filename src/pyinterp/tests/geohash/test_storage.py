@@ -5,7 +5,7 @@
 import os
 import fsspec
 import pytest
-import pyinterp.geohash.storage as storage
+from ...geohash import storage
 
 
 @pytest.fixture(scope="session")

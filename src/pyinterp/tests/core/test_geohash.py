@@ -4,7 +4,7 @@
 # BSD-style license that can be found in the LICENSE file.
 import numpy
 import pytest
-import pyinterp.core.geohash as geohash
+from ...core import geohash
 
 testcases = [["77mkh2hcj7mz", -26.015434642, -26.173663656],
              ["wthnssq3w00x", 29.291182895, 118.331595326],
@@ -22,9 +22,11 @@ def test_string_numpy():
     strs = numpy.array([item[0] for item in testcases], dtype="S")
     lons, lats = geohash.decode(strs, round=True)
     assert numpy.all(
-        numpy.abs(lons - numpy.array([item[2] for item in testcases])) < 1e-6)
+        numpy.abs(  # type: ignore
+            lons - numpy.array([item[2] for item in testcases])) < 1e-6)
     assert numpy.all(
-        numpy.abs(lats - numpy.array([item[1] for item in testcases])) < 1e-6)
+        numpy.abs(  # type: ignore
+            lats - numpy.array([item[1] for item in testcases])) < 1e-6)
 
     strs = numpy.array([item[0] for item in testcases], dtype="U")
     with pytest.raises(ValueError):

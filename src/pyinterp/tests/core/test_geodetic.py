@@ -6,8 +6,8 @@ import pickle
 import pytest
 import math
 import numpy as np
-from pyinterp import core
-from pyinterp.core import geodetic
+from ... import core
+from ...core import geodetic
 
 POINTS = [(-36.25, -54.9238), (-36.5, -54.9238), (-36.75, -54.9238),
           (-37, -54.9238), (-37.25, -54.9238), (-37.5, -54.9238),
@@ -361,7 +361,8 @@ def test_system_pickle():
 def test_coordinates_ecef_lla():
     """ECEF/LLA Conversion Test"""
     lon, lat, alt = core.geodetic.Coordinates(None).ecef_to_lla(
-        [1176498.769459714], [5555043.905503586], [2895446.8901510699])
+        np.array([1176498.769459714]), np.array([5555043.905503586]),
+        np.array([2895446.8901510699]))
     assert lon[0] == pytest.approx(78.042068, abs=1e-8)
     assert lat[0] == pytest.approx(27.173891, abs=1e-8)
     assert alt[0] == pytest.approx(168.0, abs=1e-8)
@@ -369,8 +370,8 @@ def test_coordinates_ecef_lla():
 
 def test_coordinates_lla_to_ecef():
     """LLA/ECEF Conversion Test"""
-    x, y, z = core.geodetic.Coordinates(None).lla_to_ecef([78.042068],
-                                                          [27.173891], [168.0])
+    x, y, z = core.geodetic.Coordinates(None).lla_to_ecef(np.array([78.042068]),
+                                                          np.array([27.173891]), np.array([168.0]))
     assert x[0] == pytest.approx(1176498.769459714, abs=1e-8)
     assert y[0] == pytest.approx(5555043.905503586, abs=1e-8)
     assert z[0] == pytest.approx(2895446.8901510699, abs=1e-8)
@@ -465,7 +466,7 @@ def test_box():
     assert box.covered_by(core.geodetic.Point(1, 2))
     assert not box.covered_by(core.geodetic.Point(0, 0))
 
-    flags = box.covered_by([1, 0], [2, 0])
+    flags = box.covered_by(np.array([1, 0]), np.array([2, 0]))
     assert np.all(flags == [1, 0])
 
     box.min_corner, box.max_corner = max_corner, min_corner

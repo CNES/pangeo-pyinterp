@@ -12,20 +12,17 @@ except ImportError:
     HAVE_SCIPY = False
 import numpy as np
 import xarray as xr
-import pyinterp
-import pyinterp.geodetic
+from .. import geodetic
+from .. import Axis, Binning2D
 from . import grid2d_path
 
 
 def build_instance(dtype):
     ds = xr.load_dataset(grid2d_path())
 
-    x_axis = pyinterp.Axis(np.arange(-180, 180, 5), is_circle=True)
-    y_axis = pyinterp.Axis(np.arange(-90, 95, 5))
-    binning = pyinterp.Binning2D(x_axis,
-                                 y_axis,
-                                 pyinterp.geodetic.System(),
-                                 dtype=dtype)
+    x_axis = Axis(np.arange(-180, 180, 5), is_circle=True)
+    y_axis = Axis(np.arange(-90, 95, 5))
+    binning = Binning2D(x_axis, y_axis, geodetic.System(), dtype=dtype)
     assert x_axis == binning.x
     assert y_axis == binning.y
     assert isinstance(str(binning), str)
@@ -49,16 +46,16 @@ def build_instance(dtype):
 
 def test_binning2d():
     build_instance(np.float64)
-    build_instance(np.float32)
+    build_instance(np.float32), Binning2D
 
     with pytest.raises(ValueError):
         build_instance(np.int8)
 
 
 def test_dask():
-    x_axis = pyinterp.Axis(np.linspace(-180, 180, 1), is_circle=True)
-    y_axis = pyinterp.Axis(np.linspace(-80, 80, 1))
-    binning = pyinterp.Binning2D(x_axis, y_axis)
+    x_axis = Axis(np.linspace(-180, 180, 1), is_circle=True)
+    y_axis = Axis(np.linspace(-80, 80, 1))
+    binning = Binning2D(x_axis, y_axis)
 
     x = da.full((4096 * 8, ), -180.0, dtype="f8", chunks=4096)
     y = da.full((4096 * 8, ), -80.0, dtype="f8", chunks=4096)
@@ -70,10 +67,10 @@ def test_dask():
     assert binning.variable("sum_of_weights")[0, 0] == 32768
     assert binning.variable("mean")[0, 0] == pytest.approx(z.mean().compute())
     assert binning.variable("variance")[0, 0] == pytest.approx(
-        z.std().compute()**2)
+        z.std().compute()**2)  # type: ignore
     assert binning.variable("sum")[0, 0] == pytest.approx(z.sum().compute())
     if HAVE_SCIPY:
         assert binning.variable("kurtosis")[0, 0] == pytest.approx(
-            das.kurtosis(z).compute())
+            das.kurtosis(z).compute())  # type: ignore
         assert binning.variable("skewness")[0, 0] == pytest.approx(
-            das.skew(z).compute())
+            das.skew(z).compute())  # type: ignore

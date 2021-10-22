@@ -5,7 +5,7 @@
 import pickle
 import pytest
 import numpy as np
-import pyinterp.core as core
+from ... import core
 
 
 def f4d(x, y, z, u):
@@ -112,16 +112,17 @@ def test_interpolator():
     assert np.nanstd(other - calculated) == pytest.approx(0, abs=1e-1)
 
     with pytest.raises(ValueError):
-        other = core.quadrivariate_float64(grid,
-                                           mx.flatten(),
-                                           my.flatten(),
-                                           mz.flatten(),
-                                           None,
-                                           interpolator,
-                                           num_threads=0,
-                                           z_method="linear",
-                                           u_method="nearest",
-                                           bounds_error=False)
+        other = core.quadrivariate_float64(  # type: ignore
+            grid,
+            mx.flatten(),
+            my.flatten(),
+            mz.flatten(),
+            None,
+            interpolator,
+            num_threads=0,
+            z_method="linear",
+            u_method="nearest",
+            bounds_error=False)
 
     with pytest.raises(ValueError):
         other = core.quadrivariate_float64(grid,

@@ -3,7 +3,7 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 import numpy
-import pyinterp.geohash as geohash
+from ... import geohash
 
 testcases = [
     [0xc28a4d93b20a22f8, "sb54v4xk18jg", 0.497818518, 38.198505253],
@@ -4114,11 +4114,11 @@ def test_encoding_decoding():
         numpy.array([item[0]
                      for item in testcases], dtype='uint64') == int_hashs)
     decoded_lon, decoded_lat = geohash.int64.decode(int_hashs, round=True)
-    assert numpy.all(numpy.abs(lat - decoded_lat) < 1e-7)
-    assert numpy.all(numpy.abs(lon - decoded_lon) < 1e-7)
+    assert numpy.all(numpy.abs(lat - decoded_lat) < 1e-7)  # type: ignore
+    assert numpy.all(numpy.abs(lon - decoded_lon) < 1e-7)  # type: ignore
 
     str_hashs = geohash.encode(lon, lat)
     assert numpy.all([item[1] for item in testcases] == str_hashs.astype("U"))
     decoded_lon, decoded_lat = geohash.decode(str_hashs, round=True)
-    assert numpy.all(numpy.abs(lat - decoded_lat) < 1e-6)
-    assert numpy.all(numpy.abs(lon - decoded_lon) < 1e-6)
+    assert numpy.all(numpy.abs(lat - decoded_lat) < 1e-6)  # type: ignore
+    assert numpy.all(numpy.abs(lon - decoded_lon) < 1e-6)  # type: ignore

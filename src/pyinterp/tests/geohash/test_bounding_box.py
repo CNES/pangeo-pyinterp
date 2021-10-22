@@ -2,8 +2,8 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-import pyinterp.geohash as geohash
-import pyinterp.geodetic as geodetic
+from ... import geohash
+from ... import geodetic
 
 decodecases = [
     ["91rc", (7.20703125, 7.3828125, -124.1015625, -123.75)],

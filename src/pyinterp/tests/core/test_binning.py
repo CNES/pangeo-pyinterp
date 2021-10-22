@@ -9,11 +9,12 @@ import pytest
 import netCDF4
 try:
     import matplotlib.pyplot
+    import matplotlib.colors
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
 import numpy as np
-import pyinterp.core as core
+from ... import core
 from .. import grid2d_path
 
 
@@ -32,7 +33,7 @@ def plot(x, y, z, filename):
 
 
 def load_data():
-    with netCDF4.Dataset(grid2d_path()) as ds:
+    with netCDF4.Dataset(grid2d_path()) as ds:  # type: ignore
         z = ds.variables['mss'][:].T
         z[z.mask] = float("nan")
         return ds.variables['lon'][:], ds.variables['lat'][:], z.data
@@ -102,7 +103,7 @@ def test_binning2d_pickle():
     y_axis = core.Axis(np.linspace(-90, 90, 1))
 
     binning = core.Binning2DFloat64(x_axis, y_axis, None)
-    binning.push([-180], [-90], [np.pi])
+    binning.push(np.array([-180]), np.array([-90]), np.array([np.pi]))
 
     assert np.all(binning.count() == 1)
     assert np.all(binning.mean() == np.pi)
@@ -132,7 +133,7 @@ def test_binning2d_iadd():
     y_axis = core.Axis(np.linspace(-90, 90, 1))
 
     binning = core.Binning2DFloat64(x_axis, y_axis, None)
-    binning.push([-180], [-90], [np.pi])
+    binning.push(np.array([-180]), np.array([-90]), np.array([np.pi]))
 
     other = copy.copy(binning)
     other += binning

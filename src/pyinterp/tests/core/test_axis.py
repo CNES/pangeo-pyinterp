@@ -5,7 +5,7 @@
 import pickle
 import pytest
 import numpy as np
-import pyinterp.core as core
+from ... import core
 
 MERCATOR_LATITUDES = np.array([
     -89.000000, -88.908818, -88.809323, -88.700757, -88.582294, -88.453032,
@@ -79,10 +79,10 @@ def test_axis_accessor():
     assert a != frozen
 
     with pytest.raises(ValueError):
-        core.Axis([], is_circle=False)
+        core.Axis([], is_circle=False)  # type: ignore
 
     with pytest.raises(ValueError):
-        core.Axis([5, 2, 7], is_circle=False)
+        core.Axis([5, 2, 7], is_circle=False)  # type: ignore
 
     a = core.Axis(MERCATOR_LATITUDES, is_circle=True)
     assert not a.is_circle

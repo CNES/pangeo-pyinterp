@@ -6,28 +6,28 @@ import os
 import netCDF4
 import numpy as np
 import pytest
-import pyinterp
-import pyinterp.fill
+from .. import Axis, Grid2D, Grid3D
+from .. import fill
 from . import grid2d_path
 
 
 def load_data(cube=False):
-    ds = netCDF4.Dataset(grid2d_path())
-    x_axis = pyinterp.Axis(ds.variables["lon"][::5], is_circle=True)
-    y_axis = pyinterp.Axis(ds.variables["lat"][::5])
+    ds = netCDF4.Dataset(grid2d_path())  # type: ignore
+    x_axis = Axis(ds.variables["lon"][::5], is_circle=True)
+    y_axis = Axis(ds.variables["lat"][::5])
     mss = ds.variables["mss"][::5, ::5].T
     mss[mss.mask] = float("nan")
     if cube:
-        z_axis = pyinterp.Axis(np.arange(2))
+        z_axis = Axis(np.arange(2))
         mss = np.stack([mss.data] * len(z_axis)).transpose(1, 2, 0)
-        return pyinterp.grid.Grid3D(x_axis, y_axis, z_axis, mss)
-    return pyinterp.grid.Grid2D(x_axis, y_axis, mss.data)
+        return Grid3D(x_axis, y_axis, z_axis, mss)
+    return Grid2D(x_axis, y_axis, mss.data)
 
 
 def test_loess():
     grid = load_data()
-    filled0 = pyinterp.fill.loess(grid, num_threads=0)
-    filled1 = pyinterp.fill.loess(grid, num_threads=1)
+    filled0 = fill.loess(grid, num_threads=0)
+    filled1 = fill.loess(grid, num_threads=1)
     data = np.copy(grid.array)
     data[np.isnan(data)] = 0
     filled0[np.isnan(filled0)] = 0
@@ -37,16 +37,14 @@ def test_loess():
     assert (data - filled1).mean() != 0
 
     with pytest.raises(ValueError):
-        pyinterp.fill.loess(grid, value_type="x")
+        fill.loess(grid, value_type="x")
 
 
 def test_gauss_seidel():
     grid = load_data()
-    _, filled0 = pyinterp.fill.gauss_seidel(grid, num_threads=0)
-    _, filled1 = pyinterp.fill.gauss_seidel(grid, num_threads=1)
-    _, filled2 = pyinterp.fill.gauss_seidel(grid,
-                                            first_guess='zero',
-                                            num_threads=0)
+    _, filled0 = fill.gauss_seidel(grid, num_threads=0)
+    _, filled1 = fill.gauss_seidel(grid, num_threads=1)
+    _, filled2 = fill.gauss_seidel(grid, first_guess='zero', num_threads=0)
     data = np.copy(grid.array)
     data[np.isnan(data)] = 0
     filled0[np.isnan(filled0)] = 0
@@ -58,31 +56,31 @@ def test_gauss_seidel():
     assert (filled2 - filled1).mean() != 0
 
     with pytest.raises(ValueError):
-        pyinterp.fill.gauss_seidel(grid, '_')
+        fill.gauss_seidel(grid, '_')
 
-    x_axis = pyinterp.Axis(np.linspace(-180, 180, 10), is_circle=True)
-    y_axis = pyinterp.Axis(np.linspace(-90, 90, 10), is_circle=False)
+    x_axis = Axis(np.linspace(-180, 180, 10), is_circle=True)
+    y_axis = Axis(np.linspace(-90, 90, 10), is_circle=False)
     data = np.random.rand(len(x_axis), len(y_axis))
-    grid = pyinterp.Grid2D(x_axis, y_axis, data)
-    _, filled0 = pyinterp.fill.gauss_seidel(grid, num_threads=0)
+    grid = Grid2D(x_axis, y_axis, data)
+    _, filled0 = fill.gauss_seidel(grid, num_threads=0)
     assert isinstance(filled0, np.ndarray)
 
 
 def test_loess_3d():
     grid = load_data(True)
     mask = np.isnan(grid.array)
-    filled0 = pyinterp.fill.loess(grid, num_threads=0)
+    filled0 = fill.loess(grid, num_threads=0)
     filled0[mask] = np.nan
     assert np.nanmean(filled0 - grid.array) == 0
 
     with pytest.raises(ValueError):
-        pyinterp.fill.loess(grid, num_threads=0, nx=0, ny=1)
+        fill.loess(grid, num_threads=0, nx=0, ny=1)
 
     with pytest.raises(ValueError):
-        pyinterp.fill.loess(grid, num_threads=0, nx=1, ny=0)
+        fill.loess(grid, num_threads=0, nx=1, ny=0)
 
 
 def test_gauss_seidel_3d():
     grid = load_data(True)
-    _, filled0 = pyinterp.fill.gauss_seidel(grid, num_threads=0)
+    _, filled0 = fill.gauss_seidel(grid, num_threads=0)
     assert (filled0[:, :, 0] - filled0[:, :, 1]).mean() == 0

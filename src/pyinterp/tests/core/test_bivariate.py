@@ -8,11 +8,12 @@ import pytest
 import netCDF4
 try:
     import matplotlib.pyplot
+    import matplotlib.colors
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
 import numpy as np
-import pyinterp.core as core
+from ... import core
 from .. import grid2d_path
 
 def plot(x, y, z, filename):
@@ -30,7 +31,7 @@ def plot(x, y, z, filename):
 
 
 def load_data(is_circle=True):
-    with netCDF4.Dataset(grid2d_path()) as ds:
+    with netCDF4.Dataset(grid2d_path()) as ds:  # type: ignore
         z = ds.variables['mss'][:].T
         z[z.mask] = float("nan")
         return core.Grid2DFloat64(

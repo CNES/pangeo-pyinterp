@@ -7,7 +7,7 @@ import datetime
 import random
 import numpy as np
 import pytest
-import pyinterp.core as core
+from ... import core
 
 
 def make_date(samples=10000) -> Tuple[List[datetime.datetime], np.ndarray]:

@@ -7,11 +7,12 @@ import pickle
 import netCDF4
 try:
     import matplotlib.pyplot
+    import matplotlib.colors
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
 import numpy as np
-import pyinterp.core as core
+from ... import core
 from .. import grid2d_path
 
 
@@ -31,7 +32,7 @@ def plot(x, y, z, filename):
 
 def load_data(packing=True):
     """Creating the search tree"""
-    with netCDF4.Dataset(grid2d_path()) as ds:
+    with netCDF4.Dataset(grid2d_path()) as ds:  # type: ignore
         z = ds.variables['mss'][:].T
         z[z.mask] = float("nan")
         x = ds.variables['lon'][:]
@@ -112,6 +113,32 @@ def test_rtree_rbf():
 
     if HAVE_PLT:
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_rtree_rbf.png")
+
+
+def test_rtree_window_function():
+    """Interpolation test"""
+    mesh = load_data()
+    lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
+    lat = np.arange(-90, 90, 1 / 3.0, dtype="float32") + 1 / 3.0
+    x, y = np.meshgrid(lon, lat, indexing="ij")
+    z0, _ = mesh.window_function(np.vstack((x.flatten(), y.flatten())).T,
+                                 within=False,
+                                 radius=2_000_000,
+                                 wf=core.WindowFunction.Hamming,
+                                 k=11,
+                                 num_threads=1)
+    z1, _ = mesh.window_function(np.vstack((x.flatten(), y.flatten())).T,
+                                 within=False,
+                                 radius=2_000_000,
+                                 wf=core.WindowFunction.Hamming,
+                                 k=11,
+                                 num_threads=1)
+    z0 = np.ma.fix_invalid(z0)
+    z1 = np.ma.fix_invalid(z1)
+    assert np.all(z1 == z0)
+
+    if HAVE_PLT:
+        plot(x, y, z0.reshape((len(lon), len(lat))), "mss_rtree_wf.png")
 
 
 def test_rtree_insert():

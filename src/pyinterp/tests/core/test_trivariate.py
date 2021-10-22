@@ -8,11 +8,12 @@ import pytest
 import netCDF4
 try:
     import matplotlib.pyplot
+    import matplotlib.colors
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
 import numpy as np
-import pyinterp.core as core
+from ... import core
 from .. import grid3d_path
 
 
@@ -31,22 +32,28 @@ def plot(x, y, z, filename):
 
 
 def load_data(temporal_axis=False):
-    with netCDF4.Dataset(grid3d_path()) as ds:
+    with netCDF4.Dataset(grid3d_path()) as ds:  # type: ignore
         z = np.flip(ds.variables['tcw'][:].T, axis=1)
         z[z.mask] = float("nan")
-        z_axis = core.TemporalAxis(
-            netCDF4.num2date(
-                ds.variables['time'][:],
-                ds.variables['time'].units,
-                only_use_cftime_datetimes=False,
-                only_use_python_datetimes=True).astype("datetime64[h]").astype(
-                    "int64")) if temporal_axis else core.Axis(
-                        ds.variables['time'][:])
-        class_ = core.TemporalGrid3DFloat64 if temporal_axis else core.Grid3DFloat64
+        if temporal_axis:
+            z_axis = core.TemporalAxis(
+                netCDF4.num2date(  # type: ignore
+                    ds.variables['time'][:],
+                    ds.variables['time'].units,
+                    only_use_cftime_datetimes=False,
+                    only_use_python_datetimes=True).astype(
+                        "datetime64[h]").astype("int64"))
+            class_ = (core.TemporalGrid3DFloat64
+                      if temporal_axis else core.Grid3DFloat64)
 
-        return class_(core.Axis(ds.variables['longitude'][:], is_circle=True),
-                      core.Axis(np.flip(ds.variables['latitude'][:])), z_axis,
-                      z.data)
+            return core.TemporalGrid3DFloat64(
+                core.Axis(ds.variables['longitude'][:], is_circle=True),
+                core.Axis(np.flip(ds.variables['latitude'][:])), z_axis,
+                z.data)
+        return core.Grid3DFloat64(
+            core.Axis(ds.variables['longitude'][:], is_circle=True),
+            core.Axis(np.flip(ds.variables['latitude'][:])),
+            core.Axis(ds.variables['time'][:]), z.data)
 
 
 def test_grid3d_accessors():
@@ -135,20 +142,22 @@ def test_grid3d_bounds_error():
     lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
     time = 898500 + 3
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
-    core.trivariate_float64(grid,
-                            x.flatten(),
-                            y.flatten(),
-                            t.flatten(),
-                            interpolator,
-                            num_threads=0)
+    core.trivariate_float64(
+        grid,  # type: ignore
+        x.flatten(),
+        y.flatten(),
+        t.flatten(),
+        interpolator,
+        num_threads=0)
     with pytest.raises(ValueError):
-        core.trivariate_float64(grid,
-                                x.flatten(),
-                                y.flatten(),
-                                t.flatten(),
-                                interpolator,
-                                bounds_error=True,
-                                num_threads=0)
+        core.trivariate_float64(
+            grid,  # type: ignore
+            x.flatten(),
+            y.flatten(),
+            t.flatten(),
+            interpolator,
+            bounds_error=True,
+            num_threads=0)
 
 
 def test_grid3d_z_method():
@@ -158,45 +167,50 @@ def test_grid3d_z_method():
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
     time = np.array([
-        netCDF4.num2date(898500 + 3,
-                         "hours since 1900-01-01 00:00:0.0",
-                         only_use_cftime_datetimes=False,
-                         only_use_python_datetimes=True)
+        netCDF4.num2date(  # type: ignore
+            898500 + 3,
+            "hours since 1900-01-01 00:00:0.0",
+            only_use_cftime_datetimes=False,
+            only_use_python_datetimes=True)
     ]).astype("datetime64[h]").astype("int64")
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
-    z0 = core.trivariate_float64(grid,
-                                 x.flatten(),
-                                 y.flatten(),
-                                 t.flatten(),
-                                 interpolator,
-                                 num_threads=0)
-    z1 = core.trivariate_float64(grid,
-                                 x.flatten(),
-                                 y.flatten(),
-                                 t.flatten(),
-                                 interpolator,
-                                 z_method="linear",
-                                 num_threads=0)
+    z0 = core.trivariate_float64(
+        grid,  # type: ignore
+        x.flatten(),
+        y.flatten(),
+        t.flatten(),
+        interpolator,
+        num_threads=0)
+    z1 = core.trivariate_float64(
+        grid,  # type: ignore
+        x.flatten(),
+        y.flatten(),
+        t.flatten(),
+        interpolator,
+        z_method="linear",
+        num_threads=0)
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z0 == z1)
-    z1 = core.trivariate_float64(grid,
-                                 x.flatten(),
-                                 y.flatten(),
-                                 t.flatten(),
-                                 interpolator,
-                                 z_method="nearest",
-                                 num_threads=0)
+    z1 = core.trivariate_float64(
+        grid,  # type: ignore
+        x.flatten(),
+        y.flatten(),
+        t.flatten(),
+        interpolator,
+        z_method="nearest",
+        num_threads=0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z0 != z1)
     with pytest.raises(ValueError):
-        core.trivariate_float64(grid,
-                                x.flatten(),
-                                y.flatten(),
-                                t.flatten(),
-                                interpolator,
-                                z_method="NEAREST",
-                                num_threads=0)
+        core.trivariate_float64(
+            grid,  # type: ignore
+            x.flatten(),
+            y.flatten(),
+            t.flatten(),
+            interpolator,
+            z_method="NEAREST",
+            num_threads=0)
 
 
 def test_grid3d_interpolator():

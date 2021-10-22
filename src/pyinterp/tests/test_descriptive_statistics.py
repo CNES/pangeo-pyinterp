@@ -7,9 +7,9 @@ import pickle
 import dask.array as da
 import numpy as np
 import pytest
-import pyinterp
 import xarray as xr
 #
+from .. import DescriptiveStatistics
 from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 from . import grid2d_path, grid3d_path, grid4d_path
 
@@ -19,10 +19,10 @@ from . import grid2d_path, grid3d_path, grid4d_path
 def test_descriptive_statistics_1d(dtype, error):
     """Test the computation of descriptive statistics for a 1D array."""
     values = np.random.random_sample((10000, )).astype(dtype)
-    ds = pyinterp.DescriptiveStatistics(values, dtype=dtype)
+    ds = DescriptiveStatistics(values, dtype=dtype)
 
     def check_stats(ds, values):
-        assert isinstance(ds, pyinterp.DescriptiveStatistics)
+        assert isinstance(ds, DescriptiveStatistics)
         assert ds.count() == values.size
         assert ds.max() == np.max(values)
         assert ds.mean() == pytest.approx(np.mean(values),
@@ -43,10 +43,10 @@ def test_descriptive_statistics_1d(dtype, error):
     other = pickle.loads(pickle.dumps(ds))
     check_stats(other, values)
 
-    ds = pyinterp.DescriptiveStatistics(values, weights=np.ones(values.size))
+    ds = DescriptiveStatistics(values, weights=np.ones(values.size))
     check_stats(ds, values)
 
-    ds = pyinterp.DescriptiveStatistics(da.from_array(values, chunks=(1000, )))
+    ds = DescriptiveStatistics(da.from_array(values, chunks=(1000, )))
     check_stats(ds, values)
 
     assert isinstance(str(ds), str)
@@ -55,7 +55,7 @@ def test_descriptive_statistics_1d(dtype, error):
 def test_array():
     """Test the computation of descriptive statistics for a tensor."""
     values = np.random.random_sample((2, 20, 30))
-    ds = pyinterp.DescriptiveStatistics(values, axis=(0, ))
+    ds = DescriptiveStatistics(values, axis=(0, ))
 
     array = ds.array()
     assert array.shape == (20, 30)
@@ -76,8 +76,8 @@ def test_axis():
     values = np.random.random_sample((2, 3, 4, 5, 6, 7))
 
     def check_axis(values, axis, delayed=False):
-        ds = pyinterp.DescriptiveStatistics(
-            da.asarray(values) if delayed else values, axis=axis)
+        ds = DescriptiveStatistics(da.asarray(values) if delayed else values,
+                                   axis=axis)
         assert np.all(ds.count() == np.sum(values * 0 + 1, axis=axis))
         assert np.all(ds.max() == np.max(values, axis=axis))
         assert ds.mean() == pytest.approx(np.mean(values, axis=axis))
@@ -100,13 +100,13 @@ def test_axis():
 def test_grid():
     """Test the computation of descriptive statistics for a grid."""
     data = xr.load_dataset(grid2d_path()).mss
-    ds = pyinterp.DescriptiveStatistics(data)
+    ds = DescriptiveStatistics(data)
     assert ds.mean()[0] == pytest.approx(data.mean())
 
     data = xr.load_dataset(grid3d_path()).tcw
-    ds = pyinterp.DescriptiveStatistics(data, axis=(0, ))
+    ds = DescriptiveStatistics(data, axis=(0, ))
     assert ds.mean() == pytest.approx(data.mean(axis=0))
 
     data = xr.load_dataset(grid4d_path()).pressure
-    ds = pyinterp.DescriptiveStatistics(data, axis=(0, 1))
+    ds = DescriptiveStatistics(data, axis=(0, 1))
     assert ds.mean() == pytest.approx(data.mean(axis=(0, 1)))

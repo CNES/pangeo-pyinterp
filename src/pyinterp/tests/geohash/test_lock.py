@@ -7,7 +7,7 @@ import tempfile
 import os
 import pickle
 import pytest
-import pyinterp.geohash as geohash
+from ... import geohash
 
 
 def test_lock_lock():

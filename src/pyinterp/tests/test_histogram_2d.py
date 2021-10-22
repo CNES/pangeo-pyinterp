@@ -6,7 +6,7 @@ import pytest
 import dask.array as da
 import numpy as np
 import xarray as xr
-import pyinterp
+from .. import Axis, Histogram2D
 from . import grid2d_path
 
 
@@ -14,9 +14,9 @@ def build_instance(dtype):
     """Build an instance of Histogram2D with a given dtype."""
     ds = xr.load_dataset(grid2d_path())
 
-    x_axis = pyinterp.Axis(np.arange(-180, 180, 5), is_circle=True)
-    y_axis = pyinterp.Axis(np.arange(-90, 95, 5))
-    hist2d = pyinterp.Histogram2D(x_axis, y_axis, bin_counts=40, dtype=dtype)
+    x_axis = Axis(np.arange(-180, 180, 5), is_circle=True)
+    y_axis = Axis(np.arange(-90, 95, 5))
+    hist2d = Histogram2D(x_axis, y_axis, bin_counts=40, dtype=dtype)
     assert x_axis == hist2d.x
     assert y_axis == hist2d.y
     assert isinstance(str(hist2d), str)
@@ -50,9 +50,9 @@ def test_histogram2d():
 
 def test_dask():
     """Test Histogram2D with dask arrays."""
-    x_axis = pyinterp.Axis(np.linspace(-180, 180, 1), is_circle=True)
-    y_axis = pyinterp.Axis(np.linspace(-80, 80, 1))
-    hist2d = pyinterp.Histogram2D(x_axis, y_axis)
+    x_axis = Axis(np.linspace(-180, 180, 1), is_circle=True)
+    y_axis = Axis(np.linspace(-80, 80, 1))
+    hist2d = Histogram2D(x_axis, y_axis)
 
     x = da.full((4096 * 8, ), -180.0, dtype="f8", chunks=4096)
     y = da.full((4096 * 8, ), -80.0, dtype="f8", chunks=4096)
@@ -63,4 +63,4 @@ def test_dask():
     assert np.all(hist2d.variable("count") == 32768)
     assert hist2d.variable("mean")[0, 0] == pytest.approx(z.mean().compute())
     assert hist2d.variable("variance")[0, 0] == pytest.approx(
-        z.std().compute()**2, rel=1e-4, abs=1e-4)
+        z.std().compute()**2, rel=1e-4, abs=1e-4)  # type: ignore

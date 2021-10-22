@@ -38,10 +38,12 @@ class Box:
     def distance(self, point: Point) -> float:
         ...
 
-    def read_wkt(self, *args, **kwargs) -> Any:
+    @staticmethod
+    def read_wkt(wkt: str) -> Box:
         ...
 
-    def whole_earth(self, *args, **kwargs) -> Any:
+    @staticmethod
+    def whole_earth() -> Box:
         ...
 
     def wkt(self) -> str:
@@ -112,7 +114,8 @@ class Point:
                  wgs: Optional[System] = ...) -> float:
         ...
 
-    def read_wkt(self, *args, **kwargs) -> Any:
+    @staticmethod
+    def read_wkt(wkt: str) -> Point:
         ...
 
     def wkt(self) -> str:
@@ -162,7 +165,8 @@ class Polygon:
     def envelope(self) -> Box:
         ...
 
-    def read_wkt(self, *args, **kwargs) -> Any:
+    @staticmethod
+    def read_wkt(wkt: str) -> Polygon:
         ...
 
     def wkt(self) -> str:

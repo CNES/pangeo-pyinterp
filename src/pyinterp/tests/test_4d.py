@@ -9,26 +9,25 @@ import pickle
 import pytest
 import numpy as np
 import xarray as xr
-import pyinterp.backends.xarray
-import pyinterp
+from ..backends import xarray as xr_backend
+from .. import Axis, Grid4D, TemporalAxis, bicubic
 from . import grid4d_path
 
 
 def test_4d():
-    grid = pyinterp.backends.xarray.Grid4D(xr.load_dataset(
-        grid4d_path()).pressure,
-                                           increasing_axes=True)
+    grid = xr_backend.Grid4D(xr.load_dataset(grid4d_path()).pressure,
+                             increasing_axes=True)
 
-    assert isinstance(grid, pyinterp.backends.xarray.Grid4D)
-    assert isinstance(grid, pyinterp.Grid4D)
+    assert isinstance(grid, xr_backend.Grid4D)
+    assert isinstance(grid, Grid4D)
     other = pickle.loads(pickle.dumps(grid))
-    assert isinstance(other, pyinterp.backends.xarray.Grid4D)
-    assert isinstance(grid, pyinterp.Grid4D)
+    assert isinstance(other, xr_backend.Grid4D)
+    assert isinstance(grid, Grid4D)
 
-    assert isinstance(grid.x, pyinterp.Axis)
-    assert isinstance(grid.y, pyinterp.Axis)
-    assert isinstance(grid.z, pyinterp.TemporalAxis)
-    assert isinstance(grid.u, pyinterp.Axis)
+    assert isinstance(grid.x, Axis)
+    assert isinstance(grid.y, Axis)
+    assert isinstance(grid.z, TemporalAxis)
+    assert isinstance(grid.u, Axis)
     assert isinstance(grid.array, np.ndarray)
 
     lon = np.arange(-125, -70, 0.25)
@@ -68,16 +67,16 @@ def test_4d():
                                                         time=t.flatten()),
                                 bounds_error=True)
 
-    grid = pyinterp.backends.xarray.RegularGridInterpolator(
-        xr.load_dataset(grid4d_path()).pressure, increasing_axes=True)
+    grid = xr_backend.RegularGridInterpolator(xr.load_dataset(
+        grid4d_path()).pressure,
+                                              increasing_axes=True)
     assert grid.ndim, 4
-    assert isinstance(grid.grid, pyinterp.backends.xarray.Grid4D)
+    assert isinstance(grid.grid, xr_backend.Grid4D)
 
 
 def test_4d_degraded():
-    grid = pyinterp.backends.xarray.Grid4D(xr.load_dataset(
-        grid4d_path()).pressure,
-                                           increasing_axes=True)
+    grid = xr_backend.Grid4D(xr.load_dataset(grid4d_path()).pressure,
+                             increasing_axes=True)
     zero = np.array([0])
     with pytest.raises(ValueError):
-        pyinterp.bicubic(grid, zero, zero, zero)
+        bicubic(grid, zero, zero, zero)

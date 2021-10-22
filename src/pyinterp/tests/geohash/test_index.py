@@ -5,8 +5,8 @@
 import pytest
 import numpy
 import xarray
-import pyinterp.geohash as geohash
-import pyinterp.geodetic as geodetic
+from ... import geohash
+from ... import geodetic
 
 
 def test_index():

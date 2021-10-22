@@ -9,24 +9,24 @@ import pickle
 import pytest
 import numpy as np
 import xarray as xr
-import pyinterp.backends.xarray
-import pyinterp
+from ..backends import xarray as xr_backend
+from .. import Axis, Grid3D, TemporalAxis
 from . import grid3d_path
 
 
 def test_3d():
-    grid = pyinterp.backends.xarray.Grid3D(xr.load_dataset(grid3d_path()).tcw,
-                                           increasing_axes=True)
+    grid = xr_backend.Grid3D(xr.load_dataset(grid3d_path()).tcw,
+                             increasing_axes=True)
 
-    assert isinstance(grid, pyinterp.backends.xarray.Grid3D)
-    assert isinstance(grid, pyinterp.Grid3D)
+    assert isinstance(grid, xr_backend.Grid3D)
+    assert isinstance(grid, Grid3D)
     other = pickle.loads(pickle.dumps(grid))
-    assert isinstance(other, pyinterp.backends.xarray.Grid3D)
-    assert isinstance(grid, pyinterp.Grid3D)
+    assert isinstance(other, xr_backend.Grid3D)
+    assert isinstance(grid, Grid3D)
 
-    assert isinstance(grid.x, pyinterp.Axis)
-    assert isinstance(grid.y, pyinterp.Axis)
-    assert isinstance(grid.z, pyinterp.TemporalAxis)
+    assert isinstance(grid.x, Axis)
+    assert isinstance(grid.y, Axis)
+    assert isinstance(grid.z, TemporalAxis)
     assert isinstance(grid.array, np.ndarray)
 
     lon = np.arange(-180, 180, 1) + 1 / 3.0
@@ -56,7 +56,7 @@ def test_3d():
                         bounds_error=True)
 
     array = xr.load_dataset(grid3d_path()).tcw
-    grid = pyinterp.backends.xarray.Grid3D(array, increasing_axes=True)
+    grid = xr_backend.Grid3D(array, increasing_axes=True)
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z = grid.trivariate(
         collections.OrderedDict(longitude=x.flatten(),
@@ -64,10 +64,11 @@ def test_3d():
                                 time=t.flatten()))
     assert isinstance(z, np.ndarray)
 
-    grid = pyinterp.backends.xarray.RegularGridInterpolator(
-        xr.load_dataset(grid3d_path()).tcw, increasing_axes=True)
+    grid = xr_backend.RegularGridInterpolator(xr.load_dataset(
+        grid3d_path()).tcw,
+                                              increasing_axes=True)
     assert grid.ndim == 3
-    assert isinstance(grid.grid, pyinterp.backends.xarray.Grid3D)
+    assert isinstance(grid.grid, xr_backend.Grid3D)
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z = grid(
         dict(longitude=x.flatten(), latitude=y.flatten(), time=t.flatten()))

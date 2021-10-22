@@ -6,7 +6,7 @@ import pickle
 import numpy as np
 from numpy.core.numeric import ones
 import pytest
-import pyinterp.core as core
+from ... import core
 from .test_descriptive_statistics import (weighted_mom1, weighted_mom2,
                                           weighted_mom3, weighted_mom4)
 
@@ -171,6 +171,6 @@ def test_axis():
     check_axis(values, (1, 3, 5))
 
     with pytest.raises(ValueError):
-        core.DescriptiveStatisticsFloat64(values, axis=(12, ))
+        core.DescriptiveStatisticsFloat64(values, axis=(12, ))  # type: ignore
     with pytest.raises(ValueError):
-        core.DescriptiveStatisticsFloat64(values, axis=(-1, ))
+        core.DescriptiveStatisticsFloat64(values, axis=(-1, ))  # type: ignore
