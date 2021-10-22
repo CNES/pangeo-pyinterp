@@ -5,7 +5,7 @@ dependencies:
   - numcodecs
   - pandas
   - pip
-  - pyinterp>=0.8.1
+  - pyinterp>=0.9.0
   - pypandoc
   - pytest
   - python=3.7
@@ -15,4 +15,5 @@ dependencies:
     - sphinx_inline_tabs
 channels:
   - main
+  - fbriol
   - conda-forge
