@@ -15,9 +15,9 @@ Changelog
 * Calculates univariate statistics.
 * Binning using streaming histogram to evaluate quantiles.
 * Refactoring of the tests to include them in the distribution.
-* Using unordered_map instead of map to optimize geohash queries.
+* Using unordered_map instead of maps to optimize geohash queries.
 * Store the geohash index on fs mapping.
-* Timedelta64 are also temporel axes.
+* Timedelta64 is also temporal axes.
 
 0.7.1 (25 April 2021)
 ---------------------
@@ -92,14 +92,14 @@ Changelog
 -------------------------
 * Addition of binned bivariate statistics.
 * Addition of bicubic interpolation in 3D space.
-* Improved generation of the C++ extension.
+* Improved generations of the C++ extension.
 * Analysis of test coverage.
 * Minor bug fixes.
 
 0.0.6 (4 October 2019)
 -------------------------
 * Improvement of axis performance.
-* Fixed a performance problem with bilinear, bicubic and trivariate
+* Fixed performance problems with bilinear, bicubic and trivariate
   interpolations.
 * Handling of time axes in the xarray backend.
 * Access to main objects from the main module.
@@ -124,7 +124,7 @@ Changelog
 
 0.0.2 (12 July, 2019)
 ---------------------
-* Handle bounds error on structured grid interpolation.
+* Handle bound error on structured grid interpolation.
 
 0.0.1 (8 July, 2019)
 --------------------

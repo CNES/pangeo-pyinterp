@@ -17,7 +17,7 @@ class System(geodetic.System):
             parameters (tuple, optional): A tuple that defines:
 
                 * the semi-major axis of ellipsoid, in meters.
-                * flattening of ellipsoid.
+                * flattening of the ellipsoid.
 
         .. note::
             If no arguments are provided, the constructor initializes a WGS-84
@@ -67,7 +67,7 @@ class Point2D(geodetic.Point):
 
 
 class Point(geodetic.Point):
-    """Handle a point in a equatorial spherical coordinates system in degrees.
+    """Handle a point in an equatorial spherical coordinate system in degrees.
     """
     def __init__(self, lon: float = 0, lat: float = 0):
         """Initialize a new point.

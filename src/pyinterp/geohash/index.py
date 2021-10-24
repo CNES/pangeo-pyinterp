@@ -14,7 +14,7 @@ from ..core import geohash
 
 
 class GeoHash:
-    """Geogrophic index based on GeoHash encoding.
+    """Geographics index based on GeoHash encoding.
 
     Args:
         store (AbstractMutableMapping): Object managing the storage of the

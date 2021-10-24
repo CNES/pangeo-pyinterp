@@ -30,7 +30,7 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
         mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D, pyinterp.grid.Grid4D):
             Function on a uniform grid to be interpolated. If the grid is a ND
             grid, the bicubic interpolation is performed spatially along the X
-            and Y axes of the ND grid and a linear interpolation is performed
+            and Y axes of the ND grid and a linear interpolation are performed
             along the other axes between the values obtained by the bicubic
             interpolation.
 
@@ -46,9 +46,9 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
         u (numpy.ndarray, optional): None for a :py:class:`2D Grid
             <pyinterp.grid.Grid2D>`, :py:class:`3D Grid
             <pyinterp.grid.Grid3D>` otherwise U-values.
-        nx (int, optional): The number of X coordinate values required to
+        nx (int, optional): The number of X-coordinate values required to
             perform the interpolation. Defaults to ``3``.
-        ny (int, optional): The number of Y coordinate values required to
+        ny (int, optional): The number of Y-coordinate values required to
             perform the interpolation. Defaults to ``3``.
         fitting_model (str, optional): Type of interpolation to be performed.
             Supported are ``linear``, ``bicubic``, ``polynomial``, ``c_spline``,
@@ -65,7 +65,7 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
             Default ``undef``.
         bounds_error (bool, optional): If True, when interpolated values are
             requested outside of the domain of the input axes (x,y), a
-            :py:class:`ValueError` is raised. If False, then value is set to
+            :py:class:`ValueError` is raised. If False, then the value is set to
             NaN. Default to ``False``.
         num_threads (int, optional): The number of threads to use for the
             computation. If 0 all CPUs are used. If 1 is given, no parallel

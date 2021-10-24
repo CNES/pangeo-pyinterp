@@ -21,7 +21,7 @@ mesh = pyinterp.RTree()
 
 #%%
 # Then, we will insert points into the tree. The class allows you to add points
-# using two algorithms. The first one, called :py:meth:`packing
+# using two algorithms. The first one called :py:meth:`packing
 # <pyinterp.RTree.packing>`, will enable you to enter the values in the tree at
 # once. This mechanism is the recommended solution to create an optimized
 # in-memory structure, both in terms of construction time and queries. When this
@@ -50,10 +50,10 @@ mesh.packing(numpy.vstack((lons, lats)).T, data)
 #
 # .. note::
 #
-#     When comparing an RBF to IDW, IDW will never predict values higher than
-#     the maximum measured value or lower than the minimum measured value.
-#     However, RBFs can predict values higher than the maximum values and lower
-#     than the minimum measured values.
+#     When comparing an RBF to IDW, IDW will never predict values higher than the
+#     maximum measured value or lower than the minimum measured value. However,
+#     RBFs can predict values higher than the maximum values and lower than the
+#     minimum measured values.
 #
 #     The window function restricts the analyzed data set to a range near the
 #     point of interest. The weighting factor decreases the effect of points

@@ -73,7 +73,7 @@ trivariate = interpolator.trivariate(
 # Bicubic on 3D grid
 # ==================
 #
-# The grid used organizes the latitudes in descending order. We ask our
+# Used grid organizes the latitudes in descending order. We ask our
 # constructor to flip this axis in order to correctly evaluate the bicubic
 # interpolation from this 3D cube (only necessary to perform a bicubic
 # interpolation).

@@ -66,7 +66,7 @@ quadrivariate = interpolator.quadrivariate(
 # Bicubic on 4D grid
 # ==================
 #
-# The grid used organizes the latitudes in descending order. We ask our
+# Used grid organizes the latitudes in descending order. We ask our
 # constructor to flip this axis in order to correctly evaluate the bicubic
 # interpolation from this 4D cube (only necessary to perform a bicubic
 # interpolation).
@@ -96,7 +96,7 @@ lats = my[0, :].squeeze()
 #
 # .. note::
 #
-#   The resolution of the example grid is very low (one pixel every one degree)
+#   The resolution of the grid example is very low (one pixel everyone degree)
 #   therefore the calculation window cannot find the required pixels at the
 #   edges to calculate the interpolation correctly. See Chapter
 #   :doc:`ex_fill_undef` to see how to address this issue.

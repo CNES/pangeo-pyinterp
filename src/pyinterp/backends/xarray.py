@@ -66,7 +66,7 @@ class AxisIdentifier:
 
         Returns:
             str, optional:
-                The name of the latitude coordinate
+                The name of the latitude coordinates
         """
         return self._axis(cf.AxisLatitudeUnit())
 
@@ -119,7 +119,7 @@ def _coords(
 
     Args:
         coords (dict): Mapping from dimension names to the
-            new coordinates. New coordinate can be an scalar, array-like.
+            new coordinates. New coordinate can be a scalar, array-like.
         dims (tuple): List of dimensions handled by the grid
         datetime64 (tuple, optional): Properties of the axis used
 
@@ -127,7 +127,7 @@ def _coords(
         tuple: the tuple of arguments decoded.
 
     Raises:
-        TypeError if coords is not on instance of ``dict``
+        TypeError if coords are not one instance of ``dict``
         IndexError if the number of coordinates is different from the
             number of grid dimensions
         IndexError if one of the coordinates is not used by this grid.
@@ -435,7 +435,7 @@ class RegularGridInterpolator:
     """Interpolation on a regular grid in arbitrary dimensions
 
     The data must be defined on a regular grid; the grid spacing however may be
-    uneven.  Linear, nearest-neighbour, inverse distance weighting and bicubic
+    uneven.  Linear, nearest neighbors, inverse distance weighting and bicubic
     interpolation are supported.
     """
     def __init__(self,
@@ -504,7 +504,7 @@ class RegularGridInterpolator:
 
     @property
     def grid(self) -> Union[Grid2D, Grid3D, Grid4D]:
-        """Gets the instance handling the regular grid for interpolations.
+        """Gets the instance of handling the regular grid for interpolations.
 
         Returns:
             Grid2D, Grid3D, Grid4D: the regular grid

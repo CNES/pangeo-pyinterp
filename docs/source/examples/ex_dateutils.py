@@ -1,7 +1,7 @@
 """
-*******************
-Numpy date utilites
-*******************
+********************
+Numpy date utilities
+********************
 
 This library provides utility functions to perform conversions and get
 information about numpy dates quickly.
@@ -48,7 +48,7 @@ pyinterp.dateutils.isocalendar(dates)
 pyinterp.dateutils.weekday(dates)
 
 # %%
-# Get the timedelta from since january
+# Get the timedelta from since January
 pyinterp.dateutils.timedelta_since_january(dates)
 
 # %%

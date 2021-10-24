@@ -2,7 +2,7 @@ Setup with Anaconda
 *******************
 
 `Anaconda <https://anaconda.org/>`_  is a free and open-source distribution of
-the Python programming language for scientific computing, that aims to simplify
+the Python programming language for scientific computing, which aims to simplify
 package management and deployment. The package management system ``conda``
 manages package versions.
 

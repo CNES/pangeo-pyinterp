@@ -11,7 +11,7 @@ been developed.
 World Geodetic System (WGS)
 ===========================
 
-This class allows to describe the geodetic coordinate system used in the
+This class allows describing the geodetic coordinate system used in the
 calculation. By default, the class instantiates the WGS84 system.
 """
 #%%

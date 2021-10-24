@@ -4,7 +4,7 @@ Descriptive Statistics
 **********************
 
 Numpy offers many statistical functions, but if you want to obtain several
-statistical variables from the same array, it' s necessary to process the data
+statistical variables from the same array, it's necessary to process the data
 several times to calculate the various parameters. This example shows how to use
 the DescriptiveStatistics class to obtain several statistical variables with a
 single calculation. Also, the calculation algorithm is incremental and is more

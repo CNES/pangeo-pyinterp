@@ -105,7 +105,7 @@ following steps:
 
 The first command compiles the extension to generate a coverage mapping to allow
 code coverage analysis. The second command performs the Python and C++ unit
-tests, analyzes the coverage of the C++ code, and generates the associated HTML
+tests, analyze the coverage of the C++ code, and generates the associated HTML
 report with `lcov <http://ltp.sourceforge.net/coverage/lcov.php>`_. The
 generated report is available in the ``htmllcov`` directory located at the root
 of the project.

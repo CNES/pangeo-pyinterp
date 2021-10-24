@@ -86,7 +86,7 @@ class StreamingHistogram:
                 over the flattened array.
             bin_count (int, optional): The maximum number of bins to use in the
                 histogram. If the number of bins exceeds the number of values,
-                the histogram will be trimed. Default is ``None``, which will
+                the histogram will be trimmed. Default is ``None``, which will
                 set the number of bins to 100.
             dtype (numpy.dtype, optional): Data type of the returned array. By
                 default, the data type is numpy.float64.
@@ -140,12 +140,12 @@ class StreamingHistogram:
 
         If :py:meth:`size() <pyinterp.StreamingHistogram.size>` is equal to
         :py:meth:`count() <pyinterp.StreamingHistogram.count>` then the
-        histrogram used to calculate the statistics is uncompressed. Otherwise,
+        histogram used to calculate the statistics is un-compressed. Otherwise,
         the histogram is compressed, which means that the calculated statistical
         quantities are an approximation of the statistical variables.
 
         Returns:
-            numpy.ndarray: Returns the number of bins allocated to calculate
+            numpy.ndarray: Returns number of bins allocated to calculate
             the histogram.
         """
         return self._instance.size()

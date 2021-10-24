@@ -78,7 +78,7 @@ contrast, in the case of an irregular axis, the search will be performed using a
 binary search.
 
 Finally, this class can define a circular axis from a vector to correctly
-locate a value on the circle. This type of Axis will is used handling
+locate a value on the circle. This type of Axis will is used for handling
 longitudes.
 
 Temporal Axes
@@ -104,21 +104,21 @@ implementations.
 The tree used here is the implementation provided by the `C++ Boost library
 <https://www.boost.org/doc/libs/1_70_0/libs/geometry/doc/html/geometry/reference/spatial_indexes/boost__geometry__index__rtree.html>`_.
 
-An adaptation has introduced to address spherical equatorial coordinates
-effectively. Although the Boost library allows these coordinates to manipulated
+An adaptation has been introduced to address spherical equatorial coordinates
+effectively. Although the Boost library allows these coordinates to manipulate
 natively, the performance is lower than in the case of Cartesian space. Thus, we
 have chosen to implement a conversion of Longitude Latitude Altitude (*LLA*)
 coordinates into Earth-Centered, Earth-Fixed (*ECEF*) coordinates transparently
 for the user to ensure that we can preserve excellent performance. The
-disadvantage of this implementation is that it requires a little more memory, as
+disadvantage of this implementation is that it requires fairly more memory, as
 one more element gets used to index the value of the Cartesian space.
 
 The management of the `LLA
 <https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.geodetic.Coordinates.ecef_to_lla.html>`_/`ECEF
 <https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.geodetic.Coordinates.lla_to_ecef.html>`_
 coordinate conversion is managed to use the `Olson, D.K.
-<https://ieeexplore.ieee.org/document/481290>`_ algorithm. It has excellent
-performance with an accuracy of 1e-8 meters for altitude.
+<https://ieeexplore.ieee.org/document/481290>`_ algorithm. It has an excellent
+performance with the accuracy of 1e-8 meters for altitude.
 
 Geohash
 -------
