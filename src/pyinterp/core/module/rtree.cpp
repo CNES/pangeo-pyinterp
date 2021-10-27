@@ -213,7 +213,8 @@ Returns:
            &pyinterp::RTree<CoordinateType, Type, N>::window_function,
            py::arg("coordinates"), py::arg("radius"), py::arg("k") = 9,
            py::arg("wf") = pyinterp::WindowFunction::kHamming,
-           py::arg("within") = true, py::arg("num_threads") = 0,
+           py::arg("arg") = py::none(), py::arg("within") = true,
+           py::arg("num_threads") = 0,
            (R"__doc__(
 Interpolation of the value at the requested position by window function.
 
@@ -226,6 +227,8 @@ Args:
         calculating the interpolated value. Defaults to ``9``.
     wf (pyinterp.core.WindowFunction, optional): The window function to be
         used. Defaults to :py:attr:`pyinterp.core.WindowFunction.Hamming`.
+    arg (float, optional): The optional argument of the window function.
+        Defaults to ``None``.
     within (bool, optional): If true, the method ensures that the neighbors
         found are located around the point of interest. Defaults to ``true``.
     num_threads (int, optional): The number of threads to use for the
@@ -281,16 +284,21 @@ void init_rtree(py::module& m) {
       .value("Hamming", pyinterp::WindowFunction::kHamming,
              ":math:`w(d) = 0.53836 - 0.46164 \\cos(\\frac{\\pi (d + r)}{r})`")
       .value("Lanczos", pyinterp::WindowFunction::kLanczos,
-             ":math:`w(d) = sinc(\\frac{2(d + r)}{2r} - 1)`")
+             ":math:`w(d) = \\left\\{\\begin{array}{ll}"
+             "sinc(\\frac{d}{r}) \\times sinc(\\frac{d}{nlobes \\times r}),"
+             " & d \\le nlobes \\times r \\\\ "
+             "0, & d \\gt nlobes \\times r \\end{array} \\right\\}`")
       .value("Nuttall", pyinterp::WindowFunction::kNuttall,
              ":math:`w(d) = 0.3635819 - 0.4891775 "
              "\\cos(\\frac{\\pi (d + r)}{r}) + 0.1365995 "
              "\\cos(\\frac{2 \\pi (d + r)}{r})`")
       .value("Parzen", pyinterp::WindowFunction::kParzen,
              ":math:`w(d) = \\left\\{ \\begin{array}{ll} 1 - 6 "
-             "\\left(\\frac{2*d}{2*r}\\right)^2 \\left(1 - "
-             "\\frac{2*d}{2*r}\\right), & 0 \\le d \\le \\frac{r}{2} \\\\ "
-             "2\\left(1 - \\frac{2*d}{2*r}\\right)^3 & \\frac{r}{2} < d \\le r "
+             "\\left(\\frac{2*d}{2*r}\\right)^2 "
+             "\\left(1 - \\frac{2*d}{2*r}\\right), & "
+             "d \\le \\frac{2r + arg}{4} \\\\ "
+             "2\\left(1 - \\frac{2*d}{2*r}\\right)^3 & "
+             "\\frac{2r + arg}{2} \\le d \\lt \\frac{2r +arg}{4} "
              "\\end{array} \\right\\}`")
       .value("ParzenSWOT", pyinterp::WindowFunction::kParzenSWOT,
              ":math:`w(d) = w(d) = \\left\\{\\begin{array}{ll} "

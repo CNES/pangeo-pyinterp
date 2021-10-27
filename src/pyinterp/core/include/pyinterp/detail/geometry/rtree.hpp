@@ -346,8 +346,8 @@ class RTree {
   /// neighbors used in the calculation.
   auto window_function(const point_t &point,
                        const math::WindowFunction<distance_t> &wf,
-                       distance_t radius, uint32_t k, bool within) const
-      -> std::pair<distance_t, uint32_t> {
+                       const distance_t arg, distance_t radius, uint32_t k,
+                       bool within) const -> std::pair<distance_t, uint32_t> {
     distance_t result = 0;
     distance_t total_weight = 0;
 
@@ -357,7 +357,7 @@ class RTree {
     for (const auto &item : nearest) {
       const auto distance = item.first;
 
-      auto wk = wf(distance, radius);
+      auto wk = wf(distance, radius, arg);
       total_weight += wk;
       result += item.second * wk;
       ++neighbors;

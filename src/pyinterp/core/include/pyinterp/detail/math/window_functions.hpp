@@ -21,7 +21,7 @@ enum Function : uint8_t {
 
 /// Hamming window function.
 template <typename T>
-constexpr auto hamming(const T& d, const T& r) -> T {
+constexpr auto hamming(const T& d, const T& r, const T&) -> T {
   if (d <= r) {
     return 0.53836 - 0.46164 * std::cos(pi<T>() * (d + r) / r);
   }
@@ -30,7 +30,7 @@ constexpr auto hamming(const T& d, const T& r) -> T {
 
 /// kBlackman window function.
 template <typename T>
-constexpr auto blackman(const T& d, const T& r) -> T {
+constexpr auto blackman(const T& d, const T& r, const T&) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
     return (T(7938) / T(18608)) -
@@ -42,7 +42,7 @@ constexpr auto blackman(const T& d, const T& r) -> T {
 
 /// Flat top window function.
 template <typename T>
-constexpr auto flat_top(const T& d, const T& r) -> T {
+constexpr auto flat_top(const T& d, const T& r, const T&) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
     return 0.21557895 - 0.41663158 * std::cos(pi<T>() * ratio) +
@@ -55,7 +55,7 @@ constexpr auto flat_top(const T& d, const T& r) -> T {
 
 /// Nuttall window function.
 template <typename T>
-constexpr auto nuttall(const T& d, const T& r) -> T {
+constexpr auto nuttall(const T& d, const T& r, const T&) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
     return 0.3635819 - 0.4891775 * std::cos(pi<T>() * ratio) +
@@ -66,7 +66,7 @@ constexpr auto nuttall(const T& d, const T& r) -> T {
 
 /// kBlackman-Harris window function.
 template <typename T>
-constexpr auto blackman_harris(const T& d, const T& r) -> T {
+constexpr auto blackman_harris(const T& d, const T& r, const T&) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
     return 0.35875 - 0.48829 * std::cos(pi<T>() * ratio) +
@@ -77,22 +77,22 @@ constexpr auto blackman_harris(const T& d, const T& r) -> T {
 }
 /// Lanczos window function.
 template <typename T>
-constexpr auto lanczos(const T& d, const T& r) -> T {
-  if (d <= r) {
-    return sinc(2 * (d + r) / (2 * r) - 1);
+constexpr auto lanczos(const T& d, const T& r, const T& nlobes) -> T {
+  if (d <= nlobes * r) {
+    return sinc(d / r) * sinc(d / (r * nlobes));
   }
   return T(0);
 }
 
 // Parzen window function.
 template <typename T>
-constexpr auto parzen(const T& d, const T& r) -> T {
+constexpr auto parzen(const T& d, const T& r, const T& sampling) -> T {
   auto ratio = d / r;
-  auto l = 2 * r /* + sampling */;
+  auto l = 2 * r + sampling;
   if (d <= l / 4) {
     return 1 - 6 * std::pow(ratio, 2) * (1 - ratio);
   }
-  if (l / 2 <= r || d > l / 4) {
+  if (l / 2 <= d || d > l / 4) {
     return 2 * std::pow(1 - ratio, 3);
   }
   return T(0);
@@ -100,7 +100,7 @@ constexpr auto parzen(const T& d, const T& r) -> T {
 
 // A window similar to the Parzen window used for SWOT products.
 template <typename T>
-constexpr auto parzen_swot(const T& d, const T& r) -> T {
+constexpr auto parzen_swot(const T& d, const T& r, const T&) -> T {
   auto l = 2 * r;
   auto ratio = (2 * d) / l;
   if (d <= l / 4) {
@@ -126,7 +126,7 @@ template <typename T>
 class WindowFunction {
  public:
   /// Pointer to the Window Function used.
-  using PtrWindowFunction = T (*)(const T&, const T&);
+  using PtrWindowFunction = T (*)(const T&, const T&, const T&);
 
   /// Default constructor
   ///
@@ -167,9 +167,11 @@ class WindowFunction {
   ///
   /// @param data The data to apply the window function to.
   /// @param r The radius of the window function.
+  /// @param arg The optional argument to the window function.
   /// @return The windowed data.
-  constexpr auto operator()(const T& data, const T& r) const -> T {
-    return (this->function_)(data, r);
+  constexpr auto operator()(const T& data, const T& r,
+                            const T& arg = T(0)) const -> T {
+    return (this->function_)(data, r, arg);
   }
 
  private:

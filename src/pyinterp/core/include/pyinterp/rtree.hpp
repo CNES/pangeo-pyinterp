@@ -237,17 +237,18 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
       const pybind11::array_t<CoordinateType, pybind11::array::c_style>
           &coordinates,
       const distance_t &radius, const uint32_t k, const WindowFunction wf,
-      const bool within, const size_t num_threads) const -> pybind11::tuple {
+      const std::optional<distance_t> &arg, const bool within,
+      const size_t num_threads) const -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case N - 1:
         return _window_function<N - 1>(
             &RTree<CoordinateType, Type, N>::from_lon_lat, coordinates, radius,
-            k, wf, within, num_threads);
+            k, wf, arg.value_or(0), within, num_threads);
       case N:
         return _window_function<N>(
             &RTree<CoordinateType, Type, N>::from_lon_lat_alt, coordinates,
-            radius, k, wf, within, num_threads);
+            radius, k, wf, arg.value_or(0), within, num_threads);
       default:
         throw std::invalid_argument(
             RTree<CoordinateType, Type, N>::invalid_shape());
@@ -610,8 +611,9 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
   auto _window_function(Converter converter,
                         const pybind11::array_t<CoordinateType> &coordinates,
                         const distance_t radius, const uint32_t k,
-                        const WindowFunction wf, const bool within,
-                        const size_t num_threads) const -> pybind11::tuple {
+                        const WindowFunction wf, const distance_t arg,
+                        const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     auto _coordinates = coordinates.template unchecked<2>();
     auto size = coordinates.shape(0);
 
@@ -647,7 +649,7 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
                 auto result =
                     detail::geometry::RTree<CoordinateType, Type,
                                             N>::window_function(point,
-                                                                wf_handler,
+                                                                wf_handler, arg,
                                                                 radius, k,
                                                                 within);
                 _data(ix) = result.first;

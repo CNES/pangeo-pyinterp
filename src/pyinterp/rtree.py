@@ -251,6 +251,7 @@ class RTree:
             radius: float,
             k: Optional[int] = 9,
             wf: Optional[str] = None,
+            arg: Optional[float] = None,
             within: Optional[bool] = True,
             num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
         """Interpolation of the value at the requested position by window
@@ -296,7 +297,10 @@ class RTree:
                   0.277263158 \\cos(\\frac{2 \\pi (d + r)}{r}) -
                   0.083578947 \\cos(\\frac{3 \\pi (d + r)}{r}) +
                   0.006947368 \\cos(\\frac{4 \\pi (d + r)}{r})`
-                * ``lanczos``: :math:`w(d) = sinc(\\frac{2(d + r)}{2r} - 1)`
+                * ``lanczos``: :math:`w(d) = \\left\\{\\begin{array}{ll}
+                  sinc(\\frac{d}{r}) \\times sinc(\\frac{d}{arg \\times r}),
+                  & d \\le arg \\times r \\\\ 0,
+                  & d \\gt arg \\times r \\end{array} \\right\\}`
                 * ``hamming``: :math:`w(d) = 0.53836 - 0.46164
                   \\cos(\\frac{\\pi (d + r)}{r})`
                 * ``nuttall``: :math:`w(d) = 0.3635819 - 0.4891775
@@ -304,10 +308,11 @@ class RTree:
                   \\cos(\\frac{2 \\pi (d + r)}{r})`
                 * ``parzen``: :math:`w(d) = \\left\\{ \\begin{array}{ll} 1 - 6
                   \\left(\\frac{2*d}{2*r}\\right)^2
-                  \\left(1 - \\frac{2*d}{2*r}\\right), & 0
-                  \\le d \\le \\frac{r}{2} \\\\
-                  2\\left(1 - \\frac{2*d}{2*r}\\right)^3 &
-                  \\frac{r}{2} < d \\le r \\end{array} \\right\\}`
+                  \\left(1 - \\frac{2*d}{2*r}\\right),
+                  & d \\le \\frac{2r + arg}{4} \\\\
+                  2\\left(1 - \\frac{2*d}{2*r}\\right)^3
+                  & \\frac{2r + arg}{2} \\le d \\lt \\frac{2r +arg}{4}
+                  \\end{array} \\right\\}`
                 * ``parzen_swot``: :math:`w(d) = \\left\\{\\begin{array}{ll}
                   1 - 6\\left(\\frac{2 * d}{2 * r}\\right)^2
                   + 6\\left(1 - \\frac{2 * d}{2 * r}\\right), &
@@ -315,6 +320,9 @@ class RTree:
                   2\\left(1 - \\frac{2 * d}{2 * r}\\right)^3 &
                   \\frac{2r}{2} \\ge d \\gt \\frac{2r}{4} \\end{array}
                   \\right\\}`
+            arg (float, optional): The optional argument of the window
+                function. Defaults to ``1`` for ``lanczos``, to ``0`` for
+                ``parzen`` and for all other functions is ``None``.
             within (bool, optional): If true, the method ensures that the
                 neighbors found are located around the point of interest. In
                 other words, this parameter ensures that the calculated values
@@ -339,10 +347,30 @@ class RTree:
                 "parzen_swot",
         ]:
             raise ValueError(f"Window function {wf!r} is not defined")
+
+        if wf in ["lanczos", "parzen"]:
+            if arg is None:
+                defaults = dict(lanczos=1, parzen=0)
+                arg = defaults[wf]
+
+            if wf == "lanczos" and arg < 1:  # type: ignore
+                raise ValueError(f"The argument of the function {wf!r} must be "
+                                "greater than 1")
+
+            if wf == "parzen" and arg < 0:  # type: ignore
+                raise ValueError(f"The argument of the function {wf!r} must be "
+                                "greater than 0")
+        else:
+            if arg is not None:
+                raise ValueError(f"The function {wf!r} does not support the "
+                                "optional argument")
+
+
         wf = "".join(item.capitalize() for item in wf.split("_"))
 
         return self._instance.window_function(coordinates, radius, k,
                                               getattr(core.WindowFunction, wf),
+                                              arg,
                                               within, num_threads)
 
     def __getstate__(self) -> Tuple:

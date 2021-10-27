@@ -851,6 +851,7 @@ class RTree3DFloat32:
                         radius: float,
                         k: int = ...,
                         wf: WindowFunction = ...,
+                        arg: Optional[float] = ...,
                         within: bool = ...,
                         num_threads: int = ...) -> tuple:
         ...
@@ -918,6 +919,7 @@ class RTree3DFloat64:
                         radius: float,
                         k: int = ...,
                         wf: WindowFunction = ...,
+                        arg: Optional[float] = ...,
                         within: bool = ...,
                         num_threads: int = ...) -> tuple:
         ...
