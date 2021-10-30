@@ -122,9 +122,9 @@ jobs:
       python setup.py test
     displayName: Test cases
 - job:
-  displayName: vs2017-win2016
+  displayName: windows-2019
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
   strategy:
     matrix:
       Python37:
