@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.9.1 (30 October 2021)
+-----------------------
+* Add arguments for windowed functions.
+
 0.9.0 (22 October 2021)
 -----------------------
 * Smoothing of an unstructured interpolated mesh with a window function.

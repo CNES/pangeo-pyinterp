@@ -1,6 +1,5 @@
 name: pyinterp
 channels:
-  - fbriol
   - conda-forge
 dependencies:
   - cartopy
@@ -11,4 +10,4 @@ dependencies:
   - netCDF4
   - numcodecs
   - pandas
-  - pyinterp>=0.9.0
+  - pyinterp>=0.9.1
