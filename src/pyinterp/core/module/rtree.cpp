@@ -275,6 +275,8 @@ void init_rtree(py::module& m) {
              ":math:`w(d) = 0.35875 - 0.48829 \\cos(\\frac{\\pi (d + r)}{r}) + "
              "0.14128 \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.01168 "
              "\\cos(\\frac{3 \\pi (d + r)}{r})`")
+      .value("Boxcar", pyinterp::WindowFunction::kBoxcar,
+             ":math:`w(d) = 1`")
       .value("FlatTop", pyinterp::WindowFunction::kFlatTop,
              ":math:`w(d) = 0.21557895 - "
              "0.41663158 \\cos(\\frac{\\pi (d + r)}{r}) + "

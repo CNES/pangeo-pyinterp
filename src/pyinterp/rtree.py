@@ -292,6 +292,7 @@ class RTree:
                   \\cos(\\frac{\\pi (d + r)}{r}) + 0.14128
                   \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.01168
                   \\cos(\\frac{3 \\pi (d + r)}{r})`
+                * ``boxcar``: :math:`w(d) = 1`
                 * ``flat_top``: :math:`w(d) = 0.21557895 -
                   0.41663158 \\cos(\\frac{\\pi (d + r)}{r}) +
                   0.277263158 \\cos(\\frac{2 \\pi (d + r)}{r}) -
@@ -339,6 +340,7 @@ class RTree:
         if wf not in [
                 "blackman",
                 "blackman_harris",
+                "boxcar",
                 "flattop",
                 "hamming",
                 "lanczos",

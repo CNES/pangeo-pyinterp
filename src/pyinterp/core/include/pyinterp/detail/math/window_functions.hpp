@@ -11,6 +11,7 @@ namespace window {
 enum Function : uint8_t {
   kBlackman,
   kBlackmanHarris,
+  kBoxcar,
   kFlatTop,
   kHamming,
   kLanczos,
@@ -112,6 +113,16 @@ constexpr auto parzen_swot(const T& d, const T& r, const T&) -> T {
   return T(0);
 }
 
+// Boxcar window function.
+template <typename T>
+constexpr auto boxcar(const T& d, const T& r, const T& sampling) -> T {
+  if (d <= r) {
+    return T(1);
+  }
+  return T(0);
+}
+
+
 }  // namespace window
 
 /// In signal processing and statistics, a window function (also known as
@@ -138,6 +149,9 @@ class WindowFunction {
         break;
       case window::Function::kBlackmanHarris:
         function_ = &window::blackman_harris;
+        break;
+      case window::Function::kBoxcar:
+        function_ = &window::boxcar;
         break;
       case window::Function::kFlatTop:
         function_ = &window::flat_top;
