@@ -4,6 +4,7 @@
 # BSD-style license that can be found in the LICENSE file.
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
+from typing import ClassVar, Optional
 import datetime
 import os
 import pathlib
@@ -49,6 +50,7 @@ def execute(cmd):
                                shell=True,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
+    assert process.stdout is not None
     return process.stdout.read().decode()
 
 
@@ -110,7 +112,7 @@ def revision():
 
     # If the information is unavailable (execution of this function outside the
     # development environment), file creation is not possible
-    if not stdout:
+    if not stdout or match is None:
         pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
         with open(module, "r") as stream:
             for line in stream:
@@ -119,18 +121,11 @@ def revision():
                     return match.group(1)
         raise AssertionError()
 
-    # No tag already registred
-    if match is None:
-        pattern = re.compile(r'([\w\d]+)(?:-(dirty))?')
-        match = pattern.search(stdout)
-        version = "0.0"
-        sha1 = match.group(1)
-    else:
-        version = match.group(1)
-        commits = int(match.group(2))
-        sha1 = match.group(3)
-        if commits != 0:
-            version += f".dev{commits}"
+    version = match.group(1)
+    commits = int(match.group(2))
+    sha1 = match.group(3)
+    if commits != 0:
+        version += f".dev{commits}"
 
     stdout = execute("git log  %s -1 --format=\"%%H %%at\"" % sha1)
     stdout = stdout.strip().split()
@@ -204,40 +199,40 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     """Build the Python extension using cmake"""
 
     #: Preferred BOOST root
-    BOOST_ROOT = None
+    BOOST_ROOT: ClassVar[Optional[str]] = None
 
     #: Build the unit tests of the C++ extension
-    BUILD_INITTESTS = None
+    BUILD_INITTESTS: ClassVar[Optional[bool]] = None
 
     #: Enable coverage reporting
-    CODE_COVERAGE = None
+    CODE_COVERAGE: ClassVar[Optional[bool]] = None
 
     #: Generation of the conda-forge package
-    CONDA_FORGE = None
+    CONDA_FORGE: ClassVar[Optional[bool]] = None
 
     #: Preferred C compiler
-    C_COMPILER = None
+    C_COMPILER: ClassVar[Optional[str]] = None
 
     #: Preferred C++ compiler
-    CXX_COMPILER = None
+    CXX_COMPILER: ClassVar[Optional[str]] = None
 
     #: Preferred Eigen root
-    EIGEN3_INCLUDE_DIR = None
+    EIGEN3_INCLUDE_DIR: ClassVar[Optional[str]] = None
 
     #: Preferred GSL root
-    GSL_ROOT = None
+    GSL_ROOT: ClassVar[Optional[str]] = None
 
     #: Preferred MKL root
-    MKL_ROOT = None
+    MKL_ROOT: ClassVar[Optional[str]] = None
 
     #: Preferred Snappy root
-    SNAPPY_ROOT = None
+    SNAPPY_ROOT: ClassVar[Optional[str]] = None
 
     #: Run CMake to configure this project
-    RECONFIGURE = None
+    RECONFIGURE: ClassVar[Optional[bool]] = None
 
     #: Use of MKL
-    MKL = None
+    MKL: ClassVar[Optional[bool]] = None
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
@@ -435,10 +430,10 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                     cfg.upper(), extdir)
             ]
             build_args += ['--', '/m']
-            if self.verbose:
+            if self.verbose:  # type: ignore
                 build_args += ['/verbosity:n']
 
-        if self.verbose:
+        if self.verbose:  # type: ignore
             build_args.insert(0, "--verbose")
 
         os.chdir(str(build_temp))
@@ -453,7 +448,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         if configure:
             self.spawn(['cmake', str(WORKING_DIRECTORY)] + cmake_args)
-        if not self.dry_run:
+        if not self.dry_run:  # type: ignore
             cmake_cmd = ['cmake', '--build', '.']
             if self.BUILD_INITTESTS is None:
                 cmake_cmd += ['--target', 'core']
@@ -573,8 +568,9 @@ class Test(setuptools.Command):
         sys.path.insert(0, str(build_dirname()))
 
         errno = pytest.main(
-            shlex.split(self.pytest_args,
-                        posix=platform.system() != 'Windows'))
+            shlex.split(
+                self.pytest_args,  # type: ignore
+                posix=platform.system() != 'Windows'))
         if errno:
             sys.exit(errno)
 
@@ -652,13 +648,14 @@ def main():
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9"
+            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10"
         ],
         cmdclass={
             'build': Build,
             'build_ext': BuildExt,
             'test': Test
-        },
+        },  # type: ignore
         data_files=typehints(),
         description='Interpolation of geo-referenced data for Python.',
         ext_modules=[CMakeExtension(name="pyinterp.core")],
@@ -673,7 +670,8 @@ def main():
         },
         package_dir={'': 'src'},
         packages=setuptools.find_namespace_packages(where='src',
-                                                    exclude=['pyinterp.core*']),
+                                                    exclude=['pyinterp.core*'
+                                                             ]),
         platforms=['POSIX', 'MacOS', 'Windows'],
         python_requires='>=3.6',
         tests_require=tests_require,
