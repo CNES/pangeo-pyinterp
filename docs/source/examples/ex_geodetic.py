@@ -79,10 +79,10 @@ print(paris.distance(new_york, strategy='vincenty', wgs=wgs84))
 lon = numpy.arange(0, 360, 10)
 lat = numpy.arange(-90, 90.5, 10)
 mx, my = numpy.meshgrid(lon, lat)
-distances = pyinterp.geodetic.coordinate_distances(mx.flatten(),
-                                                   my.flatten(),
-                                                   mx.flatten() + 1,
-                                                   my.flatten() + 1,
+distances = pyinterp.geodetic.coordinate_distances(mx.ravel(),
+                                                   my.ravel(),
+                                                   mx.ravel() + 1,
+                                                   my.ravel() + 1,
                                                    strategy="vincenty",
                                                    wgs=wgs84,
                                                    num_threads=1)
@@ -408,7 +408,7 @@ mx, my = numpy.meshgrid(lon, lat)
 # Creates the polython
 polygon = pyinterp.geodetic.Polygon(
     [pyinterp.geodetic.Point(*item) for item in coordinates])
-mask = polygon.covered_by(mx.flatten(), my.flatten())
+mask = polygon.covered_by(mx.ravel(), my.ravel())
 mask = mask.reshape(mx.shape)
 
 # %%
@@ -418,8 +418,8 @@ ax = fig.add_subplot(111, projection=cartopy.crs.PlateCarree())
 ax.add_feature(cartopy.feature.LAND)
 ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
 ax.coastlines()
-ax.scatter(mx.flatten(),
-           my.flatten(),
+ax.scatter(mx.ravel(),
+           my.ravel(),
            c=mask,
            cmap="bwr_r",
            transform=cartopy.crs.PlateCarree(),

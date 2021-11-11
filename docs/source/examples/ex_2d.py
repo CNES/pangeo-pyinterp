@@ -59,7 +59,7 @@ mx, my = numpy.meshgrid(numpy.arange(-180, 180, 1) + 1 / 3.0,
 # The grid is :py:meth:`interpolated
 # <pyinterp.backends.xarray.Grid2D.bivariate>` to the desired coordinates:
 mss = interpolator.bivariate(
-    coords=dict(lon=mx.flatten(), lat=my.flatten())).reshape(mx.shape)
+    coords=dict(lon=mx.ravel(), lat=my.ravel())).reshape(mx.shape)
 
 #%%
 # Let's visualize the original grid and the result of the interpolation.
@@ -115,7 +115,7 @@ fig.show()
 # The interpolation :py:meth:`bicubic <pyinterp.backends.xarray.Grid2D.bicubic>`
 # function has more parameters to define the data frame used by the spline
 # functions and how to process the edges of the regional grids:
-mss = interpolator.bicubic(coords=dict(lon=mx.flatten(), lat=my.flatten()),
+mss = interpolator.bicubic(coords=dict(lon=mx.ravel(), lat=my.ravel()),
                            nx=3,
                            ny=3).reshape(mx.shape)
 

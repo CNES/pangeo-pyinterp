@@ -65,7 +65,7 @@ def test_binning2d_methods():
     hist2d = core.Histogram2DFloat64(x_axis, y_axis, None)
     x, y, z = load_data()
     mx, my = np.meshgrid(x, y, indexing='ij')
-    hist2d.push(mx.flatten(), my.flatten(), z.flatten())
+    hist2d.push(mx.ravel(), my.ravel(), z.ravel())
 
     count = hist2d.count()
     assert count.max() != 0

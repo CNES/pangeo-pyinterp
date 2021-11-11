@@ -67,7 +67,7 @@ mx, my, mz = numpy.meshgrid(numpy.arange(-180, 180, 0.25) + 1 / 3.0,
 # We interpolate our grid using a :py:meth:`classical
 # <pyinterp.backends.xarray.Grid3D.trivariate>`:
 trivariate = interpolator.trivariate(
-    dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
+    dict(longitude=mx.ravel(), latitude=my.ravel(), time=mz.ravel()))
 
 #%%
 # Bicubic on 3D grid
@@ -85,7 +85,7 @@ interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars["tcw"],
 # <pyinterp.backends.xarray.Grid3D.bicubic>` interpolation in space followed by
 # a linear interpolation in the temporal axis:
 bicubic = interpolator.bicubic(
-    dict(longitude=mx.flatten(), latitude=my.flatten(), time=mz.flatten()))
+    dict(longitude=mx.ravel(), latitude=my.ravel(), time=mz.ravel()))
 
 #%%
 # We transform our result cubes into a matrix.

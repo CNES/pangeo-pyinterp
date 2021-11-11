@@ -57,10 +57,10 @@ mx, my, mz, mu = numpy.meshgrid(numpy.arange(-125, -70, 0.5),
 # We interpolate our grid using a :py:meth:`classical
 # <pyinterp.backends.xarray.Grid4D.quadrivariate>`:
 quadrivariate = interpolator.quadrivariate(
-    dict(longitude=mx.flatten(),
-         latitude=my.flatten(),
-         time=mz.flatten(),
-         level=mu.flatten())).reshape(mx.shape)
+    dict(longitude=mx.ravel(),
+         latitude=my.ravel(),
+         time=mz.ravel(),
+         level=mu.ravel())).reshape(mx.shape)
 
 #%%
 # Bicubic on 4D grid
@@ -77,10 +77,10 @@ interpolator = pyinterp.backends.xarray.Grid4D(ds.pressure,
 # We interpolate our grid using a :py:meth:`bicubic
 # <pyinterp.backends.xarray.Grid4D.bicubic>` interpolation in space followed by
 # a linear interpolation in the temporal axis:
-bicubic = interpolator.bicubic(dict(longitude=mx.flatten(),
-                                    latitude=my.flatten(),
-                                    time=mz.flatten(),
-                                    level=mu.flatten()),
+bicubic = interpolator.bicubic(dict(longitude=mx.ravel(),
+                                    latitude=my.ravel(),
+                                    time=mz.ravel(),
+                                    level=mu.ravel()),
                                nx=2,
                                ny=2).reshape(mx.shape)
 

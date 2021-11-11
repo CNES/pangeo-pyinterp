@@ -37,34 +37,34 @@ def test_4d():
     x, y, z, t = np.meshgrid(lon, lat, level, time, indexing="ij")
 
     pressure = grid.quadrivariate(
-        collections.OrderedDict(longitude=x.flatten(),
-                                latitude=y.flatten(),
-                                level=z.flatten(),
-                                time=t.flatten()))
+        collections.OrderedDict(longitude=x.ravel(),
+                                latitude=y.ravel(),
+                                level=z.ravel(),
+                                time=t.ravel()))
     assert isinstance(pressure, np.ndarray)
 
     pressure = grid.bicubic(
-        collections.OrderedDict(longitude=x.flatten(),
-                                latitude=y.flatten(),
-                                level=z.flatten(),
-                                time=t.flatten()))
+        collections.OrderedDict(longitude=x.ravel(),
+                                latitude=y.ravel(),
+                                level=z.ravel(),
+                                time=t.ravel()))
     assert isinstance(pressure, np.ndarray)
 
     with pytest.raises(ValueError):
         time = 5
         x, y, t = np.meshgrid(lon, lat, level, time, indexing="ij")
         pressure = grid.quadrivariate(collections.OrderedDict(
-            longitude=x.flatten(),
-            latitude=y.flatten(),
-            level=z.flatten(),
-            time=t.flatten()),
+            longitude=x.ravel(),
+            latitude=y.ravel(),
+            level=z.ravel(),
+            time=t.ravel()),
                                       bounds_error=True)
 
     with pytest.raises(ValueError):
-        pressure = grid.bicubic(collections.OrderedDict(longitude=x.flatten(),
-                                                        latitude=y.flatten(),
-                                                        level=z.flatten(),
-                                                        time=t.flatten()),
+        pressure = grid.bicubic(collections.OrderedDict(longitude=x.ravel(),
+                                                        latitude=y.ravel(),
+                                                        level=z.ravel(),
+                                                        time=t.ravel()),
                                 bounds_error=True)
 
     grid = xr_backend.RegularGridInterpolator(xr.load_dataset(

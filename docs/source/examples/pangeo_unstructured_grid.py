@@ -52,8 +52,8 @@ ssh = ssh["Eta"].isel(time=0, i=indices, j=indices)
 #%%
 # Populates the search tree
 mesh.packing(
-    numpy.vstack((lons.values.flatten(), lats.values.flatten())).T,
-    ssh.values.flatten())
+    numpy.vstack((lons.values.ravel(), lats.values.ravel())).T,
+    ssh.values.ravel())
 
 #%%
 # When the tree is created, you can interpolate data with two algorithms:
@@ -85,7 +85,7 @@ mx, my = numpy.meshgrid(numpy.arange(x0, x1, res),
 #%%
 # IDW interpolation
 idw_eta, neighbors = mesh.inverse_distance_weighting(
-    numpy.vstack((mx.flatten(), my.flatten())).T,
+    numpy.vstack((mx.ravel(), my.ravel())).T,
     within=True,  # Extrapolation is forbidden
     radius=55000,  # In a radius of 5.5 Km
     k=8,  # We are looking for at most 8 neighbours
@@ -95,7 +95,7 @@ idw_eta = idw_eta.reshape(mx.shape)
 #%%
 # RBF interpolation
 rbf_eta, neighbors = mesh.radial_basis_function(
-    numpy.vstack((mx.flatten(), my.flatten())).T,
+    numpy.vstack((mx.ravel(), my.ravel())).T,
     within=True,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbours
     num_threads=0)

@@ -33,7 +33,7 @@ values = numpy.random.random_sample((2, 4, 6, 8))
 # Create a DescriptiveStatistics object.
 ds = pyinterp.DescriptiveStatistics(values)
 
-#%% 
+#%%
 # The constructor will calculate the statistical variables on the provided data.
 # The calculated variables are stored in the instance and can be accessed using
 # different methods:
@@ -65,9 +65,9 @@ ds.mean()
 #%%
 # The class can also process a dask array. In this case, the call to the
 # constructor triggers the calculation.
-ds = pyinterp.DescriptiveStatistics(
-    dask.array.from_array(values, chunks=(2, 2, 2, 2)),
-    axis=(1, 2))
+ds = pyinterp.DescriptiveStatistics(dask.array.from_array(values,
+                                                          chunks=(2, 2, 2, 2)),
+                                    axis=(1, 2))
 ds.mean()
 
 #%%

@@ -66,7 +66,7 @@ def test_binning2d_methods():
     binning = core.Binning2DFloat64(x_axis, y_axis, None)
     x, y, z = load_data()
     mx, my = np.meshgrid(x, y, indexing='ij')
-    binning.push(mx.flatten(), my.flatten(), z.flatten())
+    binning.push(mx.ravel(), my.ravel(), z.ravel())
 
     count = binning.count()
     assert count.max() != 0
@@ -77,7 +77,7 @@ def test_binning2d_methods():
 
     mx, my = np.meshgrid(x, y, indexing='ij')
     binning.clear()
-    binning.push(mx.flatten(), my.flatten(), z.flatten(), simple=False)
+    binning.push(mx.ravel(), my.ravel(), z.ravel(), simple=False)
 
     count = binning.count()
     assert count.max() != 0

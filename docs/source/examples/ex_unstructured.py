@@ -66,7 +66,7 @@ mx, my = numpy.meshgrid(numpy.arange(X0, X1 + STEP, STEP),
                         indexing="ij")
 
 idw, neighbors = mesh.inverse_distance_weighting(
-    numpy.vstack((mx.flatten(), my.flatten())).T,
+    numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbors
     radius=600000,
@@ -76,7 +76,7 @@ idw = idw.reshape(mx.shape)
 #%%
 # Interpolation with RBF method
 rbf, neighbors = mesh.radial_basis_function(
-    numpy.vstack((mx.flatten(), my.flatten())).T,
+    numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbors
     radius=600000,
@@ -87,7 +87,7 @@ rbf = rbf.reshape(mx.shape)
 #%%
 # Interpolation with a Window Function
 wf, neighbors = mesh.window_function(
-    numpy.vstack((mx.flatten(), my.flatten())).T,
+    numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,
     radius=600000,

@@ -292,6 +292,7 @@ class RTree:
                   \\cos(\\frac{\\pi (d + r)}{r}) + 0.14128
                   \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.01168
                   \\cos(\\frac{3 \\pi (d + r)}{r})`
+                * ``boxcar``: :math:`w(d) = 1`
                 * ``flat_top``: :math:`w(d) = 0.21557895 -
                   0.41663158 \\cos(\\frac{\\pi (d + r)}{r}) +
                   0.277263158 \\cos(\\frac{2 \\pi (d + r)}{r}) -
@@ -339,6 +340,7 @@ class RTree:
         if wf not in [
                 "blackman",
                 "blackman_harris",
+                "boxcar",
                 "flattop",
                 "hamming",
                 "lanczos",
@@ -354,24 +356,24 @@ class RTree:
                 arg = defaults[wf]
 
             if wf == "lanczos" and arg < 1:  # type: ignore
-                raise ValueError(f"The argument of the function {wf!r} must be "
-                                "greater than 1")
+                raise ValueError(
+                    f"The argument of the function {wf!r} must be "
+                    "greater than 1")
 
             if wf == "parzen" and arg < 0:  # type: ignore
-                raise ValueError(f"The argument of the function {wf!r} must be "
-                                "greater than 0")
+                raise ValueError(
+                    f"The argument of the function {wf!r} must be "
+                    "greater than 0")
         else:
             if arg is not None:
                 raise ValueError(f"The function {wf!r} does not support the "
-                                "optional argument")
-
+                                 "optional argument")
 
         wf = "".join(item.capitalize() for item in wf.split("_"))
 
         return self._instance.window_function(coordinates, radius, k,
                                               getattr(core.WindowFunction, wf),
-                                              arg,
-                                              within, num_threads)
+                                              arg, within, num_threads)
 
     def __getstate__(self) -> Tuple:
         """Return the state of the object for pickling purposes.

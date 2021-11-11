@@ -21,8 +21,8 @@ def build_rtree(dtype):
     assert isinstance(mesh, pyinterp.RTree)
     assert len(mesh) == 0
     assert not bool(mesh)
-    mesh.packing(np.vstack((lon.flatten(), lat.flatten())).T, data.flatten())
-    assert len(mesh) == len(lon.flatten())
+    mesh.packing(np.vstack((lon.ravel(), lat.ravel())).T, data.ravel())
+    assert len(mesh) == len(lon.ravel())
     assert bool(mesh)
     (x_min, y_min, z_min), (x_max, y_max, z_max) = mesh.bounds()
     assert x_min == -180
@@ -34,8 +34,8 @@ def build_rtree(dtype):
     mesh.clear()
     assert len(mesh) == 0
     assert not bool(mesh)
-    mesh.insert(np.vstack((lon.flatten(), lat.flatten())).T, data.flatten())
-    assert len(mesh) == len(lon.flatten())
+    mesh.insert(np.vstack((lon.ravel(), lat.ravel())).T, data.ravel())
+    assert len(mesh) == len(lon.ravel())
     assert isinstance(pickle.loads(pickle.dumps(mesh)), pyinterp.RTree)
 
 
@@ -59,7 +59,7 @@ def load_data():
     z = ds.mss.T
     x, y = np.meshgrid(ds.lon.values, ds.lat.values, indexing='ij')
     mesh = pyinterp.RTree()
-    mesh.packing(np.vstack((x.flatten(), y.flatten())).T, z.values.flatten())
+    mesh.packing(np.vstack((x.ravel(), y.ravel())).T, z.values.ravel())
     return mesh
 
 
@@ -68,7 +68,7 @@ def test_interpolate():
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
-    coordinates = np.vstack((x.flatten(), y.flatten())).T
+    coordinates = np.vstack((x.ravel(), y.ravel())).T
     mesh.query(coordinates)
     mesh.inverse_distance_weighting(coordinates)
     mesh.radial_basis_function(coordinates)

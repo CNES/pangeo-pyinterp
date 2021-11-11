@@ -25,7 +25,6 @@ import pyinterp.backends.xarray
 import pyinterp.tests
 import xarray
 
-
 #%%
 # The first step is to load the data into memory and create the interpolator
 # object:
@@ -111,7 +110,7 @@ fig.show()
 # :py:class:`This class<pyinterp.Histogram2D>`, like the previous one, allows
 # calculating a binning using distribution and obtains the median value of the
 # pixels. histograms. In addition, this approach calculates the quantiles of the
-# 
+#
 # Note that the algorithm used defines a maximum size of the number of bins
 # handled by each histogram. If the number of observations is greater than the
 # capacity of the histogram, the histogram will be compressed to best present

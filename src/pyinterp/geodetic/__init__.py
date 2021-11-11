@@ -7,6 +7,7 @@ import warnings
 from ..core import geodetic
 from ..core.geodetic import coordinate_distances
 
+
 class System(geodetic.System):
     """World Geodetic System (WGS).
     """

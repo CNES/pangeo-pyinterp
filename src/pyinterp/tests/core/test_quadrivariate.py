@@ -58,14 +58,14 @@ def test_interpolator():
     interpolator = core.Bilinear3D()
 
     calculated = core.quadrivariate_float64(grid,
-                                            mx.flatten(),
-                                            my.flatten(),
-                                            mz.flatten(),
-                                            mu.flatten(),
+                                            mx.ravel(),
+                                            my.ravel(),
+                                            mz.ravel(),
+                                            mu.ravel(),
                                             interpolator,
                                             num_threads=0,
                                             bounds_error=True)
-    assert np.all(expected.flatten() == calculated)
+    assert np.all(expected.ravel() == calculated)
 
     x = np.arange(-1, 1, 0.2)
     y = np.arange(-1, 1, 0.2)
@@ -78,20 +78,20 @@ def test_interpolator():
     interpolator = core.Bilinear3D()
 
     calculated = core.quadrivariate_float64(grid,
-                                            mx.flatten(),
-                                            my.flatten(),
-                                            mz.flatten(),
-                                            mu.flatten(),
+                                            mx.ravel(),
+                                            my.ravel(),
+                                            mz.ravel(),
+                                            mu.ravel(),
                                             interpolator,
                                             num_threads=0,
                                             bounds_error=False)
-    assert np.nanstd(expected.flatten() - calculated) == pytest.approx(0)
+    assert np.nanstd(expected.ravel() - calculated) == pytest.approx(0)
 
     other = core.quadrivariate_float64(grid,
-                                       mx.flatten(),
-                                       my.flatten(),
-                                       mz.flatten(),
-                                       mu.flatten(),
+                                       mx.ravel(),
+                                       my.ravel(),
+                                       mz.ravel(),
+                                       mu.ravel(),
                                        interpolator,
                                        num_threads=0,
                                        z_method="linear",
@@ -100,10 +100,10 @@ def test_interpolator():
     assert np.nanstd(other - calculated) == pytest.approx(0)
 
     other = core.quadrivariate_float64(grid,
-                                       mx.flatten(),
-                                       my.flatten(),
-                                       mz.flatten(),
-                                       mu.flatten(),
+                                       mx.ravel(),
+                                       my.ravel(),
+                                       mz.ravel(),
+                                       mu.ravel(),
                                        interpolator,
                                        num_threads=0,
                                        z_method="linear",
@@ -114,9 +114,9 @@ def test_interpolator():
     with pytest.raises(ValueError):
         other = core.quadrivariate_float64(  # type: ignore
             grid,
-            mx.flatten(),
-            my.flatten(),
-            mz.flatten(),
+            mx.ravel(),
+            my.ravel(),
+            mz.ravel(),
             None,
             interpolator,
             num_threads=0,
@@ -126,10 +126,10 @@ def test_interpolator():
 
     with pytest.raises(ValueError):
         other = core.quadrivariate_float64(grid,
-                                           mx.flatten(),
-                                           my.flatten(),
-                                           mz.flatten(),
-                                           mu.flatten(),
+                                           mx.ravel(),
+                                           my.ravel(),
+                                           mz.ravel(),
+                                           mu.ravel(),
                                            interpolator,
                                            num_threads=0,
                                            z_method="LINEAR",
@@ -138,10 +138,10 @@ def test_interpolator():
 
     with pytest.raises(ValueError):
         other = core.quadrivariate_float64(grid,
-                                           mx.flatten(),
-                                           my.flatten(),
-                                           mz.flatten(),
-                                           mu.flatten(),
+                                           mx.ravel(),
+                                           my.ravel(),
+                                           mz.ravel(),
+                                           mu.ravel(),
                                            interpolator,
                                            num_threads=0,
                                            z_method="linear",

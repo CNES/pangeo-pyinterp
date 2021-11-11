@@ -215,8 +215,7 @@ class DescriptiveStatistics:
                                    core.DescriptiveStatisticsFloat64) else 'f4'
         dtype = [('count', 'u8'), ('kurtosis', dreal), ('max', dreal),
                  ('mean', dreal), ('min', dreal), ('skewness', dreal),
-                 ('sum_of_weights', dreal), ('sum', dreal),
-                 ('var', dreal)]
+                 ('sum_of_weights', dreal), ('sum', dreal), ('var', dreal)]
         fields = [item[0] for item in dtype]
         field = fields.pop()
         buffer = getattr(self, field)()
