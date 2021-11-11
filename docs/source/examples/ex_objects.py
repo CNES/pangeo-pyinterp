@@ -16,9 +16,7 @@ automate the steps described below using the xarray objects library.
 Step-by-step creation of grids
 ##############################
 """
-import os
 import timeit
-import pathlib
 import netCDF4
 import pandas
 import pyinterp
@@ -26,7 +24,6 @@ import pyinterp.backends.xarray
 import pyinterp.tests
 import numpy
 import xarray
-
 
 with netCDF4.Dataset(pyinterp.tests.grid3d_path()) as ds:
     lon, lat, time, time_units, tcw = ds.variables[

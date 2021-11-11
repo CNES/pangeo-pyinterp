@@ -356,24 +356,24 @@ class RTree:
                 arg = defaults[wf]
 
             if wf == "lanczos" and arg < 1:  # type: ignore
-                raise ValueError(f"The argument of the function {wf!r} must be "
-                                "greater than 1")
+                raise ValueError(
+                    f"The argument of the function {wf!r} must be "
+                    "greater than 1")
 
             if wf == "parzen" and arg < 0:  # type: ignore
-                raise ValueError(f"The argument of the function {wf!r} must be "
-                                "greater than 0")
+                raise ValueError(
+                    f"The argument of the function {wf!r} must be "
+                    "greater than 0")
         else:
             if arg is not None:
                 raise ValueError(f"The function {wf!r} does not support the "
-                                "optional argument")
-
+                                 "optional argument")
 
         wf = "".join(item.capitalize() for item in wf.split("_"))
 
         return self._instance.window_function(coordinates, radius, k,
                                               getattr(core.WindowFunction, wf),
-                                              arg,
-                                              within, num_threads)
+                                              arg, within, num_threads)
 
     def __getstate__(self) -> Tuple:
         """Return the state of the object for pickling purposes.
