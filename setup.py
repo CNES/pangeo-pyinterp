@@ -107,12 +107,10 @@ def revision():
     os.chdir(WORKING_DIRECTORY)
     module = pathlib.Path(WORKING_DIRECTORY, 'src', 'pyinterp', 'version.py')
     stdout = execute("git describe --tags --dirty --long --always").strip()
-    pattern = re.compile(r'([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?')
-    match = pattern.search(stdout)
 
     # If the information is unavailable (execution of this function outside the
     # development environment), file creation is not possible
-    if not stdout or match is None:
+    if not stdout:
         pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
         with open(module, "r") as stream:
             for line in stream:
@@ -121,11 +119,21 @@ def revision():
                     return match.group(1)
         raise AssertionError()
 
-    version = match.group(1)
-    commits = int(match.group(2))
-    sha1 = match.group(3)
-    if commits != 0:
-        version += f".dev{commits}"
+    pattern = re.compile(r'([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?')
+    match = pattern.search(stdout)
+    if match is None:
+        # No tag found, use the last commit
+        pattern = re.compile(r'([\w\d]+)(?:-(dirty))?')
+        match = pattern.search(stdout)
+        assert match is not None, f"Unable to parse git output {stdout!r}"
+        version = "0.0"
+        sha1 = match.group(1)
+    else:
+        version = match.group(1)
+        commits = int(match.group(2))
+        sha1 = match.group(3)
+        if commits != 0:
+            version += f".dev{commits}"
 
     stdout = execute("git log  %s -1 --format=\"%%H %%at\"" % sha1)
     stdout = stdout.strip().split()
