@@ -49,11 +49,9 @@ def load_data(packing=True):
         x, y = np.meshgrid(x, y, indexing='ij')
         mesh = core.RTree3DFloat32(core.geodetic.System())
         if packing:
-            mesh.packing(
-                np.vstack((x.flatten(), y.flatten())).T, z.data.flatten())
+            mesh.packing(np.vstack((x.ravel(), y.ravel())).T, z.data.ravel())
         else:
-            mesh.insert(
-                np.vstack((x.flatten(), y.flatten())).T, z.data.flatten())
+            mesh.insert(np.vstack((x.ravel(), y.ravel())).T, z.data.ravel())
         return mesh
 
 
@@ -64,13 +62,13 @@ def test_rtree_idw():
     lat = np.arange(-90, 90, 1 / 3.0, dtype="float32") + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
     z0, _ = mesh.inverse_distance_weighting(np.vstack(
-        (x.flatten(), y.flatten())).T,
+        (x.ravel(), y.ravel())).T,
                                             within=False,
                                             radius=None,
                                             k=8,
                                             num_threads=0)
     z1, _ = mesh.inverse_distance_weighting(np.vstack(
-        (x.flatten(), y.flatten())).T,
+        (x.ravel(), y.ravel())).T,
                                             within=False,
                                             radius=None,
                                             k=8,
@@ -90,7 +88,7 @@ def test_rtree_rbf():
     lat = np.arange(-90, 90, 1 / 3.0, dtype="float32") + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
     z0, _ = mesh.radial_basis_function(
-        np.vstack((x.flatten(), y.flatten())).T,
+        np.vstack((x.ravel(), y.ravel())).T,
         within=False,
         radius=None,
         rbf=core.RadialBasisFunction.InverseMultiquadric,
@@ -99,7 +97,7 @@ def test_rtree_rbf():
         k=11,
         num_threads=1)
     z1, _ = mesh.radial_basis_function(
-        np.vstack((x.flatten(), y.flatten())).T,
+        np.vstack((x.ravel(), y.ravel())).T,
         within=False,
         radius=None,
         rbf=core.RadialBasisFunction.InverseMultiquadric,
@@ -121,13 +119,13 @@ def test_rtree_window_function():
     lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0, dtype="float32") + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
-    z0, _ = mesh.window_function(np.vstack((x.flatten(), y.flatten())).T,
+    z0, _ = mesh.window_function(np.vstack((x.ravel(), y.ravel())).T,
                                  within=False,
                                  radius=2_000_000,
                                  wf=core.WindowFunction.Hamming,
                                  k=11,
                                  num_threads=1)
-    z1, _ = mesh.window_function(np.vstack((x.flatten(), y.flatten())).T,
+    z1, _ = mesh.window_function(np.vstack((x.ravel(), y.ravel())).T,
                                  within=False,
                                  radius=2_000_000,
                                  wf=core.WindowFunction.Hamming,

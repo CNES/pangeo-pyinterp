@@ -16,6 +16,7 @@ import numpy as np
 from ... import core
 from .. import grid2d_path
 
+
 def plot(x, y, z, filename):
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
     value = z.mean()
@@ -65,14 +66,14 @@ def run_bivariate(interpolator, filename):
     x, y = np.meshgrid(lon, lat, indexing="ij")
 
     z0 = core.bivariate_float64(grid,
-                                x.flatten(),
-                                y.flatten(),
+                                x.ravel(),
+                                y.ravel(),
                                 interpolator,
                                 num_threads=0)
 
     z1 = core.bivariate_float64(grid,
-                                x.flatten(),
-                                y.flatten(),
+                                x.ravel(),
+                                y.ravel(),
                                 interpolator,
                                 num_threads=1)
 
@@ -88,8 +89,8 @@ def run_bivariate(interpolator, filename):
     # Out of bounds interpolation
     with pytest.raises(ValueError):
         core.bivariate_float64(grid,
-                               x.flatten(),
-                               y.flatten(),
+                               x.ravel(),
+                               y.ravel(),
                                interpolator,
                                bounds_error=True,
                                num_threads=0)
@@ -125,13 +126,13 @@ def test_spline_interpolator():
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
     z0 = core.spline_float64(grid,
-                             x.flatten(),
-                             y.flatten(),
+                             x.ravel(),
+                             y.ravel(),
                              fitting_model="akima",
                              num_threads=0)
     z1 = core.spline_float64(grid,
-                             x.flatten(),
-                             y.flatten(),
+                             x.ravel(),
+                             y.ravel(),
                              fitting_model="akima",
                              num_threads=1)
     z0 = np.ma.fix_invalid(z0)
@@ -140,7 +141,7 @@ def test_spline_interpolator():
     if HAVE_PLT:
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_akima.png")
 
-    z0 = core.spline_float64(grid, x.flatten(), y.flatten())
+    z0 = core.spline_float64(grid, x.ravel(), y.ravel())
     z0 = np.ma.fix_invalid(z0)
     assert not np.all(z1 == z0)
     if HAVE_PLT:
@@ -149,8 +150,8 @@ def test_spline_interpolator():
     # Out of bounds interpolation
     with pytest.raises(ValueError):
         core.spline_float64(grid,
-                            x.flatten(),
-                            y.flatten(),
+                            x.ravel(),
+                            y.ravel(),
                             fitting_model="akima",
                             bounds_error=True,
                             num_threads=0)
@@ -165,7 +166,7 @@ def test_spline_degraded():
 
     with pytest.raises(ValueError):
         core.spline_float64(grid,
-                            x.flatten(),
-                            y.flatten(),
+                            x.ravel(),
+                            y.ravel(),
                             bounds_error=True,
                             num_threads=0)

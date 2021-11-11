@@ -84,15 +84,15 @@ def run_interpolator(interpolator, filename):
     time = 898500 + 3
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z0 = core.trivariate_float64(grid,
-                                 x.flatten(),
-                                 y.flatten(),
-                                 t.flatten(),
+                                 x.ravel(),
+                                 y.ravel(),
+                                 t.ravel(),
                                  interpolator,
                                  num_threads=0)
     z1 = core.trivariate_float64(grid,
-                                 x.flatten(),
-                                 y.flatten(),
-                                 t.flatten(),
+                                 x.ravel(),
+                                 y.ravel(),
+                                 t.ravel(),
                                  interpolator,
                                  num_threads=1)
     shape = (len(lon), len(lat))
@@ -112,16 +112,16 @@ def test_trivariate_spline():
     time = 898524 + 3
     x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z0 = core.spline_float64(grid,
-                             x.flatten(),
-                             y.flatten(),
-                             t.flatten(),
+                             x.ravel(),
+                             y.ravel(),
+                             t.ravel(),
                              fitting_model="akima",
                              bounds_error=True,
                              num_threads=0)
     z1 = core.spline_float64(grid,
-                             x.flatten(),
-                             y.flatten(),
-                             t.flatten(),
+                             x.ravel(),
+                             y.ravel(),
+                             t.ravel(),
                              fitting_model="akima",
                              bounds_error=True,
                              num_threads=1)
@@ -144,17 +144,17 @@ def test_grid3d_bounds_error():
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     core.trivariate_float64(
         grid,  # type: ignore
-        x.flatten(),
-        y.flatten(),
-        t.flatten(),
+        x.ravel(),
+        y.ravel(),
+        t.ravel(),
         interpolator,
         num_threads=0)
     with pytest.raises(ValueError):
         core.trivariate_float64(
             grid,  # type: ignore
-            x.flatten(),
-            y.flatten(),
-            t.flatten(),
+            x.ravel(),
+            y.ravel(),
+            t.ravel(),
             interpolator,
             bounds_error=True,
             num_threads=0)
@@ -176,16 +176,16 @@ def test_grid3d_z_method():
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z0 = core.trivariate_float64(
         grid,  # type: ignore
-        x.flatten(),
-        y.flatten(),
-        t.flatten(),
+        x.ravel(),
+        y.ravel(),
+        t.ravel(),
         interpolator,
         num_threads=0)
     z1 = core.trivariate_float64(
         grid,  # type: ignore
-        x.flatten(),
-        y.flatten(),
-        t.flatten(),
+        x.ravel(),
+        y.ravel(),
+        t.ravel(),
         interpolator,
         z_method="linear",
         num_threads=0)
@@ -194,9 +194,9 @@ def test_grid3d_z_method():
     assert np.all(z0 == z1)
     z1 = core.trivariate_float64(
         grid,  # type: ignore
-        x.flatten(),
-        y.flatten(),
-        t.flatten(),
+        x.ravel(),
+        y.ravel(),
+        t.ravel(),
         interpolator,
         z_method="nearest",
         num_threads=0)
@@ -205,9 +205,9 @@ def test_grid3d_z_method():
     with pytest.raises(ValueError):
         core.trivariate_float64(
             grid,  # type: ignore
-            x.flatten(),
-            y.flatten(),
-            t.flatten(),
+            x.ravel(),
+            y.ravel(),
+            t.ravel(),
             interpolator,
             z_method="NEAREST",
             num_threads=0)

@@ -35,33 +35,33 @@ def test_3d():
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
 
     z = grid.trivariate(
-        collections.OrderedDict(longitude=x.flatten(),
-                                latitude=y.flatten(),
-                                time=t.flatten()))
+        collections.OrderedDict(longitude=x.ravel(),
+                                latitude=y.ravel(),
+                                time=t.ravel()))
     assert isinstance(z, np.ndarray)
 
     z = grid.bicubic(
-        collections.OrderedDict(longitude=x.flatten()[1:2],
-                                latitude=y.flatten()[1:2],
-                                time=t.flatten()[1:2]))
+        collections.OrderedDict(longitude=x.ravel()[1:2],
+                                latitude=y.ravel()[1:2],
+                                time=t.ravel()[1:2]))
     assert isinstance(z, np.ndarray)
 
     with pytest.raises(ValueError):
         time = np.array([datetime.datetime(2012, 7, 2, 15, 0)],
                         dtype="datetime64")
         x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
-        grid.trivariate(collections.OrderedDict(longitude=x.flatten(),
-                                                latitude=y.flatten(),
-                                                time=t.flatten()),
+        grid.trivariate(collections.OrderedDict(longitude=x.ravel(),
+                                                latitude=y.ravel(),
+                                                time=t.ravel()),
                         bounds_error=True)
 
     array = xr.load_dataset(grid3d_path()).tcw
     grid = xr_backend.Grid3D(array, increasing_axes=True)
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z = grid.trivariate(
-        collections.OrderedDict(longitude=x.flatten(),
-                                latitude=y.flatten(),
-                                time=t.flatten()))
+        collections.OrderedDict(longitude=x.ravel(),
+                                latitude=y.ravel(),
+                                time=t.ravel()))
     assert isinstance(z, np.ndarray)
 
     grid = xr_backend.RegularGridInterpolator(xr.load_dataset(
@@ -70,6 +70,5 @@ def test_3d():
     assert grid.ndim == 3
     assert isinstance(grid.grid, xr_backend.Grid3D)
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
-    z = grid(
-        dict(longitude=x.flatten(), latitude=y.flatten(), time=t.flatten()))
+    z = grid(dict(longitude=x.ravel(), latitude=y.ravel(), time=t.ravel()))
     assert isinstance(z, np.ndarray)

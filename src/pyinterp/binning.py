@@ -71,7 +71,7 @@ class Binning2D:
         return self._instance.y
 
     @property
-    def wgs(self) -> core.geodetic.System:
+    def wgs(self) -> Optional[core.geodetic.System]:
         """Gets the geodetic system handled of the grid"""
         return self._instance.wgs
 
@@ -93,14 +93,16 @@ class Binning2D:
 
     def __add__(self, other: "Binning2D") -> "Binning2D":
         result = copy.copy(self)
-        result._instance += other._instance
+        if type(result._instance) != type(other._instance):
+            raise TypeError("Binning2D instance must be of the same type")
+        result._instance += other._instance  # type: ignore
         return result
 
     def push(self,
              x: np.ndarray,
              y: np.ndarray,
              z: np.ndarray,
-             simple: Optional[bool] = True) -> None:
+             simple: bool = True) -> None:
         """Push new samples into the defined bins.
 
         Args:
@@ -145,10 +147,10 @@ class Binning2D:
             1996,
             Pages 165-184,
         """
-        self._instance.push(
-            np.asarray(x).flatten(),
-            np.asarray(y).flatten(),
-            np.asarray(z).flatten(), simple)
+        x = np.asarray(x).ravel()
+        y = np.asarray(y).ravel()
+        z = np.asarray(z).ravel()
+        self._instance.push(x, y, z, simple)
 
     def push_delayed(self,
                      x: Union[np.ndarray, da.Array],
@@ -185,9 +187,9 @@ class Binning2D:
             return np.array([binning], dtype="object")
 
         return da.map_blocks(_process_block,
-                             x.flatten(),
-                             y.flatten(),
-                             z.flatten(),
+                             x.ravel(),
+                             y.ravel(),
+                             z.ravel(),
                              self.x,
                              self.y,
                              self.wgs,

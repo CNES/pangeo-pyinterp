@@ -39,7 +39,7 @@ class Histogram2D:
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
-                 bin_counts: Optional[Union[int]] = None,
+                 bin_counts: Optional[int] = None,
                  dtype: Optional[np.dtype] = np.dtype("float64")):
         """Initializes the grid used to calculate the statistics.
 
@@ -115,10 +115,10 @@ class Histogram2D:
             z (numpy.ndarray): New samples to push into the
                 defined bins.
         """
-        self._instance.push(
-            np.asarray(x).flatten(),
-            np.asarray(y).flatten(),
-            np.asarray(z).flatten())
+        x = np.asarray(x).ravel()
+        y = np.asarray(y).ravel()
+        z = np.asarray(z).ravel()
+        self._instance.push(x, y, z)
 
     def push_delayed(self, x: Union[np.ndarray, da.Array], y: Union[np.ndarray,
                                                                     da.Array],
@@ -150,9 +150,9 @@ class Histogram2D:
             return np.array([hist2d], dtype="object")
 
         return da.map_blocks(_process_block,
-                             x.flatten(),
-                             y.flatten(),
-                             z.flatten(),
+                             x.ravel(),
+                             y.ravel(),
+                             z.ravel(),
                              self.x,
                              self.y,
                              self.dtype,

@@ -18,7 +18,6 @@ import pyinterp.fill
 import pyinterp.tests
 import xarray
 
-
 #%%
 # For example, in the figure above, if you want to interpolate the gray point
 # with a bilinear interpolation, the undefined red value, set to NaN, will not
@@ -41,8 +40,8 @@ mask = numpy.array([
     [1, 0, 0, 1, 1, 1, 1, 1],  # yapf: disable
     [1, 1, 1, 0, 0, 0, 0, 0]
 ]).T
-ax.scatter(lons.flatten(),
-           lats.flatten(),
+ax.scatter(lons.ravel(),
+           lats.ravel(),
            c=mask,
            cmap="bwr_r",
            transform=cartopy.crs.PlateCarree(),

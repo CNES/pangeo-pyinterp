@@ -52,17 +52,14 @@ def test_biavariate():
     lat = np.arange(-90, 90, 1) + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
 
-    z = grid.bivariate(
-        collections.OrderedDict(lon=x.flatten(), lat=y.flatten()))
+    z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()))
     assert isinstance(z, np.ndarray)
 
-    z = grid.bivariate(collections.OrderedDict(lon=x.flatten(),
-                                               lat=y.flatten()),
+    z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                        interpolator="nearest")
     assert isinstance(z, np.ndarray)
 
-    z = grid.bivariate(collections.OrderedDict(lon=x.flatten(),
-                                               lat=y.flatten()),
+    z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                        interpolator="inverse_distance_weighting")
     assert isinstance(z, np.ndarray)
 
@@ -70,27 +67,25 @@ def test_biavariate():
                              geodetic=False)
 
     assert isinstance(grid, xr_backend.Grid2D)
-    w = grid.bivariate(collections.OrderedDict(lon=x.flatten(),
-                                               lat=y.flatten()),
+    w = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                        interpolator="inverse_distance_weighting")
     assert np.ma.fix_invalid(z).mean() != np.ma.fix_invalid(w).mean()
 
     with pytest.raises(TypeError):
-        grid.bivariate((x.flatten(), y.flatten()))  # type: ignore
+        grid.bivariate((x.ravel(), y.ravel()))  # type: ignore
 
     with pytest.raises(IndexError):
         grid.bivariate(
-            collections.OrderedDict(lon=x.flatten(),
-                                    lat=y.flatten(),
+            collections.OrderedDict(lon=x.ravel(),
+                                    lat=y.ravel(),
                                     time=np.arange(3)))
 
     with pytest.raises(IndexError):
         grid.bivariate(
-            collections.OrderedDict(longitude=x.flatten(), lat=y.flatten()))
+            collections.OrderedDict(longitude=x.ravel(), lat=y.ravel()))
 
     with pytest.raises(ValueError):
-        grid.bivariate(collections.OrderedDict(lon=x.flatten(),
-                                               lat=y.flatten()),
+        grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                        bounds_error=True)
 
     lon = Axis(np.linspace(0, 360, 100), is_circle=True)
@@ -110,7 +105,7 @@ def test_biavariate():
 
     grid = xr_backend.RegularGridInterpolator(
         xr.load_dataset(grid2d_path()).mss)
-    z = grid(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),
+    z = grid(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
              method="bilinear")
     assert isinstance(z, np.ndarray)
 
@@ -122,24 +117,24 @@ def test_bicubic():
     lat = np.arange(-90, 90, 1) + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
 
-    z = grid.bicubic(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()))
+    z = grid.bicubic(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()))
     assert isinstance(z, np.ndarray)
 
     for fitting_model in [
             'linear', 'bicubic', 'polynomial', 'c_spline', 'c_spline_periodic',
             'akima', 'akima_periodic', 'steffen'
     ]:
-        other = grid.bicubic(collections.OrderedDict(lon=x.flatten(),
-                                                     lat=y.flatten()),
+        other = grid.bicubic(collections.OrderedDict(lon=x.ravel(),
+                                                     lat=y.ravel()),
                              fitting_model=fitting_model)
         assert (z - other).mean() != 0  # type: ignore
 
     with pytest.raises(ValueError):
-        grid.bicubic(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),
+        grid.bicubic(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                      bounds_error=True)
 
     with pytest.raises(ValueError):
-        grid.bicubic(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),
+        grid.bicubic(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                      bounds_error=True,
                      boundary="sym")
 
@@ -151,27 +146,27 @@ def test_bicubic():
 
     assert isinstance(grid, Grid2D)
     with pytest.raises(ValueError):
-        bicubic(grid, x.flatten(), y.flatten(), fitting_model='_')
+        bicubic(grid, x.ravel(), y.ravel(), fitting_model='_')
     with pytest.raises(ValueError):
-        bicubic(grid, x.flatten(), y.flatten(), boundary='_')
+        bicubic(grid, x.ravel(), y.ravel(), boundary='_')
     grid = Grid2D(x_axis.flip(inplace=False), y_axis, matrix.T)
     with pytest.raises(ValueError):
-        bicubic(grid, x.flatten(), y.flatten())
+        bicubic(grid, x.ravel(), y.ravel())
 
     grid = Grid2D(x_axis, y_axis.flip(), matrix.T)
     with pytest.raises(ValueError):
-        bicubic(grid, x.flatten(), y.flatten())
+        bicubic(grid, x.ravel(), y.ravel())
 
     matrix, _, _ = np.meshgrid(x_axis[:], y_axis[:], z_axis[:])
     grid = Grid3D(x_axis, y_axis, z_axis, matrix.transpose(1, 0, 2))
     with pytest.raises(ValueError):
-        bicubic(grid, x.flatten(), y.flatten())
+        bicubic(grid, x.ravel(), y.ravel())
 
     grid = xr_backend.RegularGridInterpolator(
         xr.load_dataset(grid2d_path()).mss)
     assert grid.ndim == 2
     assert isinstance(grid.grid, xr_backend.Grid2D)
-    z = grid(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),
+    z = grid(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
              method="bicubic",
              bicubic_kwargs=dict(nx=3, ny=3))
     assert isinstance(z, np.ndarray)
@@ -192,6 +187,6 @@ def test_grid_2d_int8():
     lat = np.arange(-90, 90, 1) + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
 
-    z = interpolator(collections.OrderedDict(lon=x.flatten(), lat=y.flatten()),
+    z = interpolator(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                      method="nearest")
     assert np.mean(z) != 0

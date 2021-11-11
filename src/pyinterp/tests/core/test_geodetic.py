@@ -370,8 +370,8 @@ def test_coordinates_ecef_lla():
 
 def test_coordinates_lla_to_ecef():
     """LLA/ECEF Conversion Test"""
-    x, y, z = core.geodetic.Coordinates(None).lla_to_ecef(np.array([78.042068]),
-                                                          np.array([27.173891]), np.array([168.0]))
+    x, y, z = core.geodetic.Coordinates(None).lla_to_ecef(
+        np.array([78.042068]), np.array([27.173891]), np.array([168.0]))
     assert x[0] == pytest.approx(1176498.769459714, abs=1e-8)
     assert y[0] == pytest.approx(5555043.905503586, abs=1e-8)
     assert z[0] == pytest.approx(2895446.8901510699, abs=1e-8)
@@ -431,7 +431,6 @@ def test_point_distance():
                               strategy="thomas") == acropolis.distance(ulb)
     with pytest.raises(ValueError):
         acropolis.distance(ulb, strategy="Thomas")
-
 
 
 def test_point_pickle():
@@ -543,8 +542,8 @@ def test_polygon_covered_by():
     mx, my = np.meshgrid(lon, lat)
     polygon = core.geodetic.Polygon(
         [core.geodetic.Point(*item) for item in POINTS])
-    mask1 = polygon.covered_by(mx.flatten(), my.flatten()).reshape(mx.shape)
-    mask2 = polygon.covered_by(mx.flatten(), my.flatten(),
+    mask1 = polygon.covered_by(mx.ravel(), my.ravel()).reshape(mx.shape)
+    mask2 = polygon.covered_by(mx.ravel(), my.ravel(),
                                num_theads=1).reshape(mx.shape)
     assert np.all(mask2 == mask1)
     ix, iy = np.where(mask1 == 1)
@@ -558,7 +557,7 @@ def test_polygon_covered_by():
     ])
     # Switch to [-180, 180[ input range
     mx = (mx + 180) % 360 - 180
-    mask2 = polygon.covered_by(mx.flatten(), my.flatten()).reshape(mx.shape)
+    mask2 = polygon.covered_by(mx.ravel(), my.ravel()).reshape(mx.shape)
     assert np.all(mask2 == mask1)
 
 
@@ -566,14 +565,18 @@ def test_coordinate_distance():
     lon = np.arange(0, 360, 10)
     lat = np.arange(-90, 90.5, 10)
     mx, my = np.meshgrid(lon, lat)
-    d1 = core.geodetic.coordinate_distances(mx.flatten(), my.flatten(),
-                                       mx.flatten() + 1,
-                                       my.flatten() + 1,
-                                       strategy="vincenty", num_threads=1)
-    d0 = core.geodetic.coordinate_distances(mx.flatten(), my.flatten(),
-                                       mx.flatten() + 1,
-                                       my.flatten() + 1,
-                                       strategy="vincenty", num_threads=0)
+    d1 = core.geodetic.coordinate_distances(mx.ravel(),
+                                            my.ravel(),
+                                            mx.ravel() + 1,
+                                            my.ravel() + 1,
+                                            strategy="vincenty",
+                                            num_threads=1)
+    d0 = core.geodetic.coordinate_distances(mx.ravel(),
+                                            my.ravel(),
+                                            mx.ravel() + 1,
+                                            my.ravel() + 1,
+                                            strategy="vincenty",
+                                            num_threads=0)
     assert np.all(d0 == d1)
     d0 = d0.reshape(mx.shape)
     for iy in range(d0.shape[0]):
