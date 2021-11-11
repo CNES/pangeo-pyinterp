@@ -112,6 +112,7 @@ ax.pcolormesh(mx,
               my,
               idw_eta,
               cmap='terrain',
+              shading='auto',
               transform=cartopy.crs.PlateCarree())
 ax.coastlines()
 ax.xaxis.set_major_formatter(lon_formatter)
@@ -125,6 +126,7 @@ ax.pcolormesh(mx,
               my,
               rbf_eta,
               cmap='terrain',
+              shading='auto',
               transform=cartopy.crs.PlateCarree())
 ax.coastlines()
 ax.xaxis.set_major_formatter(lon_formatter)

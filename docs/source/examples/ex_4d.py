@@ -107,6 +107,7 @@ pcm = ax1.pcolormesh(lons,
                      lats,
                      quadrivariate.T,
                      cmap='jet',
+                     shading='auto',
                      transform=cartopy.crs.PlateCarree())
 ax1.coastlines()
 ax1.set_title("Trilinear")
@@ -117,6 +118,7 @@ pcm = ax2.pcolormesh(lons,
                      lats,
                      bicubic.T,
                      cmap='jet',
+                     shading='auto',
                      transform=cartopy.crs.PlateCarree())
 ax2.coastlines()
 ax2.set_title("Spline & Linear in time")
