@@ -432,8 +432,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                 cmake_args += ["-DCODE_COVERAGE=ON"]
         else:
             cmake_args += [
-                '-G', 'Visual Studio 16 2019',
-                '-DCMAKE_GENERATOR_PLATFORM=x64',
+                '-G', 'Visual Studio 15 2017' if self.CONDA_FORGE else
+                'Visual Studio 16 2019', '-DCMAKE_GENERATOR_PLATFORM=x64',
                 '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(
                     cfg.upper(), extdir)
             ]
