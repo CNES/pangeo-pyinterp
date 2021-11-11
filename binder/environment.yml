@@ -11,3 +11,4 @@ dependencies:
   - numcodecs
   - pandas
   - pyinterp>=0.9.2
+  - pytest
