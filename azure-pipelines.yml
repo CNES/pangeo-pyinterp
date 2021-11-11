@@ -58,8 +58,8 @@ jobs:
         python.version: '3.8'
       Python39:
         python.version: '3.9'
-      Python310:
-        python.version: '3.10'
+      # Python310:
+      #   python.version: '3.10'
   steps:
   - checkout: self
     fetchDepth: 1
@@ -100,8 +100,8 @@ jobs:
         python.version: '3.8'
       Python39:
         python.version: '3.9'
-      Python310:
-        python.version: '3.10'
+      # Python310:
+      #   python.version: '3.10'
   steps:
   - checkout: self
     fetchDepth: 1
@@ -137,8 +137,8 @@ jobs:
         python.version: '3.8'
       Python39:
         python.version: '3.9'
-      Python310:
-        python.version: '3.10'
+      # Python310:
+      #   python.version: '3.10'
   steps:
   - checkout: self
     fetchDepth: 1
