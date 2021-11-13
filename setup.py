@@ -106,11 +106,10 @@ def revision():
     """Returns the software version"""
     os.chdir(WORKING_DIRECTORY)
     module = pathlib.Path(WORKING_DIRECTORY, 'src', 'pyinterp', 'version.py')
-    stdout = execute("git describe --tags --dirty --long --always").strip()
 
-    # If the information is unavailable (execution of this function outside the
-    # development environment), file creation is not possible
-    if not stdout:
+    # If the ".git" directory exists, this function is executed in the
+    # development environment, otherwise it's a release.
+    if not pathlib.Path(WORKING_DIRECTORY, '.git').exists():
         pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
         with open(module, "r") as stream:
             for line in stream:
@@ -119,6 +118,7 @@ def revision():
                     return match.group(1)
         raise AssertionError()
 
+    stdout = execute("git describe --tags --dirty --long --always").strip()
     pattern = re.compile(r'([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?')
     match = pattern.search(stdout)
     if match is None:
