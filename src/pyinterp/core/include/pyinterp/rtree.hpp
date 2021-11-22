@@ -436,10 +436,11 @@ class RTree : public detail::geometry::RTree<CoordinateType, Type, N> {
     auto size = coordinates.shape(0);
 
     // Allocation of result matrices.
-    auto distance = pybind11::array_t<distance_t>(
-        pybind11::array::ShapeContainer{size, static_cast<ssize_t>(k)});
-    auto value = pybind11::array_t<Type>(
-        pybind11::array::ShapeContainer{size, static_cast<ssize_t>(k)});
+    auto distance =
+        pybind11::array_t<distance_t>(pybind11::array::ShapeContainer{
+            size, static_cast<pybind11::ssize_t>(k)});
+    auto value = pybind11::array_t<Type>(pybind11::array::ShapeContainer{
+        size, static_cast<pybind11::ssize_t>(k)});
 
     auto _distance = distance.template mutable_unchecked<2>();
     auto _value = value.template mutable_unchecked<2>();

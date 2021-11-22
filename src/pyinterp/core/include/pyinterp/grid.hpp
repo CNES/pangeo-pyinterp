@@ -14,7 +14,7 @@ namespace pyinterp {
 ///
 /// @tparam DataType Grid data type
 /// @tparam Dimension Total number of dimensions handled by this instance.
-template <typename DataType, ssize_t Dimension = 2>
+template <typename DataType, pybind11::ssize_t Dimension = 2>
 class Grid2D {
  public:
   /// Default constructor
@@ -136,7 +136,7 @@ class Grid2D {
 /// @tparam DataType Grid data type
 /// @tparam AxisType Axis data type
 /// @tparam Dimension Total number of dimensions handled by this instance.
-template <typename DataType, typename AxisType, ssize_t Dimension = 3>
+template <typename DataType, typename AxisType, pybind11::ssize_t Dimension = 3>
 class Grid3D : public Grid2D<DataType, Dimension> {
  public:
   /// Default constructor
