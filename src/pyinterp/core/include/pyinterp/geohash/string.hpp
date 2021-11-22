@@ -41,7 +41,7 @@ class Array {
                            capsule_);
   }
 
-  static auto get_info(const pybind11::array& hash, ssize_t ndim)
+  static auto get_info(const pybind11::array& hash, pybind11::ssize_t ndim)
       -> pybind11::buffer_info;
 
  private:

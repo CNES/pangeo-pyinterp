@@ -14,7 +14,7 @@ namespace pyinterp::geohash::string {
 static const auto base32 = Base32();
 
 // ---------------------------------------------------------------------------
-auto Array::get_info(const pybind11::array& hashs, const ssize_t ndim)
+auto Array::get_info(const pybind11::array& hashs, const pybind11::ssize_t ndim)
     -> pybind11::buffer_info {
   auto info = hashs.request();
   auto dtype = hashs.dtype();
