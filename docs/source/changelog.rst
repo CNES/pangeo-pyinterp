@@ -1,6 +1,12 @@
 Changelog
 #########
 
+0.9.3 (22 November 2021)
+------------------------
+* Compilation fails on Windows with Python 3.10
+* Warnings from matplotlib are removed.
+* Use ravel instead of flatten for numpy arrays.
+
 0.9.2 (11 November 2021)
 ------------------------
 * Add boxcar windowed function.
