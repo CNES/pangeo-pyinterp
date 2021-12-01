@@ -184,7 +184,8 @@ Returns:
              const size_t num_threads) -> py::array_t<int8_t> {
             return self.covered_by(lon, lat, num_threads);
           },
-          py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
+          py::arg("lon"), py::arg("lat"), py::arg("num_threads") = 1,
+          R"__doc__(
 Test if the coordinates of the points provided are located inside or at the
 edge of this box.
 
@@ -227,9 +228,8 @@ Returns:
 )__doc__")
       .def(
           "distance",
-          [](const geodetic::Box& self, const geodetic::Point& point) -> double {
-            return self.distance(point);
-          },
+          [](const geodetic::Box& self, const geodetic::Point& point)
+              -> double { return self.distance(point); },
           py::arg("point"),
           R"__doc__(
 Calculate the distance between this instance and a point.
@@ -357,7 +357,8 @@ Returns:
              const size_t num_threads) -> py::array_t<int8_t> {
             return self.covered_by(lon, lat, num_threads);
           },
-          py::arg("lon"), py::arg("lat"), py::arg("num_theads") = 1, R"__doc__(
+          py::arg("lon"), py::arg("lat"), py::arg("num_threads") = 1,
+          R"__doc__(
 Test if the coordinates of the points provided are located inside or at the
 edge of this polygon.
 
@@ -385,9 +386,8 @@ Returns:
 )__doc__")
       .def(
           "distance",
-          [](const geodetic::Polygon& self, const geodetic::Polygon& other) -> double {
-            return self.distance(other);
-          },
+          [](const geodetic::Polygon& self, const geodetic::Polygon& other)
+              -> double { return self.distance(other); },
           py::arg("other"),
           R"__doc__(
 Calculate the distance between the two polygons.
@@ -400,9 +400,8 @@ Returns:
 )__doc__")
       .def(
           "distance",
-          [](const geodetic::Polygon& self, const geodetic::Point& point) -> double {
-            return self.distance(point);
-          },
+          [](const geodetic::Polygon& self, const geodetic::Point& point)
+              -> double { return self.distance(point); },
           py::arg("point"),
           R"__doc__(
 Calculate the distance between this instance and a point.

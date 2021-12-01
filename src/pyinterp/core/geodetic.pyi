@@ -27,7 +27,7 @@ class Box:
     def covered_by(self,
                    lon: numpy.ndarray[numpy.float64],
                    lat: numpy.ndarray[numpy.float64],
-                   num_theads: int = ...) -> numpy.ndarray[numpy.int8]:
+                   num_threads: int = ...) -> numpy.ndarray[numpy.int8]:
         ...
 
     @overload
@@ -151,7 +151,7 @@ class Polygon:
     def covered_by(self,
                    lon: numpy.ndarray[numpy.float64],
                    lat: numpy.ndarray[numpy.float64],
-                   num_theads: int = ...) -> numpy.ndarray[numpy.int8]:
+                   num_threads: int = ...) -> numpy.ndarray[numpy.int8]:
         ...
 
     @overload

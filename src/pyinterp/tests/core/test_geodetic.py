@@ -544,7 +544,7 @@ def test_polygon_covered_by():
         [core.geodetic.Point(*item) for item in POINTS])
     mask1 = polygon.covered_by(mx.ravel(), my.ravel()).reshape(mx.shape)
     mask2 = polygon.covered_by(mx.ravel(), my.ravel(),
-                               num_theads=1).reshape(mx.shape)
+                               num_threads=1).reshape(mx.shape)
     assert np.all(mask2 == mask1)
     ix, iy = np.where(mask1 == 1)
     assert np.all(ix == [
