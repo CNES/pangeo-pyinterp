@@ -1,6 +1,10 @@
 Changelog
 #########
 
+0.9.4 (1 December 2021)
+------------------------
+* Correction of a spelling mistake for a keyword.
+
 0.9.3 (22 November 2021)
 ------------------------
 * Compilation fails on Windows with Python 3.10
