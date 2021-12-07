@@ -162,6 +162,16 @@ Args:
           "The maximal corner (upper right) of the box.")
       .def_static("whole_earth", &geodetic::Box::whole_earth,
                   "Returns the box covering the whole earth.")
+      .def("normalize", &geodetic::Box::normalize, py::arg("min_lon") = -180.0,
+           R"__doc__(
+Normalize the box to the given minimum longitude.
+
+Args:
+    min_lon (float): the minimum longitude of the box.
+
+Returns:
+    pyinterp.core.geodetic.Box: the normalized box.
+)__doc__")
       .def(
           "covered_by",
           [](const geodetic::Box& self, const geodetic::Point& point) -> bool {
