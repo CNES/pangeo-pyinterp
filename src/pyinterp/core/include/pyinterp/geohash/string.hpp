@@ -30,6 +30,12 @@ class Array {
         chars_(precision),
         size_(size) {}
 
+  /// Resize the array to the given size.
+  auto resize(const size_t size) -> void {
+    array_->resize(size * chars_);
+    size_ = size;
+  }
+
   /// Get the pointer to the raw memory
   [[nodiscard]] inline auto buffer() const -> char* { return array_->data(); }
 
@@ -97,6 +103,9 @@ auto encode(const geodetic::Point& point, char* buffer, uint32_t precision)
 
 /// Returns all GeoHash with the defined box
 [[nodiscard]] auto bounding_boxes(const std::optional<geodetic::Box>& box,
+                                  uint32_t precision) -> pybind11::array;
+
+[[nodiscard]] auto bounding_boxes(const geodetic::Polygon& polygon,
                                   uint32_t precision) -> pybind11::array;
 
 /// Returns the start and end indexes of the different GeoHash boxes.

@@ -273,7 +273,8 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
   uint64_t hash_sw;
 
   // Calculation of the number of elements constituting the grid
-  const auto boxes = box.value_or(geodetic::Box::whole_earth()).split();
+  const auto boxes =
+      box.value_or(geodetic::Box::whole_earth()).normalize(-180).split();
   for (const auto& item : boxes) {
     std::tie(hash_sw, lon_step, lat_step) = grid_properties(item, precision);
     size += lat_step * lon_step;
@@ -302,6 +303,50 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
       }
     }
   }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+[[nodiscard]] inline auto bounding_boxes(const geodetic::Polygon& polygon,
+                                         uint32_t precision)
+    -> Vector<uint64_t> {
+  size_t lat_step;
+  size_t lon_step;
+  size_t size = 0;
+  uint64_t hash_sw;
+
+  auto envelope = polygon.envelope();
+
+  // Calculation of the number of elements constituting the grid
+  std::tie(hash_sw, lon_step, lat_step) =
+      grid_properties(geodetic::Box::whole_earth(), precision);
+  size = lat_step * lon_step;
+
+  // Grid resolution in degrees
+  const auto lng_lat_err = error_with_precision(precision);
+
+  // Allocation of the vector storing the different codes of the matrix created
+  auto result = Eigen::Matrix<uint64_t, -1, 1>(size);
+  auto ix = size_t(0);
+
+  auto point_sw = decode(hash_sw, precision, true);
+
+  for (size_t lat = 0; lat < lat_step; ++lat) {
+    const auto lat_shift = lat * std::get<1>(lng_lat_err);
+
+    for (size_t lon = 0; lon < lon_step; ++lon) {
+      const auto lng_shift = lon * std::get<0>(lng_lat_err);
+      const auto hash = encode(
+          {point_sw.lon() + lng_shift, point_sw.lat() + lat_shift}, precision);
+      const auto bbox = bounding_box(hash, precision);
+
+      if (boost::geometry::intersects(bbox, envelope) && 
+          boost::geometry::intersects(polygon, bounding_box(hash, precision))) {
+        result(ix++) = hash;
+      }
+    }
+  }
+  result.conservativeResize(ix);
   return result;
 }
 

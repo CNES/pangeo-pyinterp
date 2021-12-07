@@ -173,7 +173,8 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
   auto bits = precision * 5;
 
   // Calculation of the number of elements constituting the grid
-  const auto boxes = box.value_or(geodetic::Box::whole_earth()).split();
+  const auto boxes =
+      box.value_or(geodetic::Box::whole_earth()).normalize(-180).split();
   for (const auto& item : boxes) {
     std::tie(hash_sw, lon_step, lat_step) = int64::grid_properties(item, bits);
     size += lat_step * lon_step;
@@ -208,6 +209,60 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
         }
       }
     }
+  }
+  return result.pyarray();
+}
+
+// ---------------------------------------------------------------------------
+auto bounding_boxes(const geodetic::Polygon& polygon,
+                    const uint32_t precision) -> pybind11::array {
+  size_t lat_step;
+  size_t lon_step;
+  size_t size = 0;
+  uint64_t hash_sw;
+
+  // Number of bits
+  auto bits = precision * 5;
+
+  // Envelope of the polygon for speed up the calculation
+  auto envelope = polygon.envelope();
+
+  // Calculation of the number of elements constituting the grid
+  std::tie(hash_sw, lon_step, lat_step) =
+      int64::grid_properties(geodetic::Box::whole_earth(), bits);
+  size += lat_step * lon_step;
+
+  // Grid resolution in degrees
+  const auto lng_lat_err = int64::error_with_precision(bits);
+
+  // Allocation of the vector storing the different codes of the matrix created
+  auto result = Array(size, precision);
+  auto* buffer = result.buffer();
+  size = 0;
+
+  {
+    auto gil = pybind11::gil_scoped_release();
+
+    const auto point_sw = int64::decode(hash_sw, bits, true);
+
+    for (size_t lat = 0; lat < lat_step; ++lat) {
+      const auto lat_shift = lat * std::get<1>(lng_lat_err);
+
+      for (size_t lon = 0; lon < lon_step; ++lon) {
+        const auto lon_shift = lon * std::get<0>(lng_lat_err);
+        const auto point = geodetic::Point(point_sw.lon() + lon_shift,
+                                           point_sw.lat() + lat_shift);
+        const auto hash = int64::encode(point, bits);
+        const auto bbox = int64::bounding_box(hash, bits);
+        if (boost::geometry::intersects(bbox, envelope) &&
+            boost::geometry::intersects(bbox, polygon)) {
+          Base32::encode(int64::encode(point, bits), buffer, precision);
+          buffer += precision;
+          ++size;
+        }
+      }
+    }
+    result.resize(size);
   }
   return result.pyarray();
 }

@@ -203,6 +203,25 @@ Raises:
     ValueError: If the given precision is not within [1, 12].
 )__doc__")
       .def(
+          "bounding_boxes",
+          [](const geodetic::Polygon& polygon,
+             const uint32_t precision) -> py::array {
+            check_range(precision);
+            return geohash::string::bounding_boxes(polygon, precision);
+          },
+          py::arg("box") = py::none(), py::arg("precision") = 1,
+          R"__doc__(
+Returns all geohash codes contained in the defined polygon.
+
+Args:
+  polygon (pyinterp.geodetic.Polygon): Polygon.
+  precision (int, optional): Required accuracy.
+Returns:
+  numpy.ndarray: Geohash codes.
+Raises:
+    ValueError: If the given precision is not within [1, 12].
+)__doc__")
+      .def(
           "neighbors",
           [](const py::str& hash) {
             auto buffer = parse_str(hash);

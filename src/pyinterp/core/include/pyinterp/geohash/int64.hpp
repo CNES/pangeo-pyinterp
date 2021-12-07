@@ -97,11 +97,7 @@ namespace pyinterp::geohash::int64 {
 
 // Returns all the GeoHash codes within the polygon.
 [[nodiscard]] inline auto bounding_boxes(const geodetic::Polygon& polygon,
-                                         uint32_t chars) -> Vector<uint64_t> {
-  auto box = geodetic::Box();
-  boost::geometry::envelope<geodetic::Polygon, geodetic::Box>(polygon, box);
-  return bounding_boxes(box, chars);
-}
+                                         uint32_t chars) -> Vector<uint64_t>;
 
 // Returns the area covered by the GeoHash
 [[nodiscard]] inline auto area(uint64_t hash, uint32_t precision,
