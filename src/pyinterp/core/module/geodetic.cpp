@@ -645,6 +645,21 @@ Returns:
   init_geodetic_polygon(m);
 
   m.def(
+      "normalize_longitudes",
+      [](Eigen::Ref<Eigen::VectorXd>& lon, const double min_lon) -> void {
+        lon = lon.unaryExpr([min_lon](double x) {
+          return pyinterp::detail::math::normalize_angle(x, min_lon, 360.0);
+        });
+      },
+      py::arg("lon"), py::arg("min_lon") = -180.0, R"__doc__(
+Normalizes longitudes to the range ``[min_lon, min_lon + 360)`` in place.
+
+Args:
+    lon (numpy.ndarray): Longitudes in degrees.
+    min_lon (float, optional): Minimum longitude. Defaults to ``-180.0``.
+)__doc__");
+
+  m.def(
       "coordinate_distances",
       [](const Eigen::Ref<const Eigen::VectorXd>& lon1,
          const Eigen::Ref<const Eigen::VectorXd>& lat1,
