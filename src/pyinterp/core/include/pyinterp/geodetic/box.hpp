@@ -13,10 +13,12 @@
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/point.hpp"
-#include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp::geodetic {
+
+/// Forward declaration
+class Polygon;
 
 // Defines a box made of two describing points.
 class Box : public boost::geometry::model::box<Point> {
@@ -119,19 +121,13 @@ class Box : public boost::geometry::model::box<Point> {
   }
 
   /// Calculate the area
-  [[nodiscard]] auto area(const std::optional<System>& wgs) const -> double {
-    return static_cast<Polygon>(*this).area(wgs);
-  }
+  [[nodiscard]] auto area(const std::optional<System>& wgs) const -> double;
 
   /// Calculate the distance between two boxes
-  [[nodiscard]] auto distance(const Box& other) const -> double {
-    return static_cast<Polygon>(*this).distance(static_cast<Polygon>(other));
-  }
+  [[nodiscard]] auto distance(const Box& other) const -> double;
 
   /// Calculate the distance between this instance and a point
-  [[nodiscard]] auto distance(const Point& other) const -> double {
-    return static_cast<Polygon>(*this).distance(other);
-  }
+  [[nodiscard]] auto distance(const Point& other) const -> double;
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
@@ -150,11 +146,7 @@ class Box : public boost::geometry::model::box<Point> {
   }
 
   /// Converts this instance into a polygon
-  explicit operator Polygon() const {
-    Polygon result;
-    boost::geometry::convert(*this, result);
-    return result;
-  }
+  explicit operator Polygon() const;
 
  private:
   // Returns the maximum power of 10 from a number (x > 0)

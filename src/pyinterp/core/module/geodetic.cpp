@@ -334,14 +334,8 @@ Raises:
       .def("__repr__", &geodetic::Polygon::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a point.")
-      .def(
-          "envelope",
-          [](const geodetic::Polygon& self) -> geodetic::Box {
-            auto box = geodetic::Box();
-            boost::geometry::envelope(self, box);
-            return box;
-          },
-          R"__doc__(
+      .def("envelope", &geodetic::Polygon::envelope,
+           R"__doc__(
 Calculates the envelope of this polygon.
 
 Returns:

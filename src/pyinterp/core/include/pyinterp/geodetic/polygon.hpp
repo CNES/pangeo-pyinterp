@@ -14,6 +14,9 @@
 
 namespace pyinterp::geodetic {
 
+/// Forward declaration
+class Box;
+
 class Polygon : public boost::geometry::model::polygon<Point> {
  public:
   using boost::geometry::model::polygon<Point>::polygon;
@@ -48,6 +51,9 @@ class Polygon : public boost::geometry::model::polygon<Point> {
       }
     }
   }
+
+  /// Calculates the envelope of this polygon.
+  [[nodiscard]] auto envelope() const -> Box;
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
