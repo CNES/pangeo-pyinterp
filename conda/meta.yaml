@@ -30,7 +30,6 @@ requirements:
     - pytest
     - python
     - setuptools
-    - snappy
     - xarray
   run:
     - dask

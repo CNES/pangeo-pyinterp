@@ -26,8 +26,6 @@ extern void init_quadrivariate(py::module&);
 extern void init_rtree(py::module&);
 extern void init_spline(py::module&);
 extern void init_streaming_histogram(py::module&);
-extern void init_storage_marshaller(py::module&);
-extern void init_storage_unqlite(py::module&);
 extern void init_trivariate(py::module&);
 
 static void init_geohash(py::module& m) {
@@ -39,11 +37,6 @@ GeoHash encoded as integer 64 bits
   init_geohash_int64(int64);
   init_geohash_string(m);
   init_geohash_utility(m);
-}
-
-static void init_storage(py::module& m) {
-  init_storage_marshaller(m);
-  init_storage_unqlite(m);
 }
 
 PYBIND11_MODULE(core, m) {
@@ -72,12 +65,6 @@ Replace undefined values
 ------------------------
 )__doc__");
 
-  auto storage = m.def_submodule("storage", R"__doc__(
-
-Index storage support
----------------------
-)__doc__");
-
   pyinterp::detail::gsl::set_error_handler();
 
   init_dateutils(dateutils);
@@ -99,5 +86,4 @@ Index storage support
 
   // geohash
   init_geohash(geohash);
-  init_storage(storage);
 }

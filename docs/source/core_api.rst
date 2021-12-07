@@ -137,19 +137,6 @@ Geohash bytes
   core.geohash.neighbors
   core.geohash.where
 
-UnQLite Key/Value storage
--------------------------
-
-.. autosummary::
-  :toctree: generated/
-
-  core.storage.unqlite.CompressionType
-  core.storage.unqlite.Database
-  core.storage.unqlite.DatabaseError
-  core.storage.unqlite.LockError
-  core.storage.unqlite.OperationalError
-  core.storage.unqlite.ProgrammingError
-
 Temporal Cartesian Grids
 ------------------------
 

@@ -108,17 +108,6 @@ def fix_core_geohash(src: pathlib.Path):
             stream.writelines(lines)
 
 
-def fix_core_storage(src: pathlib.Path):
-    core = src / "pyinterp" / "core" / "storage" / "__init__.pyi"
-    with core.open("r") as stream:
-        lines = stream.readlines()
-
-    lines.insert(0, "from . import unqlite\n")
-
-    with core.open("w") as stream:
-        stream.writelines(lines)
-
-
 def main():
     modules = [
         # "pyinterp.core.dateutils",
@@ -126,8 +115,6 @@ def main():
         "pyinterp.core.geodetic",
         "pyinterp.core.geohash.int64",
         "pyinterp.core.geohash",
-        "pyinterp.core.storage.unqlite",
-        "pyinterp.core.storage",
         "pyinterp.core",
     ]
     out = pathlib.Path(__file__).parent / "src"
@@ -154,7 +141,6 @@ def main():
         [grid for grid in grids if re.compile(r'Grid[2-3]DFloat').search(grid)])
     fix_core_geodetic(out)
     fix_core_geohash(out)
-    fix_core_storage(out)
 
     stubs = []
     for root, dirs, files in os.walk(str(out)):

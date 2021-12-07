@@ -142,28 +142,8 @@ timeit.timeit("pyinterp.geohash.encode(lon, lat)",
               globals=dict(pyinterp=pyinterp, lon=lon, lat=lat)) / 50
 
 #%%
-# Geohash index
-# =============
-store = pyinterp.geohash.storage.MutableMapping()
-index = pyinterp.geohash.index.init_geohash(store, precision=3)
-
-#%%time
-# The index can contain anything, as long as it's possible to serialize the data.
-index.update(zip(index.encode(lon, lat), measures))
-#%%
-# Number of box filled in this index
-len(index)
-
-#%%
-# Let's imagine that we want to retrieve the data in the following polygon:
-#
-# * ``POLYGON((-33.75 39.375,-33.75 45,-22.5 45,-22.5 39.375,-33.75 39.375))``
-polygon = pyinterp.geodetic.Polygon.read_wkt(
-    "POLYGON((-33.75 39.375,-33.75 45,-22.5 45,-22.5 39.375,-33.75 39.375))")
-items = index.items(index.keys(polygon.envelope()))
-
-#%%
 # Density calculation
+# ===================
 df = pandas.DataFrame(
     dict(lon=lon,
          lat=lat,

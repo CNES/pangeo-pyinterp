@@ -176,7 +176,7 @@ find_package(PythonLibs REQUIRED)
 find_package(Boost 1.63 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-# We prefer the use of static libraries for the GSL and Snappy modules.
+# We prefer the use of static libraries for the GSL.
 if (CONDA_FORGE)
   set(__CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so" ".dylib" ".lib")
@@ -188,10 +188,6 @@ include_directories(${GSL_INCLUDE_DIRS})
 if (WIN32)
   add_compile_definitions(GSL_DLL)
 endif()
-
-# Snappy
-find_package(Snappy REQUIRED)
-include_directories(${SNAPPY_INCLUDE_DIR})
 
 # We restore the suffixes of the libraries to be found.
 if (CONDA_FORGE)
@@ -246,13 +242,6 @@ include_directories(
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-# unqlite
-add_library(unqlite STATIC "third_party/unqlite/unqlite.c")
-target_compile_definitions(unqlite PUBLIC UNQLITE_ENABLE_THREADS)
-if(NOT WIN32)
-  set_target_properties(unqlite PROPERTIES COMPILE_FLAGS "-fPIC")
-endif()
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/include
