@@ -19,37 +19,34 @@ class Box;
 
 class Polygon : public boost::geometry::model::polygon<Point> {
  public:
-  using boost::geometry::model::polygon<Point>::polygon;
+  using Base = boost::geometry::model::polygon<Point>;
+  using Base::polygon;
 
   /// Create a new instance from Python
-  Polygon(const pybind11::list& outer, const pybind11::list& inners) {
-    try {
-      for (const auto item : outer) {
-        auto point = item.cast<geodetic::Point>();
-        boost::geometry::append(this->outer(), point);
-      }
-    } catch (const pybind11::cast_error&) {
-      throw std::invalid_argument(
-          "outer must be a list of pyinterp.geodetic.Point");
+  Polygon(const pybind11::list& outer, const pybind11::list& inners);
+
+  /// Returns the outer ring
+  [[nodiscard]] auto outer() const -> pybind11::list {
+    auto outer = pybind11::list();
+
+    for (const auto& item : Base::outer()) {
+      outer.append(item);
     }
-    if (!inners.empty()) {
-      try {
-        auto index = 0;
-        this->inners().resize(inners.size());
-        for (const auto inner : inners) {
-          auto points = inner.cast<pybind11::list>();
-          for (const auto item : points) {
-            auto point = item.cast<geodetic::Point>();
-            boost::geometry::append(this->inners()[index], point);
-          }
-          ++index;
-        }
-      } catch (const pybind11::cast_error&) {
-        throw std::invalid_argument(
-            "inners must be a list of "
-            "list of pyinterp.geodetic.Point");
+    return outer;
+  }
+
+  /// Returns the inner rings
+  [[nodiscard]] auto inners() const -> pybind11::list {
+    auto inners = pybind11::list();
+
+    for (const auto& inner : Base::inners()) {
+      auto buffer = pybind11::list();
+      for (const auto& item : inner) {
+        buffer.append(item);
       }
+      inners.append(buffer);
     }
+    return inners;
   }
 
   /// Calculates the envelope of this polygon.
@@ -57,21 +54,7 @@ class Polygon : public boost::geometry::model::polygon<Point> {
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
-    auto inners = pybind11::list();
-    auto outer = pybind11::list();
-
-    for (const auto& item : this->outer()) {
-      outer.append(item);
-    }
-
-    for (const auto& inner : this->inners()) {
-      auto buffer = pybind11::list();
-      for (const auto& item : inner) {
-        buffer.append(item);
-      }
-      inners.append(buffer);
-    }
-    return pybind11::make_tuple(outer, inners);
+    return pybind11::make_tuple(this->outer(), this->inners());
   }
 
   /// Calculate the area

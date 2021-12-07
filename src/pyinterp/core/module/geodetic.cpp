@@ -319,6 +319,10 @@ Raises:
   ValueError: if outer is not a list of pyinterp.geodetic.Point.
   ValueError: if inners is not a list of list of pyinterp.geodetic.Point.
 )")
+      .def_property_readonly("outer", &geodetic::Polygon::outer,
+                             "The outer ring.")
+      .def_property_readonly("inners", &geodetic::Polygon::inners,
+                             "The inner rings.")
       .def(
           "__eq__",
           [](const geodetic::Polygon& self, const geodetic::Polygon& rhs)
