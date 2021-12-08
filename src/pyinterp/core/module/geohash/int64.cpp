@@ -148,25 +148,6 @@ Raises:
     ValueError: If the given precision is not within [1, 64].
 )__doc__")
       .def(
-          "bounding_boxes",
-          [](const std::optional<geodetic::Box>& box,
-             const uint32_t precision) -> pyinterp::Vector<uint64_t> {
-            check_range(precision);
-            return geohash::int64::bounding_boxes(box, precision);
-          },
-          py::arg("box") = py::none(), py::arg("precision") = 5,
-          R"__doc__(
-Returns all geohash codes contained in the defined bounding box.
-
-Args:
-  box (pyinterp.geohash.Box, optional): Bounding box.
-  precision (int, optional): Required accuracy.
-Returns:
-  numpy.ndarray: Geohash codes.
-Raises:
-    ValueError: If the given precision is not within [1, 64].
-)__doc__")
-      .def(
           "neighbors",
           [](const uint64_t hash,
              const uint32_t precision) -> Eigen::Matrix<uint64_t, 8, 1> {
@@ -205,15 +186,5 @@ Returns:
     and latitudes.
 Raises:
   ValueError: If the given precision is not within [1, 64].
-)__doc__")
-      .def("where", &geohash::int64::where, py::arg("hash"),
-           R"__doc__(
-Returns the start and end indexes of the different GeoHash boxes.
-
-Args:
-  hash (numpy.ndarray): Geohash codes.
-Returns:
-  dict: dictionary between successive identical geohash codes and start and
-    end indexes in the table provided as input.
 )__doc__");
 }

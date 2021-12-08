@@ -91,25 +91,11 @@ namespace pyinterp::geohash::int64 {
 [[nodiscard]] auto grid_properties(const geodetic::Box& box, uint32_t precision)
     -> std::tuple<uint64_t, size_t, size_t>;
 
-// Returns all the GeoHash codes within the box.
-[[nodiscard]] auto bounding_boxes(const std::optional<geodetic::Box>& box,
-                                  uint32_t precision) -> Vector<uint64_t>;
-
-// Returns all the GeoHash codes within the polygon.
-[[nodiscard]] inline auto bounding_boxes(const geodetic::Polygon& polygon,
-                                         uint32_t chars) -> Vector<uint64_t>;
-
 // Returns the area covered by the GeoHash
 [[nodiscard]] inline auto area(uint64_t hash, uint32_t precision,
                                const std::optional<geodetic::System>& wgs)
     -> double {
   return bounding_box(hash, precision).area(wgs);
 }
-
-// Returns the start and end indexes of the different GeoHash boxes.
-[[nodiscard]] auto where(
-    const pybind11::EigenDRef<const Eigen::Matrix<uint64_t, -1, -1>>& hash)
-    -> std::unordered_map<uint64_t, std::tuple<std::tuple<int64_t, int64_t>,
-                                     std::tuple<int64_t, int64_t>>>;
 
 }  // namespace pyinterp::geohash::int64
