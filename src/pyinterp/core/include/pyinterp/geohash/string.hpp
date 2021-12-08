@@ -14,6 +14,7 @@
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geodetic/point.hpp"
+#include "pyinterp/geodetic/polygon.hpp"
 
 namespace pyinterp::geohash::string {
 
@@ -36,6 +37,12 @@ class Array {
     size_ = size;
   }
 
+  /// Remove an element from the array.
+  auto erase(const size_t index) -> void {
+    array_->erase(array_->begin() + index * chars_,
+                  array_->begin() + (index + 1) * chars_);
+  }
+
   /// Get the pointer to the raw memory
   [[nodiscard]] inline auto buffer() const -> char* { return array_->data(); }
 
@@ -56,6 +63,9 @@ class Array {
   uint32_t chars_;
   size_t size_;
 };
+
+/// Allocates a numpy array of strings of maximum length "precision"
+auto allocate_array(const size_t size, const uint32_t precision) -> Array;
 
 /// Encode a point into geohash with the given bit depth
 auto encode(const geodetic::Point& point, char* buffer, uint32_t precision)
@@ -101,7 +111,7 @@ auto encode(const geodetic::Point& point, char* buffer, uint32_t precision)
                         const std::optional<geodetic::System>& wgs)
     -> Eigen::MatrixXd;
 
-/// Returns all GeoHash with the defined box
+/// Returns all GeoHash within the given region
 [[nodiscard]] auto bounding_boxes(const std::optional<geodetic::Box>& box,
                                   uint32_t precision) -> pybind11::array;
 
@@ -112,5 +122,13 @@ auto encode(const geodetic::Point& point, char* buffer, uint32_t precision)
 [[nodiscard]] auto where(const pybind11::array& hash) -> std::unordered_map<
     std::string,
     std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>;
+
+/// Returns GeoHash codes of highest precision for all provides codes.
+[[nodiscard]] auto zoom_in(const pybind11::array& hash, uint32_t precision)
+    -> pybind11::array;
+
+/// Returns GeoHash codes of lowest precision for all provides codes.
+[[nodiscard]] auto zoom_out(const pybind11::array& hash, uint32_t precision)
+    -> pybind11::array;
 
 }  // namespace pyinterp::geohash::string

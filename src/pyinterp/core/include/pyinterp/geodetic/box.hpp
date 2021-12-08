@@ -38,14 +38,15 @@ class Box : public boost::geometry::model::box<Point> {
     return {{-180, -90}, {180, 90}};
   }
 
-  /// Normalize the longitude coordinate of the box in the range [min_lon,
-  /// min_lon + 360]
-  auto normalize(const double min_lon) -> Box {
+  /// Normalize the longitude coordinate of the box in the range [-180,
+  /// 180]
+  auto normalize() const -> Box {
     auto result = *this;
-    result.min_corner().set<0>(detail::math::normalize_angle(
-        result.min_corner().get<0>(), min_lon, 360.0));
-    result.max_corner().set<0>(detail::math::normalize_angle(
-        result.max_corner().get<0>(), min_lon, 360.0));
+    auto _normalize = [](const double x) -> double {
+      return  x > 180.0 ? detail::math::normalize_angle(x, -180.0, 360.0): x;
+    };
+    result.min_corner().set<0>(_normalize(result.min_corner().get<0>()));
+    result.max_corner().set<0>(_normalize(result.max_corner().get<0>()));
     return result;
   }
 
@@ -144,6 +145,10 @@ class Box : public boost::geometry::model::box<Point> {
     return Box(Point::setstate(state[0].cast<pybind11::tuple>()),
                Point::setstate(state[1].cast<pybind11::tuple>()));
   }
+
+  auto operator == (const Box& other) const -> bool {
+    return boost::geometry::equals(*this, other);
+  } 
 
   /// Converts this instance into a polygon
   explicit operator Polygon() const;

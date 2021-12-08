@@ -252,6 +252,8 @@ auto grid_properties(const geodetic::Box& box, const uint32_t precision)
   auto hash_sw = encode(box.min_corner(), precision);
   auto box_sw = bounding_box(hash_sw, precision);
   auto box_ne = bounding_box(encode(box.max_corner(), precision), precision);
+  auto lon_offset = box.max_corner().lon() == 180 ? 1 : 0;
+  auto lat_offset = box.max_corner().lat() == 90 ? 1 : 0;
 
   auto lng_lat_err = error_with_precision(precision);
   auto lon_step = static_cast<size_t>(
@@ -261,7 +263,42 @@ auto grid_properties(const geodetic::Box& box, const uint32_t precision)
       std::round((box_ne.min_corner().lat() - box_sw.min_corner().lat()) /
                  (std::get<1>(lng_lat_err))));
 
-  return std::make_tuple(hash_sw, lon_step + 1, lat_step + 1);
+  return std::make_tuple(hash_sw, lon_step + lon_offset, lat_step + lat_offset);
+}
+
+// ---------------------------------------------------------------------------
+auto bounding_boxes(const geodetic::Box& box, const uint32_t precision)
+    -> Vector<uint64_t> {
+  // If the input box cut the meridian, we need to split it into two boxes.
+  const auto boxes = geodetic::Box(box).normalize().split();
+
+  // Grid resolution in degrees
+  const auto lng_lat_err = error_with_precision(precision);
+
+  // Allocation of the vector storing the different codes of the matrix created
+  auto result = Eigen::Matrix<uint64_t, -1, 1>(count(boxes, precision));
+  auto ix = size_t(0);
+
+  for (const auto& item : boxes) {
+    size_t lat_step;
+    size_t lon_step;
+    uint64_t hash_sw;
+
+    std::tie(hash_sw, lon_step, lat_step) = grid_properties(item, precision);
+    auto point_sw = decode(hash_sw, precision, true);
+
+    for (size_t lat = 0; lat < lat_step; ++lat) {
+      const auto lat_shift = lat * std::get<1>(lng_lat_err);
+
+      for (size_t lon = 0; lon < lon_step; ++lon) {
+        const auto lng_shift = lon * std::get<0>(lng_lat_err);
+        result(ix++) =
+            encode({point_sw.lon() + lng_shift, point_sw.lat() + lat_shift},
+                   precision);
+      }
+    }
+  }
+  return result;
 }
 
 }  // namespace pyinterp::geohash::int64

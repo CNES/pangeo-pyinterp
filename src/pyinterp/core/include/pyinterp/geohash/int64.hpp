@@ -91,11 +91,31 @@ namespace pyinterp::geohash::int64 {
 [[nodiscard]] auto grid_properties(const geodetic::Box& box, uint32_t precision)
     -> std::tuple<uint64_t, size_t, size_t>;
 
+// Returns the number of geohash codes in the given box.
+[[nodiscard]] auto inline count(const std::list<geodetic::Box>& boxes,
+                                uint32_t precision) -> size_t {
+  auto result = size_t{0};
+  for (const auto& box : boxes) {
+    auto properties = grid_properties(box, precision);
+    result += std::get<1>(properties) * std::get<2>(properties);
+  }
+  return result;
+}
+
+[[nodiscard]] auto inline count(const geodetic::Box& box, uint32_t precision)
+    -> size_t {
+  return count(geodetic::Box(box).normalize().split(), precision);
+}
+
 // Returns the area covered by the GeoHash
 [[nodiscard]] inline auto area(uint64_t hash, uint32_t precision,
                                const std::optional<geodetic::System>& wgs)
     -> double {
   return bounding_box(hash, precision).area(wgs);
 }
+
+// Returns all the GeoHash codes within the box.
+[[nodiscard]] auto bounding_boxes(const geodetic::Box& box, uint32_t precision)
+    -> Vector<uint64_t>;
 
 }  // namespace pyinterp::geohash::int64

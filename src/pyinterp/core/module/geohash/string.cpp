@@ -201,6 +201,7 @@ Returns:
   numpy.ndarray: Geohash codes.
 Raises:
     ValueError: If the given precision is not within [1, 12].
+    MemoryError: If the memory is not sufficient to store the result.
 )__doc__")
       .def(
           "bounding_boxes",
@@ -220,6 +221,7 @@ Returns:
   numpy.ndarray: Geohash codes.
 Raises:
     ValueError: If the given precision is not within [1, 12].
+    MemoryError: If the memory is not sufficient to store the result.
 )__doc__")
       .def(
           "neighbors",
@@ -277,5 +279,41 @@ Args:
 Returns:
   dict: dictionary between successive identical geohash codes and start and
     end indexes in the table provided as input.
+)__doc__")
+      .def(
+          "zoom_in",
+          [](const py::array& hash, const uint32_t precision) -> py::array {
+            check_range(precision);
+            return geohash::string::zoom_in(hash, precision);
+          },
+          py::arg("hash"), py::arg("precision") = 1, R"__doc__(
+Returns the geohash code corresponding to the given one with a higher
+accuracy.
+
+Args:
+  hash (numpy.ndarray): Geohash codes.
+  precision (int, optional): Required accuracy.
+Returns:
+  numpy.ndarray: Geohash codes with higher accuracy.
+Raises:
+  ValueError: If the given precision is not within [1, 12].
+)__doc__")
+      .def(
+          "zoom_out",
+          [](const py::array& hash, const uint32_t precision) -> py::array {
+            check_range(precision);
+            return geohash::string::zoom_out(hash, precision);
+          },
+          py::arg("hash"), py::arg("precision") = 1, R"__doc__(
+Returns the geohash code corresponding to the given one with a lower
+accuracy.
+
+Args:
+  hash (numpy.ndarray): Geohash codes.
+  precision (int, optional): Required accuracy.
+Returns:
+  numpy.ndarray: Geohash codes with lower accuracy.
+Raises:
+  ValueError: If the given precision is not within [1, 12].
 )__doc__");
 }

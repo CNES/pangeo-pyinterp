@@ -64,6 +64,11 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
     ss << boost::geometry::dsv(*this);
     return ss.str();
   }
+
+  /// Returns true if the tow points are equal.
+  auto operator==(const Point& other) const -> bool {
+    return boost::geometry::equals(*this, other);
+  }
 };
 
 }  // namespace pyinterp::geodetic

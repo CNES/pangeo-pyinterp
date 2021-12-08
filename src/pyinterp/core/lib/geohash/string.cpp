@@ -47,6 +47,20 @@ auto Array::get_info(const pybind11::array& hashs, const pybind11::ssize_t ndim)
 }
 
 // ---------------------------------------------------------------------------
+auto allocate_array(const size_t size, const uint32_t precision) -> Array {
+  try {
+    return Array(size, precision);
+  } catch (const std::bad_alloc&) {
+    auto ss = std::stringstream();
+    ss << "Unable to allocate " << (size / 1073741824)
+       << " GiB for an array with shape (" << size << ",) and data type S"
+       << precision;
+    PyErr_SetString(PyExc_MemoryError, ss.str().c_str());
+    throw pybind11::error_already_set();
+  }
+}
+
+// ---------------------------------------------------------------------------
 auto encode(const geodetic::Point& point, char* const buffer,
             const uint32_t precision) -> void {
   Base32::encode(int64::encode(point, 5 * precision), buffer, precision);
@@ -58,7 +72,7 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
             const uint32_t precision) -> pybind11::array {
   detail::check_eigen_shape("lon", lon, "lat", lat);
   auto size = lon.size();
-  auto array = Array(size, precision);
+  auto array = allocate_array(size, precision);
   auto* buffer = array.buffer();
 
   {
@@ -124,7 +138,7 @@ auto neighbors(const char* const hash, const size_t count) -> pybind11::array {
   std::tie(integer_encoded, precision) = base32.decode(hash, count);
 
   const auto integers = int64::neighbors(integer_encoded, precision * 5);
-  auto array = Array(integers.size(), precision);
+  auto array = allocate_array(integers.size(), precision);
   auto* buffer = array.buffer();
 
   {
@@ -164,33 +178,29 @@ auto area(const pybind11::array& hash,
 // ---------------------------------------------------------------------------
 auto bounding_boxes(const std::optional<geodetic::Box>& box,
                     const uint32_t precision) -> pybind11::array {
-  size_t lat_step;
-  size_t lon_step;
-  size_t size = 0;
-  uint64_t hash_sw;
-
   // Number of bits
   auto bits = precision * 5;
 
-  // Calculation of the number of elements constituting the grid
+  // If the input bbox cut the meridian, we need to split it into two
+  // bounding boxes.
   const auto boxes =
-      box.value_or(geodetic::Box::whole_earth()).normalize(-180).split();
-  for (const auto& item : boxes) {
-    std::tie(hash_sw, lon_step, lat_step) = int64::grid_properties(item, bits);
-    size += lat_step * lon_step;
-  }
+      box.value_or(geodetic::Box::whole_earth()).normalize().split();
 
   // Grid resolution in degrees
   const auto lng_lat_err = int64::error_with_precision(bits);
 
   // Allocation of the vector storing the different codes of the matrix created
-  auto result = Array(size, precision);
+  auto result = allocate_array(int64::count(boxes, bits), precision);
   auto* buffer = result.buffer();
 
   {
     auto gil = pybind11::gil_scoped_release();
 
     for (const auto& item : boxes) {
+      size_t lat_step;
+      size_t lon_step;
+      uint64_t hash_sw;
+
       std::tie(hash_sw, lon_step, lat_step) =
           int64::grid_properties(item, bits);
       const auto point_sw = int64::decode(hash_sw, bits, true);
@@ -214,51 +224,52 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
 }
 
 // ---------------------------------------------------------------------------
-auto bounding_boxes(const geodetic::Polygon& polygon,
-                    const uint32_t precision) -> pybind11::array {
-  size_t lat_step;
-  size_t lon_step;
-  size_t size = 0;
-  uint64_t hash_sw;
-
+auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision)
+    -> pybind11::array {
   // Number of bits
   auto bits = precision * 5;
 
-  // Envelope of the polygon for speed up the calculation
-  auto envelope = polygon.envelope();
+  // Bounding box of the grid to be created
+  const auto envelope = polygon.envelope();
 
-  // Calculation of the number of elements constituting the grid
-  std::tie(hash_sw, lon_step, lat_step) =
-      int64::grid_properties(geodetic::Box::whole_earth(), bits);
-  size += lat_step * lon_step;
+  // If the envelope cut the meridian, we need to split it into two
+  // bounding boxes.
+  const auto boxes = envelope.normalize().split();
 
   // Grid resolution in degrees
   const auto lng_lat_err = int64::error_with_precision(bits);
 
   // Allocation of the vector storing the different codes of the matrix created
-  auto result = Array(size, precision);
+  auto result = allocate_array(int64::count(boxes, bits), precision);
   auto* buffer = result.buffer();
-  size = 0;
+  auto size = size_t(0);
 
   {
     auto gil = pybind11::gil_scoped_release();
 
-    const auto point_sw = int64::decode(hash_sw, bits, true);
+    for (const auto& item : boxes) {
+      size_t lat_step;
+      size_t lon_step;
+      uint64_t hash_sw;
 
-    for (size_t lat = 0; lat < lat_step; ++lat) {
-      const auto lat_shift = lat * std::get<1>(lng_lat_err);
+      std::tie(hash_sw, lon_step, lat_step) =
+          int64::grid_properties(item, bits);
+      const auto point_sw = int64::decode(hash_sw, bits, true);
 
-      for (size_t lon = 0; lon < lon_step; ++lon) {
-        const auto lon_shift = lon * std::get<0>(lng_lat_err);
-        const auto point = geodetic::Point(point_sw.lon() + lon_shift,
-                                           point_sw.lat() + lat_shift);
-        const auto hash = int64::encode(point, bits);
-        const auto bbox = int64::bounding_box(hash, bits);
-        if (boost::geometry::intersects(bbox, envelope) &&
-            boost::geometry::intersects(bbox, polygon)) {
-          Base32::encode(int64::encode(point, bits), buffer, precision);
-          buffer += precision;
-          ++size;
+      for (size_t lat = 0; lat < lat_step; ++lat) {
+        const auto lat_shift = lat * std::get<1>(lng_lat_err);
+
+        for (size_t lon = 0; lon < lon_step; ++lon) {
+          const auto lon_shift = lon * std::get<0>(lng_lat_err);
+          const auto point = geodetic::Point(point_sw.lon() + lon_shift,
+                                             point_sw.lat() + lat_shift);
+          const auto hash = int64::encode(point, bits);
+          const auto bbox = int64::bounding_box(hash, bits);
+          if (boost::geometry::intersects(bbox, polygon)) {
+            Base32::encode(int64::encode(point, bits), buffer, precision);
+            buffer += precision;
+            ++size;
+          }
         }
       }
     }
@@ -327,6 +338,85 @@ auto where(const pybind11::array& hashs) -> std::unordered_map<
     }
   }
   return result;
+}
+
+// ---------------------------------------------------------------------------
+
+auto zoom_in(const pybind11::array& hash, uint32_t precision_in)
+    -> pybind11::array {
+  // Number of bits nned to zoom in
+  auto bits = precision_in * 5;
+
+  // Decode the information in the provided table.
+  auto info = Array::get_info(hash, 1);
+  auto size = info.shape[0];
+  auto precision_out = info.strides[0];
+  auto* ptr = static_cast<char*>(info.ptr);
+
+  // If the zoom isn't possible, the provided table is returned.
+  if (precision_out > precision_in) {
+    return hash;
+  }
+
+  // Calculation of the number of items needed for the result.
+  auto size_in = size * (size_t(2) << (5 * (precision_in - precision_out) - 1));
+
+  // Allocates the result table.
+  auto result = allocate_array(size_in, precision_in);
+  auto* buffer = result.buffer();
+
+  {
+    auto gil = pybind11::gil_scoped_release();
+
+    for (auto ix = 0; ix < size; ++ix) {
+      auto codes =
+          int64::bounding_boxes(bounding_box(ptr, precision_out), bits);
+      for (auto jx = 0; jx < codes.size(); ++jx) {
+        Base32::encode(codes[jx], buffer, precision_in);
+        buffer += precision_in;
+      }
+      ptr += precision_out;
+    }
+  }
+  return result.pyarray();
+}
+
+// ---------------------------------------------------------------------------
+auto zoom_out(const pybind11::array& hash, uint32_t precision_in)
+    -> pybind11::array {
+  // Decodes the provided table.
+  auto info = Array::get_info(hash, 1);
+  auto size = info.shape[0];
+  auto precision_out = info.strides[0];
+  auto* ptr = static_cast<char*>(info.ptr);
+
+  // If the zoom isn't possible, the provided table is returned.
+  if (precision_out < precision_in) {
+    return hash;
+  }
+
+  auto current_code = std::string(precision_in + 1, '\0');
+  auto zoom_out_codes = std::set<std::string>();
+
+  {
+    auto gil = pybind11::gil_scoped_release();
+
+    for (auto ix = 0; ix < size; ++ix) {
+      encode(decode(ptr, precision_out, false), current_code.data(),
+             precision_in);
+      zoom_out_codes.emplace(std::string(current_code));
+      ptr += precision_out;
+    }
+  }
+
+  auto result = allocate_array(zoom_out_codes.size(), precision_in);
+  auto* buffer = result.buffer();
+  for (auto code : zoom_out_codes) {
+    std::copy(code.begin(), code.end(), buffer);
+    buffer += precision_in;
+  }
+
+  return result.pyarray();
 }
 
 }  // namespace pyinterp::geohash::string
