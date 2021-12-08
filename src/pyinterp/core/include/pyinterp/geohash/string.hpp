@@ -65,7 +65,7 @@ class Array {
 };
 
 /// Allocates a numpy array of strings of maximum length "precision"
-auto allocate_array(const size_t size, const uint32_t precision) -> Array;
+auto allocate_array(size_t size, uint32_t precision) -> Array;
 
 /// Encode a point into geohash with the given bit depth
 auto encode(const geodetic::Point& point, char* buffer, uint32_t precision)
