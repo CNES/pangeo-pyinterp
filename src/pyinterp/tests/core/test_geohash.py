@@ -50,3 +50,27 @@ def test_string_numpy():
     strs.reshape(1, 2, 5)
     with pytest.raises(ValueError):
         indexes = geohash.where(strs)
+
+def test_bounding_boxes():
+    bboxes = geohash.bounding_boxes(precision=1)
+    assert len(bboxes) == 32
+    for bbox in bboxes:
+        case = geohash.bounding_boxes(
+            geohash.bounding_box(bbox.decode()), precision=1)
+        assert len(case) == 1
+        assert case[0] == bbox
+
+        case = geohash.bounding_boxes(
+            geohash.bounding_box(bbox.decode()), precision=3)
+        assert len(case) == 2**10
+        assert all(item.startswith(bbox) for item in case)
+
+def test_bounding_zoom():
+    bboxes = geohash.bounding_boxes(precision=1)
+    assert len(bboxes) == 32
+
+    zoom_in = geohash.zoom_in(bboxes, precision=3)
+    assert len(zoom_in) == 2**10 * 32
+    assert numpy.all(
+        numpy.sort(geohash.zoom_out(zoom_in, precision=1)) == numpy.sort(
+            bboxes))

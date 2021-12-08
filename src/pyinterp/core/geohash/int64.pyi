@@ -1,14 +1,9 @@
-from typing import Dict, Optional, Tuple, overload
+from typing import Tuple, overload
 import numpy
 from .. import geodetic
 
 
 def bounding_box(hash: int, precision: int = ...) -> geodetic.Box:
-    ...
-
-
-def bounding_boxes(box: Optional[geodetic.Box] = ...,
-                   precision: int = ...) -> numpy.ndarray[numpy.uint64]:
     ...
 
 
@@ -50,10 +45,4 @@ def grid_properties(box: geodetic.Box = ...,
 
 
 def neighbors(hash: int, precision: int = ...) -> numpy.ndarray[numpy.uint64]:
-    ...
-
-
-def where(
-    hash: numpy.ndarray[numpy.uint64]
-) -> Dict[int, Tuple[Tuple[int, int], Tuple[int, int]]]:
     ...

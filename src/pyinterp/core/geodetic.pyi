@@ -19,6 +19,9 @@ class Box:
     def area(self, wgs: Optional[System] = ...) -> float:
         ...
 
+    def centroid(self) -> Point:
+        ...
+
     @overload
     def covered_by(self, point: Point) -> bool:
         ...
@@ -184,6 +187,14 @@ class Polygon:
     def __setstate__(self, arg0: tuple) -> None:
         ...
 
+    @property
+    def inners(self) -> list:
+        ...
+
+    @property
+    def outer(self) -> list:
+        ...
+
 
 class System(_System):
     __hash__: ClassVar[None] = ...
@@ -263,4 +274,9 @@ def coordinate_distances(
         strategy: str = ...,
         wgs: Optional[System] = ...,
         num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+def normalize_longitudes(lon: numpy.ndarray[numpy.float64],
+                         min_lon: float = ...) -> None:
     ...
