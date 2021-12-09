@@ -19,6 +19,9 @@
 
 namespace pyinterp::geohash::int64 {
 
+/// Format bytes as text
+[[nodiscard]] auto format_bytes(size_t bytes) -> std::string;
+
 /// Returns the precision in longitude/latitude and degrees for the given
 /// precision
 [[nodiscard]] inline auto error_with_precision(const uint32_t precision)

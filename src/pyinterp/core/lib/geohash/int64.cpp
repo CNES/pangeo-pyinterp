@@ -188,6 +188,50 @@ static encoder_t const encoder =
 static deinterleaver_t const deinterleaver =
     have_bim2 ? detail::deinterleave_bim2 : detail::deinterleave;
 
+
+// ---------------------------------------------------------------------------
+auto format_bytes(size_t bytes) -> std::string {
+  struct suffix {
+    const char* suffix;
+    size_t divisor;
+  };
+
+  static constexpr suffix suffixes[] = {
+      {"PiB", 1125899906842624ULL},
+      {"TiB", 1099511627776ULL},
+      {"GiB", 1073741824ULL},
+      {"MiB", 1048576ULL},
+      {"KiB", 1024ULL},
+      {"B", 1ULL},
+  };
+
+  auto result = std::string{};
+
+  for (const auto& item : suffixes) {
+    if (bytes > item.divisor) {
+      auto ss = std::stringstream();
+      ss << std::setprecision(2) << std::fixed
+         << (bytes / static_cast<double>(item.divisor)) << " " << item.suffix;
+      result = ss.str();
+      break;
+    }
+  }
+  return result.empty() ? std::to_string(bytes) + " B" : result;
+}
+
+// ---------------------------------------------------------------------------
+auto allocate_array(const size_t size) -> Vector<uint64_t> {
+  try {
+    return Eigen::Matrix<uint64_t, -1, 1>(size);
+  } catch (const std::bad_alloc&) {
+    auto ss = std::stringstream();
+    ss << "Unable to allocate " << format_bytes(size * 8ULL)
+       << " for an array with shape (" << size << ",) and data type uint64";
+    PyErr_SetString(PyExc_MemoryError, ss.str().c_str());
+    throw pybind11::error_already_set();
+  }
+}
+
 // ---------------------------------------------------------------------------
 auto encode(const geodetic::Point& point, const uint32_t precision)
     -> uint64_t {
@@ -276,7 +320,7 @@ auto bounding_boxes(const geodetic::Box& box, const uint32_t precision)
   const auto lng_lat_err = error_with_precision(precision);
 
   // Allocation of the vector storing the different codes of the matrix created
-  auto result = Eigen::Matrix<uint64_t, -1, 1>(count(boxes, precision));
+  auto result = allocate_array(count(boxes, precision));
   auto ix = size_t(0);
 
   for (const auto& item : boxes) {

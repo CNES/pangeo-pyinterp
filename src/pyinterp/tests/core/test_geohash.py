@@ -65,6 +65,9 @@ def test_bounding_boxes():
         assert len(case) == 2**10
         assert all(item.startswith(bbox) for item in case)
 
+    with pytest.raises(MemoryError):
+        geohash.bounding_boxes(precision=12)
+
 def test_bounding_zoom():
     bboxes = geohash.bounding_boxes(precision=1)
     assert len(bboxes) == 32

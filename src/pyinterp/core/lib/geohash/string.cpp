@@ -49,11 +49,15 @@ auto Array::get_info(const pybind11::array& hashs, const pybind11::ssize_t ndim)
 // ---------------------------------------------------------------------------
 auto allocate_array(const size_t size, const uint32_t precision) -> Array {
   try {
-    return Array(size, precision);
+    try {
+      return Array(size, precision);
+    } catch (const std::length_error&) {
+      throw std::bad_alloc();
+    }
   } catch (const std::bad_alloc&) {
     auto ss = std::stringstream();
-    ss << "Unable to allocate " << (size / 1073741824)
-       << " GiB for an array with shape (" << size << ",) and data type S"
+    ss << "Unable to allocate " << int64::format_bytes(size * precision)
+       << " for an array with shape (" << size << ",) and data type S"
        << precision;
     PyErr_SetString(PyExc_MemoryError, ss.str().c_str());
     throw pybind11::error_already_set();
