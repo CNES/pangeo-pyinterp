@@ -345,28 +345,17 @@ auto where(const pybind11::array& hashs) -> std::unordered_map<
 }
 
 // ---------------------------------------------------------------------------
-
-auto zoom_in(const pybind11::array& hash, uint32_t precision_in)
-    -> pybind11::array {
-  // Number of bits nned to zoom in
-  auto bits = precision_in * 5;
-
-  // Decode the information in the provided table.
-  auto info = Array::get_info(hash, 1);
-  auto size = info.shape[0];
-  auto precision_out = info.strides[0];
-  auto* ptr = static_cast<char*>(info.ptr);
-
-  // If the zoom isn't possible, the provided table is returned.
-  if (precision_out > precision_in) {
-    return hash;
-  }
+static auto zoom_in(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
+                    uint32_t to_precision) -> pybind11::array {
+  // Number of bits need to zoom in
+  auto bits = to_precision * 5;
 
   // Calculation of the number of items needed for the result.
-  auto size_in = size * (size_t(2) << (5 * (precision_in - precision_out) - 1));
+  auto size_in =
+      size * (size_t(2) << (5 * (to_precision - from_precision) - 1));
 
   // Allocates the result table.
-  auto result = allocate_array(size_in, precision_in);
+  auto result = allocate_array(size_in, to_precision);
   auto* buffer = result.buffer();
 
   {
@@ -374,53 +363,59 @@ auto zoom_in(const pybind11::array& hash, uint32_t precision_in)
 
     for (auto ix = 0; ix < size; ++ix) {
       auto codes =
-          int64::bounding_boxes(bounding_box(ptr, precision_out), bits);
+          int64::bounding_boxes(bounding_box(ptr, from_precision), bits);
       for (auto jx = 0; jx < codes.size(); ++jx) {
-        Base32::encode(codes[jx], buffer, precision_in);
-        buffer += precision_in;
+        Base32::encode(codes[jx], buffer, to_precision);
+        buffer += to_precision;
       }
-      ptr += precision_out;
+      ptr += from_precision;
     }
   }
   return result.pyarray();
 }
 
 // ---------------------------------------------------------------------------
-auto zoom_out(const pybind11::array& hash, uint32_t precision_in)
-    -> pybind11::array {
-  // Decodes the provided table.
-  auto info = Array::get_info(hash, 1);
-  auto size = info.shape[0];
-  auto precision_out = info.strides[0];
-  auto* ptr = static_cast<char*>(info.ptr);
-
-  // If the zoom isn't possible, the provided table is returned.
-  if (precision_out < precision_in) {
-    return hash;
-  }
-
-  auto current_code = std::string(precision_in + 1, '\0');
+static auto zoom_out(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
+                     uint32_t to_precision) -> pybind11::array {
+  auto current_code = std::string(from_precision + 1, '\0');
   auto zoom_out_codes = std::set<std::string>();
 
   {
     auto gil = pybind11::gil_scoped_release();
 
     for (auto ix = 0; ix < size; ++ix) {
-      encode(decode(ptr, precision_out, false), current_code.data(),
-             precision_in);
+      encode(decode(ptr, from_precision, false), current_code.data(),
+             to_precision);
       zoom_out_codes.emplace(std::string(current_code));
-      ptr += precision_out;
+      ptr += from_precision;
     }
   }
 
-  auto result = allocate_array(zoom_out_codes.size(), precision_in);
+  auto result = allocate_array(zoom_out_codes.size(), to_precision);
   auto* buffer = result.buffer();
   for (auto code : zoom_out_codes) {
     std::copy(code.begin(), code.end(), buffer);
-    buffer += precision_in;
+    buffer += to_precision;
   }
 
   return result.pyarray();
+}
+
+// ---------------------------------------------------------------------------
+auto zoom(const pybind11::array& hash, uint32_t precision) -> pybind11::array {
+  // Decode the information in the provided table.
+  auto info = Array::get_info(hash, 1);
+  auto size = info.shape[0];
+  auto input_precision = info.strides[0];
+  auto* ptr = static_cast<char*>(info.ptr);
+
+  if (input_precision == precision) {
+    return hash;
+  }
+  if (input_precision > precision) {
+    return zoom_out(ptr, size, input_precision, precision);
+  }
+  return zoom_in(ptr, size, input_precision, precision);
 }
 
 }  // namespace pyinterp::geohash::string

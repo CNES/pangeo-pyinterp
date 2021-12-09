@@ -281,38 +281,22 @@ Returns:
     end indexes in the table provided as input.
 )__doc__")
       .def(
-          "zoom_in",
+          "zoom",
           [](const py::array& hash, const uint32_t precision) -> py::array {
             check_range(precision);
-            return geohash::string::zoom_in(hash, precision);
+            return geohash::string::zoom(hash, precision);
           },
           py::arg("hash"), py::arg("precision") = 1, R"__doc__(
-Returns the geohash code corresponding to the given one with a higher
-accuracy.
+Returns the GeoHash codes corresponding to the same area with the given
+precision. If the given precision is higher than the precision of the
+GeoHash, the result contains a zoom in of the area, otherwise it contains a
+zoom out.
 
 Args:
   hash (numpy.ndarray): Geohash codes.
   precision (int, optional): Required accuracy.
 Returns:
   numpy.ndarray: Geohash codes with higher accuracy.
-Raises:
-  ValueError: If the given precision is not within [1, 12].
-)__doc__")
-      .def(
-          "zoom_out",
-          [](const py::array& hash, const uint32_t precision) -> py::array {
-            check_range(precision);
-            return geohash::string::zoom_out(hash, precision);
-          },
-          py::arg("hash"), py::arg("precision") = 1, R"__doc__(
-Returns the geohash code corresponding to the given one with a lower
-accuracy.
-
-Args:
-  hash (numpy.ndarray): Geohash codes.
-  precision (int, optional): Required accuracy.
-Returns:
-  numpy.ndarray: Geohash codes with lower accuracy.
 Raises:
   ValueError: If the given precision is not within [1, 12].
 )__doc__");

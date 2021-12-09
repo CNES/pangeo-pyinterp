@@ -123,12 +123,11 @@ auto encode(const geodetic::Point& point, char* buffer, uint32_t precision)
     std::string,
     std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>;
 
-/// Returns GeoHash codes of highest precision for all provides codes.
-[[nodiscard]] auto zoom_in(const pybind11::array& hash, uint32_t precision)
-    -> pybind11::array;
-
-/// Returns GeoHash codes of lowest precision for all provides codes.
-[[nodiscard]] auto zoom_out(const pybind11::array& hash, uint32_t precision)
+/// Returns the GeoHash codes corresponding to the same area with the given
+/// precision. If the given precision is higher than the precision of the
+/// GeoHash, the result contains a zoom in of the area, otherwise it contains a
+/// zoom out.
+[[nodiscard]] auto zoom(const pybind11::array& hash, uint32_t precision)
     -> pybind11::array;
 
 }  // namespace pyinterp::geohash::string
