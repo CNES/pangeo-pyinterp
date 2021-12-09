@@ -76,5 +76,5 @@ def where(hash: numpy.ndarray) -> dict:
     ...
 
 
-def zoom(hash: numpy.ndarray, precision: int = ...) -> numpy.ndarray:
+def transform(hash: numpy.ndarray, precision: int = ...) -> numpy.ndarray:
     ...

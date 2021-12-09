@@ -69,6 +69,7 @@ Encode a point into geohash code with the given precision.
 Args:
   point (pyinterp.geodetic.Point) Point to encode.
   precision (int, optional) Number of bits used to encode the geohash code.
+    Defaults to 12.
 Returns:
   int: geohash code.
 Raises:
@@ -90,6 +91,7 @@ Args:
   lon (numpy.ndarray) Longitudes in degrees.
   lat (numpy.ndarray) Latitudes in degrees.
   precision (int, optional) Number of bits used to encode the geohash code.
+    Defaults to 12.
 Returns:
   numpy.ndarray: geohash codes.
 Raises:
@@ -127,7 +129,7 @@ Decode hashes into a geographic points.
 Args:
   hash (numpy.ndarray): Geohash codes.
   round (optional, bool): If true, the coordinates of the point will be
-    rounded to the accuracy defined by the GeoHash."
+    rounded to the accuracy defined by the GeoHash. Defaults to False.
 Returns:
   tuple: longitudes/latitudes of the decoded points.
 )__doc__")
@@ -145,7 +147,7 @@ Calculate the area covered by the GeoHash.
 Args:
   hash (str): Geohash.
   wgs (optional, pyinterp.geodetic.System): WGS used to calculate the area.
-    Default to WGS84.
+    Defaults to WGS84.
 Returns:
   double: calculated area.
 )__doc__")
@@ -162,7 +164,7 @@ Calculated the area caovered by the GeoHash codes.
 Args:
   hash (numpy.ndarray): Geohash codes.
   wgs (optional, pyinterp.geodetic.System): WGS used to calculate the area.
-    Default to WGS84.
+    Defaults to WGS84.
 
 Returns:
   double: calculated areas.
@@ -195,8 +197,9 @@ Returns:
 Returns all geohash codes contained in the defined bounding box.
 
 Args:
-  box (pyinterp.geohash.Box, optional): Bounding box.
-  precision (int, optional): Required accuracy.
+  box (pyinterp.geohash.Box, optional): Bounding box. Default to the
+    global bounding box.
+  precision (int, optional): Required accuracy. Defaults to 1.
 Returns:
   numpy.ndarray: Geohash codes.
 Raises:
@@ -284,19 +287,18 @@ Returns:
           "zoom",
           [](const py::array& hash, const uint32_t precision) -> py::array {
             check_range(precision);
-            return geohash::string::zoom(hash, precision);
+            return geohash::string::transform(hash, precision);
           },
           py::arg("hash"), py::arg("precision") = 1, R"__doc__(
-Returns the GeoHash codes corresponding to the same area with the given
-precision. If the given precision is higher than the precision of the
-GeoHash, the result contains a zoom in of the area, otherwise it contains a
-zoom out.
+Transforms the given codes from one precision to another. If the given
+precision is higher than the precision of the given codes, the result contains
+a zoom in, otherwise it contains a zoom out.
 
 Args:
   hash (numpy.ndarray): Geohash codes.
-  precision (int, optional): Required accuracy.
+  precision (int, optional): Required accuracy. Defaults to 1.
 Returns:
-  numpy.ndarray: Geohash codes with higher accuracy.
+  numpy.ndarray: Geohash codes transformed.
 Raises:
   ValueError: If the given precision is not within [1, 12].
 )__doc__");

@@ -402,7 +402,8 @@ static auto zoom_out(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
 }
 
 // ---------------------------------------------------------------------------
-auto zoom(const pybind11::array& hash, uint32_t precision) -> pybind11::array {
+auto transform(const pybind11::array& hash, uint32_t precision)
+    -> pybind11::array {
   // Decode the information in the provided table.
   auto info = Array::get_info(hash, 1);
   auto size = info.shape[0];
