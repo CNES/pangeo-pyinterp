@@ -284,7 +284,7 @@ Returns:
     end indexes in the table provided as input.
 )__doc__")
       .def(
-          "zoom",
+          "transform",
           [](const py::array& hash, const uint32_t precision) -> py::array {
             check_range(precision);
             return geohash::string::transform(hash, precision);

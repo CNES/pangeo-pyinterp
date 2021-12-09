@@ -72,8 +72,8 @@ def test_bounding_zoom():
     bboxes = geohash.bounding_boxes(precision=1)
     assert len(bboxes) == 32
 
-    zoom_in = geohash.zoom_in(bboxes, precision=3)
+    zoom_in = geohash.transform(bboxes, precision=3)
     assert len(zoom_in) == 2**10 * 32
     assert numpy.all(
-        numpy.sort(geohash.zoom_out(zoom_in, precision=1)) == numpy.sort(
+        numpy.sort(geohash.transform(zoom_in, precision=1)) == numpy.sort(
             bboxes))
