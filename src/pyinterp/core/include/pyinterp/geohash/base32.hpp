@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 
