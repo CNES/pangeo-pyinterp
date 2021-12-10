@@ -131,9 +131,8 @@ characters in the string, the more precise the location.
 Geohashes use Base-32 alphabet encoding (characters can be ``0`` to ``9`` and
 ``A`` to ``Z``, excl ``A``, ``I``, ``L`` and ``O``).
 
-This method is used to build a `geographic index
-<https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.geohash.index.html>`_,
-possibly stored on disk, for the purpose of indexing data.
+The geohash is a compact way of representing a location, and is useful for
+storing a location in a database, or for indexing a location in a database.
 
 
 .. |Build Status| image:: https://dev.azure.com/fbriol/pangeo-pyinterp/_apis/build/status/CNES.pangeo-pyinterp?branchName=master
