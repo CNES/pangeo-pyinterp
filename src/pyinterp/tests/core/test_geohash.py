@@ -4,7 +4,7 @@
 # BSD-style license that can be found in the LICENSE file.
 import numpy
 import pytest
-from ...core import geohash
+from ...core import geohash, GeoHash
 
 testcases = [["77mkh2hcj7mz", -26.015434642, -26.173663656],
              ["wthnssq3w00x", 29.291182895, 118.331595326],
@@ -55,13 +55,13 @@ def test_bounding_boxes():
     bboxes = geohash.bounding_boxes(precision=1)
     assert len(bboxes) == 32
     for bbox in bboxes:
+        code = GeoHash.from_string(bbox.decode())
         case = geohash.bounding_boxes(
-            geohash.bounding_box(bbox.decode()), precision=1)
+            code.bounding_box(), precision=1)
         assert len(case) == 1
         assert case[0] == bbox
 
-        case = geohash.bounding_boxes(
-            geohash.bounding_box(bbox.decode()), precision=3)
+        case = geohash.bounding_boxes(code.bounding_box(), precision=3)
         assert len(case) == 2**10
         assert all(item.startswith(bbox) for item in case)
 
@@ -77,3 +77,11 @@ def test_bounding_zoom():
     assert numpy.all(
         numpy.sort(geohash.transform(zoom_in, precision=1)) == numpy.sort(
             bboxes))
+
+def test_class():
+    for code, lat, lon in testcases:
+        instance = GeoHash.from_string(code)
+        assert str(instance) == code
+        point = instance.center()
+        assert pytest.approx(lat, point.lat)
+        assert pytest.approx(lon, point.lon)

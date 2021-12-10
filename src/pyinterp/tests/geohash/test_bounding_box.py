@@ -2,8 +2,8 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-from ... import geohash
 from ... import geodetic
+from ... import GeoHash
 
 decodecases = [
     ["91rc", (7.20703125, 7.3828125, -124.1015625, -123.75)],
@@ -8946,6 +8946,6 @@ decodecases = [
 
 def test_bbox():
     for hash_str, (min_lat, max_lat, min_lng, max_lng) in decodecases:
-        point = geohash.decode(hash_str)
+        point = GeoHash.from_string(hash_str).center()
         assert geodetic.Box(geodetic.Point(min_lng, min_lat),
                             geodetic.Point(max_lng, max_lat)).covered_by(point)

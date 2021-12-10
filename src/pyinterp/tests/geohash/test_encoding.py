@@ -3,7 +3,8 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 import numpy
-from ... import geohash
+import pytest
+from ... import geohash, GeoHash
 
 testcases = [
     [0xc28a4d93b20a22f8, "sb54v4xk18jg", 0.497818518, 38.198505253],
@@ -4122,3 +4123,10 @@ def test_encoding_decoding():
     decoded_lon, decoded_lat = geohash.decode(str_hashs, round=True)
     assert numpy.all(numpy.abs(lat - decoded_lat) < 1e-6)  # type: ignore
     assert numpy.all(numpy.abs(lon - decoded_lon) < 1e-6)  # type: ignore
+
+    for item in testcases:
+        code = GeoHash.from_string(item[1])
+        point = code.center()
+        assert pytest.approx(point.lon, item[3])
+        assert pytest.approx(point.lat, item[3])
+        assert str(code) == item[1]

@@ -384,6 +384,47 @@ class DescriptiveStatisticsFloat64:
     def __setstate__(self, arg0: tuple) -> None:
         ...
 
+class GeoHash:
+    def __init__(self,
+                 longitude: float,
+                 latitude: float,
+                 precision: int = ...) -> None:
+        ...
+
+    def area(self, wgs: Optional[geodetic.System] = ...) -> float:
+        ...
+
+    def bounding_box(self) -> geodetic.Box:
+        ...
+
+    def center(self) -> geodetic.Point:
+        ...
+
+    @staticmethod
+    def error_with_precision(precision: int) -> Tuple[float, float]:
+        ...
+
+    @staticmethod
+    def from_string(code: str, round: bool = False) -> GeoHash:
+        ...
+
+    @staticmethod
+    def grid_properties(box: geodetic.Box,
+                        precision: int = 1) -> Tuple[GeoHash, int, int]:
+        ...
+
+    def neighbors(self) -> List[GeoHash]:
+        ...
+
+    def number_of_bits(self) -> int:
+        ...
+
+    def precision(self) -> int:
+        ...
+
+    def reduce(self) -> Tuple[float, float, int]:
+        ...
+
 
 class Grid2DFloat32:
     def __init__(self, x: Axis, y: Axis,

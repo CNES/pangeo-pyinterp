@@ -1,20 +1,15 @@
-from typing import Iterable, Optional, Tuple, overload
+from typing import Optional, Tuple, overload
+
+#
 import numpy
+
+#
+from . import int64
 from .. import geodetic
 
 
-@overload
-def area(hash: str, wgs: Optional[geodetic.System] = ...) -> float:
-    ...
-
-
-@overload
 def area(hash: numpy.ndarray,
          wgs: Optional[geodetic.System] = ...) -> numpy.ndarray[numpy.float64]:
-    ...
-
-
-def bounding_box(hash: str) -> geodetic.Box:
     ...
 
 
@@ -30,12 +25,6 @@ def bounding_boxes(box: geodetic.Polygon = ...,
     ...
 
 
-@overload
-def decode(hash: str, round: bool = ...) -> geodetic.Point:
-    ...
-
-
-@overload
 def decode(
     hash: numpy.ndarray,
     round: bool = ...
@@ -43,38 +32,15 @@ def decode(
     ...
 
 
-@overload
-def encode(point: geodetic.Point, precision: int = ...) -> handle:
-    ...
-
-
-@overload
 def encode(lon: numpy.ndarray[numpy.float64],
            lat: numpy.ndarray[numpy.float64],
            precision: int = ...) -> numpy.ndarray:
     ...
 
 
-def error(precision: int) -> tuple:
-    ...
-
-
-def grid_properties(box: geodetic.Box = ...,
-                    precision: int = ...) -> Tuple[int, int, int]:
-    ...
-
-
-def neighbors(hash: str) -> numpy.ndarray:
-    ...
-
-
-def update_dict(dictionary: dict, others: Iterable) -> None:
+def transform(hash: numpy.ndarray, precision: int = ...) -> numpy.ndarray:
     ...
 
 
 def where(hash: numpy.ndarray) -> dict:
-    ...
-
-
-def transform(hash: numpy.ndarray, precision: int = ...) -> numpy.ndarray:
     ...

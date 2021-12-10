@@ -17,9 +17,9 @@ extern void init_dateutils(py::module&);
 extern void init_descriptive_statistics(py::module&);
 extern void init_fill(py::module&);
 extern void init_geodetic(py::module&);
+extern void init_geohash_class(py::module&);
 extern void init_geohash_int64(py::module&);
 extern void init_geohash_string(py::module&);
-extern void init_geohash_utility(py::module&);
 extern void init_grid(py::module&);
 extern void init_histogram2d(py::module&);
 extern void init_quadrivariate(py::module&);
@@ -36,7 +36,6 @@ GeoHash encoded as integer 64 bits
 
   init_geohash_int64(int64);
   init_geohash_string(m);
-  init_geohash_utility(m);
 }
 
 PYBIND11_MODULE(core, m) {
@@ -56,7 +55,7 @@ Geographic coordinate system
 )__doc__");
 
   auto geohash = m.def_submodule("geohash", R"__doc__(
-Geohash encoding/decoding
+GeoHash encoding/decoding
 -------------------------
 )__doc__");
 
@@ -86,4 +85,5 @@ Replace undefined values
 
   // geohash
   init_geohash(geohash);
+  init_geohash_class(m);
 }

@@ -2,6 +2,7 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+#include "iostream"
 #include "pyinterp/geohash/string.hpp"
 
 #include "pyinterp/detail/broadcast.hpp"
@@ -14,14 +15,17 @@ namespace pyinterp::geohash::string {
 static const auto base32 = Base32();
 
 // ---------------------------------------------------------------------------
-auto Array::get_info(const pybind11::array& hashs, const pybind11::ssize_t ndim)
+auto Array::get_info(const pybind11::array& hash, const pybind11::ssize_t ndim)
     -> pybind11::buffer_info {
-  auto info = hashs.request();
-  auto dtype = hashs.dtype();
+  auto info = hash.request();
+  auto dtype = hash.dtype();
+  if ((hash.flags() & pybind11::array::c_style) == 0) {
+    throw std::runtime_error("hash must be C-style contiguous");
+  }
   switch (ndim) {
     case 1:
       if (info.ndim != 1) {
-        throw std::invalid_argument("hashs must be a one-dimensional array");
+        throw std::invalid_argument("hash must be a one-dimensional array");
       }
       if (dtype.kind() != 'S') {
         throw std::invalid_argument("hash must be a string array");
@@ -32,14 +36,14 @@ auto Array::get_info(const pybind11::array& hashs, const pybind11::ssize_t ndim)
       break;
     default:
       if (info.ndim != 2) {
-        throw std::invalid_argument("hashs must be a two-dimensional array");
+        throw std::invalid_argument("hash must be a two-dimensional array");
       }
-      if (info.strides[0] != hashs.shape(1) * info.strides[1] ||
+      if (info.strides[0] != hash.shape(1) * info.strides[1] ||
           dtype.kind() != 'S') {
-        throw std::invalid_argument("hashs must be a string array");
+        throw std::invalid_argument("hash must be a string array");
       }
       if (info.strides[1] > 12) {
-        throw std::invalid_argument("hashs length must be within [1, 12]");
+        throw std::invalid_argument("hash length must be within [1, 12]");
       }
       break;
   }
@@ -116,9 +120,9 @@ auto decode(const char* const hash, const size_t count, const bool round)
 }
 
 // ---------------------------------------------------------------------------
-auto decode(const pybind11::array& hashs, const bool round)
+auto decode(const pybind11::array& hash, const bool round)
     -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
-  auto info = Array::get_info(hashs, 1);
+  auto info = Array::get_info(hash, 1);
   auto count = info.strides[0];
   auto lon = Eigen::VectorXd(info.shape[0]);
   auto lat = Eigen::VectorXd(info.shape[0]);
@@ -283,7 +287,7 @@ auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision)
 }
 
 // ---------------------------------------------------------------------------
-auto where(const pybind11::array& hashs) -> std::unordered_map<
+auto where(const pybind11::array& hash) -> std::unordered_map<
     std::string,
     std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>> {
   // Index shifts of neighboring pixels
@@ -296,7 +300,7 @@ auto where(const pybind11::array& hashs) -> std::unordered_map<
       std::string,
       std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>();
 
-  auto info = Array::get_info(hashs, 2);
+  auto info = Array::get_info(hash, 2);
   auto rows = info.shape[0];
   auto cols = info.shape[1];
   auto chars = info.strides[1];
@@ -407,7 +411,7 @@ auto transform(const pybind11::array& hash, uint32_t precision)
   // Decode the information in the provided table.
   auto info = Array::get_info(hash, 1);
   auto size = info.shape[0];
-  auto input_precision = info.strides[0];
+  auto input_precision = static_cast<uint32_t>(info.strides[0]);
   auto* ptr = static_cast<char*>(info.ptr);
 
   if (input_precision == precision) {

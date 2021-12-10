@@ -2,7 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+from . import geodetic
+from . import geohash
 from . import version
+from ._geohash import GeoHash
 from .axis import TemporalAxis
 from .binning import Binning2D
 from .core import Axis, dateutils
@@ -14,7 +17,6 @@ from .interpolator.quadrivariate import quadrivariate
 from .interpolator.trivariate import trivariate
 from .rtree import RTree
 from .statistics import DescriptiveStatistics, StreamingHistogram
-
 __version__ = version.release()
 __date__ = version.date()
 del version

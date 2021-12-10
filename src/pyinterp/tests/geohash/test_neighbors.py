@@ -5,6 +5,7 @@
 import numpy as np
 from ... import geodetic
 from ... import geohash
+from ... import GeoHash
 
 cases = [
     [
@@ -10335,13 +10336,11 @@ def test_neighbors():
     for (lat, lon, hash_int, bits, hash_int_neighbors, hash_str,
          hash_str_neighbors) in cases:
         point = geodetic.Point(lon, lat)
-        hash = geohash.int64.encode(point, bits)
-        assert hash_int == hash
+        hash = geohash.int64.encode(np.array([lon], dtype="float64"),
+                                    np.array([lat], dtype="float64"), bits)
+        assert hash_int == hash[0]
         assert list(geohash.int64.neighbors(hash_int,
                                             bits)) == hash_int_neighbors
 
-        hash = geohash.encode(point, len(hash_str))
-        assert isinstance(hash, bytes)
-        assert list(
-            item.decode()
-            for item in geohash.neighbors(hash_str)) == hash_str_neighbors
+        code = GeoHash(lon, lat, len(hash_str))
+        assert [str(item) for item in code.neighbors()] == hash_str_neighbors

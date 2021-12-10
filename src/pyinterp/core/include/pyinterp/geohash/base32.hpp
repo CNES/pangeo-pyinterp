@@ -42,6 +42,10 @@ class Base32 {
     auto hash = static_cast<uint64_t>(0);
     const auto* it = buffer;
     while (it != buffer + count && *it != 0) {
+      if (!validate_byte(*it)) {
+        throw std::invalid_argument("Invalid character in hash: " +
+                                    std::string(buffer, count));
+      }
       hash = (hash << 5U) | static_cast<uint64_t>(
                                 decode_[static_cast<unsigned char>(*(it++))]);
     }
@@ -64,7 +68,7 @@ class Base32 {
   std::array<char, std::numeric_limits<uint8_t>::max() + 1> decode_{};
 
   // Reports whether byte is part of the encoding.
-  [[nodiscard]] inline auto validate_byte(const char byte) const -> bool {
+  [[nodiscard]] constexpr auto validate_byte(const char byte) const -> bool {
     return decode_[static_cast<unsigned char>(byte)] != Base32::kInvalid_;
   }
 };

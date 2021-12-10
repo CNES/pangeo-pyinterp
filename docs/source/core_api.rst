@@ -113,14 +113,9 @@ Geohash integer
 .. autosummary::
   :toctree: generated/
 
-  core.geohash.int64.bounding_box
-  core.geohash.int64.bounding_boxes
   core.geohash.int64.decode
   core.geohash.int64.encode
-  core.geohash.int64.error
-  core.geohash.int64.grid_properties
   core.geohash.int64.neighbors
-  core.geohash.int64.where
 
 Geohash bytes
 -------------
@@ -128,13 +123,13 @@ Geohash bytes
 .. autosummary::
   :toctree: generated/
 
-  core.geohash.bounding_box
+  core.GeoHash
+  core.geohash.area
   core.geohash.bounding_boxes
   core.geohash.decode
   core.geohash.encode
-  core.geohash.error
-  core.geohash.grid_properties
-  core.geohash.neighbors
+  core.geohash.int64
+  core.geohash.transform
   core.geohash.where
 
 Temporal Cartesian Grids

@@ -19,8 +19,7 @@ import matplotlib.pyplot
 import numpy
 import pandas
 #
-import pyinterp.geohash
-import pyinterp.geodetic
+import pyinterp
 
 
 #%%
@@ -35,7 +34,7 @@ def _sort_colors(colors):
 
 def _plot_box(ax, code, color, caption=True):
     """Plot a GeoHash bounding box"""
-    box = pyinterp.geohash.bounding_box(code.decode())
+    box = pyinterp.GeoHash.from_string(code.decode()).bounding_box()
     x0 = box.min_corner.lon
     x1 = box.max_corner.lon
     y0 = box.min_corner.lat
@@ -115,15 +114,15 @@ plot_geohash_grid(1)
 
 #%%
 # Bounds of the geohash ``d`` with a precision of two characters.
-plot_geohash_grid(2, box=pyinterp.geohash.bounding_box('d'))
+plot_geohash_grid(2, box=pyinterp.GeoHash.from_string('d').bounding_box())
 
 #%%
 # Bounds of the geohash ``dd`` with a precision of three characters.
-plot_geohash_grid(3, box=pyinterp.geohash.bounding_box('dd'))
+plot_geohash_grid(3, box=pyinterp.GeoHash.from_string('dd').bounding_box())
 
 #%%
 # Bounds of the geohash ``dds`` with a precision of four characters.
-plot_geohash_grid(4, box=pyinterp.geohash.bounding_box('dds'))
+plot_geohash_grid(4, box=pyinterp.GeoHash.from_string('dds').bounding_box())
 
 #%%
 # Encoding
