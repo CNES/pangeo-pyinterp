@@ -17,15 +17,6 @@ namespace py = pybind11;
 namespace geohash = pyinterp::geohash;
 namespace geodetic = pyinterp::geodetic;
 
-// Parsing of the string defining a GeoHash.
-static inline const auto parse_str = [](const py::str& hash) -> auto {
-  auto result = std::string(hash);
-  if (result.length() > 12) {
-    throw std::invalid_argument("GeoHash length must be within [1, 12]");
-  }
-  return result;
-};
-
 // Checking the value defining the precision of a geohash.
 static inline auto check_range(uint32_t precision) -> void {
   if (precision > 12) {
@@ -35,15 +26,15 @@ static inline auto check_range(uint32_t precision) -> void {
 
 void init_geohash_string(py::module& m) {
   m.def(
-          "encode",
-          [](const Eigen::Ref<const Eigen::VectorXd>& lon,
-             const Eigen::Ref<const Eigen::VectorXd>& lat,
-             const uint32_t precision) -> pybind11::array {
-            check_range(precision);
-            return geohash::string::encode(lon, lat, precision);
-          },
-          py::arg("lon"), py::arg("lat"), py::arg("precision") = 12,
-          R"__doc__(
+       "encode",
+       [](const Eigen::Ref<const Eigen::VectorXd>& lon,
+          const Eigen::Ref<const Eigen::VectorXd>& lat,
+          const uint32_t precision) -> pybind11::array {
+         check_range(precision);
+         return geohash::string::encode(lon, lat, precision);
+       },
+       py::arg("lon"), py::arg("lat"), py::arg("precision") = 12,
+       R"__doc__(
 Encode coordinates into geohash with the given precision.
 
 Args:

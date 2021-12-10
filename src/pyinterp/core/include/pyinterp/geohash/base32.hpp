@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <string>
 #include <tuple>
 
 namespace pyinterp::geohash {
