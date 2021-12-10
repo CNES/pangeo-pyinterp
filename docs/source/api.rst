@@ -23,7 +23,9 @@ geohash
   geohash.bounding_boxes
   geohash.decode
   geohash.encode
-  geohash.int64
+  geohash.int64.decode
+  geohash.int64.encode
+  geohash.int64.neighbors
   geohash.transform
   geohash.where
 
