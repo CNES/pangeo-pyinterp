@@ -18,7 +18,7 @@ class CoordsXY {
   CoordsXY() = delete;
 
   /// Creates a new instance
-  CoordsXY(const size_t x_size, const size_t y_size)
+  CoordsXY(const Eigen::Index x_size, const Eigen::Index y_size)
       : x_(new Eigen::VectorXd), y_(new Eigen::VectorXd) {
     auto nx = x_size << 1U;
     auto ny = y_size << 1U;
@@ -55,52 +55,57 @@ class CoordsXY {
   auto operator=(CoordsXY &&rhs) noexcept -> CoordsXY & = default;
 
   /// Get the half size of the window in abscissa.
-  [[nodiscard]] inline auto nx() const noexcept -> size_t {
-    return static_cast<size_t>(x_->size()) >> 1U;
+  [[nodiscard]] inline auto nx() const noexcept -> Eigen::Index {
+    return x_->size() >> 1;
   }
 
   /// Get the half size of the window in ordinate.
-  [[nodiscard]] inline auto ny() const noexcept -> size_t {
-    return static_cast<size_t>(y_->size()) >> 1U;
+  [[nodiscard]] inline auto ny() const noexcept -> Eigen::Index {
+    return y_->size() >> 1;
   }
 
   /// Get x-coordinates
-  inline auto x() noexcept -> std::shared_ptr<Eigen::VectorXd> & { return x_; }
+  constexpr auto x() noexcept -> std::shared_ptr<Eigen::VectorXd> & {
+    return x_;
+  }
 
   /// Get x-coordinates
-  [[nodiscard]] inline auto x() const noexcept
+  [[nodiscard]] constexpr auto x() const noexcept
       -> const std::shared_ptr<Eigen::VectorXd> & {
     return x_;
   }
 
   /// Get y-coordinates
-  inline auto y() noexcept -> std::shared_ptr<Eigen::VectorXd> & { return y_; }
+  constexpr auto y() noexcept -> std::shared_ptr<Eigen::VectorXd> & {
+    return y_;
+  }
 
   /// Get y-coordinates
-  [[nodiscard]] inline auto y() const noexcept
+  [[nodiscard]] constexpr auto y() const noexcept
       -> const std::shared_ptr<Eigen::VectorXd> & {
     return y_;
   }
 
   /// Get the ith x-axis.
-  [[nodiscard]] inline auto x(const size_t ix) const -> double {
+  [[nodiscard]] inline auto x(const Eigen::Index ix) const -> double {
     return (*x_)(ix);
   }
 
   /// Get the ith y-axis.
-  [[nodiscard]] inline auto y(const size_t jx) const -> double {
+  [[nodiscard]] inline auto y(const Eigen::Index jx) const -> double {
     return (*y_)(jx);
   }
 
   /// Set the ith x-axis.
-  inline auto x(const size_t ix) -> double & { return (*x_)(ix); }
+  inline auto x(const Eigen::Index ix) -> double & { return (*x_)(ix); }
 
   /// Get the ith y-axis.
-  inline auto y(const size_t jx) -> double & { return (*y_)(jx); }
+  inline auto y(const Eigen::Index jx) -> double & { return (*y_)(jx); }
 
   /// Normalizes the angle with respect to the first value of the X axis of this
   /// array.
-  [[nodiscard]] inline auto normalize_angle(const double xi) const -> double {
+  [[nodiscard]] constexpr auto normalize_angle(const double xi) const
+      -> double {
     return math::normalize_angle(xi, (*x_)(0), 360.0);
   }
 
@@ -131,7 +136,7 @@ class Frame2D : public CoordsXY {
   Frame2D() = delete;
 
   /// Creates a new Array
-  Frame2D(const size_t x_size, const size_t y_size)
+  Frame2D(const Eigen::Index x_size, const Eigen::Index y_size)
       : CoordsXY(x_size, y_size), q_(new Eigen::MatrixXd) {
     q_->resize(x()->size(), y()->size());
   }
@@ -166,22 +171,24 @@ class Frame2D : public CoordsXY {
   auto operator=(Frame2D &&rhs) noexcept -> Frame2D & = default;
 
   /// Get the values from the array for all x and y coordinates.
-  inline auto q() noexcept -> std::shared_ptr<Eigen::MatrixXd> & { return q_; }
+  constexpr auto q() noexcept -> std::shared_ptr<Eigen::MatrixXd> & {
+    return q_;
+  }
 
   /// Get the values from the array for all x and y coordinates.
-  [[nodiscard]] inline auto q() const noexcept
+  [[nodiscard]] constexpr auto q() const noexcept
       -> const std::shared_ptr<Eigen::MatrixXd> & {
     return q_;
   }
 
   /// Get the value at coordinate (ix, jx).
-  [[nodiscard]] inline auto q(const size_t ix, const size_t jx) const
-      -> double {
+  [[nodiscard]] inline auto q(const Eigen::Index ix,
+                              const Eigen::Index jx) const -> double {
     return (*q_)(ix, jx);
   }
 
   /// Get the value at coordinate (ix, jx).
-  inline auto q(const size_t ix, const size_t jx) -> double & {
+  inline auto q(const Eigen::Index ix, const Eigen::Index jx) -> double & {
     return (*q_)(ix, jx);
   }
 
@@ -203,7 +210,8 @@ class Frame3D : public CoordsXY {
   Frame3D() = delete;
 
   /// Creates a new instance
-  Frame3D(const size_t x_size, const size_t y_size, const size_t z_size)
+  Frame3D(const Eigen::Index x_size, const Eigen::Index y_size,
+          const Eigen::Index z_size)
       : CoordsXY(x_size, y_size), z_() {
     auto nz = z_size << 1U;
     z_.resize(nz);
@@ -243,26 +251,29 @@ class Frame3D : public CoordsXY {
   auto operator=(Frame3D &&rhs) noexcept -> Frame3D & = default;
 
   /// Get the half size of the window in z.
-  [[nodiscard]] inline auto nz() const noexcept -> size_t {
-    return static_cast<size_t>(z_.size()) >> 1U;
+  [[nodiscard]] inline auto nz() const noexcept -> Eigen::Index {
+    return z_.size() >> 1;
   }
 
   /// Get z-coordinates
-  inline auto z() noexcept -> Vector<T> & { return z_; }
+  constexpr auto z() noexcept -> Vector<T> & { return z_; }
 
   /// Get z-coordinates
-  [[nodiscard]] inline auto z() const noexcept -> const Vector<T> & {
+  [[nodiscard]] constexpr auto z() const noexcept -> const Vector<T> & {
     return z_;
   }
 
   /// Get the ith z-axis.
-  [[nodiscard]] inline auto z(const size_t ix) const -> T { return z_(ix); }
+  [[nodiscard]] inline auto z(const Eigen::Index ix) const -> T {
+    return z_(ix);
+  }
 
   /// Set the ith z-axis.
-  inline auto z(const size_t ix) -> T & { return z_(ix); }
+  inline auto z(const Eigen::Index ix) -> T & { return z_(ix); }
 
   /// Get the value at coordinate (ix, jx, kx).
-  inline auto q(const size_t ix, const size_t jx, const size_t kx) -> double & {
+  inline auto q(const Eigen::Index ix, const Eigen::Index jx,
+                const Eigen::Index kx) -> double & {
     return (*q_(kx))(ix, jx);
   }
 
@@ -292,8 +303,8 @@ class Frame4D : public CoordsXY {
   Frame4D() = delete;
 
   /// Creates a new instance
-  Frame4D(const size_t x_size, const size_t y_size, const size_t z_size,
-          const size_t u_size)
+  Frame4D(const Eigen::Index x_size, const Eigen::Index y_size,
+          const Eigen::Index z_size, const Eigen::Index u_size)
       : CoordsXY(x_size, y_size), z_() {
     auto nz = z_size << 1U;
     auto nu = u_size << 1U;
@@ -339,20 +350,20 @@ class Frame4D : public CoordsXY {
   auto operator=(Frame4D &&rhs) noexcept -> Frame4D & = default;
 
   /// Get the half size of the window in z.
-  [[nodiscard]] inline auto nz() const noexcept -> size_t {
-    return static_cast<size_t>(z_.size()) >> 1U;
+  [[nodiscard]] inline auto nz() const noexcept -> Eigen::Index {
+    return z_.size() >> 1;
   }
 
   /// Get the half size of the window in u.
-  [[nodiscard]] inline auto nu() const noexcept -> size_t {
-    return static_cast<size_t>(u_.size()) >> 1U;
+  [[nodiscard]] inline auto nu() const noexcept -> Eigen::Index {
+    return u_.size() >> 1;
   }
 
   /// Get z-coordinates
-  inline auto z() noexcept -> Vector<T> & { return z_; }
+  constexpr auto z() noexcept -> Vector<T> & { return z_; }
 
   /// Get u-coordinates
-  inline auto u() noexcept -> Eigen::VectorXd & { return u_; }
+  constexpr auto u() noexcept -> Eigen::VectorXd & { return u_; }
 
   /// Get z-coordinates
   [[nodiscard]] inline auto z() const noexcept -> const Vector<T> & {
@@ -365,22 +376,24 @@ class Frame4D : public CoordsXY {
   }
 
   /// Get the ith z-axis.
-  [[nodiscard]] inline auto z(const size_t ix) const -> T { return z_(ix); }
+  [[nodiscard]] inline auto z(const Eigen::Index ix) const -> T {
+    return z_(ix);
+  }
 
   /// Get the ith u-axis.
-  [[nodiscard]] inline auto u(const size_t ix) const -> double {
+  [[nodiscard]] inline auto u(const Eigen::Index ix) const -> double {
     return u_(ix);
   }
 
   /// Set the ith z-axis.
-  inline auto z(const size_t ix) -> T & { return z_(ix); }
+  inline auto z(const Eigen::Index ix) -> T & { return z_(ix); }
 
   /// Set the ith u-axis.
-  inline auto u(const size_t ix) -> double & { return u_(ix); }
+  inline auto u(const Eigen::Index ix) -> double & { return u_(ix); }
 
   /// Get the value at coordinate (ix, jx, kx, lx).
-  inline auto q(const size_t ix, const size_t jx, const size_t kx,
-                const size_t lx) -> double & {
+  inline auto q(const Eigen::Index ix, const Eigen::Index jx,
+                const Eigen::Index kx, const Eigen::Index lx) -> double & {
     return (*q_(kx, lx))(ix, jx);
   }
 

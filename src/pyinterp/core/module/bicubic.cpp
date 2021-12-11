@@ -39,7 +39,7 @@ static inline auto parse_axis_boundary(const std::string& boundary)
 /// Evaluate the interpolation.
 template <typename DataType, typename Interpolator>
 auto bicubic(const Grid2D<DataType>& grid, const py::array_t<double>& x,
-             const py::array_t<double>& y, size_t nx, size_t ny,
+             const py::array_t<double>& y, Eigen::Index nx, Eigen::Index ny,
              const std::string& fitting_model, const std::string& boundary,
              const bool bounds_error, size_t num_threads)
     -> py::array_t<double> {
@@ -98,10 +98,10 @@ auto bicubic(const Grid2D<DataType>& grid, const py::array_t<double>& x,
 template <typename DataType, typename AxisType, typename Interpolator>
 auto bicubic_3d(const Grid3D<DataType, AxisType>& grid,
                 const py::array_t<double>& x, const py::array_t<double>& y,
-                const py::array_t<AxisType>& z, size_t nx, size_t ny,
-                const std::string& fitting_model, const std::string& boundary,
-                const bool bounds_error, size_t num_threads)
-    -> py::array_t<double> {
+                const py::array_t<AxisType>& z, Eigen::Index nx,
+                Eigen::Index ny, const std::string& fitting_model,
+                const std::string& boundary, const bool bounds_error,
+                size_t num_threads) -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
   detail::check_ndarray_shape("x", x, "y", y, "z", z);
   auto boundary_type = parse_axis_boundary(boundary);
@@ -164,9 +164,10 @@ template <typename DataType, typename AxisType, typename Interpolator>
 auto bicubic_4d(const Grid4D<DataType, AxisType>& grid,
                 const py::array_t<double>& x, const py::array_t<double>& y,
                 const py::array_t<AxisType>& z, const py::array_t<double>& u,
-                size_t nx, size_t ny, const std::string& fitting_model,
-                const std::string& boundary, const bool bounds_error,
-                size_t num_threads) -> py::array_t<double> {
+                Eigen::Index nx, Eigen::Index ny,
+                const std::string& fitting_model, const std::string& boundary,
+                const bool bounds_error, size_t num_threads)
+    -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z, "u", 1, u);
   detail::check_ndarray_shape("x", x, "y", y, "z", z, "u", u);
   auto boundary_type = parse_axis_boundary(boundary);
@@ -245,8 +246,8 @@ void implement_bicubic(py::module& m, const std::string& prefix,
                        const std::string& default_fitting_model) {
   auto function_prefix = prefix;
   auto function_suffix = suffix;
-  function_prefix[0] = std::tolower(function_prefix[0]);
-  function_suffix[0] = std::tolower(function_suffix[0]);
+  function_prefix[0] = static_cast<char>(std::tolower(function_prefix[0]));
+  function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
   m.def((function_prefix + "_" + function_suffix).c_str(),
         &pyinterp::bicubic<DataType, Interpolator>, py::arg("grid"),
@@ -291,8 +292,8 @@ void implement_bicubic_3d(py::module& m, const std::string& prefix,
                           const std::string& default_fitting_model) {
   auto function_prefix = prefix;
   auto function_suffix = suffix;
-  function_prefix[0] = std::tolower(function_prefix[0]);
-  function_suffix[0] = std::tolower(function_suffix[0]);
+  function_prefix[0] = static_cast<char>(std::tolower(function_prefix[0]));
+  function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
   m.def(
       (function_prefix + "_" + function_suffix).c_str(),
@@ -346,8 +347,8 @@ void implement_bicubic_4d(py::module& m, const std::string& prefix,
                           const std::string& default_fitting_model) {
   auto function_prefix = prefix;
   auto function_suffix = suffix;
-  function_prefix[0] = std::tolower(function_prefix[0]);
-  function_suffix[0] = std::tolower(function_suffix[0]);
+  function_prefix[0] = static_cast<char>(std::tolower(function_prefix[0]));
+  function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
   m.def(
       (function_prefix + "_" + function_suffix).c_str(),
