@@ -25,19 +25,19 @@ constexpr std::array<int, 13> DAYS_IN_MONTH({-1, 31, 28, 31, 30, 31, 30, 31, 31,
 // the year day *yday* with week day *wday*.  ISO weeks start on Monday; the
 // first ISO week has the year's first Thursday. *yday* may be as small as
 // *YDAY_MINIMUM*.
-inline auto iso_week_days(int yday, int wday) -> int {
-  const int big_enough_multiple_of_7 = (-YDAY_MINIMUM / 7 + 2) * 7;
+constexpr auto iso_week_days(int yday, int wday) -> int {
+  constexpr int big_enough_multiple_of_7 = (-YDAY_MINIMUM / 7 + 2) * 7;
   return yday - (yday - wday + ISO_WEEK1_WDAY + big_enough_multiple_of_7) % 7 +
          ISO_WEEK1_WDAY - ISO_WEEK_START_WDAY;
 }
 
 // True if leap year, else false.
-inline auto is_leap_year(const int year) -> int {
+constexpr auto is_leap_year(const int year) -> int {
   return (year & 3) == 0 && ((year % 25) != 0 || (year & 15) == 0);  // NOLINT
 }
 
 // Number of days in that month in that year
-inline auto days_in_month(const int year, const int month) -> int {
+constexpr auto days_in_month(const int year, const int month) -> int {
   if (month == 2 && is_leap_year(year) == 1) {
     return 29;
   }
@@ -151,7 +151,7 @@ class FractionalSeconds {
 };
 
 /// Gets year, month, day in civil calendar
-inline auto year_month_day(const int64_t epoch) noexcept -> Date {
+constexpr auto year_month_day(const int64_t epoch) noexcept -> Date {
   // number of days since 1970-01-01
   const auto days_since_epoch =
       epoch / 86400LL + 719468LL - static_cast<int64_t>((epoch % 86400LL) < 0);
@@ -177,7 +177,7 @@ inline auto year_month_day(const int64_t epoch) noexcept -> Date {
 }
 
 /// Gets the number of hours, minutes and seconds elapsed in the day
-inline auto hour_minute_second(const int64_t epoch) noexcept -> Time {
+constexpr auto hour_minute_second(const int64_t epoch) noexcept -> Time {
   auto seconds_within_day = epoch % 86400;
   if (seconds_within_day < 0) {
     seconds_within_day += 86400;
@@ -190,7 +190,7 @@ inline auto hour_minute_second(const int64_t epoch) noexcept -> Time {
 }
 
 /// Gets the number of days since the first January
-inline auto days_since_january(const Date& date) -> unsigned {
+constexpr auto days_since_january(const Date& date) -> unsigned {
   unsigned result = date.day - 1;
 
   if (date.month > 2) {
@@ -205,7 +205,7 @@ inline auto days_since_january(const Date& date) -> unsigned {
 }
 
 /// Gets the day of the week; Sunday is 0 ... Saturday is 6
-inline auto weekday(const int64_t epoch) noexcept -> unsigned {
+constexpr auto weekday(const int64_t epoch) noexcept -> unsigned {
   const auto days = epoch / 86400;
   return static_cast<unsigned>(days >= -4 ? (days + 4) % 7
                                           : (days + 5) % 7 + 6);
@@ -218,11 +218,12 @@ inline auto weekday(const int64_t epoch) noexcept -> unsigned {
 /// from that.
 ///
 ///  The first week is 1; Monday is 1 ... Sunday is 7.
-inline auto isocalendar(const int64_t epoch) -> ISOCalendar {
+constexpr auto isocalendar(const int64_t epoch) -> ISOCalendar {
   auto date = year_month_day(epoch);
   auto yday = days_since_january(date);
   auto wday = weekday(epoch);
-  auto days = detail::iso_week_days(yday, wday);
+  auto days =
+      detail::iso_week_days(static_cast<int>(yday), static_cast<int>(wday));
 
   // This ISO week belongs to the previous year ?
   if (days < 0) {
@@ -232,7 +233,8 @@ inline auto isocalendar(const int64_t epoch) -> ISOCalendar {
         static_cast<int>(wday));
   } else {
     int week_days = detail::iso_week_days(
-        static_cast<int>(yday) - (365 + detail::is_leap_year(date.year)), wday);
+        static_cast<int>(yday) - (365 + detail::is_leap_year(date.year)),
+        static_cast<int>(wday));
 
     // This ISO week belongs to the next year ?
     if (0 <= week_days) {

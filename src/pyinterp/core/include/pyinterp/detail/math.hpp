@@ -27,7 +27,7 @@ union FloatingPoint {
 // Fast calculation of 2^n
 inline constexpr auto power2(const int32_t exponent) -> double {
   FloatingPoint floating_point{2};
-  floating_point.parts.exponent += static_cast<uint64_t>(exponent - 1);
+  floating_point.parts.exponent += static_cast<uint64_t>(exponent) - 1;
   return floating_point.value;
 }
 

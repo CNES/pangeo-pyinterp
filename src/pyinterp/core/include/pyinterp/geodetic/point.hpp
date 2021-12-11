@@ -54,7 +54,7 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
-    return Point(state[0].cast<double>(), state[1].cast<double>());
+    return {state[0].cast<double>(), state[1].cast<double>()};
   }
 
   /// Converts a Point into a string with the same meaning as that of this

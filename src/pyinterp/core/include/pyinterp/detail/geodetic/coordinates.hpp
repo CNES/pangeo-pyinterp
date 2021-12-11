@@ -54,7 +54,7 @@ class Coordinates {
 
   /// Gets the WGS used by this instance
   [[nodiscard]] inline auto system() const noexcept -> System {
-    return System(a_, f_);
+    return {a_, f_};
   }
 
   /// Converts Cartesian coordinates to Geographic latitude, longitude, and

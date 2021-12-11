@@ -13,7 +13,7 @@ namespace py = pybind11;
 template <typename Type>
 void implement_fill_functions(py::module& m, const std::string& suffix) {
   auto function_suffix = suffix;
-  function_suffix[0] = std::tolower(function_suffix[0]);
+  function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
   m.def(("loess_" + function_suffix).c_str(), &pyinterp::fill::loess<Type>,
         py::arg("grid"), py::arg("nx") = 3, py::arg("ny") = 3,
@@ -81,7 +81,7 @@ template <typename Type, typename AxisType>
 void implement_loess_3d(py::module& m, const std::string& prefix,
                         const std::string& suffix) {
   auto function_suffix = suffix;
-  function_suffix[0] = std::tolower(function_suffix[0]);
+  function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
   m.def(("loess_" + function_suffix).c_str(),
         &pyinterp::fill::loess<Type, AxisType>, py::arg("grid"),

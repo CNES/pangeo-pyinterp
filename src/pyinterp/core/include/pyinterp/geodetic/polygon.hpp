@@ -78,8 +78,7 @@ class Polygon : public boost::geometry::model::polygon<Point> {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
-    return Polygon(state[0].cast<pybind11::list>(),
-                   state[1].cast<pybind11::list>());
+    return {state[0].cast<pybind11::list>(), state[1].cast<pybind11::list>()};
   }
 
   /// @brief Test if the given point is inside or on border of this instance

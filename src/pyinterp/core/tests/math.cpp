@@ -156,3 +156,20 @@ TEST(math, sinc) {
   EXPECT_NEAR(math::sinc(0.1), 0.983631643083466, 1e-6);
   EXPECT_NEAR(math::sinc(0.5), 0.6366197723675814, 1e-6);
 }
+
+TEST(math, power2) {
+  EXPECT_DOUBLE_EQ(math::power2(0.0), 1.0);
+  EXPECT_DOUBLE_EQ(math::power2(1.0), 2.0);
+  EXPECT_DOUBLE_EQ(math::power2(16.0), 65536.0);
+  EXPECT_DOUBLE_EQ(math::power2(32.0), 4294967296.0);
+  EXPECT_DOUBLE_EQ(math::power2(-16.0), 1.52587890625e-05);
+}
+
+TEST(math, power10) {
+  EXPECT_DOUBLE_EQ(math::power10(0), 1.0);
+  EXPECT_DOUBLE_EQ(math::power10(1), 10.0);
+  EXPECT_DOUBLE_EQ(math::power10(10), 1e10);
+  EXPECT_DOUBLE_EQ(math::power10(11), 1e11);
+  EXPECT_DOUBLE_EQ(math::power10(-11), 1e-11);
+  EXPECT_DOUBLE_EQ(math::power10(-10), 1e-10);
+}

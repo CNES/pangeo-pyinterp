@@ -287,53 +287,14 @@ class Irregular : public Abstract<T> {
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] auto find_index(T coordinate, bool bounded) const
+  [[nodiscard]] constexpr auto find_index(const T coordinate,
+                                          const bool bounded) const
       -> int64_t override {
-    int64_t low = 0;
-    int64_t mid = 0;
-    int64_t high = size();
-
+    auto high = size();
     if (this->is_ascending_) {
-      if (coordinate < edges_[0]) {
-        return bounded ? 0 : -1;
-      }
-
-      if (coordinate > edges_[edges_.size() - 1]) {
-        return bounded ? high - 1 : -1;
-      }
-
-      while (high > low + 1) {
-        // low and high are strictly positive
-        mid = (low + high) >> 1;  // NOLINT
-        auto value = edges_[mid];
-
-        if (value == coordinate) {
-          return mid;
-        }
-        value < coordinate ? low = mid : high = mid;
-      }
-      return low;
+      return this->find_index_ascending(coordinate, bounded, high);
     }
-
-    if (coordinate < edges_[edges_.size() - 1]) {
-      return bounded ? high - 1 : -1;
-    }
-
-    if (coordinate > edges_[0]) {
-      return bounded ? 0 : -1;
-    }
-
-    while (high > low + 1) {
-      // low and high are strictly positive
-      mid = (low + high) >> 1;  // NOLINT
-      auto value = edges_[mid];
-
-      if (value == coordinate) {
-        return mid;
-      }
-      value < coordinate ? high = mid : low = mid;
-    }
-    return low;
+    return this->find_index_descending(coordinate, bounded, high);
   }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
@@ -360,6 +321,66 @@ class Irregular : public Abstract<T> {
 
     edges_[0] = 2 * points_[0] - edges_[1];
     edges_[n] = 2 * points_[n - 1] - edges_[n - 1];
+  }
+
+  /// Search for the index corresponding to the requested value if the axis is
+  /// sorted in ascending order.
+  [[nodiscard]] constexpr auto find_index_ascending(const T coordinate,
+                                                    const bool bounded,
+                                                    int64_t high) const
+      -> int64_t {
+    int64_t low = 0;
+    int64_t mid = 0;
+
+    if (coordinate < edges_[0]) {
+      return bounded ? 0 : -1;
+    }
+
+    if (coordinate > edges_[this->edges_.size() - 1]) {
+      return bounded ? high - 1 : -1;
+    }
+
+    while (high > low + 1) {
+      // low and high are strictly positive
+      mid = (low + high) >> 1;  // NOLINT
+      auto value = edges_[mid];
+
+      if (value == coordinate) {
+        return mid;
+      }
+      value < coordinate ? low = mid : high = mid;
+    }
+    return low;
+  }
+
+  /// Search for the index corresponding to the requested value if the axis is
+  /// sorted in descending order.
+  [[nodiscard]] constexpr auto find_index_descending(const T coordinate,
+                                                     const bool bounded,
+                                                     int64_t high) const
+      -> int64_t {
+    int64_t low = 0;
+    int64_t mid = 0;
+
+    if (coordinate < edges_[this->edges_.size() - 1]) {
+      return bounded ? high - 1 : -1;
+    }
+
+    if (coordinate > edges_[0]) {
+      return bounded ? 0 : -1;
+    }
+
+    while (high > low + 1) {
+      // low and high are strictly positive
+      mid = (low + high) >> 1;  // NOLINT
+      auto value = edges_[mid];
+
+      if (value == coordinate) {
+        return mid;
+      }
+      value < coordinate ? high = mid : low = mid;
+    }
+    return low;
   }
 };
 
@@ -488,11 +509,9 @@ class Regular<T, typename std::enable_if<std::is_floating_point_v<T>>::type>
   /// @copydoc AbstractRegular::AbstractRegular(const T start, const T stop,
   /// const T num)
   Regular(const T start, const T stop, const T num)
-      : AbstractRegular<T>(start, stop, num) {
-    // The inverse step of this axis is stored in order to optimize the search
-    // for an index for a given value by avoiding a division.
-    inv_step_ = T(1.0) / this->step_;
-  }
+      // The inverse step of this axis is stored in order to optimize the search
+      // for an index for a given value by avoiding a division.
+      : AbstractRegular<T>(start, stop, num), inv_step_(T(1.0) / this->step_) {}
 
   /// @copydoc Abstract::find_index(double,bool) const
   [[nodiscard]] auto find_index(T coordinate, bool bounded) const noexcept
@@ -530,11 +549,9 @@ class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
   /// @copydoc AbstractRegular::AbstractRegular(const T start, const T stop,
   /// const T num)
   Regular(const T start, const T stop, const T num)
-      : AbstractRegular<T>(start, stop, num) {
-    // The inverse step of this axis is stored in order to optimize the search
-    // for an index for a given value by avoiding a division.
-    step_2_ = this->step_ >> 1;
-  }
+      // The inverse step of this axis is stored in order to optimize the search
+      // for an index for a given value by avoiding a division.
+      : AbstractRegular<T>(start, stop, num), step_2_(this->step_ >> 1) {}
 
   /// @copydoc Abstract::find_index(double,bool) const
   [[nodiscard]] auto find_index(T coordinate, bool bounded) const noexcept

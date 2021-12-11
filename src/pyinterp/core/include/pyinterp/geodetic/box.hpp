@@ -142,8 +142,8 @@ class Box : public boost::geometry::model::box<Point> {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
-    return Box(Point::setstate(state[0].cast<pybind11::tuple>()),
-               Point::setstate(state[1].cast<pybind11::tuple>()));
+    return {Point::setstate(state[0].cast<pybind11::tuple>()),
+            Point::setstate(state[1].cast<pybind11::tuple>())};
   }
 
   auto operator==(const Box& other) const -> bool {

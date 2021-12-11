@@ -29,7 +29,7 @@ class System : public detail::geodetic::System {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
-    return System(state[0].cast<double>(), state[1].cast<double>());
+    return {state[0].cast<double>(), state[1].cast<double>()};
   }
 };
 

@@ -37,12 +37,6 @@ class Array {
     size_ = size;
   }
 
-  /// Remove an element from the array.
-  auto erase(const size_t index) -> void {
-    array_->erase(array_->begin() + index * chars_,
-                  array_->begin() + (index + 1) * chars_);
-  }
-
   /// Get the pointer to the raw memory
   [[nodiscard]] inline auto buffer() const -> char* { return array_->data(); }
 
