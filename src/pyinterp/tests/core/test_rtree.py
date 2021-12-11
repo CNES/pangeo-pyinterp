@@ -55,7 +55,7 @@ def load_data(packing=True):
         return mesh
 
 
-def test_rtree_idw():
+def test_rtree_idw(pytestconfig):
     """Interpolation test"""
     mesh = load_data()
     lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
@@ -77,11 +77,11 @@ def test_rtree_idw():
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
 
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption("visualize"):
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_rtree_idw.png")
 
 
-def test_rtree_rbf():
+def test_rtree_rbf(pytestconfig):
     """Interpolation test"""
     mesh = load_data()
     lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
@@ -109,11 +109,11 @@ def test_rtree_rbf():
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
 
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption("visualize"):
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_rtree_rbf.png")
 
 
-def test_rtree_window_function():
+def test_rtree_window_function(pytestconfig):
     """Interpolation test"""
     mesh = load_data()
     lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
@@ -135,7 +135,7 @@ def test_rtree_window_function():
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
 
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption("visualize"):
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_rtree_wf.png")
 
 

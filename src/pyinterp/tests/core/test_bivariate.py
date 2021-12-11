@@ -58,7 +58,7 @@ def test_grid2d_pickle():
         np.ma.fix_invalid(grid.array) == np.ma.fix_invalid(other.array))
 
 
-def run_bivariate(interpolator, filename):
+def run_bivariate(interpolator, filename, visualize):
     """Testing an interpolation method."""
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
@@ -83,7 +83,7 @@ def run_bivariate(interpolator, filename):
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
 
-    if HAVE_PLT:
+    if HAVE_PLT and visualize:
         plot(x, y, z0.reshape((len(lon), len(lat))), filename)
 
     # Out of bounds interpolation
@@ -98,11 +98,14 @@ def run_bivariate(interpolator, filename):
     return z0
 
 
-def test_bivariate_interpolator():
+def test_bivariate_interpolator(pytestconfig):
     """Testing of different interpolation methods"""
-    a = run_bivariate(core.Nearest2D(), "mss_bivariate_nearest")
-    b = run_bivariate(core.Bilinear2D(), "mss_bivariate_bilinear")
-    c = run_bivariate(core.InverseDistanceWeighting2D(), "mss_bivariate_idw")
+    a = run_bivariate(core.Nearest2D(), "mss_bivariate_nearest",
+                      pytestconfig.getoption("visualize"))
+    b = run_bivariate(core.Bilinear2D(), "mss_bivariate_bilinear",
+                      pytestconfig.getoption("visualize"))
+    c = run_bivariate(core.InverseDistanceWeighting2D(), "mss_bivariate_idw",
+                      pytestconfig.getoption("visualize"))
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0
@@ -119,7 +122,7 @@ def test_bivariate_pickle():
         assert isinstance(pickle.loads(pickle.dumps(obj)), getattr(core, item))
 
 
-def test_spline_interpolator():
+def test_spline_interpolator(pytestconfig):
     """Testing of different spline interpolation methods"""
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
@@ -138,13 +141,13 @@ def test_spline_interpolator():
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption("visualize"):
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_akima.png")
 
     z0 = core.spline_float64(grid, x.ravel(), y.ravel())
     z0 = np.ma.fix_invalid(z0)
     assert not np.all(z1 == z0)
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption("visualize"):
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_cspline.png")
 
     # Out of bounds interpolation

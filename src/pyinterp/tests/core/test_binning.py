@@ -59,7 +59,7 @@ def test_binning2d_acessors():
     assert count.mean() == 0
 
 
-def test_binning2d_methods():
+def test_binning2d_methods(pytestconfig):
     x_axis = core.Axis(np.linspace(-180, 180, 361 // 4), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 180 // 4))
 
@@ -71,7 +71,7 @@ def test_binning2d_methods():
     count = binning.count()
     assert count.max() != 0
     simple_mean = np.ma.fix_invalid(binning.mean())
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
         plot(mx, my, simple_mean, "binning2d_simple.png")
 
@@ -82,7 +82,7 @@ def test_binning2d_methods():
     count = binning.count()
     assert count.max() != 0
     linear_mean = np.ma.fix_invalid(binning.mean())
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
         plot(mx, my, linear_mean, "binning2d_linear.png")
 

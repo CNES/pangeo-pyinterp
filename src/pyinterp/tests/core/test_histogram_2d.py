@@ -58,7 +58,7 @@ def test_histogram2d_constructor():
     assert count.mean() == 0
 
 
-def test_binning2d_methods():
+def test_binning2d_methods(pytestconfig):
     x_axis = core.Axis(np.linspace(-180, 180, 361 // 4), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 180 // 4))
 
@@ -70,7 +70,7 @@ def test_binning2d_methods():
     count = hist2d.count()
     assert count.max() != 0
     simple_mean = np.ma.fix_invalid(hist2d.mean())
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption("visualize"):
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
         plot(mx, my, simple_mean, "hist2d_mean.png")
 
@@ -82,7 +82,7 @@ def test_binning2d_methods():
     assert isinstance(hist2d.kurtosis(), np.ndarray)
     median = np.ma.fix_invalid(hist2d.quantile())
     assert isinstance(median, np.ndarray)
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption("visualize"):
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
         plot(mx, my, median, "hist2d_median.png")
 

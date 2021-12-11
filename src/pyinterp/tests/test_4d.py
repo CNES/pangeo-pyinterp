@@ -2,9 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-import datetime
 import collections
-import os
 import pickle
 import pytest
 import numpy as np

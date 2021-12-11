@@ -76,7 +76,7 @@ def test_grid3d_pickle():
         np.ma.fix_invalid(grid.array) == np.ma.fix_invalid(other.array))
 
 
-def run_interpolator(interpolator, filename):
+def run_interpolator(interpolator, filename, visualize):
     """Testing an interpolation method."""
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
@@ -99,12 +99,12 @@ def run_interpolator(interpolator, filename):
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
-    if HAVE_PLT:
+    if HAVE_PLT and visualize:
         plot(x.reshape(shape), y.reshape(shape), z0.reshape(shape), filename)
     return z0
 
 
-def test_trivariate_spline():
+def test_trivariate_spline(pytestconfig):
     """Testing of the spline interpolation"""
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
@@ -129,7 +129,7 @@ def test_trivariate_spline():
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
-    if HAVE_PLT:
+    if HAVE_PLT and pytestconfig.getoption("visualize"):
         plot(x.reshape(shape), y.reshape(shape), z0.reshape(shape),
              "tcw_spline.png")
 
@@ -213,12 +213,15 @@ def test_grid3d_z_method():
             num_threads=0)
 
 
-def test_grid3d_interpolator():
+def test_grid3d_interpolator(pytestconfig):
     """Testing of different interpolation methods"""
-    a = run_interpolator(core.Nearest3D(), "tcw_trivariate_nearest")
-    b = run_interpolator(core.Bilinear3D(), "tcw_trivariate_bilinear")
+    a = run_interpolator(core.Nearest3D(), "tcw_trivariate_nearest",
+                         pytestconfig.getoption("visualize"))
+    b = run_interpolator(core.Bilinear3D(), "tcw_trivariate_bilinear",
+                         pytestconfig.getoption("visualize"))
     c = run_interpolator(core.InverseDistanceWeighting3D(),
-                         "tcw_trivariate_idw")
+                         "tcw_trivariate_idw",
+                         pytestconfig.getoption("visualize"))
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0
