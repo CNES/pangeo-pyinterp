@@ -160,7 +160,7 @@ class GeoHash {
     }
     return int64::error_with_precision(precision * 5);
   }
-  
+
   /// Returns the arguments to rebuild this instance.
   [[nodiscard]] auto reduce() const -> std::tuple<double, double, uint32_t> {
     auto point = center();

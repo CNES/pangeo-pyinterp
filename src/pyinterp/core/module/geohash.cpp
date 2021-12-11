@@ -117,8 +117,8 @@ Args:
 Returns:
     float: calculated area in square meters.
 )__doc__")
-      .def("reduce", &geohash::GeoHash::reduce, 
-R"__doc__(
+      .def("reduce", &geohash::GeoHash::reduce,
+           R"__doc__(
 Returns the arguments to rebuild this instance.
 
 Returns:

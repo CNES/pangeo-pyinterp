@@ -188,7 +188,6 @@ static encoder_t const encoder =
 static deinterleaver_t const deinterleaver =
     have_bim2 ? detail::deinterleave_bim2 : detail::deinterleave;
 
-
 // ---------------------------------------------------------------------------
 auto format_bytes(size_t bytes) -> std::string {
   struct Suffix {

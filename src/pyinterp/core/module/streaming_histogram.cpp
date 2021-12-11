@@ -34,7 +34,7 @@ Args:
         flattened array.
 )__doc__")
       .def("bins", &pyinterp::StreamingHistogram<Type>::bins,
-            R"__doc__(
+           R"__doc__(
 Returns the histogram bins.
 
 Returns:

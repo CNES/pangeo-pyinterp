@@ -110,8 +110,8 @@ class Histogram2D {
 
   /// Compute the count of points within each bin.
   [[nodiscard]] auto count() const -> pybind11::array_t<uint64_t> {
-    return calculate_statistics<decltype(&StreamingHistogram::count),
-                                uint64_t>(&StreamingHistogram::count);
+    return calculate_statistics<decltype(&StreamingHistogram::count), uint64_t>(
+        &StreamingHistogram::count);
   }
 
   /// Compute the minimum of values for points within each bin.
@@ -219,8 +219,7 @@ class Histogram2D {
     auto bins_count = size_t(0);
     for (Eigen::Index ix = 0; ix < histogram_.rows(); ++ix) {
       for (Eigen::Index iy = 0; iy < histogram_.cols(); ++iy) {
-        bins_count = std::max(
-            bins_count, histogram_(ix, iy).size());
+        bins_count = std::max(bins_count, histogram_(ix, iy).size());
       }
     }
     auto result =

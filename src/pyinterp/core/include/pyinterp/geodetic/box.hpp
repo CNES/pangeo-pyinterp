@@ -43,7 +43,7 @@ class Box : public boost::geometry::model::box<Point> {
   [[nodiscard]] auto normalize() const -> Box {
     auto result = *this;
     auto _normalize = [](const double x) -> double {
-      return  x > 180.0 ? detail::math::normalize_angle(x, -180.0, 360.0): x;
+      return x > 180.0 ? detail::math::normalize_angle(x, -180.0, 360.0) : x;
     };
     result.min_corner().set<0>(_normalize(result.min_corner().get<0>()));
     result.max_corner().set<0>(_normalize(result.max_corner().get<0>()));
@@ -146,9 +146,9 @@ class Box : public boost::geometry::model::box<Point> {
                Point::setstate(state[1].cast<pybind11::tuple>()));
   }
 
-  auto operator == (const Box& other) const -> bool {
+  auto operator==(const Box& other) const -> bool {
     return boost::geometry::equals(*this, other);
-  } 
+  }
 
   /// Converts this instance into a polygon
   explicit operator Polygon() const;
