@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdint>
+#include <stdexcept>
+#include <string>
 
 #include "pyinterp/detail/math.hpp"
 
@@ -22,7 +24,7 @@ enum Function : uint8_t {
 
 /// Hamming window function.
 template <typename T>
-constexpr auto hamming(const T& d, const T& r, const T&) -> T {
+constexpr auto hamming(const T& d, const T& r, const T& /*unused*/) -> T {
   if (d <= r) {
     return 0.53836 - 0.46164 * std::cos(pi<T>() * (d + r) / r);
   }
@@ -31,7 +33,7 @@ constexpr auto hamming(const T& d, const T& r, const T&) -> T {
 
 /// kBlackman window function.
 template <typename T>
-constexpr auto blackman(const T& d, const T& r, const T&) -> T {
+constexpr auto blackman(const T& d, const T& r, const T& /*unused*/) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
     return (T(7938) / T(18608)) -
@@ -43,7 +45,7 @@ constexpr auto blackman(const T& d, const T& r, const T&) -> T {
 
 /// Flat top window function.
 template <typename T>
-constexpr auto flat_top(const T& d, const T& r, const T&) -> T {
+constexpr auto flat_top(const T& d, const T& r, const T& /*unused*/) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
     return 0.21557895 - 0.41663158 * std::cos(pi<T>() * ratio) +
@@ -56,7 +58,7 @@ constexpr auto flat_top(const T& d, const T& r, const T&) -> T {
 
 /// Nuttall window function.
 template <typename T>
-constexpr auto nuttall(const T& d, const T& r, const T&) -> T {
+constexpr auto nuttall(const T& d, const T& r, const T& /*unused*/) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
     return 0.3635819 - 0.4891775 * std::cos(pi<T>() * ratio) +
@@ -67,7 +69,8 @@ constexpr auto nuttall(const T& d, const T& r, const T&) -> T {
 
 /// kBlackman-Harris window function.
 template <typename T>
-constexpr auto blackman_harris(const T& d, const T& r, const T&) -> T {
+constexpr auto blackman_harris(const T& d, const T& r, const T& /*unused*/)
+    -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
     return 0.35875 - 0.48829 * std::cos(pi<T>() * ratio) +
@@ -101,7 +104,7 @@ constexpr auto parzen(const T& d, const T& r, const T& sampling) -> T {
 
 // A window similar to the Parzen window used for SWOT products.
 template <typename T>
-constexpr auto parzen_swot(const T& d, const T& r, const T&) -> T {
+constexpr auto parzen_swot(const T& d, const T& r, const T& /*unused*/) -> T {
   auto l = 2 * r;
   auto ratio = (2 * d) / l;
   if (d <= l / 4) {
@@ -115,13 +118,12 @@ constexpr auto parzen_swot(const T& d, const T& r, const T&) -> T {
 
 // Boxcar window function.
 template <typename T>
-constexpr auto boxcar(const T& d, const T& r, const T& sampling) -> T {
+constexpr auto boxcar(const T& d, const T& r, const T& /*sampling*/) -> T {
   if (d <= r) {
     return T(1);
   }
   return T(0);
 }
-
 
 }  // namespace window
 
@@ -142,7 +144,7 @@ class WindowFunction {
   /// Default constructor
   ///
   /// @param function The window function to use.
-  WindowFunction(const window::Function wf) {
+  explicit WindowFunction(const window::Function wf) {
     switch (wf) {
       case window::Function::kBlackman:
         function_ = &window::blackman;

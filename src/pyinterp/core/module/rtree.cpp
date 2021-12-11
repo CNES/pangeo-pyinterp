@@ -253,63 +253,62 @@ void init_rtree(py::module& m) {
   py::enum_<pyinterp::RadialBasisFunction>(m, "RadialBasisFunction",
                                            "Radial basis functions")
       .value("Cubic", pyinterp::RadialBasisFunction::Cubic,
-             ":math:`\\varphi(r) = r^3`")
+             R"(:math:`\varphi(r) = r^3`)")
       .value("Gaussian", pyinterp::RadialBasisFunction::Gaussian,
              R"(:math:`\varphi(r) = e^{-(\dfrac{r}{\varepsilon})^2}`)")
       .value("InverseMultiquadric",
              pyinterp::RadialBasisFunction::InverseMultiquadric,
-             ":math:`\\varphi(r) = \\dfrac{1}"
-             "{\\sqrt{1+(\\dfrac{r}{\\varepsilon})^2}}`")
+             R"(:math:`\varphi(r) = \dfrac{1}"
+             "{\sqrt{1+(\dfrac{r}{\varepsilon})^2}}`)")
       .value("Linear", pyinterp::RadialBasisFunction::Linear,
-             ":math:`\\varphi(r) = r`")
+             R"(:math:`\varphi(r) = r`)")
       .value("Multiquadric", pyinterp::RadialBasisFunction::Multiquadric,
              R"(:math:`\varphi(r) = \sqrt{1+(\dfrac{r}{\varepsilon}^2})`)")
       .value("ThinPlate", pyinterp::RadialBasisFunction::ThinPlate,
-             ":math:`\\varphi(r) = r^2 \\ln(r)`.");
+             R"(:math:`\varphi(r) = r^2 \ln(r)`.)");
 
   py::enum_<pyinterp::WindowFunction>(m, "WindowFunction", "Window functions")
       .value("Blackman", pyinterp::WindowFunction::kBlackman,
-             ":math:`w(d) = 0.42659 - 0.49656 \\cos(\\frac{\\pi (d + r)}{r}) + "
-             "0.076849 \\cos(\\frac{2 \\pi (d + r)}{r})`")
+             R"(:math:`w(d) = 0.42659 - 0.49656 \cos(\frac{\pi (d + r)}{r}) + "
+             "0.076849 \cos(\frac{2 \pi (d + r)}{r})`)")
       .value("BlackmanHarris", pyinterp::WindowFunction::kBlackmanHarris,
-             ":math:`w(d) = 0.35875 - 0.48829 \\cos(\\frac{\\pi (d + r)}{r}) + "
-             "0.14128 \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.01168 "
-             "\\cos(\\frac{3 \\pi (d + r)}{r})`")
-      .value("Boxcar", pyinterp::WindowFunction::kBoxcar,
-             ":math:`w(d) = 1`")
+             R"(:math:`w(d) = 0.35875 - 0.48829 \cos(\frac{\pi (d + r)}{r}) + "
+             "0.14128 \cos(\frac{2 \pi (d + r)}{r}) - 0.01168 "
+             "\cos(\frac{3 \pi (d + r)}{r})`)")
+      .value("Boxcar", pyinterp::WindowFunction::kBoxcar, ":math:`w(d) = 1`")
       .value("FlatTop", pyinterp::WindowFunction::kFlatTop,
-             ":math:`w(d) = 0.21557895 - "
-             "0.41663158 \\cos(\\frac{\\pi (d + r)}{r}) + "
-             "0.277263158 \\cos(\\frac{2 \\pi (d + r)}{r}) - "
-             "0.083578947 \\cos(\\frac{3 \\pi (d + r)}{r}) + "
-             "0.006947368 \\cos(\\frac{4 \\pi (d + r)}{r})`")
+             R"(:math:`w(d) = 0.21557895 - "
+             "0.41663158 \cos(\frac{\pi (d + r)}{r}) + "
+             "0.277263158 \cos(\frac{2 \pi (d + r)}{r}) - "
+             "0.083578947 \cos(\frac{3 \pi (d + r)}{r}) + "
+             "0.006947368 \cos(\frac{4 \pi (d + r)}{r})`)")
       .value("Hamming", pyinterp::WindowFunction::kHamming,
-             ":math:`w(d) = 0.53836 - 0.46164 \\cos(\\frac{\\pi (d + r)}{r})`")
+             R"(:math:`w(d) = 0.53836 - 0.46164 \cos(\frac{\pi (d + r)}{r})`)")
       .value("Lanczos", pyinterp::WindowFunction::kLanczos,
-             ":math:`w(d) = \\left\\{\\begin{array}{ll}"
-             "sinc(\\frac{d}{r}) \\times sinc(\\frac{d}{nlobes \\times r}),"
-             " & d \\le nlobes \\times r \\\\ "
-             "0, & d \\gt nlobes \\times r \\end{array} \\right\\}`")
+             R"(:math:`w(d) = \left\{\begin{array}{ll}"
+             "sinc(\frac{d}{r}) \times sinc(\frac{d}{nlobes \times r}),"
+             " & d \le nlobes \times r \\ "
+             "0, & d \gt nlobes \times r \end{array} \right\}`)")
       .value("Nuttall", pyinterp::WindowFunction::kNuttall,
-             ":math:`w(d) = 0.3635819 - 0.4891775 "
-             "\\cos(\\frac{\\pi (d + r)}{r}) + 0.1365995 "
-             "\\cos(\\frac{2 \\pi (d + r)}{r})`")
+             R"(:math:`w(d) = 0.3635819 - 0.4891775 "
+             "\cos(\frac{\pi (d + r)}{r}) + 0.1365995 "
+             "\cos(\frac{2 \pi (d + r)}{r})`)")
       .value("Parzen", pyinterp::WindowFunction::kParzen,
-             ":math:`w(d) = \\left\\{ \\begin{array}{ll} 1 - 6 "
-             "\\left(\\frac{2*d}{2*r}\\right)^2 "
-             "\\left(1 - \\frac{2*d}{2*r}\\right), & "
-             "d \\le \\frac{2r + arg}{4} \\\\ "
-             "2\\left(1 - \\frac{2*d}{2*r}\\right)^3 & "
-             "\\frac{2r + arg}{2} \\le d \\lt \\frac{2r +arg}{4} "
-             "\\end{array} \\right\\}`")
+             R"(:math:`w(d) = \left\{ \begin{array}{ll} 1 - 6 "
+             "\left(\frac{2*d}{2*r}\right)^2 "
+             "\left(1 - \frac{2*d}{2*r}\right), & "
+             "d \le \frac{2r + arg}{4} \\ "
+             "2\left(1 - \frac{2*d}{2*r}\right)^3 & "
+             "\frac{2r + arg}{2} \le d \lt \frac{2r +arg}{4} "
+             "\end{array} \right\}`)")
       .value("ParzenSWOT", pyinterp::WindowFunction::kParzenSWOT,
-             ":math:`w(d) = w(d) = \\left\\{\\begin{array}{ll} "
-             "1 - 6\\left(\\frac{2 * d}{2 * r}\\right)^2 + "
-             "6\\left(1 - \\frac{2 * d}{2 * r}\\right), & "
-             "d \\le \\frac{2r}{4} \\\\ "
-             "2\\left(1 - \\frac{2 * d}{2 * r}\\right)^3 & "
-             "\\frac{2r}{2} \\ge d \\gt \\frac{2r}{4} \\end{array} "
-             "\\right\\}`");
+             R"(:math:`w(d) = w(d) = \left\{\begin{array}{ll} "
+             "1 - 6\left(\frac{2 * d}{2 * r}\right)^2 + "
+             "6\left(1 - \frac{2 * d}{2 * r}\right), & "
+             "d \le \frac{2r}{4} \\ "
+             "2\left(1 - \frac{2 * d}{2 * r}\right)^3 & "
+             "\frac{2r}{2} \ge d \gt \frac{2r}{4} \end{array} "
+             "\right\}`)");
 
   implement_rtree<double, double, 3>(m, "Float64");
   implement_rtree<float, float, 3>(m, "Float32");

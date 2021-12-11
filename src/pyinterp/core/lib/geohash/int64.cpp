@@ -191,18 +191,22 @@ static deinterleaver_t const deinterleaver =
 
 // ---------------------------------------------------------------------------
 auto format_bytes(size_t bytes) -> std::string {
-  struct suffix {
+  struct Suffix {
     const char* suffix;
     size_t divisor;
+
+    Suffix(const char* suffix, const size_t divisor)
+        : suffix(suffix), divisor(divisor) {}
   };
 
-  static constexpr suffix suffixes[] = {
-      {"PiB", 1125899906842624ULL},
-      {"TiB", 1099511627776ULL},
-      {"GiB", 1073741824ULL},
-      {"MiB", 1048576ULL},
-      {"KiB", 1024ULL},
-      {"B", 1ULL},
+  static std::array<Suffix, 7> suffixes = {
+      Suffix("EiB", 1152921504606846976ULL),
+      Suffix("PiB", 1125899906842624ULL),
+      Suffix("TiB", 1099511627776ULL),
+      Suffix("GiB", 1073741824ULL),
+      Suffix("MiB", 1048576ULL),
+      Suffix("KiB", 1024ULL),
+      Suffix("B", 1ULL),
   };
 
   auto result = std::string{};

@@ -80,28 +80,32 @@ class GeoHash {
   }
 
   /// Returns the bounding box of the geohash.
-  inline auto bounding_box() const -> geodetic::Box {
+  [[nodiscard]] inline auto bounding_box() const -> geodetic::Box {
     return string::bounding_box(code_.data(), precision());
   }
 
   /// Returns the center point of this.
-  inline auto center() const -> geodetic::Point {
+  [[nodiscard]] inline auto center() const -> geodetic::Point {
     return bounding_box().centroid();
   }
 
   /// Returns the geohash code.
-  inline auto string_value() const -> std::string { return code_; }
+  [[nodiscard]] inline auto string_value() const -> std::string {
+    return code_;
+  }
 
   /// Returns the precision of the geohash.
-  inline auto precision() const -> uint32_t {
+  [[nodiscard]] inline auto precision() const -> uint32_t {
     return static_cast<uint32_t>(code_.length());
   }
 
   /// Returns the number of bits used to represent the geohash.
-  inline auto number_of_bits() const -> uint32_t { return precision() * 5; }
+  [[nodiscard]] inline auto number_of_bits() const -> uint32_t {
+    return precision() * 5;
+  }
 
   /// Returns the value of the integer64 stored in the geohash.
-  auto integer_value(bool round) const -> uint64_t {
+  [[nodiscard]] auto integer_value(bool round) const -> uint64_t {
     return int64::encode(string::decode(code_.data(), precision(), round),
                          number_of_bits());
   }
@@ -109,14 +113,14 @@ class GeoHash {
   /// Returns the eight neighbors of this.
   ///
   /// @return An array of GeoHash in the order N, NE, E, SE, S, SW, W, NW.
-  auto neighbors() const -> std::vector<GeoHash> {
+  [[nodiscard]] auto neighbors() const -> std::vector<GeoHash> {
     auto neighbors = int64::neighbors(integer_value(false), number_of_bits());
     auto result = std::vector<GeoHash>();
     result.reserve(8);
     for (auto ix = 0; ix < 8; ++ix) {
       auto code = std::string(precision(), '\0');
       Base32::encode(neighbors[ix], code.data(), code.size());
-      result.emplace_back(GeoHash::from_string(std::move(code), false));
+      result.emplace_back(GeoHash::from_string(code, false));
     }
     return result;
   }
@@ -124,7 +128,8 @@ class GeoHash {
   /// Returns the area covered by this.
   ///
   /// @return The area of the geohash in square meters.
-  inline auto area(const std::optional<geodetic::System>& wgs) const -> double {
+  [[nodiscard]] inline auto area(
+      const std::optional<geodetic::System>& wgs) const -> double {
     return string::area(code_.data(), precision(), wgs);
   }
 
@@ -136,7 +141,8 @@ class GeoHash {
                                             uint32_t precision)
       -> std::tuple<GeoHash, size_t, size_t> {
     uint64_t code;
-    size_t lng_boxes, lat_boxes;
+    size_t lng_boxes;
+    size_t lat_boxes;
 
     std::tie(code, lng_boxes, lat_boxes) =
         int64::grid_properties(box, precision * 5);

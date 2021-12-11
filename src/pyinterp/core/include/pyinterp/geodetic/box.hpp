@@ -40,7 +40,7 @@ class Box : public boost::geometry::model::box<Point> {
 
   /// Normalize the longitude coordinate of the box in the range [-180,
   /// 180]
-  auto normalize() const -> Box {
+  [[nodiscard]] auto normalize() const -> Box {
     auto result = *this;
     auto _normalize = [](const double x) -> double {
       return  x > 180.0 ? detail::math::normalize_angle(x, -180.0, 360.0): x;

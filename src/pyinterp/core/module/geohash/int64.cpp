@@ -16,7 +16,6 @@
 
 namespace py = pybind11;
 namespace geohash = pyinterp::geohash;
-namespace geodetic = pyinterp::geodetic;
 
 // Checking the value defining the precision of a geohash.
 static inline auto check_range(uint32_t precision) -> void {

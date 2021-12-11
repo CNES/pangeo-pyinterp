@@ -9,7 +9,6 @@
 
 namespace py = pybind11;
 namespace geohash = pyinterp::geohash;
-namespace geodetic = pyinterp::geodetic;
 
 void init_geohash_class(py::module& m) {
   py::class_<geohash::GeoHash>(m, "GeoHash", R"__doc__(

@@ -20,9 +20,9 @@
             "name": "MacOSX",
             "includePath": [
                 "${workspaceFolder}/**",
-                "~/opt/miniconda3/include/",
-                "~/opt/miniconda3/include/eigen3/",
-                "~/opt/miniconda3/include/python3.8"
+                "~/anaconda3/include/",
+                "~/anaconda3/include/eigen3/",
+                "~/anaconda3/include/python3.8"
             ],
             "defines": [],
             "macFrameworkPath": [
