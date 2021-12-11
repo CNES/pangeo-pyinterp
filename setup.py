@@ -209,6 +209,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     #: Preferred Eigen root
     EIGEN3_INCLUDE_DIR: ClassVar[Optional[str]] = None
 
+    #: Selected CMAKE generator
+    GENERATOR: ClassVar[Optional[str]] = None
+
     #: Preferred GSL root
     GSL_ROOT: ClassVar[Optional[str]] = None
 
@@ -373,7 +376,14 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         build_args = ['--config', cfg]
 
-        if platform.system() != 'Windows':
+        is_windows = platform.system() == "Windows"
+
+        if self.GENERATOR is not None:
+            cmake_args.append("-G" + self.GENERATOR)
+        elif is_windows:
+            cmake_args.append("-G" + 'Visual Studio 15 2017')
+
+        if not is_windows:
             build_args += ['--', '-j%d' % os.cpu_count()]
             if platform.system() == 'Darwin':
                 cmake_args += [
@@ -383,8 +393,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                 cmake_args += ["-DCODE_COVERAGE=ON"]
         else:
             cmake_args += [
-                '-G', 'Visual Studio 15 2017' if self.CONDA_FORGE else
-                'Visual Studio 16 2019', '-DCMAKE_GENERATOR_PLATFORM=x64',
+                '-DCMAKE_GENERATOR_PLATFORM=x64',
                 '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(
                     cfg.upper(), extdir)
             ]
@@ -426,6 +435,7 @@ class Build(distutils.command.build.build):
         ('c-compiler=', None, 'Preferred C compiler'),
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
         ('eigen-root=', None, 'Preferred Eigen3 include directory'),
+        ('generator=', None, 'Selected CMake generator'),
         ('gsl-root=', None, 'Preferred GSL installation prefix'),
         ('mkl-root=', None, 'Preferred MKL installation prefix'),
         ('mkl=', None, 'Using MKL as BLAS library'),
@@ -446,6 +456,7 @@ class Build(distutils.command.build.build):
         self.c_compiler = None
         self.cxx_compiler = None
         self.eigen_root = None
+        self.generator = None
         self.gsl_root = None
         self.mkl = None
         self.mkl_root = None
@@ -480,6 +491,8 @@ class Build(distutils.command.build.build):
             BuildExt.CXX_COMPILER = self.cxx_compiler
         if self.eigen_root is not None:
             BuildExt.EIGEN3_INCLUDE_DIR = self.eigen_root
+        if self.generator is not None:
+            BuildExt.GENERATOR = self.generator
         if self.gsl_root is not None:
             BuildExt.GSL_ROOT = self.gsl_root
         if self.mkl_root is not None:
