@@ -380,7 +380,7 @@ static auto zoom_in(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
 // ---------------------------------------------------------------------------
 static auto zoom_out(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
                      uint32_t to_precision) -> pybind11::array {
-  auto current_code = std::string(from_precision + 1, '\0');
+  auto current_code = std::string(to_precision, '\0');
   auto zoom_out_codes = std::set<std::string>();
 
   {
