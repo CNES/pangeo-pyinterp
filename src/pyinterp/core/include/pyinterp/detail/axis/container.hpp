@@ -287,8 +287,8 @@ class Irregular : public Abstract<T> {
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] constexpr auto find_index(const T coordinate,
-                                          const bool bounded) const
+  [[nodiscard]] inline auto find_index(const T coordinate,
+                                       const bool bounded) const
       -> int64_t override {
     auto high = size();
     if (this->is_ascending_) {
