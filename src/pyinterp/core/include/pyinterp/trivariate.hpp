@@ -22,16 +22,14 @@ using Bivariate3D = detail::math::Bivariate<Point, T>;
 
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
-inline auto _trivariate(const Grid3D<Type, AxisType>& grid,
-                           const Coordinate& x, const Coordinate& y,
-                           const AxisType& z,
-                           const Axis<double>& x_axis,
-                           const Axis<double>& y_axis,
-                           const Axis<AxisType>& z_axis,
-                           const Bivariate3D<Point, Coordinate>* interpolator,
-                           const detail::math::z_method_t<AxisType, Coordinate>&
-                               z_interpolation_method,
-                           const bool bounds_error) -> Coordinate {
+inline auto _trivariate(const Grid3D<Type, AxisType>& grid, const Coordinate& x,
+                        const Coordinate& y, const AxisType& z,
+                        const Axis<double>& x_axis, const Axis<double>& y_axis,
+                        const Axis<AxisType>& z_axis,
+                        const Bivariate3D<Point, Coordinate>* interpolator,
+                        const detail::math::z_method_t<AxisType, Coordinate>&
+                            z_interpolation_method,
+                        const bool bounds_error) -> Coordinate {
   auto x_indexes = x_axis.find_indexes(x);
   auto y_indexes = y_axis.find_indexes(y);
   auto z_indexes = z_axis.find_indexes(z);
@@ -77,7 +75,6 @@ inline auto _trivariate(const Grid3D<Type, AxisType>& grid,
   }
   return std::numeric_limits<Coordinate>::quiet_NaN();
 }
-
 
 /// Interpolation of bivariate function.
 ///
