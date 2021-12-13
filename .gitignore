@@ -117,3 +117,6 @@ docs/source/readme.rst
 
 # Generated source files
 src/pyinterp/version.py
+
+# Core libraries
+!src/pyinterp/core/lib
