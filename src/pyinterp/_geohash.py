@@ -8,6 +8,7 @@ import xarray
 from . import geodetic
 from .core import GeoHash as BaseGeoHash, geohash
 
+
 class GeoHash(BaseGeoHash):
     """
     Handle GeoHash encoded in base 32.
@@ -66,7 +67,7 @@ class GeoHash(BaseGeoHash):
 
         return xarray.Dataset(
             dict(geohash=xarray.DataArray(
-                geohash.int64.encode(lon, lat, precision=5).reshape(4, 8),
+                grid,
                 dims=('lat', 'lon'),
                 coords=dict(lon=xarray.DataArray(
                     lon, dims=("lon", ), attrs=dict(units="degrees_north")),
