@@ -20,6 +20,65 @@ namespace pyinterp {
 template <template <class> class Point, typename T>
 using Bivariate3D = detail::math::Bivariate<Point, T>;
 
+template <template <class> class Point, typename Coordinate, typename AxisType,
+          typename Type>
+inline auto _trivariate(const Grid3D<Type, AxisType>& grid,
+                           const Coordinate& x, const Coordinate& y,
+                           const AxisType& z,
+                           const Axis<double>& x_axis,
+                           const Axis<double>& y_axis,
+                           const Axis<AxisType>& z_axis,
+                           const Bivariate3D<Point, Coordinate>* interpolator,
+                           const detail::math::z_method_t<AxisType, Coordinate>&
+                               z_interpolation_method,
+                           const bool bounds_error) -> Coordinate {
+  auto x_indexes = x_axis.find_indexes(x);
+  auto y_indexes = y_axis.find_indexes(y);
+  auto z_indexes = z_axis.find_indexes(z);
+
+  if (x_indexes.has_value() && y_indexes.has_value() && z_indexes.has_value()) {
+    int64_t ix0;
+    int64_t ix1;
+    int64_t iy0;
+    int64_t iy1;
+    int64_t iz0;
+    int64_t iz1;
+
+    std::tie(ix0, ix1) = *x_indexes;
+    std::tie(iy0, iy1) = *y_indexes;
+    std::tie(iz0, iz1) = *z_indexes;
+
+    // The fourth coordinate is not used by the 3D interpolator.
+    auto x0 = x_axis(ix0);
+    auto p = Point<Coordinate>(x_axis.normalize_coordinate(x, x0), y, z);
+    auto p0 = Point<Coordinate>(x0, y_axis(iy0), z_axis(iz0));
+    auto p1 = Point<Coordinate>(x_axis(ix1), y_axis(iy1), z_axis(iz1));
+
+    return pyinterp::detail::math::trivariate<Point, Coordinate>(
+        p, p0, p1, static_cast<Coordinate>(grid.value(ix0, iy0, iz0)),
+        static_cast<Coordinate>(grid.value(ix0, iy1, iz0)),
+        static_cast<Coordinate>(grid.value(ix1, iy0, iz0)),
+        static_cast<Coordinate>(grid.value(ix1, iy1, iz0)),
+        static_cast<Coordinate>(grid.value(ix0, iy0, iz1)),
+        static_cast<Coordinate>(grid.value(ix0, iy1, iz1)),
+        static_cast<Coordinate>(grid.value(ix1, iy0, iz1)),
+        static_cast<Coordinate>(grid.value(ix1, iy1, iz1)), interpolator,
+        z_interpolation_method);
+  }
+
+  if (bounds_error) {
+    if (!x_indexes.has_value()) {
+      Grid3D<Type, AxisType>::index_error(x_axis, x, "x");
+    }
+    if (!y_indexes.has_value()) {
+      Grid3D<Type, AxisType>::index_error(y_axis, y, "y");
+    }
+    Grid3D<Type, AxisType>::index_error(z_axis, z, "z");
+  }
+  return std::numeric_limits<Coordinate>::quiet_NaN();
+}
+
+
 /// Interpolation of bivariate function.
 ///
 /// @tparam Point A type of point defining a point in space.
@@ -65,57 +124,9 @@ auto trivariate(const Grid3D<Type, AxisType>& grid,
         [&](size_t start, size_t end) {
           try {
             for (size_t ix = start; ix < end; ++ix) {
-              auto x_indexes = x_axis.find_indexes(_x(ix));
-              auto y_indexes = y_axis.find_indexes(_y(ix));
-              auto z_indexes = z_axis.find_indexes(_z(ix));
-
-              if (x_indexes.has_value() && y_indexes.has_value() &&
-                  z_indexes.has_value()) {
-                int64_t ix0;
-                int64_t ix1;
-                int64_t iy0;
-                int64_t iy1;
-                int64_t iz0;
-                int64_t iz1;
-
-                std::tie(ix0, ix1) = *x_indexes;
-                std::tie(iy0, iy1) = *y_indexes;
-                std::tie(iz0, iz1) = *z_indexes;
-
-                auto x0 = x_axis(ix0);
-
-                _result(ix) =
-                    pyinterp::detail::math::trivariate<Point, Coordinate>(
-                        Point<Coordinate>(x_axis.is_angle()
-                                              ? detail::math::normalize_angle(
-                                                    _x(ix), x0, 360.0)
-                                              : _x(ix),
-                                          _y(ix), _z(ix)),
-                        Point<Coordinate>(x0, y_axis(iy0), z_axis(iz0)),
-                        Point<Coordinate>(x_axis(ix1), y_axis(iy1),
-                                          z_axis(iz1)),
-                        static_cast<Coordinate>(grid.value(ix0, iy0, iz0)),
-                        static_cast<Coordinate>(grid.value(ix0, iy1, iz0)),
-                        static_cast<Coordinate>(grid.value(ix1, iy0, iz0)),
-                        static_cast<Coordinate>(grid.value(ix1, iy1, iz0)),
-                        static_cast<Coordinate>(grid.value(ix0, iy0, iz1)),
-                        static_cast<Coordinate>(grid.value(ix0, iy1, iz1)),
-                        static_cast<Coordinate>(grid.value(ix1, iy0, iz1)),
-                        static_cast<Coordinate>(grid.value(ix1, iy1, iz1)),
-                        interpolator, z_interpolation_method);
-
-              } else {
-                if (bounds_error) {
-                  if (!x_indexes.has_value()) {
-                    Grid3D<Type, AxisType>::index_error(x_axis, _x(ix), "x");
-                  }
-                  if (!y_indexes.has_value()) {
-                    Grid3D<Type, AxisType>::index_error(y_axis, _y(ix), "y");
-                  }
-                  Grid3D<Type, AxisType>::index_error(z_axis, _z(ix), "z");
-                }
-                _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
-              }
+              _result(ix) = _trivariate(grid, _x(ix), _y(ix), _z(ix), x_axis,
+                                        y_axis, z_axis, interpolator,
+                                        z_interpolation_method, bounds_error);
             }
           } catch (...) {
             except = std::current_exception();
@@ -141,7 +152,7 @@ template <template <class> class Point, typename Coordinate, typename AxisType,
 void implement_trivariate(pybind11::module& m, const std::string& prefix,
                           const std::string& suffix) {
   auto function_suffix = suffix;
-  function_suffix[0] = std::tolower(function_suffix[0]);
+  function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
   m.def(("trivariate_" + function_suffix).c_str(),
         &trivariate<Point, Coordinate, AxisType, Type>, pybind11::arg("grid"),
         pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),

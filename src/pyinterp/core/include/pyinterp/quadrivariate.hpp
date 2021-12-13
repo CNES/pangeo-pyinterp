@@ -33,6 +33,89 @@ constexpr auto get_u_interpolation_method(const std::string& method)
   throw std::invalid_argument("unknown interpolation method: " + method);
 }
 
+/// Quadrivariate interpolation for a given point.
+template <template <class> class Point, typename Coordinate, typename AxisType,
+          typename Type>
+inline auto _quadrivariate(const Grid4D<Type, AxisType>& grid,
+                           const Coordinate& x, const Coordinate& y,
+                           const AxisType& z, const Coordinate& u,
+                           const Axis<double>& x_axis,
+                           const Axis<double>& y_axis,
+                           const Axis<AxisType>& z_axis,
+                           const Axis<double>& u_axis,
+                           const Bivariate4D<Point, Coordinate>* interpolator,
+                           const detail::math::z_method_t<AxisType, Coordinate>&
+                               z_interpolation_method,
+                           const detail::math::z_method_t<AxisType, Coordinate>&
+                               u_interpolation_method,
+                           const bool bounds_error) -> Coordinate {
+  auto x_indexes = x_axis.find_indexes(x);
+  auto y_indexes = y_axis.find_indexes(y);
+  auto z_indexes = z_axis.find_indexes(z);
+  auto u_indexes = u_axis.find_indexes(u);
+
+  if (x_indexes.has_value() && y_indexes.has_value() && z_indexes.has_value() &&
+      u_indexes.has_value()) {
+    int64_t ix0;
+    int64_t ix1;
+    int64_t iy0;
+    int64_t iy1;
+    int64_t iz0;
+    int64_t iz1;
+    int64_t iu0;
+    int64_t iu1;
+
+    std::tie(ix0, ix1) = *x_indexes;
+    std::tie(iy0, iy1) = *y_indexes;
+    std::tie(iz0, iz1) = *z_indexes;
+    std::tie(iu0, iu1) = *u_indexes;
+
+    // The fourth coordinate is not used by the 3D interpolator.
+    auto x0 = x_axis(ix0);
+    auto p = Point<Coordinate>(x_axis.normalize_coordinate(x, x0), y, z);
+    auto p0 = Point<Coordinate>(x0, y_axis(iy0), z_axis(iz0));
+    auto p1 = Point<Coordinate>(x_axis(ix1), y_axis(iy1), z_axis(iz1));
+
+    auto u0 = pyinterp::detail::math::trivariate<Point, Coordinate>(
+        p, p0, p1, static_cast<Coordinate>(grid.value(ix0, iy0, iz0, iu0)),
+        static_cast<Coordinate>(grid.value(ix0, iy1, iz0, iu0)),
+        static_cast<Coordinate>(grid.value(ix1, iy0, iz0, iu0)),
+        static_cast<Coordinate>(grid.value(ix1, iy1, iz0, iu0)),
+        static_cast<Coordinate>(grid.value(ix0, iy0, iz1, iu0)),
+        static_cast<Coordinate>(grid.value(ix0, iy1, iz1, iu0)),
+        static_cast<Coordinate>(grid.value(ix1, iy0, iz1, iu0)),
+        static_cast<Coordinate>(grid.value(ix1, iy1, iz1, iu0)), interpolator,
+        z_interpolation_method);
+
+    auto u1 = pyinterp::detail::math::trivariate<Point, Coordinate>(
+        p, p0, p1, static_cast<Coordinate>(grid.value(ix0, iy0, iz0, iu1)),
+        static_cast<Coordinate>(grid.value(ix0, iy1, iz0, iu1)),
+        static_cast<Coordinate>(grid.value(ix1, iy0, iz0, iu1)),
+        static_cast<Coordinate>(grid.value(ix1, iy1, iz0, iu1)),
+        static_cast<Coordinate>(grid.value(ix0, iy0, iz1, iu1)),
+        static_cast<Coordinate>(grid.value(ix0, iy1, iz1, iu1)),
+        static_cast<Coordinate>(grid.value(ix1, iy0, iz1, iu1)),
+        static_cast<Coordinate>(grid.value(ix1, iy1, iz1, iu1)), interpolator,
+        z_interpolation_method);
+
+    return u_interpolation_method(u, u_axis(iu0), u_axis(iu1), u0, u1);
+  }
+
+  if (bounds_error) {
+    if (!x_indexes.has_value()) {
+      Grid4D<Type, AxisType>::index_error(x_axis, x, "x");
+    }
+    if (!y_indexes.has_value()) {
+      Grid4D<Type, AxisType>::index_error(y_axis, y, "y");
+    }
+    if (!z_indexes.has_value()) {
+      Grid4D<Type, AxisType>::index_error(z_axis, z, "z");
+    }
+    Grid4D<Type, AxisType>::index_error(u_axis, u, "u");
+  }
+  return std::numeric_limits<Coordinate>::quiet_NaN();
+}
+
 /// Interpolation of quadrivariate function.
 ///
 /// @tparam Point A type of point defining a point in space.
@@ -86,81 +169,10 @@ auto quadrivariate(const Grid4D<Type, AxisType>& grid,
         [&](size_t start, size_t end) {
           try {
             for (size_t ix = start; ix < end; ++ix) {
-              auto x_indexes = x_axis.find_indexes(_x(ix));
-              auto y_indexes = y_axis.find_indexes(_y(ix));
-              auto z_indexes = z_axis.find_indexes(_z(ix));
-              auto u_indexes = u_axis.find_indexes(_u(ix));
-
-              if (x_indexes.has_value() && y_indexes.has_value() &&
-                  z_indexes.has_value() && u_indexes.has_value()) {
-                int64_t ix0;
-                int64_t ix1;
-                int64_t iy0;
-                int64_t iy1;
-                int64_t iz0;
-                int64_t iz1;
-                int64_t iu0;
-                int64_t iu1;
-
-                std::tie(ix0, ix1) = *x_indexes;
-                std::tie(iy0, iy1) = *y_indexes;
-                std::tie(iz0, iz1) = *z_indexes;
-                std::tie(iu0, iu1) = *u_indexes;
-
-                auto x0 = x_axis(ix0);
-
-                // The fourth coordinate is not used by the 3D interpolator.
-                auto p = Point<Coordinate>(
-                    x_axis.is_angle()
-                        ? detail::math::normalize_angle(_x(ix), x0, 360.0)
-                        : _x(ix),
-                    _y(ix), _z(ix));
-                auto p0 = Point<Coordinate>(x0, y_axis(iy0), z_axis(iz0));
-                auto p1 =
-                    Point<Coordinate>(x_axis(ix1), y_axis(iy1), z_axis(iz1));
-
-                auto u0 = pyinterp::detail::math::trivariate<Point, Coordinate>(
-                    p, p0, p1,
-                    static_cast<Coordinate>(grid.value(ix0, iy0, iz0, iu0)),
-                    static_cast<Coordinate>(grid.value(ix0, iy1, iz0, iu0)),
-                    static_cast<Coordinate>(grid.value(ix1, iy0, iz0, iu0)),
-                    static_cast<Coordinate>(grid.value(ix1, iy1, iz0, iu0)),
-                    static_cast<Coordinate>(grid.value(ix0, iy0, iz1, iu0)),
-                    static_cast<Coordinate>(grid.value(ix0, iy1, iz1, iu0)),
-                    static_cast<Coordinate>(grid.value(ix1, iy0, iz1, iu0)),
-                    static_cast<Coordinate>(grid.value(ix1, iy1, iz1, iu0)),
-                    interpolator, z_interpolation_method);
-
-                auto u1 = pyinterp::detail::math::trivariate<Point, Coordinate>(
-                    p, p0, p1,
-                    static_cast<Coordinate>(grid.value(ix0, iy0, iz0, iu1)),
-                    static_cast<Coordinate>(grid.value(ix0, iy1, iz0, iu1)),
-                    static_cast<Coordinate>(grid.value(ix1, iy0, iz0, iu1)),
-                    static_cast<Coordinate>(grid.value(ix1, iy1, iz0, iu1)),
-                    static_cast<Coordinate>(grid.value(ix0, iy0, iz1, iu1)),
-                    static_cast<Coordinate>(grid.value(ix0, iy1, iz1, iu1)),
-                    static_cast<Coordinate>(grid.value(ix1, iy0, iz1, iu1)),
-                    static_cast<Coordinate>(grid.value(ix1, iy1, iz1, iu1)),
-                    interpolator, z_interpolation_method);
-
-                _result(ix) = u_interpolation_method(_u(ix), u_axis(iu0),
-                                                     u_axis(iu1), u0, u1);
-
-              } else {
-                if (bounds_error) {
-                  if (!x_indexes.has_value()) {
-                    Grid4D<Type, AxisType>::index_error(x_axis, _x(ix), "x");
-                  }
-                  if (!y_indexes.has_value()) {
-                    Grid4D<Type, AxisType>::index_error(y_axis, _y(ix), "y");
-                  }
-                  if (!z_indexes.has_value()) {
-                    Grid4D<Type, AxisType>::index_error(z_axis, _z(ix), "z");
-                  }
-                  Grid4D<Type, AxisType>::index_error(u_axis, _u(ix), "u");
-                }
-                _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
-              }
+              _result(ix) = _quadrivariate<Point, Coordinate, AxisType, Type>(
+                  grid, _x(ix), _y(ix), _z(ix), _u(ix), x_axis, y_axis, z_axis,
+                  u_axis, interpolator, z_interpolation_method,
+                  u_interpolation_method, bounds_error);
             }
           } catch (...) {
             except = std::current_exception();
@@ -186,7 +198,7 @@ template <template <class> class Point, typename Coordinate, typename AxisType,
 void implement_quadrivariate(pybind11::module& m, const std::string& prefix,
                              const std::string& suffix) {
   auto function_suffix = suffix;
-  function_suffix[0] = std::tolower(function_suffix[0]);
+  function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
   m.def(("quadrivariate_" + function_suffix).c_str(),
         &quadrivariate<Point, Coordinate, AxisType, Type>,
         pybind11::arg("grid"), pybind11::arg("x"), pybind11::arg("y"),

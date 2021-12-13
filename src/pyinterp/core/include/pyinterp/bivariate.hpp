@@ -67,6 +67,46 @@ class InverseDistanceWeighting
   }
 };
 
+/// Bivariate interpolation for a given point.
+template <template <class> class Point, typename Coordinate, typename Type>
+inline auto _bivariate(
+    const Grid2D<Type>& grid, const Coordinate& x, const Coordinate& y,
+    const Axis<double>& x_axis, const Axis<double>& y_axis,
+    const BivariateInterpolator<Point, Coordinate>* interpolator,
+    const bool bounds_error) -> Coordinate {
+  auto x_indexes = x_axis.find_indexes(x);
+  auto y_indexes = y_axis.find_indexes(y);
+
+  if (x_indexes.has_value() && y_indexes.has_value()) {
+    int64_t ix0;
+    int64_t ix1;
+    int64_t iy0;
+    int64_t iy1;
+
+    std::tie(ix0, ix1) = *x_indexes;
+    std::tie(iy0, iy1) = *y_indexes;
+
+    auto x0 = x_axis(ix0);
+    auto p = Point<Coordinate>(x_axis.normalize_coordinate(x, x0), y);
+    auto p0 = Point<Coordinate>(x0, y_axis(iy0));
+    auto p1 = Point<Coordinate>(x_axis(ix1), y_axis(iy1));
+
+    return interpolator->evaluate(
+        p, p0, p1, static_cast<Coordinate>(grid.value(ix0, iy0)),
+        static_cast<Coordinate>(grid.value(ix0, iy1)),
+        static_cast<Coordinate>(grid.value(ix1, iy0)),
+        static_cast<Coordinate>(grid.value(ix1, iy1)));
+  }
+
+  if (bounds_error) {
+    if (!x_indexes.has_value()) {
+      Grid2D<Type>::index_error(x_axis, x, "x");
+    }
+    Grid2D<Type>::index_error(y_axis, y, "y");
+  }
+  return std::numeric_limits<Coordinate>::quiet_NaN();
+}
+
 /// Interpolation of bivariate function.
 ///
 /// @tparam Coordinate The type of data used by the interpolators.
@@ -102,42 +142,8 @@ auto bivariate(const Grid2D<Type>& grid, const pybind11::array_t<Coordinate>& x,
         [&](size_t start, size_t end) {
           try {
             for (size_t ix = start; ix < end; ++ix) {
-              auto x_indexes = x_axis.find_indexes(_x(ix));
-              auto y_indexes = y_axis.find_indexes(_y(ix));
-
-              if (x_indexes.has_value() && y_indexes.has_value()) {
-                int64_t ix0;
-                int64_t ix1;
-                int64_t iy0;
-                int64_t iy1;
-
-                std::tie(ix0, ix1) = *x_indexes;
-                std::tie(iy0, iy1) = *y_indexes;
-
-                auto x0 = x_axis(ix0);
-
-                _result(ix) = interpolator->evaluate(
-                    Point<Coordinate>(
-                        x_axis.is_angle()
-                            ? detail::math::normalize_angle(_x(ix), x0, 360.0)
-                            : _x(ix),
-                        _y(ix)),
-                    Point<Coordinate>(x0, y_axis(iy0)),
-                    Point<Coordinate>(x_axis(ix1), y_axis(iy1)),
-                    static_cast<Coordinate>(grid.value(ix0, iy0)),
-                    static_cast<Coordinate>(grid.value(ix0, iy1)),
-                    static_cast<Coordinate>(grid.value(ix1, iy0)),
-                    static_cast<Coordinate>(grid.value(ix1, iy1)));
-
-              } else {
-                if (bounds_error) {
-                  if (!x_indexes.has_value()) {
-                    Grid2D<Type>::index_error(x_axis, _x(ix), "x");
-                  }
-                  Grid2D<Type>::index_error(y_axis, _y(ix), "y");
-                }
-                _result(ix) = std::numeric_limits<Coordinate>::quiet_NaN();
-              }
+              _result(ix) = _bivariate(grid, _x(ix), _y(ix), x_axis, y_axis,
+                                       interpolator, bounds_error);
             }
           } catch (...) {
             except = std::current_exception();

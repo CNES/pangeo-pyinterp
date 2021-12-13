@@ -219,6 +219,16 @@ class Axis {
     return axis_->coordinate_value(index);
   }
 
+  /// Returns the normalized value of the coordinate with the respect to the
+  /// axis definition.
+  [[nodiscard]] inline constexpr auto normalize_coordinate(
+      const T coordinate, const T min) const noexcept -> T {
+    if (is_angle() && (coordinate >= min + circle_ || coordinate < min)) {
+      return math::normalize_angle(coordinate, min, circle_);
+    }
+    return coordinate;
+  }
+
   /// Returns the normalized value with respect to the axis definition. This
   /// means if the axis defines a circle, this method returns a value within the
   /// interval [font(), back()] otherwise it returns the value supplied.
@@ -452,16 +462,6 @@ class Axis {
   /// the axis.
   std::shared_ptr<axis::container::Abstract<T>> axis_{
       std::make_shared<axis::container::Undefined<T>>()};
-
-  /// Normalize angle
-  [[nodiscard]] inline auto normalize_coordinate(const T coordinate,
-                                                 const T min) const noexcept
-      -> T {
-    if (is_angle() && (coordinate >= min + circle_ || coordinate < min)) {
-      return math::normalize_angle(coordinate, min, circle_);
-    }
-    return coordinate;
-  }
 
   /// Computes axis's properties
   void compute_properties(T epsilon) {
