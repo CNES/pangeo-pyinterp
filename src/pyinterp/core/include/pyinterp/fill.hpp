@@ -41,7 +41,8 @@ void set_zonal_average(pybind11::EigenDRef<Matrix<Type>>& grid,
       [&](size_t y_start, size_t y_end) {
         try {
           // Calculation of longitude band means.
-          for (size_t iy = y_start; iy < y_end; ++iy) {
+          for (auto iy = static_cast<int64_t>(y_start);
+               iy < static_cast<int64_t>(y_end); ++iy) {
             auto acc = boost::accumulators::accumulator_set<
                 Type,
                 boost::accumulators::stats<boost::accumulators::tag::count,

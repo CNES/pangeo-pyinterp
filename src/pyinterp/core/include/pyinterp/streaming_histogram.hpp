@@ -297,7 +297,7 @@ class StreamingHistogram {
       auto marshal_hist = static_cast<std::string>(accumulators_(ix));
       auto size = marshal_hist.size();
       ss.write(reinterpret_cast<const char*>(&size), sizeof(size));
-      ss.write(marshal_hist.c_str(), size);
+      ss.write(marshal_hist.c_str(), static_cast<std::streamsize>(size));
     }
     return ss.str();
   }
@@ -315,7 +315,7 @@ class StreamingHistogram {
         auto size = size_t(0);
         ss.read(reinterpret_cast<char*>(&size), sizeof(size));
         auto marshal_hist = std::string(size, '\0');
-        ss.read(marshal_hist.data(), size);
+        ss.read(marshal_hist.data(), static_cast<std::streamsize>(size));
         accumulators(ix) = std::move(Accumulators(marshal_hist));
       }
       return accumulators;

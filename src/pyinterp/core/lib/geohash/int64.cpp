@@ -214,7 +214,8 @@ auto format_bytes(size_t bytes) -> std::string {
     if (bytes > item.divisor) {
       auto ss = std::stringstream();
       ss << std::setprecision(2) << std::fixed
-         << (bytes / static_cast<double>(item.divisor)) << " " << item.suffix;
+         << (static_cast<double>(bytes) / static_cast<double>(item.divisor))
+         << " " << item.suffix;
       result = ss.str();
       break;
     }
@@ -324,7 +325,7 @@ auto bounding_boxes(const geodetic::Box& box, const uint32_t precision)
 
   // Allocation of the vector storing the different codes of the matrix created
   auto result = allocate_array(count(boxes, precision));
-  auto ix = size_t(0);
+  auto ix = int64_t(0);
 
   for (const auto& item : boxes) {
     size_t lat_step;
@@ -335,10 +336,12 @@ auto bounding_boxes(const geodetic::Box& box, const uint32_t precision)
     auto point_sw = decode(hash_sw, precision, true);
 
     for (size_t lat = 0; lat < lat_step; ++lat) {
-      const auto lat_shift = lat * std::get<1>(lng_lat_err);
+      const auto lat_shift =
+          static_cast<double>(lat) * std::get<1>(lng_lat_err);
 
       for (size_t lon = 0; lon < lon_step; ++lon) {
-        const auto lng_shift = lon * std::get<0>(lng_lat_err);
+        const auto lng_shift =
+            static_cast<double>(lon) * std::get<0>(lng_lat_err);
         result(ix++) =
             encode({point_sw.lon() + lng_shift, point_sw.lat() + lat_shift},
                    precision);

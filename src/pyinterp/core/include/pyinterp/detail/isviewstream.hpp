@@ -36,7 +36,7 @@ class sviewbuf : public std::streambuf {
 
  public:
   sviewbuf(const char* s, std::size_t count) {
-    auto* begin = const_cast<char*>(s);
+    auto* begin = const_cast<char*>(s);  // NOLINT
     this->setg(begin, begin, begin + count);
   }
 

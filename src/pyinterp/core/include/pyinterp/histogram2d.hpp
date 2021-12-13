@@ -286,7 +286,7 @@ class Histogram2D {
         auto marshal_hist = static_cast<std::string>(histogram_(ix, jx));
         auto size = marshal_hist.size();
         ss.write(reinterpret_cast<const char*>(&size), sizeof(size));
-        ss.write(marshal_hist.c_str(), size);
+        ss.write(marshal_hist.c_str(), static_cast<std::streamsize>(size));
       }
     }
     return ss.str();
@@ -311,7 +311,7 @@ class Histogram2D {
           auto size = size_t(0);
           ss.read(reinterpret_cast<char*>(&size), sizeof(size));
           auto marshal_hist = std::string(size, '\0');
-          ss.read(marshal_hist.data(), size);
+          ss.read(marshal_hist.data(), static_cast<std::streamsize>(size));
           histogram(ix, jx) = std::move(StreamingHistogram(marshal_hist));
         }
       }

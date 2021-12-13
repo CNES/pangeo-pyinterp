@@ -213,10 +213,12 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
       const auto point_sw = int64::decode(hash_sw, bits, true);
 
       for (size_t lat = 0; lat < lat_step; ++lat) {
-        const auto lat_shift = lat * std::get<1>(lng_lat_err);
+        const auto lat_shift =
+            static_cast<double>(lat) * std::get<1>(lng_lat_err);
 
         for (size_t lon = 0; lon < lon_step; ++lon) {
-          const auto lon_shift = lon * std::get<0>(lng_lat_err);
+          const auto lon_shift =
+              static_cast<double>(lon) * std::get<0>(lng_lat_err);
 
           Base32::encode(int64::encode({point_sw.lon() + lon_shift,
                                         point_sw.lat() + lat_shift},
@@ -264,10 +266,12 @@ auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision)
       const auto point_sw = int64::decode(hash_sw, bits, true);
 
       for (size_t lat = 0; lat < lat_step; ++lat) {
-        const auto lat_shift = lat * std::get<1>(lng_lat_err);
+        const auto lat_shift =
+            static_cast<double>(lat) * std::get<1>(lng_lat_err);
 
         for (size_t lon = 0; lon < lon_step; ++lon) {
-          const auto lon_shift = lon * std::get<0>(lng_lat_err);
+          const auto lon_shift =
+              static_cast<double>(lon) * std::get<0>(lng_lat_err);
           const auto point = geodetic::Point(point_sw.lon() + lon_shift,
                                              point_sw.lat() + lat_shift);
           const auto hash = int64::encode(point, bits);

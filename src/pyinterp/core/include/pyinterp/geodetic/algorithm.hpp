@@ -70,7 +70,8 @@ template <typename Geometry1, typename Geometry2>
     detail::dispatch(
         [&](size_t start, size_t end) {
           try {
-            for (size_t ix = start; ix < end; ++ix) {
+            for (auto ix = static_cast<int64_t>(start);
+                 ix < static_cast<int64_t>(end); ++ix) {
               _result(ix) = static_cast<int8_t>(boost::geometry::covered_by(
                   Geometry1(lon(ix), lat(ix)), geometry2));
             }
@@ -143,7 +144,8 @@ template <typename Geometry, typename Strategy>
     detail::dispatch(
         [&](size_t start, size_t end) {
           try {
-            for (size_t ix = start; ix < end; ++ix) {
+            for (auto ix = static_cast<int64_t>(start);
+                 ix < static_cast<int64_t>(end); ++ix) {
               _result(ix) = boost::geometry::distance(
                   Geometry(lon1(ix), lat1(ix)), Geometry(lon2(ix), lat2(ix)),
                   strategy);
