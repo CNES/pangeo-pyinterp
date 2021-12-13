@@ -159,7 +159,7 @@ class Axis {
   /// Does the axis represent an angle?
   ///
   /// @return true if the axis represent an angle
-  [[nodiscard]] inline auto is_angle() const noexcept -> bool {
+  [[nodiscard]] inline constexpr auto is_angle() const noexcept -> bool {
     return math::Fill<T>::is_not(circle_);
   }
 

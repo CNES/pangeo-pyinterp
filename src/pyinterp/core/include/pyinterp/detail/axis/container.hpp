@@ -433,7 +433,7 @@ class AbstractRegular : public Abstract<T> {
   /// Get the step between two successive values.
   ///
   /// @return increment value
-  [[nodiscard]] auto step() const -> T { return step_; }
+  [[nodiscard]] auto constexpr step() const -> T { return step_; }
 
   /// @copydoc Abstract::flip()
   auto flip() -> void override {
@@ -443,33 +443,34 @@ class AbstractRegular : public Abstract<T> {
   }
 
   /// @copydoc Abstract::coordinate_value(const int64_t) const
-  [[nodiscard]] inline auto coordinate_value(const int64_t index) const noexcept
-      -> T override {
+  [[nodiscard]] inline constexpr auto coordinate_value(
+      const int64_t index) const noexcept -> T override {
     return static_cast<T>(start_ + index * step_);
   }
 
   /// @copydoc Abstract::min_value() const
-  [[nodiscard]] inline auto min_value() const noexcept -> T override {
+  [[nodiscard]] inline constexpr auto min_value() const noexcept -> T override {
     return coordinate_value(this->is_ascending_ ? 0 : size_ - 1);
   }
 
   /// @copydoc Abstract::max_value() const
-  [[nodiscard]] inline auto max_value() const noexcept -> T override {
+  [[nodiscard]] inline constexpr auto max_value() const noexcept -> T override {
     return coordinate_value(this->is_ascending_ ? size_ - 1 : 0);
   }
 
   /// @copydoc Abstract::front() const
-  [[nodiscard]] inline auto front() const noexcept -> T override {
+  [[nodiscard]] inline constexpr auto front() const noexcept -> T override {
     return start_;
   }
 
   /// @copydoc Abstract::back() const
-  [[nodiscard]] inline auto back() const noexcept -> T override {
+  [[nodiscard]] inline constexpr auto back() const noexcept -> T override {
     return coordinate_value(size_ - 1);
   }
 
   /// @copydoc Abstract::size() const
-  [[nodiscard]] inline auto size() const noexcept -> int64_t override {
+  [[nodiscard]] inline constexpr auto size() const noexcept
+      -> int64_t override {
     return size_;
   }
 
