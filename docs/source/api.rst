@@ -72,6 +72,8 @@ Geodetic systems
   geodetic.Point
   geodetic.Polygon
   geodetic.System
+  geodetic.coordinate_distances
+  geodetic.normalize_longitudes
 
 .. _cartesian_interpolators:
 
