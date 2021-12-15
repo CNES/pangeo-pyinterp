@@ -110,7 +110,8 @@ auto encode(const geodetic::Point& point, char* buffer, uint32_t precision)
                                   uint32_t precision) -> pybind11::array;
 
 [[nodiscard]] auto bounding_boxes(const geodetic::Polygon& polygon,
-                                  uint32_t precision) -> pybind11::array;
+                                  uint32_t precision, size_t num_threads)
+    -> pybind11::array;
 
 /// Returns the start and end indexes of the different GeoHash boxes.
 [[nodiscard]] auto where(const pybind11::array& hash) -> std::unordered_map<

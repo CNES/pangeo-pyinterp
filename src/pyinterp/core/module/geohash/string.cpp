@@ -106,18 +106,25 @@ Raises:
 )__doc__")
       .def(
           "bounding_boxes",
-          [](const geodetic::Polygon& polygon,
-             const uint32_t precision) -> py::array {
+          [](const geodetic::Polygon& polygon, const uint32_t precision,
+             const size_t num_threads) -> py::array {
             check_range(precision);
-            return geohash::string::bounding_boxes(polygon, precision);
+            return geohash::string::bounding_boxes(polygon, precision,
+                                                   num_threads);
           },
           py::arg("box") = py::none(), py::arg("precision") = 1,
+          py::arg("num_threads") = 0,
           R"__doc__(
 Returns all geohash codes contained in the defined polygon.
 
 Args:
   polygon (pyinterp.geodetic.Polygon): Polygon.
   precision (int, optional): Required accuracy.
+    Defaults to 1.
+  num_threads (int, optional): The number of threads to use for the
+    computation. If 0 all CPUs are used. If 1 is given, no parallel
+    computing code is used at all, which is useful for debugging.
+    Defaults to ``0``.
 Returns:
   numpy.ndarray: GeoHash codes.
 Raises:

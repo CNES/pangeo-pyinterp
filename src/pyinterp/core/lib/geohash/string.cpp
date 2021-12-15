@@ -5,6 +5,9 @@
 #include "pyinterp/geohash/string.hpp"
 
 #include "pyinterp/detail/broadcast.hpp"
+#include "pyinterp/detail/thread.hpp"
+#include "pyinterp/eigen.hpp"
+#include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geohash/base32.hpp"
 #include "pyinterp/geohash/int64.hpp"
 
@@ -233,8 +236,80 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
 }
 
 // ---------------------------------------------------------------------------
-auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision)
-    -> pybind11::array {
+// Calculates a grid containing for each cell a boolean indicating if the cell
+// of the grid is enclosed or not in the polygon.
+static auto mask_box(const geodetic::Box& box, const geodetic::Polygon& polygon,
+                     const std::tuple<double, double>& lng_lat_err,
+                     const uint32_t bits, const size_t num_threads)
+    -> Matrix<bool> {
+  size_t lat_step;
+  size_t lon_step;
+  uint64_t hash_sw;
+
+  // Calculate the grid properties
+  std::tie(hash_sw, lon_step, lat_step) = int64::grid_properties(box, bits);
+  const auto point_sw = int64::decode(hash_sw, bits, true);
+
+  // Allocate the grid result
+  auto result = Matrix<bool>(lon_step, lat_step);
+
+  // Captures the detected exceptions in the calculation function
+  // (only the last exception captured is kept)
+  auto except = std::exception_ptr(nullptr);
+
+  detail::dispatch(
+      [&](size_t start, size_t end) {
+        for (auto lat = static_cast<int64_t>(start);
+             lat < static_cast<int64_t>(end); ++lat) {
+          const auto lat_shift =
+              static_cast<double>(lat) * std::get<1>(lng_lat_err);
+
+          for (size_t lon = 0; lon < lon_step; ++lon) {
+            const auto lon_shift =
+                static_cast<double>(lon) * std::get<0>(lng_lat_err);
+
+            result(lon, lat) = boost::geometry::intersects(
+                int64::bounding_box(
+                    int64::encode(geodetic::Point(point_sw.lon() + lon_shift,
+                                                  point_sw.lat() + lat_shift),
+                                  bits),
+                    bits),
+                polygon);
+          }
+        }
+      },
+      lat_step, num_threads);
+
+  if (except != nullptr) {
+    std::rethrow_exception(except);
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+static auto mask_boxes(const std::vector<geodetic::Box>& boxes,
+                       const geodetic::Polygon& polygon,
+                       const std::tuple<double, double>& lng_lat_err,
+                       const uint32_t precision, const size_t num_threads)
+    -> std::vector<Matrix<bool>> {
+  // Allocation of the vector storing the different codes of the matrix created
+  auto result = std::vector<Matrix<bool>>();
+
+  {
+    auto gil = pybind11::gil_scoped_release();
+
+    for (const auto& item : boxes) {
+      result.emplace_back(
+          mask_box(item, polygon, lng_lat_err, precision, num_threads));
+    }
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision,
+                    const size_t num_threads) -> pybind11::array {
   // Number of bits
   auto bits = precision * 5;
 
@@ -243,48 +318,66 @@ auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision)
 
   // If the envelope cut the meridian, we need to split it into two
   // bounding boxes.
-  const auto boxes = envelope.normalize().split();
+  auto split_box = [](const geodetic::Box& box) -> std::vector<geodetic::Box> {
+    auto boxes = box.normalize().split();
+    return {std::make_move_iterator(boxes.begin()),
+            std::make_move_iterator(boxes.end())};
+  };
+  auto boxes = split_box(envelope);
 
   // Grid resolution in degrees
   const auto lng_lat_err = int64::error_with_precision(bits);
 
-  // Allocation of the vector storing the different codes of the matrix created
-  auto result = allocate_array(int64::count(boxes, bits), precision);
-  auto* buffer = result.buffer();
+  // Calculates the intersection mask between the polygon and the GeoHash grid
+  // (multithreaded)
+  auto masks = mask_boxes(boxes, polygon, lng_lat_err, bits, num_threads);
+  
+  // Count the number of cells that are enclosed by the polygon
   auto size = size_t(0);
+  for (const auto& item : masks) {
+    size += static_cast<size_t>(
+        std::count(item.data(), item.data() + item.size(), true));
+  }
+  
+  // Allocates the result array
+  auto result = allocate_array(size, precision);
+  auto* buffer = result.buffer();
 
+  // Finally, for each cell of the grid, if it is enclosed by the polygon,
+  // we add the code to the result array
   {
     auto gil = pybind11::gil_scoped_release();
 
-    for (const auto& item : boxes) {
+    for (auto ix = size_t(0); ix < masks.size(); ++ix) {
+      auto box = boxes[ix];
+      auto mask = masks[ix];
+
       size_t lat_step;
       size_t lon_step;
       uint64_t hash_sw;
 
-      std::tie(hash_sw, lon_step, lat_step) =
-          int64::grid_properties(item, bits);
+      std::tie(hash_sw, lon_step, lat_step) = int64::grid_properties(box, bits);
       const auto point_sw = int64::decode(hash_sw, bits, true);
-
       for (size_t lat = 0; lat < lat_step; ++lat) {
         const auto lat_shift =
             static_cast<double>(lat) * std::get<1>(lng_lat_err);
 
         for (size_t lon = 0; lon < lon_step; ++lon) {
-          const auto lon_shift =
-              static_cast<double>(lon) * std::get<0>(lng_lat_err);
-          const auto point = geodetic::Point(point_sw.lon() + lon_shift,
-                                             point_sw.lat() + lat_shift);
-          const auto hash = int64::encode(point, bits);
-          const auto bbox = int64::bounding_box(hash, bits);
-          if (boost::geometry::intersects(bbox, polygon)) {
-            Base32::encode(int64::encode(point, bits), buffer, precision);
+          if (mask(lon, lat)) {
+            const auto lon_shift =
+                static_cast<double>(lon) * std::get<0>(lng_lat_err);
+
+            Base32::encode(
+                int64::encode(geodetic::Point(point_sw.lon() + lon_shift,
+                                              point_sw.lat() + lat_shift),
+                              bits),
+                buffer, precision);
             buffer += precision;
             ++size;
           }
         }
       }
     }
-    result.resize(size);
   }
   return result.pyarray();
 }
