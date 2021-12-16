@@ -103,10 +103,10 @@ def test_bivariate_interpolator(pytestconfig):
     """Testing of different interpolation methods"""
     visualize = pytestconfig.getoption("visualize")
     dump = pytestconfig.getoption("dump")
-    a = run_bivariate(core.Nearest2D(), "mss_bivariate_nearest",
-                      visualize, dump)
-    b = run_bivariate(core.Bilinear2D(), "mss_bivariate_bilinear",
-                      visualize, dump)
+    a = run_bivariate(core.Nearest2D(), "mss_bivariate_nearest", visualize,
+                      dump)
+    b = run_bivariate(core.Bilinear2D(), "mss_bivariate_bilinear", visualize,
+                      dump)
     c = run_bivariate(core.InverseDistanceWeighting2D(), "mss_bivariate_idw",
                       visualize, dump)
     assert (a - b).std() != 0

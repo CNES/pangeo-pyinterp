@@ -223,13 +223,12 @@ def test_grid3d_interpolator(pytestconfig):
     """Testing of different interpolation methods"""
     visualize = pytestconfig.getoption("visualize")
     dump = pytestconfig.getoption("dump")
-    a = run_interpolator(core.Nearest3D(), "tcw_trivariate_nearest",
-                         visualize, dump)
+    a = run_interpolator(core.Nearest3D(), "tcw_trivariate_nearest", visualize,
+                         dump)
     b = run_interpolator(core.Bilinear3D(), "tcw_trivariate_bilinear",
                          visualize, dump)
     c = run_interpolator(core.InverseDistanceWeighting3D(),
-                         "tcw_trivariate_idw",
-                         visualize, dump)
+                         "tcw_trivariate_idw", visualize, dump)
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0

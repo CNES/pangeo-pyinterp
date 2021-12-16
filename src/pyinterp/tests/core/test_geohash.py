@@ -51,13 +51,13 @@ def test_string_numpy():
     with pytest.raises(ValueError):
         indexes = geohash.where(strs)
 
+
 def test_bounding_boxes():
     bboxes = geohash.bounding_boxes(precision=1)
     assert len(bboxes) == 32
     for bbox in bboxes:
         code = GeoHash.from_string(bbox.decode())
-        case = geohash.bounding_boxes(
-            code.bounding_box(), precision=1)
+        case = geohash.bounding_boxes(code.bounding_box(), precision=1)
         assert len(case) == 1
         assert case[0] == bbox
 
@@ -68,6 +68,7 @@ def test_bounding_boxes():
     with pytest.raises(MemoryError):
         geohash.bounding_boxes(precision=12)
 
+
 def test_bounding_zoom():
     bboxes = geohash.bounding_boxes(precision=1)
     assert len(bboxes) == 32
@@ -77,6 +78,7 @@ def test_bounding_zoom():
     assert numpy.all(
         numpy.sort(geohash.transform(zoom_in, precision=1)) == numpy.sort(
             bboxes))
+
 
 def test_class():
     for code, lat, lon in testcases:
