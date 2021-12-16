@@ -29,3 +29,4 @@ sys.path.insert(0, str(build_dirname().resolve()))
 def pytest_addoption(parser):
     """Add command line options to pytest."""
     parser.addoption("--visualize", action="store_true", default=False)
+    parser.addoption("--dump", action="store_true", default=False)

@@ -8,7 +8,7 @@ import numpy as np
 import xarray as xr
 import pyinterp.backends.xarray
 import pyinterp
-from . import grid2d_path
+from . import grid2d_path, make_or_compare_reference
 
 
 def build_rtree(dtype):
@@ -62,16 +62,21 @@ def load_data():
     return mesh
 
 
-def test_interpolate():
+def test_interpolate(pytestconfig):
+    dump = pytestconfig.getoption("dump")
     mesh = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing="ij")
     coordinates = np.vstack((x.ravel(), y.ravel())).T
-    mesh.query(coordinates)
-    mesh.inverse_distance_weighting(coordinates)
-    mesh.radial_basis_function(coordinates)
-    mesh.window_function(coordinates, radius=2_000_000)
+    data, _ = mesh.query(coordinates)
+    make_or_compare_reference("rtree_query.npy", data, dump)
+    data, _ = mesh.inverse_distance_weighting(coordinates)
+    make_or_compare_reference("rtree_idw.npy", data, dump)
+    data, _ = mesh.radial_basis_function(coordinates)
+    make_or_compare_reference("rtree_rbf.npy", data, dump)
+    data, _ = mesh.window_function(coordinates, radius=2_000_000)
+    make_or_compare_reference("rtree_wf.npy", data, dump)
 
     with pytest.raises(ValueError):
         mesh.radial_basis_function(coordinates, epsilon=1, rbf="cubic")

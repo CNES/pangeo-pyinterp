@@ -14,7 +14,7 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 from ... import core
-from .. import grid3d_path
+from .. import grid3d_path, make_or_compare_reference
 
 
 def plot(x, y, z, filename):
@@ -76,7 +76,7 @@ def test_grid3d_pickle():
         np.ma.fix_invalid(grid.array) == np.ma.fix_invalid(other.array))
 
 
-def run_interpolator(interpolator, filename, visualize):
+def run_interpolator(interpolator, filename, visualize, dump):
     """Testing an interpolation method."""
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
@@ -95,6 +95,7 @@ def run_interpolator(interpolator, filename, visualize):
                                  t.ravel(),
                                  interpolator,
                                  num_threads=1)
+    make_or_compare_reference(filename + ".npy", z1, dump)
     shape = (len(lon), len(lat))
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
@@ -125,6 +126,8 @@ def test_trivariate_spline(pytestconfig):
                              fitting_model="akima",
                              bounds_error=True,
                              num_threads=1)
+    make_or_compare_reference("test_trivariate_spline.npy", z1,
+                              pytestconfig.getoption("dump"))
     shape = (len(lon), len(lat))
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
@@ -160,8 +163,9 @@ def test_grid3d_bounds_error():
             num_threads=0)
 
 
-def test_grid3d_z_method():
+def test_grid3d_z_method(pytestconfig):
     """Test of the interpolation method used on Z-axis"""
+    dump = pytestconfig.getoption("dump")
     grid = load_data(temporal_axis=True)
     interpolator = core.TemporalBilinear3D()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
@@ -189,6 +193,7 @@ def test_grid3d_z_method():
         interpolator,
         z_method="linear",
         num_threads=0)
+    make_or_compare_reference("test_grid3d_z_method_linear.npy", z1, dump)
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z0 == z1)
@@ -200,6 +205,7 @@ def test_grid3d_z_method():
         interpolator,
         z_method="nearest",
         num_threads=0)
+    make_or_compare_reference("test_grid3d_z_method_nearest.npy", z1, dump)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z0 != z1)
     with pytest.raises(ValueError):
@@ -215,13 +221,15 @@ def test_grid3d_z_method():
 
 def test_grid3d_interpolator(pytestconfig):
     """Testing of different interpolation methods"""
+    visualize = pytestconfig.getoption("visualize")
+    dump = pytestconfig.getoption("dump")
     a = run_interpolator(core.Nearest3D(), "tcw_trivariate_nearest",
-                         pytestconfig.getoption("visualize"))
+                         visualize, dump)
     b = run_interpolator(core.Bilinear3D(), "tcw_trivariate_bilinear",
-                         pytestconfig.getoption("visualize"))
+                         visualize, dump)
     c = run_interpolator(core.InverseDistanceWeighting3D(),
                          "tcw_trivariate_idw",
-                         pytestconfig.getoption("visualize"))
+                         visualize, dump)
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0

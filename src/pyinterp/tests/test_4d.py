@@ -9,10 +9,10 @@ import numpy as np
 import xarray as xr
 from ..backends import xarray as xr_backend
 from .. import Axis, Grid4D, TemporalAxis, bicubic
-from . import grid4d_path
+from . import grid4d_path, make_or_compare_reference
 
 
-def test_4d():
+def test_4d(pytestconfig):
     grid = xr_backend.Grid4D(xr.load_dataset(grid4d_path()).pressure,
                              increasing_axes=True)
 
@@ -40,6 +40,8 @@ def test_4d():
                                 level=z.ravel(),
                                 time=t.ravel()))
     assert isinstance(pressure, np.ndarray)
+    make_or_compare_reference("4d_pressure_bilinear.npy", pressure,
+                              pytestconfig.getoption("dump"))
 
     pressure = grid.bicubic(
         collections.OrderedDict(longitude=x.ravel(),
@@ -47,6 +49,8 @@ def test_4d():
                                 level=z.ravel(),
                                 time=t.ravel()))
     assert isinstance(pressure, np.ndarray)
+    make_or_compare_reference("4d_pressure_bicubic.npy", pressure,
+                              pytestconfig.getoption("dump"))
 
     with pytest.raises(ValueError):
         time = 5

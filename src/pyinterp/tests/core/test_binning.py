@@ -15,7 +15,7 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 from ... import core
-from .. import grid2d_path
+from .. import grid2d_path, make_or_compare_reference
 
 
 def plot(x, y, z, filename):
@@ -60,6 +60,8 @@ def test_binning2d_acessors():
 
 
 def test_binning2d_methods(pytestconfig):
+    visualize = pytestconfig.getoption('visualize')
+    dump = pytestconfig.getoption('dump')
     x_axis = core.Axis(np.linspace(-180, 180, 361 // 4), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 180 // 4))
 
@@ -71,24 +73,26 @@ def test_binning2d_methods(pytestconfig):
     count = binning.count()
     assert count.max() != 0
     simple_mean = np.ma.fix_invalid(binning.mean())
-    if HAVE_PLT and pytestconfig.getoption('visualize'):
+    if HAVE_PLT and visualize:
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
         plot(mx, my, simple_mean, "binning2d_simple.png")
 
     mx, my = np.meshgrid(x, y, indexing='ij')
     binning.clear()
     binning.push(mx.ravel(), my.ravel(), z.ravel(), simple=False)
+    make_or_compare_reference("binning2d_simple.npy", binning.mean(), dump)
 
     count = binning.count()
     assert count.max() != 0
     linear_mean = np.ma.fix_invalid(binning.mean())
-    if HAVE_PLT and pytestconfig.getoption('visualize'):
+    if HAVE_PLT and visualize:
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
         plot(mx, my, linear_mean, "binning2d_linear.png")
 
     assert not np.all(linear_mean == simple_mean)
 
     # Test of access to statistical variables
+    make_or_compare_reference("binning2d_linear.npy", binning.mean(), dump)
     assert isinstance(binning.kurtosis(), np.ndarray)
     assert isinstance(binning.max(), np.ndarray)
     assert isinstance(binning.min(), np.ndarray)

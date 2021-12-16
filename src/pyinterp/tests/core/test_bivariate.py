@@ -14,7 +14,7 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 from ... import core
-from .. import grid2d_path
+from .. import grid2d_path, make_or_compare_reference
 
 
 def plot(x, y, z, filename):
@@ -58,7 +58,7 @@ def test_grid2d_pickle():
         np.ma.fix_invalid(grid.array) == np.ma.fix_invalid(other.array))
 
 
-def run_bivariate(interpolator, filename, visualize):
+def run_bivariate(interpolator, filename, visualize, dump):
     """Testing an interpolation method."""
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
@@ -76,6 +76,7 @@ def run_bivariate(interpolator, filename, visualize):
                                 y.ravel(),
                                 interpolator,
                                 num_threads=1)
+    make_or_compare_reference(filename + ".npy", z1, dump)
 
     # The data from the mono-threads and multi-threads execution must be
     # identical.
@@ -100,12 +101,14 @@ def run_bivariate(interpolator, filename, visualize):
 
 def test_bivariate_interpolator(pytestconfig):
     """Testing of different interpolation methods"""
+    visualize = pytestconfig.getoption("visualize")
+    dump = pytestconfig.getoption("dump")
     a = run_bivariate(core.Nearest2D(), "mss_bivariate_nearest",
-                      pytestconfig.getoption("visualize"))
+                      visualize, dump)
     b = run_bivariate(core.Bilinear2D(), "mss_bivariate_bilinear",
-                      pytestconfig.getoption("visualize"))
+                      visualize, dump)
     c = run_bivariate(core.InverseDistanceWeighting2D(), "mss_bivariate_idw",
-                      pytestconfig.getoption("visualize"))
+                      visualize, dump)
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0
@@ -124,6 +127,8 @@ def test_bivariate_pickle():
 
 def test_spline_interpolator(pytestconfig):
     """Testing of different spline interpolation methods"""
+    visualize = pytestconfig.getoption("visualize")
+    dump = pytestconfig.getoption("dump")
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
@@ -138,16 +143,17 @@ def test_spline_interpolator(pytestconfig):
                              y.ravel(),
                              fitting_model="akima",
                              num_threads=1)
+    make_or_compare_reference("mss_spline_akima.npy", z1, dump)
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
-    if HAVE_PLT and pytestconfig.getoption("visualize"):
+    if HAVE_PLT and visualize:
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_akima.png")
 
     z0 = core.spline_float64(grid, x.ravel(), y.ravel())
     z0 = np.ma.fix_invalid(z0)
     assert not np.all(z1 == z0)
-    if HAVE_PLT and pytestconfig.getoption("visualize"):
+    if HAVE_PLT and visualize:
         plot(x, y, z0.reshape((len(lon), len(lat))), "mss_cspline.png")
 
     # Out of bounds interpolation

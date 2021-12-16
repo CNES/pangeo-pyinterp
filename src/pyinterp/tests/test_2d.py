@@ -10,7 +10,7 @@ import xarray as xr
 from ..backends import xarray as xr_backend
 from .. import core
 from .. import Axis, Grid2D, Grid3D, bicubic
-from . import grid2d_path
+from . import grid2d_path, make_or_compare_reference
 
 
 def test_axis_identifier():
@@ -35,7 +35,8 @@ def test_dims_from_data_array():
         xr_backend._dims_from_data_array(array, True, 2)
 
 
-def test_biavariate():
+def test_biavariate(pytestconfig):
+    dump = pytestconfig.getoption("dump")
     grid = xr_backend.Grid2D(xr.load_dataset(grid2d_path()).mss)
 
     assert isinstance(grid, xr_backend.Grid2D)
@@ -54,14 +55,17 @@ def test_biavariate():
 
     z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()))
     assert isinstance(z, np.ndarray)
+    make_or_compare_reference("bivariate_bilinear.npy", z, dump)
 
     z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                        interpolator="nearest")
     assert isinstance(z, np.ndarray)
+    make_or_compare_reference("bivariate_nearest.npy", z, dump)
 
     z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                        interpolator="inverse_distance_weighting")
     assert isinstance(z, np.ndarray)
+    make_or_compare_reference("idw.npy", z, dump)
 
     grid = xr_backend.Grid2D(xr.load_dataset(grid2d_path()).mss,
                              geodetic=False)
@@ -110,7 +114,8 @@ def test_biavariate():
     assert isinstance(z, np.ndarray)
 
 
-def test_bicubic():
+def test_bicubic(pytestconfig):
+    dump = pytestconfig.getoption("dump")
     grid = xr_backend.Grid2D(xr.load_dataset(grid2d_path()).mss)
 
     lon = np.arange(-180, 180, 1) + 1 / 3.0
@@ -127,6 +132,7 @@ def test_bicubic():
         other = grid.bicubic(collections.OrderedDict(lon=x.ravel(),
                                                      lat=y.ravel()),
                              fitting_model=fitting_model)
+        make_or_compare_reference(f"bicubic_{fitting_model}.npy", other, dump)
         assert (z - other).mean() != 0  # type: ignore
 
     with pytest.raises(ValueError):
@@ -172,7 +178,8 @@ def test_bicubic():
     assert isinstance(z, np.ndarray)
 
 
-def test_grid_2d_int8():
+def test_grid_2d_int8(pytestconfig):
+    dump = pytestconfig.getoption("dump")
     mss = grid2d_path()
 
     grid = xr.load_dataset(grid2d_path()).mss
@@ -189,4 +196,5 @@ def test_grid_2d_int8():
 
     z = interpolator(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                      method="nearest")
+    make_or_compare_reference("nearest_int8.npy", z, dump)
     assert np.mean(z) != 0
