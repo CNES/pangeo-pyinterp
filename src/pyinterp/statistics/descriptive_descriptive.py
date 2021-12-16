@@ -102,7 +102,8 @@ class DescriptiveStatistics:
         """
         if isinstance(other, DescriptiveStatistics):
             if type(self._instance) != type(other._instance):
-                raise TypeError("Descriptive statistics must have the same type")
+                raise TypeError(
+                    "Descriptive statistics must have the same type")
             self._instance += other._instance  # type: ignore
         else:
             raise TypeError("unsupported operand type(s) for +="
