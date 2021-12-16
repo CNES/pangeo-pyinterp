@@ -118,5 +118,8 @@ docs/source/readme.rst
 # Generated source files
 src/pyinterp/version.py
 
+# Generated files for regression testing
+src/pyinterp/tests/**/*.npy
+
 # Core libraries
 !src/pyinterp/core/lib
