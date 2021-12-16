@@ -36,19 +36,17 @@ constexpr auto get_u_interpolation_method(const std::string& method)
 /// Quadrivariate interpolation for a given point.
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
-inline auto _quadrivariate(const Grid4D<Type, AxisType>& grid,
-                           const Coordinate& x, const Coordinate& y,
-                           const AxisType& z, const Coordinate& u,
-                           const Axis<double>& x_axis,
-                           const Axis<double>& y_axis,
-                           const Axis<AxisType>& z_axis,
-                           const Axis<double>& u_axis,
-                           const Bivariate4D<Point, Coordinate>* interpolator,
-                           const detail::math::z_method_t<AxisType, Coordinate>&
-                               z_interpolation_method,
-                           const detail::math::z_method_t<AxisType, Coordinate>&
-                               u_interpolation_method,
-                           const bool bounds_error) -> Coordinate {
+inline auto _quadrivariate(
+    const Grid4D<Type, AxisType>& grid, const Coordinate& x,
+    const Coordinate& y, const AxisType& z, const Coordinate& u,
+    const Axis<double>& x_axis, const Axis<double>& y_axis,
+    const Axis<AxisType>& z_axis, const Axis<double>& u_axis,
+    const Bivariate4D<Point, Coordinate>* interpolator,
+    const detail::math::z_method_t<AxisType, Coordinate>&
+        z_interpolation_method,
+    const detail::math::z_method_t<Coordinate, Coordinate>&
+        u_interpolation_method,
+    const bool bounds_error) -> Coordinate {
   auto x_indexes = x_axis.find_indexes(x);
   auto y_indexes = y_axis.find_indexes(y);
   auto z_indexes = z_axis.find_indexes(z);
