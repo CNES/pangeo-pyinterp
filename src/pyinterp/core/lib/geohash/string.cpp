@@ -234,8 +234,12 @@ static auto mask_box(const geodetic::Box& box, const geodetic::Polygon& polygon,
                      const std::tuple<double, double>& lng_lat_err,
                      const uint32_t bits, const size_t num_threads)
     -> Matrix<bool> {
+  size_t lat_step;
+  size_t lon_step;
+  uint64_t hash_sw;
+
   // Calculate the grid properties
-  auto [hash_sw, lon_step, lat_step] = int64::grid_properties(box, bits);
+  std::tie(hash_sw, lon_step, lat_step) = int64::grid_properties(box, bits);
   const auto point_sw = int64::decode(hash_sw, bits, true);
 
   // Allocate the grid result
