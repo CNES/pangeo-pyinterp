@@ -109,12 +109,12 @@ constexpr auto trivariate(
 /// @param q111 Point value for the coordinate (x1, y1, z1)
 /// @return interpolated value at coordinate (x, y, z)
 template <template <class> class Point, typename T>
-inline auto trivariate(const Point<T>& p, const Point<T>& p0,
-                       const Point<T>& p1, const T& q000, const T& q010,
-                       const T& q100, const T& q110, const T& q001,
-                       const T& q011, const T& q101, const T& q111,
-                       const Bivariate<Point, T>* bivariate,
-                       const z_method_t<T, T>& interpolator = &linear<T, T>)
+constexpr auto trivariate(const Point<T>& p, const Point<T>& p0,
+                          const Point<T>& p1, const T& q000, const T& q010,
+                          const T& q100, const T& q110, const T& q001,
+                          const T& q011, const T& q101, const T& q111,
+                          const Bivariate<Point, T>* bivariate,
+                          const z_method_t<T, T>& interpolator = &linear<T, T>)
     -> T {
   auto z0 = bivariate->evaluate(p, p0, p1, q000, q010, q100, q110);
   auto z1 = bivariate->evaluate(p, p0, p1, q001, q011, q101, q111);

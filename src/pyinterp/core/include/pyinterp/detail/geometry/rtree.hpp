@@ -66,7 +66,7 @@ class RTree {
   ///
   /// @returns The box able to contain all values stored in the container or an
   /// invalid box if there are no values in the container.
-  virtual auto bounds() const
+  virtual inline auto bounds() const
       -> std::optional<geometry::BoxND<CoordinateType, N>> {
     if (empty()) {
       return {};
@@ -85,18 +85,20 @@ class RTree {
   [[nodiscard]] constexpr auto empty() const -> bool { return tree_->empty(); }
 
   /// Removes all values stored in the container.
-  inline void clear() { tree_->clear(); }
+  inline auto clear() -> void { tree_->clear(); }
 
   /// The tree is created using packing algorithm (The old data is erased before
   /// construction.)
   ///
   /// @param points
-  void packing(const std::vector<value_t> &points) { *tree_ = rtree_t(points); }
+  inline auto packing(const std::vector<value_t> &points) -> void {
+    *tree_ = rtree_t(points);
+  }
 
   /// Insert new data into the search tree
   ///
   /// @param point
-  void insert(const value_t &value) { tree_->insert(value); }
+  inline auto insert(const value_t &value) -> void { tree_->insert(value); }
 
   /// Search for the K nearest neighbors of a given point.
   ///

@@ -57,8 +57,8 @@ class Interpolate2D {
   Accelerator yacc_;
 
   /// Initializes the interpolation object
-  inline void init(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya,
-                   const Eigen::MatrixXd& za) noexcept {
+  inline auto init(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya,
+                   const Eigen::MatrixXd& za) noexcept -> void {
     xacc_.reset();
     xacc_.reset();
     gsl_spline2d_init(workspace_.get(), xa.data(), ya.data(), za.data(),

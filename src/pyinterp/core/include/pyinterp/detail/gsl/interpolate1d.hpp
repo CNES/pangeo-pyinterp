@@ -77,8 +77,8 @@ class Interpolate1D {
   Accelerator acc_;
 
   /// Initializes the interpolation object
-  inline void init(const Eigen::VectorXd& xa,
-                   const Eigen::VectorXd& ya) noexcept {
+  inline auto init(const Eigen::VectorXd& xa,
+                   const Eigen::VectorXd& ya) noexcept -> void {
     acc_.reset();
     gsl_spline_init(workspace_.get(), xa.data(), ya.data(), xa.size());
   }
