@@ -203,8 +203,7 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
     auto gil = pybind11::gil_scoped_release();
 
     for (const auto& item : boxes) {
-      auto [hash_sw, lon_step, lat_step] =
-          int64::grid_properties(item, bits);
+      auto [hash_sw, lon_step, lat_step] = int64::grid_properties(item, bits);
       const auto point_sw = int64::decode(hash_sw, bits, true);
 
       for (size_t lat = 0; lat < lat_step; ++lat) {
@@ -323,14 +322,14 @@ auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision,
   // Calculates the intersection mask between the polygon and the GeoHash grid
   // (multithreaded)
   auto masks = mask_boxes(boxes, polygon, lng_lat_err, bits, num_threads);
-  
+
   // Count the number of cells that are enclosed by the polygon
   auto size = size_t(0);
   for (const auto& item : masks) {
     size += static_cast<size_t>(
         std::count(item.data(), item.data() + item.size(), true));
   }
-  
+
   // Allocates the result array
   auto result = allocate_array(size, precision);
   auto* buffer = result.buffer();
