@@ -124,7 +124,13 @@ class StreamingHistogram:
         Returns:
             StreamingHistogram: Returns itself.
         """
-        self._instance += other
+        if isinstance(other, StreamingHistogram):
+            if type(self._instance) != type(other._instance):
+                raise TypeError("StreamingHistogram types must match")
+            self._instance += other._instance  # type: ignore
+        else:
+            raise TypeError("unsupported operand type(s) for +="
+                            f": '{type(self)}' and '{type(other)}'")
         return self
 
     def bins(self) -> np.ndarray:
