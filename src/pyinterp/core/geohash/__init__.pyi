@@ -21,7 +21,8 @@ def bounding_boxes(box: Optional[geodetic.Box] = ...,
 
 @overload
 def bounding_boxes(box: geodetic.Polygon = ...,
-                   precision: int = ...) -> numpy.ndarray:
+                   precision: int = ...,
+                   num_threads: int = ...) -> numpy.ndarray:
     ...
 
 
