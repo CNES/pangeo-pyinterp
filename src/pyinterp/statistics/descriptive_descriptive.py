@@ -100,7 +100,13 @@ class DescriptiveStatistics:
         Returns:
             DescriptiveStatistics: Returns itself.
         """
-        self._instance += other
+        if isinstance(other, DescriptiveStatistics):
+            if type(self._instance) != type(other._instance):
+                raise TypeError("Descriptive statistics must have the same type")
+            self._instance += other._instance  # type: ignore
+        else:
+            raise TypeError("unsupported operand type(s) for +="
+                            f": '{type(self)}' and '{type(other)}'")
         return self
 
     def count(self) -> np.ndarray:
