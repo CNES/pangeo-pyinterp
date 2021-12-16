@@ -13,7 +13,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 
 cmake_policy(SET CMP0048 NEW)
-project(pyinterp LANGUAGES C CXX)
+project(pyinterp LANGUAGES CXX)
 
 if (POLICY CMP0063)
   cmake_policy(SET CMP0063 NEW)
