@@ -14,6 +14,23 @@ from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 from . import grid2d_path, grid3d_path, grid4d_path
 
 
+def check_stats(ds, values, dtype, error):
+    """Check the statistics of a DescriptiveStatistics object."""
+    assert isinstance(ds, DescriptiveStatistics)
+    assert ds.count() == values.size
+    assert ds.max() == np.max(values)
+    assert ds.mean() == pytest.approx(np.mean(values), rel=error, abs=error)
+    assert ds.min() == np.min(values)
+    assert ds.sum_of_weights() == values.size
+    assert ds.sum() == pytest.approx(np.sum(values), rel=error, abs=error)
+    assert ds.var() == pytest.approx(np.var(values), rel=error, abs=error)
+    assert ds.std() == pytest.approx(np.std(values), rel=error, abs=error)
+    kurtosis = weighted_mom4(values, np.ones(values.size, dtype=dtype))
+    assert ds.kurtosis() == pytest.approx(kurtosis, abs=error)
+    skewness = weighted_mom3(values, np.ones(values.size, dtype=dtype))
+    assert ds.skewness() == pytest.approx(skewness, rel=error, abs=error)
+
+
 @pytest.mark.parametrize("dtype,error", [(np.float32, 1e-4),
                                          (np.float64, 1e-6)])
 def test_descriptive_statistics_1d(dtype, error):
@@ -21,35 +38,37 @@ def test_descriptive_statistics_1d(dtype, error):
     values = np.random.random_sample((10000, )).astype(dtype)
     ds = DescriptiveStatistics(values, dtype=dtype)
 
-    def check_stats(ds, values):
-        assert isinstance(ds, DescriptiveStatistics)
-        assert ds.count() == values.size
-        assert ds.max() == np.max(values)
-        assert ds.mean() == pytest.approx(np.mean(values),
-                                          rel=error,
-                                          abs=error)
-        assert ds.min() == np.min(values)
-        assert ds.sum_of_weights() == values.size
-        assert ds.sum() == pytest.approx(np.sum(values), rel=error, abs=error)
-        assert ds.var() == pytest.approx(np.var(values), rel=error, abs=error)
-        assert ds.std() == pytest.approx(np.std(values), rel=error, abs=error)
-        kurtosis = weighted_mom4(values, np.ones(values.size, dtype=dtype))
-        assert ds.kurtosis() == pytest.approx(kurtosis, abs=error)
-        skewness = weighted_mom3(values, np.ones(values.size, dtype=dtype))
-        assert ds.skewness() == pytest.approx(skewness, rel=error, abs=error)
-
-    check_stats(ds, values)
+    check_stats(ds, values, dtype, error)
 
     other = pickle.loads(pickle.dumps(ds))
-    check_stats(other, values)
+    check_stats(other, values, dtype, error)
 
     ds = DescriptiveStatistics(values, weights=np.ones(values.size))
-    check_stats(ds, values)
+    check_stats(ds, values, dtype, error)
 
     ds = DescriptiveStatistics(da.from_array(values, chunks=(1000, )))
-    check_stats(ds, values)
+    check_stats(ds, values, dtype, error)
 
     assert isinstance(str(ds), str)
+
+
+@pytest.mark.parametrize("dtype,error", [(np.float32, 1e-4),
+                                         (np.float64, 1e-6)])
+def test_descriptive_statistics_iadd(dtype, error):
+    v0 = np.random.random_sample((5000, )).astype(dtype)
+    ds = DescriptiveStatistics(v0, dtype=dtype)
+    v1 = np.random.random_sample((5000, )).astype(dtype)
+    ds += DescriptiveStatistics(v1, dtype=dtype)
+    check_stats(ds, np.concatenate((v0, v1)), dtype, error)
+
+    with pytest.raises(TypeError):
+        ds += v1
+
+    with pytest.raises(TypeError):
+        ds2 = DescriptiveStatistics(v0,
+                                    dtype=np.float32 if dtype == np.float64
+                                    else np.float64)  # type: ignore
+        ds += ds2
 
 
 def test_array():
@@ -70,6 +89,9 @@ def test_array():
     assert np.all(ds.kurtosis() == array["kurtosis"])
     assert np.all(ds.skewness() == array["skewness"])
 
+    with pytest.raises(ValueError):
+        ds = DescriptiveStatistics(values, axis=(0, ), dtype=np.dtype('S1'))
+
 
 def test_axis():
     """Test the computation of descriptive statistics for a reduced tensor."""
@@ -87,7 +109,7 @@ def test_axis():
         assert ds.var() == pytest.approx(np.var(values, axis=axis))
 
     check_axis(values, None)
-    check_axis(values, (1, ))
+    check_axis(values, 1)
     check_axis(values, (2, 3))
     check_axis(values, (1, 3, 5))
 

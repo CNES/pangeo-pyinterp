@@ -1,5 +1,8 @@
+import numpy
 import pickle
+import pyinterp
 import pytest
+import xarray
 
 from .. import GeoHash
 
@@ -39,3 +42,29 @@ def test_geohash():
     assert [str(item)
             for item in neighbors] == ["g", "u", "s", "k", "7", "6", "d", "f"]
     assert repr(instance) == "GeoHash(-22.5, 22.5, 1)"
+
+
+def test_geohash_grid():
+    grid = GeoHash.grid()
+    assert isinstance(grid, xarray.Dataset)
+    assert grid.dims['lon'] == 8
+    assert grid.dims['lat'] == 4
+    assert grid.geohash.shape == (4, 8)
+    assert grid.geohash.dtype == "S1"
+
+
+def test_geohash_converter():
+    codes = numpy.concatenate([
+        pyinterp.geohash.bounding_boxes(precision=2),
+        pyinterp.geohash.bounding_boxes(precision=2)
+    ])
+    data = numpy.ones(codes.shape, dtype=numpy.float32)
+
+    ds = pyinterp.geohash.to_xarray(codes, data)
+    assert isinstance(ds, xarray.DataArray)
+
+    with pytest.raises(ValueError):
+        pyinterp.geohash.to_xarray(codes, data[::5])
+
+    with pytest.raises(TypeError):
+        pyinterp.geohash.to_xarray(data, data)

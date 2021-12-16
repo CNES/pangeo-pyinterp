@@ -10,6 +10,7 @@ import xarray as xr
 from ..backends import xarray as xr_backend
 from .. import Axis, Grid4D, TemporalAxis, bicubic
 from . import grid4d_path, make_or_compare_reference
+import pyinterp
 
 
 def test_4d(pytestconfig):
@@ -74,6 +75,18 @@ def test_4d(pytestconfig):
                                               increasing_axes=True)
     assert grid.ndim, 4
     assert isinstance(grid.grid, xr_backend.Grid4D)
+
+
+def test_4d_swap_dim():
+    ds = xr.load_dataset(grid4d_path())
+    ds = ds.transpose('level', 'latitude', 'longitude', 'time')
+    grid = xr_backend.Grid4D(ds.pressure, increasing_axes=True)
+    assert isinstance(grid.z, pyinterp.TemporalAxis)
+    assert grid.array.shape == (12, 6, 2, 2)
+
+    ds = ds.assign_coords(level=ds.level.values.astype("datetime64[s]"))
+    with pytest.raises(ValueError):
+        grid = xr_backend.Grid4D(ds.pressure, increasing_axes=True)
 
 
 def test_4d_degraded():

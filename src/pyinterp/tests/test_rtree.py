@@ -84,3 +84,9 @@ def test_interpolate(pytestconfig):
         mesh.radial_basis_function(coordinates, rbf="X")
     with pytest.raises(ValueError):
         mesh.window_function(coordinates, radius=1, wf="cubic")
+    with pytest.raises(ValueError):
+        mesh.window_function(coordinates, radius=1, wf="parzen", arg=-1)
+    with pytest.raises(ValueError):
+        mesh.window_function(coordinates, radius=1, wf="lanczos", arg=0)
+    with pytest.raises(ValueError):
+        mesh.window_function(coordinates, radius=1, wf="blackman", arg=2)

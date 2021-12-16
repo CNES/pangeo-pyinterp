@@ -71,3 +71,29 @@ def test_3d():
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z = grid(dict(longitude=x.ravel(), latitude=y.ravel(), time=t.ravel()))
     assert isinstance(z, np.ndarray)
+
+
+def test_backend():
+    ds = xr.load_dataset(grid3d_path())
+    grid = xr_backend.Grid3D(ds.tcw, increasing_axes=True)
+    lon = np.arange(-180, 180, 10)
+    lat = np.arange(-90, 90, 10)
+    time = np.array([datetime.datetime(2002, 7, 2, 15, 0)],
+                    dtype="datetime64[ns]")
+    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+
+    z0 = grid.trivariate(
+        collections.OrderedDict(longitude=x.ravel(),
+                                latitude=y.ravel(),
+                                time=t.ravel()))
+
+    ds = ds.assign_coords(time=ds.time.astype("int64"))
+    grid = xr_backend.Grid3D(ds.tcw, increasing_axes=True)
+    time = time.astype("int64")
+    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+
+    z1 = grid.trivariate(
+        collections.OrderedDict(longitude=x.ravel(),
+                                latitude=y.ravel(),
+                                time=t.ravel()))
+    assert np.allclose(z0, z1)
