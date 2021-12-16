@@ -299,7 +299,7 @@ inline auto frame_index(const int64_t index, const int64_t size,
 }
 
 /// Checking the size of the filter window.
-inline auto check_windows_size(const std::string& name1, const uint32_t size)
+constexpr auto check_windows_size(const std::string& name1, const uint32_t size)
     -> void {
   if (size < 1) {
     throw std::invalid_argument(name1 + " must be >= 1");
@@ -308,8 +308,8 @@ inline auto check_windows_size(const std::string& name1, const uint32_t size)
 
 /// Checking the size of the filter window.
 template <typename... Args>
-inline auto check_windows_size(const std::string& name1, uint32_t size,
-                               Args... args) -> void {
+constexpr auto check_windows_size(const std::string& name1, uint32_t size,
+                                  Args... args) -> void {
   check_windows_size(name1, size);
   check_windows_size(args...);
 }

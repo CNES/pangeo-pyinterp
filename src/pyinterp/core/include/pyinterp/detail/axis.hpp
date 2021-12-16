@@ -152,14 +152,14 @@ class Axis {
   }
 
   /// Returns true if this axis represents a circle.
-  [[nodiscard]] inline constexpr auto is_circle() const noexcept -> bool {
+  [[nodiscard]] constexpr auto is_circle() const noexcept -> bool {
     return is_circle_;
   }
 
   /// Does the axis represent an angle?
   ///
   /// @return true if the axis represent an angle
-  [[nodiscard]] inline constexpr auto is_angle() const noexcept -> bool {
+  [[nodiscard]] constexpr auto is_angle() const noexcept -> bool {
     return math::Fill<T>::is_not(circle_);
   }
 
@@ -221,8 +221,9 @@ class Axis {
 
   /// Returns the normalized value of the coordinate with the respect to the
   /// axis definition.
-  [[nodiscard]] inline constexpr auto normalize_coordinate(
-      const T coordinate, const T min) const noexcept -> T {
+  [[nodiscard]] constexpr auto normalize_coordinate(const T coordinate,
+                                                    const T min) const noexcept
+      -> T {
     if (is_angle() && (coordinate >= min + circle_ || coordinate < min)) {
       return math::normalize_angle(coordinate, min, circle_);
     }

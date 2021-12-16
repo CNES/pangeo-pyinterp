@@ -35,7 +35,7 @@ inline auto has_bmi2() noexcept -> bool {
 
 // Spread out the 32 bits of x into 64 bits, where the bits of x occupy even
 // bit positions.
-inline constexpr auto spread(const uint32_t x) -> uint64_t {
+constexpr auto spread(const uint32_t x) -> uint64_t {
   auto result = static_cast<uint64_t>(x);
   result = (result | (result << 16U)) & 0X0000FFFF0000FFFFUL;
   result = (result | (result << 8U)) & 0X00FF00FF00FF00FFUL;
@@ -47,7 +47,7 @@ inline constexpr auto spread(const uint32_t x) -> uint64_t {
 
 // Squash the even bitlevels of X into a 32-bit word. Odd bitlevels of X are
 // ignored, and may take any value.
-inline constexpr auto squash(uint64_t x) -> uint32_t {
+constexpr auto squash(uint64_t x) -> uint32_t {
   x &= 0x5555555555555555UL;
   x = (x | (x >> 1U)) & 0X3333333333333333UL;
   x = (x | (x >> 2U)) & 0X0F0F0F0F0F0F0F0FUL;
@@ -59,8 +59,7 @@ inline constexpr auto squash(uint64_t x) -> uint32_t {
 
 // Interleave the bits of x and y. In the result, x and y occupy even and odd
 // bitlevels, respectively.
-inline constexpr auto interleave(const uint32_t x, const uint32_t y)
-    -> uint64_t {
+constexpr auto interleave(const uint32_t x, const uint32_t y) -> uint64_t {
   return spread(x) | (spread(y) << 1U);
 }
 
@@ -71,7 +70,7 @@ inline auto deinterleave(const uint64_t x) -> std::tuple<uint32_t, uint32_t> {
 }
 
 // Encode the position of x within the range -r to +r as a 32-bit integer.
-inline constexpr auto encode_range(const double x, const double r) -> uint32_t {
+constexpr auto encode_range(const double x, const double r) -> uint32_t {
   if (x >= r) {
     return std::numeric_limits<uint32_t>::max();
   }
@@ -80,7 +79,7 @@ inline constexpr auto encode_range(const double x, const double r) -> uint32_t {
 }
 
 // Decode the 32-bit range encoding X back to a value in the range -r to +r.
-inline constexpr auto decode_range(const uint32_t x, const double r) -> double {
+constexpr auto decode_range(const uint32_t x, const double r) -> double {
   if (x == std::numeric_limits<uint32_t>::max()) {
     return r;
   }
@@ -89,7 +88,7 @@ inline constexpr auto decode_range(const uint32_t x, const double r) -> double {
 }
 
 // Encode the position a 64-bit integer
-inline constexpr auto encode(const double lat, const double lon) -> uint64_t {
+constexpr auto encode(const double lat, const double lon) -> uint64_t {
   return interleave(encode_range(lat, 90), encode_range(lon, 180));
 }
 

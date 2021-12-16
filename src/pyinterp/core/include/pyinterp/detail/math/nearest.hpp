@@ -15,8 +15,8 @@ namespace pyinterp::detail::math {
 /// @param y0 Point value for the coordinate (x0)
 /// @param y1 Point value for the coordinate (x1)
 template <typename T, typename U = T>
-inline constexpr auto nearest(const T& x, const T& x0, const T& x1, const U& y0,
-                              const U& y1) noexcept -> U {
+constexpr auto nearest(const T& x, const T& x0, const T& x1, const U& y0,
+                       const U& y1) noexcept -> U {
   // we use a comparable distance, there's no need to calculate the square root
   // here
   auto dx0 = sqr(x0 - x);
