@@ -38,7 +38,9 @@ class Array {
   }
 
   /// Get the pointer to the raw memory
-  [[nodiscard]] inline auto buffer() const -> char* { return array_->data(); }
+  [[nodiscard]] constexpr auto buffer() const -> char* {
+    return array_->data();
+  }
 
   /// Creates the numpy array from the memory allocated in the C++ code without
   /// copying the data.

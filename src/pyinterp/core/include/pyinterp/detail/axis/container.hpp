@@ -47,7 +47,7 @@ class Abstract {
   auto operator=(Abstract&& rhs) noexcept -> Abstract& = default;
 
   /// Returns true if the data is arranged in ascending order.
-  [[nodiscard]] inline auto is_ascending() const -> bool {
+  [[nodiscard]] constexpr auto is_ascending() const -> bool {
     return is_ascending_;
   }
 
@@ -111,7 +111,7 @@ class Abstract {
   bool is_ascending_{true};
 
   /// Calculate if the data is arranged in ascending order.
-  [[nodiscard]] inline auto calculate_is_ascending() const -> bool {
+  [[nodiscard]] constexpr auto calculate_is_ascending() const -> bool {
     return size() < 2 ? true : coordinate_value(0) < coordinate_value(1);
   }
 };
@@ -152,45 +152,45 @@ class Undefined : public Abstract<T> {
   auto flip() -> void override {}
 
   /// @copydoc Abstract::coordinate_value(const int64_t) const
-  [[nodiscard]] inline auto coordinate_value(
+  [[nodiscard]] constexpr auto coordinate_value(
       const int64_t /* index */) const noexcept -> T override {
     return math::Fill<T>::value();
   }
 
   /// @copydoc Abstract::min_value() const
-  [[nodiscard]] inline auto min_value() const noexcept -> T override {
+  [[nodiscard]] constexpr auto min_value() const noexcept -> T override {
     return coordinate_value(0);
   }
 
   /// @copydoc Abstract::max_value() const
-  [[nodiscard]] inline auto max_value() const noexcept -> T override {
+  [[nodiscard]] constexpr auto max_value() const noexcept -> T override {
     return coordinate_value(0);
   }
 
   /// @copydoc Abstract::size() const
-  [[nodiscard]] inline auto size() const noexcept -> int64_t override {
+  [[nodiscard]] constexpr auto size() const noexcept -> int64_t override {
     return 0;
   }
 
   /// @copydoc Abstract::front() const
-  [[nodiscard]] inline auto front() const noexcept -> T override {
+  [[nodiscard]] constexpr auto front() const noexcept -> T override {
     return coordinate_value(0);
   }
 
   /// @copydoc Abstract::back() const
-  [[nodiscard]] inline auto back() const noexcept -> T override {
+  [[nodiscard]] constexpr auto back() const noexcept -> T override {
     return coordinate_value(0);
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  inline auto find_index(T /* coordinate */,
-                         bool /* bounded */) const  /// NOLINT
+  constexpr auto find_index(T /* coordinate */,
+                            bool /* bounded */) const  /// NOLINT
       noexcept -> int64_t override {
     return -1;
   }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
-  inline auto operator==(const Abstract<T>& rhs) const noexcept
+  constexpr auto operator==(const Abstract<T>& rhs) const noexcept
       -> bool override {
     return dynamic_cast<const Undefined<T>*>(&rhs) != nullptr;
   }
@@ -258,37 +258,39 @@ class Irregular : public Abstract<T> {
   };
 
   /// @copydoc Abstract::coordinate_value(const int64_t) const
-  [[nodiscard]] inline auto coordinate_value(const int64_t index) const
+  [[nodiscard]] constexpr auto coordinate_value(const int64_t index) const
       -> T override {
     return points_[index];
   }
 
   /// @copydoc Abstract::min_value() const
-  [[nodiscard]] inline auto min_value() const -> T override {
+  [[nodiscard]] constexpr auto min_value() const -> T override {
     return this->is_ascending_ ? front() : back();
   }
 
   /// @copydoc Abstract::max_value() const
-  [[nodiscard]] inline auto max_value() const -> T override {
+  [[nodiscard]] constexpr auto max_value() const -> T override {
     return this->is_ascending_ ? back() : front();
   }
 
   /// @copydoc Abstract::size() const
-  [[nodiscard]] inline auto size() const noexcept -> int64_t override {
+  [[nodiscard]] constexpr auto size() const noexcept -> int64_t override {
     return points_.size();
   }
 
   /// @copydoc Abstract::front() const
-  [[nodiscard]] inline auto front() const -> T override { return points_[0]; }
+  [[nodiscard]] constexpr auto front() const -> T override {
+    return points_[0];
+  }
 
   /// @copydoc Abstract::back() const
-  [[nodiscard]] inline auto back() const -> T override {
+  [[nodiscard]] constexpr auto back() const -> T override {
     return points_[points_.size() - 1];
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] inline auto find_index(const T coordinate,
-                                       const bool bounded) const
+  [[nodiscard]] constexpr auto find_index(const T coordinate,
+                                          const bool bounded) const
       -> int64_t override {
     auto high = size();
     if (this->is_ascending_) {
@@ -554,7 +556,8 @@ class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
       : AbstractRegular<T>(start, stop, num), step_2_(this->step_ >> 1) {}
 
   /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] auto find_index(T coordinate, bool bounded) const noexcept
+  [[nodiscard]] constexpr auto find_index(T coordinate,
+                                          bool bounded) const noexcept
       -> int64_t override {
     auto index =
         static_cast<int64_t>(round((coordinate - this->start_), this->step_));
@@ -576,8 +579,8 @@ class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
 
   /// Divide positive or negative dividend by positive divisor and round to
   /// closest integer
-  [[nodiscard]] inline auto round(int64_t numerator, int64_t denominator) const
-      -> int64_t {
+  [[nodiscard]] constexpr auto round(int64_t numerator,
+                                     int64_t denominator) const -> int64_t {
     return numerator > 0 ? (numerator + step_2_) / denominator
                          : (numerator - step_2_) / denominator;
   }

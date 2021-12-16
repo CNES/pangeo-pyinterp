@@ -44,7 +44,7 @@ class System {
   ///
   /// @param semi_major_axis  Semi-major axis of ellipsoid, in meters
   /// @param flattening  Flattening of ellipsoid
-  inline System(double semi_major_axis, double flattening) noexcept
+  constexpr System(double semi_major_axis, double flattening) noexcept
       : semi_major_axis_(semi_major_axis), flattening_(flattening) {}
 
   /// Gets the Semi-major axis of the defined ellipsoid

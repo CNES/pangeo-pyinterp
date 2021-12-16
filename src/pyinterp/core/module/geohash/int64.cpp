@@ -18,7 +18,7 @@ namespace py = pybind11;
 namespace geohash = pyinterp::geohash;
 
 // Checking the value defining the precision of a geohash.
-static inline auto check_range(uint32_t precision) -> void {
+constexpr static auto check_range(uint32_t precision) -> void {
   if (precision < 1 || precision > 64) {
     throw std::invalid_argument("precision must be within [1, 64]");
   }

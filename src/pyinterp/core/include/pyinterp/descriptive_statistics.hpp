@@ -148,7 +148,7 @@ class DescriptiveStatistics {
   std::vector<pybind11::ssize_t> shape_{};
 
   /// Returns the total number of elements in the array.
-  [[nodiscard]] inline auto size() const -> pybind11::ssize_t {
+  [[nodiscard]] constexpr auto size() const -> pybind11::ssize_t {
     return std::accumulate(shape_.begin(), shape_.end(),
                            static_cast<pybind11::ssize_t>(1),
                            std::multiplies<>());

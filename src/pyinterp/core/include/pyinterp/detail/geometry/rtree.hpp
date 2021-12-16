@@ -77,12 +77,12 @@ class RTree {
   /// Returns the number of points of this mesh
   ///
   /// @return the number of points
-  [[nodiscard]] inline auto size() const -> size_t { return tree_->size(); }
+  [[nodiscard]] constexpr auto size() const -> size_t { return tree_->size(); }
 
   /// Query if the container is empty.
   ///
   /// @return true if the container is empty.
-  [[nodiscard]] inline auto empty() const -> bool { return tree_->empty(); }
+  [[nodiscard]] constexpr auto empty() const -> bool { return tree_->empty(); }
 
   /// Removes all values stored in the container.
   inline void clear() { tree_->clear(); }

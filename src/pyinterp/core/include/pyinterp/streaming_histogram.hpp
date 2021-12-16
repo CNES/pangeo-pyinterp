@@ -193,7 +193,7 @@ class StreamingHistogram {
   std::vector<pybind11::ssize_t> shape_{};
 
   /// Returns the total number of elements in the array.
-  [[nodiscard]] static inline auto shape_size(
+  [[nodiscard]] static constexpr auto shape_size(
       const std::vector<pybind11::ssize_t>& shape) -> pybind11::ssize_t {
     return std::accumulate(shape.begin(), shape.end(),
                            static_cast<pybind11::ssize_t>(1),

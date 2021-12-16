@@ -124,27 +124,29 @@ class FractionalSeconds {
   }
 
   /// Gets the number of seconds elpased since 1970
-  [[nodiscard]] inline auto seconds(const int64_t datetime64) const noexcept
+  [[nodiscard]] constexpr auto seconds(const int64_t datetime64) const noexcept
       -> int64_t {
     return datetime64 / scale_;
   }
 
   /// Gets the fractional part of the date
-  [[nodiscard]] inline auto fractional(const int64_t datetime64) const noexcept
-      -> int64_t {
+  [[nodiscard]] constexpr auto fractional(
+      const int64_t datetime64) const noexcept -> int64_t {
     return datetime64 % scale_;
   }
 
   /// Get the number of microseconds contained in the date.
-  [[nodiscard]] inline auto microsecond(const int64_t datetime64) const noexcept
-      -> int64_t {
+  [[nodiscard]] constexpr auto microsecond(
+      const int64_t datetime64) const noexcept -> int64_t {
     auto frac = fractional(datetime64);
     return scale_ <= 1'000'000 ? (1'000'000 / scale_) * frac
                                : frac / (scale_ / 1'000'000);
   }
 
   /// Get the numpy scale
-  [[nodiscard]] inline auto scale() const noexcept -> int64_t { return scale_; }
+  [[nodiscard]] constexpr auto scale() const noexcept -> int64_t {
+    return scale_;
+  }
 
  private:
   int64_t scale_;

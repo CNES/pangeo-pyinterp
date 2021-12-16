@@ -24,16 +24,16 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
       : detail::geometry::GeographicPoint2D<double>(lon, lat) {}
 
   /// Get longitude value in degrees
-  [[nodiscard]] inline auto lon() const -> double { return this->get<0>(); }
+  [[nodiscard]] constexpr auto lon() const -> double { return this->get<0>(); }
 
   /// Get latitude value in degrees
-  [[nodiscard]] inline auto lat() const -> double { return this->get<1>(); }
+  [[nodiscard]] constexpr auto lat() const -> double { return this->get<1>(); }
 
   /// Set longitude value in degrees
-  inline void lon(double const v) { this->set<0>(v); }
+  constexpr void lon(double const v) { this->set<0>(v); }
 
   /// Set latitude value in degrees
-  inline void lat(double const v) { this->set<1>(v); }
+  constexpr void lat(double const v) { this->set<1>(v); }
 
   /// Calculate the distance between the two points
   [[nodiscard]] auto distance(const Point& other,

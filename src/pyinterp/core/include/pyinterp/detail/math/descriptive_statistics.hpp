@@ -41,10 +41,12 @@ class DescriptiveStatistics {
   explicit operator const Accumulators<T>&() const { return acc_; }
 
   /// Reset the accumulator
-  void clear() noexcept { std::memset(&acc_, 0, sizeof(Accumulators<T>)); }
+  constexpr auto clear() noexcept -> void {
+    std::memset(&acc_, 0, sizeof(Accumulators<T>));
+  }
 
   /// Push a new value into the accumulator
-  void operator()(const T& value) noexcept {
+  constexpr auto operator()(const T& value) noexcept -> void {
     const auto r = acc_.sum_of_weights;
 
     if (r == 0) {
@@ -79,7 +81,7 @@ class DescriptiveStatistics {
   }
 
   /// push a new value into the accumulator associated with a weight
-  void operator()(const T& value, const T& weight) noexcept {
+  constexpr auto operator()(const T& value, const T& weight) noexcept -> void {
     if (acc_.sum_of_weights == 0) {
       *this = std::move(DescriptiveStatistics(value, weight));
     } else {
@@ -88,37 +90,38 @@ class DescriptiveStatistics {
   }
 
   /// Returns the number of samples pushed into the accumulator.
-  [[nodiscard]] inline auto count() const noexcept -> uint64_t {
+  [[nodiscard]] constexpr auto count() const noexcept -> uint64_t {
     return acc_.count;
   }
 
   /// Returns the sum of weights pushed into the accumulator.
-  [[nodiscard]] inline auto sum_of_weights() const noexcept -> const T& {
+  [[nodiscard]] constexpr auto sum_of_weights() const noexcept -> const T& {
     return acc_.sum_of_weights;
   }
 
   /// Returns the sum of the values pushed into the accumulator.
-  [[nodiscard]] inline auto sum() const noexcept -> const T& {
+  [[nodiscard]] constexpr auto sum() const noexcept -> const T& {
     return acc_.sum;
   }
 
   /// Returns the mean of the samples
-  [[nodiscard]] inline auto mean() const noexcept -> T {
+  [[nodiscard]] constexpr auto mean() const noexcept -> T {
     return acc_.count == 0 ? std::numeric_limits<T>::quiet_NaN() : acc_.mean;
   }
 
   /// Returns the min of the samples
-  [[nodiscard]] inline auto min() const noexcept -> T {
+  [[nodiscard]] constexpr auto min() const noexcept -> T {
     return acc_.count == 0 ? std::numeric_limits<T>::quiet_NaN() : acc_.min;
   }
 
   /// Returns the max of the samples
-  [[nodiscard]] inline auto max() const noexcept -> T {
+  [[nodiscard]] constexpr auto max() const noexcept -> T {
     return acc_.count == 0 ? std::numeric_limits<T>::quiet_NaN() : acc_.max;
   }
 
   /// Returns the variance of the samples
-  [[nodiscard]] inline auto variance(const int ddof = 0) const noexcept -> T {
+  [[nodiscard]] constexpr auto variance(const int ddof = 0) const noexcept
+      -> T {
     const auto cardinal = acc_.sum_of_weights - ddof;
     return cardinal <= 0 ? std::numeric_limits<T>::quiet_NaN()
                          : acc_.mom2 / cardinal;
@@ -137,7 +140,7 @@ class DescriptiveStatistics {
   }
 
   /// Returns the kurtosis of the samples
-  [[nodiscard]] inline auto kurtosis() const noexcept -> T {
+  [[nodiscard]] constexpr auto kurtosis() const noexcept -> T {
     return acc_.mom2 == 0
                ? std::numeric_limits<T>::quiet_NaN()
                : acc_.sum_of_weights * acc_.mom4 / (acc_.mom2 * acc_.mom2) -
@@ -145,7 +148,7 @@ class DescriptiveStatistics {
   }
 
   /// Combines two accumulators.
-  auto operator+=(const DescriptiveStatistics& rhs) noexcept
+  constexpr auto operator+=(const DescriptiveStatistics& rhs) noexcept
       -> DescriptiveStatistics& {
     auto w = acc_.sum_of_weights + rhs.acc_.sum_of_weights;
 

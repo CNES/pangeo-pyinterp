@@ -118,7 +118,8 @@ class Axis {
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
   /// @throw std::out_of_range if index in not in range [0, size() - 1].
-  [[nodiscard]] inline auto coordinate_value(const int64_t index) const -> T {
+  [[nodiscard]] constexpr auto coordinate_value(const int64_t index) const
+      -> T {
     if (index < 0 || index >= size()) {
       throw std::out_of_range("axis index out of range");
     }
@@ -128,26 +129,26 @@ class Axis {
   /// Get the minimum coordinate value.
   ///
   /// @return minimum coordinate value
-  [[nodiscard]] inline auto min_value() const -> T {
+  [[nodiscard]] constexpr auto min_value() const -> T {
     return axis_->min_value();
   }
 
   /// Get the maximum coordinate value.
   ///
   /// @return maximum coordinate value
-  [[nodiscard]] inline auto max_value() const -> T {
+  [[nodiscard]] constexpr auto max_value() const -> T {
     return axis_->max_value();
   }
 
   /// Get the number of values for this axis
   ///
   /// @return the number of values
-  [[nodiscard]] inline auto size() const noexcept -> int64_t {
+  [[nodiscard]] constexpr auto size() const noexcept -> int64_t {
     return axis_->size();
   }
 
   /// Check if this axis values are spaced regularly
-  [[nodiscard]] inline auto is_regular() const noexcept -> bool {
+  [[nodiscard]] constexpr auto is_regular() const noexcept -> bool {
     return dynamic_cast<axis::container::Regular<T>*>(axis_.get()) != nullptr;
   }
 
@@ -166,17 +167,17 @@ class Axis {
   /// Get the first value of this axis
   ///
   /// @return the first value
-  [[nodiscard]] inline auto front() const -> T { return axis_->front(); }
+  [[nodiscard]] constexpr auto front() const -> T { return axis_->front(); }
 
   /// Get the last value of this axis
   ///
   /// @return the last value
-  [[nodiscard]] inline auto back() const -> T { return axis_->back(); }
+  [[nodiscard]] constexpr auto back() const -> T { return axis_->back(); }
 
   /// Test if the data is sorted in ascending order.
   ///
   /// @return True if the data is sorted in ascending order.
-  [[nodiscard]] inline auto is_ascending() const -> bool {
+  [[nodiscard]] constexpr auto is_ascending() const -> bool {
     return axis_->is_ascending();
   }
 
@@ -187,7 +188,7 @@ class Axis {
   ///
   /// @return increment value if is_regular()
   /// @throw std::logic_error if this instance does not represent a regular axis
-  [[nodiscard]] inline auto increment() const -> T {
+  [[nodiscard]] constexpr auto increment() const -> T {
     auto ptr = dynamic_cast<axis::container::Regular<T>*>(axis_.get());
     if (ptr == nullptr) {
       throw std::logic_error("this axis is not regular.");
@@ -199,7 +200,7 @@ class Axis {
   ///
   /// @param rhs an other axis to compare
   /// @return if axis are equals
-  inline auto operator==(Axis const& rhs) const -> bool {
+  constexpr auto operator==(Axis const& rhs) const -> bool {
     return *axis_ == *rhs.axis_ && is_circle_ == rhs.is_circle_;
   }
 
@@ -207,7 +208,7 @@ class Axis {
   ///
   /// @param rhs an other axis to compare
   /// @return if axis are equals
-  inline auto operator!=(Axis const& rhs) const -> bool {
+  constexpr auto operator!=(Axis const& rhs) const -> bool {
     return !this->operator==(rhs);
   }
 
@@ -215,7 +216,7 @@ class Axis {
   ///
   /// @param index which coordinate. Between 0 and size()-1 inclusive
   /// @return coordinate value
-  inline auto operator()(const int64_t index) const -> T {
+  constexpr auto operator()(const int64_t index) const -> T {
     return axis_->coordinate_value(index);
   }
 
@@ -233,7 +234,7 @@ class Axis {
   /// Returns the normalized value with respect to the axis definition. This
   /// means if the axis defines a circle, this method returns a value within the
   /// interval [font(), back()] otherwise it returns the value supplied.
-  [[nodiscard]] inline auto normalize_coordinate(
+  [[nodiscard]] constexpr auto normalize_coordinate(
       const T coordinate) const noexcept -> T {
     return normalize_coordinate(coordinate, axis_->min_value());
   }
@@ -246,8 +247,8 @@ class Axis {
   /// is located before, or the value of the last element of this container if
   /// the requested value is located after.
   /// @return index of the grid point containing it or -1 if outside grid area
-  [[nodiscard]] inline auto find_index(const T coordinate,
-                                       const bool bounded) const -> int64_t {
+  [[nodiscard]] constexpr auto find_index(const T coordinate,
+                                          const bool bounded) const -> int64_t {
     return axis_->find_index(normalize_coordinate(coordinate), bounded);
   }
 
@@ -263,8 +264,8 @@ class Axis {
   /// is located before, or the value of the last element of this container if
   /// the requested value is located after.
   /// @return index of the grid point containing it or -1 if outside grid area
-  [[nodiscard]] inline auto find_nearest_index(T coordinate,
-                                               const bool bounded) const
+  [[nodiscard]] constexpr auto find_nearest_index(T coordinate,
+                                                  const bool bounded) const
       -> int64_t {
     coordinate = normalize_coordinate(coordinate);
     auto result = axis_->find_index(coordinate, bounded);
@@ -491,7 +492,7 @@ class Axis {
   }
 
   /// Put longitude into the range [0, circle_] degrees.
-  void normalize_longitude(Eigen::Ref<Vector<T>>& points) {
+  auto normalize_longitude(Eigen::Ref<Vector<T>>& points) -> void {
     auto monotonic = true;
     auto ascending = points.size() < 2 ? true : points[0] < points[1];
 

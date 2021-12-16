@@ -83,9 +83,9 @@ struct Bilinear : public Bivariate<Point, T> {
   auto operator=(Bilinear&& rhs) noexcept -> Bilinear& = default;
 
   /// Performs the bilinear interpolation
-  inline auto evaluate(const Point<T>& p, const Point<T>& p0,
-                       const Point<T>& p1, const T& q00, const T& q01,
-                       const T& q10, const T& q11) const -> T final {
+  constexpr auto evaluate(const Point<T>& p, const Point<T>& p0,
+                          const Point<T>& p1, const T& q00, const T& q01,
+                          const T& q10, const T& q11) const -> T final {
     auto dx = boost::geometry::get<0>(p1) - boost::geometry::get<0>(p0);
     auto dy = boost::geometry::get<1>(p1) - boost::geometry::get<1>(p0);
     auto t = (boost::geometry::get<0>(p) - boost::geometry::get<0>(p0)) / dx;

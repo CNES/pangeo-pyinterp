@@ -104,7 +104,8 @@ class CoordsXY {
 
   /// Normalizes the angle with respect to the first value of the X axis of this
   /// array.
-  [[nodiscard]] inline auto normalize_angle(const double xi) const -> double {
+  [[nodiscard]] constexpr auto normalize_angle(const double xi) const
+      -> double {
     return math::normalize_angle(xi, (*x_)(0), 360.0);
   }
 

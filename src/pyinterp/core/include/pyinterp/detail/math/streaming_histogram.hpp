@@ -45,10 +45,12 @@ class BinDifferences {
   }
 
   /// Get the minimum difference between bins.
-  inline auto diff() const noexcept -> T { return diff_; }
+  constexpr auto diff() const noexcept -> T { return diff_; }
 
   /// Get the index of the bin with the minimum difference.
-  [[nodiscard]] inline auto index() const noexcept -> size_t { return index_; }
+  [[nodiscard]] constexpr auto index() const noexcept -> size_t {
+    return index_;
+  }
 
  private:
   std::function<T(const Bin<T>&, const Bin<T>&)> calculate_;
@@ -56,18 +58,18 @@ class BinDifferences {
   T diff_{std::numeric_limits<T>::max()};
 
   /// Simple difference calculation.
-  static inline auto simple(const Bin<T>& lhs, const Bin<T>& rhs) -> T {
+  constexpr static auto simple(const Bin<T>& lhs, const Bin<T>& rhs) -> T {
     return lhs.value - rhs.value;
   }
 
   /// Weighted difference calculation.
-  static inline auto weighted(const Bin<T>& lhs, const Bin<T>& rhs) -> T {
+  constexpr static auto weighted(const Bin<T>& lhs, const Bin<T>& rhs) -> T {
     return BinDifferences::simple(lhs, rhs) *
            std::log(1e-5 + std::min(lhs.weight, rhs.weight));
   }
 
   /// Get the difference between the provided bins.
-  inline auto calculate(const Bin<T>& lhs, const Bin<T>& rhs) const -> T {
+  constexpr auto calculate(const Bin<T>& lhs, const Bin<T>& rhs) const -> T {
     return calculate_(lhs, rhs);
   }
 };
@@ -165,17 +167,17 @@ class StreamingHistogram {
   }
 
   /// Returns the number of samples pushed into the histogram.
-  [[nodiscard]] inline auto count() const -> uint64_t { return count_; }
+  [[nodiscard]] constexpr auto count() const -> uint64_t { return count_; }
 
   /// Returns the sum of weights pushed into the histogram.
-  [[nodiscard]] inline auto sum_of_weights() const -> T {
+  [[nodiscard]] constexpr auto sum_of_weights() const -> T {
     return std::accumulate(
         bins_.begin(), bins_.end(), T(0),
         [](T a, const Bin<T>& b) -> T { return a + b.weight; });
   }
 
   /// Returns the number of bins in the histogram.
-  [[nodiscard]] inline auto size() const noexcept -> size_t {
+  [[nodiscard]] constexpr auto size() const noexcept -> size_t {
     return bins_.size();
   }
 
@@ -233,12 +235,12 @@ class StreamingHistogram {
   }
 
   /// Returns the minimum of the distribution.
-  [[nodiscard]] auto min() const noexcept -> T {
+  [[nodiscard]] constexpr auto min() const noexcept -> T {
     return count_ != 0U ? min_ : std::numeric_limits<T>::quiet_NaN();
   }
 
   /// Returns the maximum of the distribution.
-  [[nodiscard]] auto max() const noexcept -> T {
+  [[nodiscard]] constexpr auto max() const noexcept -> T {
     return count_ != 0U ? max_ : std::numeric_limits<T>::quiet_NaN();
   }
 

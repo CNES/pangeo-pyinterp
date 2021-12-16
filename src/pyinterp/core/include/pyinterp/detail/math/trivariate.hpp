@@ -81,7 +81,7 @@ constexpr auto get_z_interpolation_method(
 /// @return interpolated value at coordinate (x, y, z)
 template <template <class> class Point = geometry::TemporalEquatorial2D,
           typename T>
-inline auto trivariate(
+constexpr auto trivariate(
     const geometry::TemporalEquatorial2D<T>& p,
     const geometry::TemporalEquatorial2D<T>& p0,
     const geometry::TemporalEquatorial2D<T>& p1, const T& q000, const T& q010,
