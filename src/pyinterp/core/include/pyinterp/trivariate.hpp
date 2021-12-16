@@ -35,16 +35,9 @@ inline auto _trivariate(const Grid3D<Type, AxisType>& grid, const Coordinate& x,
   auto z_indexes = z_axis.find_indexes(z);
 
   if (x_indexes.has_value() && y_indexes.has_value() && z_indexes.has_value()) {
-    int64_t ix0;
-    int64_t ix1;
-    int64_t iy0;
-    int64_t iy1;
-    int64_t iz0;
-    int64_t iz1;
-
-    std::tie(ix0, ix1) = *x_indexes;
-    std::tie(iy0, iy1) = *y_indexes;
-    std::tie(iz0, iz1) = *z_indexes;
+    auto [ix0, ix1] = *x_indexes;
+    auto [iy0, iy1] = *y_indexes;
+    auto [iz0, iz1] = *z_indexes;
 
     // The fourth coordinate is not used by the 3D interpolator.
     auto x0 = x_axis(ix0);

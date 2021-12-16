@@ -100,9 +100,7 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
 inline auto decode_bounding_box(const char* const hash, const size_t count,
                                 uint32_t* precision = nullptr)
     -> geodetic::Box {
-  uint64_t integer_encoded;
-  uint32_t chars;
-  std::tie(integer_encoded, chars) = base32.decode(hash, count);
+  auto [integer_encoded, chars] = base32.decode(hash, count);
   if (precision != nullptr) {
     *precision = chars;
   }
@@ -143,9 +141,7 @@ auto decode(const pybind11::array& hash, const bool round)
 
 // ---------------------------------------------------------------------------
 auto neighbors(const char* const hash, const size_t count) -> pybind11::array {
-  uint64_t integer_encoded;
-  uint32_t precision;
-  std::tie(integer_encoded, precision) = base32.decode(hash, count);
+  auto [integer_encoded, precision] = base32.decode(hash, count);
 
   const auto integers = int64::neighbors(integer_encoded, precision * 5);
   auto array = allocate_array(integers.size(), precision);
@@ -207,11 +203,7 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
     auto gil = pybind11::gil_scoped_release();
 
     for (const auto& item : boxes) {
-      size_t lat_step;
-      size_t lon_step;
-      uint64_t hash_sw;
-
-      std::tie(hash_sw, lon_step, lat_step) =
+      auto [hash_sw, lon_step, lat_step] =
           int64::grid_properties(item, bits);
       const auto point_sw = int64::decode(hash_sw, bits, true);
 
@@ -242,12 +234,8 @@ static auto mask_box(const geodetic::Box& box, const geodetic::Polygon& polygon,
                      const std::tuple<double, double>& lng_lat_err,
                      const uint32_t bits, const size_t num_threads)
     -> Matrix<bool> {
-  size_t lat_step;
-  size_t lon_step;
-  uint64_t hash_sw;
-
   // Calculate the grid properties
-  std::tie(hash_sw, lon_step, lat_step) = int64::grid_properties(box, bits);
+  auto [hash_sw, lon_step, lat_step] = int64::grid_properties(box, bits);
   const auto point_sw = int64::decode(hash_sw, bits, true);
 
   // Allocate the grid result
@@ -352,11 +340,7 @@ auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision,
       auto box = boxes[ix];
       auto mask = masks[ix];
 
-      size_t lat_step;
-      size_t lon_step;
-      uint64_t hash_sw;
-
-      std::tie(hash_sw, lon_step, lat_step) = int64::grid_properties(box, bits);
+      auto [hash_sw, lon_step, lat_step] = int64::grid_properties(box, bits);
       const auto point_sw = int64::decode(hash_sw, bits, true);
       for (size_t lat = 0; lat < lat_step; ++lat) {
         const auto lat_shift =

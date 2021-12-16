@@ -192,10 +192,7 @@ inline constexpr auto sincosd(const T& x) noexcept -> std::tuple<T, T> {
 /// @return tan(x).
 template <typename T>
 inline constexpr auto tand(const T& x) noexcept -> T {
-  T sinx{};
-  T cosx{};
-
-  std::tie(sinx, cosx) = sincosd(x);
+  auto [sinx, cosx] = sincosd(x);
   return cosx != 0 ? sinx / cosx : (sinx < 0 ? -HUGE_VAL : HUGE_VAL);
 }
 

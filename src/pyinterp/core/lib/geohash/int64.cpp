@@ -264,11 +264,9 @@ auto bounding_box(const uint64_t hash, const uint32_t precision)
 // ---------------------------------------------------------------------------
 auto neighbors(const uint64_t hash, const uint32_t precision)
     -> Eigen::Matrix<uint64_t, 8, 1> {
-  double lat_delta;
-  double lon_delta;
   auto box = bounding_box(hash, precision);
   auto center = box.centroid();
-  std::tie(lon_delta, lat_delta) = box.delta(false);
+  auto [lon_delta, lat_delta] = box.delta(false);
 
   return (Eigen::Matrix<uint64_t, 8, 1>() <<
               // N
@@ -328,11 +326,7 @@ auto bounding_boxes(const geodetic::Box& box, const uint32_t precision)
   auto ix = int64_t(0);
 
   for (const auto& item : boxes) {
-    size_t lat_step;
-    size_t lon_step;
-    uint64_t hash_sw;
-
-    std::tie(hash_sw, lon_step, lat_step) = grid_properties(item, precision);
+    auto [hash_sw, lon_step, lat_step] = grid_properties(item, precision);
     auto point_sw = decode(hash_sw, precision, true);
 
     for (size_t lat = 0; lat < lat_step; ++lat) {

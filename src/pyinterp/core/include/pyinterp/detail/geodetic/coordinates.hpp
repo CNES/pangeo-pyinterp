@@ -114,13 +114,8 @@ class Coordinates {
   template <typename T>
   inline auto lla_to_ecef(const geometry::EquatorialPoint3D<T>& lla)
       const noexcept -> geometry::Point3D<T> {
-    double siny;
-    double cosy;
-    double sinx;
-    double cosx;
-
-    std::tie(sinx, cosx) = math::sincosd(boost::geometry::get<0>(lla));
-    std::tie(siny, cosy) = math::sincosd(boost::geometry::get<1>(lla));
+    auto [sinx, cosx] = math::sincosd(boost::geometry::get<0>(lla));
+    auto [siny, cosy] = math::sincosd(boost::geometry::get<1>(lla));
     auto n = a_ / std::sqrt(1.0 - e2_ * math::sqr(siny));
     auto alt = boost::geometry::get<2>(lla);
     return {T((n + alt) * cosy * cosx), T((n + alt) * cosy * sinx),

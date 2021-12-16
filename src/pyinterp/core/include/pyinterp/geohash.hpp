@@ -140,11 +140,7 @@ class GeoHash {
   [[nodiscard]] static auto grid_properties(const geodetic::Box& box,
                                             uint32_t precision)
       -> std::tuple<GeoHash, size_t, size_t> {
-    uint64_t code;
-    size_t lng_boxes;
-    size_t lat_boxes;
-
-    std::tie(code, lng_boxes, lat_boxes) =
+    auto [code, lng_boxes, lat_boxes] =
         int64::grid_properties(box, precision * 5);
     return std::make_tuple(
         GeoHash(int64::decode(code, precision * 5, false), precision),

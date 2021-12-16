@@ -65,9 +65,8 @@ TEST(math, cosd) {
 
 TEST(math, sincosd) {
   // sincosd(x) == sin(x * π / 180), cos(x * π / 180)
-  double sinx, cosx;
   for (double x = -720; x <= 720; x += 0.1) {
-    std::tie(sinx, cosx) = math::sincosd(x);
+    auto [sinx, cosx] = math::sincosd(x);
     EXPECT_NEAR(sinx, std::sin(math::radians(x)), 1e-12);
     EXPECT_NEAR(cosx, std::cos(math::radians(x)), 1e-12);
   }

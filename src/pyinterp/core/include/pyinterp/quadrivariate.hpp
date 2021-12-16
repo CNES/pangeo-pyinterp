@@ -56,19 +56,10 @@ inline auto _quadrivariate(const Grid4D<Type, AxisType>& grid,
 
   if (x_indexes.has_value() && y_indexes.has_value() && z_indexes.has_value() &&
       u_indexes.has_value()) {
-    int64_t ix0;
-    int64_t ix1;
-    int64_t iy0;
-    int64_t iy1;
-    int64_t iz0;
-    int64_t iz1;
-    int64_t iu0;
-    int64_t iu1;
-
-    std::tie(ix0, ix1) = *x_indexes;
-    std::tie(iy0, iy1) = *y_indexes;
-    std::tie(iz0, iz1) = *z_indexes;
-    std::tie(iu0, iu1) = *u_indexes;
+    auto [ix0, ix1] = *x_indexes;
+    auto [iy0, iy1] = *y_indexes;
+    auto [iz0, iz1] = *z_indexes;
+    auto [iu0, iu1] = *u_indexes;
 
     // The fourth coordinate is not used by the 3D interpolator.
     auto x0 = x_axis(ix0);

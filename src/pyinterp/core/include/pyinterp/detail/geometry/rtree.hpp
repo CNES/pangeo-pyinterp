@@ -316,9 +316,7 @@ class RTree {
                              const math::RBF<promotion_t> &rbf,
                              distance_t radius, uint32_t k, bool within) const
       -> std::pair<promotion_t, uint32_t> {
-    Matrix<promotion_t> coordinates;
-    Vector<promotion_t> values;
-    std::tie(coordinates, values) =
+    auto [coordinates, values] =
         within ? nearest_within(point, radius, k) : nearest(point, radius, k);
     if (values.size() == 0) {
       return std::make_pair(std::numeric_limits<promotion_t>::quiet_NaN(), 0);

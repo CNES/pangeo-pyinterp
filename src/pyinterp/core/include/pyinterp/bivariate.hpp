@@ -78,13 +78,8 @@ inline auto _bivariate(
   auto y_indexes = y_axis.find_indexes(y);
 
   if (x_indexes.has_value() && y_indexes.has_value()) {
-    int64_t ix0;
-    int64_t ix1;
-    int64_t iy0;
-    int64_t iy1;
-
-    std::tie(ix0, ix1) = *x_indexes;
-    std::tie(iy0, iy1) = *y_indexes;
+    auto [ix0, ix1] = *x_indexes;
+    auto [iy0, iy1] = *y_indexes;
 
     auto x0 = x_axis(ix0);
     auto p = Point<Coordinate>(x_axis.normalize_coordinate(x, x0), y);
