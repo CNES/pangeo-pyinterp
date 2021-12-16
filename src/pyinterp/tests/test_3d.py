@@ -4,7 +4,6 @@
 # BSD-style license that can be found in the LICENSE file.
 import datetime
 import collections
-import os
 import pickle
 import pytest
 import numpy as np
