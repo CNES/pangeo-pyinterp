@@ -24,10 +24,10 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
       : detail::geometry::GeographicPoint2D<double>(lon, lat) {}
 
   /// Get longitude value in degrees
-  [[nodiscard]] constexpr auto lon() const -> double { return this->get<0>(); }
+  [[nodiscard]] inline auto lon() const -> double { return this->get<0>(); }
 
   /// Get latitude value in degrees
-  [[nodiscard]] constexpr auto lat() const -> double { return this->get<1>(); }
+  [[nodiscard]] inline auto lat() const -> double { return this->get<1>(); }
 
   /// Set longitude value in degrees
   inline auto lon(double const v) -> void { this->set<0>(v); }
