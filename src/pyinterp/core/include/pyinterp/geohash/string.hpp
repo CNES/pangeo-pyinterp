@@ -38,7 +38,7 @@ class Array {
   }
 
   /// Get the pointer to the raw memory
-  [[nodiscard]] constexpr auto buffer() const -> char* {
+  [[nodiscard]] inline auto buffer() const -> char* {
     return array_->data();
   }
 

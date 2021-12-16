@@ -30,10 +30,10 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
   [[nodiscard]] constexpr auto lat() const -> double { return this->get<1>(); }
 
   /// Set longitude value in degrees
-  constexpr void lon(double const v) { this->set<0>(v); }
+  inline auto lon(double const v) -> void { this->set<0>(v); }
 
   /// Set latitude value in degrees
-  constexpr void lat(double const v) { this->set<1>(v); }
+  inline auto lat(double const v) -> void { this->set<1>(v); }
 
   /// Calculate the distance between the two points
   [[nodiscard]] auto distance(const Point& other,

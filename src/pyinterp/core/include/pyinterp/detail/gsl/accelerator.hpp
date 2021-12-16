@@ -23,7 +23,7 @@ class Accelerator {
             [](gsl_interp_accel* ptr) { gsl_interp_accel_free(ptr); })) {}
 
   /// Gets the GSL pointer
-  constexpr operator gsl_interp_accel*() const noexcept {  // NOLINT
+  inline operator gsl_interp_accel*() const noexcept {  // NOLINT
     return acc_.get();
   }
 

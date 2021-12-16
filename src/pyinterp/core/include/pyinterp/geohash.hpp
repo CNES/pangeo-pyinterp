@@ -95,12 +95,12 @@ class GeoHash {
   }
 
   /// Returns the precision of the geohash.
-  [[nodiscard]] constexpr auto precision() const -> uint32_t {
+  [[nodiscard]] inline auto precision() const -> uint32_t {
     return static_cast<uint32_t>(code_.length());
   }
 
   /// Returns the number of bits used to represent the geohash.
-  [[nodiscard]] constexpr auto number_of_bits() const -> uint32_t {
+  [[nodiscard]] inline auto number_of_bits() const -> uint32_t {
     return precision() * 5;
   }
 
