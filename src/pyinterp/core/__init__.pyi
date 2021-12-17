@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, List, Optional, overload
+from typing import Any, ClassVar, List, Optional, Tuple, overload
 import numpy
 from . import dateutils
 from . import geodetic

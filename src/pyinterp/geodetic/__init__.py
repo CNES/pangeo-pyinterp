@@ -5,7 +5,7 @@ Geographic coordinate system
 from typing import List, Optional, Tuple
 import warnings
 from ..core import geodetic
-from ..core.geodetic import coordinate_distances
+from ..core.geodetic import coordinate_distances, normalize_longitudes
 
 
 class System(geodetic.System):
