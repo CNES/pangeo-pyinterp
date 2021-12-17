@@ -23,7 +23,14 @@ def build_dirname(extname=None):
         "lib.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR), extname)
 
 
-sys.path.insert(0, str(build_dirname().resolve()))
+def push_front_syspath():
+    """Add the build directory to the front of sys.path."""
+    if WORKING_DIRECTORY.joinpath("setup.py").exists():
+        # We are in the root directory of the development tree
+        sys.path.insert(0, str(build_dirname().resolve()))
+
+
+push_front_syspath()
 
 
 def pytest_addoption(parser):

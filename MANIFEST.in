@@ -1,13 +1,11 @@
-recursive-include cmake *
 recursive-include docs *
 recursive-include src *
-recursive-include tests *
 recursive-include third_party *
 recursive-include src *.pyi
 include CMakeLists.txt
 include CODE_OF_CONDUCT.md
 include LICENSE
-include README.md
+include README.rst
 include setup.py
 include TODO.md
 global-exclude *.py[dco]

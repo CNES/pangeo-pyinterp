@@ -20,6 +20,7 @@ import sys
 import sysconfig
 # Setuptools must be imported first
 import distutils.command.build
+import distutils.command.install
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -580,6 +581,29 @@ class Test(setuptools.Command):
         self.spawn(["genhtml", coverage_info, "--output-directory", htmllcov])
 
 
+class Intall(distutils.command.install.install):
+    """Installer"""
+    user_options = distutils.command.install.install.user_options
+
+    def initialize_options(self):
+        """Set default values for all the options that this command supports"""
+        super().initialize_options()
+
+    def finalize_options(self):
+        """Set final values for all the options that this command supports"""
+        super().finalize_options()
+
+    def run(self):
+        """A command's raison d'etre: carry out the action"""
+        super().run()
+        assert self.install_lib is not None, "install_lib is None"
+        self.copy_file(
+            str(WORKING_DIRECTORY.joinpath("conftest.py").resolve()),
+            str(
+                pathlib.Path(self.install_lib).joinpath(
+                    "pyinterp", "tests", "conftest.py")))
+
+
 def long_description():
     """Reads the README file"""
     with open(pathlib.Path(WORKING_DIRECTORY, "README.rst")) as stream:
@@ -622,6 +646,7 @@ def main():
         cmdclass={
             'build': Build,
             'build_ext': BuildExt,
+            'install': Intall,
             'test': Test
         },  # type: ignore
         data_files=typehints(),
@@ -637,9 +662,10 @@ def main():
             'pyinterp.tests': ["dataset/*"],
         },
         package_dir={'': 'src'},
-        packages=setuptools.find_namespace_packages(where='src',
-                                                    exclude=['pyinterp.core*'
-                                                             ]),
+        packages=setuptools.find_namespace_packages(
+            where='src',
+            exclude=['pyinterp.core*'],
+        ),
         platforms=['POSIX', 'MacOS', 'Windows'],
         python_requires='>=3.6',
         tests_require=tests_require,
