@@ -1,6 +1,14 @@
 Changelog
 #########
 
+0.10.0 (17 December 2021)
+-------------------------
+* Refactor regular grid interpolators.
+* Enhanced test coverage.
+* Using structured binding declaration.
+* Refactor GeoHash module
+* Deleting GeoHash indexes and storage (we're using pyarrow for this now)
+
 0.9.4 (1 December 2021)
 ------------------------
 * Correction of a spelling mistake for a keyword.
