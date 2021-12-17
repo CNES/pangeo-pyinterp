@@ -20,7 +20,7 @@ import sys
 import sysconfig
 # Setuptools must be imported first
 import distutils.command.build
-import distutils.command.install
+import distutils.command.sdist
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -581,27 +581,20 @@ class Test(setuptools.Command):
         self.spawn(["genhtml", coverage_info, "--output-directory", htmllcov])
 
 
-class Intall(distutils.command.install.install):
-    """Installer"""
-    user_options = distutils.command.install.install.user_options
-
-    def initialize_options(self):
-        """Set default values for all the options that this command supports"""
-        super().initialize_options()
-
-    def finalize_options(self):
-        """Set final values for all the options that this command supports"""
-        super().finalize_options()
+class SDist(distutils.command.sdist.sdist):
+    """Custom sdist command that copies the pytest configuration file
+    into the package"""
+    user_options = distutils.command.sdist.sdist.user_options
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
-        super().run()
-        assert self.install_lib is not None, "install_lib is None"
-        self.copy_file(
-            str(WORKING_DIRECTORY.joinpath("conftest.py").resolve()),
-            str(
-                pathlib.Path(self.install_lib).joinpath(
-                    "pyinterp", "tests", "conftest.py")))
+        source = WORKING_DIRECTORY.joinpath("conftest.py")
+        target = WORKING_DIRECTORY.joinpath("src", "pyinterp", "conftest.py")
+        source.rename(target)
+        try:
+            super().run()
+        finally:
+            target.rename(source)
 
 
 def long_description():
@@ -646,7 +639,7 @@ def main():
         cmdclass={
             'build': Build,
             'build_ext': BuildExt,
-            'install': Intall,
+            'sdist': SDist,
             'test': Test
         },  # type: ignore
         data_files=typehints(),
