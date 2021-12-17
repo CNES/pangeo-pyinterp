@@ -382,7 +382,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if self.GENERATOR is not None:
             cmake_args.append("-G" + self.GENERATOR)
         elif is_windows:
-            cmake_args.append("-G" + 'Visual Studio 15 2017')
+            cmake_args.append("-G" + 'Visual Studio 16 2019')
 
         if not is_windows:
             build_args += ['--', '-j%d' % os.cpu_count()]
