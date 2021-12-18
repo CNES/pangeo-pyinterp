@@ -72,9 +72,9 @@ namespace pyinterp::geohash::int64 {
     -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
   auto lon = Eigen::VectorXd(hash.size());
   auto lat = Eigen::VectorXd(hash.size());
-  auto point = geodetic::Point();
+
   for (Eigen::Index ix = 0; ix < hash.size(); ++ix) {
-    point = decode(hash(ix), precision, center);
+    auto point = decode(hash(ix), precision, center);
     lon[ix] = point.lon();
     lat[ix] = point.lat();
   }
