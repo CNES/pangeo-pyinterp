@@ -254,40 +254,36 @@ class StreamingHistogram {
 
   /// Update the histogram with the provided value.
   auto update_bins(const T& value, const T& weight) -> void {
-    auto append = false;
-    auto index = size_t(0);
-
-    // If the histogram is not empty, the insertion index is calculated.
-    if (!bins_.empty()) {
-      if (value <= bins_.front().value) {
-        index = 0;
-      } else if (value >= bins_.back().value) {
-        index = bins_.size() - 1;
-        append = true;
-      } else {
-        // Binary search for the insertion index.
-        auto it = std::lower_bound(
-            bins_.begin(), bins_.end(), value,
-            [](const Bin<T>& lhs, const T& rhs) { return lhs.value <= rhs; });
-        index = std::distance(bins_.begin(), it);
-      }
-
-      // If the value is already in the histogram, the weight is updated.
-      auto& bin = bins_[index];
-      if (bin.value == value) {
-        bin.weight += weight;
-        return;
-      }
+    if (bins_.empty()) {
+      bins_.emplace_back(Bin<T>{value, weight});
+      return;
     }
 
-    if (append) {
+    if (value <= bins_.front().value) {
+      bins_.insert(bins_.begin(), {value, weight});
+      return;
+    }
+
+    if (value >= bins_.back().value) {
       // If the new value is greater than the last value inserted in the
       // histogram, the bins is extended.
       bins_.emplace_back(Bin<T>{value, weight});
-    } else {
-      // Otherwise, the new value is inserted.
-      bins_.insert(bins_.begin() + index, {value, weight});
+      return;
     }
+
+    // Binary search for the insertion index.
+    auto it = std::lower_bound(
+        bins_.begin(), bins_.end(), value,
+        [](const Bin<T>& lhs, const T& rhs) { return lhs.value <= rhs; });
+    auto index = std::distance(bins_.begin(), it);
+
+    // If the value is already in the histogram, the weight is updated.
+    auto& bin = bins_[index];
+    if (bin.value == value) {
+      bin.weight += weight;
+      return;
+    }
+    bins_.insert(bins_.begin() + index, {value, weight});
   }
 
   /// Compress the histogram if necessary.
