@@ -21,7 +21,6 @@ testcases = [["77mkh2hcj7mz", -26.015434642, -26.173663656],
 def test_geohash():
     for code, lat, lon in testcases:
         instance = GeoHash(lon, lat, precision=12)
-        print(repr(instance))
         assert str(instance) == code
         point = instance.center()
         assert pytest.approx(point.lat, lat)

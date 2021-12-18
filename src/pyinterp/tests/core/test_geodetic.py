@@ -582,6 +582,5 @@ def test_coordinate_distance():
     for iy in range(d0.shape[0]):
         assert np.all(np.abs((d0[iy, :] - d0[iy, 0]) <= 1e-6))
     for ix in range(d0.shape[1]):
-        print(d0[:, ix], d0[0, ix])
         delta = np.abs(d0[:, ix] - d0[0, ix])
         assert np.all(delta[delta != 0] > 1e3)
