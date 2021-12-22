@@ -80,10 +80,12 @@ class TemporalAxis(core.TemporalAxis):
                          dtype='timedelta64[us]'))
         """
         self._assert_issubdtype(values.dtype)
-        super().__init__(values.astype("int64"))
         self.dtype = values.dtype
         self.object = self._object(self.dtype)
         self.resolution = self._npdate_resolution(str(self.dtype))
+        super().__init__(values.astype("int64"),
+                         resolution=self.resolution
+                         if "datetime64" in str(self.dtype) else None)
 
     @staticmethod
     def _assert_issubdtype(dtype: np.dtype) -> None:

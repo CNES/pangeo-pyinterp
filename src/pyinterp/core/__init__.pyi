@@ -12,7 +12,8 @@ class Axis:
     def __init__(self,
                  values: numpy.ndarray[numpy.float64],
                  epsilon: float = ...,
-                 is_circle: bool = ...) -> None:
+                 is_circle: bool = ...,
+                 resolution: Optional[str] = ...) -> None:
         ...
 
     def back(self) -> float:
@@ -383,6 +384,7 @@ class DescriptiveStatisticsFloat64:
 
     def __setstate__(self, arg0: tuple) -> None:
         ...
+
 
 class GeoHash:
     def __init__(self,
@@ -1148,7 +1150,8 @@ class TemporalAxis:
     def __init__(self,
                  values: numpy.ndarray[numpy.int64],
                  epsilon: int = ...,
-                 is_circle: bool = ...) -> None:
+                 is_circle: bool = ...,
+                 resolution: Optional[str] = ...) -> None:
         ...
 
     def back(self) -> int:
@@ -1210,6 +1213,10 @@ class TemporalAxis:
 
     @property
     def is_circle(self) -> bool:
+        ...
+
+    @property
+    def resolution(self) -> str:
         ...
 
 

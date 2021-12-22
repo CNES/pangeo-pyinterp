@@ -76,15 +76,7 @@ struct ISOCalendar {
 class FractionalSeconds {
  public:
   /// Default constructor
-  explicit FractionalSeconds(const pybind11::dtype& dtype) {
-    auto type_num =
-        pybind11::detail::array_descriptor_proxy(dtype.ptr())->type_num;
-    if (type_num != 21 /* NPY_DATETIME */) {
-      throw std::invalid_argument(
-          "array must be a numpy array of datetime64 items");
-    }
-    auto units =
-        std::string(pybind11::str(static_cast<pybind11::handle>(dtype)));
+  explicit FractionalSeconds(const std::string& units) {
     if (units == "datetime64[as]") {
       scale_ = 1'000'000'000'000'000'000;
     } else if (units == "datetime64[fs]") {
@@ -106,6 +98,18 @@ class FractionalSeconds {
           "datetime64[s] got " +
           units);
     }
+  }
+
+  /// Build a FractionalSeconds from a numpy data type.
+  static auto from_dtype(const pybind11::dtype& dtype) -> FractionalSeconds {
+    auto type_num =
+        pybind11::detail::array_descriptor_proxy(dtype.ptr())->type_num;
+    if (type_num != 21 /* NPY_DATETIME */) {
+      throw std::invalid_argument(
+          "array must be a numpy array of datetime64 items");
+    }
+    return FractionalSeconds(
+        std::string(pybind11::str(static_cast<pybind11::handle>(dtype))));
   }
 
   /// Gets the numpy units
@@ -386,8 +390,7 @@ constexpr auto date_from_minutes_since_epoch(const int64_t value)
 
   // Value is encoded as fractional seconds elapsed since 1970 (the constructor
   // throws an exception if the resolution is invalid).
-  auto frac =
-      FractionalSeconds{pybind11::dtype("datetime64[" + resolution + "]")};
+  auto frac = FractionalSeconds("datetime64[" + resolution + "]");
   auto [sec, fractional_part] = frac.epoch(value);
 
   date = date_from_epoch(sec);

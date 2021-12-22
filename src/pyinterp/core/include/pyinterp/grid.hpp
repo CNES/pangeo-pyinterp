@@ -85,7 +85,7 @@ class Grid2D {
   template <typename AxisType>
   static void index_error(const Axis<AxisType>& axis, const AxisType value,
                           const std::string& axis_label) {
-    throw std::invalid_argument(std::to_string(value) +
+    throw std::invalid_argument(axis.to_string(value) +
                                 " is out ouf bounds for axis " + axis_label +
                                 " (" + static_cast<std::string>(axis) + ")");
   }

@@ -91,7 +91,7 @@ class Axis {
   }
 
   /// Destructor
-  ~Axis() = default;
+  virtual ~Axis() = default;
 
   /// Copy constructor
   ///
@@ -124,6 +124,25 @@ class Axis {
       throw std::out_of_range("axis index out of range");
     }
     return axis_->coordinate_value(index);
+  }
+
+  /// Get a sring representation of a value handled by this axis.
+  ///
+  /// @param value Value to be converted to string
+  /// @return a string representation of the value
+  [[nodiscard]] virtual inline auto to_string(const T value) const
+      -> std::string {
+    return std::to_string(value);
+  }
+
+  /// Get a string representation of a coordinate handled by this axis.
+  ///
+  /// @param index which coordinate. Between 0 and size()-1 inclusive
+  /// @return coordinate value
+  /// @throw std::out_of_range if index in not in range [0, size() - 1].
+  [[nodiscard]] inline auto coordinate_repr(const int64_t index) const
+      -> std::string {
+    return to_string(coordinate_value(index));
   }
 
   /// Get the minimum coordinate value.
@@ -414,21 +433,21 @@ class Axis {
   explicit operator std::string() const {
     auto ss = std::stringstream();
     ss << "Axis([";
-    if (size() > 10) {
-      for (auto ix = 0; ix < 3; ++ix) {
-        ss << coordinate_value(ix) << ", ";
+    if (size() > 4) {
+      for (auto ix = 0; ix < 2; ++ix) {
+        ss << coordinate_repr(ix) << ", ";
       }
       ss << "...";
       for (auto ix = size() - 2; ix < size(); ++ix) {
-        ss << ", " << coordinate_value(ix);
+        ss << ", " << coordinate_repr(ix);
       }
     } else {
       auto length = std::min<int64_t>(6, size());
       for (auto ix = 0; ix < length - 1; ++ix) {
-        ss << coordinate_value(ix) << ", ";
+        ss << coordinate_repr(ix) << ", ";
       }
       if (length >= 1) {
-        ss << coordinate_value(length - 1);
+        ss << coordinate_repr(length - 1);
       }
     }
     ss << std::boolalpha << "], is_circle=" << is_angle() << ")";

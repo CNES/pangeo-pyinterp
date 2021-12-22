@@ -13,11 +13,11 @@
 namespace pyinterp {
 
 // Error thrown if it' s not possible to frame the value on the specified axis.
-template <typename T>
-auto index_error(const std::string& axis, T value, size_t n) -> void {
-  throw std::invalid_argument(
-      "Unable to frame the value " + std::to_string(value) + " with " +
-      std::to_string(n) + " items of the " + axis + " axis");
+auto index_error(const std::string& axis, const std::string& value, size_t n)
+    -> void {
+  throw std::invalid_argument("Unable to frame the value " + value + " with " +
+                              std::to_string(n) + " items of the " + axis +
+                              " axis");
 }
 
 /// Loads the interpolation frame into memory
@@ -35,9 +35,9 @@ auto load_frame(const Grid2D<DataType>& grid, const double x, const double y,
   if (x_indexes.empty() || y_indexes.empty()) {
     if (bounds_error) {
       if (x_indexes.empty()) {
-        index_error("x", x, frame.nx());
+        index_error("x", x_axis.to_string(x), frame.nx());
       }
-      index_error("y", y, frame.ny());
+      index_error("y", y_axis.to_string(y), frame.ny());
     }
     return false;
   }
@@ -81,11 +81,11 @@ auto load_frame(const Grid3D<DataType, AxisType>& grid, const double x,
   if (x_indexes.empty() || y_indexes.empty() || z_indexes.empty()) {
     if (bounds_error) {
       if (x_indexes.empty()) {
-        index_error("x", x, frame.nx());
+        index_error("x", x_axis.to_string(x), frame.nx());
       } else if (y_indexes.empty()) {
-        index_error("y", y, frame.ny());
+        index_error("y", y_axis.to_string(y), frame.ny());
       }
-      index_error("z", z, frame.nz());
+      index_error("z", z_axis.to_string(z), frame.nz());
     }
     return false;
   }
@@ -142,13 +142,13 @@ auto load_frame(const Grid4D<DataType, AxisType>& grid, const double x,
       u_indexes.empty()) {
     if (bounds_error) {
       if (x_indexes.empty()) {
-        index_error("x", x, frame.nx());
+        index_error("x", x_axis.to_string(x), frame.nx());
       } else if (y_indexes.empty()) {
-        index_error("y", y, frame.ny());
+        index_error("y", y_axis.to_string(y), frame.ny());
       } else if (z_indexes.empty()) {
-        index_error("z", z, frame.nz());
+        index_error("z", z_axis.to_string(z), frame.nz());
       }
-      index_error("u", u, frame.nu());
+      index_error("u", u_axis.to_string(u), frame.nu());
     }
     return false;
   }

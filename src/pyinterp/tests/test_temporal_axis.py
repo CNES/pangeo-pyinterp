@@ -26,6 +26,13 @@ def new_axis(timedelta: bool = False):
 def test_datetime64_constructor():
     values, axis = new_axis()
     assert isinstance(str(axis), str)
+    assert str(axis) == (
+        "TemporalAxis(array(['2000-01-01T00:00:00.000000', "
+        "'2000-01-01T00:00:01.000000',\n                    "
+        "'2000-01-01T00:00:02.000000', ..., '2000-01-01T23:59:57.000000',"
+        "\n                    '2000-01-01T23:59:58.000000', "
+        "'2000-01-01T23:59:59.000000'],\n                   "
+        "dtype='datetime64[us]'))")
     assert axis.safe_cast(values).dtype == np.int64
     assert np.any(
         values.astype("int64") != axis.safe_cast(values.astype(
@@ -69,6 +76,10 @@ def test_datetime64_constructor():
 def test_timedelta64_constructor():
     values, axis = new_axis(timedelta=True)
     assert isinstance(str(axis), str)
+    assert str(axis) == (
+        "TemporalAxis(array([          0,     1000000,     2000000, ..., "
+        "86397000000,\n                    86398000000, 86399000000], "
+        "dtype='timedelta64[us]'))")
     assert axis.safe_cast(values).dtype == np.int64
     assert np.any(
         values.astype("int64") != axis.safe_cast(

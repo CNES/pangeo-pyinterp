@@ -17,7 +17,7 @@ namespace dateutils = pyinterp::dateutils;
 namespace detail {
 
 static auto date(const py::array& array) -> py::array_t<dateutils::Date> {
-  auto frac = dateutils::FractionalSeconds(array.dtype());
+  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
   auto result =
       py::array_t<dateutils::Date>(py::array::ShapeContainer({array.size()}));
   auto _array = array.unchecked<int64_t, 1>();
@@ -35,7 +35,7 @@ static auto date(const py::array& array) -> py::array_t<dateutils::Date> {
 }
 
 static auto time(const py::array& array) -> py::array_t<dateutils::Time> {
-  auto frac = dateutils::FractionalSeconds(array.dtype());
+  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
   auto result =
       py::array_t<dateutils::Time>(py::array::ShapeContainer({array.size()}));
   auto _array = array.unchecked<int64_t, 1>();
@@ -54,7 +54,7 @@ static auto time(const py::array& array) -> py::array_t<dateutils::Time> {
 
 static auto isocalendar(const py::array& array)
     -> py::array_t<dateutils::ISOCalendar> {
-  auto frac = dateutils::FractionalSeconds(array.dtype());
+  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
   auto result = py::array_t<dateutils::ISOCalendar>(
       py::array::ShapeContainer({array.size()}));
   auto _array = array.unchecked<int64_t, 1>();
@@ -72,7 +72,7 @@ static auto isocalendar(const py::array& array)
 }
 
 static auto weekday(const py::array& array) -> py::array_t<unsigned> {
-  auto frac = dateutils::FractionalSeconds(array.dtype());
+  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
   auto result =
       py::array_t<unsigned>(py::array::ShapeContainer({array.size()}));
   auto _array = array.unchecked<int64_t, 1>();
@@ -90,7 +90,7 @@ static auto weekday(const py::array& array) -> py::array_t<unsigned> {
 }
 
 static auto timedelta_since_january(const py::array& array) -> py::array {
-  auto frac = dateutils::FractionalSeconds(array.dtype());
+  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
   auto result = py::array(py::dtype("timedelta64[" + frac.units() + "]"),
                           py::array::ShapeContainer({array.size()}), nullptr);
   auto _array = array.unchecked<int64_t, 1>();
@@ -114,7 +114,7 @@ static auto timedelta_since_january(const py::array& array) -> py::array {
 }
 
 static auto datetime(const py::array& array) -> py::array {
-  auto frac = dateutils::FractionalSeconds(array.dtype());
+  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
   auto* buffer = new PyObject*[array.size()];
   auto _array = array.unchecked<int64_t, 1>();
 

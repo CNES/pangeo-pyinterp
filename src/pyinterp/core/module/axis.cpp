@@ -2,12 +2,22 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+#include "pyinterp/dateutils.hpp"
 #include "pyinterp/axis.hpp"
 
 #include <pybind11/eigen.h>
+#include <pybind11/stl.h>
 
 #include "pyinterp/detail/broadcast.hpp"
 namespace py = pybind11;
+
+template <>
+auto pyinterp::Axis<int64_t>::to_string(const int64_t value) const
+    -> std::string {
+  return this->resolution_.empty()
+             ? std::to_string(value)
+             : pyinterp::dateutils::datetime64_to_str(value, this->resolution_);
+}
 
 template <typename T>
 void implement_axis(py::module& m, const std::string& prefix) {
@@ -18,9 +28,14 @@ A coordinate axis is a Variable that specifies one of the coordinates
 of a variable's values.
 )__doc__");
 
-  axis.def(py::init<py::array_t<T, py::array::c_style>&, T, bool>(),
+  axis.def(py::init<>([](py::array_t<T, py::array::c_style>& values,
+                         const T epsilon, const bool is_circle,
+                         std::optional<std::string>& resolution) {
+             return std::make_shared<pyinterp::Axis<T>>(
+                 values, resolution.value_or(""), epsilon, is_circle);
+           }),
            py::arg("values"), py::arg("epsilon") = static_cast<T>(1e-6),
-           py::arg("is_circle") = false,
+           py::arg("is_circle") = false, py::arg("resolution") = py::none(),
            R"__doc__(
 Create a coordinate axis from values.
 
@@ -30,6 +45,7 @@ Args:
         numbers in order to consider them equal. Defaults to ``1e-6``.
     is_circle (bool, optional): True, if the axis can represent a
         circle. Defaults to ``false``.
+    resolution (str, optional): Resolution of the axis.
 )__doc__")
       .def("__len__",
            [](const pyinterp::Axis<T>& self) -> size_t { return self.size(); })
