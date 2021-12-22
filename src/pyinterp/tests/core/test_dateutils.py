@@ -10,18 +10,21 @@ import pytest
 from ... import core
 
 
-def make_date(samples=10000) -> Tuple[List[datetime.datetime], np.ndarray]:
+def make_date(samples=10000,
+              resolution="us") -> Tuple[List[datetime.datetime], np.ndarray]:
     epoch = datetime.datetime(1970, 1, 1)
     delta = datetime.datetime.now() - datetime.datetime(1970, 1, 1)
 
     pydates = [epoch + random.random() * delta for _ in range(samples)]
-    npdates = np.array(pydates).astype("datetime64[ns]")
+    pydates += [epoch - random.random() * delta for _ in range(samples)]
+    npdates = np.array(pydates).astype(f"datetime64[{resolution}]")
 
     return pydates, npdates
 
 
-def test_date():
-    pydates, npdates = make_date()
+@pytest.mark.parametrize("resolution", ["ms", "us", "ns"])
+def test_date(resolution):
+    pydates, npdates = make_date(resolution=resolution)
     yms = core.dateutils.date(npdates)
 
     for ix, item in enumerate(yms):
@@ -31,16 +34,21 @@ def test_date():
         assert item['day'] == expected.day
 
 
-def test_datetime():
-    expected, npdates = make_date()
+@pytest.mark.parametrize("resolution", ["ms", "us", "ns"])
+def test_datetime(resolution):
+    expected, npdates = make_date(resolution=resolution)
     pydates = core.dateutils.datetime(npdates)
 
     for ix, item in enumerate(pydates):
+        if resolution == "ms":
+            expected[ix] = expected[ix].replace(
+                microsecond=expected[ix].microsecond // 1000 * 1000)
         assert item == expected[ix]
 
 
-def test_timedelta_since_january():
-    pydates, npdates = make_date()
+@pytest.mark.parametrize("resolution", ["ms", "us", "ns"])
+def test_timedelta_since_january(resolution):
+    pydates, npdates = make_date(resolution=resolution)
     days = core.dateutils.timedelta_since_january(npdates)
 
     for ix, item in enumerate(days):
@@ -54,11 +62,15 @@ def test_timedelta_since_january():
         assert hour == pydates[ix].hour
         assert minute == pydates[ix].minute
         assert second == pydates[ix].second
+        if resolution == "ms":
+            pydates[ix] = pydates[ix].replace(
+                microsecond=pydates[ix].microsecond // 1000 * 1000)
         assert dt.microseconds == pydates[ix].microsecond
 
 
-def test_isocalendar():
-    pydates, npdates = make_date()
+@pytest.mark.parametrize("resolution", ["ms", "us", "ns"])
+def test_isocalendar(resolution):
+    pydates, npdates = make_date(resolution=resolution)
     isocalendar = core.dateutils.isocalendar(npdates)
 
     for ix, item in enumerate(isocalendar):
@@ -68,8 +80,9 @@ def test_isocalendar():
         assert item['weekday'] == weekday
 
 
-def test_time():
-    pydates, npdates = make_date()
+@pytest.mark.parametrize("resolution", ["ms", "us", "ns"])
+def test_time(resolution):
+    pydates, npdates = make_date(resolution=resolution)
     hms = core.dateutils.time(npdates)
 
     for ix, item in enumerate(hms):
@@ -79,8 +92,9 @@ def test_time():
         assert item['second'] == expected.second
 
 
-def test_weekday():
-    pydates, npdates = make_date()
+@pytest.mark.parametrize("resolution", ["ms", "us", "ns"])
+def test_weekday(resolution):
+    pydates, npdates = make_date(resolution=resolution)
     weekday = core.dateutils.weekday(npdates)
 
     for ix, item in enumerate(weekday):
@@ -96,3 +110,15 @@ def test_wrong_units():
 
     with pytest.raises(ValueError):
         core.dateutils.date(npdates.reshape(5, 2))
+
+
+@pytest.mark.parametrize(
+    "resolution",
+    ["Y", "M", "W", "D", "h", "m", "s", "ms", "us", "ns", "ps", "as"])
+def test_format_date(resolution):
+    _, npdates = make_date(60, resolution=resolution)
+    for item in npdates:
+        value = item.astype("int64")
+        calculated = core.dateutils.datetime64_to_str(value, resolution)
+        expected = str(item)
+        assert calculated == expected

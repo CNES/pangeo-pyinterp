@@ -8,6 +8,9 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
+#include <iomanip>
+#include <sstream>
+
 namespace py = pybind11;
 namespace dateutils = pyinterp::dateutils;
 
@@ -24,7 +27,8 @@ static auto date(const py::array& array) -> py::array_t<dateutils::Date> {
     auto gil = py::gil_scoped_release();
 
     for (auto ix = 0; ix < array.size(); ++ix) {
-      _result[ix] = dateutils::year_month_day(frac.seconds(_array[ix]));
+      _result[ix] = dateutils::date_from_days_since_epoch(
+          std::get<0>(frac.days_since_epoch(_array[ix])));
     }
   }
   return result;
@@ -41,7 +45,8 @@ static auto time(const py::array& array) -> py::array_t<dateutils::Time> {
     auto gil = py::gil_scoped_release();
 
     for (auto ix = 0; ix < array.size(); ++ix) {
-      _result[ix] = dateutils::hour_minute_second(frac.seconds(_array[ix]));
+      _result[ix] =
+          dateutils::time_from_epoch(std::get<0>(frac.epoch(_array[ix])));
     }
   }
   return result;
@@ -59,7 +64,8 @@ static auto isocalendar(const py::array& array)
     auto gil = py::gil_scoped_release();
 
     for (auto ix = 0; ix < array.size(); ++ix) {
-      _result[ix] = dateutils::isocalendar(frac.seconds(_array[ix]));
+      _result[ix] = dateutils::isocalendar(
+          std::get<0>(frac.days_since_epoch(_array[ix])));
     }
   }
   return result;
@@ -76,7 +82,8 @@ static auto weekday(const py::array& array) -> py::array_t<unsigned> {
     auto gil = py::gil_scoped_release();
 
     for (auto ix = 0; ix < array.size(); ++ix) {
-      _result[ix] = dateutils::weekday(frac.seconds(_array[ix]));
+      _result[ix] =
+          dateutils::weekday(std::get<0>(frac.days_since_epoch(_array[ix])));
     }
   }
   return result;
@@ -93,14 +100,14 @@ static auto timedelta_since_january(const py::array& array) -> py::array {
     auto gil = py::gil_scoped_release();
 
     for (auto ix = 0; ix < array.size(); ++ix) {
-      auto epoch = frac.seconds(_array[ix]);
-      auto days_since_january =
-          dateutils::days_since_january(dateutils::year_month_day(epoch));
-      auto hms = dateutils::hour_minute_second(epoch);
+      auto [days, seconds, fractional_part] = frac.days_since_epoch(_array[ix]);
+      auto days_since_january = dateutils::days_since_january(
+          dateutils::date_from_days_since_epoch(days));
+      auto hms = dateutils::time_from_epoch(seconds);
       _result[ix] = (days_since_january * 86400LL + hms.hour * 3600LL +
                      hms.minute * 60LL + hms.second) *
                         frac.scale() +
-                    frac.fractional(_array[ix]);
+                    fractional_part;
     }
   }
   return result;
@@ -116,14 +123,13 @@ static auto datetime(const py::array& array) -> py::array {
   }
 
   for (auto ix = 0; ix < array.size(); ++ix) {
-    auto epoch = frac.seconds(_array[ix]);
-    auto date = dateutils::year_month_day(epoch);
-    auto time = dateutils::hour_minute_second(epoch);
-    auto msec = frac.microsecond(_array[ix]);
+    auto [days, seconds, fractional_part] = frac.days_since_epoch(_array[ix]);
+    auto date = dateutils::date_from_days_since_epoch(days);
+    auto time = dateutils::time_from_epoch(seconds);
 
-    buffer[ix] = PyDateTime_FromDateAndTime(date.year, date.month, date.day,
-                                            time.hour, time.minute, time.second,
-                                            static_cast<int>(msec));
+    buffer[ix] = PyDateTime_FromDateAndTime(
+        date.year, date.month, date.day, time.hour, time.minute, time.second,
+        static_cast<int>(frac.fractional_part(fractional_part, 1'000'000)));
   }
   auto capsule = py::capsule(
       buffer, [](void* ptr) { delete[] static_cast<PyObject*>(ptr); });
@@ -202,5 +208,8 @@ Args:
 
 Returns:
     numpy.ndarray: int dtype array containing weekday of the dates.
-)__doc__");
+)__doc__")
+      // Intentionally undocumented: this function is used only for unit tests
+      .def("datetime64_to_str", &pyinterp::dateutils::datetime64_to_str,
+           py::arg("value"), py::arg("resolution"));
 }

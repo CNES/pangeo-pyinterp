@@ -7,7 +7,12 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
+#include <cstdint>
+#include <iomanip>
+#include <sstream>
 #include <string>
+
+#include "pyinterp/detail/math.hpp"
 
 // Algorithms are extracted from the documentation of Howard Hinnant
 // cf. http://howardhinnant.github.io/date_algorithms.html
@@ -123,6 +128,48 @@ class FractionalSeconds {
     }
   }
 
+  /// Gets the number of seconds elpased since 1970 and the fractional part
+  [[nodiscard]] constexpr auto epoch(const int64_t datetime64) const noexcept
+      -> std::tuple<int64_t, int64_t> {
+    auto sec = seconds(datetime64);
+    auto frac = fractional(datetime64);
+    if (frac < 0) {
+      frac += scale_;
+      sec -= 1;
+    }
+    return std::make_tuple(sec, frac);
+  }
+
+  [[nodiscard]] constexpr auto fractional_part(
+      const int64_t frac, const int64_t scale) const noexcept -> int64_t {
+    return scale_ <= scale ? (scale / scale_) * frac : frac / (scale_ / scale);
+  }
+
+  /// Gets the number of days, seconds and the fractional part elapsed since
+  /// 1970
+  [[nodiscard]] constexpr auto days_since_epoch(const int64_t datetime64)
+      const noexcept -> std::tuple<int64_t, int64_t, int64_t> {
+    auto [seconds, fractional] = epoch(datetime64);
+    auto days = seconds / 86400LL;
+    if (seconds % 86400LL < 0) {
+      --days;
+    }
+    return std::tuple(days, seconds, fractional);
+  }
+
+  /// Gets the numpy scale
+  [[nodiscard]] constexpr auto scale() const noexcept -> int64_t {
+    return scale_;
+  }
+
+  /// Gets the maximum number of digits for the fractional part
+  [[nodiscard]] inline auto ndigits() const noexcept -> int {
+    return static_cast<int>(std::log10(scale_));
+  }
+
+ private:
+  int64_t scale_;
+
   /// Gets the number of seconds elpased since 1970
   [[nodiscard]] constexpr auto seconds(const int64_t datetime64) const noexcept
       -> int64_t {
@@ -134,29 +181,12 @@ class FractionalSeconds {
       const int64_t datetime64) const noexcept -> int64_t {
     return datetime64 % scale_;
   }
-
-  /// Get the number of microseconds contained in the date.
-  [[nodiscard]] constexpr auto microsecond(
-      const int64_t datetime64) const noexcept -> int64_t {
-    auto frac = fractional(datetime64);
-    return scale_ <= 1'000'000 ? (1'000'000 / scale_) * frac
-                               : frac / (scale_ / 1'000'000);
-  }
-
-  /// Get the numpy scale
-  [[nodiscard]] constexpr auto scale() const noexcept -> int64_t {
-    return scale_;
-  }
-
- private:
-  int64_t scale_;
 };
 
 /// Gets year, month, day in civil calendar
-constexpr auto year_month_day(const int64_t epoch) noexcept -> Date {
-  // number of days since 1970-01-01
-  const auto days_since_epoch =
-      epoch / 86400LL + 719468LL - static_cast<int64_t>((epoch % 86400LL) < 0);
+constexpr auto date_from_days_since_epoch(int64_t days_since_epoch) noexcept
+    -> Date {
+  days_since_epoch += 719468LL;
   // era : 400 year period
   const auto era = static_cast<int>(
       (days_since_epoch >= 0 ? days_since_epoch : days_since_epoch - 146096LL) /
@@ -178,8 +208,16 @@ constexpr auto year_month_day(const int64_t epoch) noexcept -> Date {
           month, day};
 }
 
+/// Gets year, month, day in civil calendar
+constexpr auto date_from_epoch(const int64_t epoch) noexcept -> Date {
+  // number of days since 1970-01-01
+  auto days_since_epoch =
+      epoch / 86400LL - static_cast<int64_t>((epoch % 86400LL) < 0);
+  return date_from_days_since_epoch(days_since_epoch);
+}
+
 /// Gets the number of hours, minutes and seconds elapsed in the day
-constexpr auto hour_minute_second(const int64_t epoch) noexcept -> Time {
+constexpr auto time_from_epoch(const int64_t epoch) noexcept -> Time {
   auto seconds_within_day = epoch % 86400;
   if (seconds_within_day < 0) {
     seconds_within_day += 86400;
@@ -206,9 +244,8 @@ constexpr auto days_since_january(const Date& date) -> unsigned {
   return result;
 }
 
-/// Gets the day of the week; Sunday is 0 ... Saturday is 6
-constexpr auto weekday(const int64_t epoch) noexcept -> unsigned {
-  const auto days = epoch / 86400;
+/// Gets thweeke day of the week; Sunday is 0 ... Saturday is 6
+constexpr auto weekday(const int64_t days) noexcept -> unsigned {
   return static_cast<unsigned>(days >= -4 ? (days + 4) % 7
                                           : (days + 5) % 7 + 6);
 }
@@ -220,10 +257,10 @@ constexpr auto weekday(const int64_t epoch) noexcept -> unsigned {
 /// from that.
 ///
 ///  The first week is 1; Monday is 1 ... Sunday is 7.
-constexpr auto isocalendar(const int64_t epoch) -> ISOCalendar {
-  auto date = year_month_day(epoch);
+constexpr auto isocalendar(const int64_t days_since_epoch) -> ISOCalendar {
+  auto date = date_from_days_since_epoch(days_since_epoch);
   auto yday = days_since_january(date);
-  auto wday = weekday(epoch);
+  auto wday = weekday(days_since_epoch);
   auto days =
       detail::iso_week_days(static_cast<int>(yday), static_cast<int>(wday));
 
@@ -246,6 +283,129 @@ constexpr auto isocalendar(const int64_t epoch) -> ISOCalendar {
   }
   return {date.year, static_cast<unsigned>(days / 7 + 1),
           (wday - 1 + 7) % 7 + 1};
+}
+
+/// Get the date from the number of years since 1970-01-01
+constexpr auto date_from_years_since_epoch(const int64_t years) -> Date {
+  return {static_cast<int>(1970 + years), 1, 1};
+}
+
+/// Get the date from the number of months since 1970-01-01
+constexpr auto date_from_months_since_epoch(const int64_t value) -> Date {
+  auto years = value / 12;
+  auto months = value % 12;
+  if (months != 0 && value < 0) {
+    --years;
+    months += 12;
+  }
+  return {static_cast<int>(1970 + years), static_cast<unsigned>(months + 1), 1};
+}
+
+/// Get the date from the number of weeks since 1970-01-01
+constexpr auto date_from_weeks_since_epoch(const int64_t weeks) -> Date {
+  return date_from_days_since_epoch(weeks * 7);
+}
+
+/// Get the date from the number of hours since 1970-01-01
+constexpr auto date_from_hours_since_epoch(const int64_t value)
+    -> std::tuple<Date, Time> {
+  auto days = value / 24;
+  auto hours = value % 24;
+  if (hours != 0 && value < 0) {
+    --days;
+    hours += 24;
+  }
+  return std::make_tuple(date_from_days_since_epoch(days),
+                         Time{static_cast<unsigned>(hours), 0, 0});
+}
+
+/// Get the date from the number of minutes since 1970-01-01
+constexpr auto date_from_minutes_since_epoch(const int64_t value)
+    -> std::tuple<Date, Time> {
+  auto days = value / 1440;
+  auto minutes = value % 1440;
+  if (minutes != 0 && value < 0) {
+    --days;
+    minutes += 1440;
+  }
+  return std::make_tuple(date_from_days_since_epoch(days),
+                         time_from_epoch(minutes * 60));
+}
+
+/// Return a string representation of the numpy datetime64
+[[nodiscard]] inline auto datetime64_to_str(const int64_t value,
+                                            const std::string& resolution)
+    -> std::string {
+  auto date = Date{};
+  auto time = Time{};
+  auto ss = std::stringstream{};
+
+  // Value is encoded as years elapsed since 1970.
+  if (resolution == "Y") {
+    date = date_from_years_since_epoch(value);
+    ss << date.year;
+
+    // Value is encoded as months elapsed since 1970.
+  } else if (resolution == "M") {
+    date = date_from_months_since_epoch(value);
+    ss << date.year << "-" << std::setfill('0') << std::setw(2)
+       << std::to_string(date.month);
+
+    // Value is encoded as weeks elapsed since 1970.
+  } else if (resolution == "W") {
+    date = date_from_weeks_since_epoch(value);
+    ss << date.year << "-" << std::setfill('0') << std::setw(2) << date.month
+       << "-" << std::setfill('0') << std::setw(2) << date.day;
+
+    // Value is encoded as days elapsed since 1970.
+  } else if (resolution == "D") {
+    date = date_from_days_since_epoch(value);
+    ss << date.year << "-" << std::setfill('0') << std::setw(2) << date.month
+       << "-" << std::setfill('0') << std::setw(2) << date.day;
+
+    // Value is encoded as hours elapsed since 1970.
+  } else if (resolution == "h") {
+    std::tie(date, time) = date_from_hours_since_epoch(value);
+    ss << date.year << "-" << std::setfill('0') << std::setw(2) << date.month
+       << "-" << std::setfill('0') << std::setw(2) << date.day << "T"
+       << std::setfill('0') << std::setw(2) << time.hour;
+
+    // Value is encoded as minutes elapsed since 1970.
+  } else if (resolution == "m") {
+    std::tie(date, time) = date_from_minutes_since_epoch(value);
+    ss << date.year << "-" << std::setfill('0') << std::setw(2) << date.month
+       << "-" << std::setfill('0') << std::setw(2) << date.day << "T"
+       << std::setfill('0') << std::setw(2) << time.hour << ":"
+       << std::setfill('0') << std::setw(2) << time.minute;
+  }
+
+  // If resolution is one of the above, return the string.
+  if (ss.tellp() != 0) {
+    return ss.str();
+  }
+
+  // Value is encoded as fractional seconds elapsed since 1970 (the constructor
+  // throws an exception if the resolution is invalid).
+  auto frac =
+      FractionalSeconds{pybind11::dtype("datetime64[" + resolution + "]")};
+  auto [sec, fractional_part] = frac.epoch(value);
+
+  date = date_from_epoch(sec);
+  time = time_from_epoch(sec);
+
+  // Write the date and time.
+  ss << date.year << "-" << std::setfill('0') << std::setw(2) << date.month
+     << "-" << std::setfill('0') << std::setw(2) << date.day << "T"
+     << std::setfill('0') << std::setw(2) << time.hour << ":"
+     << std::setfill('0') << std::setw(2) << time.minute << ":"
+     << std::setfill('0') << std::setw(2) << time.second;
+
+  int ndigits = frac.ndigits();
+  if (ndigits > 0) {
+    ss << "." << std::setfill('0') << std::setw(ndigits)
+       << std::to_string(fractional_part);
+  }
+  return ss.str();
 }
 
 }  // namespace pyinterp::dateutils
