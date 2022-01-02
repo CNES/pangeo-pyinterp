@@ -539,7 +539,7 @@ class Axis {
         (points[points.size() - 1] - points[0]) / static_cast<T>(n - 1);
 
     // If the first two values are constant, the values are not evenly spaced.
-    if (increment <= epsilon) {
+    if (std::abs(increment) <= epsilon) {
       return {};
     }
 
