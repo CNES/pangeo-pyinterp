@@ -119,6 +119,7 @@ def test_format_date(resolution):
     _, npdates = make_date(60, resolution=resolution)
     for item in npdates:
         value = item.astype("int64")
-        calculated = core.dateutils.datetime64_to_str(value, resolution)
+        calculated = core.dateutils.datetime64_to_str(
+            value, f"datetime64[{resolution}]")
         expected = str(item)
         assert calculated == expected

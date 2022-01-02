@@ -26,17 +26,12 @@ def new_axis(timedelta: bool = False):
 def test_datetime64_constructor():
     values, axis = new_axis()
     assert isinstance(str(axis), str)
-    assert str(axis) == (
-        "TemporalAxis(array(['2000-01-01T00:00:00.000000', "
-        "'2000-01-01T00:00:01.000000',\n                    "
-        "'2000-01-01T00:00:02.000000', ..., '2000-01-01T23:59:57.000000',"
-        "\n                    '2000-01-01T23:59:58.000000', "
-        "'2000-01-01T23:59:59.000000'],\n                   "
-        "dtype='datetime64[us]'))")
-    assert axis.safe_cast(values).dtype == np.int64
-    assert np.any(
-        values.astype("int64") != axis.safe_cast(values.astype(
-            "datetime64[h]")))
+    assert str(axis) == ("""<pyinterp.core.TemporalAxis>
+  min_value: 2000-01-01T00:00:00.000000
+  max_value: 2000-01-01T23:59:59.000000
+  step     : 1000000 microseconds""")
+    assert axis.dtype() == np.dtype('datetime64[us]')
+    assert np.any(values != axis.safe_cast(values.astype("datetime64[h]")))
     assert axis.increment() == np.timedelta64(1000000, "us")
     assert axis.front() == np.datetime64('2000-01-01')
     assert axis.back() == np.datetime64('2000-01-01T23:59:59')
@@ -76,14 +71,11 @@ def test_datetime64_constructor():
 def test_timedelta64_constructor():
     values, axis = new_axis(timedelta=True)
     assert isinstance(str(axis), str)
-    assert str(axis) == (
-        "TemporalAxis(array([          0,     1000000,     2000000, ..., "
-        "86397000000,\n                    86398000000, 86399000000], "
-        "dtype='timedelta64[us]'))")
-    assert axis.safe_cast(values).dtype == np.int64
-    assert np.any(
-        values.astype("int64") != axis.safe_cast(
-            values.astype("timedelta64[h]")))
+    assert str(axis) == ("""<pyinterp.core.TemporalAxis>
+  min_value: 0 microseconds
+  max_value: 86399000000 microseconds
+  step     : 1000000 microseconds""")
+    assert np.any(values != axis.safe_cast(values.astype("timedelta64[h]")))
     assert axis.increment() == np.timedelta64(1000000, "us")
     assert axis.front() == np.timedelta64(0)
     assert axis.back() == np.timedelta64('86399', 's')
@@ -116,20 +108,17 @@ def test_timedelta64_constructor():
 
 
 def test_temporal_axis_degraded():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         TemporalAxis(np.arange(10))
 
     axis = TemporalAxis(
         np.array(['2000-01-01', '2000-02-01'], dtype="datetime64[s]"))
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         axis.safe_cast(np.arange(2))
 
     assert axis.safe_cast(
         np.array(['2000-01-01', '2000-02-01'],
-                 dtype="datetime64[D]")).dtype == np.int64
-
-    with pytest.raises(ValueError):
-        axis.__setstate__(tuple())
+                 dtype="datetime64[D]")).dtype == np.dtype('datetime64[s]')
 
 
 def test_pickle():

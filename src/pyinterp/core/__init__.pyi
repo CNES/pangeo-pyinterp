@@ -12,8 +12,7 @@ class Axis:
     def __init__(self,
                  values: numpy.ndarray[numpy.float64],
                  epsilon: float = ...,
-                 is_circle: bool = ...,
-                 resolution: Optional[str] = ...) -> None:
+                 is_circle: bool = ...) -> None:
         ...
 
     def back(self) -> float:
@@ -117,6 +116,11 @@ class AxisBoundary:
 
     @property
     def value(self) -> int:
+        ...
+
+
+class AxisInt64:
+    def __init__(self, *args, **kwargs) -> None:
         ...
 
 
@@ -1144,36 +1148,34 @@ class StreamingHistogramFloat64:
         ...
 
 
-class TemporalAxis:
+class TemporalAxis(AxisInt64):
     __hash__: ClassVar[None] = ...
 
-    def __init__(self,
-                 values: numpy.ndarray[numpy.int64],
-                 epsilon: int = ...,
-                 is_circle: bool = ...,
-                 resolution: Optional[str] = ...) -> None:
+    def __init__(self, values: numpy.ndarray) -> None:
         ...
 
-    def back(self) -> int:
+    def back(self) -> numpy.ndarray:
+        ...
+
+    def dtype(self) -> numpy.dtype:
         ...
 
     def find_index(self,
-                   coordinates: numpy.ndarray[numpy.int64],
+                   coordinates: numpy.ndarray,
                    bounded: bool = ...) -> numpy.ndarray[numpy.int64]:
         ...
 
-    def find_indexes(
-            self, coordinates: numpy.ndarray[numpy.int64]
-    ) -> numpy.ndarray[numpy.int64]:
+    def find_indexes(self,
+                     coordinates: numpy.ndarray) -> numpy.ndarray[numpy.int64]:
         ...
 
     def flip(self, inplace: bool = ...) -> TemporalAxis:
         ...
 
-    def front(self) -> int:
+    def front(self) -> numpy.ndarray:
         ...
 
-    def increment(self) -> int:
+    def increment(self) -> numpy.ndarray:
         ...
 
     def is_ascending(self) -> bool:
@@ -1182,21 +1184,24 @@ class TemporalAxis:
     def is_regular(self) -> bool:
         ...
 
-    def max_value(self) -> int:
+    def max_value(self) -> numpy.ndarray:
         ...
 
-    def min_value(self) -> int:
+    def min_value(self) -> numpy.ndarray:
+        ...
+
+    def safe_cast(self, values: numpy.ndarray) -> numpy.ndarray:
         ...
 
     def __eq__(self, other: TemporalAxis) -> bool:
         ...
 
     @overload
-    def __getitem__(self, arg0: int) -> int:
+    def __getitem__(self, index: int) -> numpy.ndarray:
         ...
 
     @overload
-    def __getitem__(self, arg0: slice) -> numpy.ndarray[numpy.int64]:
+    def __getitem__(self, indices: slice) -> numpy.ndarray:
         ...
 
     def __getstate__(self) -> tuple:
@@ -1209,14 +1214,6 @@ class TemporalAxis:
         ...
 
     def __setstate__(self, arg0: tuple) -> None:
-        ...
-
-    @property
-    def is_circle(self) -> bool:
-        ...
-
-    @property
-    def resolution(self) -> str:
         ...
 
 
@@ -1237,7 +1234,7 @@ class TemporalBivariateInterpolator3D:
 
 
 class TemporalGrid3DFloat32:
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis,
+    def __init__(self, x: Axis, y: Axis, z: AxisInt64,
                  array: numpy.ndarray[numpy.float32]) -> None:
         ...
 
@@ -1260,12 +1257,12 @@ class TemporalGrid3DFloat32:
         ...
 
     @property
-    def z(self) -> TemporalAxis:
+    def z(self) -> AxisInt64:
         ...
 
 
 class TemporalGrid3DFloat64:
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis,
+    def __init__(self, x: Axis, y: Axis, z: AxisInt64,
                  array: numpy.ndarray[numpy.float64]) -> None:
         ...
 
@@ -1288,12 +1285,12 @@ class TemporalGrid3DFloat64:
         ...
 
     @property
-    def z(self) -> TemporalAxis:
+    def z(self) -> AxisInt64:
         ...
 
 
 class TemporalGrid3DInt8:
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis,
+    def __init__(self, x: Axis, y: Axis, z: AxisInt64,
                  array: numpy.ndarray[numpy.int8]) -> None:
         ...
 
@@ -1316,12 +1313,12 @@ class TemporalGrid3DInt8:
         ...
 
     @property
-    def z(self) -> TemporalAxis:
+    def z(self) -> AxisInt64:
         ...
 
 
 class TemporalGrid4DFloat32:
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, u: Axis,
+    def __init__(self, x: Axis, y: Axis, z: AxisInt64, u: Axis,
                  array: numpy.ndarray[numpy.float32]) -> None:
         ...
 
@@ -1348,12 +1345,12 @@ class TemporalGrid4DFloat32:
         ...
 
     @property
-    def z(self) -> TemporalAxis:
+    def z(self) -> AxisInt64:
         ...
 
 
 class TemporalGrid4DFloat64:
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, u: Axis,
+    def __init__(self, x: Axis, y: Axis, z: AxisInt64, u: Axis,
                  array: numpy.ndarray[numpy.float64]) -> None:
         ...
 
@@ -1380,12 +1377,12 @@ class TemporalGrid4DFloat64:
         ...
 
     @property
-    def z(self) -> TemporalAxis:
+    def z(self) -> AxisInt64:
         ...
 
 
 class TemporalGrid4DInt8:
-    def __init__(self, x: Axis, y: Axis, z: TemporalAxis, u: Axis,
+    def __init__(self, x: Axis, y: Axis, z: AxisInt64, u: Axis,
                  array: numpy.ndarray[numpy.int8]) -> None:
         ...
 
@@ -1412,7 +1409,7 @@ class TemporalGrid4DInt8:
         ...
 
     @property
-    def z(self) -> TemporalAxis:
+    def z(self) -> AxisInt64:
         ...
 
 

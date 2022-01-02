@@ -42,7 +42,7 @@ def load_data(temporal_axis=False):
                     ds.variables['time'].units,
                     only_use_cftime_datetimes=False,
                     only_use_python_datetimes=True).astype(
-                        "datetime64[h]").astype("int64"))
+                        "datetime64[h]"))
             class_ = (core.TemporalGrid3DFloat64
                       if temporal_axis else core.Grid3DFloat64)
 

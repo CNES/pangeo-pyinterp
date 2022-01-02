@@ -35,9 +35,9 @@ auto load_frame(const Grid2D<DataType>& grid, const double x, const double y,
   if (x_indexes.empty() || y_indexes.empty()) {
     if (bounds_error) {
       if (x_indexes.empty()) {
-        index_error("x", x_axis.to_string(x), frame.nx());
+        index_error("x", x_axis.coordinate_repr(x), frame.nx());
       }
-      index_error("y", y_axis.to_string(y), frame.ny());
+      index_error("y", y_axis.coordinate_repr(y), frame.ny());
     }
     return false;
   }
@@ -81,11 +81,11 @@ auto load_frame(const Grid3D<DataType, AxisType>& grid, const double x,
   if (x_indexes.empty() || y_indexes.empty() || z_indexes.empty()) {
     if (bounds_error) {
       if (x_indexes.empty()) {
-        index_error("x", x_axis.to_string(x), frame.nx());
+        index_error("x", x_axis.coordinate_repr(x), frame.nx());
       } else if (y_indexes.empty()) {
-        index_error("y", y_axis.to_string(y), frame.ny());
+        index_error("y", y_axis.coordinate_repr(y), frame.ny());
       }
-      index_error("z", z_axis.to_string(z), frame.nz());
+      index_error("z", z_axis.coordinate_repr(z), frame.nz());
     }
     return false;
   }
@@ -142,13 +142,13 @@ auto load_frame(const Grid4D<DataType, AxisType>& grid, const double x,
       u_indexes.empty()) {
     if (bounds_error) {
       if (x_indexes.empty()) {
-        index_error("x", x_axis.to_string(x), frame.nx());
+        index_error("x", x_axis.coordinate_repr(x), frame.nx());
       } else if (y_indexes.empty()) {
-        index_error("y", y_axis.to_string(y), frame.ny());
+        index_error("y", y_axis.coordinate_repr(y), frame.ny());
       } else if (z_indexes.empty()) {
-        index_error("z", z_axis.to_string(z), frame.nz());
+        index_error("z", z_axis.coordinate_repr(z), frame.nz());
       }
-      index_error("u", u_axis.to_string(u), frame.nu());
+      index_error("u", u_axis.coordinate_repr(u), frame.nu());
     }
     return false;
   }

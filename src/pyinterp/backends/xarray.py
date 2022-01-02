@@ -11,7 +11,6 @@ Build interpolation objects from xarray.DataArray instances
 from typing import Dict, Optional, Tuple, Union
 import numpy as np
 import xarray as xr
-from .. import axis
 from .. import cf
 from .. import core
 from .. import grid
@@ -114,7 +113,7 @@ def _dims_from_data_array(data_array: xr.DataArray,
 def _coords(
         coords: dict,
         dims: Tuple,
-        datetime64: Optional[Tuple[str, axis.TemporalAxis]] = None) -> Tuple:
+        datetime64: Optional[Tuple[str, core.TemporalAxis]] = None) -> Tuple:
     """Get the list of arguments to provide to the grid interpolation functions.
 
     Args:
@@ -273,7 +272,7 @@ class Grid3D(grid.Grid3D):
         # Should the grid manage a time axis?
         dtype = data_array.coords[z].dtype
         if "datetime64" in dtype.name or "timedelta64" in dtype.name:
-            self._datetime64 = z, axis.TemporalAxis(
+            self._datetime64 = z, core.TemporalAxis(
                 data_array.coords[z].values)
         else:
             self._datetime64 = None
@@ -368,13 +367,13 @@ class Grid4D(grid.Grid4D):
         self._datetime64 = None
         dtype = data_array.coords[z].dtype
         if "datetime64" in dtype.name:
-            self._datetime64 = z, axis.TemporalAxis(
+            self._datetime64 = z, core.TemporalAxis(
                 data_array.coords[z].values)
         dtype = data_array.coords[u].dtype
         if "datetime64" in dtype.name:
             if self._datetime64 is not None:
                 raise ValueError("unable to handle two time axes")
-            self._datetime64 = u, axis.TemporalAxis(
+            self._datetime64 = u, core.TemporalAxis(
                 data_array.coords[u].values)
             # The time axis is the Z axis.
             z, u = u, z

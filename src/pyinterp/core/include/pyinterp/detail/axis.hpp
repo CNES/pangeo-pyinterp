@@ -19,6 +19,7 @@
 #include "pyinterp/eigen.hpp"
 
 namespace pyinterp::axis {
+
 /// Type of boundary handling on an Axis.
 enum Boundary : uint8_t {
   kExpand,  //!< Expand the boundary as a constant.
@@ -26,6 +27,7 @@ enum Boundary : uint8_t {
   kSym,     //!< Symmetrical boundary conditions.
   kUndef,   //!< Boundary violation is not defined.
 };
+
 }  // namespace pyinterp::axis
 
 namespace pyinterp::detail {
@@ -63,7 +65,8 @@ class Axis {
   /// @param epsilon Maximum allowed difference between two real numbers in
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle.
-  explicit Axis(Eigen::Ref<Vector<T>> values, T epsilon, bool is_circle)
+  explicit Axis(const Eigen::Ref<const Vector<T>>& values, T epsilon,
+                bool is_circle)
       : circle_(is_circle ? T(360) : math::Fill<T>::value()) {
     // Axis size control
     if (values.size() > std::numeric_limits<int64_t>::max()) {
@@ -73,21 +76,12 @@ class Axis {
     }
 
     if (is_angle()) {
-      normalize_longitude(values);
-    }
-
-    // Determines whether the set of data provided can be represented as an
-    // interval.
-    auto increment = Axis<T>::is_evenly_spaced(values, epsilon);
-    if (increment) {
-      axis_ = std::make_shared<axis::container::Regular<T>>(
-          axis::container::Regular<T>(values[0], values[values.size() - 1],
-                                      static_cast<T>(values.size())));
+      auto normalized_values = normalize_longitude(values);
+      auto move = static_cast<bool>(normalized_values);
+      initialize_from_values(move ? *normalized_values: values, epsilon, move);
     } else {
-      axis_ = std::make_shared<axis::container::Irregular<T>>(
-          axis::container::Irregular<T>(values));
+      initialize_from_values(values, epsilon, false);
     }
-    compute_properties(epsilon);
   }
 
   /// Destructor
@@ -124,25 +118,6 @@ class Axis {
       throw std::out_of_range("axis index out of range");
     }
     return axis_->coordinate_value(index);
-  }
-
-  /// Get a sring representation of a value handled by this axis.
-  ///
-  /// @param value Value to be converted to string
-  /// @return a string representation of the value
-  [[nodiscard]] virtual inline auto to_string(const T value) const
-      -> std::string {
-    return std::to_string(value);
-  }
-
-  /// Get a string representation of a coordinate handled by this axis.
-  ///
-  /// @param index which coordinate. Between 0 and size()-1 inclusive
-  /// @return coordinate value
-  /// @throw std::out_of_range if index in not in range [0, size() - 1].
-  [[nodiscard]] inline auto coordinate_repr(const int64_t index) const
-      -> std::string {
-    return to_string(coordinate_value(index));
   }
 
   /// Get the minimum coordinate value.
@@ -427,31 +402,13 @@ class Axis {
     return result;
   }
 
-  /// Get a string representing this instance.
+  /// Get a string representation of a coordinate handled by this axis.
   ///
-  /// @return a string holding the converted instance.
-  explicit operator std::string() const {
-    auto ss = std::stringstream();
-    ss << "Axis([";
-    if (size() > 4) {
-      for (auto ix = 0; ix < 2; ++ix) {
-        ss << coordinate_repr(ix) << ", ";
-      }
-      ss << "...";
-      for (auto ix = size() - 2; ix < size(); ++ix) {
-        ss << ", " << coordinate_repr(ix);
-      }
-    } else {
-      auto length = std::min<int64_t>(6, size());
-      for (auto ix = 0; ix < length - 1; ++ix) {
-        ss << coordinate_repr(ix) << ", ";
-      }
-      if (length >= 1) {
-        ss << coordinate_repr(length - 1);
-      }
-    }
-    ss << std::boolalpha << "], is_circle=" << is_angle() << ")";
-    return ss.str();
+  /// @param value Value to be converted to string
+  /// @return a string representation of the value
+  [[nodiscard]] virtual inline auto coordinate_repr(const T value) const
+      -> std::string {
+    return std::to_string(value);
   }
 
  protected:
@@ -511,7 +468,8 @@ class Axis {
   }
 
   /// Put longitude into the range [0, circle_] degrees.
-  auto normalize_longitude(Eigen::Ref<Vector<T>>& points) -> void {
+  auto normalize_longitude(const Vector<T>& points)
+      -> std::unique_ptr<Vector<T>> {
     auto monotonic = true;
     auto ascending = points.size() < 2 ? true : points[0] < points[1];
 
@@ -525,19 +483,40 @@ class Axis {
     }
 
     if (!monotonic) {
+      auto result = std::make_unique<Vector<T>>(points);
       auto cross = false;
 
-      for (Eigen::Index ix = 1; ix < points.size(); ++ix) {
+      for (Eigen::Index ix = 1; ix < result->size(); ++ix) {
         if (!cross) {
-          cross = ascending ? points[ix - 1] > points[ix]
-                            : points[ix - 1] < points[ix];
+          cross = ascending ? (*result)[ix - 1] > (*result)[ix]
+                            : (*result)[ix - 1] < (*result)[ix];
         }
 
         if (cross) {
-          points[ix] += ascending ? circle_ : -circle_;
+          (*result)[ix] += ascending ? circle_ : -circle_;
         }
       }
+      return result;
     }
+    return nullptr;
+  }
+
+  /// Initializes the axis container from values.
+  auto initialize_from_values(const Eigen::Ref<const Vector<T>>& values,
+                              const T epsilon, const bool move) -> void {
+    // Determines whether the set of data provided can be represented as an
+    // interval.
+    auto increment = Axis<T>::is_evenly_spaced(values, epsilon);
+    if (increment) {
+      axis_ = std::make_shared<axis::container::Regular<T>>(
+          values[0], values[values.size() - 1], static_cast<T>(values.size()));
+    } else {
+      // Avoid data copy if possible.
+      axis_ = move ? std::make_shared<axis::container::Irregular<T>>(
+                         std::move(values))
+                   : std::make_shared<axis::container::Irregular<T>>(values);
+    }
+    compute_properties(epsilon);
   }
 
   /// Determines whether the values contained in the vector are evenly spaced

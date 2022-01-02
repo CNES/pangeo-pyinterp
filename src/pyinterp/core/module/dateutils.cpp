@@ -4,9 +4,10 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/dateutils.hpp"
 
-#include <datetime.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+
+#include <datetime.h>
 
 #include <iomanip>
 #include <sstream>
@@ -16,8 +17,20 @@ namespace dateutils = pyinterp::dateutils;
 
 namespace detail {
 
+static auto fractional_seconds_from_dtype(const pybind11::dtype& dtype)
+    -> dateutils::FractionalSeconds {
+  auto type_num =
+      pybind11::detail::array_descriptor_proxy(dtype.ptr())->type_num;
+  if (type_num != 21 /* NPY_DATETIME */) {
+    throw std::invalid_argument(
+        "array must be a numpy array of datetime64 items");
+  }
+  return dateutils::FractionalSeconds(static_cast<std::string>(
+      pybind11::str(static_cast<pybind11::handle>(dtype))));
+}
+
 static auto date(const py::array& array) -> py::array_t<dateutils::Date> {
-  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
+  auto frac = fractional_seconds_from_dtype(array.dtype());
   auto result =
       py::array_t<dateutils::Date>(py::array::ShapeContainer({array.size()}));
   auto _array = array.unchecked<int64_t, 1>();
@@ -27,7 +40,7 @@ static auto date(const py::array& array) -> py::array_t<dateutils::Date> {
     auto gil = py::gil_scoped_release();
 
     for (auto ix = 0; ix < array.size(); ++ix) {
-      _result[ix] = dateutils::date_from_days_since_epoch(
+      _result[ix] = dateutils::date_from_days(
           std::get<0>(frac.days_since_epoch(_array[ix])));
     }
   }
@@ -35,7 +48,7 @@ static auto date(const py::array& array) -> py::array_t<dateutils::Date> {
 }
 
 static auto time(const py::array& array) -> py::array_t<dateutils::Time> {
-  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
+  auto frac = fractional_seconds_from_dtype(array.dtype());
   auto result =
       py::array_t<dateutils::Time>(py::array::ShapeContainer({array.size()}));
   auto _array = array.unchecked<int64_t, 1>();
@@ -45,8 +58,8 @@ static auto time(const py::array& array) -> py::array_t<dateutils::Time> {
     auto gil = py::gil_scoped_release();
 
     for (auto ix = 0; ix < array.size(); ++ix) {
-      _result[ix] =
-          dateutils::time_from_epoch(std::get<0>(frac.epoch(_array[ix])));
+      _result[ix] = dateutils::time_from_seconds(
+          std::get<1>(frac.days_since_epoch(_array[ix])));
     }
   }
   return result;
@@ -54,7 +67,7 @@ static auto time(const py::array& array) -> py::array_t<dateutils::Time> {
 
 static auto isocalendar(const py::array& array)
     -> py::array_t<dateutils::ISOCalendar> {
-  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
+  auto frac = fractional_seconds_from_dtype(array.dtype());
   auto result = py::array_t<dateutils::ISOCalendar>(
       py::array::ShapeContainer({array.size()}));
   auto _array = array.unchecked<int64_t, 1>();
@@ -72,7 +85,7 @@ static auto isocalendar(const py::array& array)
 }
 
 static auto weekday(const py::array& array) -> py::array_t<unsigned> {
-  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
+  auto frac = fractional_seconds_from_dtype(array.dtype());
   auto result =
       py::array_t<unsigned>(py::array::ShapeContainer({array.size()}));
   auto _array = array.unchecked<int64_t, 1>();
@@ -90,9 +103,11 @@ static auto weekday(const py::array& array) -> py::array_t<unsigned> {
 }
 
 static auto timedelta_since_january(const py::array& array) -> py::array {
-  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
-  auto result = py::array(py::dtype("timedelta64[" + frac.units() + "]"),
-                          py::array::ShapeContainer({array.size()}), nullptr);
+  auto frac = fractional_seconds_from_dtype(array.dtype());
+  auto result =
+      py::array(py::dtype(static_cast<std::string>(dateutils::DType(
+                    dateutils::DType::kTimedelta64, frac.resolution()))),
+                py::array::ShapeContainer({array.size()}), nullptr);
   auto _array = array.unchecked<int64_t, 1>();
   auto _result = result.mutable_unchecked<int64_t, 1>();
 
@@ -101,12 +116,12 @@ static auto timedelta_since_january(const py::array& array) -> py::array {
 
     for (auto ix = 0; ix < array.size(); ++ix) {
       auto [days, seconds, fractional_part] = frac.days_since_epoch(_array[ix]);
-      auto days_since_january = dateutils::days_since_january(
-          dateutils::date_from_days_since_epoch(days));
-      auto hms = dateutils::time_from_epoch(seconds);
+      auto days_since_january =
+          dateutils::days_since_january(dateutils::date_from_days(days));
+      auto hms = dateutils::time_from_seconds(seconds);
       _result[ix] = (days_since_january * 86400LL + hms.hour * 3600LL +
                      hms.minute * 60LL + hms.second) *
-                        frac.scale() +
+                        frac.order_of_magnitude() +
                     fractional_part;
     }
   }
@@ -114,7 +129,7 @@ static auto timedelta_since_january(const py::array& array) -> py::array {
 }
 
 static auto datetime(const py::array& array) -> py::array {
-  auto frac = dateutils::FractionalSeconds::from_dtype(array.dtype());
+  auto frac = fractional_seconds_from_dtype(array.dtype());
   auto* buffer = new PyObject*[array.size()];
   auto _array = array.unchecked<int64_t, 1>();
 
@@ -124,12 +139,12 @@ static auto datetime(const py::array& array) -> py::array {
 
   for (auto ix = 0; ix < array.size(); ++ix) {
     auto [days, seconds, fractional_part] = frac.days_since_epoch(_array[ix]);
-    auto date = dateutils::date_from_days_since_epoch(days);
-    auto time = dateutils::time_from_epoch(seconds);
+    auto date = dateutils::date_from_days(days);
+    auto time = dateutils::time_from_seconds(seconds);
 
     buffer[ix] = PyDateTime_FromDateAndTime(
         date.year, date.month, date.day, time.hour, time.minute, time.second,
-        static_cast<int>(frac.fractional_part(fractional_part, 1'000'000)));
+        static_cast<int>(frac.cast(fractional_part, dateutils::kMicrosecond)));
   }
   auto capsule = py::capsule(
       buffer, [](void* ptr) { delete[] static_cast<PyObject*>(ptr); });
@@ -210,6 +225,12 @@ Returns:
     numpy.ndarray: int dtype array containing weekday of the dates.
 )__doc__")
       // Intentionally undocumented: this function is used only for unit tests
-      .def("datetime64_to_str", &pyinterp::dateutils::datetime64_to_str,
-           py::arg("value"), py::arg("resolution"));
+      .def(
+          "datetime64_to_str",
+          [](const int64_t value,
+             const std::string& clock_resolution) -> std::string {
+            return pyinterp::dateutils::datetime64_to_string(
+                value, dateutils::DType(clock_resolution));
+          },
+          py::arg("value"), py::arg("resolution"));
 }

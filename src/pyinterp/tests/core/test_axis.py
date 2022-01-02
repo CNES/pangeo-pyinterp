@@ -38,8 +38,11 @@ def test_axis_accessor():
     assert not (a != b)
     assert str(a) == str(b)
     assert str(a) == (
-        "Axis([0.000000, 1.000000, ..., 358.000000, 359.000000], "
-        "is_circle=false)")
+        """<pyinterp.core.Axis>
+  min_value: 0
+  max_value: 359
+  step     : 1
+  is_circle: false""")
     assert a.increment() == 1
     assert a.is_ascending()
     assert a.front() == 0

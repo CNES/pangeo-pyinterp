@@ -3,6 +3,7 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
 #include <memory>
@@ -32,10 +33,10 @@ constexpr int64_t IRREGULAR = 0x3ab687f709def680;
 template <typename T>
 inline auto vector_from_numpy(
     const std::string& name,
-    pybind11::array_t<T, pybind11::array::c_style>& ndarray)
-    -> Eigen::Map<Vector<T>> {
+    const pybind11::array_t<T, pybind11::array::c_style>& ndarray)
+    -> Eigen::Map<const Vector<T>> {
   check_array_ndim(name, 1, ndarray);
-  return Eigen::Map<Vector<T>>(ndarray.mutable_data(), ndarray.size());
+  return Eigen::Map<const Vector<T>>(ndarray.data(), ndarray.size());
 }
 
 }  // namespace detail
@@ -59,17 +60,14 @@ class Axis : public detail::Axis<T>,
   /// Create a coordinate axis from values.
   ///
   /// @param points axis values
-  /// @param resolution axis resolution
   /// @param epsilon Maximum allowed difference between two real numbers in
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle. Be careful,
   /// the angle shown must be expressed in degrees.
-  explicit Axis(pybind11::array_t<T, pybind11::array::c_style>& points,
-                std::string resolution, T epsilon, bool is_circle)
+  explicit Axis(const pybind11::array_t<T, pybind11::array::c_style>& points,
+                T epsilon, bool is_circle)
       : Axis<T>(pyinterp::detail::vector_from_numpy("points", points), epsilon,
-                is_circle) {
-    resolution_ = std::move(resolution);
-  }
+                is_circle) {}
 
   /// Get coordinate values.
   ///
@@ -161,6 +159,23 @@ class Axis : public detail::Axis<T>,
     return result;
   }
 
+  /// @copydoc detail::Axis::operator std::string() const
+  virtual explicit operator std::string() const {
+    auto ss = std::stringstream();
+    ss << "<pyinterp.core.Axis>" << std::endl;
+    if (is_regular()) {
+      ss << "  min_value: " << min_value() << std::endl;
+      ss << "  max_value: " << max_value() << std::endl;
+      ss << "  step     : " << increment() << std::endl;
+    } else {
+      auto values = coordinate_values(pybind11::slice(0, size(), 1));
+      ss << "  values   : " << static_cast<std::string>(pybind11::str(values))
+         << std::endl;
+    }
+    ss << "  is_circle: " << std::boolalpha << is_circle();
+    return ss.str();
+  }
+
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
     // Regular
@@ -169,7 +184,7 @@ class Axis : public detail::Axis<T>,
           this->handler().get());
       if (ptr != nullptr) {
         return pybind11::make_tuple(detail::axis::REGULAR, ptr->front(),
-                                    ptr->back(), ptr->size(), this->resolution_,
+                                    ptr->back(), ptr->size(),
                                     this->is_circle());
       }
     }
@@ -184,7 +199,7 @@ class Axis : public detail::Axis<T>,
           _values[ix] = ptr->coordinate_value(ix);
         }
         return pybind11::make_tuple(detail::axis::IRREGULAR, values,
-                                    this->resolution_, this->is_circle());
+                                    this->is_circle());
       }
     }
     // Undefined
@@ -213,41 +228,17 @@ class Axis : public detail::Axis<T>,
             std::shared_ptr<detail::axis::container::Abstract<T>>(
                 new detail::axis::container::Irregular<T>(Eigen::Map<Vector<T>>(
                     ndarray.mutable_data(), ndarray.size()))),
-            state[2].cast<std::string>(), state[3].cast<bool>());
+            state[2].cast<bool>());
       }
       case detail::axis::REGULAR:
         return Axis(std::shared_ptr<detail::axis::container::Abstract<T>>(
                         new detail::axis::container::Regular<T>(
                             state[1].cast<T>(), state[2].cast<T>(),
                             state[3].cast<T>())),
-                    state[4].cast<std::string>(), state[5].cast<bool>());
+                    state[4].cast<bool>());
       default:
         throw std::invalid_argument("invalid state");
     }
-  }
-
-  /// Get the resolution of this axis.
-  [[nodiscard]] auto resolution() const -> const std::string& {
-    return this->resolution_;
-  }
-
-  /// Get a sring representation of a value handled by this axis.
-  [[nodiscard]] auto to_string(const T value) const -> std::string override {
-    return detail::Axis<T>::to_string(value);
-  }
-
- private:
-  /// Resolution of this axis.
-  std::string resolution_;
-
-  /// Construction of a serialized instance.
-  ///
-  /// @param axis Axis handler
-  /// @param is_circle True, if the axis can represent a circle.
-  Axis(std::shared_ptr<detail::axis::container::Abstract<T>> axis,
-       std::string resolution, const bool is_circle)
-      : Axis(axis, is_circle) {
-    resolution_ = std::move(resolution);
   }
 };
 

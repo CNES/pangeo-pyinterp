@@ -2,75 +2,37 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/dateutils.hpp"
 #include "pyinterp/axis.hpp"
 
 #include <pybind11/eigen.h>
 #include <pybind11/stl.h>
 
 #include "pyinterp/detail/broadcast.hpp"
+#include "pyinterp/temporal_axis.hpp"
+
 namespace py = pybind11;
 
-template <>
-auto pyinterp::Axis<int64_t>::to_string(const int64_t value) const
-    -> std::string {
-  return this->resolution_.empty()
-             ? std::to_string(value)
-             : pyinterp::dateutils::datetime64_to_str(value, this->resolution_);
-}
-
-template <typename T>
-void implement_axis(py::module& m, const std::string& prefix) {
-  auto class_name = prefix + "Axis";
-  auto axis = py::class_<pyinterp::Axis<T>, std::shared_ptr<pyinterp::Axis<T>>>(
-      m, class_name.c_str(), R"__doc__(
-A coordinate axis is a Variable that specifies one of the coordinates
-of a variable's values.
-)__doc__");
-
-  axis.def(py::init<>([](py::array_t<T, py::array::c_style>& values,
-                         const T epsilon, const bool is_circle,
-                         std::optional<std::string>& resolution) {
-             return std::make_shared<pyinterp::Axis<T>>(
-                 values, resolution.value_or(""), epsilon, is_circle);
-           }),
-           py::arg("values"), py::arg("epsilon") = static_cast<T>(1e-6),
-           py::arg("is_circle") = false, py::arg("resolution") = py::none(),
-           R"__doc__(
-Create a coordinate axis from values.
-
-Args:
-    values (numpy.ndarray): Axis values.
-    epsilon (float, optional): Maximum allowed difference between two real
-        numbers in order to consider them equal. Defaults to ``1e-6``.
-    is_circle (bool, optional): True, if the axis can represent a
-        circle. Defaults to ``false``.
-    resolution (str, optional): Resolution of the axis.
-)__doc__")
-      .def("__len__",
-           [](const pyinterp::Axis<T>& self) -> size_t { return self.size(); })
-      .def("__getitem__",
-           [](const pyinterp::Axis<T>& self, size_t index) -> T {
-             return self.coordinate_value(index);
-           })
-      .def("__getitem__", &pyinterp::Axis<T>::coordinate_values)
-      .def("min_value", &pyinterp::Axis<T>::min_value, R"__doc__(
-Get the minimum coordinate value.
-
-Returns:
-    float: The minimum coordinate value.
-)__doc__")
-      .def("max_value", &pyinterp::Axis<T>::max_value, R"__doc__(
-Get the maximum coordinate value.
-
-Returns:
-    float: The maximum coordinate value.
-)__doc__")
+template <class Axis, class Coordinates>
+auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>>& axis,
+                    const std::string& name) {
+  axis.def(
+          "__repr__",
+          [](const Axis& self) -> std::string {
+            return static_cast<std::string>(self);
+          },
+          "Called by the ``repr()`` built-in function to compute the string "
+          "representation of an Axis.")
+      .def(
+          "__getitem__",
+          [](const Axis& self, size_t index) {
+            return self.coordinate_value(index);
+          },
+          py::arg("index"))
+      .def("__getitem__", &Axis::coordinate_values, py::arg("indices"))
+      .def("__len__", &Axis::size)
       .def(
           "is_regular",
-          [](const pyinterp::Axis<T>& self) -> bool {
-            return self.is_regular();
-          },
+          [](const Axis& self) -> bool { return self.is_regular(); },
           R"__doc__(
 Check if this axis values are spaced regularly.
 
@@ -79,14 +41,14 @@ Returns:
 )__doc__")
       .def(
           "flip",
-          [](std::shared_ptr<pyinterp::Axis<T>>& self,
-             const bool inplace) -> std::shared_ptr<pyinterp::Axis<T>> {
+          [](std::shared_ptr<Axis>& self,
+             const bool inplace) -> std::shared_ptr<Axis> {
             if (inplace) {
               self->flip();
               return self;
             }
-            auto result = std::make_shared<pyinterp::Axis<T>>(
-                pyinterp::Axis<T>::setstate(self->getstate()));
+            auto result =
+                std::make_shared<Axis>(Axis::setstate(self->getstate()));
             result->flip();
             return result;
           },
@@ -100,14 +62,13 @@ Args:
         ``False``.
 
 Returns:
-    pyinterp.core.)__doc__" +
-           class_name +
-           R"__doc__(: The flipped axis.
+    )__doc__" +
+           name + R"__doc__(: The flipped axis.
 )__doc__")
               .c_str())
       .def(
           "find_index",
-          [](const pyinterp::Axis<T>& self, const py::array_t<T>& coordinates,
+          [](const Axis& self, Coordinates& coordinates,
              const bool bounded) -> py::array_t<int64_t> {
             return self.find_index(coordinates, bounded);
           },
@@ -127,8 +88,8 @@ Returns:
 )__doc__")
       .def(
           "find_indexes",
-          [](const pyinterp::Axis<T>& self,
-             const py::array_t<T>& coordinates) -> py::array_t<int64_t> {
+          [](const Axis& self,
+             Coordinates& coordinates) -> py::array_t<int64_t> {
             return self.find_indexes(coordinates);
           },
           py::arg("coordinates"), R"__doc__(
@@ -150,25 +111,73 @@ Returns:
     matrix contains the indexes ``i0`` and the second column the indexes
     ``i1`` found.
 )__doc__")
-      .def("front", &pyinterp::Axis<T>::front, R"__doc__(
-Get the first value of this axis.
-
-Returns:
-    float: The first value.
-)__doc__")
-      .def("back", &pyinterp::Axis<T>::back, R"__doc__(
-Get the last value of this axis.
-
-Returns:
-    float: The last value.
-)__doc__")
-      .def("is_ascending", &pyinterp::Axis<T>::is_ascending, R"__doc__(
+      .def("is_ascending", &Axis::is_ascending, R"__doc__(
 Test if the data is sorted in ascending order.
 
 Returns:
     bool: True if the data is sorted in ascending order.
 )__doc__")
-      .def("increment", &pyinterp::Axis<T>::increment, R"__doc__(
+      .def(
+          "__eq__",
+          [](const Axis& self, const Axis& rhs) -> bool { return self == rhs; },
+          py::arg("other"),
+          "Overrides the default behavior of the ``==`` operator.")
+      .def(
+          "__ne__",
+          [](const Axis& self, const Axis& rhs) -> bool { return self != rhs; },
+          py::arg("other"),
+          "Overrides the default behavior of the ``!=`` operator.")
+      .def(py::pickle(
+          [](const Axis& self) { return self.getstate(); },
+          [](const py::tuple& state) { return Axis::setstate(state); }));
+}
+
+static void init_core_axis(py::module& m) {
+  using Axis = pyinterp::Axis<double>;
+
+  auto axis = py::class_<Axis, std::shared_ptr<Axis>>(m, "Axis", R"__doc__(
+A coordinate axis is a Variable that specifies one of the coordinates
+of a variable's values.
+)__doc__");
+
+  axis.def(py::init<>([](py::array_t<double, py::array::c_style>& values,
+                         const double epsilon, const bool is_circle) {
+             return std::make_shared<Axis>(values, epsilon, is_circle);
+           }),
+           py::arg("values"), py::arg("epsilon") = 1e-6,
+           py::arg("is_circle") = false,
+           R"__doc__(
+Create a coordinate axis from values.
+
+Args:
+    values (numpy.ndarray): Axis values.
+    epsilon (float, optional): Maximum allowed difference between two real
+        numbers in order to consider them equal. Defaults to ``1e-6``.
+    is_circle (bool, optional): True, if the axis can represent a
+        circle. Defaults to ``false``.
+)__doc__")
+      .def_property_readonly(
+          "is_circle",
+          [](const Axis& self) -> bool { return self.is_circle(); },
+          R"__doc__(
+Test if this axis represents a circle.
+
+Returns:
+    bool: True if this axis represents a circle.
+)__doc__")
+      .def("front", &Axis::front, R"__doc__(
+Get the first value of this axis.
+
+Returns:
+    float: The first value.
+)__doc__")
+      .def("back", &Axis::back, R"__doc__(
+Get the last value of this axis.
+
+Returns:
+    float: The last value.
+)__doc__")
+      .def("increment", &Axis::increment, R"__doc__(
 Get increment value if is_regular().
 
 Raises:
@@ -176,41 +185,138 @@ Raises:
 Returns:
     float: Increment value.
 )__doc__")
-      .def_property_readonly(
-          "is_circle",
-          [](const pyinterp::Axis<T>& self) -> bool {
-            return self.is_circle();
-          },
-          R"__doc__(
-Test if this axis represents a circle.
+      .def("min_value", &Axis::min_value, R"__doc__(
+Get the minimum coordinate value.
 
 Returns:
-    bool: True if this axis represents a circle.
+    float: The minimum coordinate value.
+)__doc__")
+      .def("max_value", &Axis::max_value, R"__doc__(
+Get the maximum coordinate value.
+
+Returns:
+    float: The maximum coordinate value.
+)__doc__");
+  implement_axis<Axis, const py::array_t<double>>(axis, "pyinterp.core.Axis");
+}
+
+void init_temporal_axis(py::module& m) {
+  // Required to declare the relationship between C++ classes
+  // pyinterp::TemporalAxis & pyinterp::Axis<int64_t>. pyinterp::Axis<int64_t>
+  // is used by the time grids.
+  auto base_class =
+      py::class_<pyinterp::Axis<int64_t>,
+                 std::shared_ptr<pyinterp::Axis<int64_t>>>(m, "AxisInt64");
+
+  auto axis = py::class_<pyinterp::TemporalAxis,
+                         std::shared_ptr<pyinterp::TemporalAxis>>(
+      m, "TemporalAxis", base_class, "Time axis");
+
+  axis.def(py::init<>([](const py::array& values) {
+             return std::make_shared<pyinterp::TemporalAxis>(values);
+           }),
+           py::arg("values"),
+           R"__doc__(
+Create a coordinate axis from values.
+
+Args:
+    values (numpy.ndarray): Items representing the datetimes or
+    timedeltas of the axis.
+
+Raises:
+    TypeError: if the array data type is not a datetime64 or timedelta64
+    subtype.
+
+Examples:
+
+    >>> import datetime
+    >>> import numpy as np
+    >>> import pyinterp
+    >>> start = datetime.datetime(2000, 1, 1)
+    >>> values = np.array([
+    ...     start + datetime.timedelta(hours=index)
+    ...     for index in range(86400)
+    ... ],
+    ...                   dtype="datetime64[us]")
+    >>> axis = pyinterp.TemporalAxis(values)
+    >>> axis
+    <pyinterp.core.TemporalAxis>
+      min_value: 2000-01-01T00:00:00.000000
+      max_value: 2009-11-08T23:00:00.000000
+      step     : 3600000000 microseconds
+    >>> values = np.array([
+    ...     datetime.timedelta(hours=index)
+    ...     for index in range(86400)
+    ... ],
+    ...                   dtype="timedelta64[us]")
+    >>> axis = pyinterp.TemporalAxis(values)
+    >>> axis
+    <pyinterp.core.TemporalAxis>
+      min_value: 0 microseconds
+      max_value: 311036400000000 microseconds
+      step     : 3600000000 microseconds
+)__doc__")
+      .def("dtype", &pyinterp::TemporalAxis::dtype, R"__doc__(
+Data-type of the axis's elements.
+
+Returns:
+    numpy.dtype: numpy dtype object.
+)__doc__")
+      .def("front", &pyinterp::TemporalAxis::front, R"__doc__(
+Get the first value of this axis.
+
+Returns:
+    numpy.array: The first value.
+)__doc__")
+      .def("back", &pyinterp::TemporalAxis::back, R"__doc__(
+Get the last value of this axis.
+
+Returns:
+    numpy.array: The last value.
+)__doc__")
+      .def("increment", &pyinterp::TemporalAxis::increment, R"__doc__(
+Get increment value if is_regular().
+
+Raises:
+    RuntimeError: if this instance does not represent a regular axis.
+Returns:
+    numpy.array: Increment value.
+)__doc__")
+      .def("min_value", &pyinterp::TemporalAxis::min_value, R"__doc__(
+Get the minimum coordinate value.
+
+Returns:
+    numpy.array: The minimum coordinate value.
+)__doc__")
+      .def("max_value", &pyinterp::TemporalAxis::max_value, R"__doc__(
+Get the maximum coordinate value.
+
+Returns:
+    numpy.array: The maximum coordinate value.
 )__doc__")
       .def(
-          "__eq__",
-          [](const pyinterp::Axis<T>& self,
-             const pyinterp::Axis<T>& rhs) -> bool { return self == rhs; },
-          py::arg("other"),
-          "Overrides the default behavior of the ``==`` operator.")
-      .def(
-          "__ne__",
-          [](const pyinterp::Axis<T>& self,
-             const pyinterp::Axis<T>& rhs) -> bool { return self != rhs; },
-          py::arg("other"),
-          "Overrides the default behavior of the ``!=`` operator.")
-      .def(
-          "__repr__",
-          [](const pyinterp::Axis<T>& self) -> std::string {
-            return static_cast<std::string>(self);
-          },
-          "Called by the ``repr()`` built-in function to compute the string "
-          "representation of an Axis.")
-      .def(py::pickle(
-          [](const pyinterp::Axis<T>& self) { return self.getstate(); },
-          [](const py::tuple& state) {
-            return pyinterp::Axis<T>::setstate(state);
-          }));
+          "safe_cast",
+          [](const pyinterp::TemporalAxis& self, const pybind11::array& array)
+              -> py::array { return self.safe_cast("values", array); },
+          py::arg("values"),
+          R"__doc__(
+Convert the values of the vector in the same unit as the time axis
+handled by this instance.
+
+Args:
+    values (numpy.ndarray): Values to convert.
+
+Returns:
+    numpy.ndarray: values converted.
+
+Raises:
+    UserWarning: If the implicit conversion of the supplied values to the
+        resolution of the axis truncates the values (e.g. converting
+        microseconds to seconds).
+)__doc__");
+
+  implement_axis<pyinterp::TemporalAxis, py::array>(
+      axis, "pyinterp.core.TemporalAxis");
 }
 
 void init_axis(py::module& m) {
@@ -224,6 +330,6 @@ Type of boundary handling.
       .value("Undef", pyinterp::axis::kUndef,
              "*Boundary violation is not defined*.");
 
-  implement_axis<double>(m, "");
-  implement_axis<int64_t>(m, "Temporal");
+  init_core_axis(m);
+  init_temporal_axis(m);
 }

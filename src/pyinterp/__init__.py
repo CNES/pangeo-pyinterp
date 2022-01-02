@@ -6,9 +6,8 @@ from . import geodetic
 from . import geohash
 from . import version
 from ._geohash import GeoHash
-from .axis import TemporalAxis
 from .binning import Binning2D
-from .core import Axis, dateutils
+from .core import Axis, TemporalAxis, dateutils
 from .grid import Grid2D, Grid3D, Grid4D
 from .histogram2d import Histogram2D
 from .interpolator.bicubic import bicubic
