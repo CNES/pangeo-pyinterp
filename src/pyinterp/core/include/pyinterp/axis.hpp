@@ -3,8 +3,8 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 
 #include <memory>
 #include <string>
@@ -163,16 +163,16 @@ class Axis : public detail::Axis<T>,
   virtual explicit operator std::string() const {
     auto ss = std::stringstream();
     ss << "<pyinterp.core.Axis>" << std::endl;
-    if (is_regular()) {
-      ss << "  min_value: " << min_value() << std::endl;
-      ss << "  max_value: " << max_value() << std::endl;
-      ss << "  step     : " << increment() << std::endl;
+    if (this->is_regular()) {
+      ss << "  min_value: " << this->min_value() << std::endl;
+      ss << "  max_value: " << this->max_value() << std::endl;
+      ss << "  step     : " << this->increment() << std::endl;
     } else {
-      auto values = coordinate_values(pybind11::slice(0, size(), 1));
+      auto values = coordinate_values(pybind11::slice(0, this->size(), 1));
       ss << "  values   : " << static_cast<std::string>(pybind11::str(values))
          << std::endl;
     }
-    ss << "  is_circle: " << std::boolalpha << is_circle();
+    ss << "  is_circle: " << std::boolalpha << this->is_circle();
     return ss.str();
   }
 

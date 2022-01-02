@@ -248,7 +248,7 @@ class TemporalAxis : public Axis<int64_t> {
   static auto Initialize(const std::string& name, const pybind11::array& array)
       -> TemporalAxis {
     return TemporalAxis(
-        std::move(Axis<int64_t>(detail::vector_from_numpy(array), 0, false)),
+        Axis<int64_t>(detail::vector_from_numpy(array), 0, false),
         detail::dtype(name, array));
   }
 

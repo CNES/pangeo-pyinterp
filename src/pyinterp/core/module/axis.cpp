@@ -29,7 +29,7 @@ auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>>& axis,
           },
           py::arg("index"))
       .def("__getitem__", &Axis::coordinate_values, py::arg("indices"))
-      .def("__len__", &Axis::size)
+      .def("__len__", [](const Axis& self) { return self.size(); })
       .def(
           "is_regular",
           [](const Axis& self) -> bool { return self.is_regular(); },

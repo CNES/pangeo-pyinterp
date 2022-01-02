@@ -77,8 +77,9 @@ class Axis {
 
     if (is_angle()) {
       auto normalized_values = normalize_longitude(values);
-      auto move = static_cast<bool>(normalized_values);
-      initialize_from_values(move ? *normalized_values: values, epsilon, move);
+      normalized_values
+          ? initialize_from_values(*normalized_values, epsilon, true)
+          : initialize_from_values(values, epsilon, false);
     } else {
       initialize_from_values(values, epsilon, false);
     }
@@ -512,9 +513,8 @@ class Axis {
           values[0], values[values.size() - 1], static_cast<T>(values.size()));
     } else {
       // Avoid data copy if possible.
-      axis_ = move ? std::make_shared<axis::container::Irregular<T>>(
-                         std::move(values))
-                   : std::make_shared<axis::container::Irregular<T>>(values);
+      axis_ = std::make_shared<axis::container::Irregular<T>>(
+          move ? std::move(values) : values);
     }
     compute_properties(epsilon);
   }
