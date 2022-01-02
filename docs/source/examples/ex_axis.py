@@ -78,6 +78,7 @@ MERCATOR_LATITUDES = numpy.array([
 ])
 
 axis = pyinterp.Axis(MERCATOR_LATITUDES)
+axis
 
 #%%
 # Let's display its properties.

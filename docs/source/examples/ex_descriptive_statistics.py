@@ -37,6 +37,7 @@ ds = pyinterp.DescriptiveStatistics(values)
 # The constructor will calculate the statistical variables on the provided data.
 # The calculated variables are stored in the instance and can be accessed using
 # different methods:
+#
 # * mean
 # * var
 # * std

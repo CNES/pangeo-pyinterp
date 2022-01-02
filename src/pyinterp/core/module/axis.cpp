@@ -221,11 +221,11 @@ Create a coordinate axis from values.
 
 Args:
     values (numpy.ndarray): Items representing the datetimes or
-    timedeltas of the axis.
+        timedeltas of the axis.
 
 Raises:
     TypeError: if the array data type is not a datetime64 or timedelta64
-    subtype.
+        subtype.
 
 Examples:
 
