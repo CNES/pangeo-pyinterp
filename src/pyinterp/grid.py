@@ -45,17 +45,24 @@ class Grid2D:
             >>> grid = pyinterp.Grid2D(x_axis, y_axis, array)
             >>> grid
             <pyinterp.grid.Grid2D>
+            array([[0., 0., 0., ..., 0., 0., 0.],
+                   [0., 0., 0., ..., 0., 0., 0.],
+                   [0., 0., 0., ..., 0., 0., 0.],
+                   ...,
+                   [0., 0., 0., ..., 0., 0., 0.],
+                   [0., 0., 0., ..., 0., 0., 0.],
+                   [0., 0., 0., ..., 0., 0., 0.]])
             Axis:
-              x: Axis([-180, -179, -178, ..., 178, 179], is_circle=true)
-              y: Axis([-80, -79, -78, ..., 78, 79], is_circle=false)
-            Data:
-              [[0. 0. 0. ... 0. 0. 0.]
-               [0. 0. 0. ... 0. 0. 0.]
-               [0. 0. 0. ... 0. 0. 0.]
-               ...
-               [0. 0. 0. ... 0. 0. 0.]
-               [0. 0. 0. ... 0. 0. 0.]
-               [0. 0. 0. ... 0. 0. 0.]]
+             * x: <pyinterp.axis.Axis>
+                   min_value: -180.0
+                   max_value: 179.0
+                   step: 1.0
+                   is_circle: True
+             * y: <pyinterp.axis.Axis>
+                   min_value: -80.0
+                   max_value: 79.0
+                   step: 1.0
+                   is_circle: False
         """
         prefix = ""
         for idx, item in enumerate(args):
@@ -84,16 +91,18 @@ class Grid2D:
         """Called by the ``repr()`` built-in function to compute the string
         representation of this instance.
         """
+        pad = lambda s, n: "\n".join([(" " * n if ix else "") + line for ix,
+                                      line in enumerate(s.split("\n"))])
         result = [
-            "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
+            f"<{self.__module__}.{self.__class__.__name__}>",
+            repr(self.array),
         ]
         result.append("Axis:")
         for item in dir(self):
             attr = getattr(self, item)
             if isinstance(attr, (core.Axis, core.TemporalAxis)):
-                result.append("  %s: %s" % (item, attr))
-        result.append("Data:")
-        result += ["  %s" % line for line in str(self.array).split("\n")]
+                prefix = f"* {item}: "
+                result.append(f" {prefix}{pad(repr(attr), len(prefix))}")
         return "\n".join(result)
 
     @property

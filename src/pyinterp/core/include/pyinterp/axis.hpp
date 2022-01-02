@@ -7,6 +7,8 @@
 #include <pybind11/pybind11.h>
 
 #include <memory>
+#include <regex>
+#include <sstream>
 #include <string>
 
 #include "pyinterp/detail/axis.hpp"
@@ -37,6 +39,21 @@ inline auto vector_from_numpy(
     -> Eigen::Map<const Vector<T>> {
   check_array_ndim(name, 1, ndarray);
   return Eigen::Map<const Vector<T>>(ndarray.data(), ndarray.size());
+}
+
+/// Pad a string with spaces
+inline auto pad(const std::string& str) -> std::string {
+  auto re = std::regex("(?:\r\n|\n)");
+  auto first = std::sregex_token_iterator(str.begin(), str.end(), re, -1);
+  auto last = std::sregex_token_iterator();
+  auto ss = std::stringstream{};
+  for (auto it = first; it != last; ++it) {
+    if (it != first) {
+      ss << std::endl << "             ";
+    }
+    ss << *it;
+  }
+  return ss.str();
 }
 
 }  // namespace detail
@@ -169,7 +186,8 @@ class Axis : public detail::Axis<T>,
       ss << "  step     : " << this->increment() << std::endl;
     } else {
       auto values = coordinate_values(pybind11::slice(0, this->size(), 1));
-      ss << "  values   : " << static_cast<std::string>(pybind11::str(values))
+      ss << "  values   : "
+         << detail::pad(static_cast<std::string>(pybind11::str(values)))
          << std::endl;
     }
     ss << "  is_circle: " << std::boolalpha << this->is_circle();

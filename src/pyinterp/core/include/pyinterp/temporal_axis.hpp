@@ -232,7 +232,8 @@ class TemporalAxis : public Axis<int64_t> {
          << static_cast<std::string>(pybind11::str(increment()));
     } else {
       auto values = coordinate_values(pybind11::slice(0, size(), 1));
-      ss << "  values   : " << static_cast<std::string>(pybind11::str(values));
+      ss << "  values   : "
+         << detail::pad(static_cast<std::string>(pybind11::str(values)));
     }
     return ss.str();
   }
