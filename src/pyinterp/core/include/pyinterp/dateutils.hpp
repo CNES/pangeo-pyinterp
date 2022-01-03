@@ -87,7 +87,7 @@ class DType {
       : datetype_{datetype}, resolution_{resolution} {}
 
   /// Get the clock resolution name
-  constexpr auto clock_name() const -> const char* {
+  [[nodiscard]] constexpr auto clock_name() const -> const char* {
     switch (resolution_) {
       case kYear:
         return "year";
@@ -120,7 +120,7 @@ class DType {
   }
 
   /// Get the clock unit
-  constexpr auto unit() const -> const char* {
+  [[nodiscard]] constexpr auto unit() const -> const char* {
     switch (resolution_) {
       case kYear:
         return "Y";
@@ -153,13 +153,17 @@ class DType {
   }
 
   /// Get the clock resolution handled by this instance
-  constexpr auto resolution() const -> Resolution { return resolution_; }
+  [[nodiscard]] constexpr auto resolution() const -> Resolution {
+    return resolution_;
+  }
 
   /// Get the date type handled by this instance
-  constexpr auto datetype() const -> DateType { return datetype_; }
+  [[nodiscard]] constexpr auto datetype() const -> DateType {
+    return datetype_;
+  }
 
   /// Get the date type name
-  auto constexpr datetype_name() const -> const char* {
+  [[nodiscard]] auto constexpr datetype_name() const -> const char* {
     switch (datetype_) {
       case kDatetime64:
         return "datetime64";
@@ -171,7 +175,7 @@ class DType {
 
   /// Return the string representation of the numpy data type handled by this
   /// instance.
-  operator std::string() const {
+  explicit operator std::string() const {
     std::stringstream ss;
     ss << datetype_name() << "[" << unit() << "]";
     return ss.str();
@@ -179,7 +183,7 @@ class DType {
 
   /// Get the order of magnitude of the resolution between seconds and the
   /// clock resolution
-  constexpr auto order_of_magnitude() const -> int64_t {
+  [[nodiscard]] constexpr auto order_of_magnitude() const -> int64_t {
     switch (resolution_) {
       case kSecond:
         return dateutils::kSecond;
@@ -217,7 +221,7 @@ class DType {
 
   /// Transform this instance into a new instance handling a timedelta64 type
   /// with the same resolution.
-  inline auto as_timedelta64() const -> DType {
+  [[nodiscard]] inline auto as_timedelta64() const -> DType {
     return {kTimedelta64, resolution_};
   }
 

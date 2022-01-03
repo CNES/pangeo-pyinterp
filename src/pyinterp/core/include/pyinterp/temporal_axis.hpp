@@ -23,7 +23,7 @@ namespace detail {
 inline auto dtype(const std::string& name, const pybind11::array& array)
     -> dateutils::DType {
   detail::check_array_ndim(name, 1, array);
-  if (!(array.flags() & pybind11::array::c_style)) {
+  if ((array.flags() & pybind11::array::c_style) == 0) {
     throw pybind11::type_error(name + " must be a C-style contiguous array");
   }
   return dateutils::DType(static_cast<std::string>(
@@ -35,7 +35,7 @@ inline auto dtype(const std::string& name, const pybind11::array& array)
 inline auto vector_from_numpy(const pybind11::array& array)
     -> Eigen::Map<const Vector<int64_t>> {
   auto ptr = array.unchecked<int64_t, 1>();
-  return Eigen::Map<const Vector<int64_t>>(&ptr[0], array.size());
+  return {&ptr[0], array.size()};
 }
 
 }  // namespace detail
@@ -54,7 +54,8 @@ class TemporalAxis : public Axis<int64_t> {
   ///
   /// @param points axis values
   explicit TemporalAxis(const pybind11::array& points)
-      : TemporalAxis(TemporalAxis::Initialize("points", points)) {}
+      : TemporalAxis(Axis<int64_t>(detail::vector_from_numpy(points), 0, false),
+                     detail::dtype("points", points)) {}
 
   /// Returns the numpy dtype handled by the axis.
   [[nodiscard]] inline auto dtype() const -> pybind11::dtype {
@@ -119,7 +120,7 @@ class TemporalAxis : public Axis<int64_t> {
     {
       pybind11::gil_scoped_release release;
       for (size_t ix = 0; ix < slicelength; ++ix) {
-        _result(ix) = (*this)(start);
+        _result(ix) = (*this)(static_cast<int64_t>(start));
         start += step;
       }
     }
@@ -208,9 +209,8 @@ class TemporalAxis : public Axis<int64_t> {
     if (state.size() != 2) {
       throw std::invalid_argument("invalid state");
     }
-    return TemporalAxis(
-        Axis<int64_t>::setstate(state[0].cast<pybind11::tuple>()),
-        dateutils::DType(state[1].cast<std::string>()));
+    return {Axis<int64_t>::setstate(state[0].cast<pybind11::tuple>()),
+            dateutils::DType(state[1].cast<std::string>())};
   }
 
   /// @copydoc detail::Axis::coordinate_repr(const int64_t) const
@@ -242,24 +242,16 @@ class TemporalAxis : public Axis<int64_t> {
   dateutils::DType dtype_;
 
   /// Construct a new instance from the base class.
-  TemporalAxis(Axis<int64_t> base, const std::string& dtype)
+  TemporalAxis(Axis<int64_t> base, const dateutils::DType& dtype)
       : Axis<int64_t>(std::move(base)), dtype_(dtype) {}
-
-  /// Construct a new instance from a numpy array.
-  static auto Initialize(const std::string& name, const pybind11::array& array)
-      -> TemporalAxis {
-    return TemporalAxis(
-        Axis<int64_t>(detail::vector_from_numpy(array), 0, false),
-        detail::dtype(name, array));
-  }
 
   /// Returns the result of a method wrapped in a pybind11::array.
   template <typename Getter>
-  auto as_datetype(const Getter& getter, const dateutils::DType& dtype) const
+  inline auto as_datetype(const Getter& getter,
+                          const dateutils::DType& dtype) const
       -> pybind11::array {
     auto value = getter();
-    return pybind11::array(pybind11::dtype(static_cast<std::string>(dtype)), {},
-                           {}, &value);
+    return {pybind11::dtype(static_cast<std::string>(dtype)), {}, {}, &value};
   }
 };
 
