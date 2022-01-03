@@ -1,4 +1,4 @@
-# Copyright (c) 2021 CNES
+# Copyright (c) 2022 CNES
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
@@ -55,6 +55,7 @@ def run(program, fix, path, options=""):
     args = [
         program, '-checks=*,-llvm-header-guard,-fuchsia-*,-android-*,'
         '-*-magic-numbers,-google-runtime-references,'
+        '-altera-*,-bugprone-*,'
         '-cppcoreguidelines-init-variables,'
         '-cppcoreguidelines-owning-memory,'
         '-cppcoreguidelines-pro-bounds-array-to-pointer-decay,'
