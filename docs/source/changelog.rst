@@ -1,6 +1,14 @@
 Changelog
 #########
 
+0.11.0 (3 January 2022)
+-----------------------
+* Change of the text representations of the grids.
+* Change of the text representations of the axes.
+* Display of dates in case of error in the time axes.
+* Bug fix: If the step is negative in an axis, it's impossible to detect that
+  the values are evenly spaced.
+
 0.10.0 (17 December 2021)
 -------------------------
 * Refactor regular grid interpolators.

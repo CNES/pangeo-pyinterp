@@ -15,13 +15,13 @@ HERE = pathlib.Path(__file__).absolute().parent
 # -- Project information -----------------------------------------------------
 
 project = 'pyinterp'
-copyright = '(2021, CNES/CLS)'
+copyright = '(2022, CNES/CLS)'
 author = 'CNES/CLS'
 
 # The short X.Y version
-version = '0.10.0'
+version = '0.11.0'
 # The full version, including alpha/beta/rc tags
-release = '0.10.0'
+release = '0.11.0'
 
 # -- General configuration ---------------------------------------------------
 
