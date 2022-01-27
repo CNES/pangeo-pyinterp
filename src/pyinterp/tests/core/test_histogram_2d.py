@@ -5,14 +5,17 @@
 import copy
 import os
 import pickle
+
 import netCDF4
+
 try:
-    import matplotlib.pyplot
     import matplotlib.colors
+    import matplotlib.pyplot
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
 import numpy as np
+
 from ... import core
 from .. import grid2d_path
 

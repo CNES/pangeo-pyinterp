@@ -9,7 +9,7 @@
 namespace py = pybind11;
 namespace geometry = pyinterp::detail::geometry;
 
-void init_bivariate_interpolator(py::module& m) {
+void init_bivariate_interpolator(py::module &m) {
   pyinterp::implement_bivariate_interpolator<geometry::EquatorialPoint2D,
                                              double>(m, "", "2D");
   pyinterp::implement_bivariate_interpolator<geometry::EquatorialPoint3D,

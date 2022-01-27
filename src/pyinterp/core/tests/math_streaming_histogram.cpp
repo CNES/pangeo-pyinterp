@@ -17,7 +17,7 @@ namespace math = pyinterp::detail::math;
 
 constexpr auto POINTS = 1000;
 
-auto quantile(const std::vector<double>& x, double q) {
+auto quantile(const std::vector<double> &x, double q) {
   const auto ix = (x.size() - 1) * q;
   const auto lo = floor(ix);
   const auto hi = ceil(ix);
@@ -29,7 +29,7 @@ TEST(math_streaming_histogram, push) {
   auto instance = math::StreamingHistogram<double>(3, false);
 
   instance(10);
-  const auto& bins = instance.bins();
+  const auto &bins = instance.bins();
   ASSERT_EQ(bins.size(), 1);
   EXPECT_EQ(bins[0].value, 10);
   EXPECT_EQ(bins[0].weight, 1);
@@ -139,7 +139,7 @@ TEST(math_streaming_histogram, quantile) {
 
 TEST(math_streaming_histogram, quantile_not_enough_elements) {
   auto instance = math::StreamingHistogram<double>(10, false);
-  for (const auto& item : std::vector<double>({31, 56, 40, 39, 82, 17})) {
+  for (const auto &item : std::vector<double>({31, 56, 40, 39, 82, 17})) {
     instance(item);
   }
 
@@ -149,7 +149,7 @@ TEST(math_streaming_histogram, quantile_not_enough_elements) {
 
 TEST(math_streaming_histogram, quantile_on_left) {
   auto instance = math::StreamingHistogram<double>(6, false);
-  for (const auto& item : std::vector<double>(
+  for (const auto &item : std::vector<double>(
            {3.075, 1.3, 1.35, 1.225, 1.375, 1.4, 2.05, 7.6325, 5.875, 3.495})) {
     instance(item);
   }
@@ -169,7 +169,7 @@ TEST(math_streaming_histogram, quantile_on_left) {
 
 TEST(math_streaming_histogram, quantile_on_right) {
   auto instance = math::StreamingHistogram<double>(6, false);
-  for (const auto& item :
+  for (const auto &item :
        std::vector<double>({3.075, 2.05, 25.1325, 5.875, 3.495, 50., 50.05,
                             50.2, 50.1, 50.025})) {
     instance(item);
@@ -214,7 +214,7 @@ TEST(math_streaming_histogram, stats) {
   EXPECT_EQ(acc.max(), instance.max());
   EXPECT_EQ(acc.sum_of_weights(), instance.sum_of_weights());
   acc.clear();
-  for (const auto& item : instance.bins()) {
+  for (const auto &item : instance.bins()) {
     acc(item.value, item.weight);
   }
   EXPECT_NEAR(acc.mean(), instance.mean(), 1e-6);
@@ -262,7 +262,7 @@ TEST(math_streaming_histogram, merge) {
   EXPECT_NEAR(acc.max(), instance1.max(), 1e-6);
   EXPECT_EQ(acc.sum_of_weights(), instance1.sum_of_weights());
   acc.clear();
-  for (const auto& item : instance1.bins()) {
+  for (const auto &item : instance1.bins()) {
     acc(item.value, item.weight);
   }
   EXPECT_NEAR(acc.mean(), instance1.mean(), 1e-6);
@@ -273,7 +273,7 @@ TEST(math_streaming_histogram, quantile_out_of_bounds) {
   auto instance = math::StreamingHistogram<double>(6, false);
   EXPECT_TRUE(std::isnan(instance.quantile(-0.2)));
 
-  for (const auto& item : std::vector<double>({1, 2, 3, 4, 5, 6, 6.1, 6.2})) {
+  for (const auto &item : std::vector<double>({1, 2, 3, 4, 5, 6, 6.1, 6.2})) {
     instance(item);
   }
 
@@ -290,7 +290,7 @@ TEST(math_streaming_histogram, serialization) {
   ASSERT_EQ(instance.sum_of_weights(), instance2.sum_of_weights());
   ASSERT_EQ(instance.bins().size(), instance2.bins().size());
 
-  for (const auto& item :
+  for (const auto &item :
        std::vector<double>({1, 2, 3, 4, 5, 6, 7, 8, 9, 10})) {
     instance(item);
   }

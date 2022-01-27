@@ -11,7 +11,7 @@
 namespace py = pybind11;
 
 template <typename Type>
-void implement_binning_2d(py::module& m, const std::string& suffix) {
+void implement_binning_2d(py::module &m, const std::string &suffix) {
   PYBIND11_NUMPY_DTYPE(pyinterp::detail::math::Accumulators<Type>, count,
                        sum_of_weights, mean, min, max, sum, mom2, mom3, mom4);
 
@@ -40,7 +40,7 @@ Args:
         the longitudes and latitudes.
 )__doc__")
       .def_property_readonly(
-          "x", [](const pyinterp::Binning2D<Type>& self) { return self.x(); },
+          "x", [](const pyinterp::Binning2D<Type> &self) { return self.x(); },
           R"__doc__(
 Gets the bin centers for the X Axis of the grid.
 
@@ -48,7 +48,7 @@ Returns:
     pyinterp.core.Axis: X-Axis.
 )__doc__")
       .def_property_readonly(
-          "y", [](const pyinterp::Binning2D<Type>& self) { return self.y(); },
+          "y", [](const pyinterp::Binning2D<Type> &self) { return self.y(); },
           R"__doc__(
 Gets the bin centers for the Y Axis of the grid.
 
@@ -57,7 +57,7 @@ Returns:
 )__doc__")
       .def_property_readonly(
           "wgs",
-          [](const pyinterp::Binning2D<Type>& self) { return self.wgs(); },
+          [](const pyinterp::Binning2D<Type> &self) { return self.wgs(); },
           R"__doc__(
 Gets the WGS system handled by this instance.
 
@@ -148,13 +148,13 @@ Returns:
       .def("__iadd__", &pyinterp::Binning2D<Type>::operator+=,
            py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
-          [](const pyinterp::Binning2D<Type>& self) { return self.getstate(); },
-          [](const py::tuple& state) {
+          [](const pyinterp::Binning2D<Type> &self) { return self.getstate(); },
+          [](const py::tuple &state) {
             return pyinterp::Binning2D<Type>::setstate(state);
           }));
 }
 
-void init_binning(py::module& m) {
+void init_binning(py::module &m) {
   implement_binning_2d<double>(m, "Float64");
   implement_binning_2d<float>(m, "Float32");
 }

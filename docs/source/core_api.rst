@@ -205,4 +205,3 @@ Temporal 3D interpolators
 
   core.trivariate_float32
   core.trivariate_float64
-

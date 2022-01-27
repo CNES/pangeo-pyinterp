@@ -13,8 +13,8 @@ namespace detail {
 
 /// Calculates the area of a polygon.
 template <template <class> class Point, typename Strategy, typename T>
-inline auto calculate_area(boost::geometry::model::polygon<Point<T>>& polygon,
-                           const Strategy& strategy) -> T {
+inline auto calculate_area(boost::geometry::model::polygon<Point<T>> &polygon,
+                           const Strategy &strategy) -> T {
   auto result = boost::geometry::area(polygon, strategy);
   if (result < 0) {
     boost::geometry::reverse(polygon);
@@ -27,8 +27,8 @@ inline auto calculate_area(boost::geometry::model::polygon<Point<T>>& polygon,
 /// calculated area is set to zero.
 template <template <class> class Point, typename Strategy, typename T>
 inline auto calculate_and_normalize_area(
-    boost::geometry::model::polygon<Point<T>>& polygon,
-    const Strategy& strategy, const double total_area) -> T {
+    boost::geometry::model::polygon<Point<T>> &polygon,
+    const Strategy &strategy, const double total_area) -> T {
   auto result = calculate_area<Point, Strategy, T>(polygon, strategy);
   if (result > total_area || std::fabs(result) < 1e-12) {
     result = 0;
@@ -59,8 +59,8 @@ inline auto calculate_and_normalize_area(
 ///   * w11 Weight for the coordinate (x1, y1)
 ///   * w10 Weight for the coordinate (x1, y0)
 template <template <class> class Point, typename Strategy, typename T>
-auto binning_2d(const Point<T>& pij, const Point<T>& p00, const Point<T>& p11,
-                Strategy const& strategy) -> std::tuple<T, T, T, T> {
+auto binning_2d(const Point<T> &pij, const Point<T> &p00, const Point<T> &p11,
+                Strategy const &strategy) -> std::tuple<T, T, T, T> {
   // Coordinates of the grid points deducted.
   const auto p01 =
       Point<T>{boost::geometry::get<0>(p00), boost::geometry::get<1>(p11)};

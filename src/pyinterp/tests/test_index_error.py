@@ -2,18 +2,18 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-import datetime
 import collections
+import datetime
 
+import numpy as np
 #
 import pytest
-import numpy as np
 import xarray as xr
 
-#
-from . import grid3d_path, grid4d_path
 from .. import core
 from ..backends import xarray as xr_backend
+#
+from . import grid3d_path, grid4d_path
 
 
 def test_index_error_3d():

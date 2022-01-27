@@ -25,9 +25,9 @@ class Base32 {
   }
 
   // Returns true if the buffer contains a valid definition of this encoding.
-  [[nodiscard]] constexpr auto validate(const char* hash,
+  [[nodiscard]] constexpr auto validate(const char *hash,
                                         const size_t count) const -> bool {
-    const auto* end = hash + count;
+    const auto *end = hash + count;
     while (hash != end && *hash != 0) {
       if (!validate_byte(*(hash++))) {
         return false;
@@ -38,11 +38,11 @@ class Base32 {
 
   // Returns the string decoded into bits of a 64-bit word and the the number of
   // characters other than the null character.
-  [[nodiscard]] constexpr auto decode(const char* const buffer,
+  [[nodiscard]] constexpr auto decode(const char *const buffer,
                                       const size_t count) const
       -> std::tuple<uint64_t, uint32_t> {
     auto hash = static_cast<uint64_t>(0);
-    const auto* it = buffer;
+    const auto *it = buffer;
     while (it != buffer + count && *it != 0) {
       if (!validate_byte(*it)) {
         throw std::invalid_argument("Invalid character in hash: " +
@@ -55,9 +55,9 @@ class Base32 {
   }
 
   // Encode bits of 64-bit word into a string.
-  constexpr static auto encode(uint64_t hash, char* const buffer,
+  constexpr static auto encode(uint64_t hash, char *const buffer,
                                const size_t count) -> void {
-    auto* it = buffer + count - 1;
+    auto *it = buffer + count - 1;
     while (it >= buffer) {
       *(it--) = encode_[hash & 0x1fU];
       hash >>= 5U;

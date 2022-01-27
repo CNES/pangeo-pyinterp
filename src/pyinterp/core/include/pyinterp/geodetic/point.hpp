@@ -36,9 +36,9 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
   inline auto lat(double const v) -> void { this->set<1>(v); }
 
   /// Calculate the distance between the two points
-  [[nodiscard]] auto distance(const Point& other,
+  [[nodiscard]] auto distance(const Point &other,
                               const DistanceStrategy strategy,
-                              const std::optional<System>& wgs) const
+                              const std::optional<System> &wgs) const
       -> double {
     return geodetic::distance(*this, other, strategy, wgs);
   }
@@ -50,7 +50,7 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static auto setstate(const pybind11::tuple& state) -> Point {
+  static auto setstate(const pybind11::tuple &state) -> Point {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
@@ -66,7 +66,7 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
   }
 
   /// Returns true if the tow points are equal.
-  auto operator==(const Point& other) const -> bool {
+  auto operator==(const Point &other) const -> bool {
     return boost::geometry::equals(*this, other);
   }
 };
@@ -107,10 +107,10 @@ struct dimension<pg::Point> : boost::mpl::int_<2> {};
 template <std::size_t I>
 struct access<pg::Point, I> {
   /// Accessor to pointer.
-  static auto get(pg::Point const& p) -> double { return p.template get<I>(); }
+  static auto get(pg::Point const &p) -> double { return p.template get<I>(); }
 
   /// Pointer setter.
-  static void set(pg::Point& p, double const& v) {  // NOLINT
+  static void set(pg::Point &p, double const &v) {  // NOLINT
     p.template set<I>(v);
   }
 };

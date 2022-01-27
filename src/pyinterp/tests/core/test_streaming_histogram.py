@@ -3,9 +3,10 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 import pickle
+
 import numpy as np
-from numpy.core.numeric import ones
 import pytest
+
 from ... import core
 from .test_descriptive_statistics import (weighted_mom1, weighted_mom2,
                                           weighted_mom3, weighted_mom4)

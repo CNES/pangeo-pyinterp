@@ -5,8 +5,8 @@
 import netCDF4
 import numpy as np
 import pytest
-from .. import Axis, Grid2D, Grid3D
-from .. import fill
+
+from .. import Axis, Grid2D, Grid3D, fill
 from . import grid2d_path
 
 

@@ -65,7 +65,7 @@ class GeoHash {
   /// @param[in] round If true, the coordinates of the point will be rounded to
   /// the accuracy defined by the GeoHash.
   /// @throw std::invalid_argument if the geohash is not valid.
-  static auto from_string(const std::string& code, bool round) -> GeoHash {
+  static auto from_string(const std::string &code, bool round) -> GeoHash {
     auto precision = static_cast<uint32_t>(code.size());
     if (precision > 12) {
       throw std::invalid_argument("GeoHash precision must be <= 12");
@@ -129,7 +129,7 @@ class GeoHash {
   ///
   /// @return The area of the geohash in square meters.
   [[nodiscard]] inline auto area(
-      const std::optional<geodetic::System>& wgs) const -> double {
+      const std::optional<geodetic::System> &wgs) const -> double {
     return string::area(code_.data(), precision(), wgs);
   }
 
@@ -137,7 +137,7 @@ class GeoHash {
   ///
   /// @return A tuple of three elements containing: The GeoHash of the minimum
   /// corner point, the number of cells in longitudes and latitudes.
-  [[nodiscard]] static auto grid_properties(const geodetic::Box& box,
+  [[nodiscard]] static auto grid_properties(const geodetic::Box &box,
                                             uint32_t precision)
       -> std::tuple<GeoHash, size_t, size_t> {
     auto [code, lng_boxes, lat_boxes] =
@@ -170,7 +170,7 @@ class GeoHash {
   explicit GeoHash(const size_t precision) : code_(precision, '\0'){};
 
   /// GeoHash from lon/lat and number of characters.
-  GeoHash(const geodetic::Point& point, uint32_t precision)
+  GeoHash(const geodetic::Point &point, uint32_t precision)
       : GeoHash(point.lon(), point.lat(), precision){};
 };
 

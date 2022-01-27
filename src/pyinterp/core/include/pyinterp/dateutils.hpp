@@ -70,7 +70,7 @@ class DType {
   };
 
   /// Default constructor
-  explicit inline DType(const std::string& dtype) {
+  explicit inline DType(const std::string &dtype) {
     const auto pattern = std::regex{
         R"((datetime64|timedelta64)\[(Y|M|W|D|h|m|s|(?:[munpfa]s))\])"};
     auto match = std::smatch{};
@@ -87,7 +87,7 @@ class DType {
       : datetype_{datetype}, resolution_{resolution} {}
 
   /// Get the clock resolution name
-  [[nodiscard]] constexpr auto clock_name() const -> const char* {
+  [[nodiscard]] constexpr auto clock_name() const -> const char * {
     switch (resolution_) {
       case kYear:
         return "year";
@@ -120,7 +120,7 @@ class DType {
   }
 
   /// Get the clock unit
-  [[nodiscard]] constexpr auto unit() const -> const char* {
+  [[nodiscard]] constexpr auto unit() const -> const char * {
     switch (resolution_) {
       case kYear:
         return "Y";
@@ -163,7 +163,7 @@ class DType {
   }
 
   /// Get the date type name
-  [[nodiscard]] auto constexpr datetype_name() const -> const char* {
+  [[nodiscard]] auto constexpr datetype_name() const -> const char * {
     switch (datetype_) {
       case kDatetime64:
         return "datetime64";
@@ -205,17 +205,17 @@ class DType {
   }
 
   /// Compare two instances
-  constexpr auto operator<(const DType& other) const -> bool {
+  constexpr auto operator<(const DType &other) const -> bool {
     return compare(other) < 0;
   }
 
   /// Return true if the two instances are different.
-  constexpr auto operator!=(const DType& other) const -> bool {
+  constexpr auto operator!=(const DType &other) const -> bool {
     return datetype_ != other.datetype_ || resolution_ != other.resolution_;
   }
 
   /// Return true if the two instances are equal.
-  constexpr auto operator==(const DType& other) const -> bool {
+  constexpr auto operator==(const DType &other) const -> bool {
     return datetype_ == other.datetype_ && resolution_ == other.resolution_;
   }
 
@@ -231,12 +231,12 @@ class DType {
 
   /// Compare two resolutions
   /// @return 0 if lhs == rhs, -1 if lhs < rhs, 1 if lhs > rhs
-  [[nodiscard]] constexpr auto compare(const DType& rhs) const -> int {
+  [[nodiscard]] constexpr auto compare(const DType &rhs) const -> int {
     return static_cast<int>(resolution_) - static_cast<int>(rhs.resolution_);
   }
 
   /// Parse the resolution unit from a string
-  [[nodiscard]] static inline auto parse_unit(const std::string& unit)
+  [[nodiscard]] static inline auto parse_unit(const std::string &unit)
       -> Resolution {
     if (unit == "Y") {
       return kYear;
@@ -286,11 +286,11 @@ class DType {
 class FractionalSeconds {
  public:
   /// Default constructor
-  explicit FractionalSeconds(const DType& dtype)
+  explicit FractionalSeconds(const DType &dtype)
       : order_of_magnitude_(dtype.order_of_magnitude()) {}
 
   /// Constructor from a numpy data type encoded in a string
-  explicit FractionalSeconds(const std::string& dtype)
+  explicit FractionalSeconds(const std::string &dtype)
       : order_of_magnitude_(DType(dtype).order_of_magnitude()) {}
 
   /// Get the number of days, seconds and the fractional part elapsed since
@@ -473,7 +473,7 @@ constexpr auto datetime_from_minutes(const int64_t minutes)
 }
 
 /// Convert a datetime64 to a string
-inline auto datetime64_to_string(const int64_t value, const DType& dtype)
+inline auto datetime64_to_string(const int64_t value, const DType &dtype)
     -> std::string {
   auto date = Date{};
   auto time = Time{};
@@ -562,7 +562,7 @@ constexpr auto is_leap_year(const int year) -> int {
 }
 
 /// Get the number of days since the first January
-constexpr auto days_since_january(const Date& date) -> unsigned {
+constexpr auto days_since_january(const Date &date) -> unsigned {
   unsigned result = date.day - 1;
 
   if (date.month > 2) {

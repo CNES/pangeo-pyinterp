@@ -1,8 +1,10 @@
-import numpy
 import pickle
-import pyinterp
+
+import numpy
 import pytest
 import xarray
+
+import pyinterp
 
 from .. import GeoHash
 

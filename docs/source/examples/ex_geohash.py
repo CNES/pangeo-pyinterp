@@ -12,17 +12,19 @@ Geohash Grid
 ============
 """
 import timeit
+
 import cartopy.crs
 import matplotlib.colors
 import matplotlib.patches
 import matplotlib.pyplot
 import numpy
 import pandas
+
 #
 import pyinterp
 
 
-#%%
+# %%
 # Writing a visualization routine for GeoHash grids.
 def _sort_colors(colors):
     """Sort colors by hue, saturation, value and name in descending order"""
@@ -99,24 +101,24 @@ def plot_geohash_grid(precision,
     ax.grid()
 
 
-#%%
+# %%
 # Bounds of geohash with a precision of 1 character.
 plot_geohash_grid(1)
 
-#%%
+# %%
 # Bounds of the geohash ``d`` with a precision of two characters.
 plot_geohash_grid(2, polygon=pyinterp.GeoHash.from_string('d').bounding_box())
 
-#%%
+# %%
 # Bounds of the geohash ``dd`` with a precision of three characters.
 plot_geohash_grid(3, polygon=pyinterp.GeoHash.from_string('dd').bounding_box())
 
-#%%
+# %%
 # Bounds of the geohash ``dds`` with a precision of four characters.
 plot_geohash_grid(4,
                   polygon=pyinterp.GeoHash.from_string('dds').bounding_box())
 
-#%%
+# %%
 # The :py:class:`GeoHash<pyinterp.GeoHash>` class allows encoding a coordinate
 # into a GeoHash code in order to examine its properties: precision, number of
 # bits, code, coordinates of the grid cell, etc.
@@ -126,7 +128,7 @@ print(f"precision = {code.precision()}")
 print(f"number of bits = {code.number_of_bits()}")
 print(f"lon/lat = {code.center()}")
 
-#%%
+# %%
 # You can also use this class to get the neighboring GeoHash codes of this
 # instance.
 [str(item) for item in code.neighbors()]
@@ -134,7 +136,7 @@ print(f"lon/lat = {code.center()}")
 # On the other hand, when you want to encode a large volume of data, you should
 # use functions that work on numpy arrays.
 
-#%%
+# %%
 # Encoding coordinates
 # ====================
 #
@@ -144,35 +146,35 @@ lon = numpy.random.uniform(-180, 180, SIZE)
 lat = numpy.random.uniform(-80, 80, SIZE)
 measures = numpy.random.random_sample(SIZE)
 
-#%%
+# %%
 # Encoding the data
 codes = pyinterp.geohash.encode(lon, lat, precision=4)
 codes
 
 # As you can see, the resulting codes are encoding as numpy byte arrays.
 
-#%%
+# %%
 # This algorithm is very fast, which makes it possible to process a lot of data
 # quickly.
 timeit.timeit("pyinterp.geohash.encode(lon, lat)",
               number=50,
               globals=dict(pyinterp=pyinterp, lon=lon, lat=lat)) / 50
 
-#%%
+# %%
 # The inverse operation is also possible.
 lon, lat = pyinterp.geohash.decode(codes)
 
-#%%
+# %%
 # You can also use the :py:func:`pyinterp.geohash.transform` to transform
 # coordinates from one précision to another.
 codes = pyinterp.geohash.transform(codes, precision=1)
 codes
 
-#%%
+# %%
 codes = pyinterp.geohash.transform(codes, precision=3)
 codes
 
-#%%
+# %%
 # The :py:func:`pyinterp.geohash.bounding_boxes` function allows calculating the
 # GeoHash codes contained in a box or a polygon. This function allows,
 # for example, to obtain all the GeoHash codes present on the Mediterranean.
@@ -248,11 +250,11 @@ MEDITERRANEAN_SEA = [(-1.43504, 35.38124), (-1.68901, 35.18381),
 polygon = pyinterp.geodetic.Polygon(
     [pyinterp.geodetic.Point(lon, lat) for lon, lat in MEDITERRANEAN_SEA])
 
-#%%
+# %%
 precision = 4
 plot_geohash_grid(precision, polygon=polygon, caption=False)
 
-#%%
+# %%
 # Density calculation
 # ===================
 df = pandas.DataFrame(

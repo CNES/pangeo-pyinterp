@@ -30,7 +30,7 @@ class Box : public boost::geometry::model::box<Point> {
   /// point.
   /// @param min_corner the minimum corner point
   /// @param max_corner the maximum corner point
-  Box(const Point& min_corner, const Point& max_corner)
+  Box(const Point &min_corner, const Point &max_corner)
       : boost::geometry::model::box<Point>(min_corner, max_corner) {}
 
   /// @brief Returns the box covering the whole earth.
@@ -95,7 +95,7 @@ class Box : public boost::geometry::model::box<Point> {
   ///
   /// @param pt Point to test
   //  @return True if the given point is inside or on border of this Box
-  [[nodiscard]] auto covered_by(const Point& point) const -> bool {
+  [[nodiscard]] auto covered_by(const Point &point) const -> bool {
     return boost::geometry::covered_by(point, *this);
   }
 
@@ -106,8 +106,8 @@ class Box : public boost::geometry::model::box<Point> {
   /// @param lat Latitude coordinates in degrees to check
   /// @return Returns a vector containing a flag equal to 1 if the coordinate is
   /// located in the box or at the edge otherwise 0.
-  [[nodiscard]] auto covered_by(const Eigen::Ref<const Eigen::VectorXd>& lon,
-                                const Eigen::Ref<const Eigen::VectorXd>& lat,
+  [[nodiscard]] auto covered_by(const Eigen::Ref<const Eigen::VectorXd> &lon,
+                                const Eigen::Ref<const Eigen::VectorXd> &lat,
                                 const size_t num_threads) const
       -> pybind11::array_t<int8_t> {
     return geodetic::covered_by<Point, Box>(*this, lon, lat, num_threads);
@@ -122,13 +122,13 @@ class Box : public boost::geometry::model::box<Point> {
   }
 
   /// Calculate the area
-  [[nodiscard]] auto area(const std::optional<System>& wgs) const -> double;
+  [[nodiscard]] auto area(const std::optional<System> &wgs) const -> double;
 
   /// Calculate the distance between two boxes
-  [[nodiscard]] auto distance(const Box& other) const -> double;
+  [[nodiscard]] auto distance(const Box &other) const -> double;
 
   /// Calculate the distance between this instance and a point
-  [[nodiscard]] auto distance(const Point& other) const -> double;
+  [[nodiscard]] auto distance(const Point &other) const -> double;
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
@@ -138,7 +138,7 @@ class Box : public boost::geometry::model::box<Point> {
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static auto setstate(const pybind11::tuple& state) -> Box {
+  static auto setstate(const pybind11::tuple &state) -> Box {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
@@ -146,7 +146,7 @@ class Box : public boost::geometry::model::box<Point> {
             Point::setstate(state[1].cast<pybind11::tuple>())};
   }
 
-  auto operator==(const Box& other) const -> bool {
+  auto operator==(const Box &other) const -> bool {
     return boost::geometry::equals(*this, other);
   }
 
@@ -184,13 +184,13 @@ struct point_type<pg::Box> {
 template <std::size_t Dimension>
 struct indexed_access<pg::Box, min_corner, Dimension> {
   /// get corner of box
-  static inline auto get(pg::Box const& box) -> double {
+  static inline auto get(pg::Box const &box) -> double {
     return geometry::get<Dimension>(box.min_corner());
   }
 
   /// set corner of box
-  static inline void set(pg::Box& box,  // NOLINT
-                         double const& value) {
+  static inline void set(pg::Box &box,  // NOLINT
+                         double const &value) {
     geometry::set<Dimension>(box.min_corner(), value);
   }
 };
@@ -198,13 +198,13 @@ struct indexed_access<pg::Box, min_corner, Dimension> {
 template <std::size_t Dimension>
 struct indexed_access<pg::Box, max_corner, Dimension> {
   /// get corner of box
-  static inline auto get(pg::Box const& box) -> double {
+  static inline auto get(pg::Box const &box) -> double {
     return geometry::get<Dimension>(box.max_corner());
   }
 
   /// set corner of box
-  static inline void set(pg::Box& box,  // NOLINT
-                         double const& value) {
+  static inline void set(pg::Box &box,  // NOLINT
+                         double const &value) {
     geometry::set<Dimension>(box.max_corner(), value);
   }
 };

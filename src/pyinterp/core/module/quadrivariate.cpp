@@ -9,7 +9,7 @@
 namespace py = pybind11;
 namespace geometry = pyinterp::detail::geometry;
 
-void init_quadrivariate(py::module& m) {
+void init_quadrivariate(py::module &m) {
   pyinterp::implement_quadrivariate<geometry::EquatorialPoint3D, double, double,
                                     double>(m, "", "Float64");
   pyinterp::implement_quadrivariate<geometry::EquatorialPoint3D, double, double,

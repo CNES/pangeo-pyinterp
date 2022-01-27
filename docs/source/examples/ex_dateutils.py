@@ -6,10 +6,12 @@ Numpy date utilities
 This library provides utility functions to perform conversions and get
 information about numpy dates quickly.
 """
-#%%
+# %%
 import datetime
 import random
+
 import numpy
+
 import pyinterp
 
 

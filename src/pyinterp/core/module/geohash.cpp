@@ -10,7 +10,7 @@
 namespace py = pybind11;
 namespace geohash = pyinterp::geohash;
 
-void init_geohash_class(py::module& m) {
+void init_geohash_class(py::module &m) {
   py::class_<geohash::GeoHash>(m, "GeoHash", R"__doc__(
 Handle GeoHash encoded in base 32.
 
@@ -113,7 +113,7 @@ Returns the area covered by this.
 Args:
     wgs (optional, pyinterp.geodetic.System): WGS used to calculate the area.
         Defaults to WGS84.
-    
+
 Returns:
     float: calculated area in square meters.
 )__doc__")
@@ -132,7 +132,7 @@ Gets the property of the grid covering the given box.
 Args:
   box (pyinterp.geodetic.Box): Bounding box.
   precision (int, optional): Required accuracy. Default is 1.
-    
+
 Returns:
     tuple: A tuple of three elements containing: the GeoHash of the minimum
     corner point, the number of squares in longitudes and latitudes.

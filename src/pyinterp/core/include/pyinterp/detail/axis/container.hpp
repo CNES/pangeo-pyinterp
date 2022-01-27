@@ -29,22 +29,22 @@ class Abstract {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Abstract(const Abstract& rhs) = default;
+  Abstract(const Abstract &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Abstract(Abstract&& rhs) noexcept = default;
+  Abstract(Abstract &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Abstract& rhs) -> Abstract& = default;
+  auto operator=(const Abstract &rhs) -> Abstract & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Abstract&& rhs) noexcept -> Abstract& = default;
+  auto operator=(Abstract &&rhs) noexcept -> Abstract & = default;
 
   /// Returns true if the data is arranged in ascending order.
   [[nodiscard]] constexpr auto is_ascending() const -> bool {
@@ -104,7 +104,7 @@ class Abstract {
   ///
   /// @param rhs A variable to compare
   /// @return if variables are equals
-  virtual auto operator==(const Abstract& rhs) const -> bool = 0;
+  virtual auto operator==(const Abstract &rhs) const -> bool = 0;
 
  protected:
   /// Indicates whether the data is stored in the ascending order.
@@ -131,22 +131,22 @@ class Undefined : public Abstract<T> {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Undefined(const Undefined& rhs) = default;
+  Undefined(const Undefined &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Undefined(Undefined&& rhs) noexcept = default;
+  Undefined(Undefined &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Undefined& rhs) -> Undefined& = default;
+  auto operator=(const Undefined &rhs) -> Undefined & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Undefined&& rhs) noexcept -> Undefined& = default;
+  auto operator=(Undefined &&rhs) noexcept -> Undefined & = default;
 
   /// @copydoc Abstract::flip()
   auto flip() -> void override {}
@@ -190,9 +190,9 @@ class Undefined : public Abstract<T> {
   }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
-  constexpr auto operator==(const Abstract<T>& rhs) const noexcept
+  constexpr auto operator==(const Abstract<T> &rhs) const noexcept
       -> bool override {
-    return dynamic_cast<const Undefined<T>*>(&rhs) != nullptr;
+    return dynamic_cast<const Undefined<T> *>(&rhs) != nullptr;
   }
 };
 
@@ -220,22 +220,22 @@ class Irregular : public Abstract<T> {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Irregular(const Irregular& rhs) = default;
+  Irregular(const Irregular &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Irregular(Irregular&& rhs) noexcept = default;
+  Irregular(Irregular &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Irregular& rhs) -> Irregular& = default;
+  auto operator=(const Irregular &rhs) -> Irregular & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Irregular&& rhs) noexcept -> Irregular& = default;
+  auto operator=(Irregular &&rhs) noexcept -> Irregular & = default;
 
   /// @copydoc Abstract::flip()
   auto flip() -> void override {
@@ -300,8 +300,8 @@ class Irregular : public Abstract<T> {
   }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
-  auto operator==(const Abstract<T>& rhs) const noexcept -> bool override {
-    const auto ptr = dynamic_cast<const Irregular<T>*>(&rhs);
+  auto operator==(const Abstract<T> &rhs) const noexcept -> bool override {
+    const auto ptr = dynamic_cast<const Irregular<T> *>(&rhs);
     if (ptr != nullptr) {
       return ptr->points_.size() == points_.size() && ptr->points_ == points_;
     }
@@ -415,22 +415,22 @@ class AbstractRegular : public Abstract<T> {
   /// Copy constructor
   ///
   /// @param rhs right value
-  AbstractRegular(const AbstractRegular& rhs) = default;
+  AbstractRegular(const AbstractRegular &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  AbstractRegular(AbstractRegular&& rhs) noexcept = default;
+  AbstractRegular(AbstractRegular &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const AbstractRegular& rhs) -> AbstractRegular& = default;
+  auto operator=(const AbstractRegular &rhs) -> AbstractRegular & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(AbstractRegular&& rhs) noexcept -> AbstractRegular& = default;
+  auto operator=(AbstractRegular &&rhs) noexcept -> AbstractRegular & = default;
 
   /// Get the step between two successive values.
   ///
@@ -476,8 +476,8 @@ class AbstractRegular : public Abstract<T> {
   }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
-  auto operator==(const Abstract<T>& rhs) const noexcept -> bool override {
-    const auto ptr = dynamic_cast<const AbstractRegular<T>*>(&rhs);
+  auto operator==(const Abstract<T> &rhs) const noexcept -> bool override {
+    const auto ptr = dynamic_cast<const AbstractRegular<T> *>(&rhs);
     if (ptr != nullptr) {
       return ptr->step_ == step_ && ptr->start_ == start_ &&
              ptr->size_ == size_;

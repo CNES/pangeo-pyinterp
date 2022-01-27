@@ -2,12 +2,12 @@
 Replace undefined values
 ------------------------
 """
-from typing import Optional, Union
 import concurrent.futures
+from typing import Optional, Union
+
 import numpy as np
-from . import core
-from . import grid
-from . import interface
+
+from . import core, grid, interface
 
 
 def loess(mesh: Union[grid.Grid2D, grid.Grid3D],

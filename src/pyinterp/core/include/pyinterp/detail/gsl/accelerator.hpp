@@ -18,12 +18,12 @@ class Accelerator {
   /// Default constructor
   Accelerator()
       : acc_(std::unique_ptr<gsl_interp_accel,
-                             std::function<void(gsl_interp_accel*)>>(
+                             std::function<void(gsl_interp_accel *)>>(
             gsl_interp_accel_alloc(),
-            [](gsl_interp_accel* ptr) { gsl_interp_accel_free(ptr); })) {}
+            [](gsl_interp_accel *ptr) { gsl_interp_accel_free(ptr); })) {}
 
   /// Gets the GSL pointer
-  inline operator gsl_interp_accel*() const noexcept {  // NOLINT
+  inline operator gsl_interp_accel *() const noexcept {  // NOLINT
     return acc_.get();
   }
 
@@ -33,7 +33,7 @@ class Accelerator {
   inline void reset() noexcept { gsl_interp_accel_reset(acc_.get()); }
 
  private:
-  std::unique_ptr<gsl_interp_accel, std::function<void(gsl_interp_accel*)>>
+  std::unique_ptr<gsl_interp_accel, std::function<void(gsl_interp_accel *)>>
       acc_;
 };
 

@@ -4,8 +4,10 @@
 # BSD-style license that can be found in the LICENSE file.
 import datetime
 import pickle
-import pytest
+
 import numpy as np
+import pytest
+
 from .. import TemporalAxis
 
 

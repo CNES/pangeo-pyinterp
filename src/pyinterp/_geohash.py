@@ -6,7 +6,8 @@ import xarray
 
 #
 from . import geodetic
-from .core import GeoHash as BaseGeoHash, geohash
+from .core import GeoHash as BaseGeoHash
+from .core import geohash
 
 
 class GeoHash(BaseGeoHash):
@@ -46,6 +47,7 @@ class GeoHash(BaseGeoHash):
     Throws:
         ValueError: If the precision is not in the range [1, 12].
     """
+
     @classmethod
     def grid(cls, box: Optional[geodetic.Box] = None, precision: int = 1):
         """

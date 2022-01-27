@@ -11,7 +11,7 @@ namespace pyinterp::detail::gsl {
 ///
 /// @param reason The reason for the error
 /// @param code Error number
-void error_handler(const char* reason, const char* /*unused*/, int /*unused*/,
+void error_handler(const char *reason, const char * /*unused*/, int /*unused*/,
                    int code);
 
 /// Sets the error handler for the GSL library routines.

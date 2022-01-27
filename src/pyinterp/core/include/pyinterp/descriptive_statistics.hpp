@@ -34,9 +34,9 @@ class DescriptiveStatistics {
 
   /// Constructor.
   DescriptiveStatistics(
-      pybind11::array_t<T, pybind11::array::c_style>& values,
-      std::optional<pybind11::array_t<T, pybind11::array::c_style>>& weights,
-      std::optional<std::list<pybind11::ssize_t>>& axis) {
+      pybind11::array_t<T, pybind11::array::c_style> &values,
+      std::optional<pybind11::array_t<T, pybind11::array::c_style>> &weights,
+      std::optional<std::list<pybind11::ssize_t>> &axis) {
     // Check if the given axis is valid.
     if (axis) {
       detail::numpy::check_axis_bounds(values, *axis);
@@ -114,8 +114,8 @@ class DescriptiveStatistics {
   }
 
   /// Aggregation of statistics
-  auto operator+=(const DescriptiveStatistics<T>& other)
-      -> DescriptiveStatistics& {
+  auto operator+=(const DescriptiveStatistics<T> &other)
+      -> DescriptiveStatistics & {
     if (shape_ != other.shape_) {
       throw std::invalid_argument("incompatible shapes");
     }
@@ -130,7 +130,7 @@ class DescriptiveStatistics {
   }
 
   /// Pickle support: set state of this instance
-  static auto setstate(const pybind11::tuple& state)
+  static auto setstate(const pybind11::tuple &state)
       -> std::unique_ptr<DescriptiveStatistics<T>> {
     if (state.size() != 2) {
       throw std::invalid_argument("invalid state");
@@ -156,16 +156,16 @@ class DescriptiveStatistics {
 
   /// Push values to the accumulators when the user wants to
   /// calculate statistics on the whole array. NaNs are ignored.
-  auto push(pybind11::array_t<T, pybind11::array::c_style>& arr)
+  auto push(pybind11::array_t<T, pybind11::array::c_style> &arr)
       -> Vector<Accumulators> {
-    auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
+    auto *ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
     auto result = Vector<Accumulators>(1);
-    auto& item = result[0];
+    auto &item = result[0];
 
     {
       pybind11::gil_scoped_release release;
 
-      std::for_each(ptr_arr, ptr_arr + arr.size(), [&item](const T& value) {
+      std::for_each(ptr_arr, ptr_arr + arr.size(), [&item](const T &value) {
         if (!std::isnan(value)) {
           item(value);
         }
@@ -176,13 +176,13 @@ class DescriptiveStatistics {
 
   /// Push values and weights to the accumulators when the user wants to
   /// calculate statistics on the whole array. NaNs are ignored.
-  auto push(pybind11::array_t<T, pybind11::array::c_style>& arr,
-            pybind11::array_t<T, pybind11::array::c_style>& weights)
+  auto push(pybind11::array_t<T, pybind11::array::c_style> &arr,
+            pybind11::array_t<T, pybind11::array::c_style> &weights)
       -> Vector<Accumulators> {
-    auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
-    auto* ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
+    auto *ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
+    auto *ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
     auto result = Vector<Accumulators>(1);
-    auto& item = result[0];
+    auto &item = result[0];
 
     {
       pybind11::gil_scoped_release release;
@@ -199,13 +199,13 @@ class DescriptiveStatistics {
 
   /// Push values and weights to the accumulators when the user wants to
   /// calculate statistics on a reduced array. NaNs are ignored.
-  auto push(pybind11::array_t<T, pybind11::array::c_style>& arr,
-            pybind11::array_t<T, pybind11::array::c_style>& weights,
-            const Vector<pybind11::ssize_t>& strides,
-            const Vector<pybind11::ssize_t>& adjusted_strides)
+  auto push(pybind11::array_t<T, pybind11::array::c_style> &arr,
+            pybind11::array_t<T, pybind11::array::c_style> &weights,
+            const Vector<pybind11::ssize_t> &strides,
+            const Vector<pybind11::ssize_t> &adjusted_strides)
       -> Vector<Accumulators> {
-    auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
-    auto* ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
+    auto *ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
+    auto *ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
     auto result = Vector<Accumulators>(size());
     auto indexes = Eigen::Matrix<pybind11::ssize_t, -1, 1>(arr.ndim());
 
@@ -226,10 +226,10 @@ class DescriptiveStatistics {
 
   /// Calculation of a given statistical variable.
   template <typename Func, typename Type = T, typename... Args>
-  [[nodiscard]] auto calculate_statistics(const Func& func, Args... args) const
+  [[nodiscard]] auto calculate_statistics(const Func &func, Args... args) const
       -> pybind11::array_t<Type> {
     auto result = pybind11::array_t<Type>(shape_);
-    auto ptr_result = reinterpret_cast<Type*>(
+    auto ptr_result = reinterpret_cast<Type *>(
         pybind11::detail::array_proxy(result.ptr())->data);
     {
       pybind11::gil_scoped_release release;

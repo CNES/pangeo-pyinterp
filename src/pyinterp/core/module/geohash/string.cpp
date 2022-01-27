@@ -24,11 +24,11 @@ constexpr static auto check_range(uint32_t precision) -> void {
   }
 }
 
-void init_geohash_string(py::module& m) {
+void init_geohash_string(py::module &m) {
   m.def(
        "encode",
-       [](const Eigen::Ref<const Eigen::VectorXd>& lon,
-          const Eigen::Ref<const Eigen::VectorXd>& lat,
+       [](const Eigen::Ref<const Eigen::VectorXd> &lon,
+          const Eigen::Ref<const Eigen::VectorXd> &lat,
           const uint32_t precision) -> pybind11::array {
          check_range(precision);
          return geohash::string::encode(lon, lat, precision);
@@ -50,7 +50,7 @@ Raises:
 )__doc__")
       .def(
           "decode",
-          [](const pybind11::array& hash,
+          [](const pybind11::array &hash,
              const bool round) -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
             return geohash::string::decode(hash, round);
           },
@@ -67,8 +67,8 @@ Returns:
 )__doc__")
       .def(
           "area",
-          [](const pybind11::array& hash,
-             const std::optional<geodetic::System>& wgs) -> Eigen::VectorXd {
+          [](const pybind11::array &hash,
+             const std::optional<geodetic::System> &wgs) -> Eigen::VectorXd {
             return geohash::string::area(hash, wgs);
           },
           py::arg("hash"), py::arg("wgs") = py::none(),
@@ -85,7 +85,7 @@ Returns:
 )__doc__")
       .def(
           "bounding_boxes",
-          [](const std::optional<geodetic::Box>& box,
+          [](const std::optional<geodetic::Box> &box,
              const uint32_t precision) -> py::array {
             check_range(precision);
             return geohash::string::bounding_boxes(box, precision);
@@ -106,7 +106,7 @@ Raises:
 )__doc__")
       .def(
           "bounding_boxes",
-          [](const geodetic::Polygon& polygon, const uint32_t precision,
+          [](const geodetic::Polygon &polygon, const uint32_t precision,
              const size_t num_threads) -> py::array {
             check_range(precision);
             return geohash::string::bounding_boxes(polygon, precision,
@@ -135,9 +135,9 @@ Raises:
           "where",
           // We want to return an associative dictionary between bytes and
           // tuples and not str and tuples.
-          [](const pybind11::array& hash) -> py::dict {
+          [](const pybind11::array &hash) -> py::dict {
             auto result = py::dict();
-            for (auto&& item : geohash::string::where(hash)) {
+            for (auto &&item : geohash::string::where(hash)) {
               auto key = py::bytes(item.first);
               result[key] = py::cast(item.second);
             }
@@ -155,7 +155,7 @@ Returns:
 )__doc__")
       .def(
           "transform",
-          [](const py::array& hash, const uint32_t precision) -> py::array {
+          [](const py::array &hash, const uint32_t precision) -> py::array {
             check_range(precision);
             return geohash::string::transform(hash, precision);
           },

@@ -6,13 +6,13 @@
 
 namespace pyinterp::geodetic {
 
-Polygon::Polygon(const pybind11::list& outer, const pybind11::list& inners) {
+Polygon::Polygon(const pybind11::list &outer, const pybind11::list &inners) {
   try {
     for (const auto item : outer) {
       auto point = item.cast<geodetic::Point>();
       boost::geometry::append(Base::outer(), point);
     }
-  } catch (const pybind11::cast_error&) {
+  } catch (const pybind11::cast_error &) {
     throw std::invalid_argument(
         "outer must be a list of pyinterp.geodetic.Point");
   }
@@ -28,7 +28,7 @@ Polygon::Polygon(const pybind11::list& outer, const pybind11::list& inners) {
         }
         ++index;
       }
-    } catch (const pybind11::cast_error&) {
+    } catch (const pybind11::cast_error &) {
       throw std::invalid_argument(
           "inners must be a list of "
           "list of pyinterp.geodetic.Point");

@@ -4,12 +4,13 @@
 # BSD-style license that can be found in the LICENSE file.
 import collections
 import pickle
-import pytest
+
 import numpy as np
+import pytest
 import xarray as xr
+
+from .. import Axis, Grid2D, Grid3D, bicubic, core
 from ..backends import xarray as xr_backend
-from .. import core
-from .. import Axis, Grid2D, Grid3D, bicubic
 from . import grid2d_path, make_or_compare_reference
 
 

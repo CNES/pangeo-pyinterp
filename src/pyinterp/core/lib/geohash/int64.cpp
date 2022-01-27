@@ -190,10 +190,10 @@ static deinterleaver_t const deinterleaver =
 // ---------------------------------------------------------------------------
 auto format_bytes(size_t bytes) -> std::string {
   struct Suffix {
-    const char* suffix;
+    const char *suffix;
     size_t divisor;
 
-    Suffix(const char* suffix, const size_t divisor)
+    Suffix(const char *suffix, const size_t divisor)
         : suffix(suffix), divisor(divisor) {}
   };
 
@@ -209,7 +209,7 @@ auto format_bytes(size_t bytes) -> std::string {
 
   auto result = std::string{};
 
-  for (const auto& item : suffixes) {
+  for (const auto &item : suffixes) {
     if (bytes > item.divisor) {
       auto ss = std::stringstream();
       ss << std::setprecision(2) << std::fixed
@@ -226,7 +226,7 @@ auto format_bytes(size_t bytes) -> std::string {
 auto allocate_array(const size_t size) -> Vector<uint64_t> {
   try {
     return Eigen::Matrix<uint64_t, -1, 1>(size);
-  } catch (const std::bad_alloc&) {
+  } catch (const std::bad_alloc &) {
     auto ss = std::stringstream();
     ss << "Unable to allocate " << format_bytes(size * 8ULL)
        << " for an array with shape (" << size << ",) and data type uint64";
@@ -236,7 +236,7 @@ auto allocate_array(const size_t size) -> Vector<uint64_t> {
 }
 
 // ---------------------------------------------------------------------------
-auto encode(const geodetic::Point& point, const uint32_t precision)
+auto encode(const geodetic::Point &point, const uint32_t precision)
     -> uint64_t {
   auto result = encoder(point.lat(), point.lon());
   if (precision != 64) {
@@ -292,7 +292,7 @@ auto neighbors(const uint64_t hash, const uint32_t precision)
 }
 
 // ---------------------------------------------------------------------------
-auto grid_properties(const geodetic::Box& box, const uint32_t precision)
+auto grid_properties(const geodetic::Box &box, const uint32_t precision)
     -> std::tuple<uint64_t, size_t, size_t> {
   auto hash_sw = encode(box.min_corner(), precision);
   auto box_sw = bounding_box(hash_sw, precision);
@@ -312,7 +312,7 @@ auto grid_properties(const geodetic::Box& box, const uint32_t precision)
 }
 
 // ---------------------------------------------------------------------------
-auto bounding_boxes(const geodetic::Box& box, const uint32_t precision)
+auto bounding_boxes(const geodetic::Box &box, const uint32_t precision)
     -> Vector<uint64_t> {
   // If the input box cut the meridian, we need to split it into two boxes.
   const auto boxes = geodetic::Box(box).normalize().split();
@@ -324,7 +324,7 @@ auto bounding_boxes(const geodetic::Box& box, const uint32_t precision)
   auto result = allocate_array(count(boxes, precision));
   auto ix = int64_t(0);
 
-  for (const auto& item : boxes) {
+  for (const auto &item : boxes) {
     auto [hash_sw, lon_step, lat_step] = grid_properties(item, precision);
     auto point_sw = decode(hash_sw, precision, true);
 

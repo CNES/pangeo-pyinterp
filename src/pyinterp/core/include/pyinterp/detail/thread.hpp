@@ -17,7 +17,7 @@ namespace pyinterp::detail {
 /// which is useful for debugging.
 /// @tparam Lambda Lambda function
 template <typename Lambda>
-void dispatch(const Lambda& worker, size_t size, size_t num_threads) {
+void dispatch(const Lambda &worker, size_t size, size_t num_threads) {
   if (num_threads == 1) {
     worker(0, size);
     return;
@@ -41,7 +41,7 @@ void dispatch(const Lambda& worker, size_t size, size_t num_threads) {
   }
   threads.back() = std::thread(worker, start, size);
 
-  for (auto&& item : threads) {
+  for (auto &&item : threads) {
     item.join();
   }
 }

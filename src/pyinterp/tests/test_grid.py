@@ -4,10 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 import numpy as np
 import pytest
-from .. import interface
-from .. import core
-from .. import grid
-from .. import Axis, Grid2D, TemporalAxis
+
+from .. import Axis, Grid2D, TemporalAxis, core, grid, interface
 
 
 def test_core_class_suffix():

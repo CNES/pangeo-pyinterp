@@ -19,7 +19,7 @@ namespace pyinterp::geodetic {
 class Coordinates : public detail::geodetic::Coordinates {
  public:
   /// The constructor defaults the ellipsoid parameters to WGS84.
-  explicit Coordinates(const std::optional<System>& system)
+  explicit Coordinates(const std::optional<System> &system)
       : detail::geodetic::Coordinates(system) {}
 
   /// Gets the WGS used by this instance
@@ -31,9 +31,9 @@ class Coordinates : public detail::geodetic::Coordinates {
   /// altitude. Cartesian coordinates should be in meters. The returned latitude
   /// and longitude are in degrees, and the altitude will be in meters.
   template <typename T>
-  auto ecef_to_lla(const Eigen::Ref<const Vector<T>>& x,
-                   const Eigen::Ref<const Vector<T>>& y,
-                   const Eigen::Ref<const Vector<T>>& z,
+  auto ecef_to_lla(const Eigen::Ref<const Vector<T>> &x,
+                   const Eigen::Ref<const Vector<T>> &y,
+                   const Eigen::Ref<const Vector<T>> &z,
                    const size_t num_threads) const -> pybind11::tuple {
     detail::check_eigen_shape("x", x, "y", y, "z", z);
     auto size = x.size();
@@ -78,9 +78,9 @@ class Coordinates : public detail::geodetic::Coordinates {
   /// Cartesian coordinates. The latitude and longitude should be in degrees and
   /// the altitude in meters. The returned ECEF coordinates will be in meters.
   template <typename T>
-  auto lla_to_ecef(const Eigen::Ref<const Vector<T>>& lon,
-                   const Eigen::Ref<const Vector<T>>& lat,
-                   const Eigen::Ref<const Vector<T>>& alt,
+  auto lla_to_ecef(const Eigen::Ref<const Vector<T>> &lon,
+                   const Eigen::Ref<const Vector<T>> &lat,
+                   const Eigen::Ref<const Vector<T>> &alt,
                    const size_t num_threads) const -> pybind11::tuple {
     detail::check_eigen_shape("lon", lon, "lat", lat, "alt", alt);
     auto size = lon.size();
@@ -125,10 +125,10 @@ class Coordinates : public detail::geodetic::Coordinates {
   /// Transform points between two coordinate systems defined by the
   /// Coordinates instances this and target.
   template <typename T>
-  auto transform(const Coordinates& target,
-                 const Eigen::Ref<const Vector<T>>& lon1,
-                 const Eigen::Ref<const Vector<T>>& lat1,
-                 const Eigen::Ref<const Vector<T>>& alt1,
+  auto transform(const Coordinates &target,
+                 const Eigen::Ref<const Vector<T>> &lon1,
+                 const Eigen::Ref<const Vector<T>> &lat1,
+                 const Eigen::Ref<const Vector<T>> &alt1,
                  const size_t num_threads) const -> pybind11::tuple {
     detail::check_eigen_shape("lon1", lon1, "lat1", lat1, "alt1", alt1);
     auto size = lon1.size();
@@ -177,7 +177,7 @@ class Coordinates : public detail::geodetic::Coordinates {
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static auto setstate(const pybind11::tuple& state) -> Coordinates {
+  static auto setstate(const pybind11::tuple &state) -> Coordinates {
     return Coordinates(System::setstate(state));
   }
 };

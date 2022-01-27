@@ -34,12 +34,12 @@ namespace pyinterp::geohash::int64 {
 }
 
 // Encode a point into geohash with the given precision
-[[nodiscard]] auto encode(const geodetic::Point& point, uint32_t precision)
+[[nodiscard]] auto encode(const geodetic::Point &point, uint32_t precision)
     -> uint64_t;
 
 // Encode points into geohash with the given precision
-[[nodiscard]] inline auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
-                                 const Eigen::Ref<const Eigen::VectorXd>& lat,
+[[nodiscard]] inline auto encode(const Eigen::Ref<const Eigen::VectorXd> &lon,
+                                 const Eigen::Ref<const Eigen::VectorXd> &lat,
                                  uint32_t precision) -> Vector<uint64_t> {
   detail::check_eigen_shape("lon", lon, "lat", lat);
   auto size = lon.size();
@@ -67,7 +67,7 @@ namespace pyinterp::geohash::int64 {
 // Decode hashes into a geographic points with the given bit depth.
 // If round is true, the coordinates of the points will be rounded to the
 // accuracy defined by the GeoHash.
-[[nodiscard]] inline auto decode(const Eigen::Ref<const Vector<uint64_t>>& hash,
+[[nodiscard]] inline auto decode(const Eigen::Ref<const Vector<uint64_t>> &hash,
                                  const uint32_t precision, const bool center)
     -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
   auto lon = Eigen::VectorXd(hash.size());
@@ -91,34 +91,34 @@ namespace pyinterp::geohash::int64 {
 
 // Returns the property of the grid covering the given box: geohash of the
 // minimum corner point, number of boxes in longitudes and latitudes.
-[[nodiscard]] auto grid_properties(const geodetic::Box& box, uint32_t precision)
+[[nodiscard]] auto grid_properties(const geodetic::Box &box, uint32_t precision)
     -> std::tuple<uint64_t, size_t, size_t>;
 
 // Returns the number of geohash codes in the given box.
-[[nodiscard]] auto inline count(const std::list<geodetic::Box>& boxes,
+[[nodiscard]] auto inline count(const std::list<geodetic::Box> &boxes,
                                 uint32_t precision) -> size_t {
   auto result = size_t{0};
-  for (const auto& box : boxes) {
+  for (const auto &box : boxes) {
     auto properties = grid_properties(box, precision);
     result += std::get<1>(properties) * std::get<2>(properties);
   }
   return result;
 }
 
-[[nodiscard]] auto inline count(const geodetic::Box& box, uint32_t precision)
+[[nodiscard]] auto inline count(const geodetic::Box &box, uint32_t precision)
     -> size_t {
   return count(geodetic::Box(box).normalize().split(), precision);
 }
 
 // Returns the area covered by the GeoHash
 [[nodiscard]] inline auto area(uint64_t hash, uint32_t precision,
-                               const std::optional<geodetic::System>& wgs)
+                               const std::optional<geodetic::System> &wgs)
     -> double {
   return bounding_box(hash, precision).area(wgs);
 }
 
 // Returns all the GeoHash codes within the box.
-[[nodiscard]] auto bounding_boxes(const geodetic::Box& box, uint32_t precision)
+[[nodiscard]] auto bounding_boxes(const geodetic::Box &box, uint32_t precision)
     -> Vector<uint64_t>;
 
 }  // namespace pyinterp::geohash::int64

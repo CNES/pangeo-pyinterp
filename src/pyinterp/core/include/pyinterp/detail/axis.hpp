@@ -65,7 +65,7 @@ class Axis {
   /// @param epsilon Maximum allowed difference between two real numbers in
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle.
-  explicit Axis(const Eigen::Ref<const Vector<T>>& values, T epsilon,
+  explicit Axis(const Eigen::Ref<const Vector<T>> &values, T epsilon,
                 bool is_circle)
       : circle_(is_circle ? T(360) : math::Fill<T>::value()) {
     // Axis size control
@@ -91,22 +91,22 @@ class Axis {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Axis(const Axis& rhs) = default;
+  Axis(const Axis &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Axis(Axis&& rhs) noexcept = default;
+  Axis(Axis &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Axis& rhs) -> Axis& = default;
+  auto operator=(const Axis &rhs) -> Axis & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Axis&& rhs) noexcept -> Axis& = default;
+  auto operator=(Axis &&rhs) noexcept -> Axis & = default;
 
   /// Get the ith coordinate value.
   ///
@@ -144,7 +144,7 @@ class Axis {
 
   /// Check if this axis values are spaced regularly
   [[nodiscard]] constexpr auto is_regular() const noexcept -> bool {
-    return dynamic_cast<axis::container::Regular<T>*>(axis_.get()) != nullptr;
+    return dynamic_cast<axis::container::Regular<T> *>(axis_.get()) != nullptr;
   }
 
   /// Returns true if this axis represents a circle.
@@ -184,7 +184,7 @@ class Axis {
   /// @return increment value if is_regular()
   /// @throw std::logic_error if this instance does not represent a regular axis
   [[nodiscard]] constexpr auto increment() const -> T {
-    auto ptr = dynamic_cast<axis::container::Regular<T>*>(axis_.get());
+    auto ptr = dynamic_cast<axis::container::Regular<T> *>(axis_.get());
     if (ptr == nullptr) {
       throw std::logic_error("this axis is not regular.");
     }
@@ -195,7 +195,7 @@ class Axis {
   ///
   /// @param rhs an other axis to compare
   /// @return if axis are equals
-  constexpr auto operator==(Axis const& rhs) const -> bool {
+  constexpr auto operator==(Axis const &rhs) const -> bool {
     return *axis_ == *rhs.axis_ && is_circle_ == rhs.is_circle_;
   }
 
@@ -203,7 +203,7 @@ class Axis {
   ///
   /// @param rhs an other axis to compare
   /// @return if axis are equals
-  constexpr auto operator!=(Axis const& rhs) const -> bool {
+  constexpr auto operator!=(Axis const &rhs) const -> bool {
     return !this->operator==(rhs);
   }
 
@@ -417,7 +417,7 @@ class Axis {
   ///
   /// @return the axis handler
   [[nodiscard]] inline auto handler() const noexcept
-      -> const std::shared_ptr<axis::container::Abstract<T>>& {
+      -> const std::shared_ptr<axis::container::Abstract<T>> & {
     return axis_;
   }
 
@@ -455,7 +455,7 @@ class Axis {
     // If this axis represents an angle, determine if it represents the entire
     // trigonometric circle.
     if (is_angle()) {
-      auto ptr = dynamic_cast<axis::container::Regular<T>*>(axis_.get());
+      auto ptr = dynamic_cast<axis::container::Regular<T> *>(axis_.get());
       if (ptr != nullptr) {
         is_circle_ = math::is_same(
             static_cast<T>(std::fabs(ptr->step() * size())), circle_, epsilon);
@@ -469,7 +469,7 @@ class Axis {
   }
 
   /// Put longitude into the range [0, circle_] degrees.
-  auto normalize_longitude(const Vector<T>& points)
+  auto normalize_longitude(const Vector<T> &points)
       -> std::unique_ptr<Vector<T>> {
     auto monotonic = true;
     auto ascending = points.size() < 2 ? true : points[0] < points[1];
@@ -503,7 +503,7 @@ class Axis {
   }
 
   /// Initializes the axis container from values.
-  auto initialize_from_values(const Eigen::Ref<const Vector<T>>& values,
+  auto initialize_from_values(const Eigen::Ref<const Vector<T>> &values,
                               const T epsilon, const bool move) -> void {
     // Determines whether the set of data provided can be represented as an
     // interval.
@@ -526,7 +526,7 @@ class Axis {
   /// @param epsilon Maximum allowed difference between two numbers in
   /// order to consider them equal
   /// @return The increment between two values if the values are evenly spaced
-  static auto is_evenly_spaced(const Eigen::Ref<const Vector<T>>& points,
+  static auto is_evenly_spaced(const Eigen::Ref<const Vector<T>> &points,
                                const T epsilon) -> std::optional<T> {
     size_t n = points.size();
 

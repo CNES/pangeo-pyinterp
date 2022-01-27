@@ -7,18 +7,19 @@ The undefined values in the grids do not allow interpolation of values located
 in the neighborhood. This behavior is a concern when you need to interpolate
 values near the land/sea mask of some maps.
 """
-#%%
+# %%
 import cartopy.crs
 import cartopy.feature
 import matplotlib.pyplot
 import numpy
+import xarray
+
 import pyinterp.backends.xarray
 # Module that handles the filling of undefined values.
 import pyinterp.fill
 import pyinterp.tests
-import xarray
 
-#%%
+# %%
 # For example, in the figure above, if you want to interpolate the gray point
 # with a bilinear interpolation, the undefined red value, set to NaN, will not
 # allow its calculation (the result of the arithmetic operation using a value
@@ -51,8 +52,9 @@ ax.plot([-3.5], [49], linestyle='', marker='.', color='dimgray', markersize=15)
 ax.plot([-2.5], [50], linestyle='', marker='.', color='green', markersize=15)
 fig.show()
 
-#%%
-# To overcome this problem, the library provides methods to fill undefined values.
+# %%
+# To overcome this problem, the library provides methods to fill undefined
+# values.
 #
 # .. note::
 #
@@ -64,19 +66,19 @@ fig.show()
 # =====
 #
 # The :py:func:`first <pyinterp.fill.loess>` method applies a weighted local
-# regression to extrapolate the boundary between defined and undefined values. The
-# user must indicate the number of pixels on the X and Y axes to be considered in
-# the calculation.
+# regression to extrapolate the boundary between defined and undefined values.
+# The user must indicate the number of pixels on the X and Y axes to be
+# considered in the calculation.
 #
 # Let's start by building the object handling our grid.
 ds = xarray.open_dataset(pyinterp.tests.grid2d_path())
 grid = pyinterp.backends.xarray.Grid2D(ds.mss)
 
-#%%
+# %%
 # The function filling the holes near the mask is called
 filled = pyinterp.fill.loess(grid, nx=3, ny=3)
 
-#%%
+# %%
 # The image below illustrates the result:
 fig = matplotlib.pyplot.figure()
 ax1 = fig.add_subplot(
@@ -109,17 +111,17 @@ ax2.set_extent([0, 170, -45, 30], crs=cartopy.crs.PlateCarree())
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()
 
-#%%
+# %%
 # Gauss-Seidel
 # ============
-# The :py:func:`second <pyinterp.fill.gauss_seidel>` method consists of replacing
-# all undefined values (NaN) in a grid using the Gauss-Seidel method by
-# relaxation. This `link
+# The :py:func:`second <pyinterp.fill.gauss_seidel>` method consists of
+# replacing all undefined values (NaN) in a grid using the Gauss-Seidel method
+# by relaxation. This `link
 # <https://math.berkeley.edu/~wilken/228A.F07/chr_lecture.pdf>`_ contains more
 # information on the method used.
 has_converged, filled = pyinterp.fill.gauss_seidel(grid)
 
-#%%
+# %%
 # The image below illustrates the result:
 fig = matplotlib.pyplot.figure(figsize=(10, 10))
 ax1 = fig.add_subplot(

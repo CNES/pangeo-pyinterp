@@ -4,7 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 import numpy
 import pytest
-from ...core import geohash, GeoHash
+
+from ...core import GeoHash, geohash
 
 testcases = [["77mkh2hcj7mz", -26.015434642, -26.173663656],
              ["wthnssq3w00x", 29.291182895, 118.331595326],

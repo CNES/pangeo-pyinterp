@@ -17,7 +17,7 @@
 namespace geodetic = pyinterp::geodetic;
 namespace py = pybind11;
 
-static inline auto parse_distance_strategy(const std::string& strategy)
+static inline auto parse_distance_strategy(const std::string &strategy)
     -> geodetic::DistanceStrategy {
   if (strategy == "andoyer") {
     return geodetic::kAndoyer;
@@ -31,7 +31,7 @@ static inline auto parse_distance_strategy(const std::string& strategy)
   throw std::invalid_argument("Invalid strategy: " + strategy);
 }
 
-static void init_geodetic_point(py::module& m) {
+static void init_geodetic_point(py::module &m) {
   py::class_<geodetic::Point>(m, "Point", R"__doc__(
     Handle a point in a geographic coordinates system in degrees.
 )__doc__")
@@ -58,9 +58,9 @@ Args:
                     "Latitude coordinate in degrees.")
       .def(
           "distance",
-          [](const geodetic::Point& self, const geodetic::Point& other,
-             const std::string& strategy,
-             const std::optional<geodetic::System>& wgs) -> double {
+          [](const geodetic::Point &self, const geodetic::Point &other,
+             const std::string &strategy,
+             const std::optional<geodetic::System> &wgs) -> double {
             return self.distance(other, parse_distance_strategy(strategy), wgs);
           },
           py::arg("other"), py::arg("strategy") = "thomas",
@@ -80,7 +80,7 @@ Returns:
 )__doc__")
       .def(
           "wkt",
-          [](const geodetic::Point& self) -> std::string {
+          [](const geodetic::Point &self) -> std::string {
             auto ss = std::stringstream();
             ss << boost::geometry::wkt(self);
             return ss.str();
@@ -93,7 +93,7 @@ Returns:
 )__doc__")
       .def_static(
           "read_wkt",
-          [](const std::string& wkt) -> geodetic::Point {
+          [](const std::string &wkt) -> geodetic::Point {
             auto point = geodetic::Point();
             boost::geometry::read_wkt(wkt, point);
             return point;
@@ -111,26 +111,26 @@ Returns:
            "representation of a point.")
       .def(
           "__eq__",
-          [](const geodetic::Point& self, const geodetic::Point& rhs) -> bool {
+          [](const geodetic::Point &self, const geodetic::Point &rhs) -> bool {
             return boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
           "Overrides the default behavior of the ``==`` operator.")
       .def(
           "__ne__",
-          [](const geodetic::Point& self, const geodetic::Point& rhs) -> bool {
+          [](const geodetic::Point &self, const geodetic::Point &rhs) -> bool {
             return !boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
           "Overrides the default behavior of the ``!=`` operator.")
       .def(py::pickle(
-          [](const geodetic::Point& self) { return self.getstate(); },
-          [](const py::tuple& state) {
+          [](const geodetic::Point &self) { return self.getstate(); },
+          [](const py::tuple &state) {
             return geodetic::Point::setstate(state);
           }));
 }
 
-static void init_geodetic_box(py::module& m) {
+static void init_geodetic_box(py::module &m) {
   py::class_<geodetic::Box>(m, "Box", R"__doc__(
     Defines a box made of two describing points.
 )__doc__")
@@ -148,15 +148,15 @@ Args:
 )__doc__")
       .def_property(
           "min_corner",
-          [](const geodetic::Box& self) { return self.min_corner(); },
-          [](geodetic::Box& self, const geodetic::Point& point) -> void {
+          [](const geodetic::Box &self) { return self.min_corner(); },
+          [](geodetic::Box &self, const geodetic::Point &point) -> void {
             self.min_corner() = point;
           },
           "The minimal corner (lower left) of the box.")
       .def_property(
           "max_corner",
-          [](const geodetic::Box& self) { return self.max_corner(); },
-          [](geodetic::Box& self, const geodetic::Point& point) -> void {
+          [](const geodetic::Box &self) { return self.max_corner(); },
+          [](geodetic::Box &self, const geodetic::Point &point) -> void {
             self.max_corner() = point;
           },
           "The maximal corner (upper right) of the box.")
@@ -171,7 +171,7 @@ Returns:
 )__doc__")
       .def(
           "covered_by",
-          [](const geodetic::Box& self, const geodetic::Point& point) -> bool {
+          [](const geodetic::Box &self, const geodetic::Point &point) -> bool {
             return self.covered_by(point);
           },
           py::arg("point"), R"__doc__(
@@ -185,9 +185,9 @@ Returns:
 )__doc__")
       .def(
           "covered_by",
-          [](const geodetic::Box& self,
-             const Eigen::Ref<const Eigen::VectorXd>& lon,
-             const Eigen::Ref<const Eigen::VectorXd>& lat,
+          [](const geodetic::Box &self,
+             const Eigen::Ref<const Eigen::VectorXd> &lon,
+             const Eigen::Ref<const Eigen::VectorXd> &lat,
              const size_t num_threads) -> py::array_t<int8_t> {
             return self.covered_by(lon, lat, num_threads);
           },
@@ -220,7 +220,7 @@ Returns:
 )__doc__")
       .def(
           "distance",
-          [](const geodetic::Box& self, const geodetic::Box& other) -> double {
+          [](const geodetic::Box &self, const geodetic::Box &other) -> double {
             return self.distance(other);
           },
           py::arg("other"),
@@ -235,7 +235,7 @@ Returns:
 )__doc__")
       .def(
           "distance",
-          [](const geodetic::Box& self, const geodetic::Point& point)
+          [](const geodetic::Box &self, const geodetic::Point &point)
               -> double { return self.distance(point); },
           py::arg("point"),
           R"__doc__(
@@ -249,7 +249,7 @@ Returns:
 )__doc__")
       .def(
           "wkt",
-          [](const geodetic::Box& self) -> std::string {
+          [](const geodetic::Box &self) -> std::string {
             auto ss = std::stringstream();
             ss << boost::geometry::wkt(self);
             return ss.str();
@@ -262,7 +262,7 @@ Returns:
 )__doc__")
       .def_static(
           "read_wkt",
-          [](const std::string& wkt) -> geodetic::Box {
+          [](const std::string &wkt) -> geodetic::Box {
             auto box = geodetic::Box();
             boost::geometry::read_wkt(wkt, box);
             return box;
@@ -277,14 +277,14 @@ Returns:
 )__doc__")
       .def(
           "__eq__",
-          [](const geodetic::Box& self, const geodetic::Box& rhs) -> bool {
+          [](const geodetic::Box &self, const geodetic::Box &rhs) -> bool {
             return boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
           "Overrides the default behavior of the ``==`` operator.")
       .def(
           "__ne__",
-          [](const geodetic::Box& self, const geodetic::Box& rhs) -> bool {
+          [](const geodetic::Box &self, const geodetic::Box &rhs) -> bool {
             return !boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
@@ -292,18 +292,18 @@ Returns:
       .def("__repr__", &geodetic::Box::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a box.")
-      .def(py::pickle([](const geodetic::Box& self) { return self.getstate(); },
-                      [](const py::tuple& state) {
+      .def(py::pickle([](const geodetic::Box &self) { return self.getstate(); },
+                      [](const py::tuple &state) {
                         return geodetic::Box::setstate(state);
                       }));
 }
 
-static void init_geodetic_polygon(py::module& m) {
+static void init_geodetic_polygon(py::module &m) {
   py::class_<geodetic::Polygon>(
       m, "Polygon",
       "The polygon contains an outer ring and zero or more inner rings.")
-      .def(py::init([](const py::list& outer,
-                       std::optional<const py::list>& inners) {
+      .def(py::init([](const py::list &outer,
+                       std::optional<const py::list> &inners) {
              return geodetic::Polygon(outer, inners.value_or(py::list()));
            }),
            py::arg("outer"), py::arg("inners") = py::none(), R"(
@@ -322,13 +322,13 @@ Raises:
                              "The inner rings.")
       .def(
           "__eq__",
-          [](const geodetic::Polygon& self, const geodetic::Polygon& rhs)
+          [](const geodetic::Polygon &self, const geodetic::Polygon &rhs)
               -> bool { return boost::geometry::equals(self, rhs); },
           py::arg("other"),
           "Overrides the default behavior of the ``==`` operator.")
       .def(
           "__ne__",
-          [](const geodetic::Polygon& self, const geodetic::Polygon& rhs)
+          [](const geodetic::Polygon &self, const geodetic::Polygon &rhs)
               -> bool { return !boost::geometry::equals(self, rhs); },
           py::arg("other"),
           "Overrides the default behavior of the ``!=`` operator.")
@@ -344,7 +344,7 @@ Returns:
 )__doc__")
       .def(
           "covered_by",
-          [](const geodetic::Polygon& self, const geodetic::Point& point)
+          [](const geodetic::Polygon &self, const geodetic::Point &point)
               -> bool { return self.covered_by(point); },
           py::arg("point"), R"__doc__(
 Test if the given point is inside or on border of this polygon.
@@ -356,9 +356,9 @@ Returns:
 )__doc__")
       .def(
           "covered_by",
-          [](const geodetic::Polygon& self,
-             const Eigen::Ref<const Eigen::VectorXd>& lon,
-             const Eigen::Ref<const Eigen::VectorXd>& lat,
+          [](const geodetic::Polygon &self,
+             const Eigen::Ref<const Eigen::VectorXd> &lon,
+             const Eigen::Ref<const Eigen::VectorXd> &lat,
              const size_t num_threads) -> py::array_t<int8_t> {
             return self.covered_by(lon, lat, num_threads);
           },
@@ -391,7 +391,7 @@ Returns:
 )__doc__")
       .def(
           "distance",
-          [](const geodetic::Polygon& self, const geodetic::Polygon& other)
+          [](const geodetic::Polygon &self, const geodetic::Polygon &other)
               -> double { return self.distance(other); },
           py::arg("other"),
           R"__doc__(
@@ -405,7 +405,7 @@ Returns:
 )__doc__")
       .def(
           "distance",
-          [](const geodetic::Polygon& self, const geodetic::Point& point)
+          [](const geodetic::Polygon &self, const geodetic::Point &point)
               -> double { return self.distance(point); },
           py::arg("point"),
           R"__doc__(
@@ -419,7 +419,7 @@ Returns:
 )__doc__")
       .def(
           "wkt",
-          [](const geodetic::Polygon& self) -> std::string {
+          [](const geodetic::Polygon &self) -> std::string {
             auto ss = std::stringstream();
             ss << boost::geometry::wkt(self);
             return ss.str();
@@ -432,7 +432,7 @@ Returns:
 )__doc__")
       .def_static(
           "read_wkt",
-          [](const std::string& wkt) -> geodetic::Polygon {
+          [](const std::string &wkt) -> geodetic::Polygon {
             auto polygon = geodetic::Polygon();
             boost::geometry::read_wkt(wkt, polygon);
             return polygon;
@@ -446,13 +446,13 @@ Returns:
     pyinterp.geodetic.Box: The polygon defined by the WKT representation.
 )__doc__")
       .def(py::pickle(
-          [](const geodetic::Polygon& self) { return self.getstate(); },
-          [](const py::tuple& state) {
+          [](const geodetic::Polygon &self) { return self.getstate(); },
+          [](const py::tuple &state) {
             return geodetic::Polygon::setstate(state);
           }));
 }
 
-void init_geodetic(py::module& m) {
+void init_geodetic(py::module &m) {
   auto _system = py::class_<pyinterp::detail::geodetic::System>(
       m, "_System", "C++ implementation of the WGS system.");
 
@@ -559,8 +559,8 @@ Returns:
       .def("__ne__", &geodetic::System::operator!=, py::arg("other"),
            "Overrides the default behavior of the ``!=`` operator.")
       .def(py::pickle(
-          [](const geodetic::System& self) { return self.getstate(); },
-          [](const py::tuple& state) {
+          [](const geodetic::System &self) { return self.getstate(); },
+          [](const py::tuple &state) {
             return geodetic::System::setstate(state);
           }));
 
@@ -640,8 +640,8 @@ Returns:
     tuple: Longitudes, latitudes and altitudes in the new coordinate system.
 )__doc__")
       .def(py::pickle(
-          [](const geodetic::Coordinates& self) { return self.getstate(); },
-          [](const py::tuple& state) {
+          [](const geodetic::Coordinates &self) { return self.getstate(); },
+          [](const py::tuple &state) {
             return geodetic::Coordinates::setstate(state);
           }));
 
@@ -651,7 +651,7 @@ Returns:
 
   m.def(
       "normalize_longitudes",
-      [](Eigen::Ref<Eigen::VectorXd>& lon, const double min_lon) -> void {
+      [](Eigen::Ref<Eigen::VectorXd> &lon, const double min_lon) -> void {
         lon = lon.unaryExpr([min_lon](double x) {
           return pyinterp::detail::math::normalize_angle(x, min_lon, 360.0);
         });
@@ -666,12 +666,12 @@ Args:
 
   m.def(
       "coordinate_distances",
-      [](const Eigen::Ref<const Eigen::VectorXd>& lon1,
-         const Eigen::Ref<const Eigen::VectorXd>& lat1,
-         const Eigen::Ref<const Eigen::VectorXd>& lon2,
-         const Eigen::Ref<const Eigen::VectorXd>& lat2,
-         const std::string& strategy,
-         const std::optional<geodetic::System>& wgs,
+      [](const Eigen::Ref<const Eigen::VectorXd> &lon1,
+         const Eigen::Ref<const Eigen::VectorXd> &lat1,
+         const Eigen::Ref<const Eigen::VectorXd> &lon2,
+         const Eigen::Ref<const Eigen::VectorXd> &lat2,
+         const std::string &strategy,
+         const std::optional<geodetic::System> &wgs,
          const size_t num_threads) -> py::array_t<double> {
         return geodetic::coordinate_distances<geodetic::Point>(
             lon1, lat1, lon2, lat2, parse_distance_strategy(strategy), wgs,

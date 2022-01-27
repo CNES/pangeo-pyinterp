@@ -23,12 +23,12 @@ class Interpolate2D {
   /// @param type fitting model
   /// @param acc Accelerator
   Interpolate2D(const size_t xsize, const size_t ysize,
-                const gsl_interp2d_type* type, Accelerator xacc,
+                const gsl_interp2d_type *type, Accelerator xacc,
                 Accelerator yacc)
       : workspace_(
-            std::unique_ptr<gsl_spline2d, std::function<void(gsl_spline2d*)>>(
+            std::unique_ptr<gsl_spline2d, std::function<void(gsl_spline2d *)>>(
                 gsl_spline2d_alloc(type, xsize, ysize),
-                [](gsl_spline2d* ptr) { gsl_spline2d_free(ptr); })),
+                [](gsl_spline2d *ptr) { gsl_spline2d_free(ptr); })),
         xacc_(std::move(xacc)),
         yacc_(std::move(yacc)) {}
 
@@ -43,22 +43,22 @@ class Interpolate2D {
   }
 
   /// Return the interpolated value of z for a given point x, y
-  [[nodiscard]] inline auto evaluate(const Eigen::VectorXd& xa,
-                                     const Eigen::VectorXd& ya,
-                                     const Eigen::MatrixXd& za, const double x,
+  [[nodiscard]] inline auto evaluate(const Eigen::VectorXd &xa,
+                                     const Eigen::VectorXd &ya,
+                                     const Eigen::MatrixXd &za, const double x,
                                      const double y) -> double {
     init(xa, ya, za);
     return gsl_spline2d_eval(workspace_.get(), x, y, xacc_, yacc_);
   }
 
  private:
-  std::unique_ptr<gsl_spline2d, std::function<void(gsl_spline2d*)>> workspace_;
+  std::unique_ptr<gsl_spline2d, std::function<void(gsl_spline2d *)>> workspace_;
   Accelerator xacc_;
   Accelerator yacc_;
 
   /// Initializes the interpolation object
-  inline auto init(const Eigen::VectorXd& xa, const Eigen::VectorXd& ya,
-                   const Eigen::MatrixXd& za) noexcept -> void {
+  inline auto init(const Eigen::VectorXd &xa, const Eigen::VectorXd &ya,
+                   const Eigen::MatrixXd &za) noexcept -> void {
     xacc_.reset();
     xacc_.reset();
     gsl_spline2d_init(workspace_.get(), xa.data(), ya.data(), za.data(),

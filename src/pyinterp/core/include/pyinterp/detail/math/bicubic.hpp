@@ -20,13 +20,13 @@ class Bicubic {
   ///
   /// @param xr Calculation window.
   /// @param kind method of calculation
-  explicit Bicubic(const Frame2D& xr, const std::string& kind)
+  explicit Bicubic(const Frame2D &xr, const std::string &kind)
       : interpolator_(xr.x()->size(), xr.y()->size(),
                       Bicubic::parse_interp2d_type(kind), gsl::Accelerator(),
                       gsl::Accelerator()) {}
 
   /// Return the interpolated value of y for a given point x
-  auto interpolate(const double x, const double y, const Frame2D& xr)
+  auto interpolate(const double x, const double y, const Frame2D &xr)
       -> double {
     return interpolator_.evaluate(*(xr.x()), *(xr.y()), *(xr.q()), x, y);
   }
@@ -35,8 +35,8 @@ class Bicubic {
   /// GSL interpolator
   gsl::Interpolate2D interpolator_;
 
-  static inline auto parse_interp2d_type(const std::string& kind)
-      -> const gsl_interp2d_type* {
+  static inline auto parse_interp2d_type(const std::string &kind)
+      -> const gsl_interp2d_type * {
     if (kind == "bilinear") {
       return gsl_interp2d_bilinear;
     }

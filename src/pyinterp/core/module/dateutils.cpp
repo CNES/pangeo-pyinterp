@@ -6,9 +6,9 @@
 
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
-
+// clang-format off
 #include <datetime.h>
-
+// clang-format on
 #include <iomanip>
 #include <sstream>
 
@@ -17,7 +17,7 @@ namespace dateutils = pyinterp::dateutils;
 
 namespace detail {
 
-static auto fractional_seconds_from_dtype(const pybind11::dtype& dtype)
+static auto fractional_seconds_from_dtype(const pybind11::dtype &dtype)
     -> dateutils::FractionalSeconds {
   auto type_num =
       pybind11::detail::array_descriptor_proxy(dtype.ptr())->type_num;
@@ -29,7 +29,7 @@ static auto fractional_seconds_from_dtype(const pybind11::dtype& dtype)
       pybind11::str(static_cast<pybind11::handle>(dtype))));
 }
 
-static auto date(const py::array& array) -> py::array_t<dateutils::Date> {
+static auto date(const py::array &array) -> py::array_t<dateutils::Date> {
   auto frac = fractional_seconds_from_dtype(array.dtype());
   auto result =
       py::array_t<dateutils::Date>(py::array::ShapeContainer({array.size()}));
@@ -47,7 +47,7 @@ static auto date(const py::array& array) -> py::array_t<dateutils::Date> {
   return result;
 }
 
-static auto time(const py::array& array) -> py::array_t<dateutils::Time> {
+static auto time(const py::array &array) -> py::array_t<dateutils::Time> {
   auto frac = fractional_seconds_from_dtype(array.dtype());
   auto result =
       py::array_t<dateutils::Time>(py::array::ShapeContainer({array.size()}));
@@ -65,7 +65,7 @@ static auto time(const py::array& array) -> py::array_t<dateutils::Time> {
   return result;
 }
 
-static auto isocalendar(const py::array& array)
+static auto isocalendar(const py::array &array)
     -> py::array_t<dateutils::ISOCalendar> {
   auto frac = fractional_seconds_from_dtype(array.dtype());
   auto result = py::array_t<dateutils::ISOCalendar>(
@@ -84,7 +84,7 @@ static auto isocalendar(const py::array& array)
   return result;
 }
 
-static auto weekday(const py::array& array) -> py::array_t<unsigned> {
+static auto weekday(const py::array &array) -> py::array_t<unsigned> {
   auto frac = fractional_seconds_from_dtype(array.dtype());
   auto result =
       py::array_t<unsigned>(py::array::ShapeContainer({array.size()}));
@@ -102,7 +102,7 @@ static auto weekday(const py::array& array) -> py::array_t<unsigned> {
   return result;
 }
 
-static auto timedelta_since_january(const py::array& array) -> py::array {
+static auto timedelta_since_january(const py::array &array) -> py::array {
   auto frac = fractional_seconds_from_dtype(array.dtype());
   auto result =
       py::array(py::dtype(static_cast<std::string>(dateutils::DType(
@@ -128,9 +128,9 @@ static auto timedelta_since_january(const py::array& array) -> py::array {
   return result;
 }
 
-static auto datetime(const py::array& array) -> py::array {
+static auto datetime(const py::array &array) -> py::array {
   auto frac = fractional_seconds_from_dtype(array.dtype());
-  auto* buffer = new PyObject*[array.size()];
+  auto *buffer = new PyObject *[array.size()];
   auto _array = array.unchecked<int64_t, 1>();
 
   if (PyDateTimeAPI == nullptr) {
@@ -147,7 +147,7 @@ static auto datetime(const py::array& array) -> py::array {
         static_cast<int>(frac.cast(fractional_part, dateutils::kMicrosecond)));
   }
   auto capsule = py::capsule(
-      buffer, [](void* ptr) { delete[] static_cast<PyObject*>(ptr); });
+      buffer, [](void *ptr) { delete[] static_cast<PyObject *>(ptr); });
 
   return py::array(py::dtype("object"),
                    pybind11::array::ShapeContainer({array.size()}), buffer,
@@ -156,7 +156,7 @@ static auto datetime(const py::array& array) -> py::array {
 
 }  // namespace detail
 
-void init_dateutils(py::module& m) {
+void init_dateutils(py::module &m) {
   PYBIND11_NUMPY_DTYPE(dateutils::Date, year, month, day);
   PYBIND11_NUMPY_DTYPE(dateutils::Time, hour, minute, second);
   PYBIND11_NUMPY_DTYPE(dateutils::ISOCalendar, year, week, weekday);
@@ -228,7 +228,7 @@ Returns:
       .def(
           "datetime64_to_str",
           [](const int64_t value,
-             const std::string& clock_resolution) -> std::string {
+             const std::string &clock_resolution) -> std::string {
             return pyinterp::dateutils::datetime64_to_string(
                 value, dateutils::DType(clock_resolution));
           },

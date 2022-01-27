@@ -7,7 +7,6 @@
 # http://www.sphinx-doc.org/en/master/config
 
 # -- Path setup --------------------------------------------------------------
-import os
 import pathlib
 
 HERE = pathlib.Path(__file__).absolute().parent

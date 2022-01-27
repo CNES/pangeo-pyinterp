@@ -6,12 +6,13 @@
 Data binning
 ------------
 """
-from typing import Optional, Union
 import copy
+from typing import Optional, Union
+
 import dask.array as da
 import numpy as np
-from . import core
-from . import geodetic
+
+from . import core, geodetic
 
 
 class Binning2D:
@@ -19,6 +20,7 @@ class Binning2D:
     Group a number of more or less continuous values into a smaller number of
     "bins" located on a grid.
     """
+
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
@@ -93,7 +95,7 @@ class Binning2D:
 
     def __add__(self, other: "Binning2D") -> "Binning2D":
         result = copy.copy(self)
-        if type(result._instance) != type(other._instance):
+        if type(result._instance) != type(other._instance):  # noqa: E721
             raise TypeError("Binning2D instance must be of the same type")
         result._instance += other._instance  # type: ignore
         return result

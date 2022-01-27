@@ -27,7 +27,7 @@ class Bilinear : public detail::math::Bilinear<Point, T> {
     return pybind11::make_tuple();
   }
 
-  static auto setstate(const pybind11::tuple& /*tuple*/) -> Bilinear {
+  static auto setstate(const pybind11::tuple & /*tuple*/) -> Bilinear {
     return Bilinear();
   }
 };
@@ -40,7 +40,7 @@ class Nearest : public detail::math::Nearest<Point, T> {
     return pybind11::make_tuple();
   }
 
-  static auto setstate(const pybind11::tuple& /*tuple*/) -> Nearest {
+  static auto setstate(const pybind11::tuple & /*tuple*/) -> Nearest {
     return Nearest();
   }
 };
@@ -57,7 +57,7 @@ class InverseDistanceWeighting
     return pybind11::make_tuple(this->exp());
   }
 
-  static auto setstate(const pybind11::tuple& tuple)
+  static auto setstate(const pybind11::tuple &tuple)
       -> InverseDistanceWeighting {
     if (tuple.size() != 1) {
       throw std::runtime_error("invalid state");
@@ -70,9 +70,9 @@ class InverseDistanceWeighting
 /// Bivariate interpolation for a given point.
 template <template <class> class Point, typename Coordinate, typename Type>
 inline auto _bivariate(
-    const Grid2D<Type>& grid, const Coordinate& x, const Coordinate& y,
-    const Axis<double>& x_axis, const Axis<double>& y_axis,
-    const BivariateInterpolator<Point, Coordinate>* interpolator,
+    const Grid2D<Type> &grid, const Coordinate &x, const Coordinate &y,
+    const Axis<double> &x_axis, const Axis<double> &y_axis,
+    const BivariateInterpolator<Point, Coordinate> *interpolator,
     const bool bounds_error) -> Coordinate {
   auto x_indexes = x_axis.find_indexes(x);
   auto y_indexes = y_axis.find_indexes(y);
@@ -107,9 +107,9 @@ inline auto _bivariate(
 /// @tparam Coordinate The type of data used by the interpolators.
 /// @tparam Type The type of data used by the numerical grid.
 template <template <class> class Point, typename Coordinate, typename Type>
-auto bivariate(const Grid2D<Type>& grid, const pybind11::array_t<Coordinate>& x,
-               const pybind11::array_t<Coordinate>& y,
-               const BivariateInterpolator<Point, Coordinate>* interpolator,
+auto bivariate(const Grid2D<Type> &grid, const pybind11::array_t<Coordinate> &x,
+               const pybind11::array_t<Coordinate> &y,
+               const BivariateInterpolator<Point, Coordinate> *interpolator,
                const bool bounds_error, const size_t num_threads)
     -> pybind11::array_t<Coordinate> {
   pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
@@ -130,8 +130,8 @@ auto bivariate(const Grid2D<Type>& grid, const pybind11::array_t<Coordinate>& x,
     auto except = std::exception_ptr(nullptr);
 
     // Access to the shared pointer outside the loop to avoid data races
-    const auto& x_axis = *grid.x();
-    const auto& y_axis = *grid.y();
+    const auto &x_axis = *grid.x();
+    const auto &y_axis = *grid.y();
 
     detail::dispatch(
         [&](size_t start, size_t end) {
@@ -154,9 +154,9 @@ auto bivariate(const Grid2D<Type>& grid, const pybind11::array_t<Coordinate>& x,
 }
 
 template <template <class> class Point, typename T>
-void implement_bivariate_interpolator(pybind11::module& m,
-                                      const std::string& prefix,
-                                      const std::string& suffix) {
+void implement_bivariate_interpolator(pybind11::module &m,
+                                      const std::string &prefix,
+                                      const std::string &suffix) {
   using CoordinateSystem = BivariateInterpolator<Point, T>;
 
   /// Redirects virtual calls to Python
@@ -164,8 +164,8 @@ void implement_bivariate_interpolator(pybind11::module& m,
    public:
     using CoordinateSystem::CoordinateSystem;
 
-    auto evaluate(const Point<T>& p, const Point<T>& p0, const Point<T>& p1,
-                  const T& q00, const T& q01, const T& q10, const T& q11) const
+    auto evaluate(const Point<T> &p, const Point<T> &p0, const Point<T> &p1,
+                  const T &q00, const T &q01, const T &q10, const T &q11) const
         -> T override {
       PYBIND11_OVERLOAD_PURE(T, CoordinateSystem, "evaluate", p, p0,  // NOLINT
                              p1,                                      // NOLINT
@@ -183,8 +183,8 @@ void implement_bivariate_interpolator(pybind11::module& m,
       ("Bilinear interpolation in a " + suffix + " space.").c_str())
       .def(pybind11::init<>())
       .def(pybind11::pickle(
-          [](const Bilinear<Point, T>& self) { return self.getstate(); },
-          [](const pybind11::tuple& state) {
+          [](const Bilinear<Point, T> &self) { return self.getstate(); },
+          [](const pybind11::tuple &state) {
             return Bilinear<Point, T>::setstate(state);
           }));
 
@@ -193,8 +193,8 @@ void implement_bivariate_interpolator(pybind11::module& m,
       ("Nearest interpolation in a " + suffix + " space.").c_str())
       .def(pybind11::init<>())
       .def(pybind11::pickle(
-          [](const Nearest<Point, T>& self) { return self.getstate(); },
-          [](const pybind11::tuple& state) {
+          [](const Nearest<Point, T> &self) { return self.getstate(); },
+          [](const pybind11::tuple &state) {
             return Nearest<Point, T>::setstate(state);
           }));
 
@@ -204,16 +204,16 @@ void implement_bivariate_interpolator(pybind11::module& m,
           .c_str())
       .def(pybind11::init<int>(), pybind11::arg("p") = 2)
       .def(pybind11::pickle(
-          [](const InverseDistanceWeighting<Point, T>& self) {
+          [](const InverseDistanceWeighting<Point, T> &self) {
             return self.getstate();
           },
-          [](const pybind11::tuple& state) {
+          [](const pybind11::tuple &state) {
             return InverseDistanceWeighting<Point, T>::setstate(state);
           }));
 }
 
 template <template <class> class Point, typename Coordinate, typename Type>
-void implement_bivariate(pybind11::module& m, const std::string& suffix) {
+void implement_bivariate(pybind11::module &m, const std::string &suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
   m.def(("bivariate_" + function_suffix).c_str(),

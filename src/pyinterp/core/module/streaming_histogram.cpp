@@ -12,13 +12,13 @@
 namespace py = pybind11;
 
 template <typename Type>
-void implement_streaming_histogram(py::module& m, const std::string& suffix) {
+void implement_streaming_histogram(py::module &m, const std::string &suffix) {
   py::class_<pyinterp::StreamingHistogram<Type>>(
       m, ("StreamingHistogram" + suffix).c_str(), "TODO.")
-      .def(py::init<py::array_t<Type, py::array::c_style>&,
-                    std::optional<py::array_t<Type, py::array::c_style>>&,
-                    std::optional<std::list<py::ssize_t>>&,
-                    std::optional<size_t>&>(),
+      .def(py::init<py::array_t<Type, py::array::c_style> &,
+                    std::optional<py::array_t<Type, py::array::c_style>> &,
+                    std::optional<std::list<py::ssize_t>> &,
+                    std::optional<size_t> &>(),
            py::arg("values"), py::arg("weights") = py::none(),
            py::arg("axis") = py::none(), py::arg("bin_count") = py::none(),
            R"__doc__(
@@ -120,23 +120,23 @@ Returns:
            py::arg("other"), py::call_guard<py::gil_scoped_release>())
       .def(
           "__add__",
-          [](const pyinterp::StreamingHistogram<Type>& self,
-             const pyinterp::StreamingHistogram<Type>& other) {
+          [](const pyinterp::StreamingHistogram<Type> &self,
+             const pyinterp::StreamingHistogram<Type> &other) {
             auto result = pyinterp::StreamingHistogram<Type>(self);
             result += other;
             return result;
           },
           py::arg("other"), py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
-          [](const pyinterp::StreamingHistogram<Type>& self) {
+          [](const pyinterp::StreamingHistogram<Type> &self) {
             return self.getstate();
           },
-          [](const py::tuple& state) {
+          [](const py::tuple &state) {
             return pyinterp::StreamingHistogram<Type>::setstate(state);
           }));
 }
 
-void init_streaming_histogram(py::module& m) {
+void init_streaming_histogram(py::module &m) {
   implement_streaming_histogram<double>(m, "Float64");
   implement_streaming_histogram<float>(m, "Float32");
 }

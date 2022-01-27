@@ -3,8 +3,10 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 import pickle
-import pytest
+
 import numpy as np
+import pytest
+
 from ... import core
 
 MERCATOR_LATITUDES = np.array([
@@ -37,8 +39,7 @@ def test_axis_accessor():
     assert a == b
     assert not (a != b)
     assert str(a) == str(b)
-    assert str(a) == (
-        """<pyinterp.core.Axis>
+    assert str(a) == ("""<pyinterp.core.Axis>
   min_value: 0
   max_value: 359
   step     : 1

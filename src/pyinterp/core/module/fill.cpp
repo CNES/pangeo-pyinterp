@@ -11,7 +11,7 @@
 namespace py = pybind11;
 
 template <typename Type>
-void implement_fill_functions(py::module& m, const std::string& suffix) {
+void implement_fill_functions(py::module &m, const std::string &suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
@@ -78,8 +78,8 @@ Returns:
 }
 
 template <typename Type, typename AxisType>
-void implement_loess_3d(py::module& m, const std::string& prefix,
-                        const std::string& suffix) {
+void implement_loess_3d(py::module &m, const std::string &prefix,
+                        const std::string &suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
@@ -115,7 +115,7 @@ Returns:
             .c_str());
 }
 
-void init_fill(py::module& m) {
+void init_fill(py::module &m) {
   py::enum_<pyinterp::fill::FirstGuess>(
       m, "FirstGuess", "Type of first guess grid to solve Poisson's equation.")
       .value("Zero", pyinterp::fill::kZero, "Use 0.0 as an initial guess")

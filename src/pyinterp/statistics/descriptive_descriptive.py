@@ -3,8 +3,10 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 from typing import Any, Iterable, Optional, Union
+
 import dask.array as da
 import numpy as np
+
 from .. import core
 
 
@@ -52,6 +54,7 @@ class DescriptiveStatistics:
         2016,
         https://doi.org/10.1007/s00180-015-0637-z
     """
+
     def __init__(self,
                  values: Union[da.Array, np.ndarray],
                  weights: Optional[Union[da.Array, np.ndarray]] = None,
@@ -72,7 +75,7 @@ class DescriptiveStatistics:
                 assumed to have equal weight.
             axis (int, iterable, optional): Axis or axes along which to compute
                 the statistics. If not provided, the statistics are computed
-                over the flattened array.    
+                over the flattened array.
             dtype (numpy.dtype, optional): Data type of the returned array. By
                 default, the data type is numpy.float64.
         """
@@ -80,9 +83,9 @@ class DescriptiveStatistics:
             axis = (axis, )
         dtype = dtype or np.dtype("float64")
         if dtype == np.dtype("float64"):
-            attr = f"DescriptiveStatisticsFloat64"
+            attr = "DescriptiveStatisticsFloat64"
         elif dtype == np.dtype("float32"):
-            attr = f"DescriptiveStatisticsFloat32"
+            attr = "DescriptiveStatisticsFloat32"
         else:
             raise ValueError(f"dtype {dtype} not handled by the object")
         if isinstance(values, da.Array) or isinstance(weights, da.Array):
@@ -101,7 +104,7 @@ class DescriptiveStatistics:
             DescriptiveStatistics: Returns itself.
         """
         if isinstance(other, DescriptiveStatistics):
-            if type(self._instance) != type(other._instance):
+            if type(self._instance) != type(other._instance):  # noqa: E721
                 raise TypeError(
                     "Descriptive statistics must have the same type")
             self._instance += other._instance  # type: ignore
@@ -112,7 +115,7 @@ class DescriptiveStatistics:
 
     def count(self) -> np.ndarray:
         """Returns the count of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the count of samples.
         """
@@ -120,7 +123,7 @@ class DescriptiveStatistics:
 
     def kurtosis(self) -> np.ndarray:
         """Returns the kurtosis of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the kurtosis of samples.
         """
@@ -128,7 +131,7 @@ class DescriptiveStatistics:
 
     def max(self) -> np.ndarray:
         """Returns the maximum of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the maximum of samples.
         """
@@ -136,7 +139,7 @@ class DescriptiveStatistics:
 
     def mean(self) -> np.ndarray:
         """Returns the mean of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the mean of samples.
         """
@@ -144,7 +147,7 @@ class DescriptiveStatistics:
 
     def min(self) -> np.ndarray:
         """Returns the minimum of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the minimum of samples.
         """
@@ -152,7 +155,7 @@ class DescriptiveStatistics:
 
     def skewness(self) -> np.ndarray:
         """Returns the skewness of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the skewness of samples.
         """
@@ -160,7 +163,7 @@ class DescriptiveStatistics:
 
     def sum(self) -> np.ndarray:
         """Returns the sum of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the sum of samples.
         """
@@ -168,7 +171,7 @@ class DescriptiveStatistics:
 
     def sum_of_weights(self) -> np.ndarray:
         """Returns the sum of weights.
-        
+
         Returns:
             numpy.ndarray: Returns the sum of weights.
         """
@@ -176,7 +179,7 @@ class DescriptiveStatistics:
 
     def var(self, ddof: int = 0) -> np.ndarray:
         """Returns the variance of samples.
-        
+
         Args:
             ddof (int, optional): Means Delta Degrees of Freedom. The divisor
                 used in calculations is N - ddof, where N represents the number

@@ -4,15 +4,18 @@
 # BSD-style license that can be found in the LICENSE file.
 import os
 import pickle
-import pytest
+
 import netCDF4
+import pytest
+
 try:
-    import matplotlib.pyplot
     import matplotlib.colors
+    import matplotlib.pyplot
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
 import numpy as np
+
 from ... import core
 from .. import grid2d_path, make_or_compare_reference
 

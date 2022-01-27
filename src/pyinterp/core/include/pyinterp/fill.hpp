@@ -31,8 +31,8 @@ namespace detail {
 ///
 /// @param grid
 template <typename Type>
-void set_zonal_average(pybind11::EigenDRef<Matrix<Type>>& grid,
-                       Matrix<bool>& mask, const size_t num_threads) {
+void set_zonal_average(pybind11::EigenDRef<Matrix<Type>> &grid,
+                       Matrix<bool> &mask, const size_t num_threads) {
   // Captures the detected exceptions in the calculation function
   // (only the last exception captured is kept)
   auto except = std::exception_ptr(nullptr);
@@ -83,8 +83,8 @@ void set_zonal_average(pybind11::EigenDRef<Matrix<Type>>& grid,
 /// @param relaxation Relaxation constant
 /// @return maximum residual value
 template <typename Type>
-auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>>& grid,
-                  Matrix<bool>& mask, const bool is_circle,
+auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>> &grid,
+                  Matrix<bool> &mask, const bool is_circle,
                   const Type relaxation, const size_t num_threads) -> Type {
   // Maximum residual values for each thread.
   std::vector<Type> max_residuals(num_threads);
@@ -111,9 +111,9 @@ auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>>& grid,
   // @param max_residual Maximum residual of this strip.
   // @param pipe_out Last index to be processed on in this band.
   // @param pipe_in Last index processed in the previous band.
-  auto worker = [&](int64_t y_start, int64_t y_end, Type* max_residual,
-                    std::atomic<int64_t>* pipe_out,
-                    std::atomic<int64_t>* pipe_in) -> void {
+  auto worker = [&](int64_t y_start, int64_t y_end, Type *max_residual,
+                    std::atomic<int64_t> *pipe_out,
+                    std::atomic<int64_t> *pipe_in) -> void {
     // Modifies the value of a masked pixel.
     auto cell_fill = [&grid, &relaxation, &max_residual](
                          int64_t ix0, int64_t ix, int64_t ix1, int64_t iy0,
@@ -174,7 +174,7 @@ auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>>& grid,
     int64_t start = 0;
     int64_t shift = y_size / num_threads;
 
-    for (auto& item : pipeline) {
+    for (auto &item : pipeline) {
       item = std::numeric_limits<int>::min();
     }
 
@@ -187,7 +187,7 @@ auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>>& grid,
     threads.emplace_back(std::thread(worker, start, y_size,
                                      &max_residuals[num_threads - 1], nullptr,
                                      &pipeline[num_threads - 2]));
-    for (auto&& item : threads) {
+    for (auto &&item : threads) {
       item.join();
     }
   }
@@ -222,7 +222,7 @@ enum FirstGuess {
 /// @return A tuple containing the number of iterations performed and the
 /// maximum residual value.
 template <typename Type>
-auto gauss_seidel(pybind11::EigenDRef<Matrix<Type>>& grid,
+auto gauss_seidel(pybind11::EigenDRef<Matrix<Type>> &grid,
                   const FirstGuess first_guess, const bool is_circle,
                   const size_t max_iterations, const Type epsilon,
                   const Type relaxation, size_t num_threads)
@@ -271,7 +271,7 @@ auto gauss_seidel(pybind11::EigenDRef<Matrix<Type>>& grid,
 
 // Get the indexes that frame a given index.
 inline auto frame_index(const int64_t index, const int64_t size,
-                        const bool is_angle, std::vector<int64_t>& frame)
+                        const bool is_angle, std::vector<int64_t> &frame)
     -> void {
   // Index in the center of the window
   auto center = static_cast<int64_t>(frame.size() / 2);
@@ -299,7 +299,7 @@ inline auto frame_index(const int64_t index, const int64_t size,
 }
 
 /// Checking the size of the filter window.
-constexpr auto check_windows_size(const std::string& name1, const uint32_t size)
+constexpr auto check_windows_size(const std::string &name1, const uint32_t size)
     -> void {
   if (size < 1) {
     throw std::invalid_argument(name1 + " must be >= 1");
@@ -308,7 +308,7 @@ constexpr auto check_windows_size(const std::string& name1, const uint32_t size)
 
 /// Checking the size of the filter window.
 template <typename... Args>
-constexpr auto check_windows_size(const std::string& name1, uint32_t size,
+constexpr auto check_windows_size(const std::string &name1, uint32_t size,
                                   Args... args) -> void {
   check_windows_size(name1, size);
   check_windows_size(args...);
@@ -336,7 +336,7 @@ enum ValueType {
 /// at all, which is useful for debugging.
 /// @return The grid will have all the NaN filled with extrapolated values.
 template <typename Type>
-auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
+auto loess(const Grid2D<Type> &grid, const uint32_t nx, const uint32_t ny,
            const ValueType value_type, const size_t num_threads)
     -> pybind11::array_t<Type> {
   check_windows_size("nx", nx, "ny", ny);
@@ -351,8 +351,8 @@ auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
   auto worker = [&](const size_t start, const size_t end) {
     try {
       // Access to the shared pointer outside the loop to avoid data races
-      const auto& x_axis = *grid.x();
-      const auto& y_axis = *grid.y();
+      const auto &x_axis = *grid.x();
+      const auto &y_axis = *grid.y();
       auto x_frame = std::vector<int64_t>(nx * 2 + 1);
       auto y_frame = std::vector<int64_t>(ny * 2 + 1);
 
@@ -437,7 +437,7 @@ auto loess(const Grid2D<Type>& grid, const uint32_t nx, const uint32_t ny,
 }
 
 template <typename Type, typename AxisType>
-auto loess(const Grid3D<Type, AxisType>& grid, const uint32_t nx,
+auto loess(const Grid3D<Type, AxisType> &grid, const uint32_t nx,
            const uint32_t ny, const ValueType value_type,
            const size_t num_threads) -> pybind11::array_t<Type> {
   check_windows_size("nx", nx, "ny", ny);
@@ -452,8 +452,8 @@ auto loess(const Grid3D<Type, AxisType>& grid, const uint32_t nx,
   auto worker = [&](const size_t start, const size_t end) {
     try {
       // Access to the shared pointer outside the loop to avoid data races
-      const auto& x_axis = *grid.x();
-      const auto& y_axis = *grid.y();
+      const auto &x_axis = *grid.x();
+      const auto &y_axis = *grid.y();
       auto x_frame = std::vector<int64_t>(nx * 2 + 1);
       auto y_frame = std::vector<int64_t>(ny * 2 + 1);
 

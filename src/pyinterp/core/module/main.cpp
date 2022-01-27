@@ -8,27 +8,27 @@
 
 namespace py = pybind11;
 
-extern void init_axis(py::module&);
-extern void init_bicubic(py::module&);
-extern void init_binning(py::module&);
-extern void init_bivariate_interpolator(py::module&);
-extern void init_bivariate(py::module&);
-extern void init_dateutils(py::module&);
-extern void init_descriptive_statistics(py::module&);
-extern void init_fill(py::module&);
-extern void init_geodetic(py::module&);
-extern void init_geohash_class(py::module&);
-extern void init_geohash_int64(py::module&);
-extern void init_geohash_string(py::module&);
-extern void init_grid(py::module&);
-extern void init_histogram2d(py::module&);
-extern void init_quadrivariate(py::module&);
-extern void init_rtree(py::module&);
-extern void init_spline(py::module&);
-extern void init_streaming_histogram(py::module&);
-extern void init_trivariate(py::module&);
+extern void init_axis(py::module &);
+extern void init_bicubic(py::module &);
+extern void init_binning(py::module &);
+extern void init_bivariate_interpolator(py::module &);
+extern void init_bivariate(py::module &);
+extern void init_dateutils(py::module &);
+extern void init_descriptive_statistics(py::module &);
+extern void init_fill(py::module &);
+extern void init_geodetic(py::module &);
+extern void init_geohash_class(py::module &);
+extern void init_geohash_int64(py::module &);
+extern void init_geohash_string(py::module &);
+extern void init_grid(py::module &);
+extern void init_histogram2d(py::module &);
+extern void init_quadrivariate(py::module &);
+extern void init_rtree(py::module &);
+extern void init_spline(py::module &);
+extern void init_streaming_histogram(py::module &);
+extern void init_trivariate(py::module &);
 
-static void init_geohash(py::module& m) {
+static void init_geohash(py::module &m) {
   auto int64 = m.def_submodule("int64", R"__doc__(
 GeoHash encoded as integer 64 bits
 ----------------------------------

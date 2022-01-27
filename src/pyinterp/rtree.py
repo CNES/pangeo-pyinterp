@@ -7,14 +7,16 @@ RTree spatial index
 -------------------
 """
 from typing import Optional, Tuple
+
 import numpy as np
-from . import core
-from . import geodetic
+
+from . import core, geodetic
 
 
 class RTree:
     """R*Tree spatial index for geodetic scalar values.
     """
+
     def __init__(self,
                  system: Optional[geodetic.System] = None,
                  dtype: Optional[np.dtype] = None,
@@ -262,7 +264,7 @@ class RTree:
         .. math::
 
             \\frac{\\sum_{i=1}^{k} \\omega(d_i,r)x_i}
-            {\\sum_{i=1}^{k} \\omega(d_i,r)} 
+            {\\sum_{i=1}^{k} \\omega(d_i,r)}
 
         where :math:`d_i` is the distance between the point of interest and
         the :math:`i`-th neighbor, :math:`r` is the radius of the search,

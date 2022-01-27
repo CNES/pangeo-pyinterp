@@ -4,13 +4,16 @@
 # BSD-style license that can be found in the LICENSE file.
 import collections
 import pickle
-import pytest
+
 import numpy as np
+import pytest
 import xarray as xr
-from ..backends import xarray as xr_backend
-from .. import Axis, Grid4D, TemporalAxis, bicubic
-from . import grid4d_path, make_or_compare_reference
+
 import pyinterp
+
+from .. import Axis, Grid4D, TemporalAxis, bicubic
+from ..backends import xarray as xr_backend
+from . import grid4d_path, make_or_compare_reference
 
 
 def test_4d(pytestconfig):

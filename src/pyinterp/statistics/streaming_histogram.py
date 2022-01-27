@@ -3,8 +3,10 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 from typing import Any, Iterable, Optional, Union
+
 import dask.array as da
 import numpy as np
+
 from .. import core
 
 
@@ -62,6 +64,7 @@ class StreamingHistogram:
         class :py:class:`DescriptiveStatistics <pyinterp.DescriptiveStatistics>`
         which will give you more accurate results.
     """
+
     def __init__(self,
                  values: Union[da.Array, np.ndarray],
                  weights: Optional[Union[da.Array, np.ndarray]] = None,
@@ -95,9 +98,9 @@ class StreamingHistogram:
             axis = (axis, )
         dtype = dtype or np.dtype("float64")
         if dtype == np.dtype("float64"):
-            attr = f"StreamingHistogramFloat64"
+            attr = "StreamingHistogramFloat64"
         elif dtype == np.dtype("float32"):
-            attr = f"StreamingHistogramFloat32"
+            attr = "StreamingHistogramFloat32"
         else:
             raise ValueError(f"dtype {dtype} not handled by the object")
         if isinstance(values, da.Array) or isinstance(weights, da.Array):
@@ -120,12 +123,12 @@ class StreamingHistogram:
 
         Args:
             other (object): The histogram to add to the current one.
-        
+
         Returns:
             StreamingHistogram: Returns itself.
         """
         if isinstance(other, StreamingHistogram):
-            if type(self._instance) != type(other._instance):
+            if type(self._instance) != type(other._instance):  # noqa: E721
                 raise TypeError("StreamingHistogram types must match")
             self._instance += other._instance  # type: ignore
         else:
@@ -135,7 +138,7 @@ class StreamingHistogram:
 
     def bins(self) -> np.ndarray:
         """Returns the histogram bins.
-        
+
         Returns:
             numpy.ndarray: The histogram bins.
         """
@@ -158,7 +161,7 @@ class StreamingHistogram:
 
     def count(self) -> np.ndarray:
         """Returns the count of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the count of samples.
         """
@@ -166,7 +169,7 @@ class StreamingHistogram:
 
     def kurtosis(self) -> np.ndarray:
         """Returns the kurtosis of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the kurtosis of samples.
         """
@@ -174,7 +177,7 @@ class StreamingHistogram:
 
     def max(self) -> np.ndarray:
         """Returns the maximum of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the maximum of samples.
         """
@@ -182,7 +185,7 @@ class StreamingHistogram:
 
     def mean(self) -> np.ndarray:
         """Returns the mean of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the mean of samples.
         """
@@ -190,7 +193,7 @@ class StreamingHistogram:
 
     def min(self) -> np.ndarray:
         """Returns the minimum of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the minimum of samples.
         """
@@ -198,7 +201,7 @@ class StreamingHistogram:
 
     def skewness(self) -> np.ndarray:
         """Returns the skewness of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the skewness of samples.
         """
@@ -206,7 +209,7 @@ class StreamingHistogram:
 
     def sum_of_weights(self) -> np.ndarray:
         """Returns the sum of weights.
-        
+
         Returns:
             numpy.ndarray: Returns the sum of weights.
         """
@@ -214,7 +217,7 @@ class StreamingHistogram:
 
     def var(self) -> np.ndarray:
         """Returns the variance of samples.
-        
+
         Returns:
             numpy.ndarray: Returns the variance of samples.
         """

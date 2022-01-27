@@ -39,12 +39,12 @@ static auto coordinates_help() -> std::string {
 }
 
 template <size_t N>
-static auto class_name(const char* const suffix) -> std::string {
+static auto class_name(const char *const suffix) -> std::string {
   return "RTree" + std::to_string(N) + "D" + suffix;
 }
 
 template <typename CoordinateType, typename Type, size_t N>
-static void implement_rtree(py::module& m, const char* const suffix) {
+static void implement_rtree(py::module &m, const char *const suffix) {
   py::class_<pyinterp::RTree<CoordinateType, Type, N>>(
       m, class_name<N>(suffix).c_str(),
       R"__doc__(
@@ -75,7 +75,7 @@ Returns:
            "Called to implement the built-in function ``len()``")
       .def(
           "__bool__",
-          [](const pyinterp::RTree<CoordinateType, Type, N>& self) {
+          [](const pyinterp::RTree<CoordinateType, Type, N> &self) {
             return !self.empty();
           },
           "Called to implement truth value testing and the built-in operation "
@@ -111,8 +111,8 @@ Args:
            py::call_guard<py::gil_scoped_release>())
       .def(
           "query",
-          [](const pyinterp::RTree<CoordinateType, Type, N>& self,
-             const py::array_t<CoordinateType>& coordinates, const uint32_t k,
+          [](const pyinterp::RTree<CoordinateType, Type, N> &self,
+             const py::array_t<CoordinateType> &coordinates, const uint32_t k,
              const bool within, const size_t num_threads) -> py::tuple {
             return self.query(coordinates, k, within, num_threads);
           },
@@ -241,15 +241,15 @@ Returns:
 )__doc__")
                .c_str())
       .def(py::pickle(
-          [](const pyinterp::RTree<CoordinateType, Type, N>& self) {
+          [](const pyinterp::RTree<CoordinateType, Type, N> &self) {
             return self.getstate();
           },
-          [](const py::tuple& state) {
+          [](const py::tuple &state) {
             return pyinterp::RTree<CoordinateType, Type, N>::setstate(state);
           }));
 }
 
-void init_rtree(py::module& m) {
+void init_rtree(py::module &m) {
   py::enum_<pyinterp::RadialBasisFunction>(m, "RadialBasisFunction",
                                            "Radial basis functions")
       .value("Cubic", pyinterp::RadialBasisFunction::Cubic,

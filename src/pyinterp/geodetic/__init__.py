@@ -3,7 +3,7 @@ Geographic coordinate system
 ----------------------------
 """
 from typing import List, Optional, Tuple
-import warnings
+
 from ..core import geodetic
 from ..core.geodetic import coordinate_distances, normalize_longitudes
 
@@ -11,6 +11,7 @@ from ..core.geodetic import coordinate_distances, normalize_longitudes
 class System(geodetic.System):
     """World Geodetic System (WGS).
     """
+
     def __init__(self, parameters: Optional[Tuple[float, float]] = None):
         """Constructor.
 
@@ -43,6 +44,7 @@ class System(geodetic.System):
 class Coordinates(geodetic.Coordinates):
     """World Geodetic Coordinates System.
     """
+
     def __init__(self, system: Optional[System] = None):
         """Constructor.
 
@@ -54,22 +56,10 @@ class Coordinates(geodetic.Coordinates):
         super(Coordinates, self).__init__(system)
 
 
-class Point2D(geodetic.Point):
-    """Deprecated Alias.
-    """
-    def __init__(self, lon: float = 0, lat: float = 0):
-        warnings.warn(
-            f"{self.__class__.__name__} will be deprecated in the future. "
-            "Instead, use pyinterp.geodetic.Point",
-            PendingDeprecationWarning,
-            stacklevel=2,
-        )
-        super(Point2D, self).__init__(lon, lat)
-
-
 class Point(geodetic.Point):
     """Handle a point in an equatorial spherical coordinate system in degrees.
     """
+
     def __init__(self, lon: float = 0, lat: float = 0):
         """Initialize a new point.
 
@@ -84,6 +74,7 @@ class Box(geodetic.Box):
     """Defines a box made of two describing points in a spherical coordinates
     system in degrees.
     """
+
     def __init__(self,
                  min_corner: Optional[Point] = None,
                  max_corner: Optional[Point] = None):
@@ -99,25 +90,10 @@ class Box(geodetic.Box):
                                   or geodetic.Point())
 
 
-class Box2D(geodetic.Box):
-    """Deprecated Alias.
-    """
-    def __init__(self,
-                 min_corner: Optional[Point] = None,
-                 max_corner: Optional[Point] = None):
-        warnings.warn(
-            f"{self.__class__.__name__} will be deprecated in the future. "
-            "Instead, use pyinterp.geodetic.Box",
-            PendingDeprecationWarning,
-            stacklevel=2,
-        )
-        super(Box2D, self).__init__(min_corner or geodetic.Point(), max_corner
-                                    or geodetic.Point())
-
-
 class Polygon(geodetic.Polygon):
     """The polygon contains an outer ring and zero or more inner rings.
     """
+
     def __init__(self,
                  outer: List[Point],
                  inners: Optional[List[List[Point]]] = None) -> None:
@@ -133,3 +109,14 @@ class Polygon(geodetic.Polygon):
             :py:class:`pyinterp.geodetic.Point`.
         """
         super().__init__(outer, inners)  # type: ignore
+
+
+__all__ = [
+    "Box",
+    "coordinate_distances",
+    "Coordinates",
+    "normalize_longitudes",
+    "Point",
+    "Polygon",
+    "System",
+]

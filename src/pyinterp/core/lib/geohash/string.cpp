@@ -17,7 +17,7 @@ namespace pyinterp::geohash::string {
 static const auto base32 = Base32();
 
 // ---------------------------------------------------------------------------
-auto Array::get_info(const pybind11::array& hash, const pybind11::ssize_t ndim)
+auto Array::get_info(const pybind11::array &hash, const pybind11::ssize_t ndim)
     -> pybind11::buffer_info {
   auto info = hash.request();
   auto dtype = hash.dtype();
@@ -57,10 +57,10 @@ auto allocate_array(const size_t size, const uint32_t precision) -> Array {
   try {
     try {
       return Array(size, precision);
-    } catch (const std::length_error&) {
+    } catch (const std::length_error &) {
       throw std::bad_alloc();
     }
-  } catch (const std::bad_alloc&) {
+  } catch (const std::bad_alloc &) {
     auto ss = std::stringstream();
     ss << "Unable to allocate " << int64::format_bytes(size * precision)
        << " for an array with shape (" << size << ",) and data type S"
@@ -71,19 +71,19 @@ auto allocate_array(const size_t size, const uint32_t precision) -> Array {
 }
 
 // ---------------------------------------------------------------------------
-auto encode(const geodetic::Point& point, char* const buffer,
+auto encode(const geodetic::Point &point, char *const buffer,
             const uint32_t precision) -> void {
   Base32::encode(int64::encode(point, 5 * precision), buffer, precision);
 }
 
 // ---------------------------------------------------------------------------
-auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
-            const Eigen::Ref<const Eigen::VectorXd>& lat,
+auto encode(const Eigen::Ref<const Eigen::VectorXd> &lon,
+            const Eigen::Ref<const Eigen::VectorXd> &lat,
             const uint32_t precision) -> pybind11::array {
   detail::check_eigen_shape("lon", lon, "lat", lat);
   auto size = lon.size();
   auto array = allocate_array(size, precision);
-  auto* buffer = array.buffer();
+  auto *buffer = array.buffer();
 
   {
     auto gil = pybind11::gil_scoped_release();
@@ -97,8 +97,8 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
 }
 
 // ---------------------------------------------------------------------------
-inline auto decode_bounding_box(const char* const hash, const size_t count,
-                                uint32_t* precision = nullptr)
+inline auto decode_bounding_box(const char *const hash, const size_t count,
+                                uint32_t *precision = nullptr)
     -> geodetic::Box {
   auto [integer_encoded, chars] = base32.decode(hash, count);
   if (precision != nullptr) {
@@ -108,25 +108,25 @@ inline auto decode_bounding_box(const char* const hash, const size_t count,
 }
 
 // ---------------------------------------------------------------------------
-auto bounding_box(const char* const hash, const size_t count) -> geodetic::Box {
+auto bounding_box(const char *const hash, const size_t count) -> geodetic::Box {
   return decode_bounding_box(hash, count);
 }
 
 // ---------------------------------------------------------------------------
-auto decode(const char* const hash, const size_t count, const bool round)
+auto decode(const char *const hash, const size_t count, const bool round)
     -> geodetic::Point {
   auto bbox = bounding_box(hash, count);
   return round ? bbox.round() : bbox.centroid();
 }
 
 // ---------------------------------------------------------------------------
-auto decode(const pybind11::array& hash, const bool round)
+auto decode(const pybind11::array &hash, const bool round)
     -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
   auto info = Array::get_info(hash, 1);
   auto count = info.strides[0];
   auto lon = Eigen::VectorXd(info.shape[0]);
   auto lat = Eigen::VectorXd(info.shape[0]);
-  auto* ptr = static_cast<char*>(info.ptr);
+  auto *ptr = static_cast<char *>(info.ptr);
   {
     auto gil = pybind11::gil_scoped_release();
     for (auto ix = 0LL; ix < info.shape[0]; ++ix) {
@@ -140,12 +140,12 @@ auto decode(const pybind11::array& hash, const bool round)
 }
 
 // ---------------------------------------------------------------------------
-auto neighbors(const char* const hash, const size_t count) -> pybind11::array {
+auto neighbors(const char *const hash, const size_t count) -> pybind11::array {
   auto [integer_encoded, precision] = base32.decode(hash, count);
 
   const auto integers = int64::neighbors(integer_encoded, precision * 5);
   auto array = allocate_array(integers.size(), precision);
-  auto* buffer = array.buffer();
+  auto *buffer = array.buffer();
 
   {
     auto gil = pybind11::gil_scoped_release();
@@ -158,12 +158,12 @@ auto neighbors(const char* const hash, const size_t count) -> pybind11::array {
 }
 
 // ---------------------------------------------------------------------------
-auto area(const pybind11::array& hash,
-          const std::optional<geodetic::System>& wgs) -> Eigen::MatrixXd {
+auto area(const pybind11::array &hash,
+          const std::optional<geodetic::System> &wgs) -> Eigen::MatrixXd {
   auto info = Array::get_info(hash, 1);
   auto count = info.strides[0];
   auto result = Eigen::VectorXd(info.shape[0]);
-  auto* ptr = static_cast<char*>(info.ptr);
+  auto *ptr = static_cast<char *>(info.ptr);
   auto spheroid = wgs.has_value()
                       ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
                                                        wgs->semi_minor_axis())
@@ -182,7 +182,7 @@ auto area(const pybind11::array& hash,
 }
 
 // ---------------------------------------------------------------------------
-auto bounding_boxes(const std::optional<geodetic::Box>& box,
+auto bounding_boxes(const std::optional<geodetic::Box> &box,
                     const uint32_t precision) -> pybind11::array {
   // Number of bits
   auto bits = precision * 5;
@@ -197,12 +197,12 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
 
   // Allocation of the vector storing the different codes of the matrix created
   auto result = allocate_array(int64::count(boxes, bits), precision);
-  auto* buffer = result.buffer();
+  auto *buffer = result.buffer();
 
   {
     auto gil = pybind11::gil_scoped_release();
 
-    for (const auto& item : boxes) {
+    for (const auto &item : boxes) {
       auto [hash_sw, lon_step, lat_step] = int64::grid_properties(item, bits);
       const auto point_sw = int64::decode(hash_sw, bits, true);
 
@@ -229,8 +229,8 @@ auto bounding_boxes(const std::optional<geodetic::Box>& box,
 // ---------------------------------------------------------------------------
 // Calculates a grid containing for each cell a boolean indicating if the cell
 // of the grid is enclosed or not in the polygon.
-static auto mask_box(const geodetic::Box& box, const geodetic::Polygon& polygon,
-                     const std::tuple<double, double>& lng_lat_err,
+static auto mask_box(const geodetic::Box &box, const geodetic::Polygon &polygon,
+                     const std::tuple<double, double> &lng_lat_err,
                      const uint32_t bits, const size_t num_threads)
     -> Matrix<bool> {
   size_t lat_step;
@@ -279,9 +279,9 @@ static auto mask_box(const geodetic::Box& box, const geodetic::Polygon& polygon,
 }
 
 // ---------------------------------------------------------------------------
-static auto mask_boxes(const std::vector<geodetic::Box>& boxes,
-                       const geodetic::Polygon& polygon,
-                       const std::tuple<double, double>& lng_lat_err,
+static auto mask_boxes(const std::vector<geodetic::Box> &boxes,
+                       const geodetic::Polygon &polygon,
+                       const std::tuple<double, double> &lng_lat_err,
                        const uint32_t precision, const size_t num_threads)
     -> std::vector<Matrix<bool>> {
   // Allocation of the vector storing the different codes of the matrix created
@@ -290,7 +290,7 @@ static auto mask_boxes(const std::vector<geodetic::Box>& boxes,
   {
     auto gil = pybind11::gil_scoped_release();
 
-    for (const auto& item : boxes) {
+    for (const auto &item : boxes) {
       result.emplace_back(
           mask_box(item, polygon, lng_lat_err, precision, num_threads));
     }
@@ -299,7 +299,7 @@ static auto mask_boxes(const std::vector<geodetic::Box>& boxes,
 }
 
 // ---------------------------------------------------------------------------
-auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision,
+auto bounding_boxes(const geodetic::Polygon &polygon, const uint32_t precision,
                     const size_t num_threads) -> pybind11::array {
   // Number of bits
   auto bits = precision * 5;
@@ -309,7 +309,7 @@ auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision,
 
   // If the envelope cut the meridian, we need to split it into two
   // bounding boxes.
-  auto split_box = [](const geodetic::Box& box) -> std::vector<geodetic::Box> {
+  auto split_box = [](const geodetic::Box &box) -> std::vector<geodetic::Box> {
     auto boxes = box.normalize().split();
     return {std::make_move_iterator(boxes.begin()),
             std::make_move_iterator(boxes.end())};
@@ -325,14 +325,14 @@ auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision,
 
   // Count the number of cells that are enclosed by the polygon
   auto size = size_t(0);
-  for (const auto& item : masks) {
+  for (const auto &item : masks) {
     size += static_cast<size_t>(
         std::count(item.data(), item.data() + item.size(), true));
   }
 
   // Allocates the result array
   auto result = allocate_array(size, precision);
-  auto* buffer = result.buffer();
+  auto *buffer = result.buffer();
 
   // Finally, for each cell of the grid, if it is enclosed by the polygon,
   // we add the code to the result array
@@ -370,7 +370,7 @@ auto bounding_boxes(const geodetic::Polygon& polygon, const uint32_t precision,
 }
 
 // ---------------------------------------------------------------------------
-auto where(const pybind11::array& hash) -> std::unordered_map<
+auto where(const pybind11::array &hash) -> std::unordered_map<
     std::string,
     std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>> {
   // Index shifts of neighboring pixels
@@ -387,7 +387,7 @@ auto where(const pybind11::array& hash) -> std::unordered_map<
   auto rows = info.shape[0];
   auto cols = info.shape[1];
   auto chars = info.strides[1];
-  auto* ptr = static_cast<char*>(info.ptr);
+  auto *ptr = static_cast<char *>(info.ptr);
   std::string current_code;
   std::string neighboring_code;
 
@@ -415,11 +415,11 @@ auto where(const pybind11::array& hash) -> std::unordered_map<
           if (i >= 0 && i < rows && j >= 0 && j < cols) {
             neighboring_code = std::string(ptr + (i * cols + j) * chars, chars);
             if (current_code == neighboring_code) {
-              auto& first = std::get<0>(it->second);
+              auto &first = std::get<0>(it->second);
               std::get<0>(first) = std::min(std::get<0>(first), i);
               std::get<1>(first) = std::max(std::get<1>(first), i);
 
-              auto& second = std::get<1>(it->second);
+              auto &second = std::get<1>(it->second);
               std::get<0>(second) = std::min(std::get<0>(second), j);
               std::get<1>(second) = std::max(std::get<1>(second), j);
             }
@@ -432,7 +432,7 @@ auto where(const pybind11::array& hash) -> std::unordered_map<
 }
 
 // ---------------------------------------------------------------------------
-static auto zoom_in(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
+static auto zoom_in(char *ptr, pybind11::ssize_t size, uint32_t from_precision,
                     uint32_t to_precision) -> pybind11::array {
   // Number of bits need to zoom in
   auto bits = to_precision * 5;
@@ -443,7 +443,7 @@ static auto zoom_in(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
 
   // Allocates the result table.
   auto result = allocate_array(size_in, to_precision);
-  auto* buffer = result.buffer();
+  auto *buffer = result.buffer();
 
   {
     auto gil = pybind11::gil_scoped_release();
@@ -462,7 +462,7 @@ static auto zoom_in(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
 }
 
 // ---------------------------------------------------------------------------
-static auto zoom_out(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
+static auto zoom_out(char *ptr, pybind11::ssize_t size, uint32_t from_precision,
                      uint32_t to_precision) -> pybind11::array {
   auto current_code = std::string(to_precision, '\0');
   auto zoom_out_codes = std::set<std::string>();
@@ -479,7 +479,7 @@ static auto zoom_out(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
   }
 
   auto result = allocate_array(zoom_out_codes.size(), to_precision);
-  auto* buffer = result.buffer();
+  auto *buffer = result.buffer();
   for (auto code : zoom_out_codes) {
     std::copy(code.begin(), code.end(), buffer);
     buffer += to_precision;
@@ -489,13 +489,13 @@ static auto zoom_out(char* ptr, pybind11::ssize_t size, uint32_t from_precision,
 }
 
 // ---------------------------------------------------------------------------
-auto transform(const pybind11::array& hash, uint32_t precision)
+auto transform(const pybind11::array &hash, uint32_t precision)
     -> pybind11::array {
   // Decode the information in the provided table.
   auto info = Array::get_info(hash, 1);
   auto size = info.shape[0];
   auto input_precision = static_cast<uint32_t>(info.strides[0]);
-  auto* ptr = static_cast<char*>(info.ptr);
+  auto *ptr = static_cast<char *>(info.ptr);
 
   if (input_precision == precision) {
     return hash;

@@ -33,7 +33,7 @@ class Histogram2D {
   /// @param x Definition of the bin centers for the X axis of the grid.
   /// @param y Definition of the bin centers for the Y axis of the grid.
   Histogram2D(std::shared_ptr<Axis<double>> x, std::shared_ptr<Axis<double>> y,
-              const std::optional<size_t>& bin_count)
+              const std::optional<size_t> &bin_count)
       : x_(std::move(x)), y_(std::move(y)), histogram_(x_->size(), y_->size()) {
     if (bin_count) {
       for (int ix = 0; ix < histogram_.rows(); ++ix) {
@@ -50,27 +50,27 @@ class Histogram2D {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Histogram2D(const Histogram2D& rhs) = delete;
+  Histogram2D(const Histogram2D &rhs) = delete;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Histogram2D(Histogram2D&& rhs) noexcept = delete;
+  Histogram2D(Histogram2D &&rhs) noexcept = delete;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Histogram2D& rhs) -> Histogram2D& = delete;
+  auto operator=(const Histogram2D &rhs) -> Histogram2D & = delete;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Histogram2D&& rhs) noexcept -> Histogram2D& = delete;
+  auto operator=(Histogram2D &&rhs) noexcept -> Histogram2D & = delete;
 
   /// Inserts new values in the grid from Z values for X, Y data
   /// coordinates.
-  void push(const pybind11::array_t<T>& x, const pybind11::array_t<T>& y,
-            const pybind11::array_t<T>& z) {
+  void push(const pybind11::array_t<T> &x, const pybind11::array_t<T> &y,
+            const pybind11::array_t<T> &z) {
     detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
     detail::check_ndarray_shape("x", x, "y", y, "z", z);
 
@@ -81,8 +81,8 @@ class Histogram2D {
     {
       pybind11::gil_scoped_release release;
 
-      const auto& x_axis = static_cast<pyinterp::detail::Axis<double>&>(*x_);
-      const auto& y_axis = static_cast<pyinterp::detail::Axis<double>&>(*y_);
+      const auto &x_axis = static_cast<pyinterp::detail::Axis<double> &>(*x_);
+      const auto &y_axis = static_cast<pyinterp::detail::Axis<double> &>(*y_);
 
       for (pybind11::ssize_t idx = 0; idx < x.size(); ++idx) {
         auto value = _z(idx);
@@ -140,7 +140,7 @@ class Histogram2D {
   }
 
   /// Compute the quantile of values for points within each bin.
-  [[nodiscard]] auto quantile(const T& q) const -> pybind11::array_t<T> {
+  [[nodiscard]] auto quantile(const T &q) const -> pybind11::array_t<T> {
     return calculate_statistics(&StreamingHistogram::quantile, q);
   }
 
@@ -169,7 +169,7 @@ class Histogram2D {
   }
 
   /// Pickle support: set state of this instance
-  static auto setstate(const pybind11::tuple& state)
+  static auto setstate(const pybind11::tuple &state)
       -> std::unique_ptr<Histogram2D<T>> {
     if (state.size() != 3) {
       throw std::invalid_argument("invalid state");
@@ -192,14 +192,14 @@ class Histogram2D {
   }
 
   /// Aggregation of statistics
-  auto operator+=(const Histogram2D& other) -> Histogram2D& {
+  auto operator+=(const Histogram2D &other) -> Histogram2D & {
     if (*x_ != *(other.x_) || *y_ != *(other.y_)) {
       throw std::invalid_argument("Unable to combine different grids");
     }
     for (Eigen::Index ix = 0; ix < histogram_.rows(); ++ix) {
       for (Eigen::Index iy = 0; iy < histogram_.cols(); ++iy) {
-        auto& lhs = histogram_(ix, iy);
-        auto& rhs = other.histogram_(ix, iy);
+        auto &lhs = histogram_(ix, iy);
+        auto &rhs = other.histogram_(ix, iy);
 
         // Statistics are defined only in the other instance.
         if (lhs.size() == 0 && rhs.size() != 0) {
@@ -233,7 +233,7 @@ class Histogram2D {
       for (Eigen::Index ix = 0; ix < histogram_.rows(); ++ix) {
         for (Eigen::Index iy = 0; iy < histogram_.cols(); ++iy) {
           auto iz = size_t(0);
-          auto& bins = histogram_(ix, iy).bins();
+          auto &bins = histogram_(ix, iy).bins();
           for (iz = 0; iz < bins.size(); ++iz) {
             _result(ix, iy, iz) = bins[iz];
           }
@@ -257,7 +257,7 @@ class Histogram2D {
 
   /// Calculation of a given statistical variable.
   template <typename Func, typename Type = T, typename... Args>
-  [[nodiscard]] auto calculate_statistics(const Func& func, Args... args) const
+  [[nodiscard]] auto calculate_statistics(const Func &func, Args... args) const
       -> pybind11::array_t<Type> {
     pybind11::array_t<Type> z({x_->size(), y_->size()});
     auto _z = z.template mutable_unchecked<2>();
@@ -278,22 +278,22 @@ class Histogram2D {
     auto ss = std::stringstream();
     ss.exceptions(std::stringstream::failbit);
     auto rows = histogram_.rows();
-    ss.write(reinterpret_cast<const char*>(&rows), sizeof(rows));
+    ss.write(reinterpret_cast<const char *>(&rows), sizeof(rows));
     auto cols = histogram_.cols();
-    ss.write(reinterpret_cast<const char*>(&cols), sizeof(cols));
+    ss.write(reinterpret_cast<const char *>(&cols), sizeof(cols));
     for (int ix = 0; ix < histogram_.rows(); ++ix) {
       for (int jx = 0; jx < histogram_.cols(); ++jx) {
         auto marshal_hist = static_cast<std::string>(histogram_(ix, jx));
         auto size = marshal_hist.size();
-        ss.write(reinterpret_cast<const char*>(&size), sizeof(size));
+        ss.write(reinterpret_cast<const char *>(&size), sizeof(size));
         ss.write(marshal_hist.c_str(), static_cast<std::streamsize>(size));
       }
     }
     return ss.str();
   }
 
-  static auto unmarshal(const std::string_view& data,
-                        Matrix<StreamingHistogram>& histogram) -> void {
+  static auto unmarshal(const std::string_view &data,
+                        Matrix<StreamingHistogram> &histogram) -> void {
     auto gil = pybind11::gil_scoped_release();
     auto ss = detail::isviewstream(data);
     ss.exceptions(std::stringstream::failbit);
@@ -301,21 +301,21 @@ class Histogram2D {
     try {
       auto rows = Eigen::Index(0);
       auto cols = Eigen::Index(0);
-      ss.read(reinterpret_cast<char*>(&rows), sizeof(rows));
-      ss.read(reinterpret_cast<char*>(&cols), sizeof(cols));
+      ss.read(reinterpret_cast<char *>(&rows), sizeof(rows));
+      ss.read(reinterpret_cast<char *>(&cols), sizeof(cols));
       if (rows != histogram.rows() || cols != histogram.cols()) {
         throw std::invalid_argument("invalid state");
       }
       for (int ix = 0; ix < rows; ++ix) {
         for (int jx = 0; jx < cols; ++jx) {
           auto size = size_t(0);
-          ss.read(reinterpret_cast<char*>(&size), sizeof(size));
+          ss.read(reinterpret_cast<char *>(&size), sizeof(size));
           auto marshal_hist = std::string(size, '\0');
           ss.read(marshal_hist.data(), static_cast<std::streamsize>(size));
           histogram(ix, jx) = std::move(StreamingHistogram(marshal_hist));
         }
       }
-    } catch (std::ios_base::failure&) {
+    } catch (std::ios_base::failure &) {
       throw std::invalid_argument("invalid state");
     }
   }

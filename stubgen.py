@@ -2,11 +2,12 @@
 Generates stubs for the core modules.
 =====================================
 """
-from typing import List
-import pathlib
-import sys
 import os
+import pathlib
 import re
+import sys
+from typing import List
+
 import mypy.stubgen
 import yapf
 
@@ -136,9 +137,9 @@ def main():
                                    export_less=False)
     mypy.stubgen.generate_stubs(options)
     grids = fix_core(out)
-    fix_core_fill(
-        out,
-        [grid for grid in grids if re.compile(r'Grid[2-3]DFloat').search(grid)])
+    fix_core_fill(out, [
+        grid for grid in grids if re.compile(r'Grid[2-3]DFloat').search(grid)
+    ])
     fix_core_geodetic(out)
     fix_core_geohash(out)
 

@@ -3,15 +3,17 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 import pickle
+
 #
 import dask.array as da
 import numpy as np
 import pytest
 import xarray as xr
+
 #
 from .. import DescriptiveStatistics
-from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 from . import grid2d_path, grid3d_path, grid4d_path
+from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 
 
 def check_stats(ds, values, dtype, error):

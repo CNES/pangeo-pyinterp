@@ -21,33 +21,34 @@ Regular axis
 
 For example, let's construct an axis representing a regular axis.
 """
-#%%
+# %%
 import numpy
+
 import pyinterp
 
 axis = pyinterp.Axis(numpy.arange(-90, 90, 0.25))
 axis
 
-#%%
+# %%
 # This object can be queried to obtain its properties.
 print(f"is ascending ? {axis.is_ascending()}")
 print(f"is regular ? {axis.is_regular()}")
 print(f"is circle ? {axis.is_circle}")
 
-#%%
+# %%
 # The most useful interfaces allow you to search for the index of the closest
 # value.
 axis.find_index([1e-3])
 
-#%%
+# %%
 # It is also possible to find the indices around a value.
 axis.find_indexes([1e-3])
 
-#%%
+# %%
 # The list of available methods is described in the :py:class:`online help
 # <pyinterp.Axis>` .
 
-#%%
+# %%
 # Irregular axis
 # ==============
 #
@@ -80,17 +81,17 @@ MERCATOR_LATITUDES = numpy.array([
 axis = pyinterp.Axis(MERCATOR_LATITUDES)
 axis
 
-#%%
+# %%
 # Let's display its properties.
 print(f"is ascending ? {axis.is_ascending()}")
 print(f"is regular ? {axis.is_regular()}")
 print(f"is circle ? {axis.is_circle}")
 
-#%%
+# %%
 # It is possible to query this axis as before.
 axis.find_index([1e-3])
 
-#%%
+# %%
 # Longitude
 # =========
 #
@@ -99,11 +100,11 @@ axis.find_index([1e-3])
 axis = pyinterp.Axis(numpy.arange(0, 360, 1), is_circle=True)
 axis
 
-#%%
+# %%
 # In this case, you don't have to worry about the bounds of the axis.
 axis.find_index([-180]), axis.find_index([180])
 
-#%%
+# %%
 # TemporalAxis
 # ============
 #
@@ -134,7 +135,7 @@ axis.find_index(numpy.array([numpy.datetime64('2020-01-01T00:10:34.000')]))
 # You can pass any date unit to the axis.
 axis.find_index(numpy.array([numpy.datetime64('2020-01-01')]))
 
-#%%
+# %%
 # This object also makes it possible to manipulate timedeltas.
 axis = pyinterp.TemporalAxis(dates - numpy.datetime64('2020-01-01'))
 axis

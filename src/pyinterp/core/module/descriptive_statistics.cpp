@@ -12,14 +12,14 @@
 namespace py = pybind11;
 
 template <typename Type>
-void implement_descriptive_statistics(py::module& m,
-                                      const std::string& suffix) {
+void implement_descriptive_statistics(py::module &m,
+                                      const std::string &suffix) {
   py::class_<pyinterp::DescriptiveStatistics<Type>>(
       m, ("DescriptiveStatistics" + suffix).c_str(),
       "Univariate descriptive statistics.")
-      .def(py::init<py::array_t<Type, py::array::c_style>&,
-                    std::optional<py::array_t<Type, py::array::c_style>>&,
-                    std::optional<std::list<py::ssize_t>>&>(),
+      .def(py::init<py::array_t<Type, py::array::c_style> &,
+                    std::optional<py::array_t<Type, py::array::c_style>> &,
+                    std::optional<std::list<py::ssize_t>> &>(),
            py::arg("values"), py::arg("weights") = py::none(),
            py::arg("axis") = py::none(), R"__doc__(
 Default constructor
@@ -107,23 +107,23 @@ Returns:
            py::arg("other"), py::call_guard<py::gil_scoped_release>())
       .def(
           "__add__",
-          [](const pyinterp::DescriptiveStatistics<Type>& self,
-             const pyinterp::DescriptiveStatistics<Type>& other) {
+          [](const pyinterp::DescriptiveStatistics<Type> &self,
+             const pyinterp::DescriptiveStatistics<Type> &other) {
             auto result = pyinterp::DescriptiveStatistics<Type>(self);
             result += other;
             return result;
           },
           py::arg("other"), py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
-          [](const pyinterp::DescriptiveStatistics<Type>& self) {
+          [](const pyinterp::DescriptiveStatistics<Type> &self) {
             return self.getstate();
           },
-          [](const py::tuple& state) {
+          [](const py::tuple &state) {
             return pyinterp::DescriptiveStatistics<Type>::setstate(state);
           }));
 }
 
-void init_descriptive_statistics(py::module& m) {
+void init_descriptive_statistics(py::module &m) {
   implement_descriptive_statistics<double>(m, "Float64");
   implement_descriptive_statistics<float>(m, "Float32");
 }

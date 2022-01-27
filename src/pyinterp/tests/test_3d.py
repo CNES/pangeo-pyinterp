@@ -2,14 +2,16 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-import datetime
 import collections
+import datetime
 import pickle
-import pytest
+
 import numpy as np
+import pytest
 import xarray as xr
-from ..backends import xarray as xr_backend
+
 from .. import Axis, Grid3D, TemporalAxis
+from ..backends import xarray as xr_backend
 from . import grid3d_path
 
 

@@ -11,18 +11,18 @@ object. By default, this object considers the WGS-84 geodetic coordinate system.
 But you can define another one using the class :py:class:`System
 <pyinterp.geodetic.System>`.
 """
-import numpy
 import cartopy.crs
 import cartopy.mpl.ticker
 import intake
 import matplotlib.pyplot
+import numpy
 
-#%%
+# %%
 import pyinterp
 
 mesh = pyinterp.RTree()
 
-#%%
+# %%
 # Then, we will insert points into the tree. The class allows you to add points
 # using two algorithms. The first one, called :py:meth:`packing
 # <pyinterp.RTree.packing>`, will enable you to enter the values in the tree at
@@ -34,28 +34,28 @@ cat_url = "https://raw.githubusercontent.com/pangeo-data/pangeo-datastore" \
     "/master/intake-catalogs/ocean/llc4320.yaml"
 cat = intake.open_catalog(cat_url)
 
-#%%
+# %%
 # Grid subsampling (orginal volume is too huge for this example)
 indices = slice(0, None, 8)
 
-#%%
+# %%
 # Reads longitudes and latitudes of the grid
 array = cat.LLC4320_grid.to_dask()
 lons = array["XC"].isel(i=indices, j=indices)
 lats = array["YC"].isel(i=indices, j=indices)
 
-#%%
+# %%
 # Reads SSH values for the first time step of the time series
 ssh = cat.LLC4320_SSH.to_dask()
 ssh = ssh["Eta"].isel(time=0, i=indices, j=indices)
 
-#%%
+# %%
 # Populates the search tree
 mesh.packing(
     numpy.vstack((lons.values.ravel(), lats.values.ravel())).T,
     ssh.values.ravel())
 
-#%%
+# %%
 # When the tree is created, you can interpolate data with two algorithms:
 #
 # * :py:meth:`Inverse Distance Weighting
@@ -68,10 +68,10 @@ mesh.packing(
 #
 # .. note::
 #
-#     When comparing an RBF to IDW, IDW will never predict values higher than the
-#     maximum measured value or lower than the minimum measured value. However,
-#     RBFs can predict values higher than the maximum values and lower than the
-#     minimum measured values.
+#     When comparing an RBF to IDW, IDW will never predict values higher than
+#     the maximum measured value or lower than the minimum measured value.
+#     However, RBFs can predict values higher than the maximum values and lower
+#     than the minimum measured values.
 #
 # In this example, we will under-sample the source grid at 1/32 degree over an
 # area of the globe.
@@ -82,7 +82,7 @@ mx, my = numpy.meshgrid(numpy.arange(x0, x1, res),
                         numpy.arange(y0, y1, res),
                         indexing="ij")
 
-#%%
+# %%
 # IDW interpolation
 idw_eta, neighbors = mesh.inverse_distance_weighting(
     numpy.vstack((mx.ravel(), my.ravel())).T,
@@ -92,7 +92,7 @@ idw_eta, neighbors = mesh.inverse_distance_weighting(
     num_threads=0)
 idw_eta = idw_eta.reshape(mx.shape)
 
-#%%
+# %%
 # RBF interpolation
 rbf_eta, neighbors = mesh.radial_basis_function(
     numpy.vstack((mx.ravel(), my.ravel())).T,
@@ -101,7 +101,7 @@ rbf_eta, neighbors = mesh.radial_basis_function(
     num_threads=0)
 rbf_eta = rbf_eta.reshape(mx.shape)
 
-#%%
+# %%
 # Let's visualize our interpolated data
 fig = matplotlib.pyplot.figure(figsize=(18, 9))
 lon_formatter = cartopy.mpl.ticker.LongitudeFormatter(
@@ -136,7 +136,7 @@ ax.set_yticks(numpy.arange(y0, y1, 10))
 ax.set_title("Eta (RBF)")
 fig.show()
 
-#%%
+# %%
 # The image below illustrates the result of the IDW interpolation:
 #
 # .. figure:: ../pictures/mit_gcm.png

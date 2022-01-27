@@ -38,7 +38,7 @@ class DescriptiveStatistics {
   explicit DescriptiveStatistics(Accumulators<T> acc) : acc_(std::move(acc)) {}
 
   /// Returns the raw statistical incremental values
-  explicit operator const Accumulators<T>&() const { return acc_; }
+  explicit operator const Accumulators<T> &() const { return acc_; }
 
   /// Reset the accumulator
   constexpr auto clear() noexcept -> void {
@@ -46,7 +46,7 @@ class DescriptiveStatistics {
   }
 
   /// Push a new value into the accumulator
-  constexpr auto operator()(const T& value) noexcept -> void {
+  constexpr auto operator()(const T &value) noexcept -> void {
     const auto r = acc_.sum_of_weights;
 
     if (r == 0) {
@@ -81,7 +81,7 @@ class DescriptiveStatistics {
   }
 
   /// push a new value into the accumulator associated with a weight
-  constexpr auto operator()(const T& value, const T& weight) noexcept -> void {
+  constexpr auto operator()(const T &value, const T &weight) noexcept -> void {
     if (acc_.sum_of_weights == 0) {
       *this = std::move(DescriptiveStatistics(value, weight));
     } else {
@@ -95,12 +95,12 @@ class DescriptiveStatistics {
   }
 
   /// Returns the sum of weights pushed into the accumulator.
-  [[nodiscard]] constexpr auto sum_of_weights() const noexcept -> const T& {
+  [[nodiscard]] constexpr auto sum_of_weights() const noexcept -> const T & {
     return acc_.sum_of_weights;
   }
 
   /// Returns the sum of the values pushed into the accumulator.
-  [[nodiscard]] constexpr auto sum() const noexcept -> const T& {
+  [[nodiscard]] constexpr auto sum() const noexcept -> const T & {
     return acc_.sum;
   }
 
@@ -148,8 +148,8 @@ class DescriptiveStatistics {
   }
 
   /// Combines two accumulators.
-  constexpr auto operator+=(const DescriptiveStatistics& rhs) noexcept
-      -> DescriptiveStatistics& {
+  constexpr auto operator+=(const DescriptiveStatistics &rhs) noexcept
+      -> DescriptiveStatistics & {
     auto w = acc_.sum_of_weights + rhs.acc_.sum_of_weights;
 
     if (rhs.acc_.min < acc_.min) {
@@ -200,7 +200,7 @@ class DescriptiveStatistics {
  private:
   Accumulators<T> acc_{};
 
-  DescriptiveStatistics(const T& value, const T& weight) {
+  DescriptiveStatistics(const T &value, const T &weight) {
     auto weighted_value = weight * value;
     acc_ = std::move(Accumulators<T>{1, weight, value, weighted_value,
                                      weighted_value, weighted_value, 0, 0, 0});

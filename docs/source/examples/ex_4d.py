@@ -27,18 +27,19 @@ import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
+import xarray
+
 import pyinterp
 import pyinterp.backends.xarray
 import pyinterp.tests
-import xarray
 
-#%%
+# %%
 # The first step is to load the data into memory and create the interpolator
 # object:
 ds = xarray.open_dataset(pyinterp.tests.grid4d_path())
 interpolator = pyinterp.backends.xarray.Grid4D(ds.pressure)
 
-#%%
+# %%
 # We will build a new grid that will be used to build a new interpolated grid.
 #
 # .. warning ::
@@ -53,7 +54,7 @@ mx, my, mz, mu = numpy.meshgrid(numpy.arange(-125, -70, 0.5),
                                 0.5,
                                 indexing="ij")
 
-#%%
+# %%
 # We interpolate our grid using a :py:meth:`classical
 # <pyinterp.backends.xarray.Grid4D.quadrivariate>`:
 quadrivariate = interpolator.quadrivariate(
@@ -62,7 +63,7 @@ quadrivariate = interpolator.quadrivariate(
          time=mz.ravel(),
          level=mu.ravel())).reshape(mx.shape)
 
-#%%
+# %%
 # Bicubic on 4D grid
 # ==================
 #
@@ -73,7 +74,7 @@ quadrivariate = interpolator.quadrivariate(
 interpolator = pyinterp.backends.xarray.Grid4D(ds.pressure,
                                                increasing_axes=True)
 
-#%%
+# %%
 # We interpolate our grid using a :py:meth:`bicubic
 # <pyinterp.backends.xarray.Grid4D.bicubic>` interpolation in space followed by
 # a linear interpolation in the temporal axis:
@@ -84,14 +85,14 @@ bicubic = interpolator.bicubic(dict(longitude=mx.ravel(),
                                nx=2,
                                ny=2).reshape(mx.shape)
 
-#%%
+# %%
 # We transform our result cubes into a matrix.
 quadrivariate = quadrivariate.squeeze(axis=(2, 3))
 bicubic = bicubic.squeeze(axis=(2, 3))
 lons = mx[:, 0].squeeze()
 lats = my[0, :].squeeze()
 
-#%%
+# %%
 # Let's visualize our results.
 #
 # .. note::

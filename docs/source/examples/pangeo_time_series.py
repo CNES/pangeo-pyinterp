@@ -16,9 +16,14 @@ In this example, we consider the time series of MSLA maps distributed by
 AVISO/CMEMS. We start by retrieving the data:
 """
 import datetime
+
+import cartopy.crs
+import cartopy.feature
+import intake
+import matplotlib.pyplot
 import numpy
 import pandas
-import intake
+
 import pyinterp.backends.xarray
 import pyinterp.tests
 
@@ -28,10 +33,11 @@ cat = intake.open_catalog("https://raw.githubusercontent.com/pangeo-data"
 ds = cat["sea_surface_height"].to_dask()
 
 
-#%%
+# %%
 # To manage the time series retrieved, we create the following object:
 class TimeSeries:
     """Manage a time series composed of a grid stack"""
+
     def __init__(self, ds):
         self.ds = ds
         self.series, self.dt = self._load_ts()
@@ -84,7 +90,7 @@ class TimeSeries:
 time_series = TimeSeries(ds)
 
 
-#%%
+# %%
 # The test data set containing a set of positions of different floats is then
 # loaded.
 def cnes_jd_to_datetime(seconds):
@@ -115,7 +121,7 @@ def load_positions():
 df = load_positions()
 
 
-#%%
+# %%
 # Two last functions are then implemented. The first function will divide the
 # time series to be processed into weeks.
 def periods(df, time_series, frequency='W'):
@@ -133,7 +139,7 @@ def periods(df, time_series, frequency='W'):
     yield end, df.index[-1] + time_series.dt
 
 
-#%%
+# %%
 # The second one will interpolate the DataFrame loaded in memory.
 def interpolate(df, time_series, start, end):
     """Interpolate the time series over the defined period."""
@@ -148,12 +154,12 @@ def interpolate(df, time_series, start, end):
         num_threads=0)
 
 
-#%%
+# %%
 # Finally, the SLA is interpolated on all loaded floats.
 for start, end in periods(df, time_series, frequency='M'):
     interpolate(df, time_series, start, end)
 
-#%%
+# %%
 # Visualization of the SLA for a float.
 float_id = 62423050
 selected_float = df[df.id == float_id]
@@ -161,11 +167,7 @@ first = selected_float.index.min()
 last = selected_float.index.max()
 size = (selected_float.index - first) / (last - first)
 
-#%%
-import matplotlib.pyplot
-import cartopy.crs
-import cartopy.feature
-
+# %%
 fig = matplotlib.pyplot.figure(figsize=(10, 5))
 ax = fig.add_subplot(111,
                      projection=cartopy.crs.PlateCarree(central_longitude=180))
@@ -183,7 +185,7 @@ ax.add_feature(cartopy.feature.COASTLINE)
 ax.set_extent([80, 100, 13.5, 25], crs=cartopy.crs.PlateCarree())
 fig.colorbar(sc)
 
-#%%
+# %%
 # The image below illustrates the result of the code above:
 #
 # .. figure:: ../pictures/time_series.png

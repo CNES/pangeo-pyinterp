@@ -23,13 +23,13 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   using Base::polygon;
 
   /// Create a new instance from Python
-  Polygon(const pybind11::list& outer, const pybind11::list& inners);
+  Polygon(const pybind11::list &outer, const pybind11::list &inners);
 
   /// Returns the outer ring
   [[nodiscard]] auto outer() const -> pybind11::list {
     auto outer = pybind11::list();
 
-    for (const auto& item : Base::outer()) {
+    for (const auto &item : Base::outer()) {
       outer.append(item);
     }
     return outer;
@@ -39,9 +39,9 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   [[nodiscard]] auto inners() const -> pybind11::list {
     auto inners = pybind11::list();
 
-    for (const auto& inner : Base::inners()) {
+    for (const auto &inner : Base::inners()) {
       auto buffer = pybind11::list();
-      for (const auto& item : inner) {
+      for (const auto &item : inner) {
         buffer.append(item);
       }
       inners.append(buffer);
@@ -58,23 +58,23 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   }
 
   /// Calculate the area
-  [[nodiscard]] auto area(const std::optional<System>& wgs) const -> double {
+  [[nodiscard]] auto area(const std::optional<System> &wgs) const -> double {
     return geodetic::area(*this, wgs);
   }
 
   /// Calculate the distance between two polygons
-  [[nodiscard]] auto distance(const Polygon& other) const -> double {
+  [[nodiscard]] auto distance(const Polygon &other) const -> double {
     return geodetic::distance(*this, other);
   }
 
   /// Calculate the distance between this instance and a point
-  [[nodiscard]] auto distance(const Point& other) const -> double {
+  [[nodiscard]] auto distance(const Point &other) const -> double {
     return geodetic::distance(*this, other);
   }
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static auto setstate(const pybind11::tuple& state) -> Polygon {
+  static auto setstate(const pybind11::tuple &state) -> Polygon {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }
@@ -85,7 +85,7 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   ///
   /// @param pt Point to test
   //  @return True if the given point is inside or on border of this Polygon
-  [[nodiscard]] auto covered_by(const Point& point) const -> bool {
+  [[nodiscard]] auto covered_by(const Point &point) const -> bool {
     return boost::geometry::covered_by(point, *this);
   }
 
@@ -96,8 +96,8 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   /// @param lat Latitude coordinates in degrees to check
   /// @return Returns a vector containing a flag equal to 1 if the coordinate is
   /// located in the Polygon or at the edge otherwise 0.
-  [[nodiscard]] auto covered_by(const Eigen::Ref<const Eigen::VectorXd>& lon,
-                                const Eigen::Ref<const Eigen::VectorXd>& lat,
+  [[nodiscard]] auto covered_by(const Eigen::Ref<const Eigen::VectorXd> &lon,
+                                const Eigen::Ref<const Eigen::VectorXd> &lat,
                                 const size_t num_threads) const
       -> pybind11::array_t<int8_t> {
     return geodetic::covered_by<Point, Polygon>(*this, lon, lat, num_threads);
@@ -123,41 +123,41 @@ struct tag<pg::Polygon> {
 };
 template <>
 struct ring_const_type<pg::Polygon> {
-  using type = const model::polygon<pg::Point>::ring_type&;
+  using type = const model::polygon<pg::Point>::ring_type &;
 };
 template <>
 struct ring_mutable_type<pg::Polygon> {
-  using type = model::polygon<pg::Point>::ring_type&;
+  using type = model::polygon<pg::Point>::ring_type &;
 };
 template <>
 struct interior_const_type<pg::Polygon> {
-  using type = const model::polygon<pg::Point>::inner_container_type&;
+  using type = const model::polygon<pg::Point>::inner_container_type &;
 };
 template <>
 struct interior_mutable_type<pg::Polygon> {
-  using type = model::polygon<pg::Point>::inner_container_type&;
+  using type = model::polygon<pg::Point>::inner_container_type &;
 };
 
 template <>
 struct exterior_ring<pg::Polygon> {
-  static auto get(model::polygon<pg::Point>& p)
-      -> model::polygon<pg::Point>::ring_type& {
+  static auto get(model::polygon<pg::Point> &p)
+      -> model::polygon<pg::Point>::ring_type & {
     return p.outer();
   }
-  static auto get(model::polygon<pg::Point> const& p)
-      -> model::polygon<pg::Point>::ring_type const& {
+  static auto get(model::polygon<pg::Point> const &p)
+      -> model::polygon<pg::Point>::ring_type const & {
     return p.outer();
   }
 };
 
 template <>
 struct interior_rings<pg::Polygon> {
-  static auto get(model::polygon<pg::Point>& p)
-      -> model::polygon<pg::Point>::inner_container_type& {
+  static auto get(model::polygon<pg::Point> &p)
+      -> model::polygon<pg::Point>::inner_container_type & {
     return p.inners();
   }
-  static auto get(model::polygon<pg::Point> const& p)
-      -> model::polygon<pg::Point>::inner_container_type const& {
+  static auto get(model::polygon<pg::Point> const &p)
+      -> model::polygon<pg::Point>::inner_container_type const & {
     return p.inners();
   }
 };

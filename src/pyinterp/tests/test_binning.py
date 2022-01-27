@@ -3,8 +3,10 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 import os
-import pytest
+
 import dask.array as da
+import pytest
+
 try:
     import dask.array.stats as das
     HAVE_SCIPY = True
@@ -12,8 +14,8 @@ except ImportError:
     HAVE_SCIPY = False
 import numpy as np
 import xarray as xr
-from .. import geodetic
-from .. import Axis, Binning2D
+
+from .. import Axis, Binning2D, geodetic
 from . import grid2d_path
 
 

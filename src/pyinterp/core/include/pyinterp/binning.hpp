@@ -50,26 +50,26 @@ class Binning2D {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Binning2D(const Binning2D& rhs) = delete;
+  Binning2D(const Binning2D &rhs) = delete;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Binning2D(Binning2D&& rhs) noexcept = delete;
+  Binning2D(Binning2D &&rhs) noexcept = delete;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Binning2D& rhs) -> Binning2D& = delete;
+  auto operator=(const Binning2D &rhs) -> Binning2D & = delete;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Binning2D&& rhs) noexcept -> Binning2D& = delete;
+  auto operator=(Binning2D &&rhs) noexcept -> Binning2D & = delete;
 
   /// Inserts new values in the grid from Z values for X, Y data coordinates.
-  void push(const pybind11::array_t<T>& x, const pybind11::array_t<T>& y,
-            const pybind11::array_t<T>& z, const bool simple) {
+  void push(const pybind11::array_t<T> &x, const pybind11::array_t<T> &y,
+            const pybind11::array_t<T> &z, const bool simple) {
     detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
     detail::check_ndarray_shape("x", x, "y", y, "z", z);
 
@@ -158,7 +158,7 @@ class Binning2D {
 
   /// Gets the WGS system
   [[nodiscard]] inline auto wgs() const
-      -> const std::optional<geodetic::System>& {
+      -> const std::optional<geodetic::System> & {
     return wgs_;
   }
 
@@ -170,7 +170,7 @@ class Binning2D {
   }
 
   /// Pickle support: set state of this instance
-  static auto setstate(const pybind11::tuple& state)
+  static auto setstate(const pybind11::tuple &state)
       -> std::unique_ptr<Binning2D<T>> {
     if (state.size() != 4) {
       throw std::invalid_argument("invalid state");
@@ -207,7 +207,7 @@ class Binning2D {
   }
 
   /// Aggregation of statistics
-  auto operator+=(const Binning2D& other) -> Binning2D& {
+  auto operator+=(const Binning2D &other) -> Binning2D & {
     if (*x_ != *(other.x_) || *y_ != *(other.y_)) {
       throw std::invalid_argument("Unable to combine different grids");
     }
@@ -220,8 +220,8 @@ class Binning2D {
 
     for (Eigen::Index ix = 0; ix < acc_.rows(); ++ix) {
       for (Eigen::Index iy = 0; iy < acc_.cols(); ++iy) {
-        auto& lhs = acc_(ix, iy);
-        auto& rhs = other.acc_(ix, iy);
+        auto &lhs = acc_(ix, iy);
+        auto &rhs = other.acc_(ix, iy);
 
         // Statistics are defined only in the other instance.
         if (lhs.count() == 0 && rhs.count() != 0) {
@@ -250,7 +250,7 @@ class Binning2D {
 
   /// Calculation of a given statistical variable.
   template <typename Func, typename Type = T, typename... Args>
-  [[nodiscard]] auto calculate_statistics(const Func& func, Args... args) const
+  [[nodiscard]] auto calculate_statistics(const Func &func, Args... args) const
       -> pybind11::array_t<Type> {
     pybind11::array_t<Type> z({x_->size(), y_->size()});
     auto _z = z.template mutable_unchecked<2>();
@@ -267,9 +267,9 @@ class Binning2D {
   }
 
   /// Insertion of data on the nearest bin.
-  void push_nearest(const pybind11::array_t<T>& x,
-                    const pybind11::array_t<T>& y,
-                    const pybind11::array_t<T>& z) {
+  void push_nearest(const pybind11::array_t<T> &x,
+                    const pybind11::array_t<T> &y,
+                    const pybind11::array_t<T> &z) {
     auto _x = x.template unchecked<1>();
     auto _y = y.template unchecked<1>();
     auto _z = z.template unchecked<1>();
@@ -277,8 +277,8 @@ class Binning2D {
     {
       pybind11::gil_scoped_release release;
 
-      const auto& x_axis = static_cast<pyinterp::detail::Axis<double>&>(*x_);
-      const auto& y_axis = static_cast<pyinterp::detail::Axis<double>&>(*y_);
+      const auto &x_axis = static_cast<pyinterp::detail::Axis<double> &>(*x_);
+      const auto &y_axis = static_cast<pyinterp::detail::Axis<double> &>(*y_);
 
       for (pybind11::ssize_t idx = 0; idx < x.size(); ++idx) {
         auto value = _z(idx);
@@ -296,8 +296,8 @@ class Binning2D {
   }
 
   /// Update statistics for the linear binning (ignore zero weights).
-  void update_acc(const int64_t ix, const int64_t iy, const T& value,
-                  const T& weight) {
+  void update_acc(const int64_t ix, const int64_t iy, const T &value,
+                  const T &weight) {
     if (!detail::math::is_almost_zero(weight,
                                       std::numeric_limits<T>::epsilon())) {
       acc_(ix, iy)(value, weight);
@@ -306,8 +306,8 @@ class Binning2D {
 
   /// Set bins with nearest binning.
   template <template <class> class Point, typename Strategy>
-  void push_linear(const pybind11::array_t<T>& x, const pybind11::array_t<T>& y,
-                   const pybind11::array_t<T>& z, const Strategy& strategy) {
+  void push_linear(const pybind11::array_t<T> &x, const pybind11::array_t<T> &y,
+                   const pybind11::array_t<T> &z, const Strategy &strategy) {
     auto _x = x.template unchecked<1>();
     auto _y = y.template unchecked<1>();
     auto _z = z.template unchecked<1>();
@@ -315,8 +315,8 @@ class Binning2D {
     {
       pybind11::gil_scoped_release release;
 
-      const auto& x_axis = static_cast<pyinterp::detail::Axis<double>&>(*x_);
-      const auto& y_axis = static_cast<pyinterp::detail::Axis<double>&>(*y_);
+      const auto &x_axis = static_cast<pyinterp::detail::Axis<double> &>(*x_);
+      const auto &y_axis = static_cast<pyinterp::detail::Axis<double> &>(*y_);
 
       for (pybind11::ssize_t idx = 0; idx < x.size(); ++idx) {
         auto value = _z(idx);

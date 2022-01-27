@@ -9,7 +9,7 @@
 namespace py = pybind11;
 namespace geometry = pyinterp::detail::geometry;
 
-void init_bivariate(py::module& m) {
+void init_bivariate(py::module &m) {
   pyinterp::implement_bivariate<geometry::EquatorialPoint2D, double, double>(
       m, "Float64");
   pyinterp::implement_bivariate<geometry::EquatorialPoint2D, double, float>(

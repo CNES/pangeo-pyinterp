@@ -35,12 +35,12 @@ class sviewbuf : public std::streambuf {
   }
 
  public:
-  sviewbuf(const char* s, std::size_t count) {
-    auto* begin = const_cast<char*>(s);  // NOLINT
+  sviewbuf(const char *s, std::size_t count) {
+    auto *begin = const_cast<char *>(s);  // NOLINT
     this->setg(begin, begin, begin + count);
   }
 
-  explicit sviewbuf(const std::string_view& str)
+  explicit sviewbuf(const std::string_view &str)
       : sviewbuf(str.data(), str.size()) {}
 };
 
@@ -52,8 +52,8 @@ class sviewbuf : public std::streambuf {
 /// ends before this stream, reading from it invokes undefined behavior.
 class isviewstream : private virtual sviewbuf, public std::istream {
  public:
-  explicit isviewstream(const std::string_view& str)
-      : sviewbuf(str), std::istream(static_cast<std::streambuf*>(this)) {}
+  explicit isviewstream(const std::string_view &str)
+      : sviewbuf(str), std::istream(static_cast<std::streambuf *>(this)) {}
 };
 
 }  // namespace pyinterp::detail

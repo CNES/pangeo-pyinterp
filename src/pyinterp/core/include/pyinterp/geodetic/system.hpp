@@ -15,7 +15,7 @@ class System : public detail::geodetic::System {
   using detail::geodetic::System::System;
 
   /// Construction of the class from the base class.
-  explicit System(detail::geodetic::System&& base)
+  explicit System(detail::geodetic::System &&base)
       : detail::geodetic::System(base){};
 
   /// Get a tuple that fully encodes the state of this instance
@@ -25,7 +25,7 @@ class System : public detail::geodetic::System {
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static auto setstate(const pybind11::tuple& state) -> System {
+  static auto setstate(const pybind11::tuple &state) -> System {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }

@@ -4,23 +4,24 @@
 # BSD-style license that can be found in the LICENSE file.
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
-from typing import ClassVar, Optional
 import datetime
+# Setuptools must be imported first
+import distutils.command.build
+import distutils.command.sdist
 import os
 import pathlib
 import platform
 import re
-import setuptools
-import setuptools.command.build_ext
-import setuptools.command.install
-import setuptools.command.test
 import shlex
 import subprocess
 import sys
 import sysconfig
-# Setuptools must be imported first
-import distutils.command.build
-import distutils.command.sdist
+from typing import ClassVar, Optional
+
+import setuptools
+import setuptools.command.build_ext
+import setuptools.command.install
+import setuptools.command.test
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -180,6 +181,7 @@ def date() -> str:
 # pylint: disable=too-few-public-methods
 class CMakeExtension(setuptools.Extension):
     """Python extension to build"""
+
     def __init__(self, name):
         super(CMakeExtension, self).__init__(name, sources=[])
 
@@ -260,8 +262,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if not boost_root.exists():
             if cls.CONDA_FORGE:
                 raise RuntimeError(
-                    "Unable to find the Boost library in the conda distribution "
-                    "used.")
+                    "Unable to find the Boost library in the conda "
+                    "distribution used.")
             return None
         return "{boost_option} -DBoost_INCLUDE_DIR={boost_root}".format(
             boost_root=boost_root, boost_option=boost_option).split()
@@ -279,8 +281,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if not eigen_include_dir.exists():
             if cls.CONDA_FORGE:
                 raise RuntimeError(
-                    "Unable to find the Eigen3 library in the conda distribution "
-                    "used.")
+                    "Unable to find the Eigen3 library in the conda "
+                    "distribution used.")
             return None
         return "-DEIGEN3_INCLUDE_DIR=" + str(eigen_include_dir)
 
@@ -310,7 +312,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if not result:
             try:
                 # pylint: disable=unused-import
-                import conda
+                import conda  # noqa: F401
+
                 # pylint: enable=unused-import
             except ImportError:
                 result = False

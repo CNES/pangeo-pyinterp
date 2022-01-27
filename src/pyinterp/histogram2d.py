@@ -6,10 +6,12 @@
 Histogram 2D
 ------------
 """
-from typing import Optional, Union
 import copy
+from typing import Optional, Union
+
 import dask.array as da
 import numpy as np
+
 from . import core
 
 
@@ -36,6 +38,7 @@ class Histogram2D:
         Journal of Machine Learning Research, 11, 28, 849-872
         http://jmlr.org/papers/v11/ben-haim10a.html
     """
+
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,

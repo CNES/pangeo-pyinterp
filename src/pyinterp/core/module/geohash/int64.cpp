@@ -24,11 +24,11 @@ constexpr static auto check_range(uint32_t precision) -> void {
   }
 }
 
-void init_geohash_int64(py::module& m) {
+void init_geohash_int64(py::module &m) {
   m.def(
        "encode",
-       [](const Eigen::Ref<const Eigen::VectorXd>& lon,
-          const Eigen::Ref<const Eigen::VectorXd>& lat,
+       [](const Eigen::Ref<const Eigen::VectorXd> &lon,
+          const Eigen::Ref<const Eigen::VectorXd> &lat,
           const uint32_t precision) -> pyinterp::Vector<uint64_t> {
          check_range(precision);
          return geohash::int64::encode(lon, lat, precision);
@@ -49,7 +49,7 @@ Raises:
 )__doc__")
       .def(
           "decode",
-          [](const Eigen::Ref<const pyinterp::Vector<uint64_t>>& hash,
+          [](const Eigen::Ref<const pyinterp::Vector<uint64_t>> &hash,
              const uint32_t precision,
              const bool round) -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
             check_range(precision);

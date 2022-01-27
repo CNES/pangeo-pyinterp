@@ -12,14 +12,15 @@ But you can define another one using the class :py:class:`System
 <pyinterp.geodetic.System>`.
 """
 
-#%%
+# %%
 import matplotlib.pyplot
 import numpy
+
 import pyinterp
 
 mesh = pyinterp.RTree()
 
-#%%
+# %%
 # Then, we will insert points into the tree. The class allows you to add points
 # using two algorithms. The first one called :py:meth:`packing
 # <pyinterp.RTree.packing>`, will enable you to enter the values in the tree at
@@ -50,10 +51,10 @@ mesh.packing(numpy.vstack((lons, lats)).T, data)
 #
 # .. note::
 #
-#     When comparing an RBF to IDW, IDW will never predict values higher than the
-#     maximum measured value or lower than the minimum measured value. However,
-#     RBFs can predict values higher than the maximum values and lower than the
-#     minimum measured values.
+#     When comparing an RBF to IDW, IDW will never predict values higher than
+#     the maximum measured value or lower than the minimum measured value.
+#     However, RBFs can predict values higher than the maximum values and lower
+#     than the minimum measured values.
 #
 #     The window function restricts the analyzed data set to a range near the
 #     point of interest. The weighting factor decreases the effect of points
@@ -73,7 +74,7 @@ idw, neighbors = mesh.inverse_distance_weighting(
     num_threads=0)
 idw = idw.reshape(mx.shape)
 
-#%%
+# %%
 # Interpolation with RBF method
 rbf, neighbors = mesh.radial_basis_function(
     numpy.vstack((mx.ravel(), my.ravel())).T,
@@ -84,7 +85,7 @@ rbf, neighbors = mesh.radial_basis_function(
     num_threads=0)
 rbf = rbf.reshape(mx.shape)
 
-#%%
+# %%
 # Interpolation with a Window Function
 wf, neighbors = mesh.window_function(
     numpy.vstack((mx.ravel(), my.ravel())).T,
@@ -95,7 +96,7 @@ wf, neighbors = mesh.window_function(
     num_threads=0)
 wf = wf.reshape(mx.shape)
 
-#%%
+# %%
 # Let's visualize our interpolated data
 fig = matplotlib.pyplot.figure(figsize=(10, 20))
 ax1 = fig.add_subplot(311)

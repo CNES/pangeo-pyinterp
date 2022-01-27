@@ -13,7 +13,7 @@
 namespace pyinterp {
 
 // Error thrown if it' s not possible to frame the value on the specified axis.
-auto index_error(const std::string& axis, const std::string& value, size_t n)
+auto index_error(const std::string &axis, const std::string &value, size_t n)
     -> void {
   throw std::invalid_argument("Unable to frame the value " + value + " with " +
                               std::to_string(n) + " items of the " + axis +
@@ -22,11 +22,11 @@ auto index_error(const std::string& axis, const std::string& value, size_t n)
 
 /// Loads the interpolation frame into memory
 template <typename DataType>
-auto load_frame(const Grid2D<DataType>& grid, const double x, const double y,
+auto load_frame(const Grid2D<DataType> &grid, const double x, const double y,
                 const axis::Boundary boundary, const bool bounds_error,
-                detail::math::Frame2D& frame) -> bool {
-  const auto& x_axis = *grid.x();
-  const auto& y_axis = *grid.y();
+                detail::math::Frame2D &frame) -> bool {
+  const auto &x_axis = *grid.x();
+  const auto &y_axis = *grid.y();
   const auto y_indexes =
       y_axis.find_indexes(y, static_cast<uint32_t>(frame.ny()), boundary);
   const auto x_indexes =
@@ -64,13 +64,13 @@ auto load_frame(const Grid2D<DataType>& grid, const double x, const double y,
 
 /// Loads the interpolation frame into memory
 template <typename DataType, typename AxisType>
-auto load_frame(const Grid3D<DataType, AxisType>& grid, const double x,
+auto load_frame(const Grid3D<DataType, AxisType> &grid, const double x,
                 const double y, const AxisType z, const axis::Boundary boundary,
-                const bool bounds_error, detail::math::Frame3D<AxisType>& frame)
+                const bool bounds_error, detail::math::Frame3D<AxisType> &frame)
     -> bool {
-  const auto& x_axis = *grid.x();
-  const auto& y_axis = *grid.y();
-  const auto& z_axis = *grid.z();
+  const auto &x_axis = *grid.x();
+  const auto &y_axis = *grid.y();
+  const auto &z_axis = *grid.z();
   const auto z_indexes =
       z_axis.find_indexes(z, static_cast<uint32_t>(frame.nz()), boundary);
   const auto y_indexes =
@@ -121,14 +121,14 @@ auto load_frame(const Grid3D<DataType, AxisType>& grid, const double x,
 
 /// Loads the interpolation frame into memory
 template <typename DataType, typename AxisType>
-auto load_frame(const Grid4D<DataType, AxisType>& grid, const double x,
+auto load_frame(const Grid4D<DataType, AxisType> &grid, const double x,
                 const double y, const AxisType z, const double u,
                 const axis::Boundary boundary, const bool bounds_error,
-                detail::math::Frame4D<AxisType>& frame) -> bool {
-  const auto& x_axis = *grid.x();
-  const auto& y_axis = *grid.y();
-  const auto& z_axis = *grid.z();
-  const auto& u_axis = *grid.u();
+                detail::math::Frame4D<AxisType> &frame) -> bool {
+  const auto &x_axis = *grid.x();
+  const auto &y_axis = *grid.y();
+  const auto &z_axis = *grid.z();
+  const auto &u_axis = *grid.u();
   const auto u_indexes =
       u_axis.find_indexes(u, static_cast<uint32_t>(frame.nu()), boundary);
   const auto z_indexes =

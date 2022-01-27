@@ -34,15 +34,15 @@ constexpr int64_t IRREGULAR = 0x3ab687f709def680;
 /// @return The numpy vector copied into an Eigen vector.
 template <typename T>
 inline auto vector_from_numpy(
-    const std::string& name,
-    const pybind11::array_t<T, pybind11::array::c_style>& ndarray)
+    const std::string &name,
+    const pybind11::array_t<T, pybind11::array::c_style> &ndarray)
     -> Eigen::Map<const Vector<T>> {
   check_array_ndim(name, 1, ndarray);
   return Eigen::Map<const Vector<T>>(ndarray.data(), ndarray.size());
 }
 
 /// Pad a string with spaces
-inline auto pad(const std::string& str) -> std::string {
+inline auto pad(const std::string &str) -> std::string {
   auto re = std::regex("(?:\r\n|\n)");
   auto first = std::sregex_token_iterator(str.begin(), str.end(), re, -1);
   auto last = std::sregex_token_iterator();
@@ -81,7 +81,7 @@ class Axis : public detail::Axis<T>,
   /// order to consider them equal.
   /// @param is_circle True, if the axis can represent a circle. Be careful,
   /// the angle shown must be expressed in degrees.
-  explicit Axis(const pybind11::array_t<T, pybind11::array::c_style>& points,
+  explicit Axis(const pybind11::array_t<T, pybind11::array::c_style> &points,
                 T epsilon, bool is_circle)
       : Axis<T>(pyinterp::detail::vector_from_numpy("points", points), epsilon,
                 is_circle) {}
@@ -90,7 +90,7 @@ class Axis : public detail::Axis<T>,
   ///
   /// @param slice Slice of indexes to read
   /// @return coordinate values
-  auto coordinate_values(const pybind11::slice& slice) const
+  auto coordinate_values(const pybind11::slice &slice) const
       -> pybind11::array_t<T> {
     size_t start;
     size_t stop;
@@ -123,7 +123,7 @@ class Axis : public detail::Axis<T>,
   ///   points on the axis or the value -1 if the *bounded* parameter is set
   ///   to false and the index looked for is located outside the limits of the
   ///   axis.
-  auto find_index(const pybind11::array_t<T>& coordinates, bool bounded) const
+  auto find_index(const pybind11::array_t<T> &coordinates, bool bounded) const
       -> pybind11::array_t<int64_t> {
     detail::check_array_ndim("coordinates", 1, coordinates);
 
@@ -152,7 +152,7 @@ class Axis : public detail::Axis<T>,
   /// @return A matrix of shape (n, 2). The first column of the matrix
   /// contains the indexes i0 and the second column the indexes i1
   /// found.
-  auto find_indexes(const pybind11::array_t<T>& coordinates) const
+  auto find_indexes(const pybind11::array_t<T> &coordinates) const
       -> pybind11::array_t<int64_t> {
     detail::check_array_ndim("coordinates", 1, coordinates);
 
@@ -198,7 +198,7 @@ class Axis : public detail::Axis<T>,
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
     // Regular
     {
-      auto ptr = dynamic_cast<detail::axis::container::Regular<T>*>(
+      auto ptr = dynamic_cast<detail::axis::container::Regular<T> *>(
           this->handler().get());
       if (ptr != nullptr) {
         return pybind11::make_tuple(detail::axis::REGULAR, ptr->front(),
@@ -208,7 +208,7 @@ class Axis : public detail::Axis<T>,
     }
     // Irregular
     {
-      auto ptr = dynamic_cast<detail::axis::container::Irregular<T>*>(
+      auto ptr = dynamic_cast<detail::axis::container::Irregular<T> *>(
           this->handler().get());
       if (ptr != nullptr) {
         auto values = pybind11::array_t<T>(ptr->size());
@@ -221,7 +221,7 @@ class Axis : public detail::Axis<T>,
       }
     }
     // Undefined
-    auto ptr = dynamic_cast<detail::axis::container::Undefined<T>*>(
+    auto ptr = dynamic_cast<detail::axis::container::Undefined<T> *>(
         this->handler().get());
     if (ptr != nullptr) {
       return pybind11::make_tuple(detail::axis::UNDEFINED);
@@ -231,7 +231,7 @@ class Axis : public detail::Axis<T>,
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static auto setstate(const pybind11::tuple& state) -> Axis<T> {
+  static auto setstate(const pybind11::tuple &state) -> Axis<T> {
     if (state.empty()) {
       throw std::invalid_argument("invalid state");
     }

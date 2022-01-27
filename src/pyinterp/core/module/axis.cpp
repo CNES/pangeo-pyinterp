@@ -13,26 +13,26 @@
 namespace py = pybind11;
 
 template <class Axis, class Coordinates>
-auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>>& axis,
-                    const std::string& name) {
+auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>> &axis,
+                    const std::string &name) {
   axis.def(
           "__repr__",
-          [](const Axis& self) -> std::string {
+          [](const Axis &self) -> std::string {
             return static_cast<std::string>(self);
           },
           "Called by the ``repr()`` built-in function to compute the string "
           "representation of an Axis.")
       .def(
           "__getitem__",
-          [](const Axis& self, size_t index) {
+          [](const Axis &self, size_t index) {
             return self.coordinate_value(index);
           },
           py::arg("index"))
       .def("__getitem__", &Axis::coordinate_values, py::arg("indices"))
-      .def("__len__", [](const Axis& self) { return self.size(); })
+      .def("__len__", [](const Axis &self) { return self.size(); })
       .def(
           "is_regular",
-          [](const Axis& self) -> bool { return self.is_regular(); },
+          [](const Axis &self) -> bool { return self.is_regular(); },
           R"__doc__(
 Check if this axis values are spaced regularly.
 
@@ -41,7 +41,7 @@ Returns:
 )__doc__")
       .def(
           "flip",
-          [](std::shared_ptr<Axis>& self,
+          [](std::shared_ptr<Axis> &self,
              const bool inplace) -> std::shared_ptr<Axis> {
             if (inplace) {
               self->flip();
@@ -68,7 +68,7 @@ Returns:
               .c_str())
       .def(
           "find_index",
-          [](const Axis& self, Coordinates& coordinates,
+          [](const Axis &self, Coordinates &coordinates,
              const bool bounded) -> py::array_t<int64_t> {
             return self.find_index(coordinates, bounded);
           },
@@ -88,8 +88,8 @@ Returns:
 )__doc__")
       .def(
           "find_indexes",
-          [](const Axis& self,
-             Coordinates& coordinates) -> py::array_t<int64_t> {
+          [](const Axis &self,
+             Coordinates &coordinates) -> py::array_t<int64_t> {
             return self.find_indexes(coordinates);
           },
           py::arg("coordinates"), R"__doc__(
@@ -119,20 +119,20 @@ Returns:
 )__doc__")
       .def(
           "__eq__",
-          [](const Axis& self, const Axis& rhs) -> bool { return self == rhs; },
+          [](const Axis &self, const Axis &rhs) -> bool { return self == rhs; },
           py::arg("other"),
           "Overrides the default behavior of the ``==`` operator.")
       .def(
           "__ne__",
-          [](const Axis& self, const Axis& rhs) -> bool { return self != rhs; },
+          [](const Axis &self, const Axis &rhs) -> bool { return self != rhs; },
           py::arg("other"),
           "Overrides the default behavior of the ``!=`` operator.")
       .def(py::pickle(
-          [](const Axis& self) { return self.getstate(); },
-          [](const py::tuple& state) { return Axis::setstate(state); }));
+          [](const Axis &self) { return self.getstate(); },
+          [](const py::tuple &state) { return Axis::setstate(state); }));
 }
 
-static void init_core_axis(py::module& m) {
+static void init_core_axis(py::module &m) {
   using Axis = pyinterp::Axis<double>;
 
   auto axis = py::class_<Axis, std::shared_ptr<Axis>>(m, "Axis", R"__doc__(
@@ -140,7 +140,7 @@ A coordinate axis is a Variable that specifies one of the coordinates
 of a variable's values.
 )__doc__");
 
-  axis.def(py::init<>([](py::array_t<double, py::array::c_style>& values,
+  axis.def(py::init<>([](py::array_t<double, py::array::c_style> &values,
                          const double epsilon, const bool is_circle) {
              return std::make_shared<Axis>(values, epsilon, is_circle);
            }),
@@ -158,7 +158,7 @@ Args:
 )__doc__")
       .def_property_readonly(
           "is_circle",
-          [](const Axis& self) -> bool { return self.is_circle(); },
+          [](const Axis &self) -> bool { return self.is_circle(); },
           R"__doc__(
 Test if this axis represents a circle.
 
@@ -200,7 +200,7 @@ Returns:
   implement_axis<Axis, const py::array_t<double>>(axis, "pyinterp.core.Axis");
 }
 
-void init_temporal_axis(py::module& m) {
+void init_temporal_axis(py::module &m) {
   // Required to declare the relationship between C++ classes
   // pyinterp::TemporalAxis & pyinterp::Axis<int64_t>. pyinterp::Axis<int64_t>
   // is used by the time grids.
@@ -212,7 +212,7 @@ void init_temporal_axis(py::module& m) {
                          std::shared_ptr<pyinterp::TemporalAxis>>(
       m, "TemporalAxis", base_class, "Time axis");
 
-  axis.def(py::init<>([](const py::array& values) {
+  axis.def(py::init<>([](const py::array &values) {
              return std::make_shared<pyinterp::TemporalAxis>(values);
            }),
            py::arg("values"),
@@ -296,7 +296,7 @@ Returns:
 )__doc__")
       .def(
           "safe_cast",
-          [](const pyinterp::TemporalAxis& self, const pybind11::array& array)
+          [](const pyinterp::TemporalAxis &self, const pybind11::array &array)
               -> py::array { return self.safe_cast("values", array); },
           py::arg("values"),
           R"__doc__(
@@ -319,7 +319,7 @@ Raises:
       axis, "pyinterp.core.TemporalAxis");
 }
 
-void init_axis(py::module& m) {
+void init_axis(py::module &m) {
   py::enum_<pyinterp::axis::Boundary>(m, "AxisBoundary", R"__doc__(
 Type of boundary handling.
 )__doc__")

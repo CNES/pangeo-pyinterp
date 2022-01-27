@@ -26,12 +26,13 @@ import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
+import xarray
+
 import pyinterp
 import pyinterp.backends.xarray
 import pyinterp.tests
-import xarray
 
-#%%
+# %%
 # The first step is to load the data into memory and create the interpolator
 # object:
 #
@@ -45,7 +46,7 @@ import xarray
 ds = xarray.open_dataset(pyinterp.tests.grid2d_path())
 interpolator = pyinterp.backends.xarray.Grid2D(ds.mss)
 
-#%%
+# %%
 # We will then build the coordinates on which we want to interpolate our grid:
 #
 # .. note::
@@ -55,13 +56,13 @@ mx, my = numpy.meshgrid(numpy.arange(-180, 180, 1) + 1 / 3.0,
                         numpy.arange(-89, 89, 1) + 1 / 3.0,
                         indexing='ij')
 
-#%%
+# %%
 # The grid is :py:meth:`interpolated
 # <pyinterp.backends.xarray.Grid2D.bivariate>` to the desired coordinates:
 mss = interpolator.bivariate(
     coords=dict(lon=mx.ravel(), lat=my.ravel())).reshape(mx.shape)
 
-#%%
+# %%
 # Let's visualize the original grid and the result of the interpolation.
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
 ax1 = fig.add_subplot(
@@ -91,7 +92,7 @@ ax2.set_title("Bilinear Interpolated MSS")
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()
 
-#%%
+# %%
 # Values can be interpolated with several methods: *bilinear*, *nearest*, and
 # *inverse distance weighting*. Distance calculations, if necessary, are
 # calculated using the `Haversine formula
@@ -107,12 +108,12 @@ fig.show()
 #
 # .. warning::
 #
-#     When using this interpolator, pay attention to the undefined values. Because
-#     as long as the calculation window uses an indefinite point, the interpolator
-#     will compute indeterminate values. In other words, this interpolator
-#     increases the area covered by the masked values. To avoid this behavior, it
-#     is necessary to :doc:`pre-process <ex_fill_undef>` the grid to delete
-#     undefined values.
+#     When using this interpolator, pay attention to the undefined values.
+#     Because as long as the calculation window uses an indefinite point, the
+#     interpolator will compute indeterminate values. In other words, this
+#     interpolator increases the area covered by the masked values. To avoid
+#     this behavior, it is necessary to :doc:`pre-process <ex_fill_undef>` the
+#     grid to delete undefined values.
 #
 # The interpolation :py:meth:`bicubic <pyinterp.backends.xarray.Grid2D.bicubic>`
 # function has more parameters to define the data frame used by the spline
@@ -121,7 +122,7 @@ mss = interpolator.bicubic(coords=dict(lon=mx.ravel(), lat=my.ravel()),
                            nx=3,
                            ny=3).reshape(mx.shape)
 
-#%%
+# %%
 # .. warning::
 #
 #     The grid provided must have strictly increasing axes to meet the

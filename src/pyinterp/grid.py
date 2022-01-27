@@ -7,9 +7,10 @@ Regular grids
 =============
 """
 from typing import Optional, Union
+
 import numpy as np
-from . import core
-from . import interface
+
+from . import core, interface
 
 
 class Grid2D:
@@ -91,8 +92,13 @@ class Grid2D:
         """Called by the ``repr()`` built-in function to compute the string
         representation of this instance.
         """
-        pad = lambda s, n: "\n".join([(" " * n if ix else "") + line for ix,
-                                      line in enumerate(s.split("\n"))])
+
+        def pad(string, length):
+            """Pad a string to a given length.
+            """
+            return "\n".join([(" " * length if ix else "") + line
+                              for ix, line in enumerate(string.split("\n"))])
+
         result = [
             f"<{self.__module__}.{self.__class__.__name__}>",
             repr(self.array),

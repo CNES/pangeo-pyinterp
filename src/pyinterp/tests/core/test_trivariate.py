@@ -4,15 +4,18 @@
 # BSD-style license that can be found in the LICENSE file.
 import os
 import pickle
-import pytest
+
 import netCDF4
+import pytest
+
 try:
-    import matplotlib.pyplot
     import matplotlib.colors
+    import matplotlib.pyplot
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
 import numpy as np
+
 from ... import core
 from .. import grid3d_path, make_or_compare_reference
 
@@ -41,8 +44,7 @@ def load_data(temporal_axis=False):
                     ds.variables['time'][:],
                     ds.variables['time'].units,
                     only_use_cftime_datetimes=False,
-                    only_use_python_datetimes=True).astype(
-                        "datetime64[h]"))
+                    only_use_python_datetimes=True).astype("datetime64[h]"))
             class_ = (core.TemporalGrid3DFloat64
                       if temporal_axis else core.Grid3DFloat64)
 

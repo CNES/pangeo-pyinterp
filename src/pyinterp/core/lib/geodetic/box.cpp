@@ -5,17 +5,17 @@
 namespace pyinterp::geodetic {
 
 /// Calculate the area
-auto Box::area(const std::optional<System>& wgs) const -> double {
+auto Box::area(const std::optional<System> &wgs) const -> double {
   return static_cast<Polygon>(*this).area(wgs);
 }
 
 /// Calculate the distance between two boxes
-auto Box::distance(const Box& other) const -> double {
+auto Box::distance(const Box &other) const -> double {
   return static_cast<Polygon>(*this).distance(static_cast<Polygon>(other));
 }
 
 /// Calculate the distance between this instance and a point
-[[nodiscard]] auto Box::distance(const Point& other) const -> double {
+[[nodiscard]] auto Box::distance(const Point &other) const -> double {
   return static_cast<Polygon>(*this).distance(other);
 }
 

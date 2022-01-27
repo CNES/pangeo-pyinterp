@@ -32,18 +32,19 @@ import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
+import xarray
+
 import pyinterp
 import pyinterp.backends.xarray
 import pyinterp.tests
-import xarray
 
-#%%
+# %%
 # The first step is to load the data into memory and create the interpolator
 # object:
 ds = xarray.open_dataset(pyinterp.tests.grid3d_path())
 interpolator = pyinterp.backends.xarray.Grid3D(ds.tcw)
 
-#%%
+# %%
 # We will build a new grid that will be used to build a new interpolated grid.
 #
 # .. note ::
@@ -63,13 +64,13 @@ mx, my, mz = numpy.meshgrid(numpy.arange(-180, 180, 0.25) + 1 / 3.0,
                                         dtype="datetime64"),
                             indexing='ij')
 
-#%%
+# %%
 # We interpolate our grid using a :py:meth:`classical
 # <pyinterp.backends.xarray.Grid3D.trivariate>`:
 trivariate = interpolator.trivariate(
     dict(longitude=mx.ravel(), latitude=my.ravel(), time=mz.ravel()))
 
-#%%
+# %%
 # Bicubic on 3D grid
 # ==================
 #
@@ -80,21 +81,21 @@ trivariate = interpolator.trivariate(
 interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars["tcw"],
                                                increasing_axes=True)
 
-#%%
+# %%
 # We interpolate our grid using a :py:meth:`bicubic
 # <pyinterp.backends.xarray.Grid3D.bicubic>` interpolation in space followed by
 # a linear interpolation in the temporal axis:
 bicubic = interpolator.bicubic(
     dict(longitude=mx.ravel(), latitude=my.ravel(), time=mz.ravel()))
 
-#%%
+# %%
 # We transform our result cubes into a matrix.
 trivariate = trivariate.reshape(mx.shape).squeeze(axis=2)
 bicubic = bicubic.reshape(mx.shape).squeeze(axis=2)
 lons = mx[:, 0].squeeze()
 lats = my[0, :].squeeze()
 
-#%%
+# %%
 # Let's visualize our results.
 fig = matplotlib.pyplot.figure(figsize=(5, 8))
 ax1 = fig.add_subplot(

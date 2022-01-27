@@ -36,22 +36,22 @@ class Grid2D {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Grid2D(const Grid2D& rhs) = default;
+  Grid2D(const Grid2D &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Grid2D(Grid2D&& rhs) noexcept = default;
+  Grid2D(Grid2D &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Grid2D& rhs) -> Grid2D& = default;
+  auto operator=(const Grid2D &rhs) -> Grid2D & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Grid2D&& rhs) noexcept -> Grid2D& = default;
+  auto operator=(Grid2D &&rhs) noexcept -> Grid2D & = default;
 
   /// Gets the X-Axis
   [[nodiscard]] inline auto x() const noexcept
@@ -66,13 +66,13 @@ class Grid2D {
   }
 
   /// Gets values of the array to interpolate
-  inline auto array() const noexcept -> const pybind11::array_t<DataType>& {
+  inline auto array() const noexcept -> const pybind11::array_t<DataType> & {
     return array_;
   }
 
   /// Gets the grid value for the coordinate pixel (ix, iy, ...).
   template <typename... Index>
-  inline auto value(Index&&... index) const noexcept -> const DataType& {
+  inline auto value(Index &&...index) const noexcept -> const DataType & {
     return ptr_(std::forward<Index>(index)...);
   }
 
@@ -83,8 +83,8 @@ class Grid2D {
   /// @param value The value outside the axis domain.
   /// @param axis_label The name of the axis
   template <typename AxisType>
-  static void index_error(const Axis<AxisType>& axis, const AxisType value,
-                          const std::string& axis_label) {
+  static void index_error(const Axis<AxisType> &axis, const AxisType value,
+                          const std::string &axis_label) {
     throw std::invalid_argument(
         axis.coordinate_repr(value) + " is out ouf bounds for axis " +
         axis_label + " [" + axis.coordinate_repr(axis.min_value()) + ", ..., " +
@@ -97,7 +97,7 @@ class Grid2D {
   }
 
   /// Pickle support: set state of this instance
-  static auto setstate(const pybind11::tuple& tuple) -> Grid2D {
+  static auto setstate(const pybind11::tuple &tuple) -> Grid2D {
     if (tuple.size() != 3) {
       throw std::runtime_error("invalid state");
     }
@@ -120,8 +120,8 @@ class Grid2D {
 
   /// Checking the shape of the array for each defined axis.
   template <typename AxisType, typename... Args>
-  void check_shape(const size_t idx, const Axis<AxisType>* axis,
-                   const std::string& x, const std::string& y, Args... args) {
+  void check_shape(const size_t idx, const Axis<AxisType> *axis,
+                   const std::string &x, const std::string &y, Args... args) {
     if (axis->size() != array_.shape(idx)) {
       throw std::invalid_argument(
           x + ", " + y + " could not be broadcast together with shape (" +
@@ -141,8 +141,8 @@ template <typename DataType, typename AxisType, pybind11::ssize_t Dimension = 3>
 class Grid3D : public Grid2D<DataType, Dimension> {
  public:
   /// Default constructor
-  Grid3D(const std::shared_ptr<Axis<double>>& x,
-         const std::shared_ptr<Axis<double>>& y,
+  Grid3D(const std::shared_ptr<Axis<double>> &x,
+         const std::shared_ptr<Axis<double>> &y,
          std::shared_ptr<Axis<AxisType>> z, pybind11::array_t<DataType> array)
       : Grid2D<DataType, Dimension>(x, y, std::move(array)), z_(std::move(z)) {
     this->check_shape(2, z_.get(), "z", "array");
@@ -161,7 +161,7 @@ class Grid3D : public Grid2D<DataType, Dimension> {
   }
 
   /// Pickle support: set state of this instance
-  static auto setstate(const pybind11::tuple& tuple) -> Grid3D {
+  static auto setstate(const pybind11::tuple &tuple) -> Grid3D {
     if (tuple.size() != 4) {
       throw std::runtime_error("invalid state");
     }
@@ -186,8 +186,8 @@ template <typename DataType, typename AxisType>
 class Grid4D : public Grid3D<DataType, AxisType, 4> {
  public:
   /// Default constructor
-  Grid4D(const std::shared_ptr<Axis<double>>& x,
-         const std::shared_ptr<Axis<double>>& y,
+  Grid4D(const std::shared_ptr<Axis<double>> &x,
+         const std::shared_ptr<Axis<double>> &y,
          std::shared_ptr<Axis<AxisType>> z, std::shared_ptr<Axis<double>> u,
          pybind11::array_t<DataType> array)
       : Grid3D<DataType, AxisType, 4>(x, y, z, std::move(array)),
@@ -209,7 +209,7 @@ class Grid4D : public Grid3D<DataType, AxisType, 4> {
   }
 
   /// Pickle support: set state of this instance
-  static auto setstate(const pybind11::tuple& tuple) -> Grid4D {
+  static auto setstate(const pybind11::tuple &tuple) -> Grid4D {
     if (tuple.size() != 5) {
       throw std::runtime_error("invalid state");
     }
@@ -233,8 +233,8 @@ class Grid4D : public Grid3D<DataType, AxisType, 4> {
 /// @tparam DataType Grid data type
 /// @tparam AxisType Axis data type
 template <typename DataType, typename AxisType>
-void implement_ndgrid(pybind11::module& m, const std::string& prefix,
-                      const std::string& suffix) {
+void implement_ndgrid(pybind11::module &m, const std::string &prefix,
+                      const std::string &suffix) {
   std::string help = "Cartesian Grid 3D";
   if (prefix.length()) {
     help = prefix + " " + help;
@@ -258,7 +258,7 @@ Args:
 )__doc__")
                .c_str())
       .def_property_readonly(
-          "x", [](const Grid3D<DataType, AxisType>& self) { return self.x(); },
+          "x", [](const Grid3D<DataType, AxisType> &self) { return self.x(); },
           R"__doc__(
 Gets the X-Axis handled by this instance
 
@@ -266,7 +266,7 @@ Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
       .def_property_readonly(
-          "y", [](const Grid3D<DataType, AxisType>& self) { return self.y(); },
+          "y", [](const Grid3D<DataType, AxisType> &self) { return self.y(); },
           R"__doc__(
 Gets the Y-Axis handled by this instance
 
@@ -274,7 +274,7 @@ Returns:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
       .def_property_readonly(
-          "z", [](const Grid3D<DataType, AxisType>& self) { return self.z(); },
+          "z", [](const Grid3D<DataType, AxisType> &self) { return self.z(); },
           (R"__doc__(
 Gets the Z-Axis handled by this instance
 
@@ -286,7 +286,7 @@ Returns:
               .c_str())
       .def_property_readonly(
           "array",
-          [](const Grid3D<DataType, AxisType>& self) { return self.array(); },
+          [](const Grid3D<DataType, AxisType> &self) { return self.array(); },
           R"__doc__(
 Gets the values handled by this instance
 
@@ -294,10 +294,10 @@ Returns:
     numpy.ndarray: values
 )__doc__")
       .def(pybind11::pickle(
-          [](const Grid3D<DataType, AxisType>& self) {
+          [](const Grid3D<DataType, AxisType> &self) {
             return self.getstate();
           },
-          [](const pybind11::tuple& state) {
+          [](const pybind11::tuple &state) {
             return Grid3D<DataType, AxisType>::setstate(state);
           }));
 
@@ -326,7 +326,7 @@ Args:
 )__doc__")
                .c_str())
       .def_property_readonly(
-          "x", [](const Grid4D<DataType, AxisType>& self) { return self.x(); },
+          "x", [](const Grid4D<DataType, AxisType> &self) { return self.x(); },
           R"__doc__(
 Gets the X-Axis handled by this instance
 
@@ -334,7 +334,7 @@ Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
       .def_property_readonly(
-          "y", [](const Grid4D<DataType, AxisType>& self) { return self.y(); },
+          "y", [](const Grid4D<DataType, AxisType> &self) { return self.y(); },
           R"__doc__(
 Gets the Y-Axis handled by this instance
 
@@ -342,7 +342,7 @@ Returns:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
       .def_property_readonly(
-          "z", [](const Grid4D<DataType, AxisType>& self) { return self.z(); },
+          "z", [](const Grid4D<DataType, AxisType> &self) { return self.z(); },
           (R"__doc__(
 Gets the Z-Axis handled by this instance
 
@@ -352,7 +352,7 @@ Returns:
 )__doc__")
               .c_str())
       .def_property_readonly(
-          "u", [](const Grid4D<DataType, AxisType>& self) { return self.u(); },
+          "u", [](const Grid4D<DataType, AxisType> &self) { return self.u(); },
           R"__doc__(
 Gets the U-Axis handled by this instance
 
@@ -361,7 +361,7 @@ Returns:
 )__doc__")
       .def_property_readonly(
           "array",
-          [](const Grid4D<DataType, AxisType>& self) { return self.array(); },
+          [](const Grid4D<DataType, AxisType> &self) { return self.array(); },
           R"__doc__(
 Gets the values handled by this instance
 
@@ -369,10 +369,10 @@ Returns:
     numpy.ndarray: values
 )__doc__")
       .def(pybind11::pickle(
-          [](const Grid4D<DataType, AxisType>& self) {
+          [](const Grid4D<DataType, AxisType> &self) {
             return self.getstate();
           },
-          [](const pybind11::tuple& state) {
+          [](const pybind11::tuple &state) {
             return Grid4D<DataType, AxisType>::setstate(state);
           }));
 }
@@ -381,7 +381,7 @@ Returns:
 ///
 /// @tparam DataType Grid data type
 template <typename DataType>
-void implement_grid(pybind11::module& m, const std::string& suffix) {
+void implement_grid(pybind11::module &m, const std::string &suffix) {
   pybind11::class_<Grid2D<DataType>>(m, ("Grid2D" + suffix).c_str(),
                                      "Cartesian Grid 2D")
       .def(pybind11::init<std::shared_ptr<Axis<double>>,
@@ -397,7 +397,7 @@ Args:
     array (numpy.ndarray): Bivariate function
 )__doc__")
       .def_property_readonly(
-          "x", [](const Grid2D<DataType>& self) { return self.x(); },
+          "x", [](const Grid2D<DataType> &self) { return self.x(); },
           R"__doc__(
 Gets the X-Axis handled by this instance
 
@@ -405,7 +405,7 @@ Returns:
     pyinterp.core.Axis: X-Axis
 )__doc__")
       .def_property_readonly(
-          "y", [](const Grid2D<DataType>& self) { return self.y(); },
+          "y", [](const Grid2D<DataType> &self) { return self.y(); },
           R"__doc__(
 Gets the Y-Axis handled by this instance
 
@@ -413,7 +413,7 @@ Returns:
     pyinterp.core.Axis: Y-Axis
 )__doc__")
       .def_property_readonly(
-          "array", [](const Grid2D<DataType>& self) { return self.array(); },
+          "array", [](const Grid2D<DataType> &self) { return self.array(); },
           R"__doc__(
 Gets the values handled by this instance
 
@@ -421,8 +421,8 @@ Returns:
     numpy.ndarray: values
 )__doc__")
       .def(pybind11::pickle(
-          [](const Grid2D<DataType>& self) { return self.getstate(); },
-          [](const pybind11::tuple& state) {
+          [](const Grid2D<DataType> &self) { return self.getstate(); },
+          [](const pybind11::tuple &state) {
             return Grid2D<DataType>::setstate(state);
           }));
 

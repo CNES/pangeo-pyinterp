@@ -3,6 +3,7 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 import pytest
+
 from .. import geodetic
 
 
@@ -31,11 +32,6 @@ def test_point():
     assert pt.lat == 2
 
 
-def test_point_2d():
-    with pytest.warns(PendingDeprecationWarning):
-        geodetic.Point2D()
-
-
 def test_box():
     box = geodetic.Box()
     assert isinstance(box, geodetic.Box)
@@ -51,11 +47,6 @@ def test_box():
     assert box.min_corner.lat == 2
     assert box.max_corner.lon == 3
     assert box.max_corner.lat == 4
-
-
-def test_box2d():
-    with pytest.warns(PendingDeprecationWarning):
-        geodetic.Box2D()
 
 
 def test_polygon():

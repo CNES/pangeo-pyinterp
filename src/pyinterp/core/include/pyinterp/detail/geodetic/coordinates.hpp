@@ -15,7 +15,7 @@ namespace pyinterp::detail::geodetic {
 class Coordinates {
  public:
   /// Default constructor.
-  explicit Coordinates(const std::optional<System>& system) {
+  explicit Coordinates(const std::optional<System> &system) {
     auto _system = system.value_or(System());
     // semi-major axis
     a_ = _system.semi_major_axis();
@@ -41,16 +41,16 @@ class Coordinates {
   virtual ~Coordinates() = default;
 
   /// Default copy constructor
-  Coordinates(const Coordinates&) = default;
+  Coordinates(const Coordinates &) = default;
 
   /// Default copy assignment operator
-  auto operator=(const Coordinates&) -> Coordinates& = default;
+  auto operator=(const Coordinates &) -> Coordinates & = default;
 
   /// Move constructor
-  Coordinates(Coordinates&&) noexcept = default;
+  Coordinates(Coordinates &&) noexcept = default;
 
   /// Move assignment operator
-  auto operator=(Coordinates&&) noexcept -> Coordinates& = default;
+  auto operator=(Coordinates &&) noexcept -> Coordinates & = default;
 
   /// Gets the WGS used by this instance
   [[nodiscard]] inline auto system() const noexcept -> System {
@@ -61,7 +61,7 @@ class Coordinates {
   /// altitude. Cartesian coordinates should be in meters. The returned latitude
   /// and longitude are in degrees, and the altitude will be in meters.
   template <typename T>
-  auto ecef_to_lla(const geometry::Point3D<T>& ecef) const noexcept
+  auto ecef_to_lla(const geometry::Point3D<T> &ecef) const noexcept
       -> geometry::EquatorialPoint3D<T> {
     const double x = boost::geometry::get<0>(ecef);
     const double y = boost::geometry::get<1>(ecef);
@@ -112,7 +112,7 @@ class Coordinates {
   /// Cartesian coordinates. The latitude and longitude should be in degrees and
   /// the altitude in meters. The returned ECEF coordinates will be in meters.
   template <typename T>
-  inline auto lla_to_ecef(const geometry::EquatorialPoint3D<T>& lla)
+  inline auto lla_to_ecef(const geometry::EquatorialPoint3D<T> &lla)
       const noexcept -> geometry::Point3D<T> {
     auto [sinx, cosx] = math::sincosd(boost::geometry::get<0>(lla));
     auto [siny, cosy] = math::sincosd(boost::geometry::get<1>(lla));
@@ -125,8 +125,8 @@ class Coordinates {
   /// Transform points between two coordinate systems defined by the
   /// Coordinates instances this and target.
   template <typename T>
-  inline auto transform(const Coordinates& target,
-                        const geometry::EquatorialPoint3D<T>& lla)
+  inline auto transform(const Coordinates &target,
+                        const geometry::EquatorialPoint3D<T> &lla)
       const noexcept -> geometry::EquatorialPoint3D<T> {
     return target.ecef_to_lla(lla_to_ecef(lla));
   }

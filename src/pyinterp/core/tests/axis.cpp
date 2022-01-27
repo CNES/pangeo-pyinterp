@@ -32,7 +32,7 @@ TYPED_TEST_SUITE(AxisTest, Implementations);
 
 TYPED_TEST(AxisTest, default_constructor) {
   // undefined axis
-  auto& axis = *(this->axis);
+  auto &axis = *(this->axis);
   EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.front()));
   EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.back()));
   EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.min_value()));
@@ -56,7 +56,7 @@ TYPED_TEST(AxisTest, default_constructor) {
 TYPED_TEST(AxisTest, singleton) {
   // axis with one value
   this->reset_axis(0, 1, 1, static_cast<TypeParam>(1e-6), false);
-  auto& axis = *(this->axis);
+  auto &axis = *(this->axis);
   EXPECT_EQ(axis.find_index(0, false), 0);
   EXPECT_EQ(axis.find_index(1, false), -1);
   EXPECT_EQ(axis.find_index(1, true), 0);
@@ -79,7 +79,7 @@ TYPED_TEST(AxisTest, singleton) {
 TYPED_TEST(AxisTest, binary) {
   // axis with two values
   this->reset_axis(0, 1, 2, static_cast<TypeParam>(1e-6), false);
-  auto& axis = *(this->axis);
+  auto &axis = *(this->axis);
   auto indexes = axis.find_indexes(0);
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 0);
@@ -127,7 +127,7 @@ TYPED_TEST(AxisTest, binary) {
 TYPED_TEST(AxisTest, wrap_longitude) {
   // axis representing a circle
   this->reset_axis(0, 359, 360, static_cast<TypeParam>(1e-6), true);
-  auto& a1 = *(this->axis);
+  auto &a1 = *(this->axis);
   int64_t i1;
 
   EXPECT_EQ(a1.front(), 0);
@@ -479,7 +479,7 @@ TEST(axis, irregular) {
 TYPED_TEST(AxisTest, search_indexes) {
   // search for indexes around a value on an axis
   this->reset_axis(0, 359, 360, static_cast<TypeParam>(1e-6), true);
-  auto& axis = *(this->axis);
+  auto &axis = *(this->axis);
 
   if (std::is_floating_point_v<TypeParam>) {
     auto indexes = axis.find_indexes(static_cast<TypeParam>(359.4));
@@ -539,7 +539,7 @@ TYPED_TEST(AxisTest, search_window) {
   // search for indexes that frame a value around a window
   std::vector<int64_t> indexes;
   this->reset_axis(-180, 179, 360, static_cast<TypeParam>(1e-6), true);
-  auto& axis = *(this->axis);
+  auto &axis = *(this->axis);
 
   indexes = axis.find_indexes(0, 1, pyinterp::axis::kUndef);
   ASSERT_EQ(indexes.size(), 2);
@@ -719,7 +719,7 @@ TEST(axis, timestamp) {
 
 TYPED_TEST(AxisTest, find_nearest_index) {
   this->reset_axis(0, 355, 72, static_cast<TypeParam>(1e-6), true);
-  auto& axis = *(this->axis);
+  auto &axis = *(this->axis);
 
   EXPECT_EQ(axis.find_nearest_index(356, false), 71);
   EXPECT_EQ(axis.find_nearest_index(358, false), 0);

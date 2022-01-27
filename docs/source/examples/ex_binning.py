@@ -20,21 +20,22 @@ import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
+import xarray
+
 import pyinterp
 import pyinterp.backends.xarray
 import pyinterp.tests
-import xarray
 
-#%%
+# %%
 # The first step is to load the data into memory and create the interpolator
 # object:
 ds = xarray.open_dataset(pyinterp.tests.aoml_path())
 
-#%%
+# %%
 # Let's start by calculating the standard for vectors u and v.
 norm = (ds.ud**2 + ds.vd**2)**0.5
 
-#%%
+# %%
 # Now, we will describe the grid used to calculate our :py:class:`binned
 # <pyinterp.Binning2D>` statics.
 binning = pyinterp.Binning2D(
@@ -42,13 +43,13 @@ binning = pyinterp.Binning2D(
     pyinterp.Axis(numpy.arange(40, 47, 0.3)))
 binning
 
-#%%
+# %%
 # We push the loaded data into the different defined bins using :ref:`simple
 # binning <bilinear_binning>`.
 binning.clear()
 binning.push(ds.lon, ds.lat, norm, True)
 
-#%%
+# %%
 # .. note ::
 #
 #   If the processed data is larger than the available RAM, it's possible to use
@@ -66,14 +67,14 @@ binning.push(ds.lon, ds.lat, norm, True)
 # <pyinterp.Binning2D.variable>` such as variance, minimum, maximum, etc.
 nearest = binning.variable('mean')
 
-#%%
+# %%
 # Then, we push the loaded data into the different defined bins using
 # :ref:`linear binning <bilinear_binning>`.
 binning.clear()
 binning.push(ds.lon, ds.lat, norm, False)
 linear = binning.variable('mean')
 
-#%%
+# %%
 # We visualize our result
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
 ax1 = fig.add_subplot(211, projection=cartopy.crs.PlateCarree())
@@ -104,7 +105,7 @@ ax2.set_title("Linear binning.")
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()
 
-#%%
+# %%
 # ===========
 # Histogram2D
 # ===========
@@ -124,12 +125,12 @@ hist2d = pyinterp.Histogram2D(
     pyinterp.Axis(numpy.arange(40, 47, 0.3)))
 hist2d
 
-#%%
+# %%
 # We push the loaded data into the different defined bins using the method
 # :py:meth:`push <pyinterp.Histogram2D.push>`.
 hist2d.push(ds.lon, ds.lat, norm)
 
-#%%
+# %%
 # We visualize the mean vs median of the distribution.
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
 ax1 = fig.add_subplot(211, projection=cartopy.crs.PlateCarree())

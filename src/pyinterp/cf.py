@@ -11,6 +11,7 @@ from typing import List
 
 class AxisUnit(list):
     """Units management for axes."""
+
     @property
     def units(self) -> List:
         """Get the list of known units.
@@ -23,6 +24,7 @@ class AxisUnit(list):
 
 class AxisLatitudeUnit(AxisUnit):
     """Units known to the axis defining the latitude."""
+
     def __init__(self):
         super(AxisLatitudeUnit, self).__init__()
         self.append("degrees_north")
@@ -35,6 +37,7 @@ class AxisLatitudeUnit(AxisUnit):
 
 class AxisLongitudeUnit(AxisUnit):
     """Units known to the axis defining the longitude."""
+
     def __init__(self):
         super(AxisLongitudeUnit, self).__init__()
         self.append("degrees_east")
@@ -47,6 +50,7 @@ class AxisLongitudeUnit(AxisUnit):
 
 class AxisTimeUnit(AxisUnit):
     """Units known to the axis defining the time."""
+
     def __init__(self):
         super(AxisTimeUnit, self).__init__()
         self.append("days")

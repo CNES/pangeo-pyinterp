@@ -7,7 +7,9 @@ Interface with the library core
 ===============================
 """
 import re
+
 import numpy as np
+
 from . import core
 
 #: Regular expression to extract the grid type from the class name.
@@ -56,13 +58,19 @@ def _core_function(function: str, instance: object) -> str:
     Returns:
         str: the class suffix
     """
-    if not isinstance(
-            instance,
-        (core.Grid2DFloat64, core.Grid2DFloat32, core.Grid2DInt8,
-         core.Grid3DFloat64, core.Grid3DFloat32, core.Grid4DFloat64,
-         core.Grid4DFloat32, core.TemporalGrid3DFloat64,
-         core.TemporalGrid3DFloat32, core.TemporalGrid4DFloat64,
-         core.TemporalGrid4DFloat32)):
+    if not isinstance(instance, (
+            core.Grid2DFloat64,
+            core.Grid2DFloat32,
+            core.Grid2DInt8,
+            core.Grid3DFloat64,
+            core.Grid3DFloat32,
+            core.Grid4DFloat64,
+            core.Grid4DFloat32,
+            core.TemporalGrid3DFloat64,
+            core.TemporalGrid3DFloat32,
+            core.TemporalGrid4DFloat64,
+            core.TemporalGrid4DFloat32,
+    )):
         raise TypeError("instance is not an object handling a grid.")
     name = instance.__class__.__name__
     match = PATTERN(name)

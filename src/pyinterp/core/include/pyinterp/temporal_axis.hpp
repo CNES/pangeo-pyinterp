@@ -20,7 +20,7 @@ namespace detail {
 
 /// Check the properties of the numpy array and returns the type of dates
 /// encoded in this parameter.
-inline auto dtype(const std::string& name, const pybind11::array& array)
+inline auto dtype(const std::string &name, const pybind11::array &array)
     -> dateutils::DType {
   detail::check_array_ndim(name, 1, array);
   if ((array.flags() & pybind11::array::c_style) == 0) {
@@ -32,7 +32,7 @@ inline auto dtype(const std::string& name, const pybind11::array& array)
 
 /// Get the numpy data type and the raw values stored in a numpy
 /// datetime64/timedelta64 array
-inline auto vector_from_numpy(const pybind11::array& array)
+inline auto vector_from_numpy(const pybind11::array &array)
     -> Eigen::Map<const Vector<int64_t>> {
   auto ptr = array.unchecked<int64_t, 1>();
   return {&ptr[0], array.size()};
@@ -53,7 +53,7 @@ class TemporalAxis : public Axis<int64_t> {
   /// Create a coordinate axis from values.
   ///
   /// @param points axis values
-  explicit TemporalAxis(const pybind11::array& points)
+  explicit TemporalAxis(const pybind11::array &points)
       : TemporalAxis(Axis<int64_t>(detail::vector_from_numpy(points), 0, false),
                      detail::dtype("points", points)) {}
 
@@ -101,7 +101,7 @@ class TemporalAxis : public Axis<int64_t> {
   }
 
   /// @copydoc Axis::coordinates_values(const pybind11::slice&) const
-  auto coordinate_values(const pybind11::slice& slice) const
+  auto coordinate_values(const pybind11::slice &slice) const
       -> pybind11::array {
     size_t start;
     size_t stop;
@@ -128,7 +128,7 @@ class TemporalAxis : public Axis<int64_t> {
   }
 
   /// @copydoc Axis::find_index(const pybind11::array_t<int64_t>, bool) const
-  auto find_index(const pybind11::array& coordinates, bool bounded) const
+  auto find_index(const pybind11::array &coordinates, bool bounded) const
       -> pybind11::array_t<int64_t> {
     const auto values = safe_cast("coordinates", coordinates);
     const auto size = values.size();
@@ -147,7 +147,7 @@ class TemporalAxis : public Axis<int64_t> {
   }
 
   /// @copydoc Axis::find_indexes(const pybind11::array_t<int64_t>) const
-  auto find_indexes(const pybind11::array& coordinates) const
+  auto find_indexes(const pybind11::array &coordinates) const
       -> pybind11::array_t<int64_t> {
     const auto values = safe_cast("coordinates", coordinates);
     const auto size = values.size();
@@ -172,8 +172,8 @@ class TemporalAxis : public Axis<int64_t> {
 
   /// Convert the dates of the vector in the same unit as the time axis
   /// defined in this instance.
-  [[nodiscard]] auto safe_cast(const std::string& name,
-                               const pybind11::array& coordinates) const
+  [[nodiscard]] auto safe_cast(const std::string &name,
+                               const pybind11::array &coordinates) const
       -> pybind11::array {
     auto dtype = detail::dtype(name, coordinates);
 
@@ -205,7 +205,7 @@ class TemporalAxis : public Axis<int64_t> {
   }
 
   /// @copydoc detail::Axis::setstate(const pybind11::tuple&) const
-  static auto setstate(const pybind11::tuple& state) -> TemporalAxis {
+  static auto setstate(const pybind11::tuple &state) -> TemporalAxis {
     if (state.size() != 2) {
       throw std::invalid_argument("invalid state");
     }
@@ -242,13 +242,13 @@ class TemporalAxis : public Axis<int64_t> {
   dateutils::DType dtype_;
 
   /// Construct a new instance from the base class.
-  TemporalAxis(Axis<int64_t> base, const dateutils::DType& dtype)
+  TemporalAxis(Axis<int64_t> base, const dateutils::DType &dtype)
       : Axis<int64_t>(std::move(base)), dtype_(dtype) {}
 
   /// Returns the result of a method wrapped in a pybind11::array.
   template <typename Getter>
-  inline auto as_datetype(const Getter& getter,
-                          const dateutils::DType& dtype) const
+  inline auto as_datetype(const Getter &getter,
+                          const dateutils::DType &dtype) const
       -> pybind11::array {
     auto value = getter();
     return {pybind11::dtype(static_cast<std::string>(dtype)), {}, {}, &value};

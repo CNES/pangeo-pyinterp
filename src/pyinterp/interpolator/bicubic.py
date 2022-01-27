@@ -7,10 +7,10 @@ Bicubic interpolation
 =====================
 """
 from typing import Optional, Union
+
 import numpy as np
-from .. import core
-from .. import grid
-from .. import interface
+
+from .. import core, grid, interface
 
 
 def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],

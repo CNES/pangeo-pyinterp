@@ -30,10 +30,10 @@ class StreamingHistogram {
 
   /// Constructor.
   StreamingHistogram(
-      pybind11::array_t<T, pybind11::array::c_style>& values,
-      std::optional<pybind11::array_t<T, pybind11::array::c_style>>& weights,
-      std::optional<std::list<pybind11::ssize_t>>& axis,
-      std::optional<size_t>& bin_count) {
+      pybind11::array_t<T, pybind11::array::c_style> &values,
+      std::optional<pybind11::array_t<T, pybind11::array::c_style>> &weights,
+      std::optional<std::list<pybind11::ssize_t>> &axis,
+      std::optional<size_t> &bin_count) {
     // Default number of bins.
     bin_count = bin_count.value_or(100);
 
@@ -72,7 +72,7 @@ class StreamingHistogram {
   auto resize(const size_t bin_count) {
     std::for_each(accumulators_.data(),
                   accumulators_.data() + accumulators_.size(),
-                  [bin_count](auto& item) { item.resize(bin_count); });
+                  [bin_count](auto &item) { item.resize(bin_count); });
   }
 
   /// Returns the number of bins.
@@ -103,7 +103,7 @@ class StreamingHistogram {
   }
 
   /// Returns the quantile of samples.
-  [[nodiscard]] auto quantile(const T& q) const -> pybind11::array_t<T> {
+  [[nodiscard]] auto quantile(const T &q) const -> pybind11::array_t<T> {
     return calculate_statistics(&Accumulators::quantile, q);
   }
 
@@ -128,7 +128,7 @@ class StreamingHistogram {
   }
 
   /// Aggregation of statistics
-  auto operator+=(const StreamingHistogram<T>& other) -> StreamingHistogram& {
+  auto operator+=(const StreamingHistogram<T> &other) -> StreamingHistogram & {
     if (shape_ != other.shape_) {
       throw std::invalid_argument("incompatible shapes");
     }
@@ -141,20 +141,20 @@ class StreamingHistogram {
     auto max_size = std::numeric_limits<size_t>::min();
     std::for_each(accumulators_.data(),
                   accumulators_.data() + accumulators_.size(),
-                  [&max_size](const auto& item) {
+                  [&max_size](const auto &item) {
                     max_size = std::max(max_size, item.size());
                   });
     auto shape = std::vector<size_t>(shape_.begin(), shape_.end());
     shape.push_back(max_size);
     auto result = pybind11::array_t<Bin>(shape);
-    auto ptr_result = reinterpret_cast<Bin*>(
+    auto ptr_result = reinterpret_cast<Bin *>(
         pybind11::detail::array_proxy(result.ptr())->data);
     {
       pybind11::gil_scoped_release release;
 
       for (auto ix = 0; ix < accumulators_.size(); ++ix) {
-        auto& item = accumulators_[ix];
-        auto& bins = item.bins();
+        auto &item = accumulators_[ix];
+        auto &bins = item.bins();
 
         auto jx = size_t(0);
         auto shift = ix * max_size;
@@ -175,7 +175,7 @@ class StreamingHistogram {
   }
 
   /// Pickle support: set state of this instance
-  static auto setstate(const pybind11::tuple& state)
+  static auto setstate(const pybind11::tuple &state)
       -> std::unique_ptr<StreamingHistogram<T>> {
     if (state.size() != 2) {
       throw std::invalid_argument("invalid state");
@@ -194,7 +194,7 @@ class StreamingHistogram {
 
   /// Returns the total number of elements in the array.
   [[nodiscard]] static constexpr auto shape_size(
-      const std::vector<pybind11::ssize_t>& shape) -> pybind11::ssize_t {
+      const std::vector<pybind11::ssize_t> &shape) -> pybind11::ssize_t {
     return std::accumulate(shape.begin(), shape.end(),
                            static_cast<pybind11::ssize_t>(1),
                            std::multiplies<>());
@@ -202,24 +202,24 @@ class StreamingHistogram {
 
   /// Allocates the accumulators needed for the result statistics.
   [[nodiscard]] static auto allocate_accumulators(
-      const size_t bin_count, const std::vector<pybind11::ssize_t>& shape)
+      const size_t bin_count, const std::vector<pybind11::ssize_t> &shape)
       -> Vector<Accumulators> {
     auto result = Vector<Accumulators>(StreamingHistogram::shape_size(shape));
     std::for_each(result.data(), result.data() + result.size(),
-                  [bin_count](auto& acc) { acc.resize(bin_count); });
+                  [bin_count](auto &acc) { acc.resize(bin_count); });
     return result;
   }
 
   /// Push values to the accumulators when the user wants to
   /// calculate statistics on the whole array. NaNs are ignored.
-  auto push(pybind11::array_t<T, pybind11::array::c_style>& arr) -> void {
-    auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
-    auto& item = accumulators_[0];
+  auto push(pybind11::array_t<T, pybind11::array::c_style> &arr) -> void {
+    auto *ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
+    auto &item = accumulators_[0];
 
     {
       pybind11::gil_scoped_release release;
 
-      std::for_each(ptr_arr, ptr_arr + arr.size(), [&item](const auto& value) {
+      std::for_each(ptr_arr, ptr_arr + arr.size(), [&item](const auto &value) {
         if (!std::isnan(value)) {
           item(value);
         }
@@ -229,11 +229,11 @@ class StreamingHistogram {
 
   /// Push values and weights to the accumulators when the user wants to
   /// calculate statistics on the whole array. NaNs are ignored.
-  auto push(pybind11::array_t<T, pybind11::array::c_style>& arr,
-            pybind11::array_t<T, pybind11::array::c_style>& weights) -> void {
-    auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
-    auto* ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
-    auto& item = accumulators_[0];
+  auto push(pybind11::array_t<T, pybind11::array::c_style> &arr,
+            pybind11::array_t<T, pybind11::array::c_style> &weights) -> void {
+    auto *ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
+    auto *ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
+    auto &item = accumulators_[0];
 
     {
       pybind11::gil_scoped_release release;
@@ -249,12 +249,12 @@ class StreamingHistogram {
 
   /// Push values and weights to the accumulators when the user wants to
   /// calculate statistics on a reduced array. NaNs are ignored.
-  auto push(pybind11::array_t<T, pybind11::array::c_style>& arr,
-            pybind11::array_t<T, pybind11::array::c_style>& weights,
-            const Vector<pybind11::ssize_t>& strides,
-            const Vector<pybind11::ssize_t>& adjusted_strides) -> void {
-    auto* ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
-    auto* ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
+  auto push(pybind11::array_t<T, pybind11::array::c_style> &arr,
+            pybind11::array_t<T, pybind11::array::c_style> &weights,
+            const Vector<pybind11::ssize_t> &strides,
+            const Vector<pybind11::ssize_t> &adjusted_strides) -> void {
+    auto *ptr_arr = detail::numpy::get_data_pointer<T>(arr.ptr());
+    auto *ptr_weights = detail::numpy::get_data_pointer<T>(weights.ptr());
     auto indexes = Eigen::Matrix<pybind11::ssize_t, -1, 1>(arr.ndim());
     {
       pybind11::gil_scoped_release release;
@@ -272,10 +272,10 @@ class StreamingHistogram {
 
   /// Calculation of a given statistical variable.
   template <typename Func, typename Type = T, typename... Args>
-  [[nodiscard]] auto calculate_statistics(const Func& func, Args... args) const
+  [[nodiscard]] auto calculate_statistics(const Func &func, Args... args) const
       -> pybind11::array_t<Type> {
     auto result = pybind11::array_t<Type>(shape_);
-    auto ptr_result = reinterpret_cast<Type*>(
+    auto ptr_result = reinterpret_cast<Type *>(
         pybind11::detail::array_proxy(result.ptr())->data);
     {
       pybind11::gil_scoped_release release;
@@ -292,34 +292,34 @@ class StreamingHistogram {
     auto ss = std::stringstream();
     ss.exceptions(std::stringstream::failbit);
     auto size = accumulators_.size();
-    ss.write(reinterpret_cast<const char*>(&size), sizeof(size));
+    ss.write(reinterpret_cast<const char *>(&size), sizeof(size));
     for (int ix = 0; ix < size; ++ix) {
       auto marshal_hist = static_cast<std::string>(accumulators_(ix));
       auto size = marshal_hist.size();
-      ss.write(reinterpret_cast<const char*>(&size), sizeof(size));
+      ss.write(reinterpret_cast<const char *>(&size), sizeof(size));
       ss.write(marshal_hist.c_str(), static_cast<std::streamsize>(size));
     }
     return ss.str();
   }
 
-  static auto unmarshal(const std::string_view& data) -> Vector<Accumulators> {
+  static auto unmarshal(const std::string_view &data) -> Vector<Accumulators> {
     auto gil = pybind11::gil_scoped_release();
     auto ss = detail::isviewstream(data);
     ss.exceptions(std::stringstream::failbit);
 
     try {
       auto size = Eigen::Index(0);
-      ss.read(reinterpret_cast<char*>(&size), sizeof(size));
+      ss.read(reinterpret_cast<char *>(&size), sizeof(size));
       auto accumulators = Vector<Accumulators>(size);
       for (int ix = 0; ix < size; ++ix) {
         auto size = size_t(0);
-        ss.read(reinterpret_cast<char*>(&size), sizeof(size));
+        ss.read(reinterpret_cast<char *>(&size), sizeof(size));
         auto marshal_hist = std::string(size, '\0');
         ss.read(marshal_hist.data(), static_cast<std::streamsize>(size));
         accumulators(ix) = std::move(Accumulators(marshal_hist));
       }
       return accumulators;
-    } catch (std::ios_base::failure&) {
+    } catch (std::ios_base::failure &) {
       throw std::invalid_argument("invalid state");
     }
   }

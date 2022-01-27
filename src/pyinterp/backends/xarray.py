@@ -9,12 +9,11 @@ XArray
 Build interpolation objects from xarray.DataArray instances
 """
 from typing import Dict, Optional, Tuple, Union
+
 import numpy as np
 import xarray as xr
-from .. import cf
-from .. import core
-from .. import grid
-from .. import interpolator
+
+from .. import cf, core, grid, interpolator
 
 __all__ = ['Grid2D', 'Grid3D', 'Grid4D', 'RegularGridInterpolator']
 
@@ -22,6 +21,7 @@ __all__ = ['Grid2D', 'Grid3D', 'Grid4D', 'RegularGridInterpolator']
 class AxisIdentifier:
     """Identification of the axes defining longitudes, latitudes in a
     CF file."""
+
     def __init__(self, data_array: xr.DataArray):
         self.data_array = data_array
 
@@ -150,6 +150,7 @@ def _coords(
 class Grid2D(grid.Grid2D):
     """Builds a Grid2D from the Xarray data provided.
     """
+
     def __init__(self,
                  data_array: xr.DataArray,
                  increasing_axes: bool = False,
@@ -231,6 +232,7 @@ class Grid2D(grid.Grid2D):
 class Grid3D(grid.Grid3D):
     """Builds a Grid3D from the Xarray data provided.
     """
+
     def __init__(self,
                  data_array: xr.DataArray,
                  increasing_axes: bool = False,
@@ -326,6 +328,7 @@ class Grid3D(grid.Grid3D):
 class Grid4D(grid.Grid4D):
     """Builds a Grid4D from the Xarray data provided.
     """
+
     def __init__(self,
                  data_array: xr.DataArray,
                  increasing_axes: bool = False,
@@ -437,6 +440,7 @@ class RegularGridInterpolator:
     uneven.  Linear, nearest neighbors, inverse distance weighting and bicubic
     interpolation are supported.
     """
+
     def __init__(self,
                  array: xr.DataArray,
                  increasing_axes: bool = True,

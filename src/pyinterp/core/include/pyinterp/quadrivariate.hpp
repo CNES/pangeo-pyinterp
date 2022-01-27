@@ -22,7 +22,7 @@ using Bivariate4D = detail::math::Bivariate<Point, T>;
 
 /// Get the fonction used to perform the interpolation on the U-Axis
 template <typename T>
-constexpr auto get_u_interpolation_method(const std::string& method)
+constexpr auto get_u_interpolation_method(const std::string &method)
     -> pyinterp::detail::math::z_method_t<T, T> {
   if (method == "linear") {
     return &pyinterp::detail::math::linear<T, T>;
@@ -37,15 +37,15 @@ constexpr auto get_u_interpolation_method(const std::string& method)
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
 inline auto _quadrivariate(
-    const Grid4D<Type, AxisType>& grid, const Coordinate& x,
-    const Coordinate& y, const AxisType& z, const Coordinate& u,
-    const Axis<double>& x_axis, const Axis<double>& y_axis,
-    const Axis<AxisType>& z_axis, const Axis<double>& u_axis,
-    const Bivariate4D<Point, Coordinate>* interpolator,
-    const detail::math::z_method_t<AxisType, Coordinate>&
-        z_interpolation_method,
-    const detail::math::z_method_t<Coordinate, Coordinate>&
-        u_interpolation_method,
+    const Grid4D<Type, AxisType> &grid, const Coordinate &x,
+    const Coordinate &y, const AxisType &z, const Coordinate &u,
+    const Axis<double> &x_axis, const Axis<double> &y_axis,
+    const Axis<AxisType> &z_axis, const Axis<double> &u_axis,
+    const Bivariate4D<Point, Coordinate> *interpolator,
+    const detail::math::z_method_t<AxisType, Coordinate>
+        &z_interpolation_method,
+    const detail::math::z_method_t<Coordinate, Coordinate>
+        &u_interpolation_method,
     const bool bounds_error) -> Coordinate {
   auto x_indexes = x_axis.find_indexes(x);
   auto y_indexes = y_axis.find_indexes(y);
@@ -113,14 +113,14 @@ inline auto _quadrivariate(
 /// @tparam Type Grid data type
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
-auto quadrivariate(const Grid4D<Type, AxisType>& grid,
-                   const pybind11::array_t<Coordinate>& x,
-                   const pybind11::array_t<Coordinate>& y,
-                   const pybind11::array_t<AxisType>& z,
-                   const pybind11::array_t<Coordinate>& u,
-                   const Bivariate4D<Point, Coordinate>* interpolator,
-                   const std::optional<std::string>& z_method,
-                   const std::optional<std::string>& u_method,
+auto quadrivariate(const Grid4D<Type, AxisType> &grid,
+                   const pybind11::array_t<Coordinate> &x,
+                   const pybind11::array_t<Coordinate> &y,
+                   const pybind11::array_t<AxisType> &z,
+                   const pybind11::array_t<Coordinate> &u,
+                   const Bivariate4D<Point, Coordinate> *interpolator,
+                   const std::optional<std::string> &z_method,
+                   const std::optional<std::string> &u_method,
                    const bool bounds_error, const size_t num_threads)
     -> pybind11::array_t<Coordinate> {
   pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z, "u", 1,
@@ -149,10 +149,10 @@ auto quadrivariate(const Grid4D<Type, AxisType>& grid,
     auto except = std::exception_ptr(nullptr);
 
     // Access to the shared pointer outside the loop to avoid data races
-    const auto& x_axis = *grid.x();
-    const auto& y_axis = *grid.y();
-    const auto& z_axis = *grid.z();
-    const auto& u_axis = *grid.u();
+    const auto &x_axis = *grid.x();
+    const auto &y_axis = *grid.y();
+    const auto &z_axis = *grid.z();
+    const auto &u_axis = *grid.u();
 
     detail::dispatch(
         [&](size_t start, size_t end) {
@@ -184,8 +184,8 @@ auto quadrivariate(const Grid4D<Type, AxisType>& grid,
 /// @tparam Type Grid data type
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
-void implement_quadrivariate(pybind11::module& m, const std::string& prefix,
-                             const std::string& suffix) {
+void implement_quadrivariate(pybind11::module &m, const std::string &prefix,
+                             const std::string &suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
   m.def(("quadrivariate_" + function_suffix).c_str(),

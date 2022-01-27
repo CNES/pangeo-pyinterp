@@ -8,7 +8,7 @@
 
 namespace pyinterp::detail::gsl {
 
-void error_handler(const char* reason, const char* /*unused*/, int /*unused*/,
+void error_handler(const char *reason, const char * /*unused*/, int /*unused*/,
                    int code) {
   std::ostringstream error;
   error << reason << " (GSL error #" << code << ")";

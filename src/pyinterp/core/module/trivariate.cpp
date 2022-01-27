@@ -9,7 +9,7 @@
 namespace py = pybind11;
 namespace geometry = pyinterp::detail::geometry;
 
-void init_trivariate(py::module& m) {
+void init_trivariate(py::module &m) {
   pyinterp::implement_trivariate<geometry::EquatorialPoint3D, double, double,
                                  double>(m, "", "Float64");
   pyinterp::implement_trivariate<geometry::EquatorialPoint3D, double, double,

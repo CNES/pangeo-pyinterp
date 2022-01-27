@@ -14,23 +14,25 @@ World Geodetic System (WGS)
 This class allows describing the geodetic coordinate system used in the
 calculation. By default, the class instantiates the WGS84 system.
 """
-#%%
+# %%
 import timeit
+
 import cartopy.crs
 import cartopy.feature
 import matplotlib.pyplot
 import numpy
+
 import pyinterp.geodetic
 
 wgs84 = pyinterp.geodetic.System()
 wgs84
 
-#%%
+# %%
 # You can instantiate other systems.
 grs80 = pyinterp.geodetic.System((6378137, 1 / 298.257222101))
 grs80
 
-#%%
+# %%
 # World Geodetic Coordinates System
 # =================================
 #

@@ -2,12 +2,15 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-import pytest
 import pickle
+
 import numpy as np
+import pytest
 import xarray as xr
-import pyinterp.backends.xarray
+
 import pyinterp
+import pyinterp.backends.xarray
+
 from . import grid2d_path, make_or_compare_reference
 
 

@@ -22,13 +22,13 @@ using Bivariate3D = detail::math::Bivariate<Point, T>;
 
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
-inline auto _trivariate(const Grid3D<Type, AxisType>& grid, const Coordinate& x,
-                        const Coordinate& y, const AxisType& z,
-                        const Axis<double>& x_axis, const Axis<double>& y_axis,
-                        const Axis<AxisType>& z_axis,
-                        const Bivariate3D<Point, Coordinate>* interpolator,
-                        const detail::math::z_method_t<AxisType, Coordinate>&
-                            z_interpolation_method,
+inline auto _trivariate(const Grid3D<Type, AxisType> &grid, const Coordinate &x,
+                        const Coordinate &y, const AxisType &z,
+                        const Axis<double> &x_axis, const Axis<double> &y_axis,
+                        const Axis<AxisType> &z_axis,
+                        const Bivariate3D<Point, Coordinate> *interpolator,
+                        const detail::math::z_method_t<AxisType, Coordinate>
+                            &z_interpolation_method,
                         const bool bounds_error) -> Coordinate {
   auto x_indexes = x_axis.find_indexes(x);
   auto y_indexes = y_axis.find_indexes(y);
@@ -77,12 +77,12 @@ inline auto _trivariate(const Grid3D<Type, AxisType>& grid, const Coordinate& x,
 /// @tparam Type Grid data type
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
-auto trivariate(const Grid3D<Type, AxisType>& grid,
-                const pybind11::array_t<Coordinate>& x,
-                const pybind11::array_t<Coordinate>& y,
-                const pybind11::array_t<AxisType>& z,
-                const Bivariate3D<Point, Coordinate>* interpolator,
-                const std::optional<std::string>& z_method,
+auto trivariate(const Grid3D<Type, AxisType> &grid,
+                const pybind11::array_t<Coordinate> &x,
+                const pybind11::array_t<Coordinate> &y,
+                const pybind11::array_t<AxisType> &z,
+                const Bivariate3D<Point, Coordinate> *interpolator,
+                const std::optional<std::string> &z_method,
                 const bool bounds_error, const size_t num_threads)
     -> pybind11::array_t<Coordinate> {
   pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
@@ -106,9 +106,9 @@ auto trivariate(const Grid3D<Type, AxisType>& grid,
     auto except = std::exception_ptr(nullptr);
 
     // Access to the shared pointer outside the loop to avoid data races
-    const auto& x_axis = *grid.x();
-    const auto& y_axis = *grid.y();
-    const auto& z_axis = *grid.z();
+    const auto &x_axis = *grid.x();
+    const auto &y_axis = *grid.y();
+    const auto &z_axis = *grid.z();
 
     detail::dispatch(
         [&](size_t start, size_t end) {
@@ -139,8 +139,8 @@ auto trivariate(const Grid3D<Type, AxisType>& grid,
 /// @tparam Type Grid data type
 template <template <class> class Point, typename Coordinate, typename AxisType,
           typename Type>
-void implement_trivariate(pybind11::module& m, const std::string& prefix,
-                          const std::string& suffix) {
+void implement_trivariate(pybind11::module &m, const std::string &prefix,
+                          const std::string &suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
   m.def(("trivariate_" + function_suffix).c_str(),
