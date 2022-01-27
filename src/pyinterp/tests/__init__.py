@@ -1,6 +1,7 @@
-from typing import Optional
-import numpy
 import pathlib
+from typing import Optional
+
+import numpy
 import pytest
 
 ROOT = pathlib.Path(__file__).parent.joinpath("dataset").resolve()
@@ -47,6 +48,26 @@ def grid3d_path():
 def grid4d_path():
     """Return path to the Grid 4D"""
     return ROOT.joinpath("pres_temp_4D.nc")
+
+
+def geohash_bbox_path():
+    """Return path to the GeoHash bounding box"""
+    return ROOT.joinpath("geohash_bbox.json")
+
+
+def geohash_neighbors_path():
+    """Return path to the GeoHash neighbors"""
+    return ROOT.joinpath("geohash_neighbors.json")
+
+
+def geohash_path():
+    """Return path to the GeoHash dataset"""
+    return ROOT.joinpath("geohash.json")
+
+
+def polygon_path():
+    """Return path to the polygon dataset"""
+    return ROOT.joinpath("polygon.json")
 
 
 def run(pattern: Optional[str] = None) -> None:
