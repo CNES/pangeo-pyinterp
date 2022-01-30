@@ -5,9 +5,6 @@
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
 import datetime
-# Setuptools must be imported first
-import distutils.command.build
-import distutils.command.sdist
 import os
 import pathlib
 import platform
@@ -21,7 +18,12 @@ from typing import ClassVar, Optional
 import setuptools
 import setuptools.command.build_ext
 import setuptools.command.install
+import setuptools.command.sdist
 import setuptools.command.test
+
+# Must be imported after setuptools for now (distutils is deprecated, but
+# handles the build command for the moment).
+import distutils.command.build  # isort: skip
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -584,10 +586,10 @@ class Test(setuptools.Command):
         self.spawn(["genhtml", coverage_info, "--output-directory", htmllcov])
 
 
-class SDist(distutils.command.sdist.sdist):
+class SDist(setuptools.command.sdist.sdist):
     """Custom sdist command that copies the pytest configuration file
     into the package"""
-    user_options = distutils.command.sdist.sdist.user_options
+    user_options = setuptools.command.sdist.sdist.user_options
 
     def run(self):
         """A command's raison d'etre: carry out the action"""
