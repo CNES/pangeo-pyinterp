@@ -56,7 +56,7 @@ auto Array::get_info(const pybind11::array &hash, const pybind11::ssize_t ndim)
 auto allocate_array(const size_t size, const uint32_t precision) -> Array {
   try {
     try {
-      return Array(size, precision);
+      return {size, precision};
     } catch (const std::length_error &) {
       throw std::bad_alloc();
     }
