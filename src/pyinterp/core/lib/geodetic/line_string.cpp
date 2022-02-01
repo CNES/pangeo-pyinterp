@@ -40,4 +40,31 @@ auto LineString::intersection(const LineString& rhs) const
   return output[0];
 }
 
+auto LineString::getstate() const -> pybind11::tuple {
+  auto lon = pybind11::array_t<double>(pybind11::array::ShapeContainer{size()});
+  auto lat = pybind11::array_t<double>(pybind11::array::ShapeContainer{size()});
+  auto _lon = lon.mutable_unchecked<1>();
+  auto _lat = lat.mutable_unchecked<1>();
+  auto ix = size_t(0);
+  std::for_each(line_string_.begin(), line_string_.end(),
+                [&](const auto& point) {
+                  _lon[ix] = point.lon();
+                  _lat[ix] = point.lat();
+                  ++ix;
+                });
+  return pybind11::make_tuple(lon, lat);
+}
+
+auto LineString::setstate(const pybind11::tuple& state) -> LineString {
+  if (state.size() != 2) {
+    throw std::runtime_error("invalid state");
+  }
+  auto lon = state[0].cast<pybind11::array_t<double>>();
+  auto lat = state[1].cast<pybind11::array_t<double>>();
+
+  auto x = Eigen::Map<const Vector<double>>(lon.data(), lon.size());
+  auto y = Eigen::Map<const Vector<double>>(lat.data(), lat.size());
+  return {x, y};
+}
+
 }  // namespace pyinterp::geodetic
