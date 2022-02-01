@@ -307,7 +307,7 @@ def test_crossover():
     coordinates = crossover.search()
     assert coordinates is not None
     assert pytest.approx(coordinates.lon) == 4
-    assert pytest.approx(coordinates.lat) == 4.001842102846154
+    assert pytest.approx(coordinates.lat, rel=1e-3) == 4.0018282189756835
     assert crossover.nearest(coordinates) == (4, 3)
 
     other = pickle.loads(pickle.dumps(crossover))
@@ -363,5 +363,5 @@ def test_case_crossover_shift():
     coordinates = crossover.search()
     assert coordinates is not None
     assert pytest.approx(coordinates.lon) == 15
-    assert pytest.approx(coordinates.lat) == 1.6562359225333825
+    assert pytest.approx(coordinates.lat, rel=1e-3) == 1.6551107341906504
     assert crossover.nearest(coordinates, predicate=None) == (2, 1)
