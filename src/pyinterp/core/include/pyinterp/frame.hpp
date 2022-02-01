@@ -13,8 +13,8 @@
 namespace pyinterp {
 
 // Error thrown if it' s not possible to frame the value on the specified axis.
-auto index_error(const std::string &axis, const std::string &value, size_t n)
-    -> void {
+inline auto index_error(const std::string &axis, const std::string &value,
+                        size_t n) -> void {
   throw std::invalid_argument("Unable to frame the value " + value + " with " +
                               std::to_string(n) + " items of the " + axis +
                               " axis");
