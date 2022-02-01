@@ -291,3 +291,77 @@ def test_coordinate_distance():
     for ix in range(d0.shape[1]):
         delta = np.abs(d0[:, ix] - d0[0, ix])
         assert np.all(delta[delta != 0] > 1e3)
+
+
+def test_crossover():
+    """Calculate the location of a crossover"""
+    lon1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
+    lat1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
+    lon2 = np.array(lon1[:])
+    lat2 = np.array(lat1[::-1])
+
+    crossover = core.geodetic.Crossover(core.geodetic.Linestring(lon1, lat1),
+                                        core.geodetic.Linestring(lon2, lat2))
+    assert isinstance(crossover, core.geodetic.Crossover)
+    assert crossover.exists()
+    coordinates = crossover.search()
+    assert coordinates is not None
+    assert pytest.approx(coordinates.lon) == 4
+    assert pytest.approx(coordinates.lat) == 4.001842102846154
+    assert crossover.nearest(coordinates) == (4, 3)
+
+    other = pickle.loads(pickle.dumps(crossover))
+    assert list(crossover.half_orbit_1) == list(other.half_orbit_1)
+    assert list(crossover.half_orbit_2) == list(other.half_orbit_2)
+
+
+def test_merged_point():
+    """Try to compute a crossover from overlay tracks"""
+    lon1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
+    lat1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
+
+    crossover = core.geodetic.Crossover(core.geodetic.Linestring(lon1, lat1),
+                                        core.geodetic.Linestring(lon1, lat1))
+    assert isinstance(crossover, core.geodetic.Crossover)
+    assert crossover.exists()
+
+    with pytest.raises(RuntimeError):
+        crossover.search()
+
+    crossover = core.geodetic.Crossover(
+        core.geodetic.Linestring(lon1, lat1),
+        core.geodetic.Linestring(lon1 + 10, lat1 + 10))
+    assert not crossover.exists()
+    assert crossover.search() is None
+
+
+def test_missing_crossover():
+    """Try to calculate a crossing point when the entry passes do not cross.
+    """
+    x1 = np.array([0, 1, 2, 3, 4, 5, 6], dtype=np.float64)
+    y1 = np.array([0, 1, 2, 3, 4, 5, 6], dtype=np.float64)
+    x2 = np.flip(x1, axis=0)
+    y2 = np.flip(x2, axis=0)
+
+    crossover = core.geodetic.Crossover(core.geodetic.Linestring(x1, y1),
+                                        core.geodetic.Linestring(x2, y2))
+    assert isinstance(crossover, core.geodetic.Crossover)
+    assert crossover.exists()
+
+
+def test_case_crossover_shift():
+    """Calculate a crossover between two tracks."""
+    lon1 = np.array([300, 350, 40, 90], dtype=np.float64)
+    lat1 = np.array([0, 1, 2, 3], dtype=np.float64)
+    lon2 = np.array(lon1[:])
+    lat2 = np.array(lat1[::-1])
+
+    crossover = core.geodetic.Crossover(core.geodetic.Linestring(lon1, lat1),
+                                        core.geodetic.Linestring(lon2, lat2))
+    assert isinstance(crossover, core.geodetic.Crossover)
+    assert crossover.exists()
+    coordinates = crossover.search()
+    assert coordinates is not None
+    assert pytest.approx(coordinates.lon) == 15
+    assert pytest.approx(coordinates.lat) == 1.6562359225333825
+    assert crossover.nearest(coordinates, predicate=None) == (2, 1)

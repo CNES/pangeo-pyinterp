@@ -5,7 +5,20 @@ Geographic coordinate system
 from typing import List, Optional, Tuple
 
 from ..core import geodetic
-from ..core.geodetic import coordinate_distances, normalize_longitudes
+from ..core.geodetic import (Crossover, Linestring, coordinate_distances,
+                             normalize_longitudes)
+
+__all__ = [
+    "Box",
+    "coordinate_distances",
+    "Coordinates",
+    "Crossover",
+    "Linestring",
+    "normalize_longitudes",
+    "Point",
+    "Polygon",
+    "System",
+]
 
 
 class System(geodetic.System):
@@ -109,14 +122,3 @@ class Polygon(geodetic.Polygon):
             :py:class:`pyinterp.geodetic.Point`.
         """
         super().__init__(outer, inners)  # type: ignore
-
-
-__all__ = [
-    "Box",
-    "coordinate_distances",
-    "Coordinates",
-    "normalize_longitudes",
-    "Point",
-    "Polygon",
-    "System",
-]

@@ -69,6 +69,8 @@ Geodetic systems
 
   geodetic.Box
   geodetic.Coordinates
+  geodetic.Crossover
+  geodetic.Linestring
   geodetic.Point
   geodetic.Polygon
   geodetic.System

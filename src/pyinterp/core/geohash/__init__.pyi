@@ -1,9 +1,5 @@
 from typing import Optional, Tuple, overload
-
-#
 import numpy
-
-#
 from . import int64
 from .. import geodetic
 

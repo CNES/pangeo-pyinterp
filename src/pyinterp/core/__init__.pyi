@@ -53,11 +53,11 @@ class Axis:
         ...
 
     @overload
-    def __getitem__(self, arg0: int) -> float:
+    def __getitem__(self, index: int) -> float:
         ...
 
     @overload
-    def __getitem__(self, arg0: slice) -> numpy.ndarray[numpy.float64]:
+    def __getitem__(self, indices: slice) -> numpy.ndarray[numpy.float64]:
         ...
 
     def __getstate__(self) -> tuple:
@@ -120,11 +120,13 @@ class AxisBoundary:
 
 
 class AxisInt64:
+
     def __init__(self, *args, **kwargs) -> None:
         ...
 
 
 class Bilinear2D(BivariateInterpolator2D):
+
     def __init__(self) -> None:
         ...
 
@@ -136,6 +138,7 @@ class Bilinear2D(BivariateInterpolator2D):
 
 
 class Bilinear3D(BivariateInterpolator3D):
+
     def __init__(self) -> None:
         ...
 
@@ -147,6 +150,7 @@ class Bilinear3D(BivariateInterpolator3D):
 
 
 class Binning2DFloat32:
+
     def __init__(self,
                  x: Axis,
                  y: Axis,
@@ -213,6 +217,7 @@ class Binning2DFloat32:
 
 
 class Binning2DFloat64:
+
     def __init__(self,
                  x: Axis,
                  y: Axis,
@@ -279,16 +284,19 @@ class Binning2DFloat64:
 
 
 class BivariateInterpolator2D:
+
     def __init__(self, *args, **kwargs) -> None:
         ...
 
 
 class BivariateInterpolator3D:
+
     def __init__(self, *args, **kwargs) -> None:
         ...
 
 
 class DescriptiveStatisticsFloat32:
+
     def __init__(self,
                  values: numpy.ndarray[numpy.float32],
                  weights: Optional[numpy.ndarray[numpy.float32]] = ...,
@@ -340,6 +348,7 @@ class DescriptiveStatisticsFloat32:
 
 
 class DescriptiveStatisticsFloat64:
+
     def __init__(self,
                  values: numpy.ndarray[numpy.float64],
                  weights: Optional[numpy.ndarray[numpy.float64]] = ...,
@@ -391,6 +400,7 @@ class DescriptiveStatisticsFloat64:
 
 
 class GeoHash:
+
     def __init__(self,
                  longitude: float,
                  latitude: float,
@@ -433,6 +443,7 @@ class GeoHash:
 
 
 class Grid2DFloat32:
+
     def __init__(self, x: Axis, y: Axis,
                  array: numpy.ndarray[numpy.float32]) -> None:
         ...
@@ -457,6 +468,7 @@ class Grid2DFloat32:
 
 
 class Grid2DFloat64:
+
     def __init__(self, x: Axis, y: Axis,
                  array: numpy.ndarray[numpy.float64]) -> None:
         ...
@@ -481,6 +493,7 @@ class Grid2DFloat64:
 
 
 class Grid2DInt8:
+
     def __init__(self, x: Axis, y: Axis,
                  array: numpy.ndarray[numpy.int8]) -> None:
         ...
@@ -505,6 +518,7 @@ class Grid2DInt8:
 
 
 class Grid3DFloat32:
+
     def __init__(self, x: Axis, y: Axis, z: Axis,
                  array: numpy.ndarray[numpy.float32]) -> None:
         ...
@@ -533,6 +547,7 @@ class Grid3DFloat32:
 
 
 class Grid3DFloat64:
+
     def __init__(self, x: Axis, y: Axis, z: Axis,
                  array: numpy.ndarray[numpy.float64]) -> None:
         ...
@@ -561,6 +576,7 @@ class Grid3DFloat64:
 
 
 class Grid3DInt8:
+
     def __init__(self, x: Axis, y: Axis, z: Axis,
                  array: numpy.ndarray[numpy.int8]) -> None:
         ...
@@ -589,6 +605,7 @@ class Grid3DInt8:
 
 
 class Grid4DFloat32:
+
     def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
                  array: numpy.ndarray[numpy.float32]) -> None:
         ...
@@ -621,6 +638,7 @@ class Grid4DFloat32:
 
 
 class Grid4DFloat64:
+
     def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
                  array: numpy.ndarray[numpy.float64]) -> None:
         ...
@@ -653,6 +671,7 @@ class Grid4DFloat64:
 
 
 class Grid4DInt8:
+
     def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
                  array: numpy.ndarray[numpy.int8]) -> None:
         ...
@@ -685,6 +704,7 @@ class Grid4DInt8:
 
 
 class Histogram2DFloat32:
+
     def __init__(self, x: Axis, y: Axis, bins: Optional[int] = ...) -> None:
         ...
 
@@ -745,6 +765,7 @@ class Histogram2DFloat32:
 
 
 class Histogram2DFloat64:
+
     def __init__(self, x: Axis, y: Axis, bins: Optional[int] = ...) -> None:
         ...
 
@@ -805,6 +826,7 @@ class Histogram2DFloat64:
 
 
 class InverseDistanceWeighting2D(BivariateInterpolator2D):
+
     def __init__(self, p: int = ...) -> None:
         ...
 
@@ -816,6 +838,7 @@ class InverseDistanceWeighting2D(BivariateInterpolator2D):
 
 
 class InverseDistanceWeighting3D(BivariateInterpolator3D):
+
     def __init__(self, p: int = ...) -> None:
         ...
 
@@ -827,6 +850,7 @@ class InverseDistanceWeighting3D(BivariateInterpolator3D):
 
 
 class Nearest2D(BivariateInterpolator2D):
+
     def __init__(self) -> None:
         ...
 
@@ -838,6 +862,7 @@ class Nearest2D(BivariateInterpolator2D):
 
 
 class Nearest3D(BivariateInterpolator3D):
+
     def __init__(self) -> None:
         ...
 
@@ -849,6 +874,7 @@ class Nearest3D(BivariateInterpolator3D):
 
 
 class RTree3DFloat32:
+
     def __init__(self, system: Optional[geodetic.System]) -> None:
         ...
 
@@ -917,6 +943,7 @@ class RTree3DFloat32:
 
 
 class RTree3DFloat64:
+
     def __init__(self, system: Optional[geodetic.System]) -> None:
         ...
 
@@ -1029,6 +1056,7 @@ class RadialBasisFunction:
 
 
 class StreamingHistogramFloat32:
+
     def __init__(self,
                  values: numpy.ndarray[numpy.float32],
                  weights: Optional[numpy.ndarray[numpy.float32]] = ...,
@@ -1089,6 +1117,7 @@ class StreamingHistogramFloat32:
 
 
 class StreamingHistogramFloat64:
+
     def __init__(self,
                  values: numpy.ndarray[numpy.float64],
                  weights: Optional[numpy.ndarray[numpy.float64]] = ...,
@@ -1218,6 +1247,7 @@ class TemporalAxis(AxisInt64):
 
 
 class TemporalBilinear3D(TemporalBivariateInterpolator3D):
+
     def __init__(self) -> None:
         ...
 
@@ -1229,11 +1259,13 @@ class TemporalBilinear3D(TemporalBivariateInterpolator3D):
 
 
 class TemporalBivariateInterpolator3D:
+
     def __init__(self, *args, **kwargs) -> None:
         ...
 
 
 class TemporalGrid3DFloat32:
+
     def __init__(self, x: Axis, y: Axis, z: AxisInt64,
                  array: numpy.ndarray[numpy.float32]) -> None:
         ...
@@ -1262,6 +1294,7 @@ class TemporalGrid3DFloat32:
 
 
 class TemporalGrid3DFloat64:
+
     def __init__(self, x: Axis, y: Axis, z: AxisInt64,
                  array: numpy.ndarray[numpy.float64]) -> None:
         ...
@@ -1290,6 +1323,7 @@ class TemporalGrid3DFloat64:
 
 
 class TemporalGrid3DInt8:
+
     def __init__(self, x: Axis, y: Axis, z: AxisInt64,
                  array: numpy.ndarray[numpy.int8]) -> None:
         ...
@@ -1318,6 +1352,7 @@ class TemporalGrid3DInt8:
 
 
 class TemporalGrid4DFloat32:
+
     def __init__(self, x: Axis, y: Axis, z: AxisInt64, u: Axis,
                  array: numpy.ndarray[numpy.float32]) -> None:
         ...
@@ -1350,6 +1385,7 @@ class TemporalGrid4DFloat32:
 
 
 class TemporalGrid4DFloat64:
+
     def __init__(self, x: Axis, y: Axis, z: AxisInt64, u: Axis,
                  array: numpy.ndarray[numpy.float64]) -> None:
         ...
@@ -1382,6 +1418,7 @@ class TemporalGrid4DFloat64:
 
 
 class TemporalGrid4DInt8:
+
     def __init__(self, x: Axis, y: Axis, z: AxisInt64, u: Axis,
                  array: numpy.ndarray[numpy.int8]) -> None:
         ...
@@ -1414,6 +1451,7 @@ class TemporalGrid4DInt8:
 
 
 class TemporalInverseDistanceWeighting3D(TemporalBivariateInterpolator3D):
+
     def __init__(self, p: int = ...) -> None:
         ...
 
@@ -1425,6 +1463,7 @@ class TemporalInverseDistanceWeighting3D(TemporalBivariateInterpolator3D):
 
 
 class TemporalNearest3D(TemporalBivariateInterpolator3D):
+
     def __init__(self) -> None:
         ...
 

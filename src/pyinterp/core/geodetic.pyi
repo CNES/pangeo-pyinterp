@@ -1,4 +1,4 @@
-from typing import Any, ClassVar, Optional, overload
+from typing import Any, ClassVar, Iterator, Optional, Tuple, overload
 import numpy
 from .. import geodetic
 
@@ -66,6 +66,7 @@ class Box:
 
 
 class Coordinates:
+
     def __init__(self, system: Optional[System]) -> None:
         ...
 
@@ -95,6 +96,71 @@ class Coordinates:
         ...
 
     def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Crossover:
+
+    def __init__(self, half_orbit_1: Linestring,
+                 half_orbit_2: Linestring) -> None:
+        ...
+
+    def exists(self) -> bool:
+        ...
+
+    def nearest(self,
+                point: Point,
+                predicate: Optional[float] = ...,
+                strategy: str = ...,
+                wgs: Optional[System] = ...) -> Optional[Tuple[int, int]]:
+        ...
+
+    def search(self) -> Optional[Point]:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, state: tuple) -> None:
+        ...
+
+    @property
+    def half_orbit_1(self) -> Linestring:
+        ...
+
+    @property
+    def half_orbit_2(self) -> Linestring:
+        ...
+
+
+class Linestring:
+
+    def __init__(self, lon: numpy.ndarray[numpy.float64],
+                 lat: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def intersection(self, rhs: Linestring) -> Optional[Point]:
+        ...
+
+    def intersects(self, rhs: Linestring) -> bool:
+        ...
+
+    def nearest(self, point: Point) -> int:
+        ...
+
+    def __getitem__(self, index: int) -> Point:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __iter__(self) -> Iterator:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __setstate__(self, tuple: tuple) -> None:
         ...
 
 
@@ -262,6 +328,7 @@ class System(_System):
 
 
 class _System:
+
     def __init__(self, *args, **kwargs) -> None:
         ...
 

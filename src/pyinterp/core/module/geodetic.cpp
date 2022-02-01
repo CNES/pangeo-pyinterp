@@ -10,6 +10,8 @@
 #include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/box.hpp"
 #include "pyinterp/geodetic/coordinates.hpp"
+#include "pyinterp/geodetic/crossover.hpp"
+#include "pyinterp/geodetic/line_string.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geodetic/system.hpp"
@@ -452,6 +454,129 @@ Returns:
           }));
 }
 
+static void init_geodetic_linestring(py::module &m) {
+  py::class_<geodetic::LineString>(m, "Linestring",
+                                   R"__doc__(
+A linestring (named so by OGC) is a collection of points.
+)__doc__")
+      .def(py::init<const Eigen::Ref<const pyinterp::Vector<double>> &,
+                    const Eigen::Ref<const pyinterp::Vector<double>> &>(),
+           py::arg("lon"), py::arg("lat"),
+           py::call_guard<py::gil_scoped_release>())
+      .def("__len__", &geodetic::LineString::size)
+      .def(
+          "__getitem__",
+          [](const geodetic::LineString &self,
+             size_t index) -> geodetic::Point { return self.at(index); },
+          py::arg("index"))
+      .def("__iter__",
+           [](const geodetic::LineString &self) {
+             return py::make_iterator(self.begin(), self.end(),
+                                      py::keep_alive<0, 1>());
+           })
+      .def("intersects", &geodetic::LineString::intersects, py::arg("rhs"),
+           R"__doc__(
+Test if this linestring intersects with another linestring.
+
+Args:
+    rhs: The linestring to test.
+Returns:
+    True if the linestring intersects this instance.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
+      .def("intersection", &geodetic::LineString::intersection, py::arg("rhs"),
+           R"__doc__(
+Get the coordinate of the intersection between this linestring and another one.
+
+Args:
+    rhs: The linestring to test.
+
+Returns:
+    The coordinates of the intersection or None if there is no intersection.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
+      .def("nearest", &geodetic::LineString::nearest, py::arg("point"),
+           R"__doc__(
+Find the nearest index of a point in this linestring to the provided one.
+
+Args:
+    point: The point to consider.
+
+Returns:
+    The index of the nearest point or None if no intersection is found.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
+      .def(py::pickle(
+          [](const geodetic::LineString &self) { return self.getstate(); },
+          [](const py::tuple &state) {
+            return geodetic::LineString::setstate(state);
+          }));
+}
+
+void init_geodetic_crossover(py::module &m) {
+  py::class_<geodetic::Crossover>(m, "Crossover",
+                                  R"__doc__(
+Calculate the crossover between two half-orbits.
+
+Args:
+    half_orbit_1: The first half-orbit.
+    half_orbit_2: The second half-orbit.
+)__doc__")
+      .def(py::init<geodetic::LineString, geodetic::LineString>(),
+           py::arg("half_orbit_1"), py::arg("half_orbit_2"),
+           py::call_guard<py::gil_scoped_release>())
+      .def_property_readonly("half_orbit_1",
+                             &geodetic::Crossover::get_half_orbit_1,
+                             "Returns the first half-orbit.")
+      .def_property_readonly("half_orbit_2",
+                             &geodetic::Crossover::get_half_orbit_2,
+                             "Returns the second half-orbit.")
+      .def("search", &geodetic::Crossover::search, R"__doc__(
+Search for the crossover between the two half-orbits.
+
+Returns:
+    The crossover or None if there is no crossover.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
+      .def("exists", &geodetic::Crossover::exists, R"__doc__(
+Test if there is a crossover between the two half-orbits.
+
+Returns:
+    True if there is a crossover.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
+      .def(
+          "nearest",
+          [](const geodetic::Crossover &self, const geodetic::Point &point,
+             const std::optional<double> &predicate,
+             const std::string &strategy,
+             const std::optional<geodetic::System> &wgs)
+              -> std::optional<std::tuple<size_t, size_t>> {
+            return self.nearest(point, predicate.value_or(40'075'000.0),
+                                parse_distance_strategy(strategy), wgs);
+          },
+          py::arg("point"), py::arg("predicate") = py::none(),
+          py::arg("strategy") = "thomas", py::arg("wgs") = py::none(),
+          R"__doc__(
+Find the nearest indices on the two half-orbits from a given point.
+
+Args:
+    point: The point to consider.
+    predicate: The distance predicate, in meters.
+    strategy: The distance calculation strategy.
+    wgs: The WGS system to use.
+
+Returns:
+    The indices of the nearest points or None if no intersection is found.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(py::pickle(
+          [](const geodetic::Crossover &self) { return self.getstate(); },
+          [](const py::tuple &state) {
+            return geodetic::Crossover::setstate(state);
+          }));
+}
+
 void init_geodetic(py::module &m) {
   auto _system = py::class_<pyinterp::detail::geodetic::System>(
       m, "_System", "C++ implementation of the WGS system.");
@@ -648,6 +773,8 @@ Returns:
   init_geodetic_point(m);
   init_geodetic_box(m);
   init_geodetic_polygon(m);
+  init_geodetic_linestring(m);
+  init_geodetic_crossover(m);
 
   m.def(
       "normalize_longitudes",

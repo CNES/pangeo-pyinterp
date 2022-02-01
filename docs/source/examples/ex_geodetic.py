@@ -428,3 +428,68 @@ ax.scatter(mx.ravel(),
            vmin=0,
            vmax=1)
 fig.show()
+
+# %%
+# Crossover
+# =========
+#
+# The class handle the calculation of the crossover between two lines.
+# We initialize two lines corresponding to two half-orbits of a satellite.
+lon1 = numpy.array([234.068292, 234.092812, 234.117362, 234.141943],
+                   dtype=numpy.float64)
+lat1 = numpy.array([-67.11689, -67.132143, -67.147393, -67.162639],
+                   dtype=numpy.float64)
+lon2 = numpy.array([234.061488, 234.086091, 234.110664, 234.135205],
+                   dtype=numpy.float64)
+lat2 = numpy.array([-67.183321, -67.168076, -67.152826, -67.137573],
+                   dtype=numpy.float64)
+
+# %%
+# We create the two lines and the crossover.
+crossover = pyinterp.geodetic.Crossover(
+    pyinterp.geodetic.Linestring(lon1, lat1),
+    pyinterp.geodetic.Linestring(lon2, lat2))
+
+# %%
+# We can check if there is a crossing between these two lines.
+print(f"There is a crossover between these two lines: {crossover.exists()}")
+
+# %%
+# We can get the crossing point.
+coordinates = crossover.search()
+assert coordinates is not None
+print(f"The crossing point is: {coordinates}")
+
+# %%
+# It is possible to obtain the points on the two lines nearest to the crossing
+# point.
+nearest_indices = crossover.nearest(coordinates)
+assert nearest_indices is not None
+print("The nearest points on the line #1: " +
+      str(crossover.half_orbit_1[nearest_indices[0]]))
+print("The nearest points on the line #2: " +
+      str(crossover.half_orbit_2[nearest_indices[1]]))
+
+# %%
+# Finally, the information found is displayed to verify the data found.
+fig = matplotlib.pyplot.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection=cartopy.crs.PlateCarree())
+ax.add_feature(cartopy.feature.LAND)
+ax.plot(lon1, lat1, '-o', color='red', transform=cartopy.crs.PlateCarree())
+ax.plot(lon2, lat2, '-o', color='blue', transform=cartopy.crs.PlateCarree())
+ax.plot(coordinates.lon,
+        coordinates.lat,
+        '-o',
+        color='green',
+        transform=cartopy.crs.PlateCarree())
+ax.plot(lon1[nearest_indices[0]],
+        lat1[nearest_indices[0]],
+        'o',
+        color='orange',
+        transform=cartopy.crs.PlateCarree())
+ax.plot(lon2[nearest_indices[1]],
+        lat2[nearest_indices[1]],
+        'o',
+        color='orange',
+        transform=cartopy.crs.PlateCarree())
+ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
