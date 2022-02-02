@@ -10,5 +10,5 @@ dependencies:
   - netCDF4
   - numcodecs
   - pandas
-  - pyinterp>=0.11.0
+  - pyinterp>=0.12.0
   - pytest

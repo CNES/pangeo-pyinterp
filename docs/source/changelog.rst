@@ -1,6 +1,14 @@
 Changelog
 #########
 
+0.12.0 (2 February 2022)
+------------------------
+* Extract test data into auxiliary files.
+* Install pre-commit hooks
+* Upload automatically the package on pypi
+* Calculate crossovers between line string.
+
+
 0.11.0 (3 January 2022)
 -----------------------
 * Change of the text representations of the grids.
