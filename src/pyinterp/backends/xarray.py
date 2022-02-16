@@ -8,7 +8,7 @@ XArray
 
 Build interpolation objects from xarray.DataArray instances
 """
-from typing import Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import numpy as np
 import xarray as xr
@@ -481,20 +481,46 @@ class RegularGridInterpolator:
             self._grid = Grid2D(array,
                                 increasing_axes=increasing_axes,
                                 geodetic=geodetic)
-            self._interp = self._grid.bivariate
         elif len(array.shape) == 3:
             self._grid = Grid3D(array,
                                 increasing_axes=increasing_axes,
                                 geodetic=geodetic)
-            self._interp = self._grid.trivariate
         elif len(array.shape) == 4:
             self._grid = Grid4D(array,
                                 increasing_axes=increasing_axes,
                                 geodetic=geodetic)
-            self._interp = self._grid.quadrivariate
         else:
             raise NotImplementedError(
                 "Only the 2D, 3D or 4D grids can be interpolated.")
+        self._interp = RegularGridInterpolator._select_interpolator_function(
+            self._grid)
+
+    @staticmethod
+    def _select_interpolator_function(tensor: Any) -> Callable:
+        """Select the interpolation function
+
+        Args:
+            tensor: The grid to interpolate.
+
+        Returns:
+            The interpolation function.
+        """
+        array = tensor.array
+        if len(array.shape) == 2:
+            return tensor.bivariate
+        if len(array.shape) == 3:
+            return tensor.trivariate
+        if len(array.shape) == 4:
+            return tensor.quadrivariate
+        raise NotImplementedError(str(tensor))
+
+    def __getstate__(self) -> Tuple:
+        return (self._grid, )
+
+    def __setstate__(self, state: Tuple) -> None:
+        self._grid = state[0]
+        self._interp = RegularGridInterpolator._select_interpolator_function(
+            self._grid)
 
     @property
     def ndim(self) -> int:

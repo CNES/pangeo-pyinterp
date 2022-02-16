@@ -114,6 +114,9 @@ def test_biavariate(pytestconfig):
              method="bilinear")
     assert isinstance(z, np.ndarray)
 
+    other = pickle.loads(pickle.dumps(grid))
+    assert isinstance(other, Grid2D)
+
 
 def test_bicubic(pytestconfig):
     dump = pytestconfig.getoption("dump")
