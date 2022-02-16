@@ -17,8 +17,8 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 
-from ... import core
 from .. import grid2d_path, make_or_compare_reference
+from ... import core
 
 
 def plot(x, y, z, filename):
@@ -42,7 +42,7 @@ def load_data():
         return ds.variables['lon'][:], ds.variables['lat'][:], z.data
 
 
-def test_binning2d_acessors():
+def test_binning2d_accessors():
     x_axis = core.Axis(np.linspace(-180, 180, 10), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 10))
 
@@ -141,6 +141,106 @@ def test_binning2d_iadd():
 
     binning = core.Binning2DFloat64(x_axis, y_axis, None)
     binning.push(np.array([-180]), np.array([-90]), np.array([np.pi]))
+
+    other = copy.copy(binning)
+    other += binning
+
+    assert np.all(binning.count() == 1)
+    assert np.all(binning.mean() == np.pi)
+    assert np.all(binning.min() == np.pi)
+    assert np.all(binning.max() == np.pi)
+    assert np.all(binning.sum() == np.pi)
+    assert np.all(binning.sum_of_weights() == 1)
+    assert np.all(binning.variance() == 0)
+    assert np.all(np.isnan(other.skewness()))
+    assert np.all(np.isnan(other.kurtosis()))
+
+    assert np.all(other.count() == 2)
+    assert np.all(other.mean() == np.pi)
+    assert np.all(other.min() == np.pi)
+    assert np.all(other.max() == np.pi)
+    assert np.all(other.sum() == np.pi * 2)
+    assert np.all(other.sum_of_weights() == 2)
+    assert np.all(other.variance() == 0)
+    assert np.all(np.isnan(other.skewness()))
+    assert np.all(np.isnan(other.kurtosis()))
+
+
+def test_binning1d_accessors():
+    x_axis = core.Axis(np.linspace(-100, 100, 10))
+
+    binning = core.Binning1DFloat64(x_axis)
+    assert isinstance(binning.x, core.Axis)
+    assert isinstance(binning.y, core.Axis)
+    assert binning.wgs is None
+
+    # The class must return a reference on the axes provided during
+    # construction
+    assert id(x_axis) == id(binning.x)
+
+    binning.clear()
+    count = binning.count()
+    assert isinstance(count, np.ndarray)
+    assert count.size == len(x_axis)
+    assert count.mean() == 0
+
+
+def test_binning1d_methods():
+    x_axis = core.Axis(np.linspace(-100, 100, 361 // 4), is_circle=True)
+
+    binning = core.Binning1DFloat64(x_axis, )
+    x, y, z = load_data()
+    mx, my = np.meshgrid(x, y, indexing='ij')
+    binning.push(mx.ravel(), z.ravel())
+
+    count = binning.count()
+    assert count.max() != 0
+
+    # Test of access to statistical variables
+    assert isinstance(binning.mean(), np.ndarray)
+    assert isinstance(binning.kurtosis(), np.ndarray)
+    assert isinstance(binning.max(), np.ndarray)
+    assert isinstance(binning.min(), np.ndarray)
+    assert isinstance(binning.skewness(), np.ndarray)
+    assert isinstance(binning.sum(), np.ndarray)
+    assert isinstance(binning.sum_of_weights(), np.ndarray)
+    assert isinstance(binning.variance(), np.ndarray)
+
+
+def test_binning1d_pickle():
+    x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
+
+    binning = core.Binning1DFloat64(x_axis)
+    binning.push(np.array([-180]), np.array([np.pi]))
+
+    assert np.all(binning.count() == 1)
+    assert np.all(binning.mean() == np.pi)
+    assert np.all(binning.min() == np.pi)
+    assert np.all(binning.max() == np.pi)
+    assert np.all(binning.sum() == np.pi)
+    assert np.all(binning.sum_of_weights() == 1)
+    assert np.all(binning.variance() == 0)
+    assert np.all(np.isnan(binning.skewness()))
+    assert np.all(np.isnan(binning.kurtosis()))
+
+    other = pickle.loads(pickle.dumps(binning))
+
+    assert np.all(other.count() == 1)
+    assert np.all(other.mean() == np.pi)
+    assert np.all(other.min() == np.pi)
+    assert np.all(other.max() == np.pi)
+    assert np.all(other.sum() == np.pi)
+    assert np.all(other.sum_of_weights() == 1)
+    assert np.all(other.variance() == 0)
+    assert np.all(np.isnan(other.skewness()))
+    assert np.all(np.isnan(other.kurtosis()))
+
+
+def test_binning1d_iadd():
+    x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
+
+    binning = core.Binning1DFloat64(x_axis)
+    binning.push(np.array([-180]), np.array([np.pi]))
 
     other = copy.copy(binning)
     other += binning

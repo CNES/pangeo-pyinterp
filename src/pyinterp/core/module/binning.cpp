@@ -11,7 +11,7 @@
 namespace py = pybind11;
 
 template <typename Type>
-void implement_binning_2d(py::module &m, const std::string &suffix) {
+void implement_binning(py::module &m, const std::string &suffix) {
   PYBIND11_NUMPY_DTYPE(pyinterp::detail::math::Accumulators<Type>, count,
                        sum_of_weights, mean, min, max, sum, mom2, mom3, mom4);
 
@@ -152,9 +152,38 @@ Returns:
           [](const py::tuple &state) {
             return pyinterp::Binning2D<Type>::setstate(state);
           }));
+
+  py::class_<pyinterp::Binning1D<Type>, pyinterp::Binning2D<Type>>(
+      m, ("Binning1D" + suffix).c_str(),
+      R"__doc__(
+Group a number of more or less continuous values into a smaller number of
+"bins" located on a vector.
+)__doc__")
+      .def(py::init<std::shared_ptr<pyinterp::Axis<double>>>(), py::arg("x"),
+           R"__doc__(
+Default constructor
+
+Args:
+    x (pyinterp.core.Axis): Definition of the bin centers for the X Axis.
+)__doc__")
+      .def("push", &pyinterp::Binning1D<Type>::push, py::arg("x"), py::arg("z"),
+           py::arg("weights") = std::nullopt, R"__doc__(
+Push new samples into the defined bins.
+
+Args:
+    x (numpy.ndarray): X coordinates of the values to push.
+    z (numpy.ndarray): New samples to push.
+    weights (numpy.ndarray, optional): Weights of the new samples. Defaults to
+        None.
+)__doc__")
+      .def(py::pickle(
+          [](const pyinterp::Binning1D<Type> &self) { return self.getstate(); },
+          [](const py::tuple &state) {
+            return pyinterp::Binning1D<Type>::setstate(state);
+          }));
 }
 
 void init_binning(py::module &m) {
-  implement_binning_2d<double>(m, "Float64");
-  implement_binning_2d<float>(m, "Float32");
+  implement_binning<double>(m, "Float64");
+  implement_binning<float>(m, "Float32");
 }

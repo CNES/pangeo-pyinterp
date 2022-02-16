@@ -4,7 +4,7 @@
 # BSD-style license that can be found in the LICENSE file.
 from . import geodetic, geohash, version
 from ._geohash import GeoHash
-from .binning import Binning2D
+from .binning import Binning1D, Binning2D
 from .core import Axis, TemporalAxis, dateutils
 from .grid import Grid2D, Grid3D, Grid4D
 from .histogram2d import Histogram2D
@@ -24,6 +24,7 @@ __all__ = [
     "__version__",
     "Axis",
     "bicubic",
+    "Binning1D",
     "Binning2D",
     "bivariate",
     "dateutils",

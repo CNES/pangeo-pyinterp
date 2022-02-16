@@ -6,8 +6,8 @@
 Data binning
 ------------
 """
-import copy
 from typing import Optional, Union
+import copy
 
 import dask.array as da
 import numpy as np
@@ -220,6 +220,129 @@ class Binning2D:
                     * ``sum_of_weights`` : compute the sum of weigths within
                       each bin.
                     * ``variance`` : compute the variance within each bin.
+
+        Returns:
+            numpy.ndarray: The dataset representing the calculated
+            statistical variable.
+        """
+        try:
+            return getattr(self._instance, statistics)()
+        except AttributeError:
+            raise ValueError(
+                f"The statistical variable {statistics} is unknown.")
+
+
+class Binning1D:
+    """
+    Group a number of more or less continuous values into a smaller number of
+    "bins" located on a vector.
+    """
+
+    def __init__(self,
+                 x: core.Axis,
+                 dtype: Optional[np.dtype] = np.dtype("float64")):
+        """
+        Initializes the grid used to calculate the statistics.
+
+        Args:
+            x (pyinterp.Axis) : Definition of the bin centers for the X axis
+                of the grid.
+            dtype (numpy.dtype, optional): Data type of the instance to create.
+
+        .. note ::
+
+            The axe define the centers of the different bins where the
+            statistics will be calculated.
+        """
+        if dtype == np.dtype("float64"):
+            self._instance = core.Binning1DFloat64(x)
+        elif dtype == np.dtype("float32"):
+            self._instance = core.Binning1DFloat32(x)
+        else:
+            raise ValueError(f"dtype {dtype} not handled by the object")
+        self.dtype = dtype
+
+    @property
+    def x(self) -> core.Axis:
+        """Gets the bin centers for the X Axis of the grid"""
+        return self._instance.x
+
+    def clear(self) -> None:
+        """Clears the data inside each bin."""
+        self._instance.clear()
+
+    def __repr__(self) -> str:
+        """Called by the ``repr()`` built-in function to compute the string
+        representation of this instance
+        """
+        result = [
+            "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
+        ]
+        result.append("Axis:")
+        result.append(f"  {self._instance.x}")
+        return "\n".join(result)
+
+    def __add__(self, other: "Binning1D") -> "Binning1D":
+        result = copy.copy(self)
+        if type(result._instance) != type(other._instance):  # noqa: E721
+            raise TypeError("Binning1D instance must be of the same type")
+        result._instance += other._instance  # type: ignore
+        return result
+
+    def push(self, x: np.ndarray, z: np.ndarray) -> None:
+        """Push new samples into the defined bins.
+
+        Args:
+            x (numpy.ndarray): X coordinates of the samples
+            z (numpy.ndarray): New samples to push into the
+                defined bins.
+        """
+        x = np.asarray(x).ravel()
+        z = np.asarray(z).ravel()
+        self._instance.push(x, z)
+
+    def push_delayed(self, x: Union[np.ndarray, da.Array],
+                     z: Union[np.ndarray, da.Array]) -> da.Array:
+        """Push new samples into the defined bins from dask array.
+
+        Args:
+            x (numpy.ndarray, dask.Array): X coordinates of the samples.
+            z (numpy.ndarray, dask.Array): New samples to push into the
+                defined bins.
+        Returns:
+            The calculation graph producing the update of the vector from the
+            provided samples. Running the graph will return an instance of this
+            class containing the statistics calculated for all processed
+            samples.
+
+        .. seealso ::
+
+            :py:meth:`push <pyinterp.Binning1D.push>`
+        """
+        x = da.asarray(x)
+        z = da.asarray(z)
+
+        def _process_block(x, z, x_axis):
+            binning = Binning1D(x_axis)
+            binning.push(x, z)
+            return np.array([binning], dtype="object")
+
+        return da.map_blocks(_process_block,
+                             x.ravel(),
+                             z.ravel(),
+                             self.x,
+                             dtype="object").sum()
+
+    def variable(self, statistics: str = 'mean') -> np.ndarray:
+        """Gets the regular grid containing the calculated statistics.
+
+        Args:
+            statistics (str or iterable, optional) : The statistics to compute.
+
+            .. seealso ::
+
+                The py:meth:`pyinterp.Binning2D.variable` method describes the
+                accessible statistical variables.
 
         Returns:
             numpy.ndarray: The dataset representing the calculated

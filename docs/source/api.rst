@@ -35,6 +35,7 @@ Binning
 .. autosummary::
   :toctree: generated/
 
+  Binning1D
   Binning2D
   Histogram2D
 

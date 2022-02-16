@@ -236,14 +236,23 @@ class Binning2D {
     return *this;
   }
 
- private:
-  /// Grid axis
+ protected:
+  /// X-Axis
   std::shared_ptr<Axis<double>> x_;
+
+  /// Y-Axis
   std::shared_ptr<Axis<double>> y_;
 
   /// Statistics grid
   Matrix<DescriptiveStatistics> acc_;
 
+  /// Returns the matrix of raw statistics.
+  inline auto acc() const -> Matrix<Accumulators> {
+    auto gil = pybind11::gil_scoped_release();
+    return acc_.template cast<Accumulators>();
+  }
+
+ private:
   /// Geodetic coordinate system required to calculate areas (optional if the
   /// user wishes to handle Cartesian coordinates).
   std::optional<geodetic::System> wgs_;
@@ -256,7 +265,6 @@ class Binning2D {
     auto _z = z.template mutable_unchecked<2>();
     {
       pybind11::gil_scoped_release release;
-
       for (Eigen::Index ix = 0; ix < acc_.rows(); ++ix) {
         for (Eigen::Index iy = 0; iy < acc_.cols(); ++iy) {
           _z(ix, iy) = (acc_(ix, iy).*func)(args...);
@@ -350,11 +358,81 @@ class Binning2D {
       }
     }
   }
+};
 
-  /// Returns the matrix of raw statistics.
-  inline auto acc() const -> Matrix<Accumulators> {
-    auto gil = pybind11::gil_scoped_release();
-    return acc_.template cast<Accumulators>();
+/// Group a number of points into bins.
+template <typename T>
+class Binning1D : public Binning2D<T> {
+ public:
+  /// Default constructor.
+  Binning1D(std::shared_ptr<Axis<double>> x)
+      : Binning2D<T>(std::move(x),
+                     std::make_shared<Axis<double>>(0, 1, 1, 0, false),
+                     std::nullopt) {}
+
+  /// Push data on the nearest bin.
+  ///
+  /// @param x x-coordinates of the points.
+  /// @param z values of the points.
+  void push(const pybind11::array_t<T> &x, const pybind11::array_t<T> &z,
+            const std::optional<pybind11::array_t<T>> &weights = std::nullopt) {
+    auto _x = x.template unchecked<1>();
+    auto _z = z.template unchecked<1>();
+    auto _weights = weights.has_value()
+                        ? weights->template unchecked<1>()
+                        : pybind11::array_t<T>().template unchecked<1>();
+
+    {
+      pybind11::gil_scoped_release release;
+
+      const auto &x_axis =
+          static_cast<pyinterp::detail::Axis<double> &>(*this->x_);
+
+      for (pybind11::ssize_t idx = 0; idx < x.size(); ++idx) {
+        auto value = _z(idx);
+
+        if (!std::isnan(value)) {
+          auto ix = x_axis.find_index(_x(idx), true);
+
+          if (ix != -1) {
+            auto weight = weights.has_value() ? _weights(idx) : 1;
+            this->acc_(ix)(value, weight);
+          }
+        }
+      }
+    }
+  }
+
+  /// Pickle support: get state of this instance
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
+    return pybind11::make_tuple(this->x_->getstate(), this->acc());
+  }
+
+  /// Pickle support: set state of this instance
+  static auto setstate(const pybind11::tuple &state)
+      -> std::unique_ptr<Binning1D<T>> {
+    if (state.size() != 2) {
+      throw std::invalid_argument("invalid state");
+    }
+
+    // Unmarshalling X-Axis
+    auto x = std::make_shared<Axis<double>>();
+    *x = Axis<double>::setstate(state[0].cast<pybind11::tuple>());
+
+    // Unmarshalling computed statistics
+    auto acc = state[1].cast<Matrix<typename Binning2D<T>::Accumulators>>();
+    if (acc.rows() != x->size() || acc.cols() != 1) {
+      throw std::invalid_argument("invalid state");
+    }
+
+    // Unmarshalling instance
+    auto result = std::make_unique<Binning1D<T>>(x);
+    {
+      auto gil = pybind11::gil_scoped_release();
+      result->acc_ = std::move(
+          acc.template cast<typename Binning2D<T>::DescriptiveStatistics>());
+    }
+    return result;
   }
 };
 
