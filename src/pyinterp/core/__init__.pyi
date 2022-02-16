@@ -149,6 +149,42 @@ class Bilinear3D(BivariateInterpolator3D):
         ...
 
 
+class Binning1DFloat32(Binning2DFloat32):
+
+    def __init__(self, x: Axis) -> None:
+        ...
+
+    def push(self,
+             x: numpy.ndarray[numpy.float32],
+             z: numpy.ndarray[numpy.float32],
+             weights: Optional[numpy.ndarray[numpy.float32]] = ...) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
+class Binning1DFloat64(Binning2DFloat64):
+
+    def __init__(self, x: Axis) -> None:
+        ...
+
+    def push(self,
+             x: numpy.ndarray[numpy.float64],
+             z: numpy.ndarray[numpy.float64],
+             weights: Optional[numpy.ndarray[numpy.float64]] = ...) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, arg0: tuple) -> None:
+        ...
+
+
 class Binning2DFloat32:
 
     def __init__(self,
