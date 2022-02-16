@@ -8,8 +8,12 @@ import numpy as np
 import pytest
 
 from ... import core
-from .test_descriptive_statistics import (weighted_mom1, weighted_mom2,
-                                          weighted_mom3, weighted_mom4)
+from .test_descriptive_statistics import (
+    weighted_mom1,
+    weighted_mom2,
+    weighted_mom3,
+    weighted_mom4,
+)
 
 
 def weighted_quantile(data, weights, perc):

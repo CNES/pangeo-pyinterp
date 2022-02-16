@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from .. import Axis, Histogram2D
 from . import grid2d_path
+from .. import Axis, Histogram2D
 
 
 def build_instance(dtype):

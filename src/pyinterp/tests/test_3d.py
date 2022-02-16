@@ -10,9 +10,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from . import grid3d_path
 from .. import Axis, Grid3D, TemporalAxis
 from ..backends import xarray as xr_backend
-from . import grid3d_path
 
 
 def test_3d():

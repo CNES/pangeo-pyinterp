@@ -6,8 +6,8 @@
 Histogram 2D
 ------------
 """
-import copy
 from typing import Optional, Union
+import copy
 
 import dask.array as da
 import numpy as np

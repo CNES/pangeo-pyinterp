@@ -7,8 +7,8 @@ import json
 import numpy
 import pytest
 
-from ... import GeoHash, geohash
 from .. import geohash_path
+from ... import GeoHash, geohash
 
 
 def test_encoding_decoding():

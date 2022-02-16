@@ -6,11 +6,17 @@
 GeoHash bytes
 -------------
 """
-from .. import geodetic
-from ..core.geohash import (area, bounding_boxes, decode, encode, transform,
-                            where)
 #
 from . import int64
+from .. import geodetic
+from ..core.geohash import (
+    area,
+    bounding_boxes,
+    decode,
+    encode,
+    transform,
+    where,
+)
 from .converter import to_xarray
 
 __all__ = [

@@ -4,8 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 import json
 
-from ... import GeoHash, geodetic
 from .. import geohash_bbox_path
+from ... import GeoHash, geodetic
 
 
 def test_bbox():

@@ -6,8 +6,8 @@ import json
 
 import numpy as np
 
-from ... import GeoHash, geodetic, geohash
 from .. import geohash_neighbors_path
+from ... import GeoHash, geodetic, geohash
 
 
 def test_neighbors():

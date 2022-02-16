@@ -4,6 +4,7 @@
 # BSD-style license that can be found in the LICENSE file.
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
+from typing import ClassVar, Optional
 import datetime
 import os
 import pathlib
@@ -13,7 +14,6 @@ import shlex
 import subprocess
 import sys
 import sysconfig
-from typing import ClassVar, Optional
 
 import setuptools
 import setuptools.command.build_ext

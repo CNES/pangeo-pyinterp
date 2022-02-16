@@ -6,8 +6,7 @@ import xarray
 
 #
 from . import geodetic
-from .core import GeoHash as BaseGeoHash
-from .core import geohash
+from .core import GeoHash as BaseGeoHash, geohash
 
 
 class GeoHash(BaseGeoHash):
@@ -71,12 +70,13 @@ class GeoHash(BaseGeoHash):
             dict(geohash=xarray.DataArray(
                 grid,
                 dims=('lat', 'lon'),
-                coords=dict(lon=xarray.DataArray(
-                    lon, dims=("lon", ), attrs=dict(units="degrees_north")),
-                            lat=xarray.DataArray(lat,
-                                                 dims=("lat", ),
-                                                 attrs=dict(
-                                                     units="degrees_east"))))))
+                coords=dict(
+                    lon=xarray.DataArray(
+                        lon, dims=("lon", ), attrs=dict(
+                            units="degrees_north")),
+                    lat=xarray.DataArray(
+                        lat, dims=("lat", ), attrs=dict(units="degrees_east")),
+                ))))
 
     @staticmethod
     def from_string(code: str, round: bool = False) -> "GeoHash":

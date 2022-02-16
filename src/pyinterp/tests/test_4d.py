@@ -11,9 +11,9 @@ import xarray as xr
 
 import pyinterp
 
+from . import grid4d_path, make_or_compare_reference
 from .. import Axis, Grid4D, TemporalAxis, bicubic
 from ..backends import xarray as xr_backend
-from . import grid4d_path, make_or_compare_reference
 
 
 def test_4d(pytestconfig):

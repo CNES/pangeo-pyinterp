@@ -1,5 +1,5 @@
-import pathlib
 from typing import Optional
+import pathlib
 
 import numpy
 import pytest

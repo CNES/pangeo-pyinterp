@@ -6,8 +6,8 @@ import netCDF4
 import numpy as np
 import pytest
 
-from .. import Axis, Grid2D, Grid3D, fill
 from . import grid2d_path
+from .. import Axis, Grid2D, Grid3D, fill
 
 
 def load_data(cube=False):

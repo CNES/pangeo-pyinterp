@@ -10,9 +10,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from . import grid2d_path, grid3d_path, grid4d_path
 #
 from .. import DescriptiveStatistics
-from . import grid2d_path, grid3d_path, grid4d_path
 from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 
 

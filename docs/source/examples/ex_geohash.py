@@ -78,11 +78,15 @@ def plot_geohash_grid(precision,
         box = polygon.envelope() if isinstance(
             polygon, pyinterp.geodetic.Polygon) else polygon
 
-        ax.set_extent([
-            box.min_corner.lon, box.max_corner.lon, box.min_corner.lat,
-            box.max_corner.lat
-        ],
-                      crs=cartopy.crs.PlateCarree())
+        ax.set_extent(
+            [
+                box.min_corner.lon,
+                box.max_corner.lon,
+                box.min_corner.lat,
+                box.max_corner.lat,
+            ],
+            crs=cartopy.crs.PlateCarree(),
+        )
     else:
         box = None
     colors = _sort_colors(color_list)

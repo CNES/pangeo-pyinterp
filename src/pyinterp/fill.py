@@ -2,8 +2,8 @@
 Replace undefined values
 ------------------------
 """
-import concurrent.futures
 from typing import Optional, Union
+import concurrent.futures
 
 import numpy as np
 

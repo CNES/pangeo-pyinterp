@@ -10,10 +10,10 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from .. import core
-from ..backends import xarray as xr_backend
 #
 from . import grid3d_path, grid4d_path
+from .. import core
+from ..backends import xarray as xr_backend
 
 
 def test_index_error_3d():

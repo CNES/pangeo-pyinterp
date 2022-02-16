@@ -16,8 +16,8 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 
-from ... import core
 from .. import grid2d_path, make_or_compare_reference
+from ... import core
 
 
 def plot(x, y, z, filename):

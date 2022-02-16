@@ -5,8 +5,12 @@ Geographic coordinate system
 from typing import List, Optional, Tuple
 
 from ..core import geodetic
-from ..core.geodetic import (Crossover, Linestring, coordinate_distances,
-                             normalize_longitudes)
+from ..core.geodetic import (
+    Crossover,
+    Linestring,
+    coordinate_distances,
+    normalize_longitudes,
+)
 
 __all__ = [
     "Box",

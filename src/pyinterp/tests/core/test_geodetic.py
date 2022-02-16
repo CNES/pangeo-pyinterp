@@ -9,9 +9,9 @@ import pickle
 import numpy as np
 import pytest
 
+from .. import polygon_path
 from ... import core
 from ...core import geodetic
-from .. import polygon_path
 
 
 def test_system_wgs84():

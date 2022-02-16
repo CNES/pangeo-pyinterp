@@ -2,11 +2,11 @@
 Generates stubs for the core modules.
 =====================================
 """
+from typing import List
 import os
 import pathlib
 import re
 import sys
-from typing import List
 
 import mypy.stubgen
 import yapf
