@@ -97,6 +97,18 @@ class DescriptiveStatistics:
                                   core.DescriptiveStatisticsFloat32] = getattr(
                                       core, attr)(values, weights, axis)
 
+    def copy(self) -> "DescriptiveStatistics":
+        """Creates a copy of the current descriptive statistics container.
+
+        Returns:
+            DescriptiveStatistics: Returns a copy of the current
+                descriptive statistics container.
+        """
+        cls = type(self)
+        result = getattr(cls, "__new__")(cls)
+        result._instance = self._instance.copy()
+        return result
+
     def __iadd__(self, other: Any) -> "DescriptiveStatistics":
         """Adds a new descriptive statistics container to the current one.
 
@@ -108,10 +120,26 @@ class DescriptiveStatistics:
                 raise TypeError(
                     "Descriptive statistics must have the same type")
             self._instance += other._instance  # type: ignore
-        else:
-            raise TypeError("unsupported operand type(s) for +="
-                            f": '{type(self)}' and '{type(other)}'")
-        return self
+            return self
+        raise TypeError("unsupported operand type(s) for +="
+                        f": '{type(self)}' and '{type(other)}'")
+
+    def __add__(self, other: Any) -> "DescriptiveStatistics":
+        """Adds a new descriptive statistics container to the current one.
+
+        Returns:
+            DescriptiveStatistics: Returns a new descriptive statistics
+                container.
+        """
+        if isinstance(other, DescriptiveStatistics):
+            if type(self._instance) != type(other._instance):  # noqa: E721
+                raise TypeError(
+                    "Descriptive statistics must have the same type")
+            result = self.copy()
+            result += other
+            return result
+        raise TypeError("unsupported operand type(s) for +="
+                        f": '{type(self)}' and '{type(other)}'")
 
     def count(self) -> np.ndarray:
         """Returns the count of samples.

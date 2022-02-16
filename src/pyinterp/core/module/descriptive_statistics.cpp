@@ -33,6 +33,21 @@ Args:
         statistics. If not provided, the statistics are computed over the
         flattened array.
 )__doc__")
+      .def(
+          "copy",
+          [](const pyinterp::DescriptiveStatistics<Type> &self)
+              -> pyinterp::DescriptiveStatistics<Type> {
+            return pyinterp::DescriptiveStatistics<Type>(self);
+          },
+          R"__doc__(
+Copy constructor
+
+Args:
+    other (DescriptiveStatistics): The object to copy.
+
+Returns:
+        DescriptiveStatistics: A copy of the current object.
+)__doc__")
       .def("count", &pyinterp::DescriptiveStatistics<Type>::count,
            R"__doc__(
 Returns the count of samples.

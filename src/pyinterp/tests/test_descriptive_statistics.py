@@ -73,6 +73,25 @@ def test_descriptive_statistics_iadd(dtype, error):
         ds += ds2
 
 
+@pytest.mark.parametrize("dtype,error", [(np.float32, 1e-4),
+                                         (np.float64, 1e-6)])
+def test_descriptive_statistics_add(dtype, error):
+    v0 = np.random.random_sample((5000, )).astype(dtype)
+    ds = DescriptiveStatistics(v0, dtype=dtype)
+    v1 = np.random.random_sample((5000, )).astype(dtype)
+    ds = ds + DescriptiveStatistics(v1, dtype=dtype)
+    check_stats(ds, np.concatenate((v0, v1)), dtype, error)
+
+    with pytest.raises(TypeError):
+        ds + v1
+
+    with pytest.raises(TypeError):
+        ds2 = DescriptiveStatistics(v0,
+                                    dtype=np.float32 if dtype == np.float64
+                                    else np.float64)  # type: ignore
+        ds + ds2
+
+
 def test_array():
     """Test the computation of descriptive statistics for a tensor."""
     values = np.random.random_sample((2, 20, 30))

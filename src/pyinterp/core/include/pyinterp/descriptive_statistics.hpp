@@ -66,6 +66,10 @@ class DescriptiveStatistics {
     }
   }
 
+  /// Copy constructor.
+  DescriptiveStatistics(const DescriptiveStatistics &rhs)
+      : accumulators_(rhs.accumulators_), shape_(rhs.shape_) {}
+
   /// Returns the count of samples.
   [[nodiscard]] auto count() const -> pybind11::array_t<uint64_t> {
     return calculate_statistics<decltype(&Accumulators::count), uint64_t>(
