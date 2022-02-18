@@ -8,7 +8,8 @@ XArray
 
 Build interpolation objects from xarray.DataArray instances
 """
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Dict, Hashable, Optional, Tuple, Union
+import pickle
 
 import numpy as np
 import xarray as xr
@@ -111,9 +112,10 @@ def _dims_from_data_array(data_array: xr.DataArray,
 
 
 def _coords(
-        coords: dict,
-        dims: Tuple,
-        datetime64: Optional[Tuple[str, core.TemporalAxis]] = None) -> Tuple:
+    coords: dict,
+    dims: Tuple,
+    datetime64: Optional[Tuple[Hashable, core.TemporalAxis]] = None,
+) -> Tuple:
     """Get the list of arguments to provide to the grid interpolation functions.
 
     Args:
@@ -481,46 +483,31 @@ class RegularGridInterpolator:
             self._grid = Grid2D(array,
                                 increasing_axes=increasing_axes,
                                 geodetic=geodetic)
+            self._interp = self._grid.bivariate
         elif len(array.shape) == 3:
             self._grid = Grid3D(array,
                                 increasing_axes=increasing_axes,
                                 geodetic=geodetic)
+            self._interp = self._grid.trivariate
         elif len(array.shape) == 4:
             self._grid = Grid4D(array,
                                 increasing_axes=increasing_axes,
                                 geodetic=geodetic)
+            self._interp = self._grid.quadrivariate
         else:
             raise NotImplementedError(
                 "Only the 2D, 3D or 4D grids can be interpolated.")
-        self._interp = RegularGridInterpolator._select_interpolator_function(
-            self._grid)
 
-    @staticmethod
-    def _select_interpolator_function(tensor: Any) -> Callable:
-        """Select the interpolation function
+    def __getstate__(self) -> Tuple[bytes]:
+        # Walk around a bug with pybind11 and pickle starting with Python 3.9
+        # Serialize the object here with highest protocol.
+        return (pickle.dumps((self._grid, self._interp),
+                             protocol=pickle.HIGHEST_PROTOCOL), )
 
-        Args:
-            tensor: The grid to interpolate.
-
-        Returns:
-            The interpolation function.
-        """
-        array = tensor.array
-        if len(array.shape) == 2:
-            return tensor.bivariate
-        if len(array.shape) == 3:
-            return tensor.trivariate
-        if len(array.shape) == 4:
-            return tensor.quadrivariate
-        raise NotImplementedError(str(tensor))
-
-    def __getstate__(self) -> Tuple:
-        return (self._grid, )
-
-    def __setstate__(self, state: Tuple) -> None:
-        self._grid = state[0]
-        self._interp = RegularGridInterpolator._select_interpolator_function(
-            self._grid)
+    def __setstate__(self, state: Tuple[bytes]) -> None:
+        # Walk around a bug with pybind11 and pickle starting with Python 3.9
+        # Deserialize the object here with highest protocol.
+        self._grid, self._interp = pickle.loads(state[0])
 
     @property
     def ndim(self) -> int:
