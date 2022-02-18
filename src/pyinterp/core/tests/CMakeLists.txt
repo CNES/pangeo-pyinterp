@@ -5,7 +5,7 @@
 macro (add_testcase testname)
     set(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${testname}.cpp")
     add_executable(test_${testname} ${FILES})
-    target_link_libraries(test_${testname} pyinterp gtest_main ${ARGN} cpp_coverage)
+    target_link_libraries(test_${testname} pyinterp GTest::gtest_main ${ARGN} cpp_coverage)
     add_test(NAME test_${testname} COMMAND ${EXECUTABLE_OUTPUT_PATH}/test_${testname})
 endmacro()
 

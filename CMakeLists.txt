@@ -230,15 +230,8 @@ endif()
 find_package(Eigen3 3.3.1 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-# Googletest
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-set(INSTALL_GTEST OFF)
-set(INSTALL_GMOCK OFF)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/googletest)
-include_directories(
-  ${gtest_SOURCE_DIR}/include
-  ${gmock_SOURCE_DIR}/include
-  ${gtest_SOURCE_DIR})
+# GoogleTest
+find_package(GTest)
 
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
