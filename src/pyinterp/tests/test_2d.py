@@ -114,8 +114,9 @@ def test_biavariate(pytestconfig):
              method="bilinear")
     assert isinstance(z, np.ndarray)
 
-    other = pickle.loads(pickle.dumps(grid))
-    assert isinstance(other, Grid2D)
+    # This is necessary in order for Dask to scatter the callable instances.
+    other = pickle.loads(pickle.dumps(grid, protocol=0))
+    assert isinstance(other, xr_backend.RegularGridInterpolator)
 
 
 def test_bicubic(pytestconfig):
