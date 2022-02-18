@@ -45,7 +45,7 @@ auto LineString::getstate() const -> pybind11::tuple {
   auto lat = pybind11::array_t<double>(pybind11::array::ShapeContainer{size()});
   auto _lon = lon.mutable_unchecked<1>();
   auto _lat = lat.mutable_unchecked<1>();
-  auto ix = size_t(0);
+  auto ix = int64_t(0);
   std::for_each(line_string_.begin(), line_string_.end(),
                 [&](const auto& point) {
                   _lon[ix] = point.lon();

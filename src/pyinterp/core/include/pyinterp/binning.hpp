@@ -365,7 +365,7 @@ template <typename T>
 class Binning1D : public Binning2D<T> {
  public:
   /// Default constructor.
-  Binning1D(std::shared_ptr<Axis<double>> x)
+  explicit Binning1D(std::shared_ptr<Axis<double>> x)
       : Binning2D<T>(std::move(x),
                      std::make_shared<Axis<double>>(0, 1, 1, 0, false),
                      std::nullopt) {}
