@@ -101,12 +101,11 @@ class Grid2D {
     if (tuple.size() != 3) {
       throw std::runtime_error("invalid state");
     }
-    return Grid2D(
-        std::make_shared<Axis<double>>(Axis<double>(
-            Axis<double>::setstate(tuple[0].cast<pybind11::tuple>()))),
-        std::make_shared<Axis<double>>(Axis<double>(
-            Axis<double>::setstate(tuple[1].cast<pybind11::tuple>()))),
-        tuple[2].cast<pybind11::array_t<DataType>>());
+    return Grid2D(std::make_shared<Axis<double>>(
+                      Axis<double>::setstate(tuple[0].cast<pybind11::tuple>())),
+                  std::make_shared<Axis<double>>(
+                      Axis<double>::setstate(tuple[1].cast<pybind11::tuple>())),
+                  tuple[2].cast<pybind11::array_t<DataType>>());
   }
 
  protected:

@@ -114,7 +114,10 @@
         "compare": "cpp",
         "concepts": "cpp",
         "ranges": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "regex": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp"
     },
     "python.testing.pytestArgs": [
         "."
@@ -122,5 +125,7 @@
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
     "python.testing.pytestEnabled": true,
-    "restructuredtext.languageServer.disabled": true
+    "restructuredtext.languageServer.disabled": true,
+    "python.formatting.provider": "yapf",
+    "cmake.configureOnOpen": false
 }

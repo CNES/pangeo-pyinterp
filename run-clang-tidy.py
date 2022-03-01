@@ -53,21 +53,11 @@ def usage():
 def run(program, fix, path, options=""):
     """Launch clang-tidy"""
     args = [
-        program, '-checks=*,-llvm-header-guard,-fuchsia-*,-android-*,'
-        '-*-magic-numbers,-google-runtime-references,'
-        '-altera-*,-bugprone-*,'
-        '-cppcoreguidelines-init-variables,'
-        '-cppcoreguidelines-owning-memory,'
-        '-cppcoreguidelines-pro-bounds-array-to-pointer-decay,'
-        '-cppcoreguidelines-pro-bounds-constant-array-index,'
-        '-cppcoreguidelines-pro-bounds-pointer-arithmetic,'
-        '-cppcoreguidelines-pro-type-cstyle-cast,'
-        '-cppcoreguidelines-pro-type-reinterpret-cast,'
-        '-cppcoreguidelines-pro-type-vararg,'
-        '-llvmlibc-*,'
-        '-hicpp-*,'
-        '-*-non-private-member-variables-in-classes', '-format-style=Google',
-        path, '--', options
+        program, '-checks=-*,boost-*,concurrency-*,modernize-*,'
+        'performance-*,clang-analyzer-*,portability-*,'
+        '-portability-simd-intrinsics,google-*,-google-runtime-references,'
+        '-google-readability-casting', '-format-style=Google', path, '--',
+        options
     ]
     if fix:
         args.insert(2, "-fix")
