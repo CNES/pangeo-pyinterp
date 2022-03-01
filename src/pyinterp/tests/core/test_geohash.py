@@ -86,5 +86,5 @@ def test_class():
         instance = GeoHash.from_string(code)
         assert str(instance) == code
         point = instance.center()
-        assert pytest.approx(lat, point.lat)
-        assert pytest.approx(lon, point.lon)
+        assert lat == pytest.approx(point.lat, abs=1e-6)
+        assert lon == pytest.approx(point.lon, abs=1e-6)
