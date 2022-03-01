@@ -20,12 +20,11 @@ class Binning2D:
     Group a number of more or less continuous values into a smaller number of
     "bins" located on a grid.
     """
-
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
                  wgs: Optional[geodetic.System] = None,
-                 dtype: Optional[np.dtype] = np.dtype("float64")):
+                 dtype: np.dtype = np.dtype("float64")):
         """
         Initializes the grid used to calculate the statistics.
 
@@ -158,7 +157,7 @@ class Binning2D:
                      x: Union[np.ndarray, da.Array],
                      y: Union[np.ndarray, da.Array],
                      z: Union[np.ndarray, da.Array],
-                     simple: Optional[bool] = True) -> da.Array:
+                     simple: bool = True) -> da.Array:
         """Push new samples into the defined bins from dask array.
 
         Args:
@@ -237,10 +236,7 @@ class Binning1D:
     Group a number of more or less continuous values into a smaller number of
     "bins" located on a vector.
     """
-
-    def __init__(self,
-                 x: core.Axis,
-                 dtype: Optional[np.dtype] = np.dtype("float64")):
+    def __init__(self, x: core.Axis, dtype: np.dtype = np.dtype("float64")):
         """
         Initializes the grid used to calculate the statistics.
 
@@ -289,26 +285,41 @@ class Binning1D:
         result._instance += other._instance  # type: ignore
         return result
 
-    def push(self, x: np.ndarray, z: np.ndarray) -> None:
+    def push(
+        self,
+        x: np.ndarray,
+        z: np.ndarray,
+        weights: Optional[np.ndarray] = None,
+    ) -> None:
         """Push new samples into the defined bins.
 
         Args:
             x (numpy.ndarray): X coordinates of the samples
             z (numpy.ndarray): New samples to push into the
                 defined bins.
+            weights (numpy.ndarray, optional): An array of weights, of the
+                same shape as `z`. Each value in a only contributes its
+                associated weight towards the bin count (instead of 1).
         """
         x = np.asarray(x).ravel()
         z = np.asarray(z).ravel()
-        self._instance.push(x, z)
+        self._instance.push(x, z, weights)
 
-    def push_delayed(self, x: Union[np.ndarray, da.Array],
-                     z: Union[np.ndarray, da.Array]) -> da.Array:
+    def push_delayed(
+        self,
+        x: Union[np.ndarray, da.Array],
+        z: Union[np.ndarray, da.Array],
+        weights: Optional[Union[np.ndarray, da.Array]] = None,
+    ) -> da.Array:
         """Push new samples into the defined bins from dask array.
 
         Args:
             x (numpy.ndarray, dask.Array): X coordinates of the samples.
             z (numpy.ndarray, dask.Array): New samples to push into the
                 defined bins.
+            weights (numpy.ndarray, dask.Array, optional): An array of weights,
+                of the same shape as `z`. Each value in a only contributes its
+                associated weight towards the bin count (instead of 1).
         Returns:
             The calculation graph producing the update of the vector from the
             provided samples. Running the graph will return an instance of this
@@ -321,15 +332,18 @@ class Binning1D:
         """
         x = da.asarray(x)
         z = da.asarray(z)
+        if weights is not None:
+            weights = da.asarray(weights).ravel()
 
-        def _process_block(x, z, x_axis):
+        def _process_block(x, z, weights, x_axis):
             binning = Binning1D(x_axis)
-            binning.push(x, z)
+            binning.push(x, z, weights)
             return np.array([binning], dtype="object")
 
         return da.map_blocks(_process_block,
                              x.ravel(),
                              z.ravel(),
+                             weights,
                              self.x,
                              dtype="object").sum()
 
