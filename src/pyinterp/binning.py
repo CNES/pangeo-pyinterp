@@ -20,6 +20,7 @@ class Binning2D:
     Group a number of more or less continuous values into a smaller number of
     "bins" located on a grid.
     """
+
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
@@ -236,6 +237,7 @@ class Binning1D:
     Group a number of more or less continuous values into a smaller number of
     "bins" located on a vector.
     """
+
     def __init__(self, x: core.Axis, dtype: np.dtype = np.dtype("float64")):
         """
         Initializes the grid used to calculate the statistics.
