@@ -25,8 +25,8 @@ def test_geohash():
         instance = GeoHash(lon, lat, precision=12)
         assert str(instance) == code
         point = instance.center()
-        assert pytest.approx(point.lat, lat)
-        assert pytest.approx(point.lon, lon)
+        assert lat == pytest.approx(point.lat)
+        assert lon == pytest.approx(point.lon)
 
         other = GeoHash.from_string(code)
         assert str(other) == code

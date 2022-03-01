@@ -33,6 +33,6 @@ def test_encoding_decoding():
     for item in cases:
         code = GeoHash.from_string(item[1])
         point = code.center()
-        assert pytest.approx(point.lon, item[3])
-        assert pytest.approx(point.lat, item[3])
+        assert item[3] == pytest.approx(point.lon, abs=1e-6)
+        assert item[2] == pytest.approx(point.lat, abs=1e-6)
         assert str(code) == item[1]
