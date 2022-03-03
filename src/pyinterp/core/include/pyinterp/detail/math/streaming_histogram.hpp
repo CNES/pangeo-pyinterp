@@ -35,12 +35,15 @@ class BinDifferences {
   BinDifferences(std::vector<Bin<T>> &bins, const bool weighted_diff)
       : calculate_(weighted_diff ? &BinDifferences::weighted
                                  : &BinDifferences::simple) {
-    for (size_t index = 1; index < bins.size(); ++index) {
-      auto diff = calculate(bins[index], bins[index - 1]);
+    auto first = bins.begin() + 1;
+    auto last = bins.end();
+    while (first != last) {
+      auto diff = calculate(*first, *(first - 1));
       if (diff < diff_) {
         diff_ = diff;
-        index_ = index - 1;
+        index_ = std::distance(bins.begin(), first) - 1;
       }
+      ++first;
     }
   }
 
