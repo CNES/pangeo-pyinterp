@@ -16,7 +16,7 @@ class System : public detail::geodetic::System {
 
   /// Construction of the class from the base class.
   explicit System(detail::geodetic::System &&base)
-      : detail::geodetic::System(base){};
+      : detail::geodetic::System(base) {}
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {

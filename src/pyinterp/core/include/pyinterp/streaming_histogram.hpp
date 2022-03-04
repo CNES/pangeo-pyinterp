@@ -7,8 +7,15 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+#include <algorithm>
+#include <functional>
+#include <limits>
+#include <list>
 #include <memory>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/math/streaming_histogram.hpp"

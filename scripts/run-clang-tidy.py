@@ -6,6 +6,7 @@ import argparse
 import concurrent.futures
 import multiprocessing
 import os
+import pathlib
 import platform
 import re
 import subprocess
@@ -79,8 +80,7 @@ def main():
     target = []
 
     # Root of project
-    root = os.path.normpath(
-        os.path.join(os.path.dirname(os.path.basename(__file__))))
+    root = pathlib.Path(__file__).parent.parent
 
     # Directories to include in search path
     includes = [] if args.include is None else args.include

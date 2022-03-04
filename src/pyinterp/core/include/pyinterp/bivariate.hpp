@@ -7,6 +7,8 @@
 #include <pybind11/stl.h>
 
 #include <cctype>
+#include <limits>
+#include <string>
 
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/bivariate.hpp"

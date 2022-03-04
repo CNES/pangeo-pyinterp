@@ -6,7 +6,9 @@
 #include <pybind11/numpy.h>
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <optional>
+#include <string>
 #include <tuple>
 #include <unordered_map>
 #include <vector>

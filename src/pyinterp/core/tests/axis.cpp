@@ -15,7 +15,7 @@ using Implementations = testing::Types<int32_t, int64_t, float, double>;
 template <typename T>
 class AxisTest : public testing::Test {
  protected:
-  AxisTest() : axis(std::unique_ptr<detail::Axis<T>>(new detail::Axis<T>())){};
+  AxisTest() : axis(std::unique_ptr<detail::Axis<T>>(new detail::Axis<T>())) {}
   void reset_axis(const T start, const T stop, const T num, const T epsilon,
                   const bool is_circle) {
     axis.release();
@@ -50,7 +50,6 @@ TYPED_TEST(AxisTest, default_constructor) {
   EXPECT_EQ(axis.find_index(360, false), -1);
   auto indexes = axis.find_indexes(360);
   EXPECT_FALSE(indexes.has_value());
-  EXPECT_EQ(static_cast<std::string>(axis), "Axis([], is_circle=false)");
 }
 
 TYPED_TEST(AxisTest, singleton) {
@@ -73,7 +72,6 @@ TYPED_TEST(AxisTest, singleton) {
   EXPECT_EQ(axis.size(), 1);
   EXPECT_EQ(axis.coordinate_value(0), 0);
   EXPECT_THROW((void)axis.coordinate_value(1), std::exception);
-  EXPECT_EQ(static_cast<std::string>(axis), "Axis([0], is_circle=false)");
 }
 
 TYPED_TEST(AxisTest, binary) {
@@ -121,7 +119,6 @@ TYPED_TEST(AxisTest, binary) {
   value = axis.coordinate_value(1);
   EXPECT_EQ(value, 1);
   EXPECT_THROW(value = axis.coordinate_value(2), std::exception);
-  EXPECT_EQ(static_cast<std::string>(axis), "Axis([0, 1], is_circle=false)");
 }
 
 TYPED_TEST(AxisTest, wrap_longitude) {
@@ -168,8 +165,6 @@ TYPED_TEST(AxisTest, wrap_longitude) {
     EXPECT_EQ(std::get<0>(*indexes), 350);
     EXPECT_EQ(std::get<1>(*indexes), 351);
   }
-  EXPECT_EQ(static_cast<std::string>(a1),
-            "Axis([0, 1, 2, ..., 358, 359], is_circle=true)");
   a1.flip();
   EXPECT_EQ(a1.front(), 359);
   EXPECT_EQ(a1.increment(), -1);
@@ -211,8 +206,6 @@ TYPED_TEST(AxisTest, wrap_longitude) {
     EXPECT_EQ(std::get<0>(*indexes), 8);
     EXPECT_EQ(std::get<1>(*indexes), 9);
   }
-  EXPECT_EQ(static_cast<std::string>(a1),
-            "Axis([359, 358, 357, ..., 1, 0], is_circle=true)");
   auto a2 = detail::Axis<TypeParam>(-180, 179, 360,
                                     static_cast<TypeParam>(1e-6), true);
   EXPECT_EQ(a2.front(), -180);

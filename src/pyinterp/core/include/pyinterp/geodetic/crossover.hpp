@@ -4,6 +4,8 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <optional>
+#include <tuple>
+#include <utility>
 
 #include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/line_string.hpp"

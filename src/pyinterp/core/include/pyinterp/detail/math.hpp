@@ -5,7 +5,10 @@
 #pragma once
 #include <cmath>
 #include <cstdint>
+#include <limits>
+#include <string>
 #include <tuple>
+#include <utility>
 
 namespace pyinterp::detail::math {
 

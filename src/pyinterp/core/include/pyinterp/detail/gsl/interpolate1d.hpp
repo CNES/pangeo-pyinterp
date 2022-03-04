@@ -8,6 +8,8 @@
 #include <Eigen/Core>
 #include <functional>
 #include <memory>
+#include <string>
+#include <utility>
 
 #include "pyinterp/detail/gsl/accelerator.hpp"
 

@@ -6,8 +6,10 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/eigen.hpp"

@@ -6,6 +6,7 @@
 #include <gsl/gsl_interp.h>
 
 #include <Eigen/Core>
+#include <string>
 
 #include "pyinterp/detail/gsl/interpolate1d.hpp"
 #include "pyinterp/detail/math/frame.hpp"

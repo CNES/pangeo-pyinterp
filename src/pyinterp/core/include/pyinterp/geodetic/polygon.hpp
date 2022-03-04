@@ -8,6 +8,7 @@
 
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
+#include <string>
 
 #include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/point.hpp"

@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include "pyinterp/geodetic/box.hpp"
@@ -167,11 +168,11 @@ class GeoHash {
   std::string code_{};
 
   /// Default constructor.
-  explicit GeoHash(const size_t precision) : code_(precision, '\0'){};
+  explicit GeoHash(const size_t precision) : code_(precision, '\0') {}
 
   /// GeoHash from lon/lat and number of characters.
   GeoHash(const geodetic::Point &point, uint32_t precision)
-      : GeoHash(point.lon(), point.lat(), precision){};
+      : GeoHash(point.lon(), point.lat(), precision) {}
 };
 
 }  // namespace pyinterp::geohash

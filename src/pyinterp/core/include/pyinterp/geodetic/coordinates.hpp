@@ -6,6 +6,7 @@
 #include <pybind11/numpy.h>
 
 #include <Eigen/Core>
+#include <algorithm>
 
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geodetic/coordinates.hpp"

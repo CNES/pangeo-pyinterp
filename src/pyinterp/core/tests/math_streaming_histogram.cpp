@@ -277,8 +277,9 @@ TEST(math_streaming_histogram, quantile_out_of_bounds) {
     instance(item);
   }
 
-  EXPECT_THROW(instance.quantile(-0.2), std::invalid_argument);
-  EXPECT_THROW(instance.quantile(10), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(instance.quantile(-0.2)),
+               std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(instance.quantile(10)), std::invalid_argument);
 }
 
 TEST(math_streaming_histogram, serialization) {

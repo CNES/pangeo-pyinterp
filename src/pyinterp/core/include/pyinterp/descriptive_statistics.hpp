@@ -7,8 +7,12 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
+#include <functional>
+#include <list>
 #include <memory>
 #include <optional>
+#include <utility>
+#include <vector>
 
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/math/descriptive_statistics.hpp"

@@ -6,6 +6,8 @@
 #include <pybind11/pybind11.h>
 
 #include <boost/geometry/geometries/register/point.hpp>
+#include <set>
+#include <string>
 
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/geodetic/algorithm.hpp"

@@ -6,7 +6,13 @@
 #include <pybind11/numpy.h>
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <functional>
+#include <limits>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geodetic/coordinates.hpp"

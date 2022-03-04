@@ -3,11 +3,15 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <algorithm>
 #include <cmath>
 #include <functional>
+#include <limits>
 #include <numeric>
 #include <optional>
 #include <sstream>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "pyinterp/detail/isviewstream.hpp"

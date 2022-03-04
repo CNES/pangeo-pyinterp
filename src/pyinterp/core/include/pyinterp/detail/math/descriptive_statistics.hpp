@@ -5,7 +5,9 @@
 #pragma once
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <memory>
+#include <utility>
 
 namespace pyinterp::detail::math {
 
@@ -32,7 +34,7 @@ template <typename T>
 class DescriptiveStatistics {
  public:
   /// Default constructor
-  DescriptiveStatistics() { clear(); };
+  DescriptiveStatistics() { clear(); }
 
   /// Create of a new object from statistical incremental values
   explicit DescriptiveStatistics(Accumulators<T> acc) : acc_(std::move(acc)) {}

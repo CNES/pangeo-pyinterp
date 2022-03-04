@@ -8,10 +8,15 @@
 #include <pybind11/stl.h>
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <atomic>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
+#include <limits>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/detail/thread.hpp"

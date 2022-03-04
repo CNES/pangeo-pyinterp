@@ -8,7 +8,10 @@
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
 #include <iostream>
+#include <limits>
+#include <memory>
 #include <optional>
+#include <utility>
 
 #include "pyinterp/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"

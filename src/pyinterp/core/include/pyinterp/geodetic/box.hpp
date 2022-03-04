@@ -6,6 +6,10 @@
 #include <pybind11/numpy.h>
 
 #include <Eigen/Core>
+#include <list>
+#include <set>
+#include <string>
+#include <tuple>
 
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geometry/box.hpp"

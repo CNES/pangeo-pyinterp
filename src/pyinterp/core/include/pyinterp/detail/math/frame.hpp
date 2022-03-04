@@ -5,6 +5,7 @@
 #pragma once
 #include <Eigen/Core>
 #include <memory>
+#include <utility>
 
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/eigen.hpp"

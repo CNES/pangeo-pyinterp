@@ -7,6 +7,8 @@
 #include <pybind11/pybind11.h>
 
 #include <boost/geometry.hpp>
+#include <utility>
+#include <vector>
 
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/eigen.hpp"

@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <regex>
 #include <sstream>
+#include <string>
 #include <tuple>
 
 namespace pyinterp::dateutils {

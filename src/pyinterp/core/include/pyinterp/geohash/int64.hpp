@@ -6,7 +6,9 @@
 #include <pybind11/eigen.h>
 
 #include <Eigen/Core>
+#include <list>
 #include <optional>
+#include <string>
 #include <tuple>
 #include <unordered_map>
 

@@ -5,6 +5,10 @@
 #pragma once
 #include <pybind11/numpy.h>
 
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "pyinterp/axis.hpp"
 #include "pyinterp/detail/broadcast.hpp"
 

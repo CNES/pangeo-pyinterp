@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "pyinterp/axis.hpp"
 #include "pyinterp/dateutils.hpp"

@@ -6,7 +6,12 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <boost/geometry.hpp>
+#include <limits>
+#include <memory>
 #include <optional>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/geometry/point.hpp"

@@ -6,6 +6,8 @@
 #include <pybind11/numpy.h>
 
 #include <list>
+#include <tuple>
+#include <vector>
 
 #include "pyinterp/eigen.hpp"
 

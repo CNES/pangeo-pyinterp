@@ -5,6 +5,7 @@
 #pragma once
 #include <boost/geometry.hpp>
 #include <cmath>
+#include <limits>
 #include <tuple>
 
 namespace pyinterp::detail::math {
