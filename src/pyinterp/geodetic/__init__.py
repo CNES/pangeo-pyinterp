@@ -51,8 +51,7 @@ class System(geodetic.System):
             >>> grs80
             System(6378137.0, 0.003352810681182319)
         """
-        super(System, self).__init__() if parameters is None else super(
-            System, self).__init__(*parameters)
+        super(System, self).__init__(*(parameters or ()))
 
     def __repr__(self):
         return f"System({self.semi_major_axis}, {self.flattening})"
@@ -70,7 +69,7 @@ class Coordinates(geodetic.Coordinates):
                 argument is not defined, the instance manages a WGS84
                 ellipsoid.
         """
-        super(Coordinates, self).__init__(system)
+        super().__init__(system)
 
 
 class Point(geodetic.Point):
@@ -84,7 +83,7 @@ class Point(geodetic.Point):
             lon (float, optional): Longitude in degrees of the point.
             lat (float, optional): Latitude in degrees of the point.
         """
-        super(Point, self).__init__(lon, lat)
+        super().__init__(lon, lat)
 
 
 class Box(geodetic.Box):
@@ -103,8 +102,8 @@ class Box(geodetic.Box):
             max_corner (pyinterp.geodetic.Point, optional): the maximum
                 corner point (upper right) of the box.
         """
-        super(Box, self).__init__(min_corner or geodetic.Point(), max_corner
-                                  or geodetic.Point())
+        super().__init__(min_corner or geodetic.Point(), max_corner
+                         or geodetic.Point())
 
 
 class Polygon(geodetic.Polygon):

@@ -1,3 +1,7 @@
+"""
+Geohash encoding and decoding
+-----------------------------
+"""
 from typing import Optional, Tuple, Type
 
 #

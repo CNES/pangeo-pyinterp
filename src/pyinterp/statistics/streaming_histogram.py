@@ -2,6 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""
+Calculate statistics of a stream of values
+------------------------------------------
+"""
 from typing import Any, Iterable, Optional, Union
 
 import dask.array as da

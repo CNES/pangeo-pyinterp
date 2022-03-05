@@ -189,7 +189,7 @@ class Grid2D(grid.Grid2D):
         """
 
         self._dims = _dims_from_data_array(data_array, geodetic)
-        super(Grid2D, self).__init__(
+        super().__init__(
             core.Axis(data_array.coords[self._dims[0]].values,
                       is_circle=geodetic),
             core.Axis(data_array.coords[self._dims[1]].values),
@@ -280,7 +280,7 @@ class Grid3D(grid.Grid3D):
                 data_array.coords[z].values)
         else:
             self._datetime64 = None
-        super(Grid3D, self).__init__(
+        super().__init__(
             core.Axis(data_array.coords[x].values, is_circle=geodetic),
             core.Axis(data_array.coords[y].values),
             core.Axis(data_array.coords[z].values)
@@ -387,7 +387,7 @@ class Grid4D(grid.Grid4D):
         # library
         self._dims = (x, y, z, u)
 
-        super(Grid4D, self).__init__(
+        super().__init__(
             core.Axis(data_array.coords[x].values, is_circle=geodetic),
             core.Axis(data_array.coords[y].values),
             core.Axis(data_array.coords[z].values)
@@ -558,7 +558,7 @@ class RegularGridInterpolator:
             numpy.ndarray: New array on the new coordinates.
         """
         if method == 'bicubic':
-            bicubic_kwargs = bicubic_kwargs or dict()
+            bicubic_kwargs = bicubic_kwargs or {}
             return self._grid.bicubic(coords,
                                       bounds_error=bounds_error,
                                       num_threads=num_threads,

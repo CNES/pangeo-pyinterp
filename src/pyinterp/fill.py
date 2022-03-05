@@ -51,11 +51,11 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
 
 
 def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
-                 first_guess: Optional[str] = "zonal_average",
+                 first_guess: str = "zonal_average",
                  max_iteration: Optional[int] = None,
-                 epsilon: Optional[float] = 1e-4,
+                 epsilon: float = 1e-4,
                  relaxation: Optional[float] = None,
-                 num_threads: Optional[int] = 0):
+                 num_threads: int = 0):
     """
     Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
     method by relaxation.

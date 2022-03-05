@@ -85,9 +85,7 @@ class Binning2D:
         """Called by the ``repr()`` built-in function to compute the string
         representation of this instance
         """
-        result = [
-            "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
-        ]
+        result = [f"<{self.__class__.__module__}.{self.__class__.__name__}>"]
         result.append("Axis:")
         result.append(f"  x: {self._instance.x}")
         result.append(f"  y: {self._instance.y}")
@@ -227,9 +225,9 @@ class Binning2D:
         """
         try:
             return getattr(self._instance, statistics)()
-        except AttributeError:
+        except AttributeError as exc:
             raise ValueError(
-                f"The statistical variable {statistics} is unknown.")
+                f"The statistical variable {statistics} is unknown.") from exc
 
 
 class Binning1D:
@@ -273,9 +271,7 @@ class Binning1D:
         """Called by the ``repr()`` built-in function to compute the string
         representation of this instance
         """
-        result = [
-            "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
-        ]
+        result = [f"<{self.__class__.__module__}{self.__class__.__name__}>"]
         result.append("Axis:")
         result.append(f"  {self._instance.x}")
         return "\n".join(result)
@@ -366,6 +362,6 @@ class Binning1D:
         """
         try:
             return getattr(self._instance, statistics)()
-        except AttributeError:
+        except AttributeError as exc:
             raise ValueError(
-                f"The statistical variable {statistics} is unknown.")
+                f"The statistical variable {statistics} is unknown.") from exc

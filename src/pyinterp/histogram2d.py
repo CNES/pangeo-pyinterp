@@ -94,9 +94,7 @@ class Histogram2D:
         """Called by the ``repr()`` built-in function to compute the string
         representation of this instance.
         """
-        result = [
-            "<%s.%s>" % (self.__class__.__module__, self.__class__.__name__)
-        ]
+        result = [f"<{self.__class__.__module__}.{self.__class__.__name__}>"]
         result.append("Axis:")
         result.append(f"  x: {self._instance.x}")
         result.append(f"  y: {self._instance.y}")
