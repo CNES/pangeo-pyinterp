@@ -165,20 +165,20 @@ void init_dateutils(py::module &m) {
 Return the date part of the dates.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process.
+    array: Numpy array of datetime64 to process.
 
 Returns:
-    numpy.ndarray: A structured numpy array containing three fields: ``year``,
-    ``month`` and ``day``.
+    A structured numpy array containing three fields: ``year``, ``month`` and
+    ``day``.
 )__doc__")
       .def("datetime", &detail::datetime, py::arg("array"), R"__doc__(
 Return the data as an array of native Python datetime objects.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process.
+    array: Numpy array of datetime64 to process.
 
 Returns:
-    numpy.ndarray: Object dtype array containing native Python datetime objects.
+    Object dtype array containing native Python datetime objects.
 )__doc__")
       .def("timedelta_since_january", &detail::timedelta_since_january,
            py::arg("array"),
@@ -186,22 +186,21 @@ Returns:
 Return the number the timedelta since the first January.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process.
+    array: Numpy array of datetime64 to process.
 
 Returns:
-    numpy.ndarray: timedelta64 dtype array containing the time delta since the
-    first January.
+    timedelta64 dtype array containing the time delta since the first January.
 )__doc__")
       .def("isocalendar", &detail::isocalendar, py::arg("array"),
            R"__doc__(
 Return the ISO calendar of dates.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process.
+    array: Numpy array of datetime64 to process.
 
 Returns:
-    numpy.ndarray: A structured numpy array containing three fields: ``year``,
-    ``week`` and ``weekday``.
+    A structured numpy array containing three fields: ``year``, ``week`` and
+    ``weekday``.
 
 .. seealso:: datetime.date.isocalendar.
 )__doc__")
@@ -209,20 +208,20 @@ Returns:
 Return the time part of the dates.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process.
+    array: Numpy array of datetime64 to process.
 
 Returns:
-    numpy.ndarray: A structured numpy array containing three fields: ``hour``,
-    ``minute`` and ``second``.
+    A structured numpy array containing three fields: ``hour``, ``minute`` and
+    ``second``.
 )__doc__")
       .def("weekday", &detail::weekday, py::arg("array"), R"__doc__(
 Return the weekday of the dates; Sunday is 0 ... Saturday is 6.
 
 Args:
-    array (numpy.ndarray): Numpy array of datetime64 to process.
+    array: Numpy array of datetime64 to process.
 
 Returns:
-    numpy.ndarray: int dtype array containing weekday of the dates.
+    Int dtype array containing weekday of the dates.
 )__doc__")
       // Intentionally undocumented: this function is used only for unit tests
       .def(

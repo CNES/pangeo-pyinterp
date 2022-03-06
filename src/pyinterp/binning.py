@@ -19,6 +19,29 @@ class Binning2D:
     """
     Group a number of more or less continuous values into a smaller number of
     "bins" located on a grid.
+
+    Args:
+        x: Definition of the bin centers for the X axis of the grid.
+        y: Definition of the bin centers for the Y axis of the grid.
+        wgs: WGS of the coordinate system used to manipulate geographic
+            coordinates. If this parameter is not set, the handled
+            coordinates will be considered as Cartesian coordinates.
+            Otherwise, ``x`` and ``y`` are considered to represents the
+            longitudes and latitudes.
+        dtype: Data type of the instance to create.
+
+    .. note ::
+
+        The axes define the centers of the different cells where the
+        statistics will be calculated, as shown in the figure below.
+
+        .. figure:: ../pictures/coordinates.svg
+            :align: center
+            :width: 50%
+
+        In this example, to calculate the statistics in the different cells
+        defined, the coordinates of the axes must be shifted by half a grid
+        step, 0.5 in this example.
     """
 
     def __init__(self,
@@ -26,34 +49,6 @@ class Binning2D:
                  y: core.Axis,
                  wgs: Optional[geodetic.System] = None,
                  dtype: np.dtype = np.dtype("float64")):
-        """
-        Initializes the grid used to calculate the statistics.
-
-        Args:
-            x (pyinterp.Axis) : Definition of the bin centers for the X axis
-                of the grid.
-            y (pyinterp.Axis) : Definition of the bin centers for the Y axis
-                of the grid.
-            wgs (pyinterp.geodetic.System, optional): WGS of the coordinate
-                system used to manipulate geographic coordinates. If this
-                parameter is not set, the handled coordinates will be
-                considered as Cartesian coordinates. Otherwise, ``x`` and ``y``
-                are considered to represents the longitudes and latitudes.
-            dtype (numpy.dtype, optional): Data type of the instance to create.
-
-        .. note ::
-
-            The axes define the centers of the different cells where the
-            statistics will be calculated, as shown in the figure below.
-
-            .. figure:: ../pictures/coordinates.svg
-                :align: center
-                :width: 50%
-
-            In this example, to calculate the statistics in the different cells
-            defined, the coordinates of the axes must be shifted by half a grid
-            step, 0.5 in this example.
-        """
         if dtype == np.dtype("float64"):
             self._instance = core.Binning2DFloat64(x, y, wgs)
         elif dtype == np.dtype("float32"):
@@ -64,17 +59,17 @@ class Binning2D:
 
     @property
     def x(self) -> core.Axis:
-        """Gets the bin centers for the X Axis of the grid"""
+        """Gets the bin centers for the X Axis of the grid."""
         return self._instance.x
 
     @property
     def y(self) -> core.Axis:
-        """Gets the bin centers for the Y Axis of the grid"""
+        """Gets the bin centers for the Y Axis of the grid."""
         return self._instance.y
 
     @property
     def wgs(self) -> Optional[core.geodetic.System]:
-        """Gets the geodetic system handled of the grid"""
+        """Gets the geodetic system handled of the grid."""
         return self._instance.wgs
 
     def clear(self) -> None:
@@ -83,7 +78,7 @@ class Binning2D:
 
     def __repr__(self) -> str:
         """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance
+        representation of this instance.
         """
         result = [f"<{self.__class__.__module__}.{self.__class__.__name__}>"]
         result.append("Axis:")
@@ -92,6 +87,7 @@ class Binning2D:
         return "\n".join(result)
 
     def __add__(self, other: "Binning2D") -> "Binning2D":
+        """Overrides the default behavior of the ``+`` operator."""
         result = copy.copy(self)
         if type(result._instance) != type(other._instance):  # noqa: E721
             raise TypeError("Binning2D instance must be of the same type")
@@ -106,13 +102,12 @@ class Binning2D:
         """Push new samples into the defined bins.
 
         Args:
-            x (numpy.ndarray): X coordinates of the samples
-            y (numpy.ndarray): Y coordinates of the samples
-            z (numpy.ndarray): New samples to push into the
-                defined bins.
-            simple (bool, optional): If true, a simple binning 2D is used
-                otherwise a linear binning 2d is applied. See the full
-                description of the algorithm below.
+            x: X coordinates of the samples
+            y: Y coordinates of the samples
+            z: New samples to push into the defined bins.
+            simple: If true, a simple binning 2D is used otherwise a linear
+                binning 2d is applied. See the full description of the algorithm
+                below.
 
         .. _bilinear_binning:
 
@@ -160,11 +155,10 @@ class Binning2D:
         """Push new samples into the defined bins from dask array.
 
         Args:
-            x (numpy.ndarray, dask.Array): X coordinates of the samples.
-            y (numpy.ndarray, dask.Array): Y coordinates of the samples.
-            z (numpy.ndarray, dask.Array): New samples to push into the
-                defined bins.
-            simple (bool, optional): If true, a simple binning 2D is used
+            x: X coordinates of the samples.
+            y: Y coordinates of the samples.
+            z: New samples to push into the defined bins.
+            simple: If true, a simple binning 2D is used
                 otherwise a linear binning 2d is applied. See the full
                 description of the algorithm :ref:`here <bilinear_binning>`.
         Returns:
@@ -200,8 +194,8 @@ class Binning2D:
         """Gets the regular grid containing the calculated statistics.
 
         Args:
-            statistics (str or iterable, optional) : The statistics to compute
-                The following statistics are available:
+            statistics: The statistics to compute. The following statistics are
+                available:
 
                     * ``count`` : compute the count of points within each bin.
                     * ``kurtosis`` : compute the kurtosis of values for points
@@ -220,8 +214,7 @@ class Binning2D:
                     * ``variance`` : compute the variance within each bin.
 
         Returns:
-            numpy.ndarray: The dataset representing the calculated
-            statistical variable.
+            The dataset representing the calculated statistical variable.
         """
         try:
             return getattr(self._instance, statistics)()
@@ -234,22 +227,18 @@ class Binning1D:
     """
     Group a number of more or less continuous values into a smaller number of
     "bins" located on a vector.
+
+    Args:
+        x: Definition of the bin centers for the X axis of the grid.
+        dtype: Data type of the instance to create.
+
+    .. note ::
+
+        The axe define the centers of the different bins where the
+        statistics will be calculated.
     """
 
     def __init__(self, x: core.Axis, dtype: np.dtype = np.dtype("float64")):
-        """
-        Initializes the grid used to calculate the statistics.
-
-        Args:
-            x (pyinterp.Axis) : Definition of the bin centers for the X axis
-                of the grid.
-            dtype (numpy.dtype, optional): Data type of the instance to create.
-
-        .. note ::
-
-            The axe define the centers of the different bins where the
-            statistics will be calculated.
-        """
         if dtype == np.dtype("float64"):
             self._instance = core.Binning1DFloat64(x)
         elif dtype == np.dtype("float32"):
@@ -260,7 +249,7 @@ class Binning1D:
 
     @property
     def x(self) -> core.Axis:
-        """Gets the bin centers for the X Axis of the grid"""
+        """Gets the bin centers for the X Axis of the grid."""
         return self._instance.x
 
     def clear(self) -> None:
@@ -269,7 +258,7 @@ class Binning1D:
 
     def __repr__(self) -> str:
         """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance
+        representation of this instance.
         """
         result = [f"<{self.__class__.__module__}{self.__class__.__name__}>"]
         result.append("Axis:")
@@ -277,6 +266,7 @@ class Binning1D:
         return "\n".join(result)
 
     def __add__(self, other: "Binning1D") -> "Binning1D":
+        """Overrides the default behavior of the ``+`` operator."""
         result = copy.copy(self)
         if type(result._instance) != type(other._instance):  # noqa: E721
             raise TypeError("Binning1D instance must be of the same type")
@@ -292,12 +282,11 @@ class Binning1D:
         """Push new samples into the defined bins.
 
         Args:
-            x (numpy.ndarray): X coordinates of the samples
-            z (numpy.ndarray): New samples to push into the
-                defined bins.
-            weights (numpy.ndarray, optional): An array of weights, of the
-                same shape as `z`. Each value in a only contributes its
-                associated weight towards the bin count (instead of 1).
+            x: X coordinates of the samples
+            z: New samples to push into the defined bins.
+            weights: An array of weights, of the same shape as ``z``. Each
+                value in a only contributes its associated weight towards the
+                bin count (instead of 1).
         """
         x = np.asarray(x).ravel()
         z = np.asarray(z).ravel()
@@ -312,12 +301,11 @@ class Binning1D:
         """Push new samples into the defined bins from dask array.
 
         Args:
-            x (numpy.ndarray, dask.Array): X coordinates of the samples.
-            z (numpy.ndarray, dask.Array): New samples to push into the
-                defined bins.
-            weights (numpy.ndarray, dask.Array, optional): An array of weights,
-                of the same shape as `z`. Each value in a only contributes its
-                associated weight towards the bin count (instead of 1).
+            x: X coordinates of the samples.
+            z: New samples to push into the defined bins.
+            weights: An array of weights, of the same shape as ``z``. Each
+                value in a only contributes its associated weight towards the
+                bin count (instead of 1).
         Returns:
             The calculation graph producing the update of the vector from the
             provided samples. Running the graph will return an instance of this
@@ -349,16 +337,16 @@ class Binning1D:
         """Gets the regular grid containing the calculated statistics.
 
         Args:
-            statistics (str or iterable, optional) : The statistics to compute.
-
-            .. seealso ::
-
-                The py:meth:`pyinterp.Binning2D.variable` method describes the
-                accessible statistical variables.
+            statistics: The statistics to compute.
 
         Returns:
             numpy.ndarray: The dataset representing the calculated
             statistical variable.
+
+        .. seealso ::
+
+            The :py:meth:`pyinterp.Binning2D.variable` method describes the
+            accessible statistical variables.
         """
         try:
             return getattr(self._instance, statistics)()

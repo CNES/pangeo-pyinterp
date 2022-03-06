@@ -21,25 +21,23 @@ def bivariate(grid2d: grid.Grid2D,
     """Interpolate the values provided on the defined bivariate function.
 
     Args:
-        grid2d (pyinterp.grid.Grid2D): Function on a uniform 2-dimensional
-            grid to be interpolated.
-        x (numpy.ndarray): X-values.
-        y (numpy.ndarray): Y-values.
-        interpolator (str, optional): The method of interpolation to
-            perform. Supported are ``bilinear``, ``nearest``, and
-            ``inverse_distance_weighting``. Default to ``bilinear``.
-        bounds_error (bool, optional): If True, when interpolated values
-            are requested outside of the domain of the input axes (x,y), a
-            :py:class:`ValueError` is raised. If False, then the value is set
-            to NaN. Default to ``False``.
-        num_threads (int, optional): The number of threads to use for the
-            computation. If 0 all CPUs are used. If 1 is given, no parallel
-            computing code is used at all, which is useful for debugging.
-            Defaults to ``0``.
-        p (int, optional): The power to be used by the interpolator
-            inverse_distance_weighting. Default to ``2``.
+        grid2d: Function on a uniform 2-dimensional grid to be interpolated.
+        x: X-values.
+        y: Y-values.
+        interpolator: The method of interpolation to perform. Supported are
+            ``bilinear``, ``nearest``, and ``inverse_distance_weighting``.
+            Default to ``bilinear``.
+        bounds_error: If True, when interpolated values are requested outside
+            of the domain of the input axes (x,y), a :py:class:`ValueError` is
+            raised. If False, then the value is set to NaN. Default to
+            ``False``.
+        num_threads: The number of threads to use for the computation. If 0 all
+            CPUs are used. If 1 is given, no parallel computing code is used at
+            all, which is useful for debugging. Defaults to ``0``.
+        p: The power to be used by the interpolator inverse_distance_weighting.
+            Default to ``2``.
     Returns:
-        numpy.ndarray: Values interpolated.
+        Values interpolated.
     """
     instance = grid2d._instance
     function = interface._core_function("bivariate", instance)

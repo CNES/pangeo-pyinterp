@@ -15,37 +15,38 @@ void implement_binning(py::module &m, const std::string &suffix) {
   PYBIND11_NUMPY_DTYPE(pyinterp::detail::math::Accumulators<Type>, count,
                        sum_of_weights, mean, min, max, sum, mom2, mom3, mom4);
 
-  py::class_<pyinterp::Binning2D<Type>>(m, ("Binning2D" + suffix).c_str(),
-                                        R"__doc__(
+  py::class_<pyinterp::Binning2D<Type>>(
+      m, ("Binning2D" + suffix).c_str(),
+      ("Binning2D" + suffix +
+       "(self, x: pyinterp.core.Axis,"
+       " y: pyinterp.core.Axis,"
+       " wgs: Optional[pyinterp.core.geodetic.System] = None)"
+       R"__doc__(
+
 Group a number of more or less continuous values into a smaller number of
 "bins" located on a grid.
+
+Args:
+    x: Definition of the bin centers for the X axis of the grid.
+    y: Definition of the bin centers for the Y axis of the grid.
+    wgs: WGS of the coordinate system used to manipulate geographic coordinates.
+        If this parameter is not set, the handled coordinates will be considered
+        as Cartesian coordinates. Otherwise, ``x`` and ``y`` are considered to
+        represents the longitudes and latitudes.
 )__doc__")
+          .c_str())
       .def(py::init<std::shared_ptr<pyinterp::Axis<double>>,
                     std::shared_ptr<pyinterp::Axis<double>>,
                     std::optional<pyinterp::geodetic::System>>(),
            py::arg("x"), py::arg("y"),
-           py::arg("wgs") = std::optional<pyinterp::geodetic::System>(),
-           R"__doc__(
-Default constructor
-
-Args:
-    x (pyinterp.core.Axis): Definition of the bin centers for the X axis of
-        the grid.
-    y (pyinterp.core.Axis): Definition of the bin centers for the Y axis of
-        the grid.
-    wgs (pyinterp.geodetic.System, optional): WGS of the coordinate system
-        used to manipulate geographic coordinates. If this parameter is not
-        set, the handled coordinates will be considered as Cartesian
-        coordinates. Otherwise, ``x`` and ``y`` are considered to represents
-        the longitudes and latitudes.
-)__doc__")
+           py::arg("wgs") = std::optional<pyinterp::geodetic::System>())
       .def_property_readonly(
           "x", [](const pyinterp::Binning2D<Type> &self) { return self.x(); },
           R"__doc__(
 Gets the bin centers for the X Axis of the grid.
 
 Returns:
-    pyinterp.core.Axis: X-Axis.
+    X-Axis.
 )__doc__")
       .def_property_readonly(
           "y", [](const pyinterp::Binning2D<Type> &self) { return self.y(); },
@@ -53,7 +54,7 @@ Returns:
 Gets the bin centers for the Y Axis of the grid.
 
 Returns:
-    pyinterp.core.Axis: Y-Axis.
+    Y-Axis.
 )__doc__")
       .def_property_readonly(
           "wgs",
@@ -62,75 +63,75 @@ Returns:
 Gets the WGS system handled by this instance.
 
 Returns:
-    pyinterp.core.geodetic.System: Geodetic system.
+    Geodetic system.
 )__doc__")
-      .def("clear", &pyinterp::Binning2D<Type>::clear, "Reset the statistics")
+      .def("clear", &pyinterp::Binning2D<Type>::clear, "Reset the statistics.")
       .def("count", &pyinterp::Binning2D<Type>::count,
            R"__doc__(
 Compute the count of points within each bin.
 
 Returns:
-    numpy.ndarray: count of points within each bin.
+    Count of points within each bin.
 )__doc__")
       .def("kurtosis", &pyinterp::Binning2D<Type>::kurtosis,
            R"__doc__(
 Compute the kurtosis of values for points within each bin.
 
 Returns:
-    numpy.ndarray: kurtosis of values for points within each bin.
+    Kurtosis of values for points within each bin.
 )__doc__")
       .def("max", &pyinterp::Binning2D<Type>::max,
            R"__doc__(
 Compute the maximum of values for points within each bin.
 
 Returns:
-    numpy.ndarray: maximum of values for points within each bin.
+    Maximum of values for points within each bin.
 )__doc__")
       .def("mean", &pyinterp::Binning2D<Type>::mean,
            R"__doc__(
 Compute the mean of values for points within each bin.
 
 Returns:
-    numpy.ndarray: mean of values for points within each bin.
+    Mean of values for points within each bin.
 )__doc__")
       .def("min", &pyinterp::Binning2D<Type>::min,
            R"__doc__(
 Compute the minimum of values for points within each bin.
 
 Returns:
-    numpy.ndarray: minimum of values for points within each bin.
+    Minimum of values for points within each bin.
 )__doc__")
       .def("push", &pyinterp::Binning2D<Type>::push, py::arg("x"), py::arg("y"),
            py::arg("z"), py::arg("simple") = true, R"__doc__(
 Push new samples into the defined bins.
 
 Args:
-    x (numpy.ndarray): X coordinates of the values to push.
-    y (numpy.ndarray): Y coordinates of the values to push.
-    z (numpy.ndarray): New samples to push.
-    simple (bool, optional):  If true, a simple binning 2D is used
-    otherwise a linear binning 2d is applied.
+    x: X coordinates of the values to push.
+    y: Y coordinates of the values to push.
+    z: New samples to push.
+    simple:  If true, a simple binning 2D is used otherwise a linear binning 2d
+        is applied.
 )__doc__")
       .def("sum", &pyinterp::Binning2D<Type>::sum,
            R"__doc__(
 Compute the sum of values for points within each bin.
 
 Returns:
-    numpy.ndarray: sum of values for points within each bin.
+    Sum of values for points within each bin.
 )__doc__")
       .def("sum_of_weights", &pyinterp::Binning2D<Type>::sum_of_weights,
            R"__doc__(
 Compute the sum of weights for points within each bin.
 
 Returns:
-    numpy.ndarray: sum of weights for points within each bin.
+    Sum of weights for points within each bin.
 )__doc__")
       .def("skewness", &pyinterp::Binning2D<Type>::skewness,
            R"__doc__(
 Compute the skewness of values for points within each bin.
 
 Returns:
-    numpy.ndarray: skewness of values for points within each bin.
+    Skewness of values for points within each bin.
 )__doc__")
       .def("variance", &pyinterp::Binning2D<Type>::variance,
            py::arg("ddof") = 0,
@@ -138,14 +139,15 @@ Returns:
 Compute the variance of values for points within each bin.
 
 Args:
-    ddof (int, optional): Means Delta Degrees of Freedom. The divisor used in
-        calculations is N - ddof, where N represents the number of elements.
-        By default ddof is zero.
+    ddof: Means Delta Degrees of Freedom. The divisor used in calculations is
+        N - ``ddof``, where N represents the number of elements. By default
+        ``ddof`` is zero.
 
 Returns:
-    numpy.ndarray: variance of values for points within each bin.
+    Variance of values for points within each bin.
 )__doc__")
-      .def("__iadd__", &pyinterp::Binning2D<Type>::operator+=,
+      .def("__iadd__", &pyinterp::Binning2D<Type>::operator+=, py::arg("other"),
+           "Overrides the default behavior of the ``+=`` operator.",
            py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const pyinterp::Binning2D<Type> &self) { return self.getstate(); },
@@ -155,26 +157,24 @@ Returns:
 
   py::class_<pyinterp::Binning1D<Type>, pyinterp::Binning2D<Type>>(
       m, ("Binning1D" + suffix).c_str(),
-      R"__doc__(
+      ("Binning1D" + suffix + R"__doc__((self, x: pyinterp.core.Axis)
+
 Group a number of more or less continuous values into a smaller number of
 "bins" located on a vector.
-)__doc__")
-      .def(py::init<std::shared_ptr<pyinterp::Axis<double>>>(), py::arg("x"),
-           R"__doc__(
-Default constructor
 
 Args:
-    x (pyinterp.core.Axis): Definition of the bin centers for the X Axis.
+    x: Definition of the bin centers for the X Axis.
 )__doc__")
+          .c_str())
+      .def(py::init<std::shared_ptr<pyinterp::Axis<double>>>(), py::arg("x"))
       .def("push", &pyinterp::Binning1D<Type>::push, py::arg("x"), py::arg("z"),
            py::arg("weights") = std::nullopt, R"__doc__(
 Push new samples into the defined bins.
 
 Args:
-    x (numpy.ndarray): X coordinates of the values to push.
-    z (numpy.ndarray): New samples to push.
-    weights (numpy.ndarray, optional): Weights of the new samples. Defaults to
-        None.
+    x: X coordinates of the values to push.
+    z: New samples to push.
+    weights: Weights of the new samples. Defaults to None.
 )__doc__")
       .def(py::pickle(
           [](const pyinterp::Binning1D<Type> &self) { return self.getstate(); },

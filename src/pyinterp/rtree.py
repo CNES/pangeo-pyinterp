@@ -15,26 +15,23 @@ from . import core, geodetic
 
 class RTree:
     """R*Tree spatial index for geodetic scalar values.
+
+    Args:
+        system: WGS of the coordinate system used to transform equatorial
+            spherical positions (longitudes, latitudes, altitude) into ECEF
+            coordinates. If not set the geodetic system used is WGS-84.
+            Default to ``None``.
+        dtype: Data type of the instance to create.
+        ndims: The number of dimensions of the tree. This dimension must be
+            at least equal to 3 to store the ECEF coordinates of the points.
+            Default to ``3``.
     """
 
     def __init__(self,
                  system: Optional[geodetic.System] = None,
                  dtype: Optional[np.dtype] = None,
                  ndims: int = 3):
-        """
-        Initialize a new R*Tree.
-
-        Args:
-            system (pyinterp.geodetic.System, optional): WGS of the
-                coordinate system used to transform equatorial spherical
-                positions (longitudes, latitudes, altitude) into ECEF
-                coordinates. If not set the geodetic system used is WGS-84.
-                Default to ``None``.
-            dtype (numpy.dtype, optional): Data type of the instance to create.
-            ndims (int, optional): The number of dimensions of the tree. This
-                dimension must be at least equal to 3 to store the ECEF
-                coordinates of the points. Default to ``3``.
-        """
+        """Initialize a new R*Tree."""
         dtype = dtype or np.dtype("float64")
         if ndims < 3:
             raise ValueError("ndims must be >= 3")
@@ -52,10 +49,9 @@ class RTree:
         """Returns the box able to contain all values stored in the container.
 
         Returns:
-            tuple: A tuple that contains the coordinates of the minimum and
-            maximum corners of the box able to contain all values stored in
-            the container or an empty tuple if there are no values in the
-            container.
+            A tuple that contains the coordinates of the minimum and maximum
+            corners of the box able to contain all values stored in the
+            container or an empty tuple if there are no values in the container.
         """
         return self._instance.bounds()
 
@@ -77,15 +73,14 @@ class RTree:
         before construction.)
 
         Args:
-            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
-                the number of observations and ``ndims`` is the number of
-                coordinates in order: longitude and latitude in degrees,
-                altitude in meters and then the other coordinates defined in
-                Euclidean space if ``dims`` > 3. If the shape of the matrix is
-                ``(n, ndims)`` then the method considers the altitude constant
-                and equal to zero.
-            values (numpy.ndarray): An array of size ``(n)`` containing the
-                values associated with the coordinates provided.
+            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
+                observations and ``ndims`` is the number of coordinates in
+                order: longitude and latitude in degrees, altitude in meters and
+                then the other coordinates defined in Euclidean space if
+                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
+                the method considers the altitude constant and equal to zero.
+            values: An array of size ``(n)`` containing the values associated
+                with the coordinates provided.
         """
         self._instance.packing(coordinates, values)
 
@@ -93,15 +88,14 @@ class RTree:
         """Insert new data into the search tree.
 
         Args:
-            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
-                the number of observations and ``ndims`` is the number of
-                coordinates in order: longitude and latitude in degrees,
-                altitude in meters and then the other coordinates defined in
-                Euclidean space if ``dims`` > 3. If the shape of the matrix is
-                ``(n, ndims)`` then the method considers the altitude constant
-                and equal to zero.
-            values (numpy.ndarray): An array of size ``(n)`` containing the
-                values associated with the coordinates provided.
+            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
+                observations and ``ndims`` is the number of coordinates in
+                order: longitude and latitude in degrees, altitude in meters and
+                then the other coordinates defined in Euclidean space if
+                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
+                the method considers the altitude constant and equal to zero.
+            values: An array of size ``(n)`` containing the values associated
+                with the coordinates provided.
         """
         self._instance.insert(coordinates, values)
 
@@ -113,27 +107,24 @@ class RTree:
         """Search for the nearest K nearest neighbors of a given point.
 
         Args:
-            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
-                the number of observations and ``ndims`` is the number of
-                coordinates in order: longitude and latitude in degrees,
-                altitude in meters and then the other coordinates defined in
-                Euclidean space if ``dims`` > 3. If the shape of the matrix is
-                ``(n, ndims)`` then the method considers the altitude constant
-                and equal to zero.
-            k (int, optional): The number of nearest neighbors to be searched.
-                Defaults to ``4``.
-            within (bool, optional): If true, the method ensures that the
-                neighbors found are located within the point of interest.
-                Defaults to ``false``.
-            num_threads (int, optional): The number of threads to use for the
-                computation. If 0 all CPUs are used. If 1 is given, no parallel
-                computing code is used at all, which is useful for debugging.
-                Defaults to ``0``.
+            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
+                observations and ``ndims`` is the number of coordinates in
+                order: longitude and latitude in degrees, altitude in meters and
+                then the other coordinates defined in Euclidean space if
+                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
+                the method considers the altitude constant and equal to zero.
+            k: The number of nearest neighbors to be searched. Defaults to
+                ``4``.
+            within: If true, the method ensures that the neighbors found are
+                located within the point of interest. Defaults to ``false``.
+            num_threads: The number of threads to use for the computation. If 0
+                all CPUs are used. If 1 is given, no parallel computing code is
+                used at all, which is useful for debugging. Defaults to ``0``.
         Returns:
-            tuple: A tuple containing a matrix describing for each provided
-            position, the distance, in meters, between the provided position
-            and the found neighbors and a matrix containing the value of the
-            different neighbors found for all provided positions.
+            A tuple containing a matrix describing for each provided position,
+            the distance, in meters, between the provided position and the found
+            neighbors and a matrix containing the value of the different
+            neighbors found for all provided positions.
         """
         return self._instance.query(coordinates, k, within, num_threads)
 
@@ -149,28 +140,26 @@ class RTree:
         distance weighting method.
 
         Args:
-            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
-                the number of observations and ``ndims`` is the number of
-                coordinates in order: longitude and latitude in degrees,
-                altitude in meters and then the other coordinates defined in
-                Euclidean space if ``dims`` > 3. If the shape of the matrix is
-                ``(n, ndims)`` then the method considers the altitude constant
-                and equal to zero.
-            radius (float, optional): The maximum radius of the search (m).
-                Defaults The maximum distance between two points.
-            k (int, optional): The number of nearest neighbors to be used for
-                calculating the interpolated value. Defaults to ``9``.
-            p (float, optional): The power parameters. Defaults to ``2``.
-            within (bool, optional): If true, the method ensures that the
-                neighbors found are located around the point of interest. In
-                other words, this parameter ensures that the calculated values
-                will not be extrapolated. Defaults to ``true``.
-            num_threads (int, optional): The number of threads to use for the
-                computation. If 0 all CPUs are used. If 1 is given, no parallel
-                computing code is used at all, which is useful for debugging.
-                Defaults to ``0``.
+            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
+                observations and ``ndims`` is the number of coordinates in
+                order: longitude and latitude in degrees, altitude in meters and
+                then the other coordinates defined in Euclidean space if
+                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
+                the method considers the altitude constant and equal to zero.
+            radius: The maximum radius of the search (m). Defaults The maximum
+                distance between two points.
+            k: The number of nearest neighbors to be used for calculating the
+                interpolated value. Defaults to ``9``.
+            p: The power parameters. Defaults to ``2``.
+            within: If true, the method ensures that the neighbors found are
+                located around the point of interest. In other words, this
+                parameter ensures that the calculated values will not be
+                extrapolated. Defaults to ``true``.
+            num_threads: The number of threads to use for the computation. If 0
+                all CPUs are used. If 1 is given, no parallel computing code is
+                used at all, which is useful for debugging. Defaults to ``0``.
         Returns:
-            tuple: The interpolated value and the number of neighbors used in
+            The interpolated value and the number of neighbors used in
             the calculation.
         """
         return self._instance.inverse_distance_weighting(
@@ -190,20 +179,19 @@ class RTree:
         basis function interpolation.
 
         Args:
-            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
-                the number of observations and ``ndims`` is the number of
-                coordinates in order: longitude and latitude in degrees,
-                altitude in meters and then the other coordinates defined in
-                Euclidean space if ``dims`` > 3. If the shape of the matrix is
-                ``(n, ndims)`` then the method considers the altitude constant
-                and equal to zero.
-            radius (float, optional): The maximum radius of the search (m).
-                Defaults The maximum distance between two points.
-            k (int, optional): The number of nearest neighbors to be used for
-                calculating the interpolated value. Defaults to ``9``.
-            rbf (str, optional): The radial basis function, based on the
-                radius, :math:`r`, given by the distance between points.
-                This parameter can take one of the following values:
+            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
+                observations and ``ndims`` is the number of coordinates in
+                order: longitude and latitude in degrees, altitude in meters and
+                then the other coordinates defined in Euclidean space if
+                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
+                the method considers the altitude constant and equal to zero.
+            radius: The maximum radius of the search (m). Defaults The maximum
+                distance between two points.
+            k: The number of nearest neighbors to be used for calculating the
+                interpolated value. Defaults to ``9``.
+            rbf: The radial basis function, based on the radius, :math:`r`
+                given by the distance between points. This parameter can take
+                one of the following values:
 
                 * ``cubic``: :math:`\\varphi(r) = r^3`
                 * ``gaussian``: :math:`\\varphi(r) = e^{-(\\dfrac{r}
@@ -216,22 +204,20 @@ class RTree:
                 * ``thin_plate``: :math:`\\varphi(r) = r^2 \\ln(r)`
 
                 Default to ``multiquadric``
-            epsilon (float, optional): adjustable constant for gaussian or
-                multiquadrics functions. Default to the average distance
-                between nodes.
-            smooth (float, optional): values greater than zero increase the
-                smoothness of the approximation. Default to 0 (interpolation).
-            within (bool, optional): If true, the method ensures that the
-                neighbors found are located around the point of interest. In
-                other words, this parameter ensures that the calculated values
-                will not be extrapolated. Defaults to ``true``.
-            num_threads (int, optional): The number of threads to use for the
-                computation. If 0 all CPUs are used. If 1 is given, no parallel
-                computing code is used at all, which is useful for debugging.
-                Defaults to ``0``.
+            epsilon: adjustable constant for gaussian or multiquadrics
+                functions. Default to the average distance between nodes.
+            smooth: values greater than zero increase the smoothness of the
+                approximation. Default to 0 (interpolation).
+            within: If true, the method ensures that the neighbors found are
+                located around the point of interest. In other words, this
+                parameter ensures that the calculated values will not be
+                extrapolated. Defaults to ``true``.
+            num_threads: The number of threads to use for the computation. If 0
+                all CPUs are used. If 1 is given, no parallel computing code is
+                used at all, which is useful for debugging. Defaults to ``0``.
         Returns:
-            tuple: The interpolated value and the number of neighbors used in
-            the calculation.
+            The interpolated value and the number of neighbors used in the
+            calculation.
         """
         adjustable = ['gaussian', 'inverse_multiquadric', 'multiquadric']
         non_adjustable = ['cubic', 'linear', 'thin_plate']
@@ -273,19 +259,18 @@ class RTree:
         describe above.
 
         Args:
-            coordinates (numpy.ndarray): a matrix ``(n, ndims)`` where ``n`` is
-                the number of observations and ``ndims`` is the number of
-                coordinates in order: longitude and latitude in degrees,
-                altitude in meters and then the other coordinates defined in
-                Euclidean space if ``dims`` > 3. If the shape of the matrix is
-                ``(n, ndims)`` then the method considers the altitude constant
-                and equal to zero.
-            radius (float): The maximum radius of the search (m).
-            k (int, optional): The number of nearest neighbors to be used for
-                calculating the interpolated value. Defaults to ``9``.
-            wf (str, optional): The window function, based on the distance the
-                distance between points (:math:`d`) and the radius (:math:`r`).
-                This parameter can take one of the following values:
+            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
+                observations and ``ndims`` is the number of coordinates in
+                order: longitude and latitude in degrees, altitude in meters and
+                then the other coordinates defined in Euclidean space if
+                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
+                the method considers the altitude constant and equal to zero.
+            radius: The maximum radius of the search (m).
+            k: The number of nearest neighbors to be used for calculating the
+                interpolated value. Defaults to ``9``.
+            wf: The window function, based on the distance the distance between
+                points (:math:`d`) and the radius (:math:`r`). This parameter
+                can take one of the following values:
 
                 * ``blackman``: :math:`w(d) = 0.42659 - 0.49656 \\cos(
                   \\frac{\\pi (d + r)}{r}) + 0.076849 \\cos(
@@ -323,20 +308,19 @@ class RTree:
                   2\\left(1 - \\frac{2 * d}{2 * r}\\right)^3 &
                   \\frac{2r}{2} \\ge d \\gt \\frac{2r}{4} \\end{array}
                   \\right\\}`
-            arg (float, optional): The optional argument of the window
-                function. Defaults to ``1`` for ``lanczos``, to ``0`` for
-                ``parzen`` and for all other functions is ``None``.
-            within (bool, optional): If true, the method ensures that the
-                neighbors found are located around the point of interest. In
-                other words, this parameter ensures that the calculated values
-                will not be extrapolated. Defaults to ``true``.
-            num_threads (int, optional): The number of threads to use for the
-                computation. If 0 all CPUs are used. If 1 is given, no parallel
-                computing code is used at all, which is useful for debugging.
-                Defaults to ``0``.
+            arg: The optional argument of the window function. Defaults to
+                ``1`` for ``lanczos``, to ``0`` for ``parzen`` and for all
+                other functions is ``None``.
+            within: If true, the method ensures that the neighbors found are
+                located around the point of interest. In other words, this
+                parameter ensures that the calculated values will not be
+                extrapolated. Defaults to ``true``.
+            num_threads: The number of threads to use for the computation. If 0
+                all CPUs are used. If 1 is given, no parallel computing code is
+                used at all, which is useful for debugging. Defaults to ``0``.
         Returns:
-            tuple: The interpolated value and the number of neighbors used in
-            the calculation.
+            The interpolated value and the number of neighbors used in the
+            calculation.
         """
         wf = wf or "blackman"
         if wf not in [
@@ -381,7 +365,7 @@ class RTree:
         """Return the state of the object for pickling purposes.
 
         Returns:
-            tuple: The state of the object for pickling purposes.
+            The state of the object for pickling purposes.
         """
         return (self.dtype, self._instance.__getstate__())
 
@@ -389,7 +373,7 @@ class RTree:
         """Set the state of the object from pickling.
 
         Args:
-            state (tuple): The state of the object for pickling purposes.
+            state: The state of the object for pickling purposes.
         """
         if len(state) != 2:
             raise ValueError("invalid state")

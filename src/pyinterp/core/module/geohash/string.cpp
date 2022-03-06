@@ -38,15 +38,14 @@ void init_geohash_string(py::module &m) {
 Encode coordinates into geohash with the given precision.
 
 Args:
-  lon (numpy.ndarray) Longitudes in degrees.
-  lat (numpy.ndarray) Latitudes in degrees.
-  precision (int, optional) Number of bits used to encode the geohash code.
-    Defaults to 12.
+    lon: Longitudes in degrees.
+    lat: Latitudes in degrees.
+    precision: Number of bits used to encode the geohash code. Defaults to 12.
 Returns:
-  numpy.ndarray: geohash codes.
+    Geohash codes.
 Raises:
-  ValueError: If the given precision is not within [1, 12].
-  ValueError: If the lon and lat vectors have different sizes.
+    ValueError: If the given precision is not within [1, 12].
+    ValueError: If the lon and lat vectors have different sizes.
 )__doc__")
       .def(
           "decode",
@@ -59,11 +58,11 @@ Raises:
 Decode hashes into a geographic points.
 
 Args:
-  hash (numpy.ndarray): GeoHash codes.
-  round (optional, bool): If true, the coordinates of the point will be
-    rounded to the accuracy defined by the GeoHash. Defaults to False.
+    hash: GeoHash codes.
+    round: If true, the coordinates of the point will be rounded to the accuracy
+        defined by the GeoHash. Defaults to False.
 Returns:
-  tuple: longitudes/latitudes of the decoded points.
+    Longitudes/latitudes of the decoded points.
 )__doc__")
       .def(
           "area",
@@ -76,12 +75,11 @@ Returns:
 Calculated the area caovered by the GeoHash codes.
 
 Args:
-  hash (numpy.ndarray): GeoHash codes.
-  wgs (optional, pyinterp.geodetic.System): WGS used to calculate the area.
-    Defaults to WGS84.
+    hash: GeoHash codes.
+    wgs: WGS used to calculate the area. Defaults to WGS84.
 
 Returns:
-  double: calculated areas.
+   Calculated areas.
 )__doc__")
       .def(
           "bounding_boxes",
@@ -95,11 +93,10 @@ Returns:
 Returns all geohash codes contained in the defined bounding box.
 
 Args:
-  box (pyinterp.geohash.Box, optional): Bounding box. Default to the
-    global bounding box.
-  precision (int, optional): Required accuracy. Defaults to 1.
+    box: Bounding box. Default to the global bounding box.
+    precision: Required accuracy. Defaults to 1.
 Returns:
-  numpy.ndarray: GeoHash codes.
+    GeoHash codes.
 Raises:
     ValueError: If the given precision is not within [1, 12].
     MemoryError: If the memory is not sufficient to store the result.
@@ -118,15 +115,14 @@ Raises:
 Returns all geohash codes contained in the defined polygon.
 
 Args:
-  polygon (pyinterp.geodetic.Polygon): Polygon.
-  precision (int, optional): Required accuracy.
-    Defaults to 1.
-  num_threads (int, optional): The number of threads to use for the
-    computation. If 0 all CPUs are used. If 1 is given, no parallel
-    computing code is used at all, which is useful for debugging.
-    Defaults to ``0``.
+    polygon: Polygon.
+    precision: Required accuracy. Defaults to ``1``.
+    num_threads: The number of threads to use for the
+        computation. If 0 all CPUs are used. If 1 is given, no parallel
+        computing code is used at all, which is useful for debugging.
+        Defaults to ``0``.
 Returns:
-  numpy.ndarray: GeoHash codes.
+    GeoHash codes.
 Raises:
     ValueError: If the given precision is not within [1, 12].
     MemoryError: If the memory is not sufficient to store the result.
@@ -148,9 +144,9 @@ Raises:
 Returns the start and end indexes of the different GeoHash boxes.
 
 Args:
-  hash (numpy.ndarray): GeoHash codes.
+    hash: GeoHash codes.
 Returns:
-  dict: dictionary between successive identical geohash codes and start and
+    Dictionary between successive identical geohash codes and start and
     end indexes in the table provided as input.
 )__doc__")
       .def(
@@ -165,11 +161,11 @@ precision is higher than the precision of the given codes, the result contains
 a zoom in, otherwise it contains a zoom out.
 
 Args:
-  hash (numpy.ndarray): GeoHash codes.
-  precision (int, optional): Required accuracy. Defaults to 1.
+    hash: GeoHash codes.
+    precision: Required accuracy. Defaults to ``1``.
 Returns:
-  numpy.ndarray: GeoHash codes transformed.
+    GeoHash codes transformed.
 Raises:
-  ValueError: If the given precision is not within [1, 12].
+    ValueError: If the given precision is not within [1, 12].
 )__doc__");
 }

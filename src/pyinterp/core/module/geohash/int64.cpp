@@ -38,14 +38,14 @@ void init_geohash_int64(py::module &m) {
 Encode coordinates into geohash with the given precision.
 
 Args:
-  lon (numpy.ndarray) Longitudes in degrees.
-  lat (numpy.ndarray) Latitudes in degrees.
-  precision (int, optional) Number of bits used to encode the geohash code.
+    lon: Longitudes in degrees.
+    lat: Latitudes in degrees.
+    precision: Number of bits used to encode the geohash code.
 Returns:
-  numpy.ndarray: geohash codes.
+    Geohash codes.
 Raises:
-  ValueError: If the given precision is not within [1, 64].
-  ValueError: If the lon and lat vectors have different sizes.
+    ValueError: If the given precision is not within [1, 64].
+    ValueError: If the lon and lat vectors have different sizes.
 )__doc__")
       .def(
           "decode",
@@ -60,12 +60,12 @@ Raises:
 Decode hash into a geographic points with the given precision.
 
 Args:
-  hash (numpy.ndarray): GeoHash.
-  precision (int, optional): Required accuracy.
-  round (optional, bool): If true, the coordinates of the point will be
-    rounded to the accuracy defined by the GeoHash."
+    hash: GeoHash.
+    precision: Required accuracy.
+    round: If true, the coordinates of the point will be rounded to the accuracy
+        defined by the GeoHash."
 Returns:
-  tuple: longitudes/latitudes of the decoded points.
+    Longitudes/latitudes of the decoded points.
 Raises:
     ValueError: If the given precision is not within [1, 64].
 )__doc__")
@@ -82,11 +82,11 @@ Returns all neighbors hash clockwise from north around northwest
 at the given precision.
 
 Args:
-  hash (int): Geohash code.
-  precision (int, optional): Required accuracy.
+    hash: Geohash code.
+    precision: Required accuracy.
 Returns:
-  numpy.ndarray: Geohash codes.
+    Geohash codes.
 Raises:
-  ValueError: If the given precision is not within [1, 64].
+    ValueError: If the given precision is not within [1, 64].
 )__doc__");
 }

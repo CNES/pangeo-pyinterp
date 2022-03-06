@@ -27,10 +27,9 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
     """Bicubic gridded interpolator.
 
     Args:
-        mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D, pyinterp.grid.Grid4D):
-            Function on a uniform grid to be interpolated. If the grid is a ND
-            grid, the bicubic interpolation is performed spatially along the X
-            and Y axes of the ND grid and a linear interpolation are performed
+        mesh: Function on a uniform grid to be interpolated. If the grid is a
+            ND grid, the bicubic interpolation is performed spatially along the
+            X and Y axes of the ND grid and a linear interpolation are performed
             along the other axes between the values obtained by the bicubic
             interpolation.
 
@@ -39,23 +38,21 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
                 The GSL functions for calculating bicubic functions require
                 that the axes defined in the grids are strictly increasing.
 
-        x (numpy.ndarray): X-values.
-        y (numpy.ndarray): Y-values.
-        z (numpy.ndarray, optional): None for a :py:class:`2D Grid
-            <pyinterp.grid.Grid2D>` otherwise Z-values.
-        u (numpy.ndarray, optional): None for a :py:class:`2D Grid
-            <pyinterp.grid.Grid2D>`, :py:class:`3D Grid
-            <pyinterp.grid.Grid3D>` otherwise U-values.
-        nx (int, optional): The number of X-coordinate values required to
-            perform the interpolation. Defaults to ``3``.
-        ny (int, optional): The number of Y-coordinate values required to
-            perform the interpolation. Defaults to ``3``.
-        fitting_model (str, optional): Type of interpolation to be performed.
+        x: X-values.
+        y: Y-values.
+        z: None for a :py:class:`2D Grid <pyinterp.grid.Grid2D>` otherwise
+            Z-values.
+        u: None for a :py:class:`2D Grid <pyinterp.grid.Grid2D>`,
+            :py:class:`3D Grid <pyinterp.grid.Grid3D>` otherwise U-values.
+        nx: The number of X-coordinate values required to perform the
+            interpolation. Defaults to ``3``.
+        ny: The number of Y-coordinate values required to perform the
+            interpolation. Defaults to ``3``.
+        fitting_model: Type of interpolation to be performed.
             Supported are ``linear``, ``bicubic``, ``polynomial``, ``c_spline``,
             ``c_spline_periodic``, ``akima``, ``akima_periodic`` and
             ``steffen``. Default to ``bicubic``.
-        boundary (str, optional): A flag indicating how to handle boundaries of
-            the frame.
+        boundary: A flag indicating how to handle boundaries of the frame.
 
             * ``expand``: Expand the boundary as a constant.
             * ``wrap``: circular boundary conditions.
@@ -63,16 +60,15 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
             * ``undef``: Boundary violation is not defined.
 
             Default ``undef``.
-        bounds_error (bool, optional): If True, when interpolated values are
-            requested outside of the domain of the input axes (x,y), a
-            :py:class:`ValueError` is raised. If False, then the value is set to
-            NaN. Default to ``False``.
-        num_threads (int, optional): The number of threads to use for the
-            computation. If 0 all CPUs are used. If 1 is given, no parallel
-            computing code is used at all, which is useful for debugging.
-            Defaults to ``0``.
+        bounds_error: If True, when interpolated values are requested outside
+            of the domain of the input axes (x,y), a :py:class:`ValueError` is
+            raised. If False, then the value is set to NaN. Default to
+            ``False``.
+        num_threads: The number of threads to use for the computation. If 0 all
+            CPUs are used. If 1 is given, no parallel computing code is used at
+            all, which is useful for debugging. Defaults to ``0``.
     Returns:
-        numpy.ndarray: Values interpolated.
+        Values interpolated.
     """
     if not mesh.x.is_ascending():
         raise ValueError('X-axis is not increasing')

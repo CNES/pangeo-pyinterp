@@ -17,14 +17,14 @@ template <size_t N>
 static auto coordinates_help() -> std::string {
   auto ss = std::stringstream();
   if (N == 3) {
-    ss << "coordinates (numpy.ndarray): a matrix ``(n, 3)`` where ``n`` is\n"
+    ss << "coordinates: a matrix ``(n, 3)`` where ``n`` is\n"
           "        the number of observations and 3 is the number of\n"
           "        coordinates in order: longitude and latitude in degrees\n"
           "        and altitude in meters. If the shape of the matrix is\n"
           "        ``(n, 2)`` then the method considers the altitude\n"
           "        constant and equal to zero.\n";
   } else {
-    ss << "coordinates (numpy.ndarray): a matrix ``(n, " << N
+    ss << "coordinates: a matrix ``(n, " << N
        << ")`` where ``n`` is\n"
           "        the number of observations and 3 is the number of\n"
           "        coordinates in order: longitude and latitude in degrees,\n"
@@ -47,20 +47,20 @@ template <typename CoordinateType, typename Type, size_t N>
 static void implement_rtree(py::module &m, const char *const suffix) {
   py::class_<pyinterp::RTree<CoordinateType, Type, N>>(
       m, class_name<N>(suffix).c_str(),
-      R"__doc__(
+      (class_name<N>(suffix) +
+       "(self, system: Optional[pyinterp.core.geodetic.System] = None)" +
+       R"__doc__(
+
 RTree spatial index for geodetic scalar values
-)__doc__")
-      .def(py::init<std::optional<pyinterp::geodetic::System>>(),
-           py::arg("system"),
-           R"__doc__(
-Default constructor
 
 Args:
-    system (pyinterp.core.geodetic.System, optional): WGS of the
-        coordinate system used to transform equatorial spherical positions
-        (longitudes, latitudes, altitude) into ECEF coordinates. If not set
-        the geodetic system used is WGS-84.
+    system: WGS of the coordinate system used to transform equatorial spherical
+        positions (longitudes, latitudes, altitude) into ECEF coordinates. If
+        not set the geodetic system used is WGS-84.
 )__doc__")
+          .c_str())
+      .def(py::init<std::optional<pyinterp::geodetic::System>>(),
+           py::arg("system") = std::nullopt)
       .def("bounds",
            &pyinterp::RTree<CoordinateType, Type, N>::equatorial_bounds,
            R"__doc__(
@@ -91,8 +91,8 @@ before construction.)
 Args:
     )__doc__" +
             coordinates_help<N>() + R"__doc__(
-    values (numpy.ndarray): An array of size ``(n)`` containing the values
-        associated with the coordinates provided.
+    values: An array of size ``(n)`` containing the values associated with the
+        coordinates provided.
 )__doc__")
                .c_str(),
            py::call_guard<py::gil_scoped_release>())
@@ -104,8 +104,8 @@ Insert new data into the search tree.
 Args:
     )__doc__" +
             coordinates_help<N>() + R"__doc__(
-    values (numpy.ndarray): An array of size ``(n)`` containing the values
-        associated with the coordinates provided.
+    values: An array of size ``(n)`` containing the values associated with the
+        coordinates provided.
 )__doc__")
                .c_str(),
            py::call_guard<py::gil_scoped_release>())
@@ -124,20 +124,18 @@ Search for the nearest K nearest neighbors of a given point.
 Args:
     )__doc__" +
            coordinates_help<N>() + R"__doc__(
-    k (int, optional): The number of nearest neighbors to be used for
-        calculating the interpolated value. Defaults to ``4``.
-    within (bool, optional): If true, the method ensures that the neighbors
-        found are located within the point of interest. Defaults to
-        ``false``.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``4``.
+    within: If true, the method ensures that the neighbors found are located
+        within the point of interest. Defaults to ``false``.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    tuple: A tuple containing a matrix describing for each provided position,
-    the distance, in meters, between the provided position and the found
-    neighbors and a matrix containing the value of the different neighbors
-    found for all provided positions.
+    A tuple containing a matrix describing for each provided position, the
+    distance, in meters, between the provided position and the found neighbors
+    and a matrix containing the value of the different neighbors found for all
+    provided positions.
 )__doc__")
               .c_str())
       .def(
@@ -153,21 +151,19 @@ weighting method.
 Args:
     )__doc__" +
            coordinates_help<N>() + R"__doc__(
-    radius (float, optional): The maximum radius of the search (m).
-        Defaults The maximum distance between two points.
-    k (int, optional): The number of nearest neighbors to be used for
-        calculating the interpolated value. Defaults to ``9``.
-    p (float, optional): The power parameters. Defaults to ``2``.
-    within (bool, optional): If true, the method ensures that the neighbors
-        found are located around the point of interest. In other words, this
-        parameter ensures that the calculated values will not be extrapolated.
-        Defaults to ``true``.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    radius: The maximum radius of the search (m). Defaults The maximum distance
+        between two points.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``9``.
+    p: The power parameters. Defaults to ``2``. within (bool, optional): If
+        true, the method ensures that the neighbors found are located around the
+        point of interest. In other words, this parameter ensures that the
+        calculated values will not be extrapolated. Defaults to ``true``.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    tuple: The interpolated value and the number of neighbors used in the
+    The interpolated value and the number of neighbors used in the
     calculation.
 )__doc__")
               .c_str())
@@ -187,33 +183,31 @@ interpolation.
 Args:
     )__doc__" +
            coordinates_help<N>() + R"__doc__(
-    radius (float, optional): The maximum radius of the search (m).
-        Default to the largest value that can be represented on a float.
-    k (int, optional): The number of nearest neighbors to be used for
-        calculating the interpolated value. Defaults to ``9``.
-    rbf (pyinterp.core.RadialBasisFunction, optional): The radial basis
-        function, based on the radius, r, given by the distance between points.
-        Default to :py:attr:`pyinterp.core.RadialBasisFunction.Multiquadric`.
-    epsilon (float, optional): Adjustable constant for gaussian or
-        multiquadrics functions. Default to the average distance between nodes.
-    smooth (float, optional): Values greater than zero increase the smoothness
-        of the approximation.
-    within (bool, optional): If true, the method ensures that the neighbors
-        found are located around the point of interest. Defaults to ``true``.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    radius: The maximum radius of the search (m). Default to the largest value
+        that can be represented on a float.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``9``.
+    rbf: The radial basis function, based on the radius, r, given by the
+        distance between points. Default to
+        :py:attr:`pyinterp.core.RadialBasisFunction.Multiquadric`.
+    epsilon: Adjustable constant for gaussian or multiquadrics functions.
+        Default to the average distance between nodes.
+    smooth: Values greater than zero increase the smoothness of the
+        approximation.
+    within: If true, the method ensures that the neighbors found are located
+        around the point of interest. Defaults to ``true``.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    tuple: The interpolated value and the number of neighbors used for the
-    calculation.
+    The interpolated value and the number of neighbors used for the calculation.
 )__doc__")
               .c_str())
       .def("window_function",
            &pyinterp::RTree<CoordinateType, Type, N>::window_function,
            py::arg("coordinates"), py::arg("radius"), py::arg("k") = 9,
            py::arg("wf") = pyinterp::WindowFunction::kHamming,
-           py::arg("arg") = py::none(), py::arg("within") = true,
+           py::arg("arg") = std::nullopt, py::arg("within") = true,
            py::arg("num_threads") = 0,
            (R"__doc__(
 Interpolation of the value at the requested position by window function.
@@ -221,23 +215,20 @@ Interpolation of the value at the requested position by window function.
 Args:
     )__doc__" +
             coordinates_help<N>() + R"__doc__(
-    radius (float, optional): The maximum radius of the search (m).
-        Default to the largest value that can be represented on a float.
-    k (int, optional): The number of nearest neighbors to be used for
-        calculating the interpolated value. Defaults to ``9``.
-    wf (pyinterp.core.WindowFunction, optional): The window function to be
-        used. Defaults to :py:attr:`pyinterp.core.WindowFunction.Hamming`.
-    arg (float, optional): The optional argument of the window function.
-        Defaults to ``None``.
-    within (bool, optional): If true, the method ensures that the neighbors
-        found are located around the point of interest. Defaults to ``true``.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    radius: The maximum radius of the search (m). Default to the largest value
+        that can be represented on a float.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``9``.
+    wf: The window function to be used. Defaults to
+        :py:attr:`pyinterp.core.WindowFunction.Hamming`.
+    arg: The optional argument of the window function. Defaults to ``None``.
+    within: If true, the method ensures that the neighbors found are located
+        around the point of interest. Defaults to ``true``.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    tuple: The interpolated value and the number of neighbors used for the
-    calculation.
+    The interpolated value and the number of neighbors used for the calculation.
 )__doc__")
                .c_str())
       .def(py::pickle(

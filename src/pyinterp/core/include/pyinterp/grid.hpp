@@ -243,58 +243,64 @@ void implement_ndgrid(pybind11::module &m, const std::string &prefix,
     help = prefix + " " + help;
   }
   pybind11::class_<Grid3D<DataType, AxisType>>(
-      m, (prefix + "Grid3D" + suffix).c_str(), help.c_str())
+      m, (prefix + "Grid3D" + suffix).c_str(),
+      (prefix + "Grid3D" + suffix +
+       "(self,"
+       " x: pyinterp.core.Axis,"
+       " y: pyinterp.core.Axis,"
+       " z: pyinterp.core." +
+       prefix +
+       "Axis,"
+       " array: numpy.ndarray)" +
+       R"(
+
+)" + help +
+       R"(
+
+Args:
+    x: X-Axis
+    y: Y-Axis
+    z: Z-Axis
+    array: Trivariate function values.
+)")
+          .c_str())
       .def(pybind11::init<
                std::shared_ptr<Axis<double>>, std::shared_ptr<Axis<double>>,
                std::shared_ptr<Axis<AxisType>>, pybind11::array_t<DataType>>(),
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
-           pybind11::arg("array"),
-           (R"__doc__(
-Default constructor
-
-Args:
-    x (pyinterp.core.Axis): X-Axis
-    y (pyinterp.core.Axis): Y-Axis
-    z (pyinterp.core.)__doc__" +
-            prefix + R"__doc__(Axis): Z-Axis
-    array (numpy.ndarray): Trivariate function
-)__doc__")
-               .c_str())
+           pybind11::arg("array"))
       .def_property_readonly(
           "x", [](const Grid3D<DataType, AxisType> &self) { return self.x(); },
           R"__doc__(
-Gets the X-Axis handled by this instance
+Gets the X-Axis handled by this instance.
 
 Returns:
-    pyinterp.core.Axis: X-Axis
+    X-Axis.
 )__doc__")
       .def_property_readonly(
           "y", [](const Grid3D<DataType, AxisType> &self) { return self.y(); },
           R"__doc__(
-Gets the Y-Axis handled by this instance
+Gets the Y-Axis handled by this instance.
 
 Returns:
-    pyinterp.core.Axis: Y-Axis
+    Y-Axis.
 )__doc__")
       .def_property_readonly(
           "z", [](const Grid3D<DataType, AxisType> &self) { return self.z(); },
-          (R"__doc__(
-Gets the Z-Axis handled by this instance
+          R"__doc__(
+Gets the Z-Axis handled by this instance.
 
 Returns:
-    pyinterp.core.)__doc__" +
-           prefix +
-           R"__doc__(Axis: Z-Axis
+    Z-Axis.
 )__doc__")
-              .c_str())
       .def_property_readonly(
           "array",
           [](const Grid3D<DataType, AxisType> &self) { return self.array(); },
           R"__doc__(
-Gets the values handled by this instance
+Gets the values handled by this instance.
 
 Returns:
-    numpy.ndarray: values
+    Values.
 )__doc__")
       .def(pybind11::pickle(
           [](const Grid3D<DataType, AxisType> &self) {
@@ -309,67 +315,75 @@ Returns:
     help = prefix + " " + help;
   }
   pybind11::class_<Grid4D<DataType, AxisType>>(
-      m, (prefix + "Grid4D" + suffix).c_str(), help.c_str())
+      m, (prefix + "Grid4D" + suffix).c_str(),
+      (prefix + "Grid4D" + suffix +
+       "(self,"
+       " x: pyinterp.core.Axis,"
+       " y: pyinterp.core.Axis,"
+       " z: pyinterp.core.Axis,"
+       " u: pyinterp.core." +
+       prefix +
+       "Axis,"
+       " array: numpy.ndarray)" +
+       R"(
+
+)" + help +
+       R"(
+
+Args:
+    x: X-Axis
+    y: Y-Axis
+    z: Z-Axis
+    u: U-Axis
+    array: Quadrivariate function
+)")
+          .c_str())
       .def(pybind11::init<
                std::shared_ptr<Axis<double>>, std::shared_ptr<Axis<double>>,
                std::shared_ptr<Axis<AxisType>>, std::shared_ptr<Axis<double>>,
                pybind11::array_t<DataType>>(),
            pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("z"),
-           pybind11::arg("u"), pybind11::arg("array"),
-           (R"__doc__(
-Default constructor
-
-Args:
-    x (pyinterp.core.Axis): X-Axis
-    y (pyinterp.core.Axis): Y-Axis
-    z (pyinterp.core.)__doc__" +
-            prefix + R"__doc__(Axis): Z-Axis
-    u (pyinterp.core.Axis): U-Axis
-    array (numpy.ndarray): Quadrivariate function
-)__doc__")
-               .c_str())
+           pybind11::arg("u"), pybind11::arg("array"))
       .def_property_readonly(
           "x", [](const Grid4D<DataType, AxisType> &self) { return self.x(); },
           R"__doc__(
-Gets the X-Axis handled by this instance
+Gets the X-Axis handled by this instance.
 
 Returns:
-    pyinterp.core.Axis: X-Axis
+    X-Axis.
 )__doc__")
       .def_property_readonly(
           "y", [](const Grid4D<DataType, AxisType> &self) { return self.y(); },
           R"__doc__(
-Gets the Y-Axis handled by this instance
+Gets the Y-Axis handled by this instance.
 
 Returns:
-    pyinterp.core.Axis: Y-Axis
+    Y-Axis.
 )__doc__")
       .def_property_readonly(
           "z", [](const Grid4D<DataType, AxisType> &self) { return self.z(); },
-          (R"__doc__(
-Gets the Z-Axis handled by this instance
+          R"__doc__(
+Gets the Z-Axis handled by this instance.
 
 Returns:
-    pyinterp.core.)__doc__" +
-           prefix + R"__doc__(Axis: Z-Axis
+    Z-Axis.
 )__doc__")
-              .c_str())
       .def_property_readonly(
           "u", [](const Grid4D<DataType, AxisType> &self) { return self.u(); },
           R"__doc__(
-Gets the U-Axis handled by this instance
+Gets the U-Axis handled by this instance.
 
 Returns:
-    pyinterp.core.Axis: U-Axis
+    U-Axis.
 )__doc__")
       .def_property_readonly(
           "array",
           [](const Grid4D<DataType, AxisType> &self) { return self.array(); },
           R"__doc__(
-Gets the values handled by this instance
+Gets the values handled by this instance.
 
 Returns:
-    numpy.ndarray: values
+    Values.
 )__doc__")
       .def(pybind11::pickle(
           [](const Grid4D<DataType, AxisType> &self) {
@@ -386,42 +400,47 @@ Returns:
 template <typename DataType>
 void implement_grid(pybind11::module &m, const std::string &suffix) {
   pybind11::class_<Grid2D<DataType>>(m, ("Grid2D" + suffix).c_str(),
-                                     "Cartesian Grid 2D")
+                                     ("Grid2D" + suffix +
+                                      "(self,"
+                                      " x: pyinterp.core.Axis,"
+                                      " y: pyinterp.core.Axis,"
+                                      " array: numpy.ndarray)" +
+                                      R"__doc__(
+Cartesian Grid 2D.
+
+Args:
+    x: X-Axis.
+    y: Y-Axis.
+    array: Bivariate function.
+)__doc__")
+                                         .c_str())
       .def(pybind11::init<std::shared_ptr<Axis<double>>,
                           std::shared_ptr<Axis<double>>,
                           pybind11::array_t<DataType>>(),
-           pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("array"),
-           R"__doc__(
-Default constructor
-
-Args:
-    x (pyinterp.core.Axis): X-Axis
-    y (pyinterp.core.Axis): Y-Axis
-    array (numpy.ndarray): Bivariate function
-)__doc__")
+           pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("array"))
       .def_property_readonly(
           "x", [](const Grid2D<DataType> &self) { return self.x(); },
           R"__doc__(
-Gets the X-Axis handled by this instance
+Gets the X-Axis handled by this instance.
 
 Returns:
-    pyinterp.core.Axis: X-Axis
+    X-Axis.
 )__doc__")
       .def_property_readonly(
           "y", [](const Grid2D<DataType> &self) { return self.y(); },
           R"__doc__(
-Gets the Y-Axis handled by this instance
+Gets the Y-Axis handled by this instance.
 
 Returns:
-    pyinterp.core.Axis: Y-Axis
+    Y-Axis.
 )__doc__")
       .def_property_readonly(
           "array", [](const Grid2D<DataType> &self) { return self.array(); },
           R"__doc__(
-Gets the values handled by this instance
+Gets the values handled by this instance.
 
 Returns:
-    numpy.ndarray: values
+    Values.
 )__doc__")
       .def(pybind11::pickle(
           [](const Grid2D<DataType> &self) { return self.getstate(); },

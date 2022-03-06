@@ -151,33 +151,27 @@ void implement_trivariate(pybind11::module &m, const std::string &prefix,
         pybind11::arg("interpolator"),
         pybind11::arg("z_method") = pybind11::none(),
         pybind11::arg("bounds_error") = false, pybind11::arg("num_threads") = 0,
-        (R"__doc__(
+        R"__doc__(
 Interpolate the values provided on the defined trivariate function.
 
 Args:
-    grid (pyinterp.core.)__doc__" +
-         prefix + "Grid3D" + suffix +
-         R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values.
-    y (numpy.ndarray): Y-values.
-    z (numpy.ndarray): Z-values.
-    interpolator (pyinterp.core.)__doc__" +
-         prefix + R"__doc__(BivariateInterpolator3D): 3D interpolator
-        used to interpolate values on the surface (x, y, z).
-    z_method (str, optional): The method of interpolation to perform on
-      Z-axis. Supported are ``linear`` and ``nearest``. Default to
-      ``linear``.
-    bounds_error (bool, optional): If True, when interpolated values are
-      requested outside of the domain of the input axes (x,y,z), a ValueError
-      is raised. If False, then value is set to NaN.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    grid: Grid containing the values to be interpolated.
+    x: X-values.
+    y: Y-values.
+    z: Z-values.
+    interpolator: 3D interpolator used to interpolate values on the surface
+        (x, y, z).
+    z_method: The method of interpolation to perform on Z-axis. Supported are
+        ``linear`` and ``nearest``. Default to ``linear``.
+    bounds_error: If True, when interpolated values are requested outside of the
+        domain of the input axes (x,y,z), a ValueError is raised. If False, then
+        value is set to NaN.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    numpy.ndarray: Values interpolated.
-)__doc__")
-            .c_str());
+    Values interpolated.
+)__doc__");
 }
 
 }  // namespace pyinterp

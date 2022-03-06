@@ -48,6 +48,20 @@ class DescriptiveStatistics:
     The calculation of the statistics is done when the constructor is invoked.
     Different methods allow to extract the calculated statistics.
 
+    Args:
+        values: Array containing numbers whose statistics are desired.
+
+            .. note::
+
+                NaNs are automatically ignored.
+
+        weights: An array of weights associated with the values. If not
+            provided, all values are assumed to have equal weight.
+        axis: Axis or axes along which to compute the statistics. If not
+            provided, the statistics are computed over the flattened array.
+        dtype: Data type of the returned array. By default, the data type is
+            ``numpy.float64``.
+
     .. seealso::
 
         Pébay, P., Terriberry, T.B., Kolla, H. et al.
@@ -64,25 +78,6 @@ class DescriptiveStatistics:
                  weights: Optional[Union[da.Array, np.ndarray]] = None,
                  axis: Optional[Union[int, Iterable[int]]] = None,
                  dtype: Optional[np.dtype] = None) -> None:
-        """Creates a new descriptive statistics container.
-
-        Args:
-            values (numpy.ndarray, dask.Array): Array containing numbers whose
-                statistics are desired.
-
-                .. note::
-
-                    NaNs are automatically ignored.
-
-            weights (numpy.ndarray, dask.Array, optional): An array of weights
-                associated with the values. If not provided, all values are
-                assumed to have equal weight.
-            axis (int, iterable, optional): Axis or axes along which to compute
-                the statistics. If not provided, the statistics are computed
-                over the flattened array.
-            dtype (numpy.dtype, optional): Data type of the returned array. By
-                default, the data type is numpy.float64.
-        """
         if isinstance(axis, int):
             axis = (axis, )
         dtype = dtype or np.dtype("float64")
@@ -105,8 +100,7 @@ class DescriptiveStatistics:
         """Creates a copy of the current descriptive statistics container.
 
         Returns:
-            DescriptiveStatistics: Returns a copy of the current
-                descriptive statistics container.
+            Returns a copy of the current descriptive statistics container.
         """
         cls = type(self)
         result = getattr(cls, "__new__")(cls)
@@ -117,7 +111,7 @@ class DescriptiveStatistics:
         """Adds a new descriptive statistics container to the current one.
 
         Returns:
-            DescriptiveStatistics: Returns itself.
+            Returns itself.
         """
         if isinstance(other, DescriptiveStatistics):
             if type(self._instance) != type(other._instance):  # noqa: E721
@@ -149,7 +143,7 @@ class DescriptiveStatistics:
         """Returns the count of samples.
 
         Returns:
-            numpy.ndarray: Returns the count of samples.
+            The count of samples.
         """
         return self._instance.count()
 
@@ -157,7 +151,7 @@ class DescriptiveStatistics:
         """Returns the kurtosis of samples.
 
         Returns:
-            numpy.ndarray: Returns the kurtosis of samples.
+            The kurtosis of samples.
         """
         return self._instance.kurtosis()
 
@@ -165,7 +159,7 @@ class DescriptiveStatistics:
         """Returns the maximum of samples.
 
         Returns:
-            numpy.ndarray: Returns the maximum of samples.
+            The maximum of samples.
         """
         return self._instance.max()
 
@@ -173,7 +167,7 @@ class DescriptiveStatistics:
         """Returns the mean of samples.
 
         Returns:
-            numpy.ndarray: Returns the mean of samples.
+            The mean of samples.
         """
         return self._instance.mean()
 
@@ -181,7 +175,7 @@ class DescriptiveStatistics:
         """Returns the minimum of samples.
 
         Returns:
-            numpy.ndarray: Returns the minimum of samples.
+            The minimum of samples.
         """
         return self._instance.min()
 
@@ -189,7 +183,7 @@ class DescriptiveStatistics:
         """Returns the skewness of samples.
 
         Returns:
-            numpy.ndarray: Returns the skewness of samples.
+            The skewness of samples.
         """
         return self._instance.skewness()
 
@@ -197,7 +191,7 @@ class DescriptiveStatistics:
         """Returns the sum of samples.
 
         Returns:
-            numpy.ndarray: Returns the sum of samples.
+            The sum of samples.
         """
         return self._instance.sum()
 
@@ -205,7 +199,7 @@ class DescriptiveStatistics:
         """Returns the sum of weights.
 
         Returns:
-            numpy.ndarray: Returns the sum of weights.
+            The sum of weights.
         """
         return self._instance.sum_of_weights()
 
@@ -213,12 +207,12 @@ class DescriptiveStatistics:
         """Returns the variance of samples.
 
         Args:
-            ddof (int, optional): Means Delta Degrees of Freedom. The divisor
-                used in calculations is N - ddof, where N represents the number
-                of elements. By default ddof is zero.
+            ddof: Means Delta Degrees of Freedom. The divisor used in
+                calculations is N - ddof, where N represents the number of
+                elements. By default ddof is zero.
 
         Returns:
-            numpy.ndarray: Returns the variance of samples.
+            The variance of samples.
         """
         return self._instance.variance(ddof)
 
@@ -226,12 +220,12 @@ class DescriptiveStatistics:
         """Returns the standard deviation of samples.
 
         Args:
-            ddof (int, optional): Means Delta Degrees of Freedom. The divisor
-                used in calculations is N - ddof, where N represents the number
-                of elements. By default ddof is zero.
+            ddof: Means Delta Degrees of Freedom. The divisor used in
+                calculations is N - ddof, where N represents the number of
+                elements. By default ddof is zero.
 
         Returns:
-            numpy.ndarray: Returns the standard deviation of samples.
+            The standard deviation of samples.
         """
         return np.sqrt(self.var(ddof=ddof))
 
@@ -239,19 +233,19 @@ class DescriptiveStatistics:
         """Returns the different statistical variables calculated in a numpy
         structured table with the following fields:
 
-        - count: Number of samples.
-        - kurtosis: Kurtosis of samples.
-        - max: Maximum of samples.
-        - mean: Mean of samples.
-        - min: Minimum of samples.
-        - skewness: Skewness of samples.
-        - sum_of_weights: Sum of weights.
-        - sum: Sum of samples.
-        - var: Variance of samples (ddof is equal to zero).
+        - ``count``: Number of samples.
+        - ``kurtosis``: Kurtosis of samples.
+        - ``max``: Maximum of samples.
+        - ``mean``: Mean of samples.
+        - ``min``: Minimum of samples.
+        - ``skewness``: Skewness of samples.
+        - ``sum_of_weights``: Sum of weights.
+        - ``sum``: Sum of samples.
+        - ``var``: Variance of samples (ddof is equal to zero).
 
         Returns:
-            numpy.ndarray: Returns the different statistical variables
-                calculated in a numpy structured table.
+            The different statistical variables calculated in a numpy
+            structured table.
         """
         dreal = 'f8' if isinstance(self._instance,
                                    core.DescriptiveStatisticsFloat64) else 'f4'

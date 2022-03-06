@@ -1,3 +1,5 @@
+:tocdepth: 2
+
 .. currentmodule:: pyinterp
 
 Core API Documentation
@@ -44,6 +46,8 @@ Binning
 .. autosummary::
   :toctree: generated/
 
+  core.Binning1DFloat64
+  core.Binning1DFloat32
   core.Binning2DFloat64
   core.Binning2DFloat32
   core.Histogram2DFloat64

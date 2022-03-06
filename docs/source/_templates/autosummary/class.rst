@@ -7,7 +7,6 @@
    :show-inheritance:
 
    {% block methods %}
-   .. automethod:: __init__
 
    {% set meth = [] -%}
 
@@ -21,12 +20,16 @@
       {%- if item not in inherited_members and
             item not in attributes and
             item not in meth and
-            item not in ['__dict__',
-                         '__entries',
+            item not in ['__annotations__',
+                         '__dict__',
                          '__doc__',
+                         '__entries',
+                         '__getstate__',
+                         '__hash__',
                          '__init__',
                          '__members__',
                          '__module__',
+                         '__setstate__',
                          '__weakref__'] -%}
         {{ meth.append(item) or "" }}
       {%- endif -%}

@@ -20,22 +20,19 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
     :math:`w(x)=(1-|d|^3)^3`.
 
     Args:
-        mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D): Grid function on
-            a uniform 2-dimensional grid to be filled.
-        nx (int, optional): Number of points of the half-window to be taken
-            into account along the X-axis. Defaults to ``3``.
-        ny (int, optional): Number of points of the half-window to be taken
-            into account along the Y-axis. Defaults to ``3``.
-        value_type (str, optional): Type of values processed by the
-            filter. Supported are ``undefined``, ``defined``, ``all``.
-            Default to ``undefined``.
-        num_threads (int, optional): The number of threads to use for the
-            computation. If 0 all CPUs are used. If 1 is given, no parallel
-            computing code is used at all, which is useful for debugging.
-            Defaults to ``0``.
+        mesh: Grid function on a uniform 2-dimensional grid to be filled.
+        nx: Number of points of the half-window to be taken into account along
+            the X-axis. Defaults to ``3``.
+        ny: Number of points of the half-window to be taken into account along
+            the Y-axis. Defaults to ``3``.
+        value_type: Type of values processed by the filter. Supported are
+            ``undefined``, ``defined``, ``all``. Default to ``undefined``.
+        num_threads: The number of threads to use for the computation. If 0
+            all CPUs are used. If 1 is given, no parallel computing code is used
+            at all, which is useful for debugging. Defaults to ``0``.
 
     Returns:
-        numpy.ndarray: the grid will have NaN filled with extrapolated values.
+        The grid will have NaN filled with extrapolated values.
     """
     value_type = value_type or "undefined"
     instance = mesh._instance
@@ -61,9 +58,8 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
     method by relaxation.
 
     Args:
-        mesh (pyinterp.grid.Grid2D, pyinterp.grid.Grid3D): Grid function on
-            a uniform 2/3-dimensional grid to be filled.
-        first_guess (str, optional): Specifies the type of first guess grid.
+        mesh: Grid function on a uniform 2/3-dimensional grid to be filled.
+        first_guess: Specifies the type of first guess grid.
             Supported values are:
 
                 * ``zero`` means use ``0.0`` as an initial guess;
@@ -72,12 +68,11 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
 
             Defaults to ``zonal_average``.
 
-        max_iterations (int, optional): Maximum number of iterations to be used
-            by relaxation. The default value is equal to the product of the
-            grid dimensions.
-        epsilon (float, optional): Tolerance for ending relaxation before the
-            maximum number of iterations limit. Defaults to ``1e-4``.
-        relaxation (float, opional): Relaxation constant.
+        max_iterations: Maximum number of iterations to be used by relaxation.
+            The default value is equal to the product of the grid dimensions.
+        epsilon: Tolerance for ending relaxation before the maximum number of
+            iterations limit. Defaults to ``1e-4``.
+        relaxation: Relaxation constant.
             If ``0 < relaxation < 1``, the new value is an average weighted by
             the old and the one given by the Gauss-Seidel scheme. In this case,
             convergence is slowed down (under-relaxation). Over-relaxation
@@ -90,13 +85,12 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
             ``relaxation`` = :math:`{2\\over{1+{\\pi\\over{N}}}}`; if the grid
             is of size :math:`Nx \\times Ny`,
             :math:`N = N_{x}N_{y}\\sqrt{2\\over{N_{x}^2+N_{y}^2}}`
-        num_threads (int, optional): The number of threads to use for the
-            computation. If 0 all CPUs are used. If 1 is given, no parallel
-            computing code is used at all, which is useful for debugging.
-            Defaults to ``0``.
+        num_threads: The number of threads to use for the computation. If 0 all
+            CPUs are used. If 1 is given, no parallel computing code is used at
+            all, which is useful for debugging. Defaults to ``0``.
 
     Returns:
-        tuple: a boolean indicating if the calculation has converged, i. e. if
+        A boolean indicating if the calculation has converged, i. e. if
         the value of the residues is lower than the ``epsilon`` limit set, and
         the the grid will have the all NaN filled with extrapolated values.
     """

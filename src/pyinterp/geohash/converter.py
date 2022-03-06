@@ -13,11 +13,11 @@ def to_xarray(hashs: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
     """Get the XArray grid representing the GeoHash grid.
 
     Args:
-        hashs (numpy.ndarray): Geohash codes.
-        data (numpy.ndarray): The data associated with the codes provided.
+        hashs: Geohash codes.
+        data: The data associated with the codes provided.
 
     Returns:
-        GeoHash: index handler.
+        The XArray grid representing the GeoHash grid.
     """
     if hashs.shape != data.shape:
         raise ValueError(

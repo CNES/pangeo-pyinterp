@@ -258,29 +258,24 @@ void implement_bicubic(py::module &m, const std::string &prefix,
         (prefix + R"__doc__( gridded 2D interpolation.
 
 Args:
-    grid (pyinterp.core.Grid2D)__doc__" +
-         suffix +
-         R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values.
-    y (numpy.ndarray): Y-values.
-    nx (int, optional): The number of X coordinate values required to perform
-        the interpolation. Defaults to ``3``.
-    ny (int, optional): The number of Y coordinate values required to perform
-        the interpolation. Defaults to ``3``.
-    fitting_model (str, optional): Type of interpolation to be performed.
-        Defaults to `)__doc__" +
+    grid: Grid containing the values to be interpolated.
+    x: X-values.
+    y: Y-values.
+    nx: The number of X coordinate values required to perform the interpolation.
+        Defaults to ``3``.
+    ny: The number of Y coordinate values required to perform the interpolation.
+        Defaults to ``3``.
+    fitting_model: Type of interpolation to be performed. Defaults to `)__doc__" +
          default_fitting_model + R"__doc__(`
-    boundary (str, optional): Type of axis boundary management. Defaults to
-        `undef`.
-    bounds_error (bool, optional): If True, when interpolated values are
-        requested outside of the domain of the input axes (x,y), a ValueError
-        is raised. If False, then value is set to NaN.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    boundary: Type of axis boundary management. Defaults to ``undef``.
+    bounds_error: If True, when interpolated values are requested outside of the
+        domain of the input axes (x,y), a ValueError is raised. If False, then
+        value is set to NaN.
+    num_threads: The number of threads to use for the computation. If 0 all
+        CPUs are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    numpy.ndarray: Values interpolated
+    Values interpolated
   )__doc__")
             .c_str());
 }
@@ -312,30 +307,25 @@ and linearly along the Z axis between the two values obtained by the spatial
        function_prefix + R"__doc__( 2D interpolation.
 
 Args:
-    grid (pyinterp.core.)__doc__" +
-       grid_prefix + "Grid3D" + suffix +
-       R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values.
-    y (numpy.ndarray): Y-values.
-    z (numpy.ndarray): Z-values.
-    nx (int, optional): The number of X coordinate values required to perform
-        the interpolation. Defaults to ``3``.
-    ny (int, optional): The number of Y coordinate values required to perform
-        the interpolation. Defaults to ``3``.
-    fitting_model (str, optional): Type of interpolation to be performed.
-        Defaults to `)__doc__" +
+    grid: Grid containing the values to be interpolated.
+    x: X-values.
+    y: Y-values.
+    z: Z-values.
+    nx: The number of X coordinate values required to perform the interpolation.
+        Defaults to ``3``.
+    ny: The number of Y coordinate values required to perform the interpolation.
+        Defaults to ``3``.
+    fitting_model: Type of interpolation to be performed. Defaults to `)__doc__" +
        default_fitting_model + R"__doc__(`
-    boundary (str, optional): Type of axis boundary management. Defaults to
-        `undef`.
-    bounds_error (bool, optional): If True, when interpolated values are
-        requested outside of the domain of the input axes (x,y), a ValueError
-        is raised. If False, then value is set to NaN.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    boundary: Type of axis boundary management. Defaults to ``undef``.
+    bounds_error: If True, when interpolated values are requested outside of the
+        domain of the input axes (x,y), a ValueError is raised. If False, then
+        value is set to NaN.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    numpy.ndarray: Values interpolated.
+    Values interpolated.
   )__doc__")
           .c_str());
 }
@@ -367,31 +357,26 @@ spatial )__doc__" +
        function_prefix + R"__doc__( 2D interpolation.
 
 Args:
-    (pyinterp.core.)__doc__" +
-       grid_prefix + "Grid4D" + suffix +
-       R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values.
-    y (numpy.ndarray): Y-values.
-    z (numpy.ndarray): Z-values.
-    u (numpy.ndarray): U-values.
-    nx (int, optional): The number of X coordinate values required to perform
-        the interpolation. Defaults to ``3``.
-    ny (int, optional): The number of Y coordinate values required to perform
-        the interpolation. Defaults to ``3``.
-    fitting_model (str, optional): Type of interpolation to be performed.
-        Defaults to `)__doc__" +
+    grid: Grid containing the values to be interpolated.
+    x: X-values.
+    y: Y-values.
+    z: Z-values.
+    u: U-values.
+    nx: The number of X coordinate values required to perform the interpolation.
+        Defaults to ``3``.
+    ny: The number of Y coordinate values required to perform the interpolation.
+        Defaults to ``3``.
+    fitting_model: Type of interpolation to be performed. Defaults to `)__doc__" +
        default_fitting_model + R"__doc__(`
-    boundary (str, optional): Type of axis boundary management. Defaults to
-        `undef`.
-    bounds_error (bool, optional): If True, when interpolated values are
-        requested outside of the domain of the input axes (x,y), a ValueError
-        is raised. If False, then value is set to NaN.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    boundary: Type of axis boundary management. Defaults to ``undef``.
+    bounds_error: If True, when interpolated values are requested outside of the
+        domain of the input axes (x,y), a ValueError is raised. If False, then
+        value is set to NaN.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    numpy.ndarray: Values interpolated.
+    Values interpolated.
   )__doc__")
           .c_str());
 }

@@ -55,6 +55,24 @@ class StreamingHistogram:
     histograms can be constructed independently and merged, making them usable
     with Dask.
 
+    Args:
+        values: Array containing numbers whose statistics are desired.
+
+            .. note::
+
+                NaNs are automatically ignored.
+
+        weights: An array of weights associated with the values. If not
+            provided, all values are assumed to have equal weight.
+        axis: Axis or axes along which to compute the statistics. If not
+            provided, the statistics are computed over the flattened array.
+        bin_count: The maximum number of bins to use in the histogram. If
+            the number of bins exceeds the number of values, the histogram
+            will be trimmed. Default is ``None``, which will set the number
+            of bins to 100.
+        dtype: Data type of the returned array. By default, the data type
+            is numpy.float64.
+
     .. seealso::
 
         Yael Ben-Haim and Elad Tom-Tov,
@@ -75,29 +93,6 @@ class StreamingHistogram:
                  axis: Optional[Union[int, Iterable[int]]] = None,
                  bin_count: Optional[int] = None,
                  dtype: Optional[np.dtype] = None) -> None:
-        """Initializes a new histogram.
-
-        Args:
-            values (numpy.ndarray, dask.Array): Array containing numbers whose
-                statistics are desired.
-
-                .. note::
-
-                    NaNs are automatically ignored.
-
-            weights (numpy.ndarray, dask.Array, optional): An array of weights
-                associated with the values. If not provided, all values are
-                assumed to have equal weight.
-            axis (int, iterable, optional): Axis or axes along which to compute
-                the statistics. If not provided, the statistics are computed
-                over the flattened array.
-            bin_count (int, optional): The maximum number of bins to use in the
-                histogram. If the number of bins exceeds the number of values,
-                the histogram will be trimmed. Default is ``None``, which will
-                set the number of bins to 100.
-            dtype (numpy.dtype, optional): Data type of the returned array. By
-                default, the data type is numpy.float64.
-        """
         if isinstance(axis, int):
             axis = (axis, )
         dtype = dtype or np.dtype("float64")
@@ -126,10 +121,10 @@ class StreamingHistogram:
         """Adds a new histogram to the current one.
 
         Args:
-            other (object): The histogram to add to the current one.
+            The histogram to add to the current one.
 
         Returns:
-            StreamingHistogram: Returns itself.
+            itself.
         """
         if isinstance(other, StreamingHistogram):
             if type(self._instance) != type(other._instance):  # noqa: E721
@@ -144,7 +139,7 @@ class StreamingHistogram:
         """Returns the histogram bins.
 
         Returns:
-            numpy.ndarray: The histogram bins.
+            The histogram bins.
         """
         return self._instance.bins()
 
@@ -158,8 +153,7 @@ class StreamingHistogram:
         quantities are an approximation of the statistical variables.
 
         Returns:
-            numpy.ndarray: Returns number of bins allocated to calculate
-            the histogram.
+            Number of bins allocated to calculate the histogram.
         """
         return self._instance.size()
 
@@ -167,7 +161,7 @@ class StreamingHistogram:
         """Returns the count of samples.
 
         Returns:
-            numpy.ndarray: Returns the count of samples.
+            The count of samples.
         """
         return self._instance.count()
 
@@ -175,7 +169,7 @@ class StreamingHistogram:
         """Returns the kurtosis of samples.
 
         Returns:
-            numpy.ndarray: Returns the kurtosis of samples.
+            The kurtosis of samples.
         """
         return self._instance.kurtosis()
 
@@ -183,7 +177,7 @@ class StreamingHistogram:
         """Returns the maximum of samples.
 
         Returns:
-            numpy.ndarray: Returns the maximum of samples.
+            The maximum of samples.
         """
         return self._instance.max()
 
@@ -191,7 +185,7 @@ class StreamingHistogram:
         """Returns the mean of samples.
 
         Returns:
-            numpy.ndarray: Returns the mean of samples.
+            The mean of samples.
         """
         return self._instance.mean()
 
@@ -199,7 +193,7 @@ class StreamingHistogram:
         """Returns the minimum of samples.
 
         Returns:
-            numpy.ndarray: Returns the minimum of samples.
+            The minimum of samples.
         """
         return self._instance.min()
 
@@ -207,7 +201,7 @@ class StreamingHistogram:
         """Returns the skewness of samples.
 
         Returns:
-            numpy.ndarray: Returns the skewness of samples.
+            The skewness of samples.
         """
         return self._instance.skewness()
 
@@ -215,7 +209,7 @@ class StreamingHistogram:
         """Returns the sum of weights.
 
         Returns:
-            numpy.ndarray: Returns the sum of weights.
+            The sum of weights.
         """
         return self._instance.sum_of_weights()
 
@@ -223,7 +217,7 @@ class StreamingHistogram:
         """Returns the variance of samples.
 
         Returns:
-            numpy.ndarray: Returns the variance of samples.
+            The variance of samples.
         """
         return self._instance.variance()
 
@@ -231,7 +225,7 @@ class StreamingHistogram:
         """Returns the standard deviation of samples.
 
         Returns:
-            numpy.ndarray: Returns the standard deviation of samples.
+            The standard deviation of samples.
         """
         return np.sqrt(self.var())
 
@@ -242,6 +236,6 @@ class StreamingHistogram:
             q (float): Quantile to compute. Default is ``0.5`` (median).
 
         Returns:
-            numpy.ndarray: Returns the q quantile of samples.
+            The q quantile of samples.
         """
         return self._instance.quantile(q)

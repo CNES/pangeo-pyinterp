@@ -35,17 +35,16 @@ static inline auto parse_distance_strategy(const std::string &strategy)
 
 static void init_geodetic_point(py::module &m) {
   py::class_<geodetic::Point>(m, "Point", R"__doc__(
-    Handle a point in a geographic coordinates system in degrees.
-)__doc__")
-      .def(py::init<>())
-      .def(py::init<double, double>(), py::arg("lon"), py::arg("lat"),
-           R"__doc__(
-Build a new point with the coordinates provided.
+Point(self, lon: float = 0, lat: float = 0)
+
+Handle a point in a geographic coordinates system in degrees.
 
 Args:
-    lon (float): Longitude in degrees.
-    lat (float): Latitude in degrees.
+    lon: Longitude in degrees.
+    lat: Latitude in degrees.
 )__doc__")
+      .def(py::init<>())
+      .def(py::init<double, double>(), py::arg("lon"), py::arg("lat"))
       .def_property("lon",
                     static_cast<double (geodetic::Point::*)() const>(
                         &geodetic::Point::lon),
@@ -66,19 +65,18 @@ Args:
             return self.distance(other, parse_distance_strategy(strategy), wgs);
           },
           py::arg("other"), py::arg("strategy") = "thomas",
-          py::arg("wgs") = py::none(),
+          py::arg("wgs") = std::nullopt,
           R"__doc__(
 Calculate the distance between the two points.
 
 Args:
-    other (pyinterp.core.geodetic.Point): The other point to consider.
-    strategy (str): The calculation method used to calculate the distance. This
-        parameter can take the values "andoyer", "thomas" or "vincenty".
-    wgs (pyinterp.core.geodetic.System, optional): WGS system used for the
-        calculation, default to WGS84.
+    other: The other point to consider.
+    strategy: The calculation method used to calculate the distance. This
+        parameter can take the values ``andoyer``, ``thomas`` or ``vincenty``.
+    wgs: WGS system used for the calculation, default to WGS84.
 
 Returns:
-    float: the distance between the two points in meters.
+    The distance between the two points in meters.
 )__doc__")
       .def(
           "wkt",
@@ -91,7 +89,7 @@ Returns:
 Gets the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
-    str: the WKT representation.
+    The WKT representation.
 )__doc__")
       .def_static(
           "read_wkt",
@@ -104,9 +102,9 @@ Returns:
 Parses OGC Well-Known Text (WKT) into a Point.
 
 Args:
-    wkt (str): the WKT representation of the Point.
+    wkt: the WKT representation of the Point.
 Returns:
-    pyinterp.geodetic.Point: The point defined by the WKT representation.
+    The point defined by the WKT representation.
 )__doc__")
       .def("__repr__", &geodetic::Point::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
@@ -134,20 +132,17 @@ Returns:
 
 static void init_geodetic_box(py::module &m) {
   py::class_<geodetic::Box>(m, "Box", R"__doc__(
-    Defines a box made of two describing points.
+Box(self, min_corner: Point, max_corner: Point)
+
+Defines a box made of two describing points.
+
+Args:
+    min_corner: the minimum corner point (lower left) of the box.
+    max_corner: the maximum corner point (upper right) of the box.
 )__doc__")
       .def(py::init<>())
       .def(py::init<geodetic::Point, geodetic::Point>(), py::arg("min_corner"),
-           py::arg("max_corner"),
-           R"__doc__(
-Constructor taking the minimum corner point and the maximum corner point.
-
-Args:
-    min_corner (pyinterp.core.geodetic.Point2D): the minimum corner point
-        (lower left) of the box.
-    max_corner (pyinterp.core.geodetic.Point2D): the maximum corner point
-        (upper right) of the box.
-)__doc__")
+           py::arg("max_corner"))
       .def_property(
           "min_corner",
           [](const geodetic::Box &self) { return self.min_corner(); },
@@ -169,7 +164,7 @@ Args:
 Computes the centroid of the box.
 
 Returns:
-    pyinterp.core.geodetic.Point: the centroid of the box.
+    The centroid of the box.
 )__doc__")
       .def(
           "covered_by",
@@ -180,10 +175,9 @@ Returns:
 Test if the given point is inside or on border of this box.
 
 Args:
-    point (pyinterp.geodectic.Point2D): point to test.
+    point: point to test.
 Returns:
-    bool: True if the given point is inside or on border of this
-    box.
+    True if the given point is inside or on border of this box.
 )__doc__")
       .def(
           "covered_by",
@@ -199,26 +193,24 @@ Test if the coordinates of the points provided are located inside or at the
 edge of this box.
 
 Args:
-    lon (numpy.ndarray): Longitudes coordinates in degrees to check
-    lat (numpy.ndarray): Latitude coordinates in degrees to check
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Default to 1.
+    lon: Longitudes coordinates in degrees to check
+    lat: Latitude coordinates in degrees to check
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Default to 1.
 Returns:
-    numpy.ndarray: a vector containing a flag equal to 1 if the coordinate
-    is located in the box or at the edge otherwise 0.
+    A vector containing a flag equal to 1 if the coordinate is located in the
+    box or at the edge otherwise 0.
 )__doc__")
-      .def("area", &geodetic::Box::area, py::arg("wgs") = py::none(),
+      .def("area", &geodetic::Box::area, py::arg("wgs") = std::nullopt,
            R"__doc__(
 Calculates the area.
 
 Args:
-    (pyinterp.core.geodetic.System, optional): WGS system used for the
-        calculation, default to WGS84.
+    wgs: WGS system used for the calculation, default to WGS84.
 
 Returns:
-    float: The calculated area.
+    The calculated area.
 )__doc__")
       .def(
           "distance",
@@ -230,10 +222,10 @@ Returns:
 Calculate the distance between the two boxes.
 
 Args:
-    other (pyinterp.core.geodetic.Box): The other box to consider.
+    other: The other box to consider.
 
 Returns:
-    float: the distance between the two boxes in meters.
+    The distance between the two boxes in meters.
 )__doc__")
       .def(
           "distance",
@@ -244,10 +236,10 @@ Returns:
 Calculate the distance between this instance and a point.
 
 Args:
-    point (pyinterp.core.geodetic.Point): The point to consider.
+    point: The point to consider.
 
 Returns:
-    float: the distance between this box and the provided point.
+    The distance between this box and the provided point.
 )__doc__")
       .def(
           "wkt",
@@ -260,7 +252,7 @@ Returns:
 Gets the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
-    str: the WKT representation.
+    The WKT representation.
 )__doc__")
       .def_static(
           "read_wkt",
@@ -273,9 +265,9 @@ Returns:
 Parses OGC Well-Known Text (WKT) into a box.
 
 Args:
-    wkt (str): the WKT representation of the box.
+    wkt: the WKT representation of the box.
 Returns:
-    pyinterp.geodetic.Box: The box defined by the WKT representation.
+    The box defined by the WKT representation.
 )__doc__")
       .def(
           "__eq__",
@@ -303,21 +295,22 @@ Returns:
 static void init_geodetic_polygon(py::module &m) {
   py::class_<geodetic::Polygon>(
       m, "Polygon",
-      "The polygon contains an outer ring and zero or more inner rings.")
+      R"(Polygon(self, outer: list, inners: Optional[list] = None)
+
+The polygon contains an outer ring and zero or more inner rings.
+
+Args:
+    outer: outer ring.
+    inners: list of inner rings.
+Raises:
+    ValueError: if outer is not a list of pyinterp.geodetic.Point.
+    ValueError: if inners is not a list of list of pyinterp.geodetic.Point.
+)")
       .def(py::init([](const py::list &outer,
                        std::optional<const py::list> &inners) {
              return geodetic::Polygon(outer, inners.value_or(py::list()));
            }),
-           py::arg("outer"), py::arg("inners") = py::none(), R"(
-Constructor filling the polygon.
-
-Args:
-  outer (list): outer ring.
-  inners (list, optional): list of inner rings.
-Raises:
-  ValueError: if outer is not a list of pyinterp.geodetic.Point.
-  ValueError: if inners is not a list of list of pyinterp.geodetic.Point.
-)")
+           py::arg("outer"), py::arg("inners") = std::nullopt)
       .def_property_readonly("outer", &geodetic::Polygon::outer,
                              "The outer ring.")
       .def_property_readonly("inners", &geodetic::Polygon::inners,
@@ -342,7 +335,7 @@ Raises:
 Calculates the envelope of this polygon.
 
 Returns:
-  pyinterp.geodetic.Box: The envelope of this instance.
+    The envelope of this instance.
 )__doc__")
       .def(
           "covered_by",
@@ -352,9 +345,9 @@ Returns:
 Test if the given point is inside or on border of this polygon.
 
 Args:
-    point (pyinterp.geodectic.Point2D): point to test.
+    point: point to test.
 Returns:
-    bool: True if the given point is inside or on border of this box.
+    True if the given point is inside or on border of this box.
 )__doc__")
       .def(
           "covered_by",
@@ -370,26 +363,24 @@ Test if the coordinates of the points provided are located inside or at the
 edge of this polygon.
 
 Args:
-    lon (numpy.ndarray): Longitudes coordinates in degrees to check.
-    lat (numpy.ndarray): Latitude coordinates in degrees to check.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Default to 1.
+    lon: Longitudes coordinates in degrees to check.
+    lat: Latitude coordinates in degrees to check.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Default to 1.
 Returns:
-    numpy.ndarray: a vector containing a flag equal to 1 if the coordinate
-    is located in the box or at the edge otherwise 0.
+    A vector containing a flag equal to 1 if the coordinate is located in the
+    box or at the edge otherwise 0.
 )__doc__")
-      .def("area", &geodetic::Polygon::area, py::arg("wgs") = py::none(),
+      .def("area", &geodetic::Polygon::area, py::arg("wgs") = std::nullopt,
            R"__doc__(
 Calculates the area.
 
 Args:
-    (pyinterp.core.geodetic.System, optional): WGS system used for the
-        calculation, default to WGS84.
+    wgs: WGS system used for the calculation, default to WGS84.
 
 Returns:
-    float: The calculated area.
+    The calculated area.
 )__doc__")
       .def(
           "distance",
@@ -400,10 +391,10 @@ Returns:
 Calculate the distance between the two polygons.
 
 Args:
-    other (pyinterp.core.geodetic.Polygon): The other polygon to consider.
+    other: The other polygon to consider.
 
 Returns:
-    float: the distance between the two polygons in meters.
+    The distance between the two polygons in meters.
 )__doc__")
       .def(
           "distance",
@@ -414,10 +405,10 @@ Returns:
 Calculate the distance between this instance and a point.
 
 Args:
-    point (pyinterp.core.geodetic.Point): The point to consider.
+    point: The point to consider.
 
 Returns:
-    float: the distance between this polygon and the provided point.
+    The distance between this polygon and the provided point.
 )__doc__")
       .def(
           "wkt",
@@ -430,7 +421,7 @@ Returns:
 Gets the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
-    str: the WKT representation.
+    The WKT representation.
 )__doc__")
       .def_static(
           "read_wkt",
@@ -443,9 +434,9 @@ Returns:
 Parses OGC Well-Known Text (WKT) into a polygon.
 
 Args:
-    wkt (str): the WKT representation of the polygon.
+    wkt: the WKT representation of the polygon.
 Returns:
-    pyinterp.geodetic.Box: The polygon defined by the WKT representation.
+    The polygon defined by the WKT representation.
 )__doc__")
       .def(py::pickle(
           [](const geodetic::Polygon &self) { return self.getstate(); },
@@ -455,15 +446,22 @@ Returns:
 }
 
 static void init_geodetic_linestring(py::module &m) {
-  py::class_<geodetic::LineString>(m, "Linestring",
-                                   R"__doc__(
+  py::class_<geodetic::LineString>(
+      m, "Linestring",
+      R"__doc__(Linestring(self, lon: numpy.ndarray, lat: numpy.ndarray)
+
 A linestring (named so by OGC) is a collection of points.
+
+Args:
+    lon: Longitudes coordinates in degrees.
+    lat: Latitude coordinates in degrees.
 )__doc__")
       .def(py::init<const Eigen::Ref<const pyinterp::Vector<double>> &,
                     const Eigen::Ref<const pyinterp::Vector<double>> &>(),
            py::arg("lon"), py::arg("lat"),
            py::call_guard<py::gil_scoped_release>())
-      .def("__len__", &geodetic::LineString::size)
+      .def("__len__", &geodetic::LineString::size,
+           "Called to implement the built-in function ``len()``")
       .def(
           "__getitem__",
           [](const geodetic::LineString &self,
@@ -514,8 +512,13 @@ Returns:
 }
 
 void init_geodetic_crossover(py::module &m) {
-  py::class_<geodetic::Crossover>(m, "Crossover",
-                                  R"__doc__(
+  py::class_<geodetic::Crossover>(
+      m, "Crossover",
+      "Crossover(self,"
+      " half_orbit_1: pyinterp.core.geodetic.Linestring,"
+      " half_orbit_2: pyinterp.core.geodetic.Linestring)"
+      R"__doc__(
+
 Calculate the crossover between two half-orbits.
 
 Args:
@@ -555,8 +558,8 @@ Returns:
             return self.nearest(point, predicate.value_or(40'075'000.0),
                                 parse_distance_strategy(strategy), wgs);
           },
-          py::arg("point"), py::arg("predicate") = py::none(),
-          py::arg("strategy") = "thomas", py::arg("wgs") = py::none(),
+          py::arg("point"), py::arg("predicate") = std::nullopt,
+          py::arg("strategy") = "thomas", py::arg("wgs") = std::nullopt,
           R"__doc__(
 Find the nearest indices on the two half-orbits from a given point.
 
@@ -581,17 +584,21 @@ void init_geodetic(py::module &m) {
   auto _system = py::class_<pyinterp::detail::geodetic::System>(
       m, "_System", "C++ implementation of the WGS system.");
 
-  py::class_<geodetic::System, pyinterp::detail::geodetic::System>(
-      m, "System", "World Geodetic System (WGS).")
-      .def(py::init<>())
-      .def(py::init<double, double>(), py::arg("semi_major_axis"),
-           py::arg("flattening"), R"__doc__(
+  py::class_<geodetic::System, pyinterp::detail::geodetic::System>(m, "System",
+                                                                   R"(
+System(self, semi_major_axis: float, flattening: float)
+
+World Geodetic System (WGS).
+
 Args:
-    semi_major_axis (float): Semi-major axis of ellipsoid, in meters.
-    flattening (float): Flattening of ellipsoid.
+    semi_major_axis: Semi-major axis of ellipsoid, in meters.
+    flattening: Flattening of ellipsoid.
 .. note::
     The default constructor initializes a WGS-84 ellipsoid.
-)__doc__")
+)")
+      .def(py::init<>())
+      .def(py::init<double, double>(), py::arg("semi_major_axis"),
+           py::arg("flattening"))
       .def_property_readonly(
           "semi_major_axis", &geodetic::System::semi_major_axis,
           "Semi-major axis of ellipsoid, in meters (:math:`a`).")
@@ -602,14 +609,14 @@ Args:
 Gets the semiminor axis.
 
 Returns:
-    float: :math:`b=a(1-f)`
+    :math:`b=a(1-f)`
 )__doc__")
       .def("first_eccentricity_squared",
            &geodetic::System::first_eccentricity_squared, R"__doc__(
 Gets the first eccentricity squared.
 
 Returns:
-    float: :math:`e^2=\frac{a^2-b^2}{a^2}`
+    :math:`e^2=\frac{a^2-b^2}{a^2}`
 )__doc__")
       .def("second_eccentricity_squared",
            &geodetic::System::second_eccentricity_squared, R"__doc__(
@@ -624,11 +631,10 @@ Returns:
 Gets the equatorial circumference.
 
 Args:
-    semi_major_axis (bool, optional): True to get the equatorial circumference
-        for the semi-majors axis, False for the semi-minor axis. Defaults to
-        ``true``.
+    semi_major_axis: True to get the equatorial circumference for the
+        semi-majors axis, False for the semi-minor axis. Defaults to ``true``.
 Returns:
-    float: :math:`2\pi \times a` if semi_major_axis is true otherwise
+    :math:`2\pi \times a` if semi_major_axis is true otherwise
     :math:`2\pi \times b`.
 )__doc__")
       .def("polar_radius_of_curvature",
@@ -637,7 +643,7 @@ Returns:
 Gets the polar radius of curvature.
 
 Returns:
-    float: :math:`\frac{a^2}{b}`
+    :math:`\frac{a^2}{b}`
 )__doc__")
       .def("equatorial_radius_of_curvature",
            &geodetic::System::equatorial_radius_of_curvature,
@@ -645,39 +651,39 @@ Returns:
 Gets the equatorial radius of curvature for a meridian.
 
 Returns:
-    float: :math:`\frac{b^2}{a}`
+    :math:`\frac{b^2}{a}`
 )__doc__")
       .def("axis_ratio", &geodetic::System::axis_ratio, R"__doc__(
 Gets the axis ratio.
 
 Returns:
-    float: :math:`\frac{b}{a}`
+    :math:`\frac{b}{a}`
 )__doc__")
       .def("linear_eccentricity", &geodetic::System::linear_eccentricity,
            R"__doc__(
 Gets the linear eccentricity.
 
 Returns:
-    float :math:`E=\sqrt{{a^2}-{b^2}}`
+    :math:`E=\sqrt{{a^2}-{b^2}}`
 )__doc__")
       .def("mean_radius", &geodetic::System::mean_radius, R"__doc__(
 Gets the mean radius.
 
 Returns:
-    float: :math:`R_1=\frac{2a+b}{3}`
+    :math:`R_1=\frac{2a+b}{3}`
 )__doc__")
       .def("authalic_radius", &geodetic::System::authalic_radius, R"__doc__(
 Gets the authalic radius.
 
 Returns:
-    float: :math:`R_2=\sqrt{\frac{a^2+\frac{ab^2}{E}ln(\frac{a + E}{b})}{2}}`
+    :math:`R_2=\sqrt{\frac{a^2+\frac{ab^2}{E}ln(\frac{a + E}{b})}{2}}`
 )__doc__")
       .def("volumetric_radius", &geodetic::System::volumetric_radius,
            R"__doc__(
 Gets the volumetric radius.
 
 Returns:
-    float: :math:`R_3=\sqrt[3]{a^{2}b}`
+    :math:`R_3=\sqrt[3]{a^{2}b}`
 )__doc__")
       .def("__eq__", &geodetic::System::operator==, py::arg("other"),
            "Overrides the default behavior of the ``==`` operator.")
@@ -689,16 +695,20 @@ Returns:
             return geodetic::System::setstate(state);
           }));
 
-  py::class_<geodetic::Coordinates>(m, "Coordinates",
-                                    "World Geodetic Coordinates System.")
-      .def(py::init<std::optional<geodetic::System>>(), py::arg("system"),
-           R"__doc__(
-Default constructor.
+  py::class_<geodetic::Coordinates>(
+      m, "Coordinates",
+      "Coordinates(self, "
+      "system: Optional[pyinterp.core.geodetic.System] = None)"
+      R"(
+
+World Geodetic Coordinates System.
 
 Args:
-    system (pyinterp.core.geodetic.System, optional): WGS System. If this
-        option is not defined, the instance manages a WGS84 ellipsoid.
-)__doc__")
+    system: WGS System. If this option is not defined, the instance manages a
+        WGS84 ellipsoid.
+)")
+      .def(py::init<std::optional<geodetic::System>>(),
+           py::arg("system") = std::nullopt)
       .def("ecef_to_lla", &geodetic::Coordinates::ecef_to_lla<double>,
            py::arg("x"), py::arg("y"), py::arg("z"), py::arg("num_threads") = 0,
            R"__doc__(
@@ -708,16 +718,15 @@ latitude and longitude are in degrees, and the altitude will be in
 meters.
 
 Args:
-    x (numpy.ndarray): X-coordinates in meters.
-    y (numpy.ndarray): Y-coordinates in meters.
-    z (numpy.ndarray): Z-coordinates in meters.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    x: X-coordinates in meters.
+    y: Y-coordinates in meters.
+    z: Z-coordinates in meters.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    tuple: Longitudes, latitudes and altitudes in the coordinate system
-    defined by this instance.
+    Longitudes, latitudes and altitudes in the coordinate system defined by this
+    instance.
 
 .. seealso::
 
@@ -735,13 +744,12 @@ and the altitude in meters. The returned ECEF coordinates will be in
 meters.
 
 Args:
-    lon (numpy.ndarray): Longitudes in degrees.
-    lat (numpy.ndarray): Latitudes in degrees.
-    alt (numpy.ndarray): Altitudes in meters.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    lon: Longitudes in degrees.
+    lat: Latitudes in degrees.
+    alt: Altitudes in meters.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
     tuple: X, Y and Z ECEF coordinates in meters.
 )__doc__")
@@ -753,16 +761,15 @@ Transforms the positions, provided in degrees and meters, from one WGS
 system to another.
 
 Args:
-    target (pyinterp.core.geodetic.System): WGS target.
-    lon (numpy.ndarray): Longitudes in degrees.
-    lat (numpy.ndarray): Latitudes in degrees.
-    alt (numpy.ndarray): Altitudes in meters.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    target: WGS target.
+    lon: Longitudes in degrees.
+    lat: Latitudes in degrees.
+    alt: Altitudes in meters.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    tuple: Longitudes, latitudes and altitudes in the new coordinate system.
+    Longitudes, latitudes and altitudes in the new coordinate system.
 )__doc__")
       .def(py::pickle(
           [](const geodetic::Coordinates &self) { return self.getstate(); },
@@ -787,8 +794,8 @@ Returns:
 Normalizes longitudes to the range ``[min_lon, min_lon + 360)`` in place.
 
 Args:
-    lon (numpy.ndarray): Longitudes in degrees.
-    min_lon (float, optional): Minimum longitude. Defaults to ``-180.0``.
+    lon: Longitudes in degrees.
+    min_lon: Minimum longitude. Defaults to ``-180.0``.
 )__doc__");
 
   m.def(
@@ -805,26 +812,24 @@ Args:
             num_threads);
       },
       py::arg("lon1"), py::arg("lat1"), py::arg("lon2"), py::arg("lat2"),
-      py::arg("strategy") = "thomas", py::arg("wgs") = py::none(),
+      py::arg("strategy") = "thomas", py::arg("wgs") = std::nullopt,
       py::arg("num_threads") = 0, R"__doc__(
 Returns the distance between the given coordinates.
 
 Args:
-    lon1 (numpy.ndarray): Longitudes in degrees.
-    lat1 (numpy.ndarray): Latitudes in degrees.
-    lon2 (numpy.ndarray): Longitudes in degrees.
-    lat2 (numpy.ndarray): Latitudes in degrees.
-    strategy (str): The calculation method used to calculate the distance. This
+    lon1: Longitudes in degrees.
+    lat1: Latitudes in degrees.
+    lon2: Longitudes in degrees.
+    lat2: Latitudes in degrees.
+    strategy: The calculation method used to calculate the distance. This
         parameter can take the values "andoyer", "thomas" or "vincenty".
-    wgs (pyinterp.core.geodetic.System, optional): WGS system used for the
-        calculation, default to WGS84.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    wgs: WGS system used for the calculation, default to WGS84.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    numpy.ndarray: an array containing the distances ``[..., distance_i, ...]``,
-        corresponding to the distances between the coordinates
-        ``[..., (Point(lon1_i, lat1_i), Point(lon2_i, lat2_i)), ...]``.
+    An array containing the distances ``[..., distance_i, ...]``, corresponding
+    to the distances between the coordinates
+    ``[..., (Point(lon1_i, lat1_i), Point(lon2_i, lat2_i)), ...]``.
 )__doc__");
 }

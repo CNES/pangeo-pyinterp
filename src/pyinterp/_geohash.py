@@ -41,27 +41,21 @@ class GeoHash(BaseGeoHash):
 
     The geohash is a compact way of representing a location, and is useful for
     storing a location in a database, or for indexing a location in a database.
-
-    Args:
-        longitude (float): Longitude of the point.
-        latitude (float): Latitude of the point.
-        precision (int): Number of characters in the geohash. Default is 12.
-
-    Throws:
-        ValueError: If the precision is not in the range [1, 12].
     """
 
     @classmethod
-    def grid(cls, box: Optional[geodetic.Box] = None, precision: int = 1):
+    def grid(cls,
+             box: Optional[geodetic.Box] = None,
+             precision: int = 1) -> xarray.Dataset:
         """
         Return the GeoHash grid covering the provided box.
 
         Args:
-            box (geodetic.Box, optional): Bounding box.
-            precision (int): Number of characters in the geohash. Default is 1.
+            box: Bounding box.
+            precision: Number of characters in the geohash. Default is 1.
 
         Returns:
-            xarray.Dataset: Grid of the geohash.
+            Grid of the geohash.
         """
         bbox = box or geodetic.Box.whole_earth()
         _, nlon, nlat = cls.grid_properties(bbox, precision)
@@ -88,9 +82,9 @@ class GeoHash(BaseGeoHash):
         Create from its string representation.
 
         Args:
-            code (str): Geohash code.
-            round (bool): If true, the coordinates of the point will be rounded
-                to the accuracy defined by the GeoHash.
+            code: Geohash code.
+            round: If true, the coordinates of the point will be rounded to the
+                accuracy defined by the GeoHash.
 
         Returns:
             GeoHash: Geohash.

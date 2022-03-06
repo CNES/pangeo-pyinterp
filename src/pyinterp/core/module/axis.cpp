@@ -29,7 +29,9 @@ auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>> &axis,
           },
           py::arg("index"))
       .def("__getitem__", &Axis::coordinate_values, py::arg("indices"))
-      .def("__len__", [](const Axis &self) { return self.size(); })
+      .def(
+          "__len__", [](const Axis &self) { return self.size(); },
+          "Called to implement the built-in function ``len()``")
       .def(
           "is_regular",
           [](const Axis &self) -> bool { return self.is_regular(); },
@@ -37,7 +39,7 @@ auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>> &axis,
 Check if this axis values are spaced regularly.
 
 Returns:
-  bool: True if this axis values are spaced regularly.
+  True if this axis values are spaced regularly.
 )__doc__")
       .def(
           "flip",
@@ -57,9 +59,8 @@ Returns:
 Reverse the order of elements in this axis.
 
 Args:
-    inplace (bool, optional): If true, this instance will be modified,
-        otherwise the modification will be made on a copy. Default to
-        ``False``.
+    inplace: If true, this instance will be modified, otherwise the
+        modification will be made on a copy. Default to ``False``.
 
 Returns:
     )__doc__" +
@@ -77,14 +78,14 @@ Given coordinate positions, find what grid elements contains them, or is
 closest to them.
 
 Args:
-    coordinates (numpy.ndarray): Positions in this coordinate system.
-    bounded (bool, optional): True if you want to obtain the closest value to
-        a coordinate outside the axis definition range.
+    coordinates: Positions in this coordinate system.
+    bounded: True if you want to obtain the closest value to a coordinate
+        outside the axis definition range.
 Returns:
-    numpy.ndarray: index of the grid points containing them or -1 if the
-    ``bounded`` parameter is set to false and if one of the searched indexes
-    is out of the definition range of the axis, otherwise the index of the
-    closest value of the coordinate is returned.
+    Index of the grid points containing them or -1 if the ``bounded`` parameter
+    is set to false and if one of the searched indexes is out of the definition
+    range of the axis, otherwise the index of the closest value of the
+    coordinate is returned.
 )__doc__")
       .def(
           "find_indexes",
@@ -105,17 +106,16 @@ The provided coordinates located outside the axis definition range are set to
 ``-1``.
 
 Args:
-    coordinates (numpy.ndarray): Positions in this coordinate system.
+    coordinates: Positions in this coordinate system.
 Returns:
-    numpy.ndarray: A matrix of shape ``(n, 2)``. The first column of the
-    matrix contains the indexes ``i0`` and the second column the indexes
-    ``i1`` found.
+    A matrix of shape ``(n, 2)``. The first column of the matrix contains the
+    indexes ``i0`` and the second column the indexes ``i1`` found.
 )__doc__")
       .def("is_ascending", &Axis::is_ascending, R"__doc__(
 Test if the data is sorted in ascending order.
 
 Returns:
-    bool: True if the data is sorted in ascending order.
+    True if the data is sorted in ascending order.
 )__doc__")
       .def(
           "__eq__",
@@ -136,8 +136,16 @@ static void init_core_axis(py::module &m) {
   using Axis = pyinterp::Axis<double>;
 
   auto axis = py::class_<Axis, std::shared_ptr<Axis>>(m, "Axis", R"__doc__(
+Axis(self, values: numpy.ndarray[numpy.float64], epsilon: float = 1e-06, is_circle: bool = False)
+
 A coordinate axis is a Variable that specifies one of the coordinates
 of a variable's values.
+
+Args:
+    values: Axis values.
+    epsilon: Maximum allowed difference between two real
+        numbers in order to consider them equal. Defaults to ``1e-6``.
+    is_circle: True, if the axis can represent a circle. Defaults to ``false``.
 )__doc__");
 
   axis.def(py::init<>([](py::array_t<double, py::array::c_style> &values,
@@ -145,17 +153,7 @@ of a variable's values.
              return std::make_shared<Axis>(values, epsilon, is_circle);
            }),
            py::arg("values"), py::arg("epsilon") = 1e-6,
-           py::arg("is_circle") = false,
-           R"__doc__(
-Create a coordinate axis from values.
-
-Args:
-    values (numpy.ndarray): Axis values.
-    epsilon (float, optional): Maximum allowed difference between two real
-        numbers in order to consider them equal. Defaults to ``1e-6``.
-    is_circle (bool, optional): True, if the axis can represent a
-        circle. Defaults to ``false``.
-)__doc__")
+           py::arg("is_circle") = false)
       .def_property_readonly(
           "is_circle",
           [](const Axis &self) -> bool { return self.is_circle(); },
@@ -163,19 +161,19 @@ Args:
 Test if this axis represents a circle.
 
 Returns:
-    bool: True if this axis represents a circle.
+    True if this axis represents a circle.
 )__doc__")
       .def("front", &Axis::front, R"__doc__(
 Get the first value of this axis.
 
 Returns:
-    float: The first value.
+    The first value.
 )__doc__")
       .def("back", &Axis::back, R"__doc__(
 Get the last value of this axis.
 
 Returns:
-    float: The last value.
+    The last value.
 )__doc__")
       .def("increment", &Axis::increment, R"__doc__(
 Get increment value if is_regular().
@@ -189,13 +187,13 @@ Returns:
 Get the minimum coordinate value.
 
 Returns:
-    float: The minimum coordinate value.
+    The minimum coordinate value.
 )__doc__")
       .def("max_value", &Axis::max_value, R"__doc__(
 Get the maximum coordinate value.
 
 Returns:
-    float: The maximum coordinate value.
+    The maximum coordinate value.
 )__doc__");
   implement_axis<Axis, const py::array_t<double>>(axis, "pyinterp.core.Axis");
 }
@@ -210,18 +208,14 @@ void init_temporal_axis(py::module &m) {
 
   auto axis = py::class_<pyinterp::TemporalAxis,
                          std::shared_ptr<pyinterp::TemporalAxis>>(
-      m, "TemporalAxis", base_class, "Time axis");
+      m, "TemporalAxis", base_class,
+      R"__doc__(
+TemporalAxis(self, values: numpy.ndarray)
 
-  axis.def(py::init<>([](const py::array &values) {
-             return std::make_shared<pyinterp::TemporalAxis>(values);
-           }),
-           py::arg("values"),
-           R"__doc__(
-Create a coordinate axis from values.
+Time axis
 
 Args:
-    values (numpy.ndarray): Items representing the datetimes or
-        timedeltas of the axis.
+    values: Items representing the datetimes or timedeltas of the axis.
 
 Raises:
     TypeError: if the array data type is not a datetime64 or timedelta64
@@ -255,24 +249,30 @@ Examples:
       min_value: 0 microseconds
       max_value: 311036400000000 microseconds
       step     : 3600000000 microseconds
-)__doc__")
+
+)__doc__");
+
+  axis.def(py::init<>([](const py::array &values) {
+             return std::make_shared<pyinterp::TemporalAxis>(values);
+           }),
+           py::arg("values"))
       .def("dtype", &pyinterp::TemporalAxis::dtype, R"__doc__(
 Data-type of the axis's elements.
 
 Returns:
-    numpy.dtype: numpy dtype object.
+    Numpy dtype object.
 )__doc__")
       .def("front", &pyinterp::TemporalAxis::front, R"__doc__(
 Get the first value of this axis.
 
 Returns:
-    numpy.array: The first value.
+    The first value.
 )__doc__")
       .def("back", &pyinterp::TemporalAxis::back, R"__doc__(
 Get the last value of this axis.
 
 Returns:
-    numpy.array: The last value.
+    The last value.
 )__doc__")
       .def("increment", &pyinterp::TemporalAxis::increment, R"__doc__(
 Get increment value if is_regular().
@@ -280,19 +280,19 @@ Get increment value if is_regular().
 Raises:
     RuntimeError: if this instance does not represent a regular axis.
 Returns:
-    numpy.array: Increment value.
+    Increment value.
 )__doc__")
       .def("min_value", &pyinterp::TemporalAxis::min_value, R"__doc__(
 Get the minimum coordinate value.
 
 Returns:
-    numpy.array: The minimum coordinate value.
+    The minimum coordinate value.
 )__doc__")
       .def("max_value", &pyinterp::TemporalAxis::max_value, R"__doc__(
 Get the maximum coordinate value.
 
 Returns:
-    numpy.array: The maximum coordinate value.
+    The maximum coordinate value.
 )__doc__")
       .def(
           "safe_cast",
@@ -304,10 +304,10 @@ Convert the values of the vector in the same unit as the time axis
 handled by this instance.
 
 Args:
-    values (numpy.ndarray): Values to convert.
+    values: Values to convert.
 
 Returns:
-    numpy.ndarray: values converted.
+    Values converted.
 
 Raises:
     UserWarning: If the implicit conversion of the supplied values to the

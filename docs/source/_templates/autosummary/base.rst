@@ -1,3 +1,5 @@
+:tocdepth: 1
+
 {{ fullname }}
 {{ underline }}
 

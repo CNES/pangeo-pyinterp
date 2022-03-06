@@ -20,8 +20,8 @@ def _core_class_suffix(x: np.ndarray, handle_integer: bool = False) -> str:
     """Get the suffix of the class handling the numpy data type.
 
     Args:
-        x (numpy.ndarray): array to process
-        handle_integer (bool): if True, the integer type is handled
+        x: array to process
+        handle_integer: if True, the integer type is handled
     Returns:
         str: the class suffix
     """
@@ -53,8 +53,8 @@ def _core_function(function: str, instance: object) -> str:
     """Get the suffix of the function handling the grid instance.
 
     Args:
-        function (str): TODO
-        instance (object): grid instance
+        function: function name
+        instance: grid instance
     Returns:
         str: the class suffix
     """

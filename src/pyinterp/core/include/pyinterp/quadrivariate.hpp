@@ -203,30 +203,26 @@ Interpolate the values provided on the defined trivariate function.
 Args:
     grid (pyinterp.core.)__doc__" +
          prefix + "Grid4D" + suffix +
-         R"__doc__(): Grid containing the values to be interpolated.
-    x (numpy.ndarray): X-values.
-    y (numpy.ndarray): Y-values.
-    z (numpy.ndarray): Z-values.
-    u (numpy.ndarray): U-values.
-    interpolator (pyinterp.core.)__doc__" +
-         prefix + R"__doc__(BivariateInterpolator3D): 3D interpolator
-        used to interpolate values on the surface (x, y, z). A linear
-        interpolation is used to evaluate the surface (x, y, z, u).
-    z_method (str, optional): The method of interpolation to perform on
-      Z-axis. Supported are ``linear`` and ``nearest``. Default to
-      ``linear``.
-    u_method (str, optional): The method of interpolation to perform on
-      U-axis. Supported are ``linear`` and ``nearest``. Default to
-      ``linear``.
-    bounds_error (bool, optional): If True, when interpolated values are
-      requested outside of the domain of the input axes (x, y, z, u), a
-      ValueError is raised. If False, then value is set to NaN.
-    num_threads (int, optional): The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+         R"__doc__(: Grid containing the values to be interpolated.
+    x: X-values.
+    y: Y-values.
+    z: Z-values.
+    u: U-values.
+    interpolator: 4D interpolator used to interpolate values on the surface
+        (x, y, z). A linear interpolation is used to evaluate the surface
+        (x, y, z, u).
+    z_method: The method of interpolation to perform on Z-axis. Supported are
+        ``linear`` and ``nearest``. Default to ``linear``.
+    u_method: The method of interpolation to perform on U-axis. Supported are
+      ``linear`` and ``nearest``. Default to ``linear``.
+    bounds_error: If True, when interpolated values are requested outside of the
+        domain of the input axes (x, y, z, u), a ValueError is raised. If False,
+        then value is set to NaN.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
 Returns:
-    numpy.ndarray: Values interpolated.
+    Values interpolated.
 )__doc__")
             .c_str());
 }

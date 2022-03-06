@@ -31,6 +31,26 @@ class Histogram2D:
     distribution per pixel or the value of a quantile, like the median.
     Otherwise, use the :py:class:`pyinterp.Binning2D` class.
 
+    Args:
+        x: Definition of the bin centers for the X axis of the grid.
+        y: Definition of the bin centers for the Y axis of the grid.
+        bin_counts: The number of bins to use. If not set, the number of
+            bins is 100.
+        dtype: Data type of the instance to create.
+
+    .. note ::
+
+        The axes define the centers of the different cells where the
+        statistics will be calculated, as shown in the figure below.
+
+        .. figure:: ../pictures/coordinates.svg
+            :align: center
+            :width: 50%
+
+        In this example, to calculate the statistics in the different cells
+        defined, the coordinates of the axes must be shifted by half a grid
+        step, 0.5 in this example.
+
     .. note ::
 
         Yael Ben-Haim and Elad Tom-Tov,
@@ -44,30 +64,6 @@ class Histogram2D:
                  y: core.Axis,
                  bin_counts: Optional[int] = None,
                  dtype: Optional[np.dtype] = np.dtype("float64")):
-        """Initializes the grid used to calculate the statistics.
-
-        Args:
-            x (pyinterp.Axis): Definition of the bin centers for the X axis
-                of the grid.
-            y (pyinterp.Axis): Definition of the bin centers for the Y axis
-                of the grid.
-            bin_counts (int, optional): The number of bins to use. If not set,
-                the number of bins is 100.
-            dtype (numpy.dtype, optional): Data type of the instance to create.
-
-        .. note ::
-
-            The axes define the centers of the different cells where the
-            statistics will be calculated, as shown in the figure below.
-
-            .. figure:: ../pictures/coordinates.svg
-                :align: center
-                :width: 50%
-
-            In this example, to calculate the statistics in the different cells
-            defined, the coordinates of the axes must be shifted by half a grid
-            step, 0.5 in this example.
-        """
         if dtype == np.dtype("float64"):
             self._instance = core.Histogram2DFloat64(x, y, bin_counts)
         elif dtype == np.dtype("float32"):
@@ -101,6 +97,7 @@ class Histogram2D:
         return "\n".join(result)
 
     def __add__(self, other: "Histogram2D") -> "Histogram2D":
+        """Overrides the default behavior of the ``+`` operator."""
         if self.dtype != other.dtype:
             raise ValueError("dtype mismatch")
         result = copy.copy(self)
@@ -111,10 +108,9 @@ class Histogram2D:
         """Push new samples into the defined bins.
 
         Args:
-            x (numpy.ndarray): X coordinates of the samples.
-            y (numpy.ndarray): Y coordinates of the samples.
-            z (numpy.ndarray): New samples to push into the
-                defined bins.
+            x: X coordinates of the samples.
+            y: Y coordinates of the samples.
+            z: New samples to push into the defined bins.
         """
         x = np.asarray(x).ravel()
         y = np.asarray(y).ravel()
@@ -127,10 +123,9 @@ class Histogram2D:
         """Push new samples into the defined bins from dask array.
 
         Args:
-            x (numpy.ndarray, dask.Array): X coordinates of the samples.
-            y (numpy.ndarray, dask.Array): Y coordinates of the samples.
-            z (numpy.ndarray, dask.Array): New samples to push into the
-                defined bins.
+            x: X coordinates of the samples.
+            y: Y coordinates of the samples.
+            z: New samples to push into the defined bins.
         Returns:
             The calculation graph producing the update of the grid from the
             provided samples. Running the graph will return an instance of this
@@ -163,7 +158,7 @@ class Histogram2D:
         """Gets the regular grid containing the calculated statistics.
 
         Args:
-            statistics (str or iterable, optional) : The statistics to compute
+            statistics: The statistics to compute
                 The following statistics are available:
 
                     * ``count`` : compute the count of points within each bin.
@@ -177,13 +172,12 @@ class Histogram2D:
                       each bin.
                     * ``skewness`` : compute the skewness of values for points
                     * ``variance`` : compute the variance within each bin.
-            args (list): Additional arguments to pass to the statistics
+            args: Additional arguments to pass to the statistics
                 function. For example, ``quantile`` requires a ``q``
                 argument that specifies the quantile to compute.
 
         Returns:
-            numpy.ndarray: The dataset representing the calculated
-            statistical variable.
+            The dataset representing the calculated statistical variable.
         """
         try:
             return getattr(self._instance, statistics)(*args)
