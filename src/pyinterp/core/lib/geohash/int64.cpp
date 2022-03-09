@@ -238,7 +238,9 @@ auto allocate_array(const size_t size) -> Vector<uint64_t> {
 // ---------------------------------------------------------------------------
 auto encode(const geodetic::Point &point, const uint32_t precision)
     -> uint64_t {
-  auto result = encoder(point.lat(), point.lon());
+  auto result =
+      encoder(point.lat(), pyinterp::detail::math::normalize_angle<double>(
+                               point.lon(), -180.0, 360.0));
   if (precision != 64) {
     result >>= (64 - precision);
   }
