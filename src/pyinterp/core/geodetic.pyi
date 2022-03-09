@@ -1,5 +1,7 @@
 from typing import Any, ClassVar, Iterator, Optional, Tuple, overload
+
 import numpy
+
 from .. import geodetic
 
 
@@ -66,8 +68,7 @@ class Box:
 
 
 class Coordinates:
-
-    def __init__(self, system: Optional[System]) -> None:
+    def __init__(self, system: Optional[System] = None) -> None:
         ...
 
     def ecef_to_lla(self,
@@ -98,9 +99,12 @@ class Coordinates:
     def __setstate__(self, arg0: tuple) -> None:
         ...
 
+    @property
+    def system(self) -> System:
+        ...
+
 
 class Crossover:
-
     def __init__(self, half_orbit_1: Linestring,
                  half_orbit_2: Linestring) -> None:
         ...
@@ -134,7 +138,6 @@ class Crossover:
 
 
 class Linestring:
-
     def __init__(self, lon: numpy.ndarray[numpy.float64],
                  lat: numpy.ndarray[numpy.float64]) -> None:
         ...
@@ -160,7 +163,7 @@ class Linestring:
     def __len__(self) -> int:
         ...
 
-    def __setstate__(self, tuple: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -328,7 +331,6 @@ class System(_System):
 
 
 class _System:
-
     def __init__(self, *args, **kwargs) -> None:
         ...
 

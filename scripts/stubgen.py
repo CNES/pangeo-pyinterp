@@ -67,11 +67,9 @@ def fix_core_fill(src: pathlib.Path, grids: List[str]):
     with core.open("r") as stream:
         lines = stream.readlines()
 
-    for ix, item in enumerate([
-            "", "import numpy\n"
-            f"from . import ({','.join(grids)},)\n", "", "", "", ""
-    ]):
-        lines[ix] = item if ix else lines[ix].rstrip() + ", overload\n"
+    lines[1] = f"from . import ({','.join(grids)},)\n"
+    lines[3] = ""
+    lines[5] = ""
 
     for ix, item in enumerate(lines):
         item = item.replace("pyinterp.core.", "")
@@ -118,7 +116,7 @@ def main():
         "pyinterp.core.geohash",
         "pyinterp.core",
     ]
-    out = pathlib.Path(__file__).parent / "src"
+    out = pathlib.Path(__file__).parent.parent / "src"
     options = mypy.stubgen.Options(pyversion=(sys.version_info[0],
                                               sys.version_info[1]),
                                    no_import=False,

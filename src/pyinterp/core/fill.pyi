@@ -1,5 +1,7 @@
 from typing import ClassVar, Tuple, overload
+
 import numpy
+
 from . import (
     Grid2DFloat32,
     Grid2DFloat64,
