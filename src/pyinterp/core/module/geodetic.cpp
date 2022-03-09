@@ -709,6 +709,8 @@ Args:
 )")
       .def(py::init<std::optional<geodetic::System>>(),
            py::arg("system") = std::nullopt)
+      .def_property_readonly("system", &geodetic::Coordinates::system,
+                             "WGS used to transform the coordinates.")
       .def("ecef_to_lla", &geodetic::Coordinates::ecef_to_lla<double>,
            py::arg("x"), py::arg("y"), py::arg("z"), py::arg("num_threads") = 0,
            R"__doc__(
