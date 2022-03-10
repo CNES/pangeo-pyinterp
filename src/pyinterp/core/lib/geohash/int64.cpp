@@ -9,7 +9,7 @@
 
 // Ref: https://mmcloughlin.com/posts/geohash-assembly
 namespace pyinterp::geohash::int64 {
-namespace detail {
+namespace codec {
 
 static constexpr auto exp232 = 4294967296.0;      // 2^32;
 static constexpr auto inv_exp232 = 1.0 / exp232;  // 1 / 2^32;
@@ -170,7 +170,7 @@ static auto deinterleave_bim2(const uint64_t x)
                          static_cast<uint32_t>(lon));
 }
 
-}  // namespace detail
+}  // namespace codec
 
 // Pointer to the GeoHash position encoding function.
 using encoder_t = uint64_t (*)(double, double);
@@ -179,13 +179,12 @@ using encoder_t = uint64_t (*)(double, double);
 using deinterleaver_t = std::tuple<uint32_t, uint32_t> (*)(uint64_t);
 
 // Can the CPU use the BIM2 instruction set?
-static const bool have_bim2 = detail::has_bmi2();
+static const bool have_bim2 = codec::has_bmi2();
 
 // Sets the encoding/decoding functions according to the CPU capacity
-static encoder_t const encoder =
-    have_bim2 ? detail::encode_bim2 : detail::encode;
+static encoder_t const encoder = have_bim2 ? codec::encode_bim2 : codec::encode;
 static deinterleaver_t const deinterleaver =
-    have_bim2 ? detail::deinterleave_bim2 : detail::deinterleave;
+    have_bim2 ? codec::deinterleave_bim2 : codec::deinterleave;
 
 // ---------------------------------------------------------------------------
 auto format_bytes(size_t bytes) -> std::string {
@@ -238,9 +237,7 @@ auto allocate_array(const size_t size) -> Vector<uint64_t> {
 // ---------------------------------------------------------------------------
 auto encode(const geodetic::Point &point, const uint32_t precision)
     -> uint64_t {
-  auto result =
-      encoder(point.lat(), pyinterp::detail::math::normalize_angle<double>(
-                               point.lon(), -180.0, 360.0));
+  auto result = encoder(point.lat(), point.lon());
   if (precision != 64) {
     result >>= (64 - precision);
   }
@@ -252,8 +249,8 @@ auto bounding_box(const uint64_t hash, const uint32_t precision)
     -> geodetic::Box {
   auto full_hash = hash << (64U - precision);
   auto lat_lng_int = deinterleaver(full_hash);
-  auto lat = detail::decode_range(std::get<0>(lat_lng_int), 90);
-  auto lon = detail::decode_range(std::get<1>(lat_lng_int), 180);
+  auto lat = codec::decode_range(std::get<0>(lat_lng_int), 90);
+  auto lon = codec::decode_range(std::get<1>(lat_lng_int), 180);
   auto lon_lat_err = error_with_precision(precision);
 
   return {

@@ -89,7 +89,8 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd> &lon,
     auto gil = pybind11::gil_scoped_release();
 
     for (Eigen::Index ix = 0; ix < size; ++ix) {
-      encode({lon[ix], lat[ix]}, buffer, precision);
+      encode({detail::math::normalize_angle(lon[ix], -180.0, 360.0), lat[ix]},
+             buffer, precision);
       buffer += precision;
     }
   }

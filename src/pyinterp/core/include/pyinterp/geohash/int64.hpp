@@ -47,7 +47,10 @@ namespace pyinterp::geohash::int64 {
   auto size = lon.size();
   auto result = Vector<uint64_t>(size);
   for (Eigen::Index ix = 0; ix < size; ++ix) {
-    result(ix) = encode({lon[ix], lat[ix]}, precision);
+    result(ix) =
+        encode({detail::math::normalize_angle<double>(lon[ix], -180.0, 360.0),
+                lat[ix]},
+               precision);
   }
   return result;
 }

@@ -57,7 +57,9 @@ class GeoHash {
     if (precision > 12) {
       throw std::invalid_argument("GeoHash precision must be <= 12");
     }
-    string::encode({longitude, latitude}, code_.data(), precision);
+    string::encode(
+        {detail::math::normalize_angle(longitude, -180.0, 360.0), latitude},
+        code_.data(), precision);
   }
 
   /// GeoHash from its string representation.
