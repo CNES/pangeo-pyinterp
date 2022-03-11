@@ -1,11 +1,20 @@
 Changelog
 #########
 
+0.13.0 (11 March 2022)
+----------------------
+* One-dimensional binning.
+* Update pybind11 to v2.9.1
+* Fixes minor issues and documentation.
+* Refactoring the API documentation.
+* Automatic standardization of longitude when encoding GeoHash.
+* Fixes lint warnings.
+
 0.12.0 (2 February 2022)
 ------------------------
 * Extract test data into auxiliary files.
-* Install pre-commit hooks
-* Upload automatically the package on pypi
+* Install pre-commit hooks.
+* Upload automatically the package on pypi.
 * Calculate crossovers between line string.
 
 
