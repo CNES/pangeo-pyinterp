@@ -289,6 +289,8 @@ class RTree:
                   sinc(\\frac{d}{r}) \\times sinc(\\frac{d}{arg \\times r}),
                   & d \\le arg \\times r \\\\ 0,
                   & d \\gt arg \\times r \\end{array} \\right\\}`
+                * ``gaussian``: :math:`\\left(\\dfrac{d}{r}\\right)^2\\times
+                  e^\\left(\\dfrac{1}{2}\\right)`
                 * ``hamming``: :math:`w(d) = 0.53836 - 0.46164
                   \\cos(\\frac{\\pi (d + r)}{r})`
                 * ``nuttall``: :math:`w(d) = 0.3635819 - 0.4891775

@@ -19,6 +19,7 @@ enum Function : uint8_t {
   kBlackmanHarris,
   kBoxcar,
   kFlatTop,
+  kGaussian,
   kHamming,
   kLanczos,
   kNuttall,
@@ -83,11 +84,21 @@ constexpr auto blackman_harris(const T &d, const T &r, const T & /*unused*/)
   }
   return T(0);
 }
+
 /// Lanczos window function.
 template <typename T>
 constexpr auto lanczos(const T &d, const T &r, const T &nlobes) -> T {
   if (d <= nlobes * r) {
     return sinc(d / r) * sinc(d / (r * nlobes));
+  }
+  return T(0);
+}
+
+/// Gaussian window function.
+template <typename T>
+constexpr auto gaussian(const T &d, const T &r, const T & /* unused */) -> T {
+  if (d <= r) {
+    return std::exp(T(0.5)) * math::sqr(d / r);
   }
   return T(0);
 }
@@ -164,6 +175,9 @@ class WindowFunction {
         break;
       case window::Function::kLanczos:
         function_ = &window::lanczos;
+        break;
+      case window::Function::kGaussian:
+        function_ = &window::gaussian;
         break;
       case window::Function::kHamming:
         function_ = &window::hamming;

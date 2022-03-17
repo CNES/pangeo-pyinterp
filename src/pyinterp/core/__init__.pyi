@@ -1,8 +1,9 @@
 from typing import Any, ClassVar, List, Optional, Tuple, overload
-
 import numpy
-
-from . import dateutils, fill, geodetic, geohash
+from . import dateutils
+from . import geodetic
+from . import geohash
+from . import fill
 
 
 class Axis:
@@ -1196,7 +1197,7 @@ class TemporalAxis(AxisInt64):
     def back(self) -> numpy.ndarray:
         ...
 
-    def dtype(self) -> numpy.dtype:
+    def dtype(self) -> dtype:
         ...
 
     def find_index(self,
@@ -1481,6 +1482,7 @@ class WindowFunction:
     BlackmanHarris: ClassVar[WindowFunction] = ...
     Boxcar: ClassVar[WindowFunction] = ...
     FlatTop: ClassVar[WindowFunction] = ...
+    Gaussian: ClassVar[WindowFunction] = ...
     Hamming: ClassVar[WindowFunction] = ...
     Lanczos: ClassVar[WindowFunction] = ...
     Nuttall: ClassVar[WindowFunction] = ...
@@ -1704,6 +1706,34 @@ def quadrivariate_float32(
         num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
     ...
 
+@overload
+def quadrivariate_float32(
+        grid: Grid4DFloat32,
+        x: numpy.ndarray[numpy.float64],
+        y: numpy.ndarray[numpy.float64],
+        z: numpy.ndarray[numpy.float64],
+        u: numpy.ndarray[numpy.float64],
+        interpolator: BivariateInterpolator3D,
+        z_method: Optional[str] = ...,
+        u_method: Optional[str] = ...,
+        bounds_error: bool = ...,
+        num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+@overload
+def quadrivariate_float64(
+        grid: TemporalGrid4DFloat64,
+        x: numpy.ndarray[numpy.float64],
+        y: numpy.ndarray[numpy.float64],
+        z: numpy.ndarray[numpy.int64],
+        u: numpy.ndarray[numpy.float64],
+        interpolator: TemporalBivariateInterpolator3D,
+        z_method: Optional[str] = ...,
+        u_method: Optional[str] = ...,
+        bounds_error: bool = ...,
+        num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
 
 @overload
 def quadrivariate_float64(
