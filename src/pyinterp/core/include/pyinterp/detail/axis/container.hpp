@@ -213,7 +213,6 @@ class Irregular : public Abstract<T> {
       throw std::invalid_argument("unable to create an empty container.");
     }
     this->is_ascending_ = this->calculate_is_ascending();
-    make_edges();
   }
 
   /// Destructor
@@ -243,7 +242,6 @@ class Irregular : public Abstract<T> {
   auto flip() -> void override {
     std::reverse(points_.data(), points_.data() + points_.size());
     this->is_ascending_ = !this->is_ascending_;
-    make_edges();
   }
 
   /// @copydoc Abstract::is_monotonic() const
@@ -294,11 +292,10 @@ class Irregular : public Abstract<T> {
   [[nodiscard]] constexpr auto find_index(const T coordinate,
                                           const bool bounded) const
       -> int64_t override {
-    auto high = size();
     if (this->is_ascending_) {
-      return this->find_index_ascending(coordinate, bounded, high);
+      return this->find_index(coordinate, bounded, size(), std::less<T>());
     }
-    return this->find_index_descending(coordinate, bounded, high);
+    return this->find_index(coordinate, bounded, size(), std::greater<T>());
   }
 
   /// @copydoc Abstract::operator==(const Abstract&) const
@@ -312,79 +309,35 @@ class Irregular : public Abstract<T> {
 
  private:
   Vector<T> points_{};
-  Vector<T> edges_{};
-
-  /// Computes the edges, if the axis data are not spaced regularly.
-  void make_edges() {
-    auto n = points_.size();
-    edges_.resize(n + 1);
-
-    for (Eigen::Index ix = 1; ix < n; ++ix) {
-      edges_[ix] = (points_[ix - 1] + points_[ix]) / 2;
-    }
-
-    edges_[0] = 2 * points_[0] - edges_[1];
-    edges_[n] = 2 * points_[n - 1] - edges_[n - 1];
-  }
 
   /// Search for the index corresponding to the requested value if the axis is
   /// sorted in ascending order.
-  [[nodiscard]] constexpr auto find_index_ascending(const T coordinate,
-                                                    const bool bounded,
-                                                    int64_t high) const
-      -> int64_t {
-    int64_t low = 0;
-    int64_t mid = 0;
+  template <typename Compare>
+  [[nodiscard]] constexpr auto find_index(const T coordinate,
+                                          const bool bounded, int64_t size,
+                                          Compare cmp) const -> int64_t {
+    auto begin = points_.data();
+    auto end = points_.data() + size;
+    auto it = std::lower_bound(begin, end, coordinate, cmp);
 
-    if (coordinate < edges_[0]) {
-      return bounded ? 0 : -1;
-    }
-
-    if (coordinate > edges_[this->edges_.size() - 1]) {
-      return bounded ? high - 1 : -1;
-    }
-
-    while (high > low + 1) {
-      // low and high are strictly positive
-      mid = (low + high) >> 1;  // NOLINT
-      auto value = edges_[mid];
-
-      if (value == coordinate) {
-        return mid;
+    if (it == begin) {
+      if (cmp(coordinate, *it)) {
+        return bounded ? 0 : -1;
       }
-      value < coordinate ? low = mid : high = mid;
-    }
-    return low;
-  }
-
-  /// Search for the index corresponding to the requested value if the axis is
-  /// sorted in descending order.
-  [[nodiscard]] constexpr auto find_index_descending(const T coordinate,
-                                                     const bool bounded,
-                                                     int64_t high) const
-      -> int64_t {
-    int64_t low = 0;
-    int64_t mid = 0;
-
-    if (coordinate < edges_[this->edges_.size() - 1]) {
-      return bounded ? high - 1 : -1;
+      return 0;
     }
 
-    if (coordinate > edges_[0]) {
-      return bounded ? 0 : -1;
-    }
-
-    while (high > low + 1) {
-      // low and high are strictly positive
-      mid = (low + high) >> 1;  // NOLINT
-      auto value = edges_[mid];
-
-      if (value == coordinate) {
-        return mid;
+    if (it == end) {
+      if (cmp(*(it - 1), coordinate)) {
+        return bounded ? size - 1 : -1;
       }
-      value < coordinate ? high = mid : low = mid;
+      return size - 1;
     }
-    return low;
+
+    if (abs(coordinate - *(it - 1)) < abs(coordinate - *it)) {
+      it--;
+    }
+    return std::distance(begin, it);
   }
 };
 
