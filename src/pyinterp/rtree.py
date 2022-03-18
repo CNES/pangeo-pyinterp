@@ -330,6 +330,7 @@ class RTree:
                 "blackman_harris",
                 "boxcar",
                 "flattop",
+                "gaussian",
                 "hamming",
                 "lanczos",
                 "nuttall",
