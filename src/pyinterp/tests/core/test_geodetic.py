@@ -280,14 +280,13 @@ def test_multipolygon():
         polygons.append(polygon)
         multipolygon.append(polygon)
     assert len(multipolygon) == len(polygons)
-    assert multipolygon[0] == polygons[0]
     assert polygons[1] in multipolygon
     assert list(multipolygon) == polygons
     assert isinstance(multipolygon.envelope(), geodetic.Box)
     assert multipolygon.covered_by(polygons[0].outer[0])
 
-    lon = [item[0] for item in coordinates[0]]
-    lat = [item[1] for item in coordinates[0]]
+    lon = np.fromiter((item[0] for item in coordinates[0]), dtype="float64")
+    lat = np.fromiter((item[1] for item in coordinates[0]), dtype="float64")
 
     assert np.all(multipolygon.covered_by(lon, lat) == 1)
 
