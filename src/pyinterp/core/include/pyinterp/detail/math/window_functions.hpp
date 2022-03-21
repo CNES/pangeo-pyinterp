@@ -96,7 +96,7 @@ constexpr auto lanczos(const T &d, const T &r, const T &nlobes) -> T {
 
 /// Gaussian window function.
 template <typename T>
-constexpr auto gaussian(const T &d, const T &r, const T & sigma) -> T {
+constexpr auto gaussian(const T &d, const T &r, const T &sigma) -> T {
   if (d <= r) {
     return std::exp(-T(0.5) * math::sqr(d / sigma));
   }

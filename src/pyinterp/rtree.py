@@ -349,7 +349,7 @@ class RTree:
                     f"The argument of the function {wf!r} must be "
                     "greater than 1")
 
-            if wf  == "parzen" and arg < 0:  # type: ignore
+            if wf == "parzen" and arg < 0:  # type: ignore
                 raise ValueError(
                     f"The argument of the function {wf!r} must be "
                     "greater than 0")
