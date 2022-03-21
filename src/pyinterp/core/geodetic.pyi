@@ -1,7 +1,5 @@
 from typing import Any, ClassVar, Iterator, Optional, Tuple, overload
-
 import numpy
-
 from .. import geodetic
 
 
@@ -167,6 +165,81 @@ class Linestring:
         ...
 
 
+class MultiPolygon:
+    __hash__: ClassVar[None] = ...
+
+    @overload
+    def __init__(self) -> None:
+        ...
+
+    @overload
+    def __init__(self, polygons: list) -> None:
+        ...
+
+    def append(self, polygon: Polygon) -> None:
+        ...
+
+    def area(self, wgs: Optional[System] = None) -> float:
+        ...
+
+    @overload
+    def covered_by(self, point: Point) -> bool:
+        ...
+
+    @overload
+    def covered_by(self,
+                   lon: numpy.ndarray[numpy.float64],
+                   lat: numpy.ndarray[numpy.float64],
+                   num_threads: int = ...) -> numpy.ndarray[numpy.int8]:
+        ...
+
+    @overload
+    def distance(self, other: MultiPolygon) -> float:
+        ...
+
+    @overload
+    def distance(self, other: Polygon) -> float:
+        ...
+
+    @overload
+    def distance(self, point: Point) -> float:
+        ...
+
+    def envelope(self) -> Box:
+        ...
+
+    @staticmethod
+    def read_wkt(wkt: str) -> MultiPolygon:
+        ...
+
+    def wkt(self) -> str:
+        ...
+
+    def __contains__(self, polygon: Polygon) -> bool:
+        ...
+
+    def __eq__(self, other: MultiPolygon) -> bool:
+        ...
+
+    def __getitem__(self, index: int) -> Polygon:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __iter__(self) -> Iterator:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __ne__(self, other: MultiPolygon) -> bool:
+        ...
+
+    def __setstate__(self, state: tuple) -> None:
+        ...
+
+
 class Point:
     __hash__: ClassVar[None] = ...
     lat: float
@@ -236,6 +309,7 @@ class Polygon:
 
     def envelope(self) -> Box:
         ...
+
 
     @staticmethod
     def read_wkt(wkt: str) -> Polygon:

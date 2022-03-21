@@ -74,6 +74,7 @@ Geodetic systems
   geodetic.Coordinates
   geodetic.Crossover
   geodetic.Linestring
+  geodetic.MultiPolygon
   geodetic.Point
   geodetic.Polygon
   geodetic.System

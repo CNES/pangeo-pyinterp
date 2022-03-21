@@ -12,6 +12,7 @@
 #include "pyinterp/geodetic/coordinates.hpp"
 #include "pyinterp/geodetic/crossover.hpp"
 #include "pyinterp/geodetic/line_string.hpp"
+#include "pyinterp/geodetic/multipolygon.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
 #include "pyinterp/geodetic/system.hpp"
@@ -347,7 +348,7 @@ Test if the given point is inside or on border of this polygon.
 Args:
     point: point to test.
 Returns:
-    True if the given point is inside or on border of this box.
+    True if the given point is inside or on border of this polygon.
 )__doc__")
       .def(
           "covered_by",
@@ -370,7 +371,7 @@ Args:
         which is useful for debugging. Default to 1.
 Returns:
     A vector containing a flag equal to 1 if the coordinate is located in the
-    box or at the edge otherwise 0.
+    polygon or at the edge otherwise 0.
 )__doc__")
       .def("area", &geodetic::Polygon::area, py::arg("wgs") = std::nullopt,
            R"__doc__(
@@ -442,6 +443,200 @@ Returns:
           [](const geodetic::Polygon &self) { return self.getstate(); },
           [](const py::tuple &state) {
             return geodetic::Polygon::setstate(state);
+          }));
+}
+
+static void init_geodetic_multipolygon(py::module &m) {
+  py::class_<geodetic::MultiPolygon>(m, "MultiPolygon",
+                                     R"__doc__(
+A MultiPolygon is a collection of polygons.
+
+Args:
+    polygons: The polygons to use.
+)__doc__")
+      .def(py::init<>(), "Defaults to an empty MultiPolygon.")
+      .def(py::init<const py::list &>(), py::arg("polygons"), R"__doc__(
+Initializes a MultiPolygon from a list of polygons.
+
+Args:
+    polygons: The polygons to use.
+)__doc__")
+      .def(
+          "append",
+          [](geodetic::MultiPolygon &self, geodetic::Polygon polygon) -> void {
+            self.append(std::move(polygon));
+          },
+          py::arg("polygon"), R"__doc__(
+Appends a polygon to this instance.
+
+Args:
+    polygon: The polygon to append.
+)__doc__")
+      .def("__len__", &geodetic::MultiPolygon::size,
+           "Returns the number of polygons in this instance.")
+      .def("__getitem__", &geodetic::MultiPolygon::operator(), py::arg("index"),
+           "Returns the polygon at the given index.")
+      .def(
+          "__contains__",
+          [](const geodetic::MultiPolygon &self,
+             const geodetic::Polygon &polygon) {
+            return self.contains(polygon);
+          },
+          py::arg("polygon"),
+          "True if the multi-polygon has the specified polygon, else False")
+      .def(
+          "__iter__",
+          [](const geodetic::MultiPolygon &self) {
+            return py::make_iterator(self.begin(), self.end());
+          },
+          py::keep_alive<0, 1>())
+      .def(
+          "__eq__",
+          [](const geodetic::MultiPolygon &self,
+             const geodetic::MultiPolygon &rhs) -> bool {
+            return boost::geometry::equals(self, rhs);
+          },
+          py::arg("other"),
+          "Overrides the default behavior of the ``==`` operator.")
+      .def(
+          "__ne__",
+          [](const geodetic::MultiPolygon &self,
+             const geodetic::MultiPolygon &rhs) -> bool {
+            return !boost::geometry::equals(self, rhs);
+          },
+          py::arg("other"),
+          "Overrides the default behavior of the ``!=`` operator.")
+      .def("__repr__", &geodetic::MultiPolygon::to_string,
+           "Called by the ``repr()`` built-in function to compute the string "
+           "representation of a point.")
+      .def("envelope", &geodetic::MultiPolygon::envelope,
+           R"__doc__(
+Calculates the envelope of this multi-polygon.
+
+Returns:
+    The envelope of this instance.
+)__doc__")
+      .def(
+          "covered_by",
+          [](const geodetic::MultiPolygon &self, const geodetic::Point &point)
+              -> bool { return self.covered_by(point); },
+          py::arg("point"), R"__doc__(
+Test if the given point is inside or on border of this multi-polygon.
+
+Args:
+    point: point to test.
+Returns:
+    True if the given point is inside or on border of this multi-polygon.
+)__doc__")
+      .def(
+          "covered_by",
+          [](const geodetic::MultiPolygon &self,
+             const Eigen::Ref<const Eigen::VectorXd> &lon,
+             const Eigen::Ref<const Eigen::VectorXd> &lat,
+             const size_t num_threads) -> py::array_t<int8_t> {
+            return self.covered_by(lon, lat, num_threads);
+          },
+          py::arg("lon"), py::arg("lat"), py::arg("num_threads") = 1,
+          R"__doc__(
+Test if the coordinates of the points provided are located inside or at the
+edge of this multi-polygon.
+
+Args:
+    lon: Longitudes coordinates in degrees to check.
+    lat: Latitude coordinates in degrees to check.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Default to 1.
+Returns:
+    A vector containing a flag equal to 1 if the coordinate is located in the
+    multi-polygon or at the edge otherwise 0.
+)__doc__")
+      .def("area", &geodetic::MultiPolygon::area, py::arg("wgs") = std::nullopt,
+           R"__doc__(
+Calculates the area.
+
+Args:
+    wgs: WGS system used for the calculation, default to WGS84.
+
+Returns:
+    The calculated area.
+)__doc__")
+      .def(
+          "distance",
+          [](const geodetic::MultiPolygon &self,
+             const geodetic::MultiPolygon &other) -> double {
+            return self.distance(other);
+          },
+          py::arg("other"),
+          R"__doc__(
+Calculate the distance between the two multi-polygons.
+
+Args:
+    other: The other multi-polygon to consider.
+
+Returns:
+    The distance between the two multi-polygons in meters.
+)__doc__")
+      .def(
+          "distance",
+          [](const geodetic::MultiPolygon &self, const geodetic::Polygon &other)
+              -> double { return self.distance(other); },
+          py::arg("other"),
+          R"__doc__(
+Calculate the distance between this instance and a polygon.
+
+Args:
+    other: The other multi-polygon to consider.
+
+Returns:
+    The distance between this instance and the polygon in meters.
+)__doc__")
+      .def(
+          "distance",
+          [](const geodetic::MultiPolygon &self, const geodetic::Point &point)
+              -> double { return self.distance(point); },
+          py::arg("point"),
+          R"__doc__(
+Calculate the distance between this instance and a point.
+
+Args:
+    point: The point to consider.
+
+Returns:
+    The distance between this multi-polygon and the provided point.
+)__doc__")
+      .def(
+          "wkt",
+          [](const geodetic::MultiPolygon &self) -> std::string {
+            auto ss = std::stringstream();
+            ss << boost::geometry::wkt(self);
+            return ss.str();
+          },
+          R"__doc__(
+Gets the OGC Well-Known Text (WKT) representation of this instance.
+
+Returns:
+    The WKT representation.
+)__doc__")
+      .def_static(
+          "read_wkt",
+          [](const std::string &wkt) -> geodetic::MultiPolygon {
+            auto multipolygon = geodetic::MultiPolygon();
+            boost::geometry::read_wkt(wkt, multipolygon);
+            return multipolygon;
+          },
+          py::arg("wkt"), R"__doc__(
+Parses OGC Well-Known Text (WKT) into a multi-polygon.
+
+Args:
+    wkt: the WKT representation of the multi-polygon.
+Returns:
+    The multi-polygon defined by the WKT representation.
+)__doc__")
+      .def(py::pickle(
+          [](const geodetic::MultiPolygon &self) { return self.getstate(); },
+          [](const py::tuple &state) {
+            return geodetic::MultiPolygon::setstate(state);
           }));
 }
 
@@ -782,6 +977,7 @@ Returns:
   init_geodetic_point(m);
   init_geodetic_box(m);
   init_geodetic_polygon(m);
+  init_geodetic_multipolygon(m);
   init_geodetic_linestring(m);
   init_geodetic_crossover(m);
 

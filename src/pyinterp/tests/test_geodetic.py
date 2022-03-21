@@ -2,6 +2,8 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+import pickle
+
 import pytest
 
 from .. import geodetic
@@ -83,3 +85,24 @@ def test_polygon():
 
     with pytest.raises(ValueError):
         polygon = geodetic.Polygon([1])  # type: ignore
+
+
+def test_multipolygon():
+    multipolygon = geodetic.MultiPolygon()
+    multipolygon.append(
+        geodetic.Polygon([
+            geodetic.Point(0, 0),
+            geodetic.Point(0, 5),
+            geodetic.Point(5, 5),
+            geodetic.Point(5, 0),
+            geodetic.Point(0, 0)
+        ]))
+    assert len(multipolygon) == 1
+    assert pickle.loads(pickle.dumps(multipolygon)) == multipolygon
+
+    assert multipolygon.wkt() == \
+        'MULTIPOLYGON(((0 0,0 5,5 5,5 0,0 0)))'
+
+    assert geodetic.MultiPolygon.read_wkt(
+        'MULTIPOLYGON(((0 0,0 5,5 5,5 0,0 0)))').wkt(
+        ) == 'MULTIPOLYGON(((0 0,0 5,5 5,5 0,0 0)))'

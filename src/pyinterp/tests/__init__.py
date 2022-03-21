@@ -70,6 +70,11 @@ def polygon_path():
     return ROOT.joinpath("polygon.json")
 
 
+def multipolygon_path():
+    """Return path to the polygon dataset"""
+    return ROOT.joinpath("multipolygon.json")
+
+
 def run(pattern: Optional[str] = None) -> None:
     """Run tests.
 

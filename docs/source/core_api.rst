@@ -107,6 +107,7 @@ Geodetic System
 
   core.geodetic.Box
   core.geodetic.Coordinates
+  core.geodetic.MultiPolygon
   core.geodetic.Point
   core.geodetic.Polygon
   core.geodetic.System

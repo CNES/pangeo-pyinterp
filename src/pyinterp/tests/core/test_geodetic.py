@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 import pytest
 
-from .. import polygon_path
+from .. import multipolygon_path, polygon_path
 from ... import core
 from ...core import geodetic
 
@@ -266,6 +266,41 @@ def test_polygon_covered_by():
     mx = (mx + 180) % 360 - 180
     mask2 = polygon.covered_by(mx.ravel(), my.ravel()).reshape(mx.shape)
     assert np.all(mask2 == mask1)
+
+
+def test_multipolygon():
+    with open(multipolygon_path()) as stream:
+        coordinates = json.load(stream)
+
+    polygons = []
+    multipolygon = core.geodetic.MultiPolygon()
+    for points in coordinates:
+        polygon = core.geodetic.Polygon(
+            [core.geodetic.Point(*item) for item in points])
+        polygons.append(polygon)
+        multipolygon.append(polygon)
+    assert len(multipolygon) == len(polygons)
+    assert multipolygon[0] == polygons[0]
+    assert polygons[1] in multipolygon
+    assert list(multipolygon) == polygons
+    assert isinstance(multipolygon.envelope(), geodetic.Box)
+    assert multipolygon.covered_by(polygons[0].outer[0])
+
+    lon = [item[0] for item in coordinates[0]]
+    lat = [item[1] for item in coordinates[0]]
+
+    assert np.all(multipolygon.covered_by(lon, lat) == 1)
+
+    assert multipolygon.distance(multipolygon) == 0
+    assert multipolygon.distance(polygons[-1]) == 0
+    assert multipolygon.distance(polygons[0].outer[0]) == 0
+
+    assert multipolygon.area() != 0
+
+    with pytest.raises(IndexError):
+        multipolygon[len(polygons)]
+
+    assert isinstance(multipolygon.wkt(), str)
 
 
 def test_coordinate_distance():
