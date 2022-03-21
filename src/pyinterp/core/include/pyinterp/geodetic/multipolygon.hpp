@@ -5,6 +5,7 @@
 #pragma once
 #include <boost/geometry.hpp>
 #include <string>
+#include <vector>
 
 #include "pyinterp/geodetic/polygon.hpp"
 
@@ -17,6 +18,10 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
 
   /// Default constructor
   MultiPolygon() = default;
+
+  /// Create a new instance from Python
+  explicit MultiPolygon(std::initializer_list<Polygon> polygons)
+      : Base(polygons) {}
 
   /// Create a new instance from Python
   explicit MultiPolygon(const pybind11::list &polygons);

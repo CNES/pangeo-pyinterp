@@ -42,18 +42,6 @@ class Box : public boost::geometry::model::box<Point> {
     return {{-180, -90}, {180, 90}};
   }
 
-  /// Normalize the longitude coordinate of the box in the range [-180,
-  /// 180]
-  [[nodiscard]] auto normalize() const -> Box {
-    auto result = *this;
-    auto _normalize = [](const double x) -> double {
-      return x > 180.0 ? detail::math::normalize_angle(x, -180.0, 360.0) : x;
-    };
-    result.min_corner().set<0>(_normalize(result.min_corner().get<0>()));
-    result.max_corner().set<0>(_normalize(result.max_corner().get<0>()));
-    return result;
-  }
-
   // Returns the box, or the two boxes on either side of the dateline if the
   // defined box wraps around the globe (i.e. the longitude of the min corner
   // is greater than the longitude of the max corner.)

@@ -313,31 +313,24 @@ auto grid_properties(const geodetic::Box &box, const uint32_t precision)
 // ---------------------------------------------------------------------------
 auto bounding_boxes(const geodetic::Box &box, const uint32_t precision)
     -> Vector<uint64_t> {
-  // If the input box cut the meridian, we need to split it into two boxes.
-  const auto boxes = geodetic::Box(box).normalize().split();
-
   // Grid resolution in degrees
   const auto lng_lat_err = error_with_precision(precision);
 
   // Allocation of the vector storing the different codes of the matrix created
-  auto result = allocate_array(count(boxes, precision));
+  auto [hash_sw, lon_step, lat_step] = grid_properties(box, precision);
+  auto result = allocate_array(lon_step * lat_step);
   auto ix = int64_t(0);
 
-  for (const auto &item : boxes) {
-    auto [hash_sw, lon_step, lat_step] = grid_properties(item, precision);
-    auto point_sw = decode(hash_sw, precision, true);
+  auto point_sw = decode(hash_sw, precision, false);
 
-    for (size_t lat = 0; lat < lat_step; ++lat) {
-      const auto lat_shift =
-          static_cast<double>(lat) * std::get<1>(lng_lat_err);
+  for (size_t lat = 0; lat < lat_step; ++lat) {
+    const auto lat_shift = static_cast<double>(lat) * std::get<1>(lng_lat_err);
 
-      for (size_t lon = 0; lon < lon_step; ++lon) {
-        const auto lng_shift =
-            static_cast<double>(lon) * std::get<0>(lng_lat_err);
-        result(ix++) =
-            encode({point_sw.lon() + lng_shift, point_sw.lat() + lat_shift},
-                   precision);
-      }
+    for (size_t lon = 0; lon < lon_step; ++lon) {
+      const auto lng_shift =
+          static_cast<double>(lon) * std::get<0>(lng_lat_err);
+      result(ix++) = encode(
+          {point_sw.lon() + lng_shift, point_sw.lat() + lat_shift}, precision);
     }
   }
   return result;
