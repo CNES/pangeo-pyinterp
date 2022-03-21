@@ -106,8 +106,8 @@ Raises:
           [](const geodetic::Polygon &polygon, const uint32_t precision,
              const size_t num_threads) -> py::array {
             check_range(precision);
-            return geohash::string::bounding_boxes(
-                geodetic::MultiPolygon({polygon}), precision, num_threads);
+            return geohash::string::bounding_boxes(polygon, precision,
+                                                   num_threads);
           },
           py::arg("polygon"), py::arg("precision") = 1,
           py::arg("num_threads") = 0,

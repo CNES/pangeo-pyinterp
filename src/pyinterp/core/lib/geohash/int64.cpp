@@ -314,7 +314,7 @@ auto grid_properties(const geodetic::Box &box, const uint32_t precision)
 auto bounding_boxes(const geodetic::Box &box, const uint32_t precision)
     -> Vector<uint64_t> {
   // Grid resolution in degrees
-  const auto lng_lat_err = error_with_precision(precision);
+  const auto [lng_err, lat_err] = error_with_precision(precision);
 
   // Allocation of the vector storing the different codes of the matrix created
   auto [hash_sw, lon_step, lat_step] = grid_properties(box, precision);
@@ -324,13 +324,12 @@ auto bounding_boxes(const geodetic::Box &box, const uint32_t precision)
   auto point_sw = decode(hash_sw, precision, false);
 
   for (size_t lat = 0; lat < lat_step; ++lat) {
-    const auto lat_shift = static_cast<double>(lat) * std::get<1>(lng_lat_err);
+    auto point =
+        geodetic::Point(0, point_sw.lat() + static_cast<double>(lat) * lat_err);
 
     for (size_t lon = 0; lon < lon_step; ++lon) {
-      const auto lng_shift =
-          static_cast<double>(lon) * std::get<0>(lng_lat_err);
-      result(ix++) = encode(
-          {point_sw.lon() + lng_shift, point_sw.lat() + lat_shift}, precision);
+      point.lon(point_sw.lon() + static_cast<double>(lon) * lng_err);
+      result(ix++) = encode(point, precision);
     }
   }
   return result;
