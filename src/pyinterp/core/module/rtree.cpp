@@ -274,8 +274,8 @@ void init_rtree(py::module &m) {
              "0.083578947 \cos(\frac{3 \pi (d + r)}{r}) + "
              "0.006947368 \cos(\frac{4 \pi (d + r)}{r})`)")
       .value("Gaussian", pyinterp::WindowFunction::kGaussian,
-             R"(:math:`w(d) = \left(\dfrac{d}{r}\right)^2\times "
-             "e^\left(\dfrac{1}{2}\right)")
+             R"(:math:`w(d) = e^{ -\frac{1}{2}\left("
+             "\frac{d}{\sigma}\right)^2 }`)")
       .value("Hamming", pyinterp::WindowFunction::kHamming,
              R"(:math:`w(d) = 0.53836 - 0.46164 \cos(\frac{\pi (d + r)}{r})`)")
       .value("Lanczos", pyinterp::WindowFunction::kLanczos,
