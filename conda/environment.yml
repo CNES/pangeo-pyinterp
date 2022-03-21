@@ -9,7 +9,7 @@ dependencies:
   - pyinterp>=0.13.0
   - pypandoc
   - pytest
-  - python=3.7
+  - python=3.9
   - sphinx-gallery
   - sphinx-inline-tabs
 channels:
