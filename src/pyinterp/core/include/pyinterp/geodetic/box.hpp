@@ -42,20 +42,6 @@ class Box : public boost::geometry::model::box<Point> {
     return {{-180, -90}, {180, 90}};
   }
 
-  // Returns the box, or the two boxes on either side of the dateline if the
-  // defined box wraps around the globe (i.e. the longitude of the min corner
-  // is greater than the longitude of the max corner.)
-  [[nodiscard]] auto split() const -> std::list<Box> {
-    // box wraps around the globe ?
-    if (this->min_corner().lon() > this->max_corner().lon()) {
-      return {Box({this->min_corner().lon(), this->min_corner().lat()},
-                  {180, this->max_corner().lat()}),
-              Box({-180, this->min_corner().lat()},
-                  {this->max_corner().lon(), this->max_corner().lat()})};
-    }
-    return {*this};
-  }
-
   /// @brief Returns the center of the box.
   [[nodiscard]] inline auto centroid() const -> Point {
     return boost::geometry::return_centroid<Point, Box>(*this);
