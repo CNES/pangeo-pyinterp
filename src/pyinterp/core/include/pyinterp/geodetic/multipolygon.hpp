@@ -11,6 +11,9 @@
 
 namespace pyinterp::geodetic {
 
+/// Forward declaration
+class Polygon;
+
 /// A multipolygon is a collection of polygons.
 class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
  public:
@@ -114,6 +117,12 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
     }
     return false;
   }
+
+  /// Combines this instance with another multi-polygon
+  [[nodiscard]] auto union_(const MultiPolygon &other) const -> MultiPolygon;
+
+  /// Combines this instance with another polygon
+  [[nodiscard]] auto union_(const Polygon &other) const -> MultiPolygon;
 
   /// Returns a GeoJSON representation of this instance.
   [[nodiscard]] auto to_geojson() const -> pybind11::dict;

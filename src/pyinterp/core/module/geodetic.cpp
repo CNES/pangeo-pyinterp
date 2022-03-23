@@ -388,6 +388,20 @@ Returns:
     The envelope of this instance.
 )__doc__")
       .def(
+          "union",
+          [](const geodetic::Polygon &self, const geodetic::Polygon &other)
+              -> geodetic::MultiPolygon { return self.union_(other); },
+          py::arg("other"),
+          R"__doc__(
+Computes the union of this polygon with another.
+
+Args:
+    other: The polygon to compute the union with.
+Returns:
+    The union of this polygon with the provided polygon.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
           "covered_by",
           [](const geodetic::Polygon &self, const geodetic::Point &point)
               -> bool { return self.covered_by(point); },
@@ -526,6 +540,36 @@ Args:
 Returns:
     The MultiPolygon initialized from the GeoJSON coordinate array.
 )__doc__")
+      .def(
+          "union",
+          [](const geodetic::MultiPolygon &self, const geodetic::Polygon &other)
+              -> geodetic::MultiPolygon { return self.union_(other); },
+          py::arg("other"),
+          R"__doc__(
+Computes the union of this multi-polygon with a polygon.
+
+Args:
+    other: The polygon to compute the union with.
+Returns:
+    The union of this multi-polygon with the provided polygon.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "union",
+          [](const geodetic::MultiPolygon &self,
+             const geodetic::MultiPolygon &other) -> geodetic::MultiPolygon {
+            return self.union_(other);
+          },
+          py::arg("other"),
+          R"__doc__(
+Computes the union of this multi-polygon with another multi-polygon.
+
+Args:
+    other: The multi-polygon to compute the union with.
+Returns:
+    The union of this multi-polygon with the provided multi-polygon.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "append",
           [](geodetic::MultiPolygon &self, geodetic::Polygon polygon) -> void {

@@ -5,6 +5,7 @@
 #include "pyinterp/geodetic/multipolygon.hpp"
 
 #include "pyinterp/geodetic/box.hpp"
+#include "pyinterp/geodetic/polygon.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -48,6 +49,18 @@ auto MultiPolygon::to_geojson() const -> pybind11::dict {
     coordinates.append(polygon.coordinates());
   }
   result["coordinates"] = coordinates;
+  return result;
+}
+
+auto MultiPolygon::union_(const MultiPolygon &other) const -> MultiPolygon {
+  auto result = MultiPolygon();
+  boost::geometry::union_(*this, other, result);
+  return result;
+}
+
+auto MultiPolygon::union_(const Polygon &other) const -> MultiPolygon {
+  auto result = MultiPolygon();
+  boost::geometry::union_(*this, other, result);
   return result;
 }
 

@@ -17,6 +17,7 @@ namespace pyinterp::geodetic {
 
 /// Forward declaration
 class Box;
+class MultiPolygon;
 
 class Polygon : public boost::geometry::model::polygon<Point> {
  public:
@@ -123,6 +124,9 @@ class Polygon : public boost::geometry::model::polygon<Point> {
 
   /// Returns a GeoJSON representation of this instance.
   [[nodiscard]] auto to_geojson() const -> pybind11::dict;
+
+  /// Combines this instance with another one.
+  [[nodiscard]] auto union_(const Polygon &other) const -> MultiPolygon;
 };
 
 }  // namespace pyinterp::geodetic
