@@ -118,6 +118,7 @@ def test_point():
     assert pt.lat == 33
     point = core.geodetic.Point.read_wkt("POINT(-2 2)")
     assert point.wkt() == "POINT(-2 2)"
+    assert point.to_geojson() == {"type": "Point", "coordinates": [-2, 2]}
 
 
 def test_point_distance():
@@ -180,6 +181,10 @@ def test_box():
     assert box.max_corner.lat == 1
 
     assert box.wkt() == "POLYGON((2 3,2 1,0 1,0 3,2 3))"
+    assert box.to_geojson() == {
+        "type": "Polygon",
+        "coordinates": [[[2, 3], [2, 1], [0, 1], [0, 3], [2, 3]]]
+    }
     box = core.geodetic.Box.read_wkt("POLYGON((2 3,2 1,0 1,0 3,2 3))")
     assert repr(box) == "((2, 3), (0, 1))"
 
@@ -227,6 +232,12 @@ def test_polygon():
         "((1, 1), (4, 1), (4, 4), (1, 4), (1, 1)))"
     assert polygon.wkt() == "POLYGON((0 0,0 5,5 5,5 0,0 0)," \
         "(1 1,4 1,4 4,1 4,1 1))"
+    assert polygon.to_geojson() == {
+        "type":
+        "Polygon",
+        "coordinates": [[[0, 0], [0, 5], [5, 5], [5, 0], [0, 0]],
+                        [[1, 1], [4, 1], [4, 4], [1, 4], [1, 1]]]
+    }
 
 
 def test_polygon_pickle():
@@ -422,10 +433,15 @@ def test_polygon_from_geojson():
     ]
     assert polygon.inners == []
 
-    polygon = core.geodetic.Polygon.from_geojson([
+    coordinates = [
         [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
         [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]],
-    ])
+    ]
+    polygon = core.geodetic.Polygon.from_geojson(coordinates)
+    assert polygon.to_geojson() == {
+        'type': 'Polygon',
+        'coordinates': coordinates,
+    }
     assert polygon.outer == [
         core.geodetic.Point(100.0, 0.0),
         core.geodetic.Point(101.0, 0.0),
@@ -444,7 +460,7 @@ def test_polygon_from_geojson():
 
 def test_multipolygon_from_geojson():
     """Calculate a multi-polygon from a geojson coordinate array."""
-    multipolygon = core.geodetic.MultiPolygon.from_geojson([
+    coordinates = [
         [
             [
                 [102.0, 2.0],
@@ -470,7 +486,12 @@ def test_multipolygon_from_geojson():
                 [100.2, 0.2],
             ],
         ],
-    ])
+    ]
+    multipolygon = core.geodetic.MultiPolygon.from_geojson(coordinates)
+    assert multipolygon.to_geojson() == {
+        'type': 'MultiPolygon',
+        'coordinates': coordinates
+    }
     assert multipolygon[0] == core.geodetic.Polygon([
         core.geodetic.Point(102.0, 2.0),
         core.geodetic.Point(103.0, 2.0),

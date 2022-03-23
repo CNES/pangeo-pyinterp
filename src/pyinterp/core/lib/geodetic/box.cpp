@@ -30,4 +30,8 @@ Box::operator Polygon() const {
   return result;
 }
 
+auto Box::to_geojson() const -> pybind11::dict {
+  return static_cast<Polygon>(*this).to_geojson();
+}
+
 }  // namespace pyinterp::geodetic

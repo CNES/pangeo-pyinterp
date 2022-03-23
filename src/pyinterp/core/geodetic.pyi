@@ -1,8 +1,9 @@
-from typing import Any, ClassVar, Iterator, List, Optional, Tuple, overload
+from typing import Any, ClassVar, Dict, Iterator, List, Optional, Tuple, overload
 
 import numpy
 
 from .. import geodetic
+
 
 class Box:
     __hash__: ClassVar[None] = ...
@@ -50,11 +51,17 @@ class Box:
     def read_wkt(wkt: str) -> Box:
         ...
 
+    def to_geojson(self) -> Dict[str, Any]:
+        ...
+
     @staticmethod
     def whole_earth() -> Box:
         ...
 
     def wkt(self) -> str:
+        ...
+
+    def __copy__(self) -> Box:
         ...
 
     def __eq__(self, other: Box) -> bool:
@@ -71,7 +78,6 @@ class Box:
 
 
 class Coordinates:
-
     def __init__(self, system: Optional[System] = None) -> None:
         ...
 
@@ -109,7 +115,6 @@ class Coordinates:
 
 
 class Crossover:
-
     def __init__(self, half_orbit_1: Linestring,
                  half_orbit_2: Linestring) -> None:
         ...
@@ -143,7 +148,6 @@ class Crossover:
 
 
 class Linestring:
-
     def __init__(self, lon: numpy.ndarray[numpy.float64],
                  lat: numpy.ndarray[numpy.float64]) -> None:
         ...
@@ -155,6 +159,12 @@ class Linestring:
         ...
 
     def nearest(self, point: Point) -> int:
+        ...
+
+    def to_geojson(self) -> Dict[str, Any]:
+        ...
+
+    def __copy__(self) -> Linestring:
         ...
 
     def __getitem__(self, index: int) -> Point:
@@ -217,17 +227,26 @@ class MultiPolygon:
         ...
 
     @staticmethod
-    def from_geojson(array: List[List[List[float]]]) -> MultiPolygon:
+    def from_geojson(array: List[List[List[List[float]]]]) -> MultiPolygon:
         ...
 
     @staticmethod
     def read_wkt(wkt: str) -> MultiPolygon:
         ...
 
+    def to_geojson(self) -> Dict[str, Any]:
+        ...
+
     def wkt(self) -> str:
         ...
 
+    def __add__(self, other: MultiPolygon) -> MultiPolygon:
+        ...
+
     def __contains__(self, polygon: Polygon) -> bool:
+        ...
+
+    def __copy__(self) -> MultiPolygon:
         ...
 
     def __eq__(self, other: MultiPolygon) -> bool:
@@ -237,6 +256,9 @@ class MultiPolygon:
         ...
 
     def __getstate__(self) -> tuple:
+        ...
+
+    def __iadd__(self, other: MultiPolygon) -> MultiPolygon:
         ...
 
     def __iter__(self) -> Iterator:
@@ -275,7 +297,13 @@ class Point:
     def read_wkt(wkt: str) -> Point:
         ...
 
+    def to_geojson(self) -> Dict[str, Any]:
+        ...
+
     def wkt(self) -> str:
+        ...
+
+    def __copy__(self) -> Point:
         ...
 
     def __eq__(self, other: Point) -> bool:
@@ -323,14 +351,20 @@ class Polygon:
         ...
 
     @staticmethod
-    def from_geojson(array: List[List[float]]) -> Polygon:
+    def from_geojson(array: List[List[List[float]]]) -> Polygon:
         ...
 
     @staticmethod
     def read_wkt(wkt: str) -> Polygon:
         ...
 
+    def to_geojson(self) -> Dict[str, Any]:
+        ...
+
     def wkt(self) -> str:
+        ...
+
+    def __copy__(self) -> Polygon:
         ...
 
     def __eq__(self, other: Polygon) -> bool:
@@ -420,7 +454,6 @@ class System(_System):
 
 
 class _System:
-
     def __init__(self, *args, **kwargs) -> None:
         ...
 

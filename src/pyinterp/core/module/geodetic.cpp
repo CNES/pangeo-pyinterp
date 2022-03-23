@@ -81,6 +81,13 @@ Args:
 Returns:
     The distance between the two points in meters.
 )__doc__")
+      .def("to_geojson", &geodetic::Point::to_geojson,
+           R"__doc__(
+Return the point as a GeoJSON type.
+
+Returns:
+    The point as a GeoJSON type.
+)__doc__")
       .def(
           "wkt",
           [](const geodetic::Point &self) -> std::string {
@@ -257,6 +264,13 @@ Args:
 
 Returns:
     The distance between this box and the provided point.
+)__doc__")
+      .def("to_geojson", &geodetic::Box::to_geojson,
+           R"__doc__(
+Return the box as a GeoJSON type.
+
+Returns:
+    The box as a GeoJSON type.
 )__doc__")
       .def(
           "wkt",
@@ -446,6 +460,13 @@ Args:
 Returns:
     The distance between this polygon and the provided point.
 )__doc__")
+      .def("to_geojson", &geodetic::Polygon::to_geojson,
+           R"__doc__(
+Return the polygon as a GeoJSON type.
+
+Returns:
+    The polygon as a GeoJSON type.
+)__doc__")
       .def(
           "wkt",
           [](const geodetic::Polygon &self) -> std::string {
@@ -523,6 +544,20 @@ Args:
           },
           "Implements the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
+      .def(
+          "__add__",
+          [](const geodetic::MultiPolygon &lhs,
+             const geodetic::MultiPolygon &rhs) -> geodetic::MultiPolygon {
+            auto result = geodetic::MultiPolygon(lhs);
+            result += rhs;
+            return result;
+          },
+          py::arg("other"),
+          "Overrides the + operator to concatenate two MultiPolygons.",
+          py::call_guard<py::gil_scoped_release>())
+      .def("__iadd__", &geodetic::MultiPolygon::operator+=, py::arg("other"),
+           "Overrides the default behavior of the ``+=`` operator.",
+           py::call_guard<py::gil_scoped_release>())
       .def("__len__", &geodetic::MultiPolygon::size,
            "Returns the number of polygons in this instance.")
       .def("__getitem__", &geodetic::MultiPolygon::operator(), py::arg("index"),
@@ -656,6 +691,13 @@ Args:
 Returns:
     The distance between this multi-polygon and the provided point.
 )__doc__")
+      .def("to_geojson", &geodetic::MultiPolygon::to_geojson,
+           R"__doc__(
+Return the multi-polygon as a GeoJSON type.
+
+Returns:
+    The multi-polygon as a GeoJSON type.
+)__doc__")
       .def(
           "wkt",
           [](const geodetic::MultiPolygon &self) -> std::string {
@@ -725,6 +767,13 @@ Args:
              return py::make_iterator(self.begin(), self.end(),
                                       py::keep_alive<0, 1>());
            })
+      .def("to_geojson", &geodetic::LineString::to_geojson,
+           R"__doc__(
+Return the line string as a GeoJSON type.
+
+Returns:
+    The line string as a GeoJSON type.
+)__doc__")
       .def("intersects", &geodetic::LineString::intersects, py::arg("rhs"),
            R"__doc__(
 Test if this linestring intersects with another linestring.

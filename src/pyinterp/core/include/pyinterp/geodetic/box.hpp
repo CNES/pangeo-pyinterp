@@ -139,6 +139,9 @@ class Box : public boost::geometry::model::box<Point> {
   /// Converts this instance into a polygon
   explicit operator Polygon() const;
 
+  /// Returns a GeoJSON representation of this instance.
+  [[nodiscard]] auto to_geojson() const -> pybind11::dict;
+
  private:
   // Returns the maximum power of 10 from a number (x > 0)
   static auto max_decimal_power(const double x) -> double {

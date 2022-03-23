@@ -70,4 +70,30 @@ auto Polygon::from_geojson(const pybind11::list &data) -> Polygon {
   return box;
 }
 
+auto Polygon::coordinates() const -> pybind11::list {
+  auto coordinates = pybind11::list();
+  auto ring = pybind11::list();
+
+  for (const auto &item : Base::outer()) {
+    ring.append(item.coordinates());
+  }
+  coordinates.append(ring);
+
+  for (const auto &inner : Base::inners()) {
+    ring = pybind11::list();
+    for (const auto &item : inner) {
+      ring.append(item.coordinates());
+    }
+    coordinates.append(ring);
+  }
+  return coordinates;
+}
+
+auto Polygon::to_geojson() const -> pybind11::dict {
+  auto result = pybind11::dict();
+  result["type"] = "Polygon";
+  result["coordinates"] = coordinates();
+  return result;
+}
+
 }  // namespace pyinterp::geodetic

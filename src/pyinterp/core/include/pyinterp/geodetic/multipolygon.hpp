@@ -34,6 +34,12 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
   /// Add a polygon to this multipolygon
   auto append(Polygon &&polygon) -> void { Base::emplace_back(polygon); }
 
+  /// Add a multi-polygon to this multipolygon
+  auto operator+=(const MultiPolygon &other) -> MultiPolygon {
+    Base::insert(Base::end(), other.begin(), other.end());
+    return *this;
+  }
+
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
     auto polygons = pybind11::list();
@@ -108,6 +114,9 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
     }
     return false;
   }
+
+  /// Returns a GeoJSON representation of this instance.
+  [[nodiscard]] auto to_geojson() const -> pybind11::dict;
 
   /// Converts a Polygon into a string with the same meaning as that of this
   /// instance.

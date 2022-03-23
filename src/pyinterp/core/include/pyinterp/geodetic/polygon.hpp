@@ -117,6 +117,12 @@ class Polygon : public boost::geometry::model::polygon<Point> {
     ss << boost::geometry::dsv(*this);
     return ss.str();
   }
+
+  /// Returns the GEOJSon coordinates of this instance.
+  [[nodiscard]] auto coordinates() const -> pybind11::list;
+
+  /// Returns a GeoJSON representation of this instance.
+  [[nodiscard]] auto to_geojson() const -> pybind11::dict;
 };
 
 }  // namespace pyinterp::geodetic

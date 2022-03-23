@@ -33,6 +33,22 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
     return {data[0].cast<double>(), data[1].cast<double>()};
   }
 
+  /// Returns the GEOJSon coordinates of the point.
+  [[nodiscard]] auto coordinates() const -> pybind11::list {
+    auto result = pybind11::list();
+    result.append(this->lon());
+    result.append(this->lat());
+    return result;
+  }
+
+  /// Returns a GeoJSON representation of this instance.
+  [[nodiscard]] auto to_geojson() const -> pybind11::dict {
+    auto result = pybind11::dict();
+    result["type"] = "Point";
+    result["coordinates"] = coordinates();
+    return result;
+  }
+
   /// Get longitude value in degrees
   [[nodiscard]] inline auto lon() const -> double { return this->get<0>(); }
 

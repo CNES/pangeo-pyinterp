@@ -26,6 +26,9 @@ class LineString {
   LineString(const Eigen::Ref<const Vector<double>>& lon,
              const Eigen::Ref<const Vector<double>>& lat);
 
+  /// Returns a GeoJSON representation of this instance.
+  [[nodiscard]] auto to_geojson() const -> pybind11::dict;
+
   /// Test if this linestring intersects with another linestring.
   ///
   /// @param rhs the linestring to test.

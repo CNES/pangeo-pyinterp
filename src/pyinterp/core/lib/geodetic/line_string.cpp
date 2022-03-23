@@ -71,4 +71,15 @@ auto LineString::setstate(const pybind11::tuple& state) -> LineString {
   return {x, y};
 }
 
+auto LineString::to_geojson() const -> pybind11::dict {
+  auto result = pybind11::dict();
+  result["type"] = "LineString";
+  auto coordinates = pybind11::list();
+  for (auto& point : line_string_) {
+    coordinates.append(point.coordinates());
+  }
+  result["coordinates"] = coordinates;
+  return result;
+}
+
 }  // namespace pyinterp::geodetic

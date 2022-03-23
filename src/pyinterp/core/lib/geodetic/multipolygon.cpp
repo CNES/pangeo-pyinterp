@@ -40,4 +40,15 @@ auto MultiPolygon::from_geojson(const pybind11::list &data) -> MultiPolygon {
   return box;
 }
 
+auto MultiPolygon::to_geojson() const -> pybind11::dict {
+  auto result = pybind11::dict();
+  result["type"] = "MultiPolygon";
+  auto coordinates = pybind11::list();
+  for (const auto &polygon : *this) {
+    coordinates.append(polygon.coordinates());
+  }
+  result["coordinates"] = coordinates;
+  return result;
+}
+
 }  // namespace pyinterp::geodetic
