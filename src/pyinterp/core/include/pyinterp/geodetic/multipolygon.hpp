@@ -20,8 +20,7 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
   MultiPolygon() = default;
 
   /// Create a new instance from Python
-  explicit MultiPolygon(std::initializer_list<Polygon> polygons)
-      : Base(polygons) {}
+  MultiPolygon(std::initializer_list<Polygon> polygons) : Base(polygons) {}
 
   /// Create a new instance from Python
   explicit MultiPolygon(const pybind11::list &polygons);
