@@ -1,9 +1,9 @@
 from typing import Optional, Tuple, overload
 
 import numpy
+
 from . import int64
 from .. import geodetic
-
 
 def area(hash: numpy.ndarray,
          wgs: Optional[geodetic.System] = ...) -> numpy.ndarray[numpy.float64]:

@@ -4,7 +4,6 @@ import numpy
 
 from .. import geodetic
 
-
 def decode(
     hash: numpy.ndarray[numpy.uint64],
     precision: int = ...,

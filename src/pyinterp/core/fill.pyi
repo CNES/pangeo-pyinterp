@@ -11,7 +11,6 @@ from . import (
     TemporalGrid3DFloat64,
 )
 
-
 class FirstGuess:
     __doc__: ClassVar[str] = ...  # read-only
     __members__: ClassVar[dict] = ...  # read-only

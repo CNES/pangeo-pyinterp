@@ -1,9 +1,17 @@
-from typing import Any, ClassVar, Dict, Iterator, List, Optional, Tuple, overload
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    overload,
+)
 
 import numpy
 
 from .. import geodetic
-
 
 class Box:
     __hash__: ClassVar[None] = ...

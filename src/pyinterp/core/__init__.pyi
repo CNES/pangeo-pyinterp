@@ -1,10 +1,8 @@
 from typing import Any, ClassVar, List, Optional, Tuple, overload
-import numpy
-from . import dateutils
-from . import geodetic
-from . import geohash
-from . import fill
 
+import numpy
+
+from . import dateutils, fill, geodetic, geohash
 
 class Axis:
     __hash__: ClassVar[None] = ...
