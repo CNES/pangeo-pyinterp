@@ -12,7 +12,6 @@
 #include <tuple>
 
 #include "pyinterp/detail/broadcast.hpp"
-#include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/algorithm.hpp"

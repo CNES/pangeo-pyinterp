@@ -9,17 +9,17 @@
 namespace geometry = pyinterp::detail::geometry;
 namespace math = pyinterp::detail::math;
 
-using RTree = geometry::RTree<double, int64_t, 2>;
+using RTree = geometry::RTree<geometry::Point2D<double>, int64_t>;
 
 TEST(geometry_rtree, constructor) {
   auto rtree = RTree();
   EXPECT_TRUE(rtree.empty());
-  rtree.insert(std::make_pair(geometry::PointND<double, 2>(2, 3), 0));
-  rtree.insert(std::make_pair(geometry::PointND<double, 2>(5, 4), 1));
-  rtree.insert(std::make_pair(geometry::PointND<double, 2>(9, 6), 2));
-  rtree.insert(std::make_pair(geometry::PointND<double, 2>(4, 7), 3));
-  rtree.insert(std::make_pair(geometry::PointND<double, 2>(8, 1), 4));
-  rtree.insert(std::make_pair(geometry::PointND<double, 2>(7, 2), 5));
+  rtree.insert(std::make_pair(geometry::Point2D<double>(2, 3), 0));
+  rtree.insert(std::make_pair(geometry::Point2D<double>(5, 4), 1));
+  rtree.insert(std::make_pair(geometry::Point2D<double>(9, 6), 2));
+  rtree.insert(std::make_pair(geometry::Point2D<double>(4, 7), 3));
+  rtree.insert(std::make_pair(geometry::Point2D<double>(8, 1), 4));
+  rtree.insert(std::make_pair(geometry::Point2D<double>(7, 2), 5));
   ASSERT_FALSE(rtree.empty());
   EXPECT_EQ(rtree.size(), 6);
   auto bounds = rtree.bounds();
@@ -36,12 +36,12 @@ TEST(geometry_rtree, constructor) {
 
 static auto get_coordinates() -> std::vector<RTree::value_t> {
   // https://en.wikipedia.org/wiki/K-d_tree#/media/File:Kdtree_2d.svg
-  return {{geometry::PointND<double, 2>(2, 3), 0},
-          {geometry::PointND<double, 2>(5, 4), 1},
-          {geometry::PointND<double, 2>(9, 6), 2},
-          {geometry::PointND<double, 2>(4, 7), 3},
-          {geometry::PointND<double, 2>(8, 1), 4},
-          {geometry::PointND<double, 2>(7, 2), 5}};
+  return {{geometry::Point2D<double>(2, 3), 0},
+          {geometry::Point2D<double>(5, 4), 1},
+          {geometry::Point2D<double>(9, 6), 2},
+          {geometry::Point2D<double>(4, 7), 3},
+          {geometry::Point2D<double>(8, 1), 4},
+          {geometry::Point2D<double>(7, 2), 5}};
 }
 
 TEST(geometry_rtree, query) {

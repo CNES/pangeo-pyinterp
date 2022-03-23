@@ -103,14 +103,6 @@ template <typename T>
 using Point3D =
     boost::geometry::model::point<T, 3, boost::geometry::cs::cartesian>;
 
-/// Points of a N-dimensional Cartesian space.
-///
-/// @tparam T Storage class of the coordinates of the point.
-/// @tparam N Number of dimensions of the Cartesian space.
-template <typename T, size_t N>
-using PointND =
-    boost::geometry::model::point<T, N, boost::geometry::cs::cartesian>;
-
 /// Points of a 2-dimensional spherical equatorial space.
 ///
 /// @tparam T Storage class of the coordinates of the point.
