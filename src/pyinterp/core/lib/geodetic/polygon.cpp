@@ -56,8 +56,8 @@ auto Polygon::from_geojson(const pybind11::list &data) -> Polygon {
       continue;
     }
     auto &back = base->inners().emplace_back();
-    for (const auto item : inner) {
-      back.push_back(Point::from_geojson(item.cast<pybind11::list>()));
+    for (const auto coordinates : inner) {
+      back.push_back(Point::from_geojson(coordinates.cast<pybind11::list>()));
     }
   }
   return polygon;
