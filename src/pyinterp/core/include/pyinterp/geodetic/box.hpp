@@ -37,6 +37,15 @@ class Box : public boost::geometry::model::box<Point> {
   Box(const Point &min_corner, const Point &max_corner)
       : boost::geometry::model::box<Point>(min_corner, max_corner) {}
 
+  /// Build a new box from a GeoJSON box.
+  static auto from_geojson(const pybind11::list &data) -> Box {
+    if (data.size() != 4) {
+      throw std::invalid_argument("Box must be a list of 4 elements");
+    }
+    return Box(Point(data[0].cast<double>(), data[1].cast<double>()),
+               Point(data[2].cast<double>(), data[3].cast<double>()));
+  }
+
   /// @brief Returns the box covering the whole earth.
   [[nodiscard]] static auto whole_earth() -> Box {
     return {{-180, -90}, {180, 90}};

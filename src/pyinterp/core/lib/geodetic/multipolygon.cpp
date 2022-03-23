@@ -24,6 +24,15 @@ MultiPolygon::MultiPolygon(const pybind11::list &polygons) {
   }
 }
 
+auto MultiPolygon::from_geojson(const pybind11::list &data) -> MultiPolygon {
+  auto multipolygon = MultiPolygon();
+  for (auto item : data) {
+    auto polygon = geodetic::Polygon::from_geojson(item.cast<pybind11::list>());
+    multipolygon.push_back(polygon);
+  }
+  return multipolygon;
+}
+
 /// Calculates the envelope of this polygon.
 [[nodiscard]] auto MultiPolygon::envelope() const -> Box {
   auto box = Box();

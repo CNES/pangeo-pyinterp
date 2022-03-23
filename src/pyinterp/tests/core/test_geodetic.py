@@ -399,3 +399,95 @@ def test_case_crossover_shift():
     assert pytest.approx(coordinates.lon) == 15
     assert pytest.approx(coordinates.lat, rel=1e-3) == 1.6551107341906504
     assert crossover.nearest(coordinates, predicate=None) == (2, 1)
+
+
+def test_bbox_from_geojson():
+    """Calculate a bounding box from a geojson coordinate array."""
+    bbox = core.geodetic.Box.from_geojson([100.0, 0.0, 105.0, 1.0])
+    assert bbox.max_corner == core.geodetic.Point(105.0, 1.0)
+    assert bbox.min_corner == core.geodetic.Point(100.0, 0.0)
+
+
+def test_polygon_from_geojson():
+    """Calculate a polygon from a geojson coordinate array."""
+    polygon = core.geodetic.Polygon.from_geojson([
+        [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+    ])
+    assert polygon.outer == [
+        core.geodetic.Point(100.0, 0.0),
+        core.geodetic.Point(101.0, 0.0),
+        core.geodetic.Point(101.0, 1.0),
+        core.geodetic.Point(100.0, 1.0),
+        core.geodetic.Point(100.0, 0.0),
+    ]
+    assert polygon.inners == []
+
+    polygon = core.geodetic.Polygon.from_geojson([
+        [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+        [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]],
+    ])
+    assert polygon.outer == [
+        core.geodetic.Point(100.0, 0.0),
+        core.geodetic.Point(101.0, 0.0),
+        core.geodetic.Point(101.0, 1.0),
+        core.geodetic.Point(100.0, 1.0),
+        core.geodetic.Point(100.0, 0.0),
+    ]
+    assert polygon.inners == [[
+        core.geodetic.Point(100.2, 0.2),
+        core.geodetic.Point(100.8, 0.2),
+        core.geodetic.Point(100.8, 0.8),
+        core.geodetic.Point(100.2, 0.8),
+        core.geodetic.Point(100.2, 0.2),
+    ]]
+
+
+def test_multipolygon_from_geojson():
+    """Calculate a multi-polygon from a geojson coordinate array."""
+    multipolygon = core.geodetic.MultiPolygon.from_geojson([
+        [
+            [
+                [102.0, 2.0],
+                [103.0, 2.0],
+                [103.0, 3.0],
+                [102.0, 3.0],
+                [102.0, 2.0],
+            ],
+        ],
+        [
+            [
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ],
+            [
+                [100.2, 0.2],
+                [100.8, 0.2],
+                [100.8, 0.8],
+                [100.2, 0.8],
+                [100.2, 0.2],
+            ],
+        ],
+    ])
+    assert multipolygon[0] == core.geodetic.Polygon([
+        core.geodetic.Point(102.0, 2.0),
+        core.geodetic.Point(103.0, 2.0),
+        core.geodetic.Point(103.0, 3.0),
+        core.geodetic.Point(102.0, 3.0),
+        core.geodetic.Point(102.0, 2.0),
+    ])
+    assert multipolygon[1] == core.geodetic.Polygon([
+        core.geodetic.Point(100.0, 0.0),
+        core.geodetic.Point(101.0, 0.0),
+        core.geodetic.Point(101.0, 1.0),
+        core.geodetic.Point(100.0, 1.0),
+        core.geodetic.Point(100.0, 0.0),
+    ], [[
+        core.geodetic.Point(100.2, 0.2),
+        core.geodetic.Point(100.8, 0.2),
+        core.geodetic.Point(100.8, 0.8),
+        core.geodetic.Point(100.2, 0.8),
+        core.geodetic.Point(100.2, 0.2),
+    ]])

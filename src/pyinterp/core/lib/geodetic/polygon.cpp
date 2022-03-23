@@ -40,6 +40,29 @@ Polygon::Polygon(const pybind11::list &outer, const pybind11::list &inners) {
   }
 }
 
+auto Polygon::from_geojson(const pybind11::list &data) -> Polygon {
+  auto polygon = Polygon();
+  if (data.empty()) {
+    return polygon;
+  }
+  auto outer = data[0].cast<pybind11::list>();
+  auto *base = dynamic_cast<boost::geometry::model::polygon<Point> *>(&polygon);
+  for (const auto item : outer) {
+    base->outer().push_back(Point::from_geojson(item.cast<pybind11::list>()));
+  }
+  for (size_t ix = 1; ix < data.size(); ++ix) {
+    auto inner = data[ix].cast<pybind11::list>();
+    if (inner.empty()) {
+      continue;
+    }
+    auto &back = base->inners().emplace_back();
+    for (const auto item : inner) {
+      back.push_back(Point::from_geojson(item.cast<pybind11::list>()));
+    }
+  }
+  return polygon;
+}
+
 /// Calculates the envelope of this polygon.
 [[nodiscard]] auto Polygon::envelope() const -> Box {
   auto box = Box();

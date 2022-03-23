@@ -25,6 +25,14 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
   Point(const double lon, const double lat)
       : detail::geometry::GeographicPoint2D<double>(lon, lat) {}
 
+  /// Build a new point from a GeoJSON point.
+  static auto from_geojson(const pybind11::list &data) -> Point {
+    if (data.size() != 2) {
+      throw std::invalid_argument("Point must be a list of 2 elements");
+    }
+    return Point(data[0].cast<double>(), data[1].cast<double>());
+  }
+
   /// Get longitude value in degrees
   [[nodiscard]] inline auto lon() const -> double { return this->get<0>(); }
 

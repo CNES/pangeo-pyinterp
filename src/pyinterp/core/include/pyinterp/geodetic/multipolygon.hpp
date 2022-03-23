@@ -26,6 +26,9 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
   /// Create a new instance from Python
   explicit MultiPolygon(const pybind11::list &polygons);
 
+  /// Build a new box from a GeoJSON box.
+  static auto from_geojson(const pybind11::list &data) -> MultiPolygon;
+
   /// Calculates the envelope of this polygon.
   [[nodiscard]] auto envelope() const -> Box;
 

@@ -20,6 +20,8 @@
 namespace geodetic = pyinterp::geodetic;
 namespace py = pybind11;
 
+PYBIND11_MAKE_OPAQUE(geodetic::MultiPolygon);
+
 static inline auto parse_distance_strategy(const std::string &strategy)
     -> geodetic::DistanceStrategy {
   if (strategy == "andoyer") {
@@ -144,6 +146,15 @@ Args:
       .def(py::init<>())
       .def(py::init<geodetic::Point, geodetic::Point>(), py::arg("min_corner"),
            py::arg("max_corner"))
+      .def_static("from_geojson", &geodetic::Box::from_geojson,
+                  py::arg("array"), R"__doc__(
+Creates a box from a GeoJSON coordinates array.
+
+Args:
+    array: the GeoJSON coordinate array.
+Returns:
+    The box defined by the GeoJSON coordinate array.
+)__doc__")
       .def_property(
           "min_corner",
           [](const geodetic::Box &self) { return self.min_corner(); },
@@ -316,6 +327,15 @@ Raises:
                              "The outer ring.")
       .def_property_readonly("inners", &geodetic::Polygon::inners,
                              "The inner rings.")
+      .def_static("from_geojson", &geodetic::Polygon::from_geojson,
+                  py::arg("array"), R"__doc__(
+Creates a polygon from a GeoJSON coordinates array.
+
+Args:
+    array: The GeoJSON coordinates array.
+Returns:
+    The polygon defined by the GeoJSON coordinate array.
+)__doc__")
       .def(
           "__eq__",
           [](const geodetic::Polygon &self, const geodetic::Polygon &rhs)
@@ -460,6 +480,15 @@ Initializes a MultiPolygon from a list of polygons.
 
 Args:
     polygons: The polygons to use.
+)__doc__")
+      .def_static("from_geojson", &geodetic::MultiPolygon::from_geojson,
+                  py::arg("array"), R"__doc__(
+Initializes a MultiPolygon from a GeoJSON coordinate array.
+
+Args:
+    array: The GeoJSON coordinate array.
+Returns:
+    The MultiPolygon initialized from the GeoJSON coordinate array.
 )__doc__")
       .def(
           "append",

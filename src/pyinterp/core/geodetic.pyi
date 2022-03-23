@@ -1,7 +1,8 @@
-from typing import Any, ClassVar, Iterator, Optional, Tuple, overload
-import numpy
-from .. import geodetic
+from typing import Any, ClassVar, Iterator, List, Optional, Tuple, overload
 
+import numpy
+
+from .. import geodetic
 
 class Box:
     __hash__: ClassVar[None] = ...
@@ -42,6 +43,10 @@ class Box:
         ...
 
     @staticmethod
+    def from_geojson(array: List[float]) -> Box:
+        ...
+
+    @staticmethod
     def read_wkt(wkt: str) -> Box:
         ...
 
@@ -66,6 +71,7 @@ class Box:
 
 
 class Coordinates:
+
     def __init__(self, system: Optional[System] = None) -> None:
         ...
 
@@ -103,6 +109,7 @@ class Coordinates:
 
 
 class Crossover:
+
     def __init__(self, half_orbit_1: Linestring,
                  half_orbit_2: Linestring) -> None:
         ...
@@ -136,6 +143,7 @@ class Crossover:
 
 
 class Linestring:
+
     def __init__(self, lon: numpy.ndarray[numpy.float64],
                  lat: numpy.ndarray[numpy.float64]) -> None:
         ...
@@ -206,6 +214,10 @@ class MultiPolygon:
         ...
 
     def envelope(self) -> Box:
+        ...
+
+    @staticmethod
+    def from_geojson(array: List[List[List[float]]]) -> MultiPolygon:
         ...
 
     @staticmethod
@@ -310,6 +322,9 @@ class Polygon:
     def envelope(self) -> Box:
         ...
 
+    @staticmethod
+    def from_geojson(array: List[List[float]]) -> Polygon:
+        ...
 
     @staticmethod
     def read_wkt(wkt: str) -> Polygon:
@@ -405,6 +420,7 @@ class System(_System):
 
 
 class _System:
+
     def __init__(self, *args, **kwargs) -> None:
         ...
 

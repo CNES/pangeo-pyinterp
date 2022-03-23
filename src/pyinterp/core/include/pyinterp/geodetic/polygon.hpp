@@ -23,8 +23,14 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   using Base = boost::geometry::model::polygon<Point>;
   using Base::polygon;
 
+  /// Default constructor
+  Polygon() = default;
+
   /// Create a new instance from Python
   Polygon(const pybind11::list &outer, const pybind11::list &inners);
+
+  /// Create a new instance from a GeoJSON polygon
+  static auto from_geojson(const pybind11::list &data) -> Polygon;
 
   /// Returns the outer ring
   [[nodiscard]] auto outer() const -> pybind11::list {
