@@ -7,6 +7,7 @@ Descriptive statistics
 ----------------------
 """
 from typing import Any, Iterable, Optional, Union
+import copy
 
 import dask.array as da
 import numpy as np
@@ -133,7 +134,7 @@ class DescriptiveStatistics:
             if type(self._instance) != type(other._instance):  # noqa: E721
                 raise TypeError(
                     "Descriptive statistics must have the same type")
-            result = self.copy()
+            result = copy.copy(self)
             result += other
             return result
         raise TypeError("unsupported operand type(s) for +="

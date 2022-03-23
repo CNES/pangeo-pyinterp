@@ -55,12 +55,12 @@ class Histogram2D {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Histogram2D(const Histogram2D &rhs) = delete;
+  Histogram2D(const Histogram2D &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Histogram2D(Histogram2D &&rhs) noexcept = delete;
+  Histogram2D(Histogram2D &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///

@@ -136,6 +136,13 @@ Compute the variance of values for points within each bin.
 Returns:
     Variance of values for points within each bin.
 )__doc__")
+      .def(
+          "__copy__",
+          [](const pyinterp::Histogram2D<Type> &self) {
+            return pyinterp::Histogram2D<Type>(self);
+          },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
       .def("__iadd__", &pyinterp::Histogram2D<Type>::operator+=,
            py::arg("other"),
            "Overrides the default behavior of the ``+=`` operator.",

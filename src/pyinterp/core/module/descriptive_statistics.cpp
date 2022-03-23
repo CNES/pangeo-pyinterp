@@ -40,20 +40,12 @@ Args:
            py::arg("values"), py::arg("weights") = std::nullopt,
            py::arg("axis") = std::nullopt)
       .def(
-          "copy",
-          [](const pyinterp::DescriptiveStatistics<Type> &self)
-              -> pyinterp::DescriptiveStatistics<Type> {
+          "__copy__",
+          [](const pyinterp::DescriptiveStatistics<Type> &self) {
             return pyinterp::DescriptiveStatistics<Type>(self);
           },
-          R"__doc__(
-Copy constructor.
-
-Args:
-    other: The object to copy.
-
-Returns:
-    A copy of the current object.
-)__doc__")
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
       .def("count", &pyinterp::DescriptiveStatistics<Type>::count,
            R"__doc__(
 Returns the count of samples.

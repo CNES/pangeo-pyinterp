@@ -23,6 +23,10 @@ auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>> &axis,
           "Called by the ``repr()`` built-in function to compute the string "
           "representation of an Axis.")
       .def(
+          "__copy__", [](const Axis &self) { return Axis(self); },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
           "__getitem__",
           [](const Axis &self, size_t index) {
             return self.coordinate_value(index);

@@ -149,6 +149,13 @@ Returns:
       .def("__iadd__", &pyinterp::Binning2D<Type>::operator+=, py::arg("other"),
            "Overrides the default behavior of the ``+=`` operator.",
            py::call_guard<py::gil_scoped_release>())
+      .def(
+          "__copy__",
+          [](const pyinterp::Binning2D<Type> &self) {
+            return pyinterp::Binning2D<Type>(self);
+          },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const pyinterp::Binning2D<Type> &self) { return self.getstate(); },
           [](const py::tuple &state) {

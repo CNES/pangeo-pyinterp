@@ -73,6 +73,10 @@ Args:
       maximum corners of the box able to contain all values stored in the
       container or an empty tuple if there are no values in the container.
   )__doc__")
+      .def(
+          "__copy__", [](const RTree &self) { return RTree(self); },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
       .def("__len__", &RTree::size,
            "Called to implement the built-in function ``len()``")
       .def(

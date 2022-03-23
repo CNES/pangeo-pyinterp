@@ -113,6 +113,11 @@ Returns:
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a point.")
       .def(
+          "__copy__",
+          [](const geodetic::Point &self) { return geodetic::Point(self); },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
           "__eq__",
           [](const geodetic::Point &self, const geodetic::Point &rhs) -> bool {
             return boost::geometry::equals(self, rhs);
@@ -282,6 +287,11 @@ Returns:
     The box defined by the WKT representation.
 )__doc__")
       .def(
+          "__copy__",
+          [](const geodetic::Box &self) { return geodetic::Box(self); },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
           "__eq__",
           [](const geodetic::Box &self, const geodetic::Box &rhs) -> bool {
             return boost::geometry::equals(self, rhs);
@@ -336,6 +346,11 @@ Args:
 Returns:
     The polygon defined by the GeoJSON coordinate array.
 )__doc__")
+      .def(
+          "__copy__",
+          [](const geodetic::Polygon &self) { return geodetic::Polygon(self); },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "__eq__",
           [](const geodetic::Polygon &self, const geodetic::Polygon &rhs)
@@ -501,6 +516,13 @@ Appends a polygon to this instance.
 Args:
     polygon: The polygon to append.
 )__doc__")
+      .def(
+          "__copy__",
+          [](const geodetic::MultiPolygon &self) {
+            return geodetic::MultiPolygon(self);
+          },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
       .def("__len__", &geodetic::MultiPolygon::size,
            "Returns the number of polygons in this instance.")
       .def("__getitem__", &geodetic::MultiPolygon::operator(), py::arg("index"),
@@ -684,6 +706,13 @@ Args:
                     const Eigen::Ref<const pyinterp::Vector<double>> &>(),
            py::arg("lon"), py::arg("lat"),
            py::call_guard<py::gil_scoped_release>())
+      .def(
+          "__copy__",
+          [](const geodetic::LineString &self) {
+            return geodetic::LineString(self);
+          },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
       .def("__len__", &geodetic::LineString::size,
            "Called to implement the built-in function ``len()``")
       .def(
