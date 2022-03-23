@@ -30,7 +30,7 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
     if (data.size() != 2) {
       throw std::invalid_argument("Point must be a list of 2 elements");
     }
-    return Point(data[0].cast<double>(), data[1].cast<double>());
+    return {data[0].cast<double>(), data[1].cast<double>()};
   }
 
   /// Get longitude value in degrees

@@ -41,8 +41,8 @@ class Box : public boost::geometry::model::box<Point> {
     if (data.size() != 4) {
       throw std::invalid_argument("Box must be a list of 4 elements");
     }
-    return Box(Point(data[0].cast<double>(), data[1].cast<double>()),
-               Point(data[2].cast<double>(), data[3].cast<double>()));
+    return {Point(data[0].cast<double>(), data[1].cast<double>()),
+            Point(data[2].cast<double>(), data[3].cast<double>())};
   }
 
   /// @brief Returns the box covering the whole earth.
