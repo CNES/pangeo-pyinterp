@@ -103,4 +103,10 @@ auto Polygon::union_(const Polygon &other) const -> MultiPolygon {
   return result;
 }
 
+auto Polygon::intersection(const Polygon &other) const -> MultiPolygon {
+  auto result = MultiPolygon();
+  boost::geometry::intersection(*this, other, result);
+  return result;
+}
+
 }  // namespace pyinterp::geodetic

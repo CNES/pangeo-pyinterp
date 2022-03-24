@@ -43,28 +43,6 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
     return *this;
   }
 
-  /// Get a tuple that fully encodes the state of this instance
-  [[nodiscard]] auto getstate() const -> pybind11::tuple {
-    auto polygons = pybind11::list();
-    for (const auto &polygon : *this) {
-      polygons.append(polygon);
-    }
-    return pybind11::make_tuple(polygons);
-  }
-
-  /// Create a new instance from a registered state of an instance of this
-  /// object.
-  static auto setstate(const pybind11::tuple &state) -> MultiPolygon {
-    if (state.size() != 1) {
-      throw std::runtime_error("invalid state");
-    }
-    auto polygons = pybind11::list();
-    for (const auto &polygon : state[0].cast<pybind11::list>()) {
-      polygons.append(polygon.cast<Polygon>());
-    }
-    return MultiPolygon(polygons);
-  }
-
   /// Calculate the area
   [[nodiscard]] auto area(const std::optional<System> &wgs) const -> double {
     return geodetic::area(*this, wgs);
@@ -124,6 +102,36 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
   /// Combines this instance with another polygon
   [[nodiscard]] auto union_(const Polygon &other) const -> MultiPolygon;
 
+  /// Calculates the intersection between this instance and a polygon.
+  [[nodiscard]] auto intersection(const Polygon &other) const -> MultiPolygon;
+
+  /// Calculates the intersection between this instance and another one.
+  [[nodiscard]] auto intersection(const MultiPolygon &other) const
+      -> MultiPolygon;
+
+  /// Checks if this multipolygon intersects with another one.
+  [[nodiscard]] auto intersects(const MultiPolygon &other) const -> bool {
+    return boost::geometry::intersects(*this, other);
+  }
+
+  /// Checks if this multipolygon intersects with a polygon.
+  [[nodiscard]] auto intersects(const Polygon &other) const -> bool {
+    return boost::geometry::intersects(*this, other);
+  }
+
+  /// Checks if this multipolygon touches with another one.
+  [[nodiscard]] auto touches(const MultiPolygon &other) const -> bool {
+    return boost::geometry::touches(*this, other);
+  }
+
+  /// Checks if this multipolygon touches with a polygon.
+  [[nodiscard]] auto touches(const Polygon &other) const -> bool {
+    return boost::geometry::touches(*this, other);
+  }
+
+  /// Returns the GEOJSon coordinates of this instance.
+  [[nodiscard]] auto coordinates() const -> pybind11::list;
+
   /// Returns a GeoJSON representation of this instance.
   [[nodiscard]] auto to_geojson() const -> pybind11::dict;
 
@@ -157,6 +165,20 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
 
   [[nodiscard]] inline auto end() const -> decltype(Base::end()) {
     return Base::end();
+  }
+
+  /// Get a tuple that fully encodes the state of this instance
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
+    return pybind11::make_tuple(coordinates());
+  }
+
+  /// Create a new instance from a registered state of an instance of this
+  /// object.
+  static auto setstate(const pybind11::tuple &state) -> MultiPolygon {
+    if (state.size() != 1) {
+      throw std::runtime_error("invalid state");
+    }
+    return MultiPolygon::from_geojson(state[0].cast<pybind11::list>());
   }
 };
 

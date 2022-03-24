@@ -19,7 +19,10 @@ namespace pyinterp::geodetic {
 class Point : public detail::geometry::GeographicPoint2D<double> {
  public:
   /// Default constructor
-  Point() noexcept = default;
+  Point() noexcept
+      : detail::geometry::GeographicPoint2D<double>(
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN()){};
 
   /// Build a new point with the coordinates provided.
   Point(const double lon, const double lat)

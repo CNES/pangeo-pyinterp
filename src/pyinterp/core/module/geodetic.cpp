@@ -80,7 +80,8 @@ Args:
 
 Returns:
     The distance between the two points in meters.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def("to_geojson", &geodetic::Point::to_geojson,
            R"__doc__(
 Return the point as a GeoJSON type.
@@ -100,7 +101,8 @@ Gets the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
     The WKT representation.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def_static(
           "read_wkt",
           [](const std::string &wkt) -> geodetic::Point {
@@ -115,7 +117,8 @@ Args:
     wkt: the WKT representation of the Point.
 Returns:
     The point defined by the WKT representation.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def("__repr__", &geodetic::Point::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a point.")
@@ -183,6 +186,12 @@ Returns:
           "The maximal corner (upper right) of the box.")
       .def_static("whole_earth", &geodetic::Box::whole_earth,
                   "Returns the box covering the whole earth.")
+      .def(
+          "as_polygon",
+          [](const geodetic::Box &self) -> geodetic::Polygon {
+            return static_cast<geodetic::Polygon>(self);
+          },
+          "Returns the box as a polygon.")
       .def("centroid", &geodetic::Box::centroid,
            R"__doc__(
 Computes the centroid of the box.
@@ -235,7 +244,8 @@ Args:
 
 Returns:
     The calculated area.
-)__doc__")
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "distance",
           [](const geodetic::Box &self, const geodetic::Box &other) -> double {
@@ -250,7 +260,8 @@ Args:
 
 Returns:
     The distance between the two boxes in meters.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "distance",
           [](const geodetic::Box &self, const geodetic::Point &point)
@@ -264,7 +275,8 @@ Args:
 
 Returns:
     The distance between this box and the provided point.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def("to_geojson", &geodetic::Box::to_geojson,
            R"__doc__(
 Return the box as a GeoJSON type.
@@ -284,7 +296,8 @@ Gets the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
     The WKT representation.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def_static(
           "read_wkt",
           [](const std::string &wkt) -> geodetic::Box {
@@ -299,7 +312,8 @@ Args:
     wkt: the WKT representation of the box.
 Returns:
     The box defined by the WKT representation.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "__copy__",
           [](const geodetic::Box &self) { return geodetic::Box(self); },
@@ -386,7 +400,8 @@ Calculates the envelope of this polygon.
 
 Returns:
     The envelope of this instance.
-)__doc__")
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "union",
           [](const geodetic::Polygon &self, const geodetic::Polygon &other)
@@ -402,6 +417,48 @@ Returns:
 )__doc__",
           py::call_guard<py::gil_scoped_release>())
       .def(
+          "intersection",
+          [](const geodetic::Polygon &self, const geodetic::Polygon &other)
+              -> geodetic::MultiPolygon { return self.intersection(other); },
+          py::arg("other"),
+          R"__doc__(
+Computes the intersection of this polygon with another.
+
+Args:
+    other: The polygon to compute the intersection with.
+Returns:
+    The intersection of this polygon with the provided polygon.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "intersects",
+          [](const geodetic::Polygon &self, const geodetic::Polygon &other)
+              -> bool { return self.intersects(other); },
+          py::arg("other"),
+          R"__doc__(
+Checks if this polygon intersects another.
+
+Args:
+    other: The polygon to check for intersection with.
+Returns:
+    True if this polygon intersects the provided polygon, False otherwise.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "touches",
+          [](const geodetic::Polygon &self, const geodetic::Polygon &other)
+              -> bool { return self.touches(other); },
+          py::arg("other"),
+          R"__doc__(
+Checks if this polygon touches another.
+
+Args:
+    other: The polygon to check for touch with.
+Returns:
+    True if this polygon touches the provided polygon, False otherwise.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
           "covered_by",
           [](const geodetic::Polygon &self, const geodetic::Point &point)
               -> bool { return self.covered_by(point); },
@@ -412,7 +469,8 @@ Args:
     point: point to test.
 Returns:
     True if the given point is inside or on border of this polygon.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "covered_by",
           [](const geodetic::Polygon &self,
@@ -445,7 +503,8 @@ Args:
 
 Returns:
     The calculated area.
-)__doc__")
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "distance",
           [](const geodetic::Polygon &self, const geodetic::Polygon &other)
@@ -459,7 +518,8 @@ Args:
 
 Returns:
     The distance between the two polygons in meters.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "distance",
           [](const geodetic::Polygon &self, const geodetic::Point &point)
@@ -473,7 +533,8 @@ Args:
 
 Returns:
     The distance between this polygon and the provided point.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def("to_geojson", &geodetic::Polygon::to_geojson,
            R"__doc__(
 Return the polygon as a GeoJSON type.
@@ -493,7 +554,8 @@ Gets the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
     The WKT representation.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def_static(
           "read_wkt",
           [](const std::string &wkt) -> geodetic::Polygon {
@@ -508,7 +570,8 @@ Args:
     wkt: the WKT representation of the polygon.
 Returns:
     The polygon defined by the WKT representation.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const geodetic::Polygon &self) { return self.getstate(); },
           [](const py::tuple &state) {
@@ -571,6 +634,98 @@ Returns:
 )__doc__",
           py::call_guard<py::gil_scoped_release>())
       .def(
+          "intersection",
+          [](const geodetic::MultiPolygon &self, const geodetic::Polygon &other)
+              -> geodetic::MultiPolygon { return self.intersection(other); },
+          py::arg("other"),
+          R"__doc__(
+Computes the intersection of this multi-polygon with a polygon.
+
+Args:
+    other: The polygon to compute the intersection with.
+Returns:
+    The intersection of this multi-polygon with the provided polygon.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "intersection",
+          [](const geodetic::MultiPolygon &self,
+             const geodetic::MultiPolygon &other) -> geodetic::MultiPolygon {
+            return self.intersection(other);
+          },
+          py::arg("other"),
+          R"__doc__(
+Computes the intersection of this multi-polygon with another multi-polygon.
+
+Args:
+    other: The multi-polygon to compute the intersection with.
+Returns:
+    The intersection of this multi-polygon with the provided multi-polygon.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "intersects",
+          [](const geodetic::MultiPolygon &self, const geodetic::Polygon &other)
+              -> bool { return self.intersects(other); },
+          py::arg("other"),
+          R"__doc__(
+Checks if this multi-polygon intersects with a polygon.
+
+Args:
+    other: The polygon to check for intersection with.
+Returns:
+    True if this multi-polygon intersects with the provided polygon, False
+    otherwise.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "intersects",
+          [](const geodetic::MultiPolygon &self,
+             const geodetic::MultiPolygon &other) -> bool {
+            return self.intersects(other);
+          },
+          py::arg("other"),
+          R"__doc__(
+Checks if this multi-polygon intersects with another multi-polygon.
+
+Args:
+    other: The multi-polygon to check for intersection with.
+Returns:
+    True if this multi-polygon intersects with the provided multi-polygon,
+    False otherwise.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "touches",
+          [](const geodetic::MultiPolygon &self, const geodetic::Polygon &other)
+              -> bool { return self.touches(other); },
+          py::arg("other"),
+          R"__doc__(
+Checks if this multi-polygon touches a polygon.
+
+Args:
+    other: The polygon to check for touches with.
+Returns:
+    True if this multi-polygon touches the provided polygon, False otherwise.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "touches",
+          [](const geodetic::MultiPolygon &self,
+             const geodetic::MultiPolygon &other) -> bool {
+            return self.touches(other);
+          },
+          py::arg("other"),
+          R"__doc__(
+Checks if this multi-polygon touches another multi-polygon.
+
+Args:
+    other: The multi-polygon to check for touches with.
+Returns:
+    True if this multi-polygon touches the provided multi-polygon, False
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
           "append",
           [](geodetic::MultiPolygon &self, geodetic::Polygon polygon) -> void {
             self.append(std::move(polygon));
@@ -580,7 +735,8 @@ Appends a polygon to this instance.
 
 Args:
     polygon: The polygon to append.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "__copy__",
           [](const geodetic::MultiPolygon &self) {
@@ -613,7 +769,8 @@ Args:
             return self.contains(polygon);
           },
           py::arg("polygon"),
-          "True if the multi-polygon has the specified polygon, else False")
+          "True if the multi-polygon has the specified polygon, else False",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "__iter__",
           [](const geodetic::MultiPolygon &self) {
@@ -627,7 +784,8 @@ Args:
             return boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
-          "Overrides the default behavior of the ``==`` operator.")
+          "Overrides the default behavior of the ``==`` operator.",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "__ne__",
           [](const geodetic::MultiPolygon &self,
@@ -635,7 +793,8 @@ Args:
             return !boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
-          "Overrides the default behavior of the ``!=`` operator.")
+          "Overrides the default behavior of the ``!=`` operator.",
+          py::call_guard<py::gil_scoped_release>())
       .def("__repr__", &geodetic::MultiPolygon::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a point.")
@@ -645,7 +804,8 @@ Calculates the envelope of this multi-polygon.
 
 Returns:
     The envelope of this instance.
-)__doc__")
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "covered_by",
           [](const geodetic::MultiPolygon &self, const geodetic::Point &point)
@@ -657,7 +817,8 @@ Args:
     point: point to test.
 Returns:
     True if the given point is inside or on border of this multi-polygon.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "covered_by",
           [](const geodetic::MultiPolygon &self,
@@ -690,7 +851,8 @@ Args:
 
 Returns:
     The calculated area.
-)__doc__")
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "distance",
           [](const geodetic::MultiPolygon &self,
@@ -706,7 +868,8 @@ Args:
 
 Returns:
     The distance between the two multi-polygons in meters.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "distance",
           [](const geodetic::MultiPolygon &self, const geodetic::Polygon &other)
@@ -720,7 +883,8 @@ Args:
 
 Returns:
     The distance between this instance and the polygon in meters.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "distance",
           [](const geodetic::MultiPolygon &self, const geodetic::Point &point)
@@ -734,7 +898,8 @@ Args:
 
 Returns:
     The distance between this multi-polygon and the provided point.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def("to_geojson", &geodetic::MultiPolygon::to_geojson,
            R"__doc__(
 Return the multi-polygon as a GeoJSON type.
@@ -754,7 +919,8 @@ Gets the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
     The WKT representation.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def_static(
           "read_wkt",
           [](const std::string &wkt) -> geodetic::MultiPolygon {
@@ -769,7 +935,8 @@ Args:
     wkt: the WKT representation of the multi-polygon.
 Returns:
     The multi-polygon defined by the WKT representation.
-)__doc__")
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const geodetic::MultiPolygon &self) { return self.getstate(); },
           [](const py::tuple &state) {
@@ -1145,7 +1312,8 @@ Normalizes longitudes to the range ``[min_lon, min_lon + 360)`` in place.
 Args:
     lon: Longitudes in degrees.
     min_lon: Minimum longitude. Defaults to ``-180.0``.
-)__doc__");
+)__doc__",
+      py::call_guard<py::gil_scoped_release>());
 
   m.def(
       "coordinate_distances",

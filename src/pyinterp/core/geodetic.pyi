@@ -29,6 +29,9 @@ class Box:
     def area(self, wgs: Optional[System] = ...) -> float:
         ...
 
+    def as_polygon(self, *args, **kwargs) -> Any:
+        ...
+
     def centroid(self) -> Point:
         ...
 
@@ -81,7 +84,7 @@ class Box:
     def __ne__(self, other: Box) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -114,7 +117,7 @@ class Coordinates:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -238,11 +241,43 @@ class MultiPolygon:
     def from_geojson(array: List[List[List[List[float]]]]) -> MultiPolygon:
         ...
 
+    @overload
+    def intersection(self, other: Polygon) -> MultiPolygon:
+        ...
+
+    @overload
+    def intersection(self, other: MultiPolygon) -> MultiPolygon:
+        ...
+
+    @overload
+    def intersects(self, other: Polygon) -> bool:
+        ...
+
+    @overload
+    def intersects(self, other: MultiPolygon) -> bool:
+        ...
+
     @staticmethod
     def read_wkt(wkt: str) -> MultiPolygon:
         ...
 
     def to_geojson(self) -> Dict[str, Any]:
+        ...
+
+    @overload
+    def touches(self, other: Polygon) -> bool:
+        ...
+
+    @overload
+    def touches(self, other: MultiPolygon) -> bool:
+        ...
+
+    @overload
+    def union(self, other: Polygon) -> MultiPolygon:
+        ...
+
+    @overload
+    def union(self, other: MultiPolygon) -> MultiPolygon:
         ...
 
     def wkt(self) -> str:
@@ -323,7 +358,7 @@ class Point:
     def __ne__(self, other: Point) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -362,11 +397,23 @@ class Polygon:
     def from_geojson(array: List[List[List[float]]]) -> Polygon:
         ...
 
+    def intersection(self, *args, **kwargs) -> Any:
+        ...
+
+    def intersects(self, other: Polygon) -> bool:
+        ...
+
     @staticmethod
     def read_wkt(wkt: str) -> Polygon:
         ...
 
     def to_geojson(self) -> Dict[str, Any]:
+        ...
+
+    def touches(self, other: Polygon) -> bool:
+        ...
+
+    def union(self, *args, **kwargs) -> Any:
         ...
 
     def wkt(self) -> str:
@@ -384,7 +431,7 @@ class Polygon:
     def __ne__(self, other: Polygon) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -449,7 +496,7 @@ class System(_System):
     def __ne__(self, other: _System) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
