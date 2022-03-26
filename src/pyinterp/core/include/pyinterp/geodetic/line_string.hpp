@@ -26,7 +26,7 @@ class LineString : public boost::geometry::model::linestring<Point> {
 
   /// Build a new line string from a list of points.
   explicit LineString(const pybind11::list& points) {
-    for (const auto& point : points) {
+    for (const auto point : points) {
       push_back(point.cast<Point>());
     }
   }
