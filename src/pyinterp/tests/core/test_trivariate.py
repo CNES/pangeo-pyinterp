@@ -234,3 +234,40 @@ def test_grid3d_interpolator(pytestconfig):
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0
+
+
+def test_invalid_data():
+    """Testing of the interpolation with invalid data"""
+    grid = load_data(temporal_axis=True)
+    interpolator = core.TemporalBilinear3D()
+    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
+    lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
+    time = np.array([
+        netCDF4.num2date(  # type: ignore
+            898500 + 3,
+            "hours since 1900-01-01 00:00:0.0",
+            only_use_cftime_datetimes=False,
+            only_use_python_datetimes=True)
+    ]).astype("datetime64[h]").astype("int64")
+    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    z0 = core.trivariate_float64(
+        grid,  # type: ignore
+        x.ravel(),
+        y.ravel(),
+        t.ravel(),
+        interpolator,
+        num_threads=0)
+    indices = np.random.randint(0, len(x), size=100)
+    x.ravel()[indices] = np.nan
+    y.ravel()[indices] = np.nan
+    t.ravel()[indices] = np.datetime64("NaT")
+    z1 = core.trivariate_float64(
+        grid,  # type: ignore
+        x.ravel(),
+        y.ravel(),
+        t.ravel(),
+        interpolator,
+        num_threads=0)
+    mask = ~np.isnan(x.ravel())
+    assert np.allclose(z1[mask], z0[mask], equal_nan=True)
+    assert np.all(np.isnan(z1[~mask]))
