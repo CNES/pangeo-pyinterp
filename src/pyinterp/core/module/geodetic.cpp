@@ -20,7 +20,7 @@
 namespace geodetic = pyinterp::geodetic;
 namespace py = pybind11;
 
-PYBIND11_MAKE_OPAQUE(geodetic::MultiPolygon);
+PYBIND11_MAKE_OPAQUE(geodetic::MultiPolygon)
 
 static inline auto parse_distance_strategy(const std::string &strategy)
     -> geodetic::DistanceStrategy {

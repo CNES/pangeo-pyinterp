@@ -109,10 +109,10 @@ constexpr auto parzen(const T &d, const T &r, const T &sampling) -> T {
   auto ratio = d / r;
   auto l = 2 * r + sampling;
   if (d <= l / 4) {
-    return 1 - 6 * std::pow(ratio, 2) * (1 - ratio);
+    return static_cast<T>(1 - 6 * std::pow(ratio, 2) * (1 - ratio));
   }
   if (l / 2 <= d || d > l / 4) {
-    return 2 * std::pow(1 - ratio, 3);
+    return static_cast<T>(2 * std::pow(1 - ratio, 3));
   }
   return T(0);
 }
