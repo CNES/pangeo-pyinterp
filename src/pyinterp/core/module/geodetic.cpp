@@ -946,8 +946,8 @@ Returns:
 
 static void init_geodetic_linestring(py::module &m) {
   py::class_<geodetic::LineString>(
-      m, "Linestring",
-      R"__doc__(Linestring(self, lon: numpy.ndarray, lat: numpy.ndarray)
+      m, "LineString",
+      R"__doc__(LineString(self, lon: numpy.ndarray, lat: numpy.ndarray)
 
 A linestring (named so by OGC) is a collection of points.
 
@@ -955,10 +955,70 @@ Args:
     lon: Longitudes coordinates in degrees.
     lat: Latitude coordinates in degrees.
 )__doc__")
+      .def(py::init<>())
+      .def(py::init<const py::list &>(), py::arg("points"))
       .def(py::init<const Eigen::Ref<const pyinterp::Vector<double>> &,
                     const Eigen::Ref<const pyinterp::Vector<double>> &>(),
            py::arg("lon"), py::arg("lat"),
            py::call_guard<py::gil_scoped_release>())
+      .def_static("from_geojson", &geodetic::LineString::from_geojson,
+                  py::arg("array"), R"__doc__(
+Creates a line string from a GeoJSON coordinates array.
+
+Args:
+    array: the GeoJSON coordinate array.
+Returns:
+    The line string defined by the GeoJSON coordinate array.
+)__doc__")
+      .def("to_geojson", &geodetic::LineString::to_geojson,
+           R"__doc__(
+Return the line string as a GeoJSON type.
+
+Returns:
+    The line string as a GeoJSON type.
+)__doc__")
+      .def(
+          "wkt",
+          [](const geodetic::LineString &self) -> std::string {
+            auto ss = std::stringstream();
+            ss << boost::geometry::wkt(self);
+            return ss.str();
+          },
+          R"__doc__(
+Gets the OGC Well-Known Text (WKT) representation of this instance.
+
+Returns:
+    The WKT representation.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def_static(
+          "read_wkt",
+          [](const std::string &wkt) -> geodetic::LineString {
+            auto result = geodetic::LineString();
+            boost::geometry::read_wkt(wkt, result);
+            return result;
+          },
+          py::arg("wkt"), R"__doc__(
+Parses OGC Well-Known Text (WKT) into a LineString.
+
+Args:
+    wkt: the WKT representation of the LineString.
+Returns:
+    The line string defined by the WKT representation.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "append",
+          [](geodetic::LineString &self, geodetic::Point point) -> void {
+            self.append(std::move(point));
+          },
+          py::arg("point"), R"__doc__(
+Appends a point to this instance.
+
+Args:
+    point: The point to append.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "__copy__",
           [](const geodetic::LineString &self) {
@@ -971,20 +1031,28 @@ Args:
       .def(
           "__getitem__",
           [](const geodetic::LineString &self,
-             size_t index) -> geodetic::Point { return self.at(index); },
-          py::arg("index"))
+             size_t index) -> geodetic::Point { return self(index); },
+          py::arg("index"), "Returns the point at the given index.")
+      .def(
+          "__eq__",
+          [](const geodetic::LineString &self, const geodetic::LineString &rhs)
+              -> bool { return boost::geometry::equals(self, rhs); },
+          py::arg("other"),
+          "Overrides the default behavior of the ``==`` operator.")
+      .def(
+          "__ne__",
+          [](const geodetic::LineString &self, const geodetic::LineString &rhs)
+              -> bool { return !boost::geometry::equals(self, rhs); },
+          py::arg("other"),
+          "Overrides the default behavior of the ``!=`` operator.")
+      .def("__repr__", &geodetic::LineString::to_string,
+           "Called by the ``repr()`` built-in function to compute the string "
+           "representation of a point.")
       .def("__iter__",
            [](const geodetic::LineString &self) {
              return py::make_iterator(self.begin(), self.end(),
                                       py::keep_alive<0, 1>());
            })
-      .def("to_geojson", &geodetic::LineString::to_geojson,
-           R"__doc__(
-Return the line string as a GeoJSON type.
-
-Returns:
-    The line string as a GeoJSON type.
-)__doc__")
       .def("intersects", &geodetic::LineString::intersects, py::arg("rhs"),
            R"__doc__(
 Test if this linestring intersects with another linestring.
@@ -1006,17 +1074,6 @@ Returns:
     The coordinates of the intersection or None if there is no intersection.
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
-      .def("nearest", &geodetic::LineString::nearest, py::arg("point"),
-           R"__doc__(
-Find the nearest index of a point in this linestring to the provided one.
-
-Args:
-    point: The point to consider.
-
-Returns:
-    The index of the nearest point or None if no intersection is found.
-)__doc__",
-           py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const geodetic::LineString &self) { return self.getstate(); },
           [](const py::tuple &state) {
@@ -1028,8 +1085,8 @@ void init_geodetic_crossover(py::module &m) {
   py::class_<geodetic::Crossover>(
       m, "Crossover",
       "Crossover(self,"
-      " half_orbit_1: pyinterp.core.geodetic.Linestring,"
-      " half_orbit_2: pyinterp.core.geodetic.Linestring)"
+      " half_orbit_1: pyinterp.core.geodetic.LineString,"
+      " half_orbit_2: pyinterp.core.geodetic.LineString)"
       R"__doc__(
 
 Calculate the crossover between two half-orbits.

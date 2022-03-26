@@ -447,8 +447,8 @@ lat2 = numpy.array([-67.183321, -67.168076, -67.152826, -67.137573],
 # %%
 # We create the two lines and the crossover.
 crossover = pyinterp.geodetic.Crossover(
-    pyinterp.geodetic.Linestring(lon1, lat1),
-    pyinterp.geodetic.Linestring(lon2, lat2))
+    pyinterp.geodetic.LineString(lon1, lat1),
+    pyinterp.geodetic.LineString(lon2, lat2))
 
 # %%
 # We can check if there is a crossing between these two lines.

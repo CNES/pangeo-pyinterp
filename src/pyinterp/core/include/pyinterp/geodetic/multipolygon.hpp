@@ -145,7 +145,10 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
 
   [[nodiscard]] inline auto operator()(const size_t idx) const
       -> const Polygon & {
-    return Base::at(idx);
+    if (idx >= Base::size()) {
+      throw std::out_of_range("Multipolygon index out of range");
+    }
+    return Base::operator[](idx);
   }
 
   /// Return the number of polygons in this instance

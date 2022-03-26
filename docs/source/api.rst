@@ -73,7 +73,7 @@ Geodetic systems
   geodetic.Box
   geodetic.Coordinates
   geodetic.Crossover
-  geodetic.Linestring
+  geodetic.LineString
   geodetic.MultiPolygon
   geodetic.Point
   geodetic.Polygon

@@ -7,7 +7,7 @@ from typing import List, Optional, Tuple
 from ..core import geodetic
 from ..core.geodetic import (
     Crossover,
-    Linestring,
+    LineString,
     coordinate_distances,
     normalize_longitudes,
 )
@@ -17,7 +17,7 @@ __all__ = [
     "coordinate_distances",
     "Coordinates",
     "Crossover",
-    "Linestring",
+    "LineString",
     "MultiPolygon",
     "normalize_longitudes",
     "Point",

@@ -89,6 +89,7 @@ class Box:
 
 
 class Coordinates:
+
     def __init__(self, system: Optional[System] = None) -> None:
         ...
 
@@ -126,8 +127,9 @@ class Coordinates:
 
 
 class Crossover:
-    def __init__(self, half_orbit_1: Linestring,
-                 half_orbit_2: Linestring) -> None:
+
+    def __init__(self, half_orbit_1: LineString,
+                 half_orbit_2: LineString) -> None:
         ...
 
     def exists(self) -> bool:
@@ -150,32 +152,57 @@ class Crossover:
         ...
 
     @property
-    def half_orbit_1(self) -> Linestring:
+    def half_orbit_1(self) -> LineString:
         ...
 
     @property
-    def half_orbit_2(self) -> Linestring:
+    def half_orbit_2(self) -> LineString:
         ...
 
 
-class Linestring:
+class LineString:
+    __hash__: ClassVar[None] = ...
+
+    @overload
+    def __init__(self) -> None:
+        ...
+
+    @overload
+    def __init__(self, points: list) -> None:
+        ...
+
+    @overload
     def __init__(self, lon: numpy.ndarray[numpy.float64],
                  lat: numpy.ndarray[numpy.float64]) -> None:
         ...
 
-    def intersection(self, rhs: Linestring) -> Optional[Point]:
+    def append(self, point: Point) -> None:
         ...
 
-    def intersects(self, rhs: Linestring) -> bool:
+    @staticmethod
+    def from_geojson(array: List[List[float]]) -> LineString:
         ...
 
-    def nearest(self, point: Point) -> int:
+    def intersection(self, rhs: LineString) -> Optional[Point]:
+        ...
+
+    def intersects(self, rhs: LineString) -> bool:
+        ...
+
+    @staticmethod
+    def read_wkt(wkt: str) -> LineString:
         ...
 
     def to_geojson(self) -> Dict[str, Any]:
         ...
 
-    def __copy__(self) -> Linestring:
+    def wkt(self) -> str:
+        ...
+
+    def __copy__(self) -> LineString:
+        ...
+
+    def __eq__(self, other: LineString) -> bool:
         ...
 
     def __getitem__(self, index: int) -> Point:
@@ -188,6 +215,9 @@ class Linestring:
         ...
 
     def __len__(self) -> int:
+        ...
+
+    def __ne__(self, other: LineString) -> bool:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -509,6 +539,7 @@ class System(_System):
 
 
 class _System:
+
     def __init__(self, *args, **kwargs) -> None:
         ...
 

@@ -345,8 +345,8 @@ def test_crossover():
     lon2 = np.array(lon1[:])
     lat2 = np.array(lat1[::-1])
 
-    crossover = core.geodetic.Crossover(core.geodetic.Linestring(lon1, lat1),
-                                        core.geodetic.Linestring(lon2, lat2))
+    crossover = core.geodetic.Crossover(core.geodetic.LineString(lon1, lat1),
+                                        core.geodetic.LineString(lon2, lat2))
     assert isinstance(crossover, core.geodetic.Crossover)
     assert crossover.exists()
     coordinates = crossover.search()
@@ -365,8 +365,8 @@ def test_merged_point():
     lon1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
     lat1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
 
-    crossover = core.geodetic.Crossover(core.geodetic.Linestring(lon1, lat1),
-                                        core.geodetic.Linestring(lon1, lat1))
+    crossover = core.geodetic.Crossover(core.geodetic.LineString(lon1, lat1),
+                                        core.geodetic.LineString(lon1, lat1))
     assert isinstance(crossover, core.geodetic.Crossover)
     assert crossover.exists()
 
@@ -374,8 +374,8 @@ def test_merged_point():
         crossover.search()
 
     crossover = core.geodetic.Crossover(
-        core.geodetic.Linestring(lon1, lat1),
-        core.geodetic.Linestring(lon1 + 10, lat1 + 10))
+        core.geodetic.LineString(lon1, lat1),
+        core.geodetic.LineString(lon1 + 10, lat1 + 10))
     assert not crossover.exists()
     assert crossover.search() is None
 
@@ -388,8 +388,8 @@ def test_missing_crossover():
     x2 = np.flip(x1, axis=0)
     y2 = np.flip(x2, axis=0)
 
-    crossover = core.geodetic.Crossover(core.geodetic.Linestring(x1, y1),
-                                        core.geodetic.Linestring(x2, y2))
+    crossover = core.geodetic.Crossover(core.geodetic.LineString(x1, y1),
+                                        core.geodetic.LineString(x2, y2))
     assert isinstance(crossover, core.geodetic.Crossover)
     assert crossover.exists()
 
@@ -401,8 +401,8 @@ def test_case_crossover_shift():
     lon2 = np.array(lon1[:])
     lat2 = np.array(lat1[::-1])
 
-    crossover = core.geodetic.Crossover(core.geodetic.Linestring(lon1, lat1),
-                                        core.geodetic.Linestring(lon2, lat2))
+    crossover = core.geodetic.Crossover(core.geodetic.LineString(lon1, lat1),
+                                        core.geodetic.LineString(lon2, lat2))
     assert isinstance(crossover, core.geodetic.Crossover)
     assert crossover.exists()
     coordinates = crossover.search()
@@ -524,3 +524,33 @@ def test_union_polygon():
         "4.5 1.0,4.0 -0.5))")
     union = a.union(b)
     assert len(union) == 1
+
+
+def test_linestring():
+    a = core.geodetic.LineString.from_geojson([[1, 2], [2, 3], [3, 4]])
+    assert a.wkt() == "LINESTRING(1 2,2 3,3 4)"
+    assert a == core.geodetic.LineString.read_wkt("LINESTRING(1 2,2 3,3 4)")
+    assert a == pickle.loads(pickle.dumps(a))
+    assert a.to_geojson() == {
+        'type': 'LineString',
+        'coordinates': [[1, 2], [2, 3], [3, 4]],
+    }
+    assert len(a) == 3
+    assert a[0] == core.geodetic.Point(1, 2)
+    assert a[1] == core.geodetic.Point(2, 3)
+    assert a[2] == core.geodetic.Point(3, 4)
+    with pytest.raises(IndexError):
+        a[3]
+    assert list(a) == [
+        core.geodetic.Point(1, 2),
+        core.geodetic.Point(2, 3),
+        core.geodetic.Point(3, 4),
+    ]
+    assert a == core.geodetic.LineString(np.array([1, 2, 3], dtype=float),
+                                         np.array([2, 3, 4], dtype=float))
+    assert a == a.__copy__()
+    b = core.geodetic.LineString()
+    b.append(core.geodetic.Point(1, 2))
+    b.append(core.geodetic.Point(2, 3))
+    b.append(core.geodetic.Point(3, 4))
+    assert a == b
