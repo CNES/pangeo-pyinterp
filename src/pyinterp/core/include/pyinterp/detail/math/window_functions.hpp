@@ -31,7 +31,7 @@ enum Function : uint8_t {
 template <typename T>
 constexpr auto hamming(const T &d, const T &r, const T & /*unused*/) -> T {
   if (d <= r) {
-    return 0.53836 - 0.46164 * std::cos(pi<T>() * (d + r) / r);
+    return static_cast<T>(0.53836 - 0.46164 * std::cos(pi<T>() * (d + r) / r));
   }
   return T(0);
 }
@@ -41,9 +41,9 @@ template <typename T>
 constexpr auto blackman(const T &d, const T &r, const T & /*unused*/) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
-    return (T(7938) / T(18608)) -
-           (T(9240) / T(18608)) * std::cos(pi<T>() * ratio) +
-           (T(1430) / T(18608)) * std::cos(two_pi<T>() * ratio);
+    return static_cast<T>((7938.0 / 18608.0) -
+                          (9240.0 / 18608.0) * std::cos(pi<T>() * ratio) +
+                          (1430.0 / 18608.0) * std::cos(two_pi<T>() * ratio));
   }
   return T(0);
 }
@@ -53,10 +53,10 @@ template <typename T>
 constexpr auto flat_top(const T &d, const T &r, const T & /*unused*/) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
-    return 0.21557895 - 0.41663158 * std::cos(pi<T>() * ratio) +
-           0.277263158 * std::cos(two_pi<T>() * ratio) -
-           0.083578947 * std::cos(3 * pi<T>() * ratio) +
-           0.006947368 * std::cos(4 * pi<T>() * ratio);
+    return static_cast<T>(0.21557895 - 0.41663158 * std::cos(pi<T>() * ratio) +
+                          0.277263158 * std::cos(two_pi<T>() * ratio) -
+                          0.083578947 * std::cos(3 * pi<T>() * ratio) +
+                          0.006947368 * std::cos(4 * pi<T>() * ratio));
   }
   return T(0);
 }
@@ -66,8 +66,8 @@ template <typename T>
 constexpr auto nuttall(const T &d, const T &r, const T & /*unused*/) -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
-    return 0.3635819 - 0.4891775 * std::cos(pi<T>() * ratio) +
-           0.1365995 * std::cos(two_pi<T>() * ratio);
+    return static_cast<T>(0.3635819 - 0.4891775 * std::cos(pi<T>() * ratio) +
+                          0.1365995 * std::cos(two_pi<T>() * ratio));
   }
   return T(0);
 }
@@ -78,9 +78,9 @@ constexpr auto blackman_harris(const T &d, const T &r, const T & /*unused*/)
     -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
-    return 0.35875 - 0.48829 * std::cos(pi<T>() * ratio) +
-           0.14128 * std::cos(2 * pi<T>() * ratio) -
-           0.01168 * std::cos(3 * pi<T>() * ratio);
+    return static_cast<T>(0.35875 - 0.48829 * std::cos(pi<T>() * ratio) +
+                          0.14128 * std::cos(2 * pi<T>() * ratio) -
+                          0.01168 * std::cos(3 * pi<T>() * ratio));
   }
   return T(0);
 }

@@ -364,7 +364,7 @@ class RTree {
     for (const auto &item : nearest) {
       const auto distance = item.first;
 
-      auto wk = wf(distance, radius, arg);
+      auto wk = wf(static_cast<coordinate_t>(distance), radius, arg);
       total_weight += wk;
       result += item.second * wk;
       ++neighbors;
