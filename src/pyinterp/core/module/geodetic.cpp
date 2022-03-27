@@ -402,6 +402,8 @@ Returns:
     The envelope of this instance.
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
+      .def("num_interior_rings", &geodetic::Polygon::num_interior_rings,
+           "Returns the number of the interior rings.")
       .def(
           "union",
           [](const geodetic::Polygon &self, const geodetic::Polygon &other)
@@ -603,6 +605,8 @@ Args:
 Returns:
     The MultiPolygon initialized from the GeoJSON coordinate array.
 )__doc__")
+      .def("num_interior_rings", &geodetic::MultiPolygon::num_interior_rings,
+           "Returns the number of the interior rings of all polygons.")
       .def(
           "union",
           [](const geodetic::MultiPolygon &self, const geodetic::Polygon &other)

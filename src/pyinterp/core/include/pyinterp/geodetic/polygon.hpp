@@ -11,6 +11,7 @@
 #include <string>
 
 #include "pyinterp/geodetic/algorithm.hpp"
+#include "pyinterp/geodetic/line_string.hpp"
 #include "pyinterp/geodetic/point.hpp"
 
 namespace pyinterp::geodetic {
@@ -34,12 +35,10 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   static auto from_geojson(const pybind11::list &data) -> Polygon;
 
   /// Returns the outer ring
-  [[nodiscard]] auto outer() const -> pybind11::list {
-    auto outer = pybind11::list();
-
-    for (const auto &item : Base::outer()) {
-      outer.append(item);
-    }
+  [[nodiscard]] auto outer() const -> LineString {
+    auto outer = LineString();
+    std::copy(Base::outer().begin(), Base::outer().end(),
+              std::back_inserter(outer));
     return outer;
   }
 
@@ -48,10 +47,8 @@ class Polygon : public boost::geometry::model::polygon<Point> {
     auto inners = pybind11::list();
 
     for (const auto &inner : Base::inners()) {
-      auto buffer = pybind11::list();
-      for (const auto &item : inner) {
-        buffer.append(item);
-      }
+      auto buffer = LineString();
+      std::copy(inner.begin(), inner.end(), std::back_inserter(buffer));
       inners.append(buffer);
     }
     return inners;
@@ -59,6 +56,11 @@ class Polygon : public boost::geometry::model::polygon<Point> {
 
   /// Calculates the envelope of this polygon.
   [[nodiscard]] auto envelope() const -> Box;
+
+  /// Returns the number of inner rings
+  [[nodiscard]] auto num_interior_rings() const -> std::size_t {
+    return boost::geometry::num_interior_rings(*this);
+  }
 
   /// Calculate the area
   [[nodiscard]] auto area(const std::optional<System> &wgs) const -> double {

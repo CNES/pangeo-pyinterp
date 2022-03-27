@@ -154,18 +154,29 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
   /// Return the number of polygons in this instance
   [[nodiscard]] inline auto size() const -> size_t { return Base::size(); }
 
+  /// Returns the number of the interior rings of all polygons
+  [[nodiscard]] inline auto num_interior_rings() const -> size_t {
+    return boost::geometry::num_interior_rings(*this);
+  }
+
+  /// Returns an iterator that points to the first polygon of this instance.
   [[nodiscard]] inline auto begin() -> decltype(Base::begin()) {
     return Base::begin();
   }
 
+  /// Returns an iterator that points to the last polygon of this instance.
   [[nodiscard]] inline auto end() -> decltype(Base::end()) {
     return Base::end();
   }
 
+  /// Returns a read-only (constant) iterator that points to the
+  /// first polygon of this instance.
   [[nodiscard]] inline auto begin() const -> decltype(Base::begin()) {
     return Base::begin();
   }
 
+  /// Returns a read-only (constant) iterator that points to the
+  /// last polygon of this instance.
   [[nodiscard]] inline auto end() const -> decltype(Base::end()) {
     return Base::end();
   }

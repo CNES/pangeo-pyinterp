@@ -287,6 +287,9 @@ class MultiPolygon:
     def intersects(self, other: MultiPolygon) -> bool:
         ...
 
+    def num_interior_rings(self) -> int:
+        ...
+
     @staticmethod
     def read_wkt(wkt: str) -> MultiPolygon:
         ...
@@ -433,6 +436,9 @@ class Polygon:
     def intersects(self, other: Polygon) -> bool:
         ...
 
+    def num_interior_rings(self) -> int:
+        ...
+
     @staticmethod
     def read_wkt(wkt: str) -> Polygon:
         ...
@@ -465,11 +471,11 @@ class Polygon:
         ...
 
     @property
-    def inners(self) -> list:
+    def inners(self) -> List[LineString]:
         ...
 
     @property
-    def outer(self) -> list:
+    def outer(self) -> LineString:
         ...
 
 

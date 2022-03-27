@@ -424,14 +424,15 @@ def test_polygon_from_geojson():
     polygon = core.geodetic.Polygon.from_geojson([
         [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
     ])
-    assert polygon.outer == [
+    assert polygon.outer == geodetic.LineString([
         core.geodetic.Point(100.0, 0.0),
         core.geodetic.Point(101.0, 0.0),
         core.geodetic.Point(101.0, 1.0),
         core.geodetic.Point(100.0, 1.0),
         core.geodetic.Point(100.0, 0.0),
-    ]
+    ])
     assert polygon.inners == []
+    assert polygon.num_interior_rings() == 0
 
     coordinates = [
         [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
@@ -442,20 +443,23 @@ def test_polygon_from_geojson():
         'type': 'Polygon',
         'coordinates': coordinates,
     }
-    assert polygon.outer == [
+    assert polygon.outer == geodetic.LineString([
         core.geodetic.Point(100.0, 0.0),
         core.geodetic.Point(101.0, 0.0),
         core.geodetic.Point(101.0, 1.0),
         core.geodetic.Point(100.0, 1.0),
         core.geodetic.Point(100.0, 0.0),
+    ])
+    assert polygon.inners == [
+        geodetic.LineString([
+            core.geodetic.Point(100.2, 0.2),
+            core.geodetic.Point(100.8, 0.2),
+            core.geodetic.Point(100.8, 0.8),
+            core.geodetic.Point(100.2, 0.8),
+            core.geodetic.Point(100.2, 0.2),
+        ])
     ]
-    assert polygon.inners == [[
-        core.geodetic.Point(100.2, 0.2),
-        core.geodetic.Point(100.8, 0.2),
-        core.geodetic.Point(100.8, 0.8),
-        core.geodetic.Point(100.2, 0.8),
-        core.geodetic.Point(100.2, 0.2),
-    ]]
+    assert polygon.num_interior_rings() == 1
 
 
 def test_multipolygon_from_geojson():
@@ -488,6 +492,7 @@ def test_multipolygon_from_geojson():
         ],
     ]
     multipolygon = core.geodetic.MultiPolygon.from_geojson(coordinates)
+    assert multipolygon.num_interior_rings() == 1
     assert multipolygon.to_geojson() == {
         'type': 'MultiPolygon',
         'coordinates': coordinates
