@@ -6,6 +6,7 @@
 #include <pybind11/pybind11.h>
 
 #include <boost/geometry/geometries/register/point.hpp>
+#include <limits>
 #include <set>
 #include <string>
 
@@ -22,7 +23,7 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
   Point() noexcept
       : detail::geometry::GeographicPoint2D<double>(
             std::numeric_limits<double>::quiet_NaN(),
-            std::numeric_limits<double>::quiet_NaN()){};
+            std::numeric_limits<double>::quiet_NaN()) {}
 
   /// Build a new point with the coordinates provided.
   Point(const double lon, const double lat)

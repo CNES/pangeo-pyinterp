@@ -61,7 +61,7 @@ auto LineString::getstate() const -> pybind11::tuple {
     _lon[ix] = item.lon();
     _lat[ix] = item.lat();
     ++ix;
-  };
+  }
   return pybind11::make_tuple(lon, lat);
 }
 

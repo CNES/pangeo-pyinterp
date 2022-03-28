@@ -7,6 +7,7 @@
 #include <pybind11/numpy.h>
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <boost/geometry.hpp>
 #include <string>
 

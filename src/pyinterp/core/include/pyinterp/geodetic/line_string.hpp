@@ -7,6 +7,7 @@
 #include <pybind11/pybind11.h>
 
 #include <boost/geometry.hpp>
+#include <string>
 #include <utility>
 #include <vector>
 

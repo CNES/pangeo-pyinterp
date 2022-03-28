@@ -9,7 +9,7 @@ namespace pyinterp::geodetic {
 class NearestPoint {
  public:
   /// Defaut constructor
-  NearestPoint(const LineString& line_string) {
+  explicit NearestPoint(const LineString& line_string) {
     size_t ix = 0;
     for (const auto& item : line_string) {
       rtree_.insert(std::make_pair(item, ix));
