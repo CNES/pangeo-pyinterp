@@ -47,7 +47,7 @@ class LineString : public boost::geometry::model::linestring<Point> {
   [[nodiscard]] auto to_geojson() const -> pybind11::dict;
 
   /// Add a point to this linestring.
-  auto append(Point&& point) -> void { Base::emplace_back(point); }
+  auto append(const Point& point) -> void { Base::push_back(point); }
 
   /// Test if this linestring intersects with another linestring.
   ///

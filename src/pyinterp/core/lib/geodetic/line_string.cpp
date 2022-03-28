@@ -11,7 +11,7 @@ namespace pyinterp::geodetic {
 LineString::LineString(const Eigen::Ref<const Vector<double>>& lon,
                        const Eigen::Ref<const Vector<double>>& lat) {
   detail::check_eigen_shape("lon", lon, "lat", lat);
-  for (auto ix = Eigen::Index(0); ix < lon.size(); ++ix) {
+  for (auto ix = static_cast<Eigen::Index>(0); ix < lon.size(); ++ix) {
     Base::emplace_back(Point{lon(ix), lat(ix)});
   }
 }
@@ -56,7 +56,7 @@ auto LineString::getstate() const -> pybind11::tuple {
   auto lat = pybind11::array_t<double>(pybind11::array::ShapeContainer{size()});
   auto _lon = lon.mutable_unchecked<1>();
   auto _lat = lat.mutable_unchecked<1>();
-  auto ix = int64_t(0);
+  auto ix = static_cast<int64_t>(0);
   for (const auto& item : *this) {
     _lon[ix] = item.lon();
     _lat[ix] = item.lat();

@@ -1014,7 +1014,7 @@ Returns:
       .def(
           "append",
           [](geodetic::LineString &self, geodetic::Point point) -> void {
-            self.append(std::move(point));
+            self.append(point);
           },
           py::arg("point"), R"__doc__(
 Appends a point to this instance.

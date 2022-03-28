@@ -405,8 +405,8 @@ static auto zoom_in(char *ptr, pybind11::ssize_t size, uint32_t from_precision,
   auto bits = to_precision * 5;
 
   // Calculation of the number of items needed for the result.
-  auto size_in =
-      size * (size_t(2) << (5 * (to_precision - from_precision) - 1));
+  auto size_in = size * (static_cast<size_t>(2)
+                         << (5 * (to_precision - from_precision) - 1));
 
   // Allocates the result table.
   auto result = allocate_array(size_in, to_precision);

@@ -15,7 +15,7 @@ MultiPolygon::MultiPolygon(const pybind11::list &polygons) {
       return;
     }
     resize(polygons.size());
-    for (auto ix = size_t(0); ix < polygons.size(); ++ix) {
+    for (auto ix = static_cast<size_t>(0); ix < polygons.size(); ++ix) {
       auto polygon = polygons[ix].cast<geodetic::Polygon>();
       (*this)[ix] = polygon;
     }

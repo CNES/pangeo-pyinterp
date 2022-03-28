@@ -319,7 +319,7 @@ auto bounding_boxes(const geodetic::Box &box, const uint32_t precision)
   // Allocation of the vector storing the different codes of the matrix created
   auto [hash_sw, lon_step, lat_step] = grid_properties(box, precision);
   auto result = allocate_array(lon_step * lat_step);
-  auto ix = int64_t(0);
+  auto ix = static_cast<int64_t>(0);
 
   auto point_sw = decode(hash_sw, precision, false);
 

@@ -163,7 +163,7 @@ class StreamingHistogram {
         auto &item = accumulators_[ix];
         auto &bins = item.bins();
 
-        auto jx = size_t(0);
+        auto jx = static_cast<size_t>(0);
         auto shift = ix * max_size;
         for (; jx < bins.size(); ++jx) {
           ptr_result[shift + jx] = bins[jx];
@@ -315,11 +315,11 @@ class StreamingHistogram {
     ss.exceptions(std::stringstream::failbit);
 
     try {
-      auto size = Eigen::Index(0);
+      auto size = static_cast<Eigen::Index>(0);
       ss.read(reinterpret_cast<char *>(&size), sizeof(size));
       auto accumulators = Vector<Accumulators>(size);
       for (int ix = 0; ix < size; ++ix) {
-        auto size = size_t(0);
+        auto size = static_cast<size_t>(0);
         ss.read(reinterpret_cast<char *>(&size), sizeof(size));
         auto marshal_hist = std::string(size, '\0');
         ss.read(marshal_hist.data(), static_cast<std::streamsize>(size));

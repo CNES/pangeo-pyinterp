@@ -83,7 +83,7 @@ Returns:
     Minimum of samples.
       )__doc__")
       .def("quantile", &pyinterp::StreamingHistogram<Type>::quantile,
-           py::arg("q") = Type(0.5),
+           py::arg("q") = static_cast<Type>(0.5),
            R"__doc__(
 Returns the quantile of samples.
 
