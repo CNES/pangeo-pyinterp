@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: v4.1.0
     hooks:
       - id: check-case-conflict
       - id: check-docstring-first
@@ -48,6 +48,6 @@ repos:
     - id: codespell
       exclude: "(cf.py|.*json)$"
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v13.0.0
+    rev: v13.0.1
     hooks:
       - id: clang-format
