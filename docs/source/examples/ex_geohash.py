@@ -27,7 +27,7 @@ import pyinterp
 # %%
 # Writing a visualization routine for GeoHash grids.
 def _sort_colors(colors):
-    """Sort colors by hue, saturation, value and name in descending order"""
+    """Sort colors by hue, saturation, value and name in descending order."""
     by_hsv = sorted(
         (tuple(matplotlib.colors.rgb_to_hsv(matplotlib.colors.to_rgb(color))),
          name) for name, color in colors.items())
@@ -35,7 +35,7 @@ def _sort_colors(colors):
 
 
 def _plot_box(ax, code, color, caption=True):
-    """Plot a GeoHash bounding box"""
+    """Plot a GeoHash bounding box."""
     box = pyinterp.GeoHash.from_string(code.decode()).bounding_box()
     x0 = box.min_corner.lon
     x1 = box.max_corner.lon
@@ -70,7 +70,7 @@ def plot_geohash_grid(precision,
                       caption=True,
                       color_list=None,
                       inc=7):
-    """Plot geohash bounding boxes"""
+    """Plot geohash bounding boxes."""
     color_list = color_list or matplotlib.colors.CSS4_COLORS
     fig = matplotlib.pyplot.figure(figsize=(24, 12))
     ax = fig.add_subplot(1, 1, 1, projection=cartopy.crs.PlateCarree())

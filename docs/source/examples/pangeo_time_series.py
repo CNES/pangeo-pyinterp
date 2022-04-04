@@ -36,7 +36,7 @@ ds = cat["sea_surface_height"].to_dask()
 # %%
 # To manage the time series retrieved, we create the following object:
 class TimeSeries:
-    """Manage a time series composed of a grid stack"""
+    """Manage a time series composed of a grid stack."""
 
     def __init__(self, ds):
         self.ds = ds
@@ -94,8 +94,7 @@ time_series = TimeSeries(ds)
 # The test data set containing a set of positions of different floats is then
 # loaded.
 def cnes_jd_to_datetime(seconds):
-    """Convert a date expressed in seconds since 1950 into a calendar
-    date."""
+    """Convert a date expressed in seconds since 1950 into a calendar date."""
     return datetime.datetime.utcfromtimestamp(
         ((seconds / 86400.0) - 7305.0) * 86400.0)
 
@@ -125,8 +124,7 @@ df = load_positions()
 # Two last functions are then implemented. The first function will divide the
 # time series to be processed into weeks.
 def periods(df, time_series, frequency='W'):
-    """Return the list of periods covering the time series loaded in
-    memory."""
+    """Return the list of periods covering the time series loaded in memory."""
     period_start = df.groupby(
         df.index.to_period(frequency))["sla"].count().index
 

@@ -35,7 +35,7 @@ cat_url = "https://raw.githubusercontent.com/pangeo-data/pangeo-datastore" \
 cat = intake.open_catalog(cat_url)
 
 # %%
-# Grid subsampling (orginal volume is too huge for this example)
+# Grid subsampling (original volume is too huge for this example)
 indices = slice(0, None, 8)
 
 # %%

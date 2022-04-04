@@ -173,7 +173,7 @@ class RTree {
 
   /// Interpolation of the value at the requested position.
   ///
-  /// @param point Point of interrest
+  /// @param point Point of interest
   /// @param radius The maximum radius of the search.
   /// @param k The number of nearest neighbors to be used for calculating the
   /// interpolated value.

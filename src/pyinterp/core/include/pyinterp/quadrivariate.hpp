@@ -22,7 +22,7 @@ namespace pyinterp {
 template <template <class> class Point, typename T>
 using Bivariate4D = detail::math::Bivariate<Point, T>;
 
-/// Get the fonction used to perform the interpolation on the U-Axis
+/// Get the function used to perform the interpolation on the U-Axis
 template <typename T>
 constexpr auto get_u_interpolation_method(const std::string &method)
     -> pyinterp::detail::math::z_method_t<T, T> {

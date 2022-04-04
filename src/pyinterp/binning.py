@@ -16,9 +16,8 @@ from . import core, geodetic
 
 
 class Binning2D:
-    """
-    Group a number of more or less continuous values into a smaller number of
-    "bins" located on a grid.
+    """Group a number of more or less continuous values into a smaller number
+    of "bins" located on a grid.
 
     Args:
         x: Definition of the bin centers for the X axis of the grid.
@@ -78,8 +77,7 @@ class Binning2D:
 
     def __repr__(self) -> str:
         """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance.
-        """
+        representation of this instance."""
         result = [f"<{self.__class__.__module__}.{self.__class__.__name__}>"]
         result.append("Axis:")
         result.append(f"  x: {self._instance.x}")
@@ -209,7 +207,7 @@ class Binning2D:
                     * ``skewness`` : compute the skewness within each bin.
                     * ``sum`` : compute the sum of values for points within
                       each bin.
-                    * ``sum_of_weights`` : compute the sum of weigths within
+                    * ``sum_of_weights`` : compute the sum of weights within
                       each bin.
                     * ``variance`` : compute the variance within each bin.
 
@@ -224,9 +222,8 @@ class Binning2D:
 
 
 class Binning1D:
-    """
-    Group a number of more or less continuous values into a smaller number of
-    "bins" located on a vector.
+    """Group a number of more or less continuous values into a smaller number
+    of "bins" located on a vector.
 
     Args:
         x: Definition of the bin centers for the X axis of the grid.
@@ -258,8 +255,7 @@ class Binning1D:
 
     def __repr__(self) -> str:
         """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance.
-        """
+        representation of this instance."""
         result = [f"<{self.__class__.__module__}{self.__class__.__name__}>"]
         result.append("Axis:")
         result.append(f"  {self._instance.x}")

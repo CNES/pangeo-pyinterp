@@ -16,7 +16,7 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 
 def build_dirname(extname=None):
-    """Returns the name of the build directory"""
+    """Returns the name of the build directory."""
     extname = '' if extname is None else os.sep.join(extname.split(".")[:-1])
     return pathlib.Path(
         WORKING_DIRECTORY, "build",

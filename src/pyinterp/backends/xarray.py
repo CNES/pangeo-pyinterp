@@ -20,8 +20,7 @@ __all__ = ['Grid2D', 'Grid3D', 'Grid4D', 'RegularGridInterpolator']
 
 
 class AxisIdentifier:
-    """Identification of the axes defining longitudes, latitudes in a
-    CF file.
+    """Identification of the axes defining longitudes, latitudes in a CF file.
 
     Args:
         data_array: The data array to be identified.
@@ -45,8 +44,7 @@ class AxisIdentifier:
         return None
 
     def longitude(self) -> Optional[str]:
-        """Returns the name of the dimension that defines a longitude
-        axis.
+        """Returns the name of the dimension that defines a longitude axis.
 
         Returns:
             The name of the longitude coordinate
@@ -54,8 +52,7 @@ class AxisIdentifier:
         return self._axis(cf.AxisLongitudeUnit())
 
     def latitude(self) -> Optional[str]:
-        """Returns the name of the dimension that defines a latitude
-        axis.
+        """Returns the name of the dimension that defines a latitude axis.
 
         Returns:
             The name of the latitude coordinates
@@ -66,8 +63,8 @@ class AxisIdentifier:
 def _dims_from_data_array(data_array: xr.DataArray,
                           geodetic: bool,
                           ndims: Optional[int] = 2) -> Tuple[str, str]:
-    """Gets the name of the dimensions that define the grid axes. the longitudes
-    and latitudes of the data array.
+    """Gets the name of the dimensions that define the grid axes. the
+    longitudes and latitudes of the data array.
 
     Args:
         data_array: Provided data array
@@ -108,7 +105,8 @@ def _coords(
     dims: Tuple,
     datetime64: Optional[Tuple[Hashable, core.TemporalAxis]] = None,
 ) -> Tuple:
-    """Get the list of arguments to provide to the grid interpolation functions.
+    """Get the list of arguments to provide to the grid interpolation
+    functions.
 
     Args:
         coords: Mapping from dimension names to the new coordinates. New
@@ -270,7 +268,7 @@ class Grid3D(grid.Grid3D):
             increasing_axes='inplace' if increasing_axes else None)
 
     def trivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
-        """Evaluate the interpolation defined for the given coordinates
+        """Evaluate the interpolation defined for the given coordinates.
 
         Args:
             coords: Mapping from dimension names to the coordinates to

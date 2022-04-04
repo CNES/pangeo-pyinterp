@@ -42,8 +42,7 @@ def _delayed(
 
 
 class DescriptiveStatistics:
-    """
-    Univariate descriptive statistics.
+    """Univariate descriptive statistics.
 
     Calculates the incremental descriptive statistics from the provided values.
     The calculation of the statistics is done when the constructor is invoked.

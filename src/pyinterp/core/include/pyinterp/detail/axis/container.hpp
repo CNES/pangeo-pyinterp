@@ -56,7 +56,7 @@ class Abstract {
   /// Reverse the order of elements in this axis
   virtual auto flip() -> void = 0;
 
-  /// Checks thats axis is monotonic
+  /// Checks that the axis is monotonic
   [[nodiscard]] virtual auto is_monotonic() const -> bool { return true; }
 
   /// Get the ith coordinate value.

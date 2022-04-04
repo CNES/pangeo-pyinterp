@@ -56,8 +56,7 @@ class RTree:
         return self._instance.bounds()
 
     def clear(self) -> None:
-        """Removes all values stored in the container.
-        """
+        """Removes all values stored in the container."""
         return self._instance.clear()
 
     def __len__(self):
@@ -175,8 +174,8 @@ class RTree:
             smooth: Optional[float] = 0,
             within: Optional[bool] = True,
             num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
-        """Interpolation of the value at the requested position by radial
-        basis function interpolation.
+        """Interpolation of the value at the requested position by radial basis
+        function interpolation.
 
         Args:
             coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of

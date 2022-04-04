@@ -44,7 +44,7 @@ def load_data(is_circle=True):
 
 
 def test_grid2d_init():
-    """Test construction and accessors of the object"""
+    """Test construction and accessors of the object."""
     grid = load_data()
     assert isinstance(grid.x, core.Axis)
     assert isinstance(grid.y, core.Axis)
@@ -52,7 +52,7 @@ def test_grid2d_init():
 
 
 def test_grid2d_pickle():
-    """Serialization test"""
+    """Serialization test."""
     grid = load_data()
     other = pickle.loads(pickle.dumps(grid))
     assert grid.x == other.x
@@ -103,7 +103,7 @@ def run_bivariate(interpolator, filename, visualize, dump):
 
 
 def test_bivariate_interpolator(pytestconfig):
-    """Testing of different interpolation methods"""
+    """Testing of different interpolation methods."""
     visualize = pytestconfig.getoption("visualize")
     dump = pytestconfig.getoption("dump")
     a = run_bivariate(core.Nearest2D(), "mss_bivariate_nearest", visualize,
@@ -118,7 +118,7 @@ def test_bivariate_interpolator(pytestconfig):
 
 
 def test_bivariate_pickle():
-    """Serialization of interpolator properties"""
+    """Serialization of interpolator properties."""
     for item in [
             'InverseDistanceWeighting2D', 'InverseDistanceWeighting3D',
             'Bilinear2D', 'Bilinear3D', 'Nearest2D', 'Nearest3D'
@@ -129,7 +129,7 @@ def test_bivariate_pickle():
 
 
 def test_spline_interpolator(pytestconfig):
-    """Testing of different spline interpolation methods"""
+    """Testing of different spline interpolation methods."""
     visualize = pytestconfig.getoption("visualize")
     dump = pytestconfig.getoption("dump")
     grid = load_data()
@@ -170,7 +170,7 @@ def test_spline_interpolator(pytestconfig):
 
 
 def test_spline_degraded():
-    """Testing of different spline interpolation methods"""
+    """Testing of different spline interpolation methods."""
     grid = load_data(is_circle=False)
     lon = np.arange(-190, -170, 1 / 3.0)
     lat = np.arange(-40, 40, 1 / 3.0) + 1 / 3.0

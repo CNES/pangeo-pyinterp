@@ -9,24 +9,24 @@ from .. import core
 from ..core import geohash
 
 
-def to_xarray(hashs: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
+def to_xarray(hashes: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
     """Get the XArray grid representing the GeoHash grid.
 
     Args:
-        hashs: Geohash codes.
+        hashes: Geohash codes.
         data: The data associated with the codes provided.
 
     Returns:
         The XArray grid representing the GeoHash grid.
     """
-    if hashs.shape != data.shape:
+    if hashes.shape != data.shape:
         raise ValueError(
-            "hashs, data could not be broadcast together with shape "
-            f"{hashs.shape}, f{data.shape}")
-    if hashs.dtype.kind != 'S':
-        raise TypeError("hashs must be a string array")
+            "hashes, data could not be broadcast together with shape "
+            f"{hashes.shape}, f{data.shape}")
+    if hashes.dtype.kind != 'S':
+        raise TypeError("hashes must be a string array")
     lon, lat = geohash.decode(
-        geohash.bounding_boxes(precision=hashs.dtype.itemsize))
+        geohash.bounding_boxes(precision=hashes.dtype.itemsize))
     x_axis = core.Axis(numpy.unique(lon), is_circle=True)
     y_axis = core.Axis(numpy.unique(lat))
 
@@ -36,7 +36,7 @@ def to_xarray(hashs: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
     else:
         grid = numpy.zeros((len(y_axis), len(x_axis)), dtype)
 
-    lon, lat = geohash.decode(hashs)
+    lon, lat = geohash.decode(hashes)
     grid[y_axis.find_index(lat), x_axis.find_index(lon)] = data
 
     return xarray.DataArray(

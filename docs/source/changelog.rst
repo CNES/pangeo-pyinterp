@@ -47,7 +47,7 @@ Changelog
 0.9.2 (11 November 2021)
 ------------------------
 * Add boxcar windowed function.
-* Add suport for Python 3.10
+* Add support for Python 3.10
 * Use ravel instead of flatten for numpy arrays.
 
 0.9.1 (30 October 2021)

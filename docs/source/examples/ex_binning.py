@@ -37,7 +37,7 @@ norm = (ds.ud**2 + ds.vd**2)**0.5
 
 # %%
 # Now, we will describe the grid used to calculate our :py:class:`binned
-# <pyinterp.Binning2D>` statics.
+# <pyinterp.Binning2D>` statistics.
 binning = pyinterp.Binning2D(
     pyinterp.Axis(numpy.arange(27, 42, 0.3), is_circle=True),
     pyinterp.Axis(numpy.arange(40, 47, 0.3)))
@@ -57,7 +57,7 @@ binning.push(ds.lon, ds.lat, norm, True)
 #   then the data must be added using the :py:meth:`push_delayed
 #   <pyinterp.Binning2D.push_delayed>` method. This method will return a graph,
 #   which when executed will return a new instance containing the calculated
-#   statics.
+#   statistics.
 #
 #   .. code:: python
 #

@@ -100,7 +100,7 @@ Returns:
           py::arg("coordinates"), R"__doc__(
 For all coordinate positions, search for the axis elements around them. This
 means that for n coordinate ``ix`` of the provided array, the method searches
-the indexes ``i0`` and ``i1`` as fallow:
+the indexes ``i0`` and ``i1`` as follow:
 
 .. code::
 

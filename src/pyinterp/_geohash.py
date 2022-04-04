@@ -14,8 +14,7 @@ from .core import GeoHash as BaseGeoHash, geohash
 
 
 class GeoHash(BaseGeoHash):
-    """
-    Handle GeoHash encoded in base 32.
+    """Handle GeoHash encoded in base 32.
 
     Geohashing is a geocoding method used to encode geographic coordinates
     (latitude and longitude) into a short string of digits and letters
@@ -47,8 +46,7 @@ class GeoHash(BaseGeoHash):
     def grid(cls,
              box: Optional[geodetic.Box] = None,
              precision: int = 1) -> xarray.Dataset:
-        """
-        Return the GeoHash grid covering the provided box.
+        """Return the GeoHash grid covering the provided box.
 
         Args:
             box: Bounding box.
@@ -78,8 +76,7 @@ class GeoHash(BaseGeoHash):
 
     @staticmethod
     def from_string(code: str, round: bool = False) -> "GeoHash":
-        """
-        Create from its string representation.
+        """Create from its string representation.
 
         Args:
             code: Geohash code.

@@ -8,7 +8,7 @@ namespace pyinterp::geodetic {
 
 class NearestPoint {
  public:
-  /// Defaut constructor
+  /// Default constructor
   explicit NearestPoint(const LineString& line_string) {
     size_t ix = 0;
     for (const auto& item : line_string) {

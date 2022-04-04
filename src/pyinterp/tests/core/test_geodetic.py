@@ -15,7 +15,7 @@ from ...core import geodetic
 
 
 def test_system_wgs84():
-    """Checking expected WGS-84 properties"""
+    """Checking expected WGS-84 properties."""
     wgs84 = core.geodetic.System()
     # https://fr.wikipedia.org/wiki/WGS_84
     # https://en.wikipedia.org/wiki/Geodetic_datum
@@ -47,7 +47,7 @@ def test_system_wgs84():
 
 
 def test_system_operators():
-    """Test operators"""
+    """Test operators."""
     wgs84 = core.geodetic.System()
     # https://en.wikipedia.org/wiki/Geodetic_Reference_System_1980
     grs80 = core.geodetic.System(6378137, 1 / 298.257222101)
@@ -58,13 +58,13 @@ def test_system_operators():
 
 
 def test_system_pickle():
-    """Serialization test"""
+    """Serialization test."""
     wgs84 = core.geodetic.System()
     assert wgs84 == pickle.loads(pickle.dumps(wgs84))
 
 
 def test_coordinates_ecef_lla():
-    """ECEF/LLA Conversion Test"""
+    """ECEF/LLA Conversion Test."""
     lon, lat, alt = core.geodetic.Coordinates(None).ecef_to_lla(
         np.array([1176498.769459714]), np.array([5555043.905503586]),
         np.array([2895446.8901510699]))
@@ -74,7 +74,7 @@ def test_coordinates_ecef_lla():
 
 
 def test_coordinates_lla_to_ecef():
-    """LLA/ECEF Conversion Test"""
+    """LLA/ECEF Conversion Test."""
     x, y, z = core.geodetic.Coordinates(None).lla_to_ecef(
         np.array([78.042068]), np.array([27.173891]), np.array([168.0]))
     assert x[0] == pytest.approx(1176498.769459714, abs=1e-8)
@@ -83,7 +83,7 @@ def test_coordinates_lla_to_ecef():
 
 
 def test_coordinates_round_trip():
-    """Check algorithm precision"""
+    """Check algorithm precision."""
     lon1 = np.random.uniform(-180.0, 180.0, 1000000)
     lat1 = np.random.uniform(-90.0, 90.0, 1000000)
     alt1 = np.random.uniform(-10000, 100000, 1000000)
@@ -99,14 +99,14 @@ def test_coordinates_round_trip():
 
 
 def test_coordinates_pickle():
-    """Serialization test"""
+    """Serialization test."""
     a = core.geodetic.Coordinates(None)
     b = pickle.loads(pickle.dumps(a))
     assert np.all(a.__getstate__() == b.__getstate__())
 
 
 def test_point():
-    """Test construction and accessors of the object"""
+    """Test construction and accessors of the object."""
     pt = core.geodetic.Point(12, 24)
     assert pt.lon == 12
     assert pt.lat == 24
@@ -140,7 +140,7 @@ def test_point_distance():
 
 
 def test_point_pickle():
-    """Serialization tests"""
+    """Serialization tests."""
     a = core.geodetic.Point(1, 2)
     b = pickle.loads(pickle.dumps(a))
     assert a.lon == b.lon
@@ -151,7 +151,7 @@ def test_point_pickle():
 
 
 def test_box():
-    """Test construction and accessors of the object"""
+    """Test construction and accessors of the object."""
     min_corner = core.geodetic.Point(0, 1)
     max_corner = core.geodetic.Point(2, 3)
 
@@ -193,7 +193,7 @@ def test_box():
 
 
 def test_box_pickle():
-    """Serialization tests"""
+    """Serialization tests."""
     min_corner = core.geodetic.Point(0, 1)
     max_corner = core.geodetic.Point(2, 3)
     a = core.geodetic.Box(min_corner, max_corner)
@@ -339,7 +339,7 @@ def test_coordinate_distance():
 
 
 def test_crossover():
-    """Calculate the location of a crossover"""
+    """Calculate the location of a crossover."""
     lon1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
     lat1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
     lon2 = np.array(lon1[:])
@@ -361,7 +361,7 @@ def test_crossover():
 
 
 def test_merged_point():
-    """Try to compute a crossover from overlay tracks"""
+    """Try to compute a crossover from overlay tracks."""
     lon1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
     lat1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
 
@@ -381,8 +381,7 @@ def test_merged_point():
 
 
 def test_missing_crossover():
-    """Try to calculate a crossing point when the entry passes do not cross.
-    """
+    """Try to calculate a crossing point when the entry passes do not cross."""
     x1 = np.array([0, 1, 2, 3, 4, 5, 6], dtype=np.float64)
     y1 = np.array([0, 1, 2, 3, 4, 5, 6], dtype=np.float64)
     x2 = np.flip(x1, axis=0)
