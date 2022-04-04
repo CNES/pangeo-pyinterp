@@ -5,7 +5,7 @@ repos:
       - id: check-case-conflict
       - id: check-docstring-first
       - id: check-yaml
-        exclude: conda/meta.yaml
+        exclude: "(conda/meta.yaml|.clang\\-format)$"
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
@@ -46,7 +46,7 @@ repos:
     rev: "v2.1.0"
     hooks:
     - id: codespell
-      exclude: "(cf.py|.*json)$"
+      exclude: "(cf.py|src/.*json)$"
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v13.0.1
     hooks:
