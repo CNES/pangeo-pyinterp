@@ -123,10 +123,10 @@ constexpr auto parzen_swot(const T &d, const T &r, const T & /*unused*/) -> T {
   auto l = 2 * r;
   auto ratio = (2 * d) / l;
   if (d <= l / 4) {
-    return 1 - 6 * std::pow(ratio, 2) + 6 * std::pow(ratio, 3);
+    return static_cast<T>(1 - 6 * std::pow(ratio, 2) + 6 * std::pow(ratio, 3));
   }
   if (d <= l / 2 || d > l / 4) {
-    return 2 * std::pow(1 - ratio, 3);
+    return static_cast<T>(2 * std::pow(1 - ratio, 3));
   }
   return T(0);
 }
