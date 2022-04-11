@@ -42,9 +42,15 @@ OSX_DEPLOYMENT_TARGET = '10.14'
 def build_dirname(extname=None):
     """Returns the name of the build directory."""
     extname = '' if extname is None else os.sep.join(extname.split(".")[:-1])
-    return pathlib.Path(
+    path = pathlib.Path(
         WORKING_DIRECTORY, "build",
         "lib.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR), extname)
+    if path.exists():
+        return path
+    return pathlib.Path(
+        WORKING_DIRECTORY, "build", "lib.%s-%s-%d.%d" %
+        (sysconfig.get_platform(), sys.implementation.cache_tag, MAJOR, MINOR),
+        extname)
 
 
 def execute(cmd):
@@ -371,7 +377,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         # any python sources to bundle, the dirs will be missing
         build_temp = pathlib.Path(WORKING_DIRECTORY, self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
-        extdir = str(build_dirname(ext.name))
+        extdir = str(
+            pathlib.Path(self.get_ext_fullpath(ext.name)).parent.resolve())
 
         cfg = 'Debug' if self.debug or self.CODE_COVERAGE else 'Release'
 
@@ -428,6 +435,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                 cmake_cmd += ['--target', 'core']
             self.spawn(cmake_cmd + build_args)
         os.chdir(str(WORKING_DIRECTORY))
+
+    def finalize_options(self) -> None:
+        return super().finalize_options()
 
 
 class Build(distutils.command.build.build):

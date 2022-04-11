@@ -18,9 +18,15 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 def build_dirname(extname=None):
     """Returns the name of the build directory."""
     extname = '' if extname is None else os.sep.join(extname.split(".")[:-1])
-    return pathlib.Path(
+    path = pathlib.Path(
         WORKING_DIRECTORY, "build",
         "lib.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR), extname)
+    if path.exists():
+        return path
+    return pathlib.Path(
+        WORKING_DIRECTORY, "build", "lib.%s-%s-%d.%d" %
+        (sysconfig.get_platform(), sys.implementation.cache_tag, MAJOR, MINOR),
+        extname)
 
 
 def push_front_syspath():
