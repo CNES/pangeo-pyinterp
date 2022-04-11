@@ -24,8 +24,8 @@ def build_dirname(extname=None):
     if path.exists():
         return path
     return pathlib.Path(
-        WORKING_DIRECTORY, "build", "lib.%s-%s-%d.%d" %
-        (sysconfig.get_platform(), sys.implementation.cache_tag, MAJOR, MINOR),
+        WORKING_DIRECTORY, "build",
+        "lib.%s-%s" % (sysconfig.get_platform(), sys.implementation.cache_tag),
         extname)
 
 

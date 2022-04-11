@@ -48,8 +48,8 @@ def build_dirname(extname=None):
     if path.exists():
         return path
     return pathlib.Path(
-        WORKING_DIRECTORY, "build", "lib.%s-%s-%d.%d" %
-        (sysconfig.get_platform(), sys.implementation.cache_tag, MAJOR, MINOR),
+        WORKING_DIRECTORY, "build",
+        "lib.%s-%s" % (sysconfig.get_platform(), sys.implementation.cache_tag),
         extname)
 
 
@@ -543,13 +543,19 @@ class Test(setuptools.Command):
     @staticmethod
     def tempdir():
         """Gets the build directory of the extension."""
-        return pathlib.Path(
+        path = pathlib.Path(
             WORKING_DIRECTORY, "build",
             "temp.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR))
+        if path.exists():
+            return path
+        return pathlib.Path(
+            WORKING_DIRECTORY, "build", "temp.%s-%s" %
+            (sysconfig.get_platform(), sys.implementation.cache_tag))
 
     def run(self):
         """Run tests."""
         import pytest
+        print(str(build_dirname()))
         sys.path.insert(0, str(build_dirname()))
 
         errno = pytest.main(
