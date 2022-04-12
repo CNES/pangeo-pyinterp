@@ -9,13 +9,13 @@ import pickle
 import numpy as np
 import pytest
 
-from .. import polygon_path
+from .. import multipolygon_path, polygon_path
 from ... import core
 from ...core import geodetic
 
 
 def test_system_wgs84():
-    """Checking expected WGS-84 properties"""
+    """Checking expected WGS-84 properties."""
     wgs84 = core.geodetic.System()
     # https://fr.wikipedia.org/wiki/WGS_84
     # https://en.wikipedia.org/wiki/Geodetic_datum
@@ -47,7 +47,7 @@ def test_system_wgs84():
 
 
 def test_system_operators():
-    """Test operators"""
+    """Test operators."""
     wgs84 = core.geodetic.System()
     # https://en.wikipedia.org/wiki/Geodetic_Reference_System_1980
     grs80 = core.geodetic.System(6378137, 1 / 298.257222101)
@@ -58,13 +58,13 @@ def test_system_operators():
 
 
 def test_system_pickle():
-    """Serialization test"""
+    """Serialization test."""
     wgs84 = core.geodetic.System()
     assert wgs84 == pickle.loads(pickle.dumps(wgs84))
 
 
 def test_coordinates_ecef_lla():
-    """ECEF/LLA Conversion Test"""
+    """ECEF/LLA Conversion Test."""
     lon, lat, alt = core.geodetic.Coordinates(None).ecef_to_lla(
         np.array([1176498.769459714]), np.array([5555043.905503586]),
         np.array([2895446.8901510699]))
@@ -74,7 +74,7 @@ def test_coordinates_ecef_lla():
 
 
 def test_coordinates_lla_to_ecef():
-    """LLA/ECEF Conversion Test"""
+    """LLA/ECEF Conversion Test."""
     x, y, z = core.geodetic.Coordinates(None).lla_to_ecef(
         np.array([78.042068]), np.array([27.173891]), np.array([168.0]))
     assert x[0] == pytest.approx(1176498.769459714, abs=1e-8)
@@ -83,7 +83,7 @@ def test_coordinates_lla_to_ecef():
 
 
 def test_coordinates_round_trip():
-    """Check algorithm precision"""
+    """Check algorithm precision."""
     lon1 = np.random.uniform(-180.0, 180.0, 1000000)
     lat1 = np.random.uniform(-90.0, 90.0, 1000000)
     alt1 = np.random.uniform(-10000, 100000, 1000000)
@@ -99,14 +99,14 @@ def test_coordinates_round_trip():
 
 
 def test_coordinates_pickle():
-    """Serialization test"""
+    """Serialization test."""
     a = core.geodetic.Coordinates(None)
     b = pickle.loads(pickle.dumps(a))
     assert np.all(a.__getstate__() == b.__getstate__())
 
 
 def test_point():
-    """Test construction and accessors of the object"""
+    """Test construction and accessors of the object."""
     pt = core.geodetic.Point(12, 24)
     assert pt.lon == 12
     assert pt.lat == 24
@@ -118,6 +118,7 @@ def test_point():
     assert pt.lat == 33
     point = core.geodetic.Point.read_wkt("POINT(-2 2)")
     assert point.wkt() == "POINT(-2 2)"
+    assert point.to_geojson() == {"type": "Point", "coordinates": [-2, 2]}
 
 
 def test_point_distance():
@@ -139,7 +140,7 @@ def test_point_distance():
 
 
 def test_point_pickle():
-    """Serialization tests"""
+    """Serialization tests."""
     a = core.geodetic.Point(1, 2)
     b = pickle.loads(pickle.dumps(a))
     assert a.lon == b.lon
@@ -150,7 +151,7 @@ def test_point_pickle():
 
 
 def test_box():
-    """Test construction and accessors of the object"""
+    """Test construction and accessors of the object."""
     min_corner = core.geodetic.Point(0, 1)
     max_corner = core.geodetic.Point(2, 3)
 
@@ -180,6 +181,10 @@ def test_box():
     assert box.max_corner.lat == 1
 
     assert box.wkt() == "POLYGON((2 3,2 1,0 1,0 3,2 3))"
+    assert box.to_geojson() == {
+        "type": "Polygon",
+        "coordinates": [[[2, 3], [2, 1], [0, 1], [0, 3], [2, 3]]]
+    }
     box = core.geodetic.Box.read_wkt("POLYGON((2 3,2 1,0 1,0 3,2 3))")
     assert repr(box) == "((2, 3), (0, 1))"
 
@@ -188,7 +193,7 @@ def test_box():
 
 
 def test_box_pickle():
-    """Serialization tests"""
+    """Serialization tests."""
     min_corner = core.geodetic.Point(0, 1)
     max_corner = core.geodetic.Point(2, 3)
     a = core.geodetic.Box(min_corner, max_corner)
@@ -227,6 +232,12 @@ def test_polygon():
         "((1, 1), (4, 1), (4, 4), (1, 4), (1, 1)))"
     assert polygon.wkt() == "POLYGON((0 0,0 5,5 5,5 0,0 0)," \
         "(1 1,4 1,4 4,1 4,1 1))"
+    assert polygon.to_geojson() == {
+        "type":
+        "Polygon",
+        "coordinates": [[[0, 0], [0, 5], [5, 5], [5, 0], [0, 0]],
+                        [[1, 1], [4, 1], [4, 4], [1, 4], [1, 1]]]
+    }
 
 
 def test_polygon_pickle():
@@ -268,6 +279,40 @@ def test_polygon_covered_by():
     assert np.all(mask2 == mask1)
 
 
+def test_multipolygon():
+    with open(multipolygon_path()) as stream:
+        coordinates = json.load(stream)
+
+    polygons = []
+    multipolygon = core.geodetic.MultiPolygon()
+    for points in coordinates:
+        polygon = core.geodetic.Polygon(
+            [core.geodetic.Point(*item) for item in points])
+        polygons.append(polygon)
+        multipolygon.append(polygon)
+    assert len(multipolygon) == len(polygons)
+    assert polygons[1] in multipolygon
+    assert list(multipolygon) == polygons
+    assert isinstance(multipolygon.envelope(), geodetic.Box)
+    assert multipolygon.covered_by(polygons[0].outer[0])
+
+    lon = np.fromiter((item[0] for item in coordinates[0]), dtype="float64")
+    lat = np.fromiter((item[1] for item in coordinates[0]), dtype="float64")
+
+    assert np.all(multipolygon.covered_by(lon, lat) == 1)
+
+    assert multipolygon.distance(multipolygon) == 0
+    assert multipolygon.distance(polygons[-1]) == 0
+    assert multipolygon.distance(polygons[0].outer[0]) == 0
+
+    assert multipolygon.area() != 0
+
+    with pytest.raises(IndexError):
+        multipolygon[len(polygons)]
+
+    assert isinstance(multipolygon.wkt(), str)
+
+
 def test_coordinate_distance():
     lon = np.arange(0, 360, 10)
     lat = np.arange(-90, 90.5, 10)
@@ -294,14 +339,14 @@ def test_coordinate_distance():
 
 
 def test_crossover():
-    """Calculate the location of a crossover"""
+    """Calculate the location of a crossover."""
     lon1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
     lat1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
     lon2 = np.array(lon1[:])
     lat2 = np.array(lat1[::-1])
 
-    crossover = core.geodetic.Crossover(core.geodetic.Linestring(lon1, lat1),
-                                        core.geodetic.Linestring(lon2, lat2))
+    crossover = core.geodetic.Crossover(core.geodetic.LineString(lon1, lat1),
+                                        core.geodetic.LineString(lon2, lat2))
     assert isinstance(crossover, core.geodetic.Crossover)
     assert crossover.exists()
     coordinates = crossover.search()
@@ -316,12 +361,12 @@ def test_crossover():
 
 
 def test_merged_point():
-    """Try to compute a crossover from overlay tracks"""
+    """Try to compute a crossover from overlay tracks."""
     lon1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
     lat1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
 
-    crossover = core.geodetic.Crossover(core.geodetic.Linestring(lon1, lat1),
-                                        core.geodetic.Linestring(lon1, lat1))
+    crossover = core.geodetic.Crossover(core.geodetic.LineString(lon1, lat1),
+                                        core.geodetic.LineString(lon1, lat1))
     assert isinstance(crossover, core.geodetic.Crossover)
     assert crossover.exists()
 
@@ -329,22 +374,21 @@ def test_merged_point():
         crossover.search()
 
     crossover = core.geodetic.Crossover(
-        core.geodetic.Linestring(lon1, lat1),
-        core.geodetic.Linestring(lon1 + 10, lat1 + 10))
+        core.geodetic.LineString(lon1, lat1),
+        core.geodetic.LineString(lon1 + 10, lat1 + 10))
     assert not crossover.exists()
     assert crossover.search() is None
 
 
 def test_missing_crossover():
-    """Try to calculate a crossing point when the entry passes do not cross.
-    """
+    """Try to calculate a crossing point when the entry passes do not cross."""
     x1 = np.array([0, 1, 2, 3, 4, 5, 6], dtype=np.float64)
     y1 = np.array([0, 1, 2, 3, 4, 5, 6], dtype=np.float64)
     x2 = np.flip(x1, axis=0)
     y2 = np.flip(x2, axis=0)
 
-    crossover = core.geodetic.Crossover(core.geodetic.Linestring(x1, y1),
-                                        core.geodetic.Linestring(x2, y2))
+    crossover = core.geodetic.Crossover(core.geodetic.LineString(x1, y1),
+                                        core.geodetic.LineString(x2, y2))
     assert isinstance(crossover, core.geodetic.Crossover)
     assert crossover.exists()
 
@@ -356,8 +400,8 @@ def test_case_crossover_shift():
     lon2 = np.array(lon1[:])
     lat2 = np.array(lat1[::-1])
 
-    crossover = core.geodetic.Crossover(core.geodetic.Linestring(lon1, lat1),
-                                        core.geodetic.Linestring(lon2, lat2))
+    crossover = core.geodetic.Crossover(core.geodetic.LineString(lon1, lat1),
+                                        core.geodetic.LineString(lon2, lat2))
     assert isinstance(crossover, core.geodetic.Crossover)
     assert crossover.exists()
     coordinates = crossover.search()
@@ -365,3 +409,152 @@ def test_case_crossover_shift():
     assert pytest.approx(coordinates.lon) == 15
     assert pytest.approx(coordinates.lat, rel=1e-3) == 1.6551107341906504
     assert crossover.nearest(coordinates, predicate=None) == (2, 1)
+
+
+def test_bbox_from_geojson():
+    """Calculate a bounding box from a geojson coordinate array."""
+    bbox = core.geodetic.Box.from_geojson([100.0, 0.0, 105.0, 1.0])
+    assert bbox.max_corner == core.geodetic.Point(105.0, 1.0)
+    assert bbox.min_corner == core.geodetic.Point(100.0, 0.0)
+
+
+def test_polygon_from_geojson():
+    """Calculate a polygon from a geojson coordinate array."""
+    polygon = core.geodetic.Polygon.from_geojson([
+        [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+    ])
+    assert polygon.outer == geodetic.LineString([
+        core.geodetic.Point(100.0, 0.0),
+        core.geodetic.Point(101.0, 0.0),
+        core.geodetic.Point(101.0, 1.0),
+        core.geodetic.Point(100.0, 1.0),
+        core.geodetic.Point(100.0, 0.0),
+    ])
+    assert polygon.inners == []
+    assert polygon.num_interior_rings() == 0
+
+    coordinates = [
+        [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+        [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]],
+    ]
+    polygon = core.geodetic.Polygon.from_geojson(coordinates)
+    assert polygon.to_geojson() == {
+        'type': 'Polygon',
+        'coordinates': coordinates,
+    }
+    assert polygon.outer == geodetic.LineString([
+        core.geodetic.Point(100.0, 0.0),
+        core.geodetic.Point(101.0, 0.0),
+        core.geodetic.Point(101.0, 1.0),
+        core.geodetic.Point(100.0, 1.0),
+        core.geodetic.Point(100.0, 0.0),
+    ])
+    assert polygon.inners == [
+        geodetic.LineString([
+            core.geodetic.Point(100.2, 0.2),
+            core.geodetic.Point(100.8, 0.2),
+            core.geodetic.Point(100.8, 0.8),
+            core.geodetic.Point(100.2, 0.8),
+            core.geodetic.Point(100.2, 0.2),
+        ])
+    ]
+    assert polygon.num_interior_rings() == 1
+
+
+def test_multipolygon_from_geojson():
+    """Calculate a multi-polygon from a geojson coordinate array."""
+    coordinates = [
+        [
+            [
+                [102.0, 2.0],
+                [103.0, 2.0],
+                [103.0, 3.0],
+                [102.0, 3.0],
+                [102.0, 2.0],
+            ],
+        ],
+        [
+            [
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ],
+            [
+                [100.2, 0.2],
+                [100.8, 0.2],
+                [100.8, 0.8],
+                [100.2, 0.8],
+                [100.2, 0.2],
+            ],
+        ],
+    ]
+    multipolygon = core.geodetic.MultiPolygon.from_geojson(coordinates)
+    assert multipolygon.num_interior_rings() == 1
+    assert multipolygon.to_geojson() == {
+        'type': 'MultiPolygon',
+        'coordinates': coordinates
+    }
+    assert multipolygon[0] == core.geodetic.Polygon([
+        core.geodetic.Point(102.0, 2.0),
+        core.geodetic.Point(103.0, 2.0),
+        core.geodetic.Point(103.0, 3.0),
+        core.geodetic.Point(102.0, 3.0),
+        core.geodetic.Point(102.0, 2.0),
+    ])
+    assert multipolygon[1] == core.geodetic.Polygon([
+        core.geodetic.Point(100.0, 0.0),
+        core.geodetic.Point(101.0, 0.0),
+        core.geodetic.Point(101.0, 1.0),
+        core.geodetic.Point(100.0, 1.0),
+        core.geodetic.Point(100.0, 0.0),
+    ], [[
+        core.geodetic.Point(100.2, 0.2),
+        core.geodetic.Point(100.8, 0.2),
+        core.geodetic.Point(100.8, 0.8),
+        core.geodetic.Point(100.2, 0.8),
+        core.geodetic.Point(100.2, 0.2),
+    ]])
+
+
+def test_union_polygon():
+    a = core.geodetic.Polygon.read_wkt(
+        "POLYGON((2 1.3,2.4 1.7,2.8 1.8,3.4 1.2,3.7 1.6,3.4 2,4.1 3,5.3 2.6,"
+        "5.4 1.2,4.9 0.8,2.9 0.7,2 1.3)(4.0 2.0,4.2 1.4,4.8 1.9,4.4 2.2,"
+        "4.0 2.0))")
+    b = core.geodetic.Polygon.read_wkt(
+        "POLYGON((4.0 -0.5,3.5 1.0,2.0 1.5,3.5 2.0,4.0 3.5,4.5 2.0,6.0 1.5,"
+        "4.5 1.0,4.0 -0.5))")
+    union = a.union(b)
+    assert len(union) == 1
+
+
+def test_linestring():
+    a = core.geodetic.LineString.from_geojson([[1, 2], [2, 3], [3, 4]])
+    assert a.wkt() == "LINESTRING(1 2,2 3,3 4)"
+    assert a == core.geodetic.LineString.read_wkt("LINESTRING(1 2,2 3,3 4)")
+    assert a == pickle.loads(pickle.dumps(a))
+    assert a.to_geojson() == {
+        'type': 'LineString',
+        'coordinates': [[1, 2], [2, 3], [3, 4]],
+    }
+    assert len(a) == 3
+    assert a[0] == core.geodetic.Point(1, 2)
+    assert a[1] == core.geodetic.Point(2, 3)
+    assert a[2] == core.geodetic.Point(3, 4)
+    with pytest.raises(IndexError):
+        a[3]
+    assert list(a) == [
+        core.geodetic.Point(1, 2),
+        core.geodetic.Point(2, 3),
+        core.geodetic.Point(3, 4),
+    ]
+    assert a == core.geodetic.LineString(np.array([1, 2, 3], dtype=float),
+                                         np.array([2, 3, 4], dtype=float))
+    assert a == a.__copy__()
+    b = core.geodetic.LineString()
+    b.append(core.geodetic.Point(1, 2))
+    b.append(core.geodetic.Point(2, 3))
+    b.append(core.geodetic.Point(3, 4))
+    assert a == b

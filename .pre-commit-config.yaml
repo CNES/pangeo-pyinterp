@@ -1,15 +1,17 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: v4.1.0
     hooks:
-      - id: trailing-whitespace
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-yaml
+        exclude: "(conda/meta.yaml|.clang\\-format)$"
+      - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
         args: [--fix=lf]
         exclude: docs/make.bat
-      - id: check-docstring-first
-      - id: check-yaml
-        exclude: conda/meta.yaml
+      - id: trailing-whitespace
   - repo: https://gitlab.com/pycqa/flake8
     rev: 4.0.1
     hooks:
@@ -19,11 +21,33 @@ repos:
     rev: v5.10.1
     hooks:
       - id: isort
+        name: isort (python)
+      - id: isort
+        name: isort (pyi)
+        types: [pyi]
   - repo: https://github.com/pre-commit/mirrors-yapf
     rev: v0.32.0
     hooks:
       - id: yapf
+        files: \.py(?:i)?
+  - repo: https://github.com/myint/docformatter
+    rev: "v1.4"
+    hooks:
+    - id: docformatter
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: "v0.6.13"
+    hooks:
+    - id: cmake-lint
+    - id: cmake-format
+      additional_dependencies: [pyyaml]
+      types: [file]
+      files: CMakeLists.txt
+  - repo: https://github.com/codespell-project/codespell
+    rev: "v2.1.0"
+    hooks:
+    - id: codespell
+      exclude: "(cf.py|src/.*json)$"
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v13.0.0
+    rev: v13.0.1
     hooks:
       - id: clang-format

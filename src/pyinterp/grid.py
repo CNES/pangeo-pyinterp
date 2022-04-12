@@ -86,12 +86,10 @@ class Grid2D:
 
     def __repr__(self):
         """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance.
-        """
+        representation of this instance."""
 
         def pad(string, length):
-            """Pad a string to a given length.
-            """
+            """Pad a string to a given length."""
             return "\n".join([(" " * length if ix else "") + line
                               for ix, line in enumerate(string.split("\n"))])
 
@@ -118,7 +116,7 @@ class Grid2D:
 
     @property
     def y(self) -> core.Axis:
-        """Gets the Y-Axis handled by this instance
+        """Gets the Y-Axis handled by this instance.
 
         Returns:
             Y-Axis.
@@ -174,8 +172,7 @@ class Grid3D(Grid2D):
 
     @property
     def z(self) -> Union[core.Axis, core.TemporalAxis]:
-        """
-        Gets the Z-Axis handled by this instance.
+        """Gets the Z-Axis handled by this instance.
 
         Returns:
             Z-Axis.

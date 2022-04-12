@@ -15,7 +15,7 @@ import sysconfig
 
 
 def directory_type(value):
-    """The option must define a path to a directory"""
+    """The option must define a path to a directory."""
     path = os.path.abspath(value)
     if not os.path.isdir(path):
         raise argparse.ArgumentTypeError('%r is not a directory' % value)
@@ -23,7 +23,7 @@ def directory_type(value):
 
 
 def usage():
-    """Parse arguments"""
+    """Parse arguments."""
     parser = argparse.ArgumentParser(description="Parallel clang-tidy runner")
     parser.add_argument('--include',
                         nargs="+",
@@ -52,7 +52,7 @@ def usage():
 
 
 def run(program, fix, path, options=""):
-    """Launch clang-tidy"""
+    """Launch clang-tidy."""
     args = [
         program, '-checks=-*,boost-*,concurrency-*,modernize-*,'
         'performance-*,clang-analyzer-*,portability-*,'
@@ -75,7 +75,7 @@ def run(program, fix, path, options=""):
 
 
 def main():
-    """Main function"""
+    """Main function."""
     args = usage()
     target = []
 

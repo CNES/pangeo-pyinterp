@@ -53,8 +53,7 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
                  epsilon: float = 1e-4,
                  relaxation: Optional[float] = None,
                  num_threads: int = 0):
-    """
-    Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
+    """Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
     method by relaxation.
 
     Args:

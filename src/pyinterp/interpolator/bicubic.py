@@ -28,10 +28,10 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
 
     Args:
         mesh: Function on a uniform grid to be interpolated. If the grid is a
-            ND grid, the bicubic interpolation is performed spatially along the
-            X and Y axes of the ND grid and a linear interpolation are performed
-            along the other axes between the values obtained by the bicubic
-            interpolation.
+            grid in N-D space, the bicubic interpolation is performed spatially
+            along the X and Y axes of the N-D grid and a linear interpolation
+            are performed along the other axes between the values obtained by
+            the bicubic interpolation.
 
             .. warning::
 

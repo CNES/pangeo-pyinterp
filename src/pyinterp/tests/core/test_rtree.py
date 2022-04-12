@@ -34,7 +34,7 @@ def plot(x, y, z, filename):
 
 
 def load_data(packing=True):
-    """Creating the search tree"""
+    """Creating the search tree."""
     with netCDF4.Dataset(grid2d_path()) as ds:  # type: ignore
         z = ds.variables['mss'][:].T
         z[z.mask] = float("nan")
@@ -59,7 +59,7 @@ def load_data(packing=True):
 
 
 def test_rtree_idw(pytestconfig):
-    """Interpolation test"""
+    """Interpolation test."""
     mesh = load_data()
     lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0, dtype="float32") + 1 / 3.0
@@ -85,7 +85,7 @@ def test_rtree_idw(pytestconfig):
 
 
 def test_rtree_rbf(pytestconfig):
-    """Interpolation test"""
+    """Interpolation test."""
     mesh = load_data()
     lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0, dtype="float32") + 1 / 3.0
@@ -117,7 +117,7 @@ def test_rtree_rbf(pytestconfig):
 
 
 def test_rtree_window_function(pytestconfig):
-    """Interpolation test"""
+    """Interpolation test."""
     mesh = load_data()
     lon = np.arange(-180, 180, 1 / 3.0, dtype="float32") + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0, dtype="float32") + 1 / 3.0
@@ -143,14 +143,14 @@ def test_rtree_window_function(pytestconfig):
 
 
 def test_rtree_insert():
-    """Data insertion test"""
+    """Data insertion test."""
     mesh = load_data(packing=False)
     assert isinstance(mesh, core.RTree3DFloat32)
     assert len(mesh) != 0
 
 
 def test_rtree_query():
-    """Data insertion test"""
+    """Data insertion test."""
     mesh = load_data(packing=True)
     assert len(mesh) != 0
     distances, values = mesh.query(np.vstack((np.array([0]), np.array([0]))).T)
@@ -160,7 +160,7 @@ def test_rtree_query():
 
 
 def test_rtree_pickle():
-    """Serialization test"""
+    """Serialization test."""
     interpolator = load_data()
     other = pickle.loads(pickle.dumps(interpolator))
     assert isinstance(other, core.RTree3DFloat32)

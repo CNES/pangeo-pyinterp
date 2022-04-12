@@ -109,13 +109,39 @@ Raises:
             return geohash::string::bounding_boxes(polygon, precision,
                                                    num_threads);
           },
-          py::arg("box") = py::none(), py::arg("precision") = 1,
+          py::arg("polygon"), py::arg("precision") = 1,
           py::arg("num_threads") = 0,
           R"__doc__(
 Returns all geohash codes contained in the defined polygon.
 
 Args:
     polygon: Polygon.
+    precision: Required accuracy. Defaults to ``1``.
+    num_threads: The number of threads to use for the
+        computation. If 0 all CPUs are used. If 1 is given, no parallel
+        computing code is used at all, which is useful for debugging.
+        Defaults to ``0``.
+Returns:
+    GeoHash codes.
+Raises:
+    ValueError: If the given precision is not within [1, 12].
+    MemoryError: If the memory is not sufficient to store the result.
+)__doc__")
+      .def(
+          "bounding_boxes",
+          [](const geodetic::MultiPolygon &polygons, const uint32_t precision,
+             const size_t num_threads) -> py::array {
+            check_range(precision);
+            return geohash::string::bounding_boxes(polygons, precision,
+                                                   num_threads);
+          },
+          py::arg("polygons"), py::arg("precision") = 1,
+          py::arg("num_threads") = 0,
+          R"__doc__(
+Returns all geohash codes contained in one or more defined polygons.
+
+Args:
+    polygons: MultiPolygon.
     precision: Required accuracy. Defaults to ``1``.
     num_threads: The number of threads to use for the
         computation. If 0 all CPUs are used. If 1 is given, no parallel

@@ -22,7 +22,7 @@ template <typename T, typename U>
 using z_method_t =
     std::function<U(const T &, const T &, const T &, const U &, const U &)>;
 
-/// Get the fonction used to perform the interpolation on the Z-Axis
+/// Get the function used to perform the interpolation on the Z-Axis
 template <template <class> class Point = geometry::TemporalEquatorial2D,
           typename T>
 constexpr auto get_z_method(
@@ -37,7 +37,7 @@ constexpr auto get_z_method(
   }
 }
 
-/// Get the fonction used to perform the interpolation on the Z-Axis
+/// Get the function used to perform the interpolation on the Z-Axis
 template <template <class> class Point, typename T>
 constexpr auto get_z_method(const Bivariate<Point, T> * /*unused*/,
                             const ZMethod method) -> z_method_t<T, T> {
@@ -50,7 +50,7 @@ constexpr auto get_z_method(const Bivariate<Point, T> * /*unused*/,
   }
 }
 
-/// Get the fonction used to perform the interpolation on the Z-Axis
+/// Get the function used to perform the interpolation on the Z-Axis
 template <template <class> class Point, typename T>
 constexpr auto get_z_interpolation_method(
     const Bivariate<Point, T> *interpolator, const std::string &method) {

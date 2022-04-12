@@ -1,6 +1,18 @@
 Changelog
 #########
 
+0.14.0 (12 April 2022)
+----------------------
+* Add a Gaussian filter function to window functions.
+* Select GeoHash contained in a multi-polygon.
+* Construct Geodetic objects from GeoJSON.
+* Addition of geodetic algorithms.
+* Implement the shallow copy operation.
+* Fixes lint/compiler warnings.
+* Refactor RTree class.
+* Refactor Crossovers/Linestrings class.
+* Update the building system.
+
 0.13.0 (11 March 2022)
 ----------------------
 * One-dimensional binning.
@@ -47,7 +59,7 @@ Changelog
 0.9.2 (11 November 2021)
 ------------------------
 * Add boxcar windowed function.
-* Add suport for Python 3.10
+* Add support for Python 3.10
 * Use ravel instead of flatten for numpy arrays.
 
 0.9.1 (30 October 2021)

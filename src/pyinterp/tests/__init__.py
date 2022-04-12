@@ -26,48 +26,53 @@ def make_or_compare_reference(filename: str, values: numpy.ndarray,
 
 
 def grid2d_path():
-    """Return path to the Grid 2D"""
+    """Return path to the Grid 2D."""
     return ROOT.joinpath("mss.nc")
 
 
 def aoml_path():
-    """Return path to the AOML dataset"""
+    """Return path to the AOML dataset."""
     return ROOT.joinpath("aoml_v2019.nc")
 
 
 def positions_path():
-    """Return path to the ARGO positions"""
+    """Return path to the ARGO positions."""
     return ROOT.joinpath("positions.csv")
 
 
 def grid3d_path():
-    """Return path to the Grid 3D"""
+    """Return path to the Grid 3D."""
     return ROOT.joinpath("tcw.nc")
 
 
 def grid4d_path():
-    """Return path to the Grid 4D"""
+    """Return path to the Grid 4D."""
     return ROOT.joinpath("pres_temp_4D.nc")
 
 
 def geohash_bbox_path():
-    """Return path to the GeoHash bounding box"""
+    """Return path to the GeoHash bounding box."""
     return ROOT.joinpath("geohash_bbox.json")
 
 
 def geohash_neighbors_path():
-    """Return path to the GeoHash neighbors"""
+    """Return path to the GeoHash neighbors."""
     return ROOT.joinpath("geohash_neighbors.json")
 
 
 def geohash_path():
-    """Return path to the GeoHash dataset"""
+    """Return path to the GeoHash dataset."""
     return ROOT.joinpath("geohash.json")
 
 
 def polygon_path():
-    """Return path to the polygon dataset"""
+    """Return path to the polygon dataset."""
     return ROOT.joinpath("polygon.json")
+
+
+def multipolygon_path():
+    """Return path to the polygon dataset."""
+    return ROOT.joinpath("multipolygon.json")
 
 
 def run(pattern: Optional[str] = None) -> None:

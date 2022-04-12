@@ -12,7 +12,6 @@
 #include <tuple>
 
 #include "pyinterp/detail/broadcast.hpp"
-#include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/math.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/algorithm.hpp"
@@ -37,35 +36,18 @@ class Box : public boost::geometry::model::box<Point> {
   Box(const Point &min_corner, const Point &max_corner)
       : boost::geometry::model::box<Point>(min_corner, max_corner) {}
 
+  /// Build a new box from a GeoJSON box.
+  static auto from_geojson(const pybind11::list &data) -> Box {
+    if (data.size() != 4) {
+      throw std::invalid_argument("Box must be a list of 4 elements");
+    }
+    return {Point(data[0].cast<double>(), data[1].cast<double>()),
+            Point(data[2].cast<double>(), data[3].cast<double>())};
+  }
+
   /// @brief Returns the box covering the whole earth.
   [[nodiscard]] static auto whole_earth() -> Box {
     return {{-180, -90}, {180, 90}};
-  }
-
-  /// Normalize the longitude coordinate of the box in the range [-180,
-  /// 180]
-  [[nodiscard]] auto normalize() const -> Box {
-    auto result = *this;
-    auto _normalize = [](const double x) -> double {
-      return x > 180.0 ? detail::math::normalize_angle(x, -180.0, 360.0) : x;
-    };
-    result.min_corner().set<0>(_normalize(result.min_corner().get<0>()));
-    result.max_corner().set<0>(_normalize(result.max_corner().get<0>()));
-    return result;
-  }
-
-  // Returns the box, or the two boxes on either side of the dateline if the
-  // defined box wraps around the globe (i.e. the longitude of the min corner
-  // is greater than the longitude of the max corner.)
-  [[nodiscard]] auto split() const -> std::list<Box> {
-    // box wraps around the globe ?
-    if (this->min_corner().lon() > this->max_corner().lon()) {
-      return {Box({this->min_corner().lon(), this->min_corner().lat()},
-                  {180, this->max_corner().lat()}),
-              Box({-180, this->min_corner().lat()},
-                  {this->max_corner().lon(), this->max_corner().lat()})};
-    }
-    return {*this};
   }
 
   /// @brief Returns the center of the box.
@@ -156,6 +138,9 @@ class Box : public boost::geometry::model::box<Point> {
 
   /// Converts this instance into a polygon
   explicit operator Polygon() const;
+
+  /// Returns a GeoJSON representation of this instance.
+  [[nodiscard]] auto to_geojson() const -> pybind11::dict;
 
  private:
   // Returns the maximum power of 10 from a number (x > 0)

@@ -1,9 +1,9 @@
 from typing import Optional, Tuple, overload
 
 import numpy
+
 from . import int64
 from .. import geodetic
-
 
 def area(hash: numpy.ndarray,
          wgs: Optional[geodetic.System] = ...) -> numpy.ndarray[numpy.float64]:
@@ -17,7 +17,14 @@ def bounding_boxes(box: Optional[geodetic.Box] = ...,
 
 
 @overload
-def bounding_boxes(box: geodetic.Polygon = ...,
+def bounding_boxes(polygon: geodetic.Polygon,
+                   precision: int = ...,
+                   num_threads: int = ...) -> numpy.ndarray:
+    ...
+
+
+@overload
+def bounding_boxes(polygons: geodetic.MultiPolygon,
                    precision: int = ...,
                    num_threads: int = ...) -> numpy.ndarray:
     ...

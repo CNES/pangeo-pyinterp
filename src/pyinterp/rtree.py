@@ -56,8 +56,7 @@ class RTree:
         return self._instance.bounds()
 
     def clear(self) -> None:
-        """Removes all values stored in the container.
-        """
+        """Removes all values stored in the container."""
         return self._instance.clear()
 
     def __len__(self):
@@ -175,8 +174,8 @@ class RTree:
             smooth: Optional[float] = 0,
             within: Optional[bool] = True,
             num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
-        """Interpolation of the value at the requested position by radial
-        basis function interpolation.
+        """Interpolation of the value at the requested position by radial basis
+        function interpolation.
 
         Args:
             coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
@@ -289,6 +288,8 @@ class RTree:
                   sinc(\\frac{d}{r}) \\times sinc(\\frac{d}{arg \\times r}),
                   & d \\le arg \\times r \\\\ 0,
                   & d \\gt arg \\times r \\end{array} \\right\\}`
+                * ``gaussian``: :math:`w(d) = e^{ -\\frac{1}{2}\\left(
+                  \\frac{d}{\\sigma}\\right)^2 }`
                 * ``hamming``: :math:`w(d) = 0.53836 - 0.46164
                   \\cos(\\frac{\\pi (d + r)}{r})`
                 * ``nuttall``: :math:`w(d) = 0.3635819 - 0.4891775
@@ -328,6 +329,7 @@ class RTree:
                 "blackman_harris",
                 "boxcar",
                 "flattop",
+                "gaussian",
                 "hamming",
                 "lanczos",
                 "nuttall",
@@ -336,9 +338,9 @@ class RTree:
         ]:
             raise ValueError(f"Window function {wf!r} is not defined")
 
-        if wf in ["lanczos", "parzen"]:
+        if wf in ["gaussian", "lanczos", "parzen"]:
             if arg is None:
-                defaults = dict(lanczos=1, parzen=0)
+                defaults = dict(gaussian=None, lanczos=1, parzen=0)
                 arg = defaults[wf]
 
             if wf == "lanczos" and arg < 1:  # type: ignore
@@ -350,6 +352,11 @@ class RTree:
                 raise ValueError(
                     f"The argument of the function {wf!r} must be "
                     "greater than 0")
+
+            if wf == "gaussian" and arg is None:
+                raise ValueError(
+                    f"The argument of the function {wf!r} must be "
+                    "specified")
         else:
             if arg is not None:
                 raise ValueError(f"The function {wf!r} does not support the "

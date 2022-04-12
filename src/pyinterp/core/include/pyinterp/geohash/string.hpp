@@ -15,6 +15,7 @@
 
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/box.hpp"
+#include "pyinterp/geodetic/multipolygon.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
 
@@ -112,6 +113,10 @@ auto encode(const geodetic::Point &point, char *buffer, uint32_t precision)
                                   uint32_t precision) -> pybind11::array;
 
 [[nodiscard]] auto bounding_boxes(const geodetic::Polygon &polygon,
+                                  uint32_t precision, size_t num_threads)
+    -> pybind11::array;
+
+[[nodiscard]] auto bounding_boxes(const geodetic::MultiPolygon &polygons,
                                   uint32_t precision, size_t num_threads)
     -> pybind11::array;
 

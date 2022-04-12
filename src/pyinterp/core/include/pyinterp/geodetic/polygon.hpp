@@ -7,32 +7,39 @@
 #include <pybind11/numpy.h>
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <boost/geometry.hpp>
 #include <string>
 
 #include "pyinterp/geodetic/algorithm.hpp"
+#include "pyinterp/geodetic/line_string.hpp"
 #include "pyinterp/geodetic/point.hpp"
 
 namespace pyinterp::geodetic {
 
 /// Forward declaration
 class Box;
+class MultiPolygon;
 
 class Polygon : public boost::geometry::model::polygon<Point> {
  public:
   using Base = boost::geometry::model::polygon<Point>;
   using Base::polygon;
 
+  /// Default constructor
+  Polygon() = default;
+
   /// Create a new instance from Python
   Polygon(const pybind11::list &outer, const pybind11::list &inners);
 
-  /// Returns the outer ring
-  [[nodiscard]] auto outer() const -> pybind11::list {
-    auto outer = pybind11::list();
+  /// Create a new instance from a GeoJSON polygon
+  static auto from_geojson(const pybind11::list &data) -> Polygon;
 
-    for (const auto &item : Base::outer()) {
-      outer.append(item);
-    }
+  /// Returns the outer ring
+  [[nodiscard]] auto outer() const -> LineString {
+    auto outer = LineString();
+    std::copy(Base::outer().begin(), Base::outer().end(),
+              std::back_inserter(outer));
     return outer;
   }
 
@@ -41,10 +48,8 @@ class Polygon : public boost::geometry::model::polygon<Point> {
     auto inners = pybind11::list();
 
     for (const auto &inner : Base::inners()) {
-      auto buffer = pybind11::list();
-      for (const auto &item : inner) {
-        buffer.append(item);
-      }
+      auto buffer = LineString();
+      std::copy(inner.begin(), inner.end(), std::back_inserter(buffer));
       inners.append(buffer);
     }
     return inners;
@@ -53,9 +58,9 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   /// Calculates the envelope of this polygon.
   [[nodiscard]] auto envelope() const -> Box;
 
-  /// Get a tuple that fully encodes the state of this instance
-  [[nodiscard]] auto getstate() const -> pybind11::tuple {
-    return pybind11::make_tuple(this->outer(), this->inners());
+  /// Returns the number of inner rings
+  [[nodiscard]] auto num_interior_rings() const -> std::size_t {
+    return boost::geometry::num_interior_rings(*this);
   }
 
   /// Calculate the area
@@ -71,15 +76,6 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   /// Calculate the distance between this instance and a point
   [[nodiscard]] auto distance(const Point &other) const -> double {
     return geodetic::distance(*this, other);
-  }
-
-  /// Create a new instance from a registered state of an instance of this
-  /// object.
-  static auto setstate(const pybind11::tuple &state) -> Polygon {
-    if (state.size() != 2) {
-      throw std::runtime_error("invalid state");
-    }
-    return {state[0].cast<pybind11::list>(), state[1].cast<pybind11::list>()};
   }
 
   /// @brief Test if the given point is inside or on border of this instance
@@ -110,6 +106,42 @@ class Polygon : public boost::geometry::model::polygon<Point> {
     std::stringstream ss;
     ss << boost::geometry::dsv(*this);
     return ss.str();
+  }
+
+  /// Returns the GEOJSon coordinates of this instance.
+  [[nodiscard]] auto coordinates() const -> pybind11::list;
+
+  /// Returns a GeoJSON representation of this instance.
+  [[nodiscard]] auto to_geojson() const -> pybind11::dict;
+
+  /// Combines this instance with another one.
+  [[nodiscard]] auto union_(const Polygon &other) const -> MultiPolygon;
+
+  /// Calculates the intersection between this instance and another one.
+  [[nodiscard]] auto intersection(const Polygon &other) const -> MultiPolygon;
+
+  /// Checks if this polygon intersects with another one.
+  [[nodiscard]] auto intersects(const Polygon &other) const -> bool {
+    return boost::geometry::intersects(*this, other);
+  }
+
+  /// Checks if this polygon touches another one.
+  [[nodiscard]] auto touches(const Polygon &other) const -> bool {
+    return boost::geometry::touches(*this, other);
+  }
+
+  /// Get a tuple that fully encodes the state of this instance
+  [[nodiscard]] auto getstate() const -> pybind11::tuple {
+    return pybind11::make_tuple(this->coordinates());
+  }
+
+  /// Create a new instance from a registered state of an instance of this
+  /// object.
+  static auto setstate(const pybind11::tuple &state) -> Polygon {
+    if (state.size() != 1) {
+      throw std::runtime_error("invalid state");
+    }
+    return Polygon::from_geojson(state[0].cast<pybind11::list>());
   }
 };
 

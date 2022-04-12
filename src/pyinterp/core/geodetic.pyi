@@ -1,9 +1,17 @@
-from typing import Any, ClassVar, Iterator, Optional, Tuple, overload
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    overload,
+)
 
 import numpy
 
 from .. import geodetic
-
 
 class Box:
     __hash__: ClassVar[None] = ...
@@ -19,6 +27,9 @@ class Box:
         ...
 
     def area(self, wgs: Optional[System] = ...) -> float:
+        ...
+
+    def as_polygon(self, *args, **kwargs) -> Any:
         ...
 
     def centroid(self) -> Point:
@@ -44,7 +55,14 @@ class Box:
         ...
 
     @staticmethod
+    def from_geojson(array: List[float]) -> Box:
+        ...
+
+    @staticmethod
     def read_wkt(wkt: str) -> Box:
+        ...
+
+    def to_geojson(self) -> Dict[str, Any]:
         ...
 
     @staticmethod
@@ -52,6 +70,9 @@ class Box:
         ...
 
     def wkt(self) -> str:
+        ...
+
+    def __copy__(self) -> Box:
         ...
 
     def __eq__(self, other: Box) -> bool:
@@ -63,11 +84,12 @@ class Box:
     def __ne__(self, other: Box) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
 class Coordinates:
+
     def __init__(self, system: Optional[System] = None) -> None:
         ...
 
@@ -96,7 +118,7 @@ class Coordinates:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -105,8 +127,9 @@ class Coordinates:
 
 
 class Crossover:
-    def __init__(self, half_orbit_1: Linestring,
-                 half_orbit_2: Linestring) -> None:
+
+    def __init__(self, half_orbit_1: LineString,
+                 half_orbit_2: LineString) -> None:
         ...
 
     def exists(self) -> bool:
@@ -129,26 +152,57 @@ class Crossover:
         ...
 
     @property
-    def half_orbit_1(self) -> Linestring:
+    def half_orbit_1(self) -> LineString:
         ...
 
     @property
-    def half_orbit_2(self) -> Linestring:
+    def half_orbit_2(self) -> LineString:
         ...
 
 
-class Linestring:
+class LineString:
+    __hash__: ClassVar[None] = ...
+
+    @overload
+    def __init__(self) -> None:
+        ...
+
+    @overload
+    def __init__(self, points: list) -> None:
+        ...
+
+    @overload
     def __init__(self, lon: numpy.ndarray[numpy.float64],
                  lat: numpy.ndarray[numpy.float64]) -> None:
         ...
 
-    def intersection(self, rhs: Linestring) -> Optional[Point]:
+    def append(self, point: Point) -> None:
         ...
 
-    def intersects(self, rhs: Linestring) -> bool:
+    @staticmethod
+    def from_geojson(array: List[List[float]]) -> LineString:
         ...
 
-    def nearest(self, point: Point) -> int:
+    def intersection(self, rhs: LineString) -> Optional[Point]:
+        ...
+
+    def intersects(self, rhs: LineString) -> bool:
+        ...
+
+    @staticmethod
+    def read_wkt(wkt: str) -> LineString:
+        ...
+
+    def to_geojson(self) -> Dict[str, Any]:
+        ...
+
+    def wkt(self) -> str:
+        ...
+
+    def __copy__(self) -> LineString:
+        ...
+
+    def __eq__(self, other: LineString) -> bool:
         ...
 
     def __getitem__(self, index: int) -> Point:
@@ -161,6 +215,135 @@ class Linestring:
         ...
 
     def __len__(self) -> int:
+        ...
+
+    def __ne__(self, other: LineString) -> bool:
+        ...
+
+    def __setstate__(self, state: tuple) -> None:
+        ...
+
+
+class MultiPolygon:
+    __hash__: ClassVar[None] = ...
+
+    @overload
+    def __init__(self) -> None:
+        ...
+
+    @overload
+    def __init__(self, polygons: list) -> None:
+        ...
+
+    def append(self, polygon: Polygon) -> None:
+        ...
+
+    def area(self, wgs: Optional[System] = None) -> float:
+        ...
+
+    @overload
+    def covered_by(self, point: Point) -> bool:
+        ...
+
+    @overload
+    def covered_by(self,
+                   lon: numpy.ndarray[numpy.float64],
+                   lat: numpy.ndarray[numpy.float64],
+                   num_threads: int = ...) -> numpy.ndarray[numpy.int8]:
+        ...
+
+    @overload
+    def distance(self, other: MultiPolygon) -> float:
+        ...
+
+    @overload
+    def distance(self, other: Polygon) -> float:
+        ...
+
+    @overload
+    def distance(self, point: Point) -> float:
+        ...
+
+    def envelope(self) -> Box:
+        ...
+
+    @staticmethod
+    def from_geojson(array: List[List[List[List[float]]]]) -> MultiPolygon:
+        ...
+
+    @overload
+    def intersection(self, other: Polygon) -> MultiPolygon:
+        ...
+
+    @overload
+    def intersection(self, other: MultiPolygon) -> MultiPolygon:
+        ...
+
+    @overload
+    def intersects(self, other: Polygon) -> bool:
+        ...
+
+    @overload
+    def intersects(self, other: MultiPolygon) -> bool:
+        ...
+
+    def num_interior_rings(self) -> int:
+        ...
+
+    @staticmethod
+    def read_wkt(wkt: str) -> MultiPolygon:
+        ...
+
+    def to_geojson(self) -> Dict[str, Any]:
+        ...
+
+    @overload
+    def touches(self, other: Polygon) -> bool:
+        ...
+
+    @overload
+    def touches(self, other: MultiPolygon) -> bool:
+        ...
+
+    @overload
+    def union(self, other: Polygon) -> MultiPolygon:
+        ...
+
+    @overload
+    def union(self, other: MultiPolygon) -> MultiPolygon:
+        ...
+
+    def wkt(self) -> str:
+        ...
+
+    def __add__(self, other: MultiPolygon) -> MultiPolygon:
+        ...
+
+    def __contains__(self, polygon: Polygon) -> bool:
+        ...
+
+    def __copy__(self) -> MultiPolygon:
+        ...
+
+    def __eq__(self, other: MultiPolygon) -> bool:
+        ...
+
+    def __getitem__(self, index: int) -> Polygon:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __iadd__(self, other: MultiPolygon) -> MultiPolygon:
+        ...
+
+    def __iter__(self) -> Iterator:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __ne__(self, other: MultiPolygon) -> bool:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -190,7 +373,13 @@ class Point:
     def read_wkt(wkt: str) -> Point:
         ...
 
+    def to_geojson(self) -> Dict[str, Any]:
+        ...
+
     def wkt(self) -> str:
+        ...
+
+    def __copy__(self) -> Point:
         ...
 
     def __eq__(self, other: Point) -> bool:
@@ -202,7 +391,7 @@ class Point:
     def __ne__(self, other: Point) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -238,10 +427,35 @@ class Polygon:
         ...
 
     @staticmethod
+    def from_geojson(array: List[List[List[float]]]) -> Polygon:
+        ...
+
+    def intersection(self, *args, **kwargs) -> Any:
+        ...
+
+    def intersects(self, other: Polygon) -> bool:
+        ...
+
+    def num_interior_rings(self) -> int:
+        ...
+
+    @staticmethod
     def read_wkt(wkt: str) -> Polygon:
         ...
 
+    def to_geojson(self) -> Dict[str, Any]:
+        ...
+
+    def touches(self, other: Polygon) -> bool:
+        ...
+
+    def union(self, *args, **kwargs) -> Any:
+        ...
+
     def wkt(self) -> str:
+        ...
+
+    def __copy__(self) -> Polygon:
         ...
 
     def __eq__(self, other: Polygon) -> bool:
@@ -253,15 +467,15 @@ class Polygon:
     def __ne__(self, other: Polygon) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
-    def inners(self) -> list:
+    def inners(self) -> List[LineString]:
         ...
 
     @property
-    def outer(self) -> list:
+    def outer(self) -> LineString:
         ...
 
 
@@ -318,7 +532,7 @@ class System(_System):
     def __ne__(self, other: _System) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -331,6 +545,7 @@ class System(_System):
 
 
 class _System:
+
     def __init__(self, *args, **kwargs) -> None:
         ...
 

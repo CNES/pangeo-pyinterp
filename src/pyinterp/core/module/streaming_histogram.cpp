@@ -83,7 +83,7 @@ Returns:
     Minimum of samples.
       )__doc__")
       .def("quantile", &pyinterp::StreamingHistogram<Type>::quantile,
-           py::arg("q") = Type(0.5),
+           py::arg("q") = static_cast<Type>(0.5),
            R"__doc__(
 Returns the quantile of samples.
 
@@ -123,6 +123,13 @@ Returns the variance of samples.
 Returns:
     Variance of samples.
       )__doc__")
+      .def(
+          "__copy__",
+          [](const pyinterp::StreamingHistogram<Type> &self) {
+            return pyinterp::StreamingHistogram<Type>(self);
+          },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
       .def("__iadd__", &pyinterp::StreamingHistogram<Type>::operator+=,
            py::arg("other"),
            "Overrides the default behavior of the ``+=`` operator.",

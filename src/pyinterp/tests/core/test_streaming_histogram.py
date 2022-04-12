@@ -41,7 +41,7 @@ def test_empty_container():
 
 
 def test_flatten():
-    """Test the calculation of statistics on a vector"""
+    """Test the calculation of statistics on a vector."""
     values = np.random.random_sample(1000)
     ds = core.StreamingHistogramFloat64(values, bin_count=1000)
 
@@ -153,7 +153,7 @@ def test_weighted():
 
 
 def test_axis():
-    """Test axes along which the statistics are computed"""
+    """Test axes along which the statistics are computed."""
     values = np.random.random_sample((2, 3, 4, 5, 6, 7))
 
     def check_axis(values, axis):

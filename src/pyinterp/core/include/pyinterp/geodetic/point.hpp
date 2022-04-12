@@ -6,6 +6,7 @@
 #include <pybind11/pybind11.h>
 
 #include <boost/geometry/geometries/register/point.hpp>
+#include <limits>
 #include <set>
 #include <string>
 
@@ -19,11 +20,38 @@ namespace pyinterp::geodetic {
 class Point : public detail::geometry::GeographicPoint2D<double> {
  public:
   /// Default constructor
-  Point() noexcept = default;
+  Point() noexcept
+      : detail::geometry::GeographicPoint2D<double>(
+            std::numeric_limits<double>::quiet_NaN(),
+            std::numeric_limits<double>::quiet_NaN()) {}
 
   /// Build a new point with the coordinates provided.
   Point(const double lon, const double lat)
       : detail::geometry::GeographicPoint2D<double>(lon, lat) {}
+
+  /// Build a new point from a GeoJSON point.
+  static auto from_geojson(const pybind11::list &data) -> Point {
+    if (data.size() != 2) {
+      throw std::invalid_argument("Point must be a list of 2 elements");
+    }
+    return {data[0].cast<double>(), data[1].cast<double>()};
+  }
+
+  /// Returns the GEOJSon coordinates of the point.
+  [[nodiscard]] auto coordinates() const -> pybind11::list {
+    auto result = pybind11::list();
+    result.append(this->lon());
+    result.append(this->lat());
+    return result;
+  }
+
+  /// Returns a GeoJSON representation of this instance.
+  [[nodiscard]] auto to_geojson() const -> pybind11::dict {
+    auto result = pybind11::dict();
+    result["type"] = "Point";
+    result["coordinates"] = coordinates();
+    return result;
+  }
 
   /// Get longitude value in degrees
   [[nodiscard]] inline auto lon() const -> double { return this->get<0>(); }

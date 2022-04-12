@@ -13,33 +13,34 @@
 #include <utility>
 #include <vector>
 
-#include "pyinterp/detail/geometry/box.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math/radial_basis_functions.hpp"
 #include "pyinterp/detail/math/window_functions.hpp"
 
 namespace pyinterp::detail::geometry {
 
-/// Index points in the Cartesian space at N dimensions.
+/// Index points.
 ///
-/// @tparam CoordinateType The class of storage for a point's coordinates.
-/// @tparam Type The type of data stored in the tree.
-/// @tparam N Number of dimensions in the Cartesian space handled.
-template <typename CoordinateType, typename Type, size_t N>
+/// @tparam Point point type
+/// @tparam Type of value associated to each point
+template <typename Point, typename Type>
 class RTree {
  public:
-  /// Type of the point handled by this instance.
-  using point_t = geometry::PointND<CoordinateType, N>;
+  using dimension_t = typename boost::geometry::traits::dimension<Point>;
 
-  /// Type of distances between two points.
-  using distance_t = typename boost::geometry::default_distance_result<
-      point_t, geometry::PointND<CoordinateType, N>>::type;
+  /// Type of point coordinates.
+  using coordinate_t =
+      typename boost::geometry::traits::coordinate_type<Point>::type;
+
+  /// Type of distance function
+  using distance_t =
+      typename boost::geometry::default_distance_result<Point, Point>::type;
 
   /// Type of query results.
   using result_t = std::pair<distance_t, Type>;
 
   /// Value handled by this object
-  using value_t = std::pair<point_t, Type>;
+  using value_t = std::pair<Point, Type>;
 
   /// Spatial index used
   using rtree_t =
@@ -47,7 +48,7 @@ class RTree {
 
   /// Type of the implicit conversion between the type of coordinates and values
   using promotion_t =
-      decltype(std::declval<CoordinateType>() + std::declval<Type>());
+      decltype(std::declval<coordinate_t>() + std::declval<Type>());
 
   /// Default constructor
   RTree() : tree_(new rtree_t{}) {}
@@ -72,7 +73,7 @@ class RTree {
   /// @returns The box able to contain all values stored in the container or an
   /// invalid box if there are no values in the container.
   virtual inline auto bounds() const
-      -> std::optional<geometry::BoxND<CoordinateType, N>> {
+      -> std::optional<boost::geometry::model::box<Point>> {
     if (empty()) {
       return {};
     }
@@ -110,7 +111,7 @@ class RTree {
   /// @param point Point of interest
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors:
-  auto query(const point_t &point, const uint32_t k) const
+  auto query(const Point &point, const uint32_t k) const
       -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     std::for_each(
@@ -127,7 +128,7 @@ class RTree {
   /// @param point Point of interest
   /// @param radius distance within which neighbors are returned
   /// @return the k nearest neighbors
-  auto query_ball(const point_t &point, const distance_t radius) const
+  auto query_ball(const Point &point, const coordinate_t radius) const
       -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     std::for_each(
@@ -147,10 +148,10 @@ class RTree {
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors if the point is within by its
   /// neighbors.
-  auto query_within(const point_t &point, const uint32_t k) const
+  auto query_within(const Point &point, const uint32_t k) const
       -> std::vector<result_t> {
     auto result = std::vector<result_t>();
-    auto points = boost::geometry::model::multi_point<point_t>();
+    auto points = boost::geometry::model::multi_point<Point>();
     points.reserve(k);
 
     std::for_each(
@@ -164,7 +165,7 @@ class RTree {
     // Are found points located around the requested point?
     if (!boost::geometry::covered_by(
             point, boost::geometry::return_envelope<
-                       boost::geometry::model::box<point_t>>(points))) {
+                       boost::geometry::model::box<Point>>(points))) {
       return {};
     }
     return result;
@@ -172,7 +173,7 @@ class RTree {
 
   /// Interpolation of the value at the requested position.
   ///
-  /// @param point Point of interrest
+  /// @param point Point of interest
   /// @param radius The maximum radius of the search.
   /// @param k The number of nearest neighbors to be used for calculating the
   /// interpolated value.
@@ -182,11 +183,11 @@ class RTree {
   /// ensures that the calculated values will not be extrapolated.
   /// @return a tuple containing the interpolated value and the number of
   /// neighbors used in the calculation.
-  auto inverse_distance_weighting(const point_t &point, distance_t radius,
+  auto inverse_distance_weighting(const Point &point, coordinate_t radius,
                                   uint32_t k, uint32_t p, bool within) const
-      -> std::pair<distance_t, uint32_t> {
-    distance_t result = 0;
-    distance_t total_weight = 0;
+      -> std::pair<coordinate_t, uint32_t> {
+    coordinate_t result = 0;
+    coordinate_t total_weight = 0;
 
     // We're looking for the nearest k points.
     auto nearest = within ? query_within(point, k) : query(point, k);
@@ -216,9 +217,10 @@ class RTree {
     // Finally the interpolated value is returned if there are selected points
     // otherwise one returns an undefined value.
     return total_weight != 0
-               ? std::make_pair(static_cast<distance_t>(result / total_weight),
-                                neighbors)
-               : std::make_pair(std::numeric_limits<distance_t>::quiet_NaN(),
+               ? std::make_pair(
+                     static_cast<coordinate_t>(result / total_weight),
+                     neighbors)
+               : std::make_pair(std::numeric_limits<coordinate_t>::quiet_NaN(),
                                 static_cast<uint32_t>(0));
   }
 
@@ -231,10 +233,10 @@ class RTree {
   /// @return A tuple containing the matrix describing the coordinates of the
   /// selected points and a vector of the values of the points. The arrays will
   /// be empty if no points are selected.
-  auto nearest(const point_t &point, const distance_t radius,
+  auto nearest(const Point &point, const coordinate_t radius,
                const uint32_t k) const
       -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
-    auto coordinates = Matrix<promotion_t>(N, k);
+    auto coordinates = Matrix<promotion_t>(dimension_t::value, k);
     auto values = Vector<promotion_t>(k);
     auto jx = 0U;
 
@@ -244,7 +246,7 @@ class RTree {
           if (boost::geometry::distance(point, item.first) <= radius) {
             // If the point is not too far away, it is inserted and
             // its coordinates and value are stored.
-            for (size_t ix = 0; ix < N; ++ix) {
+            for (size_t ix = 0; ix < dimension_t::value; ++ix) {
               coordinates(ix, jx) = geometry::point::get(item.first, ix);
             }
             values(jx++) = item.second;
@@ -253,7 +255,7 @@ class RTree {
 
     // The arrays are resized according to the number of selected points. This
     // number can be zero.
-    coordinates.conservativeResize(N, jx);
+    coordinates.conservativeResize(dimension_t::value, jx);
     values.conservativeResize(jx);
     return std::make_tuple(coordinates, values);
   }
@@ -267,11 +269,11 @@ class RTree {
   /// @return A tuple containing the matrix describing the coordinates of the
   /// selected points and a vector of the values of the points. The arrays will
   /// be empty if no points are selected.
-  auto nearest_within(const point_t &point, const distance_t radius,
+  auto nearest_within(const Point &point, const coordinate_t radius,
                       const uint32_t k) const
       -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
-    auto points = boost::geometry::model::multi_point<point_t>();
-    auto coordinates = Matrix<promotion_t>(N, k);
+    auto points = boost::geometry::model::multi_point<Point>();
+    auto coordinates = Matrix<promotion_t>(dimension_t::value, k);
     auto values = Vector<promotion_t>(k);
     auto jx = 0U;
 
@@ -285,7 +287,7 @@ class RTree {
             // If the point is not too far away, it is inserted and
             // its coordinates and value are stored.
             points.emplace_back(item.first);
-            for (size_t ix = 0; ix < N; ++ix) {
+            for (size_t ix = 0; ix < dimension_t::value; ++ix) {
               coordinates(ix, jx) = geometry::point::get(item.first, ix);
             }
             values(jx++) = item.second;
@@ -296,13 +298,13 @@ class RTree {
     // be returned.
     if (!boost::geometry::covered_by(
             point, boost::geometry::return_envelope<
-                       boost::geometry::model::box<point_t>>(points))) {
+                       boost::geometry::model::box<Point>>(points))) {
       jx = 0;
     }
 
     // The arrays are resized according to the number of selected points. This
     // number can be zero.
-    coordinates.conservativeResize(N, jx);
+    coordinates.conservativeResize(dimension_t::value, jx);
     values.conservativeResize(jx);
     return std::make_tuple(coordinates, values);
   }
@@ -319,17 +321,17 @@ class RTree {
   /// ensures that the calculated values will not be extrapolated.
   /// @return A pair containing the interpolated value and the number of
   /// neighbors used in the calculation.
-  auto radial_basis_function(const point_t &point,
+  auto radial_basis_function(const Point &point,
                              const math::RBF<promotion_t> &rbf,
-                             distance_t radius, uint32_t k, bool within) const
+                             coordinate_t radius, uint32_t k, bool within) const
       -> std::pair<promotion_t, uint32_t> {
     auto [coordinates, values] =
         within ? nearest_within(point, radius, k) : nearest(point, radius, k);
     if (values.size() == 0) {
       return std::make_pair(std::numeric_limits<promotion_t>::quiet_NaN(), 0);
     }
-    auto xi = Eigen::Matrix<promotion_t, N, 1>();
-    for (size_t ix = 0; ix < N; ++ix) {
+    auto xi = Eigen::Matrix<promotion_t, dimension_t::value, 1>();
+    for (size_t ix = 0; ix < dimension_t::value; ++ix) {
       xi(ix, 0) = geometry::point::get(point, ix);
     }
     auto interpolated = rbf.interpolate(coordinates, values, xi);
@@ -349,12 +351,12 @@ class RTree {
   /// ensures that the calculated values will not be extrapolated.
   /// @return A pair containing the interpolated value and the number of
   /// neighbors used in the calculation.
-  auto window_function(const point_t &point,
-                       const math::WindowFunction<distance_t> &wf,
-                       const distance_t arg, distance_t radius, uint32_t k,
-                       bool within) const -> std::pair<distance_t, uint32_t> {
-    distance_t result = 0;
-    distance_t total_weight = 0;
+  auto window_function(const Point &point,
+                       const math::WindowFunction<coordinate_t> &wf,
+                       const coordinate_t arg, coordinate_t radius, uint32_t k,
+                       bool within) const -> std::pair<coordinate_t, uint32_t> {
+    coordinate_t result = 0;
+    coordinate_t total_weight = 0;
 
     auto nearest = within ? query_within(point, k) : query(point, k);
     uint32_t neighbors = 0;
@@ -362,16 +364,17 @@ class RTree {
     for (const auto &item : nearest) {
       const auto distance = item.first;
 
-      auto wk = wf(distance, radius, arg);
+      auto wk = wf(static_cast<coordinate_t>(distance), radius, arg);
       total_weight += wk;
       result += item.second * wk;
       ++neighbors;
     }
 
     return total_weight != 0
-               ? std::make_pair(static_cast<distance_t>(result / total_weight),
-                                neighbors)
-               : std::make_pair(std::numeric_limits<distance_t>::quiet_NaN(),
+               ? std::make_pair(
+                     static_cast<coordinate_t>(result / total_weight),
+                     neighbors)
+               : std::make_pair(std::numeric_limits<coordinate_t>::quiet_NaN(),
                                 static_cast<uint32_t>(0));
   }
 

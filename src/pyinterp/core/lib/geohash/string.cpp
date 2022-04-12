@@ -188,39 +188,31 @@ auto bounding_boxes(const std::optional<geodetic::Box> &box,
   // Number of bits
   auto bits = precision * 5;
 
-  // If the input bbox cut the meridian, we need to split it into two
-  // bounding boxes.
-  const auto boxes =
-      box.value_or(geodetic::Box::whole_earth()).normalize().split();
-
   // Grid resolution in degrees
-  const auto lng_lat_err = int64::error_with_precision(bits);
+  const auto [lng_err, lat_err] = int64::error_with_precision(bits);
+
+  // Property of the grid
+  auto [hash_sw, lon_step, lat_step] =
+      int64::grid_properties(box.value_or(geodetic::Box::whole_earth()), bits);
 
   // Allocation of the vector storing the different codes of the matrix created
-  auto result = allocate_array(int64::count(boxes, bits), precision);
+  auto result = allocate_array(lon_step * lat_step, precision);
   auto *buffer = result.buffer();
 
   {
     auto gil = pybind11::gil_scoped_release();
 
-    for (const auto &item : boxes) {
-      auto [hash_sw, lon_step, lat_step] = int64::grid_properties(item, bits);
-      const auto point_sw = int64::decode(hash_sw, bits, true);
+    const auto point_sw = int64::decode(hash_sw, bits, false);
 
-      for (size_t lat = 0; lat < lat_step; ++lat) {
-        const auto lat_shift =
-            static_cast<double>(lat) * std::get<1>(lng_lat_err);
+    for (size_t lat = 0; lat < lat_step; ++lat) {
+      auto point = geodetic::Point(
+          0, point_sw.lat() + static_cast<double>(lat) * lat_err);
 
-        for (size_t lon = 0; lon < lon_step; ++lon) {
-          const auto lon_shift =
-              static_cast<double>(lon) * std::get<0>(lng_lat_err);
+      for (size_t lon = 0; lon < lon_step; ++lon) {
+        point.lon(point_sw.lon() + static_cast<double>(lon) * lng_err);
 
-          Base32::encode(int64::encode({point_sw.lon() + lon_shift,
-                                        point_sw.lat() + lat_shift},
-                                       bits),
-                         buffer, precision);
-          buffer += precision;
-        }
+        Base32::encode(int64::encode(point, bits), buffer, precision);
+        buffer += precision;
       }
     }
   }
@@ -229,19 +221,13 @@ auto bounding_boxes(const std::optional<geodetic::Box> &box,
 
 // ---------------------------------------------------------------------------
 // Calculates a grid containing for each cell a boolean indicating if the cell
-// of the grid is enclosed or not in the polygon.
-static auto mask_box(const geodetic::Box &box, const geodetic::Polygon &polygon,
-                     const std::tuple<double, double> &lng_lat_err,
-                     const uint32_t bits, const size_t num_threads)
-    -> Matrix<bool> {
-  size_t lat_step;
-  size_t lon_step;
-  uint64_t hash_sw;
-
-  // Calculate the grid properties
-  std::tie(hash_sw, lon_step, lat_step) = int64::grid_properties(box, bits);
-  const auto point_sw = int64::decode(hash_sw, bits, true);
-
+// of the grid is enclosed or not in the geometry.
+template <typename Geometry>
+auto mask_cell(const geodetic::Box &box, const Geometry &geometry,
+               const double lng_err, const double lat_err,
+               const geodetic::Point &point_sw, const size_t lon_step,
+               const size_t lat_step, const uint32_t bits,
+               const size_t num_threads) -> Matrix<bool> {
   // Allocate the grid result
   auto result = Matrix<bool>(lon_step, lat_step);
 
@@ -253,20 +239,14 @@ static auto mask_box(const geodetic::Box &box, const geodetic::Polygon &polygon,
       [&](size_t start, size_t end) {
         for (auto lat = static_cast<int64_t>(start);
              lat < static_cast<int64_t>(end); ++lat) {
-          const auto lat_shift =
-              static_cast<double>(lat) * std::get<1>(lng_lat_err);
+          auto point = geodetic::Point(
+              0, point_sw.lat() + static_cast<double>(lat) * lat_err);
 
           for (size_t lon = 0; lon < lon_step; ++lon) {
-            const auto lon_shift =
-                static_cast<double>(lon) * std::get<0>(lng_lat_err);
-
+            point.lon(point_sw.lon() + static_cast<double>(lon) * lng_err);
             result(lon, lat) = boost::geometry::intersects(
-                int64::bounding_box(
-                    int64::encode(geodetic::Point(point_sw.lon() + lon_shift,
-                                                  point_sw.lat() + lat_shift),
-                                  bits),
-                    bits),
-                polygon);
+                int64::bounding_box(int64::encode(point, bits), bits),
+                geometry);
           }
         }
       },
@@ -280,94 +260,80 @@ static auto mask_box(const geodetic::Box &box, const geodetic::Polygon &polygon,
 }
 
 // ---------------------------------------------------------------------------
-static auto mask_boxes(const std::vector<geodetic::Box> &boxes,
-                       const geodetic::Polygon &polygon,
-                       const std::tuple<double, double> &lng_lat_err,
-                       const uint32_t precision, const size_t num_threads)
-    -> std::vector<Matrix<bool>> {
-  // Allocation of the vector storing the different codes of the matrix created
-  auto result = std::vector<Matrix<bool>>();
-
-  {
-    auto gil = pybind11::gil_scoped_release();
-
-    for (const auto &item : boxes) {
-      result.emplace_back(
-          mask_box(item, polygon, lng_lat_err, precision, num_threads));
-    }
-  }
-  return result;
-}
-
-// ---------------------------------------------------------------------------
-auto bounding_boxes(const geodetic::Polygon &polygon, const uint32_t precision,
-                    const size_t num_threads) -> pybind11::array {
-  // Number of bits
-  auto bits = precision * 5;
-
-  // Bounding box of the grid to be created
-  const auto envelope = polygon.envelope();
-
-  // If the envelope cut the meridian, we need to split it into two
-  // bounding boxes.
-  auto split_box = [](const geodetic::Box &box) -> std::vector<geodetic::Box> {
-    auto boxes = box.normalize().split();
-    return {std::make_move_iterator(boxes.begin()),
-            std::make_move_iterator(boxes.end())};
-  };
-  auto boxes = split_box(envelope);
-
-  // Grid resolution in degrees
-  const auto lng_lat_err = int64::error_with_precision(bits);
-
-  // Calculates the intersection mask between the polygon and the GeoHash grid
-  // (multithreaded)
-  auto masks = mask_boxes(boxes, polygon, lng_lat_err, bits, num_threads);
-
+// Return all GeoHash codes selected by the mask.
+static auto select_cell(const double lng_err, const double lat_err,
+                        const geodetic::Point &point_sw, const size_t lon_step,
+                        const size_t lat_step, const uint32_t bits,
+                        const uint32_t precision, const Matrix<bool> &mask)
+    -> pybind11::array {
   // Count the number of cells that are enclosed by the polygon
-  auto size = size_t(0);
-  for (const auto &item : masks) {
-    size += static_cast<size_t>(
-        std::count(item.data(), item.data() + item.size(), true));
-  }
+  auto size = std::count(mask.data(), mask.data() + mask.size(), true);
 
   // Allocates the result array
   auto result = allocate_array(size, precision);
   auto *buffer = result.buffer();
 
-  // Finally, for each cell of the grid, if it is enclosed by the polygon,
-  // we add the code to the result array
+  // For each cell of the grid, if it is selected, we add the code to the
+  // result array
   {
     auto gil = pybind11::gil_scoped_release();
 
-    for (auto ix = size_t(0); ix < masks.size(); ++ix) {
-      auto box = boxes[ix];
-      auto mask = masks[ix];
+    for (size_t lat = 0; lat < lat_step; ++lat) {
+      auto point = geodetic::Point(
+          0, point_sw.lat() + static_cast<double>(lat) * lat_err);
 
-      auto [hash_sw, lon_step, lat_step] = int64::grid_properties(box, bits);
-      const auto point_sw = int64::decode(hash_sw, bits, true);
-      for (size_t lat = 0; lat < lat_step; ++lat) {
-        const auto lat_shift =
-            static_cast<double>(lat) * std::get<1>(lng_lat_err);
+      for (size_t lon = 0; lon < lon_step; ++lon) {
+        if (mask(lon, lat)) {
+          point.lon(point_sw.lon() + static_cast<double>(lon) * lng_err);
 
-        for (size_t lon = 0; lon < lon_step; ++lon) {
-          if (mask(lon, lat)) {
-            const auto lon_shift =
-                static_cast<double>(lon) * std::get<0>(lng_lat_err);
-
-            Base32::encode(
-                int64::encode(geodetic::Point(point_sw.lon() + lon_shift,
-                                              point_sw.lat() + lat_shift),
-                              bits),
-                buffer, precision);
-            buffer += precision;
-            ++size;
-          }
+          Base32::encode(int64::encode(point, bits), buffer, precision);
+          buffer += precision;
         }
       }
     }
   }
   return result.pyarray();
+}
+
+// ---------------------------------------------------------------------------
+template <typename Geometry>
+auto bounding_boxes(const Geometry &geometry, const uint32_t precision,
+                    const size_t num_threads) -> pybind11::array {
+  // Number of bits
+  auto bits = precision * 5;
+
+  // Bounding box of the grid to be created
+  const auto envelope = geometry.envelope();
+
+  // Grid resolution in degrees
+  const auto [lng_err, lat_err] = int64::error_with_precision(bits);
+
+  // Property of the grid
+  auto [hash_sw, lon_step, lat_step] = int64::grid_properties(envelope, bits);
+  const auto point_sw = int64::decode(hash_sw, bits, false);
+
+  // Calculates the intersection mask between the geometry and the GeoHash grid
+  auto mask =
+      mask_cell<Geometry>(envelope, geometry, lng_err, lat_err, point_sw,
+                          lon_step, lat_step, bits, num_threads);
+
+  // Finally, selects the geohashes that are enclosed in the geometry
+  return select_cell(lng_err, lat_err, point_sw, lon_step, lat_step, bits,
+                     precision, mask);
+}
+
+// ---------------------------------------------------------------------------
+auto bounding_boxes(const geodetic::Polygon &polygon, const uint32_t precision,
+                    const size_t num_threads) -> pybind11::array {
+  return bounding_boxes<geodetic::Polygon>(polygon, precision, num_threads);
+}
+
+// ---------------------------------------------------------------------------
+auto bounding_boxes(const geodetic::MultiPolygon &polygons,
+                    const uint32_t precision, const size_t num_threads)
+    -> pybind11::array {
+  return bounding_boxes<geodetic::MultiPolygon>(polygons, precision,
+                                                num_threads);
 }
 
 // ---------------------------------------------------------------------------
@@ -439,8 +405,8 @@ static auto zoom_in(char *ptr, pybind11::ssize_t size, uint32_t from_precision,
   auto bits = to_precision * 5;
 
   // Calculation of the number of items needed for the result.
-  auto size_in =
-      size * (size_t(2) << (5 * (to_precision - from_precision) - 1));
+  auto size_in = size * (static_cast<size_t>(2)
+                         << (5 * (to_precision - from_precision) - 1));
 
   // Allocates the result table.
   auto result = allocate_array(size_in, to_precision);

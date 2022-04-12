@@ -16,9 +16,8 @@ from . import core
 
 
 class Histogram2D:
-    """
-    Group a number of more or less continuous values into a smaller number of
-    "bins" located on a grid.
+    """Group a number of more or less continuous values into a smaller number
+    of "bins" located on a grid.
 
     This class will build for each pixel of the defined grid, a histogram. This
     histogram will be used to compute the statistics.
@@ -88,8 +87,7 @@ class Histogram2D:
 
     def __repr__(self) -> str:
         """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance.
-        """
+        representation of this instance."""
         result = [f"<{self.__class__.__module__}.{self.__class__.__name__}>"]
         result.append("Axis:")
         result.append(f"  x: {self._instance.x}")

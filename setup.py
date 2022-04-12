@@ -40,16 +40,22 @@ OSX_DEPLOYMENT_TARGET = '10.14'
 
 
 def build_dirname(extname=None):
-    """Returns the name of the build directory"""
+    """Returns the name of the build directory."""
     extname = '' if extname is None else os.sep.join(extname.split(".")[:-1])
-    return pathlib.Path(
+    path = pathlib.Path(
         WORKING_DIRECTORY, "build",
         "lib.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR), extname)
+    if path.exists():
+        return path
+    return pathlib.Path(
+        WORKING_DIRECTORY, "build",
+        "lib.%s-%s" % (sysconfig.get_platform(), sys.implementation.cache_tag),
+        extname)
 
 
 def execute(cmd):
     """Executes a command and returns the lines displayed on the standard
-    output"""
+    output."""
     process = subprocess.Popen(cmd,
                                shell=True,
                                stdout=subprocess.PIPE,
@@ -74,7 +80,7 @@ def update_meta(path, version):
 
 
 def update_environment(path, version):
-    """Updating the version number desciption in conda environment"""
+    """Updating the version number description in conda environment."""
     with open(path, 'r') as stream:
         lines = stream.readlines()
     pattern = re.compile(r'(\s+-\s+pyinterp)\s*>=\s*(.+)')
@@ -89,7 +95,7 @@ def update_environment(path, version):
 
 
 def revision():
-    """Returns the software version"""
+    """Returns the software version."""
     os.chdir(WORKING_DIRECTORY)
     module = pathlib.Path(WORKING_DIRECTORY, 'src', 'pyinterp', 'version.py')
 
@@ -182,7 +188,7 @@ def date() -> str:
 
 # pylint: disable=too-few-public-methods
 class CMakeExtension(setuptools.Extension):
-    """Python extension to build"""
+    """Python extension to build."""
 
     def __init__(self, name):
         super(CMakeExtension, self).__init__(name, sources=[])
@@ -191,7 +197,7 @@ class CMakeExtension(setuptools.Extension):
 
 
 class BuildExt(setuptools.command.build_ext.build_ext):
-    """Build the Python extension using cmake"""
+    """Build the Python extension using cmake."""
 
     #: Preferred BOOST root
     BOOST_ROOT: ClassVar[Optional[str]] = None
@@ -230,14 +236,14 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     MKL: ClassVar[Optional[bool]] = None
 
     def run(self):
-        """A command's raison d'etre: carry out the action"""
+        """Carry out the action."""
         for ext in self.extensions:
             self.build_cmake(ext)
         super().run()
 
     @classmethod
     def gsl(cls):
-        """Get the default boost path in Anaconda's environnement."""
+        """Get the default boost path in Anaconda's environment."""
         gsl_root = sys.prefix
         if pathlib.Path(gsl_root, "include", "gsl").exists():
             return "-DGSL_ROOT_DIR=" + gsl_root
@@ -252,7 +258,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     @classmethod
     def boost(cls):
-        """Get the default boost path in Anaconda's environnement."""
+        """Get the default boost path in Anaconda's environment."""
         # Do not search system for Boost & disable the search for boost-cmake
         boost_option = "-DBoost_NO_SYSTEM_PATHS=TRUE " \
             "-DBoost_NO_BOOST_CMAKE=TRUE"
@@ -272,7 +278,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     @classmethod
     def eigen(cls):
-        """Get the default Eigen3 path in Anaconda's environnement."""
+        """Get the default Eigen3 path in Anaconda's environment."""
         eigen_include_dir = pathlib.Path(sys.prefix, "include", "eigen3")
         if eigen_include_dir.exists():
             return "-DEIGEN3_INCLUDE_DIR=" + str(eigen_include_dir)
@@ -290,7 +296,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     @staticmethod
     def mkl():
-        """Get the default MKL path in Anaconda's environnement."""
+        """Get the default MKL path in Anaconda's environment."""
         mkl_header = pathlib.Path(sys.prefix, "include", "mkl.h")
         if mkl_header.exists():
             os.environ["MKLROOT"] = sys.prefix
@@ -366,18 +372,19 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         return result
 
     def build_cmake(self, ext):
-        """Execute cmake to build the Python extension"""
+        """Execute cmake to build the Python extension."""
         # These dirs will be created in build_py, so if you don't have
         # any python sources to bundle, the dirs will be missing
         build_temp = pathlib.Path(WORKING_DIRECTORY, self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
-        extdir = str(build_dirname(ext.name))
+        extdir = str(
+            pathlib.Path(self.get_ext_fullpath(ext.name)).parent.resolve())
 
         cfg = 'Debug' if self.debug or self.CODE_COVERAGE else 'Release'
 
         cmake_args = [
             "-DCMAKE_BUILD_TYPE=" + cfg, "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" +
-            str(extdir), "-DPYTHON_EXECUTABLE=" + sys.executable
+            str(extdir), "-DPython_EXECUTABLE=" + sys.executable
         ] + self.set_cmake_user_options()
 
         build_args = ['--config', cfg]
@@ -429,9 +436,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             self.spawn(cmake_cmd + build_args)
         os.chdir(str(WORKING_DIRECTORY))
 
+    def finalize_options(self) -> None:
+        return super().finalize_options()
+
 
 class Build(distutils.command.build.build):
-    """Build everything needed to install"""
+    """Build everything needed to install."""
     user_options = distutils.command.build.build.user_options
     user_options += [
         ('boost-root=', None, 'Preferred Boost installation prefix'),
@@ -453,7 +463,8 @@ class Build(distutils.command.build.build):
     boolean_options += ["conda-forge"]
 
     def initialize_options(self):
-        """Set default values for all the options that this command supports"""
+        """Set default values for all the options that this command
+        supports."""
         super().initialize_options()
         self.boost_root = None
         self.build_unittests = None
@@ -469,7 +480,7 @@ class Build(distutils.command.build.build):
         self.reconfigure = None
 
     def finalize_options(self):
-        """Set final values for all the options that this command supports"""
+        """Set final values for all the options that this command supports."""
         super().finalize_options()
         if self.code_coverage is not None and platform.system() == 'Windows':
             raise RuntimeError("Code coverage is not supported on Windows")
@@ -480,7 +491,7 @@ class Build(distutils.command.build.build):
                 "argument --mkl_root not allowed with argument --mkl=no")
 
     def run(self):
-        """A command's raison d'etre: carry out the action"""
+        """Carry out the action."""
         if self.boost_root is not None:
             BuildExt.BOOST_ROOT = self.boost_root
         if self.build_unittests is not None:
@@ -511,7 +522,7 @@ class Build(distutils.command.build.build):
 
 
 class Test(setuptools.Command):
-    """Test runner"""
+    """Test runner."""
     description = "run pytest"
     user_options = [('ext-coverage', None,
                      "Generate C++ extension coverage reports"),
@@ -519,26 +530,32 @@ class Test(setuptools.Command):
 
     def initialize_options(self):
         """Set default values for all the options that this command
-        supports"""
+        supports."""
         self.ext_coverage = None
         self.pytest_args = None
 
     def finalize_options(self):
-        """Set final values for all the options that this command supports"""
+        """Set final values for all the options that this command supports."""
         if self.pytest_args is None:
             self.pytest_args = ''
         self.pytest_args = " --pyargs pyinterp " + self.pytest_args
 
     @staticmethod
     def tempdir():
-        """Gets the build directory of the extension"""
-        return pathlib.Path(
+        """Gets the build directory of the extension."""
+        path = pathlib.Path(
             WORKING_DIRECTORY, "build",
             "temp.%s-%d.%d" % (sysconfig.get_platform(), MAJOR, MINOR))
+        if path.exists():
+            return path
+        return pathlib.Path(
+            WORKING_DIRECTORY, "build", "temp.%s-%s" %
+            (sysconfig.get_platform(), sys.implementation.cache_tag))
 
     def run(self):
-        """Run tests"""
+        """Run tests."""
         import pytest
+        print(str(build_dirname()))
         sys.path.insert(0, str(build_dirname()))
 
         errno = pytest.main(
@@ -587,12 +604,12 @@ class Test(setuptools.Command):
 
 
 class SDist(setuptools.command.sdist.sdist):
-    """Custom sdist command that copies the pytest configuration file
-    into the package"""
+    """Custom sdist command that copies the pytest configuration file into the
+    package."""
     user_options = setuptools.command.sdist.sdist.user_options
 
     def run(self):
-        """A command's raison d'etre: carry out the action"""
+        """Carry out the action."""
         source = WORKING_DIRECTORY.joinpath("conftest.py")
         target = WORKING_DIRECTORY.joinpath("src", "pyinterp", "conftest.py")
         source.rename(target)
@@ -603,13 +620,13 @@ class SDist(setuptools.command.sdist.sdist):
 
 
 def long_description():
-    """Reads the README file"""
+    """Reads the README file."""
     with open(pathlib.Path(WORKING_DIRECTORY, "README.rst")) as stream:
         return stream.read()
 
 
 def typehints():
-    """Get the list of type information files"""
+    """Get the list of type information files."""
     pyi = []
     for root, _, files in os.walk(WORKING_DIRECTORY):
         pyi += [
@@ -620,7 +637,7 @@ def typehints():
 
 
 def main():
-    """Main function"""
+    """Main function."""
     install_requires = [
         "dask", "fsspec", "numpy", "numcodecs", "toolz", "xarray >= 0.13"
     ]

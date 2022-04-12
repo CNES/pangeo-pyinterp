@@ -7,6 +7,7 @@
 #include <pybind11/pybind11.h>
 
 #include <boost/geometry.hpp>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -17,8 +18,20 @@
 namespace pyinterp::geodetic {
 
 /// A linestring (named so by OGC) is a collection of points.
-class LineString {
+class LineString : public boost::geometry::model::linestring<Point> {
  public:
+  using Base = boost::geometry::model::linestring<Point>;
+
+  /// Default constructor
+  LineString() = default;
+
+  /// Build a new line string from a list of points.
+  explicit LineString(const pybind11::list& points) {
+    for (const auto point : points) {
+      push_back(point.cast<Point>());
+    }
+  }
+
   /// Build a new line string with the coordinates provided.
   ///
   /// @param lon Longitudes of the points in degrees.
@@ -26,12 +39,22 @@ class LineString {
   LineString(const Eigen::Ref<const Vector<double>>& lon,
              const Eigen::Ref<const Vector<double>>& lat);
 
+  /// Build a new line string from a GeoJSON line string.
+  [[nodiscard]] static auto from_geojson(const pybind11::list& array)
+      -> LineString;
+
+  /// Returns a GeoJSON representation of this instance.
+  [[nodiscard]] auto to_geojson() const -> pybind11::dict;
+
+  /// Add a point to this linestring.
+  auto append(const Point& point) -> void { Base::push_back(point); }
+
   /// Test if this linestring intersects with another linestring.
   ///
   /// @param rhs the linestring to test.
   /// @return true if the linestrings intersect.
   [[nodiscard]] auto intersects(const LineString& rhs) const -> bool {
-    return boost::geometry::intersects(line_string_, rhs.line_string_);
+    return boost::geometry::intersects(*this, rhs);
   }
 
   /// Get the coordinate of the intersection between this linestring and
@@ -42,33 +65,20 @@ class LineString {
   [[nodiscard]] auto intersection(const LineString& rhs) const
       -> std::optional<Point>;
 
-  /// Find the nearest index of a point in this linestring to a given
-  /// point.
-  ///
-  /// @param point the point to search.
-  /// @return the index of the nearest point or none if no intersection is
-  ///         found.
-  [[nodiscard]] inline auto nearest(const Point& point) const -> size_t {
-    std::vector<std::pair<Point, size_t>> result;
-    rtree_.query(
-        boost::geometry::index::nearest(Point(point.lon(), point.lat()), 1),
-        std::back_inserter(result));
-    return result[0].second;
-  }
-
   /// Get the length of the linestring
   ///
   /// @return the length of the line string
-  [[nodiscard]] inline auto size() const -> size_t {
-    return line_string_.size();
-  }
+  [[nodiscard]] inline auto size() const -> size_t { return Base::size(); }
 
   /// Get a point of the linestring at a given index
   ///
   /// @param index the index of the point
   /// @return the point at the given index
-  [[nodiscard]] inline auto at(const size_t index) const -> Point {
-    return line_string_.at(index);
+  [[nodiscard]] inline auto operator()(const size_t index) const -> Point {
+    if (index >= size()) {
+      throw std::out_of_range("LineString index out of range");
+    }
+    return Base::operator[](index);
   }
 
   /// Get a point of the linestring at a given index
@@ -76,22 +86,28 @@ class LineString {
   /// @param index the index of the point
   /// @return the point at the given index
   [[nodiscard]] inline auto operator[](const size_t index) const -> Point {
-    return line_string_[index];
+    return Base::operator[](index);
   }
 
   /// Returns a read-only (constant) iterator that points to the
   /// first point of the linestring.
-  [[nodiscard]] auto begin() const
-      -> boost::geometry::model::linestring<Point>::const_iterator {
-    return line_string_.begin();
+  [[nodiscard]] auto begin() const -> decltype(Base::begin()) {
+    return Base::begin();
+  }
+
+  /// Returns an iterator that points to the first point of the linestring.
+  [[nodiscard]] auto begin() -> decltype(Base::begin()) {
+    return Base::begin();
   }
 
   /// Returns a read-only (constant) iterator that points to the
   /// last point of the linestring.
-  [[nodiscard]] auto end() const
-      -> boost::geometry::model::linestring<Point>::const_iterator {
-    return line_string_.end();
+  [[nodiscard]] auto end() const -> decltype(Base::end()) {
+    return Base::end();
   }
+
+  /// Returns an iterator that points to the last point of the linestring.
+  [[nodiscard]] auto end() -> decltype(Base::end()) { return Base::end(); }
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple;
@@ -100,11 +116,23 @@ class LineString {
   /// object.
   static auto setstate(const pybind11::tuple& state) -> LineString;
 
- private:
-  boost::geometry::model::linestring<Point> line_string_;
-  boost::geometry::index::rtree<std::pair<Point, size_t>,
-                                boost::geometry::index::quadratic<16>>
-      rtree_;
+  /// Converts a Polygon into a string with the same meaning as that of this
+  /// instance.
+  [[nodiscard]] auto to_string() const -> std::string {
+    std::stringstream ss;
+    ss << boost::geometry::dsv(*this);
+    return ss.str();
+  }
 };
 
 }  // namespace pyinterp::geodetic
+
+namespace boost::geometry::traits {
+namespace pg = pyinterp::geodetic;
+
+template <>
+struct tag<pg::LineString> {
+  using type = linestring_tag;
+};
+
+}  // namespace boost::geometry::traits

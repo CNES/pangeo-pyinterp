@@ -26,7 +26,7 @@ def load_data():
 
 
 def test_grid4d_accessors():
-    """Test construction and accessors of the object"""
+    """Test construction and accessors of the object."""
     grid = load_data()
     assert isinstance(grid.x, core.Axis)
     assert isinstance(grid.y, core.Axis)
@@ -36,7 +36,7 @@ def test_grid4d_accessors():
 
 
 def test_grid4d_pickle():
-    """Serialization test"""
+    """Serialization test."""
     grid = load_data()
     other = pickle.loads(pickle.dumps(grid))
     assert grid.x == other.x

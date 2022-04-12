@@ -7,7 +7,7 @@ from typing import List, Optional, Tuple
 from ..core import geodetic
 from ..core.geodetic import (
     Crossover,
-    Linestring,
+    LineString,
     coordinate_distances,
     normalize_longitudes,
 )
@@ -17,7 +17,8 @@ __all__ = [
     "coordinate_distances",
     "Coordinates",
     "Crossover",
-    "Linestring",
+    "LineString",
+    "MultiPolygon",
     "normalize_longitudes",
     "Point",
     "Polygon",
@@ -112,3 +113,20 @@ class Polygon(geodetic.Polygon):
                  outer: List[Point],
                  inners: Optional[List[List[Point]]] = None) -> None:
         super().__init__(outer, inners)  # type: ignore
+
+
+class MultiPolygon(geodetic.MultiPolygon):
+    """The multi-polygon contains a list of polygons.
+
+    Args:
+        polygons: list of polygons. If this argument is not defined, the
+            instance manages an empty list of polygons.
+
+    Raises:
+        ValueError: if polygons is not a list of
+            :py:class:`pyinterp.geodetic.Polygon`.
+    """
+
+    def __init__(self, polygons: Optional[List[Polygon]] = None) -> None:
+        args = (polygons, ) if polygons is not None else ()
+        super().__init__(*args)

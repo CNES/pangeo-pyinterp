@@ -96,7 +96,7 @@ class StreamingHistogram {
   explicit StreamingHistogram(const std::string_view &state) {
     auto ss = isviewstream(state);
     ss.exceptions(std::stringstream::failbit);
-    auto size = size_t(0);
+    auto size = static_cast<size_t>(0);
 
     try {
       ss.read(reinterpret_cast<char *>(&weighted_diff_), sizeof(bool));
@@ -212,7 +212,7 @@ class StreamingHistogram {
       return bins_.back().value + (ratio * (max_ - bins_.back().value));
     }
 
-    auto ix = size_t(0);
+    auto ix = static_cast<size_t>(0);
     auto mb = qw - bins_.front().weight * 0.5;
     while (mb - (bins_[ix].weight + bins_[ix + 1].weight) * 0.5 > 0 &&
            ix < bins_.size() - 1) {

@@ -7,6 +7,7 @@ Descriptive statistics
 ----------------------
 """
 from typing import Any, Iterable, Optional, Union
+import copy
 
 import dask.array as da
 import numpy as np
@@ -41,8 +42,7 @@ def _delayed(
 
 
 class DescriptiveStatistics:
-    """
-    Univariate descriptive statistics.
+    """Univariate descriptive statistics.
 
     Calculates the incremental descriptive statistics from the provided values.
     The calculation of the statistics is done when the constructor is invoked.
@@ -133,7 +133,7 @@ class DescriptiveStatistics:
             if type(self._instance) != type(other._instance):  # noqa: E721
                 raise TypeError(
                     "Descriptive statistics must have the same type")
-            result = self.copy()
+            result = copy.copy(self)
             result += other
             return result
         raise TypeError("unsupported operand type(s) for +="

@@ -1,6 +1,5 @@
 import numpy
 
-
 def date(array: numpy.ndarray) -> numpy.ndarray:
     ...
 

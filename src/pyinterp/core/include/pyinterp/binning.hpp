@@ -53,12 +53,12 @@ class Binning2D {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Binning2D(const Binning2D &rhs) = delete;
+  Binning2D(const Binning2D &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Binning2D(Binning2D &&rhs) noexcept = delete;
+  Binning2D(Binning2D &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///

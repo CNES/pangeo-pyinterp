@@ -59,7 +59,7 @@ def load_data(temporal_axis=False):
 
 
 def test_grid3d_accessors():
-    """Test construction and accessors of the object"""
+    """Test construction and accessors of the object."""
     grid = load_data()
     assert isinstance(grid.x, core.Axis)
     assert isinstance(grid.y, core.Axis)
@@ -68,7 +68,7 @@ def test_grid3d_accessors():
 
 
 def test_grid3d_pickle():
-    """Serialization test"""
+    """Serialization test."""
     grid = load_data()
     other = pickle.loads(pickle.dumps(grid))
     assert grid.x == other.x
@@ -108,7 +108,7 @@ def run_interpolator(interpolator, filename, visualize, dump):
 
 
 def test_trivariate_spline(pytestconfig):
-    """Testing of the spline interpolation"""
+    """Testing of the spline interpolation."""
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-80, 80, 1 / 3.0) + 1 / 3.0
@@ -140,7 +140,7 @@ def test_trivariate_spline(pytestconfig):
 
 
 def test_grid3d_bounds_error():
-    """Test of the detection on interpolation outside bounds"""
+    """Test of the detection on interpolation outside bounds."""
     grid = load_data()
     interpolator = core.Bilinear3D()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
@@ -166,7 +166,7 @@ def test_grid3d_bounds_error():
 
 
 def test_grid3d_z_method(pytestconfig):
-    """Test of the interpolation method used on Z-axis"""
+    """Test of the interpolation method used on Z-axis."""
     dump = pytestconfig.getoption("dump")
     grid = load_data(temporal_axis=True)
     interpolator = core.TemporalBilinear3D()
@@ -222,7 +222,7 @@ def test_grid3d_z_method(pytestconfig):
 
 
 def test_grid3d_interpolator(pytestconfig):
-    """Testing of different interpolation methods"""
+    """Testing of different interpolation methods."""
     visualize = pytestconfig.getoption("visualize")
     dump = pytestconfig.getoption("dump")
     a = run_interpolator(core.Nearest3D(), "tcw_trivariate_nearest", visualize,
@@ -234,3 +234,40 @@ def test_grid3d_interpolator(pytestconfig):
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0
+
+
+def test_invalid_data():
+    """Testing of the interpolation with invalid data."""
+    grid = load_data(temporal_axis=True)
+    interpolator = core.TemporalBilinear3D()
+    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
+    lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
+    time = np.array([
+        netCDF4.num2date(  # type: ignore
+            898500 + 3,
+            "hours since 1900-01-01 00:00:0.0",
+            only_use_cftime_datetimes=False,
+            only_use_python_datetimes=True)
+    ]).astype("datetime64[h]").astype("int64")
+    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    z0 = core.trivariate_float64(
+        grid,  # type: ignore
+        x.ravel(),
+        y.ravel(),
+        t.ravel(),
+        interpolator,
+        num_threads=0)
+    indices = np.random.randint(0, len(x), size=100)
+    x.ravel()[indices] = np.nan
+    y.ravel()[indices] = np.nan
+    t.ravel()[indices] = np.datetime64("NaT")
+    z1 = core.trivariate_float64(
+        grid,  # type: ignore
+        x.ravel(),
+        y.ravel(),
+        t.ravel(),
+        interpolator,
+        num_threads=0)
+    mask = ~np.isnan(x.ravel())
+    assert np.allclose(z1[mask], z0[mask], equal_nan=True)
+    assert np.all(np.isnan(z1[~mask]))

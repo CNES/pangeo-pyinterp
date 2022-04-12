@@ -55,12 +55,12 @@ class Histogram2D {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Histogram2D(const Histogram2D &rhs) = delete;
+  Histogram2D(const Histogram2D &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Histogram2D(Histogram2D &&rhs) noexcept = delete;
+  Histogram2D(Histogram2D &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
@@ -221,7 +221,7 @@ class Histogram2D {
 
   /// Returns the histogram for each bin.
   auto histograms() const -> pybind11::array_t<detail::math::Bin<T>> {
-    auto bins_count = size_t(0);
+    auto bins_count = static_cast<size_t>(0);
     for (Eigen::Index ix = 0; ix < histogram_.rows(); ++ix) {
       for (Eigen::Index iy = 0; iy < histogram_.cols(); ++iy) {
         bins_count = std::max(bins_count, histogram_(ix, iy).size());
@@ -237,7 +237,7 @@ class Histogram2D {
 
       for (Eigen::Index ix = 0; ix < histogram_.rows(); ++ix) {
         for (Eigen::Index iy = 0; iy < histogram_.cols(); ++iy) {
-          auto iz = size_t(0);
+          auto iz = static_cast<size_t>(0);
           auto &bins = histogram_(ix, iy).bins();
           for (iz = 0; iz < bins.size(); ++iz) {
             _result(ix, iy, iz) = bins[iz];
@@ -304,8 +304,8 @@ class Histogram2D {
     ss.exceptions(std::stringstream::failbit);
 
     try {
-      auto rows = Eigen::Index(0);
-      auto cols = Eigen::Index(0);
+      auto rows = static_cast<Eigen::Index>(0);
+      auto cols = static_cast<Eigen::Index>(0);
       ss.read(reinterpret_cast<char *>(&rows), sizeof(rows));
       ss.read(reinterpret_cast<char *>(&cols), sizeof(cols));
       if (rows != histogram.rows() || cols != histogram.cols()) {
@@ -313,7 +313,7 @@ class Histogram2D {
       }
       for (int ix = 0; ix < rows; ++ix) {
         for (int jx = 0; jx < cols; ++jx) {
-          auto size = size_t(0);
+          auto size = static_cast<size_t>(0);
           ss.read(reinterpret_cast<char *>(&size), sizeof(size));
           auto marshal_hist = std::string(size, '\0');
           ss.read(marshal_hist.data(), static_cast<std::streamsize>(size));

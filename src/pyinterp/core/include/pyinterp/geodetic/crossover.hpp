@@ -17,7 +17,7 @@ namespace pyinterp::geodetic {
 /// Calculate the crossover between two half-orbits.
 class Crossover {
  public:
-  /// Defaut constructor
+  /// Default constructor
   ///
   /// @param[in] half_orbit_1 first half-orbit.
   /// @param[in] half_orbit_2 second half-orbit.
