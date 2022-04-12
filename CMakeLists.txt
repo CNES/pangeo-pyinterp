@@ -163,16 +163,8 @@ endif()
 enable_testing()
 
 # Python
-find_package(PythonInterp REQUIRED)
-execute_process(
-  COMMAND
-    ${PYTHON_EXECUTABLE} -c [=[import os
-import sysconfig
-import sys
-sys.stdout.write(os.path.dirname(sysconfig.get_config_h_filename()))
-]=]
-  OUTPUT_VARIABLE PYTHON_INCLUDE_DIR)
-find_package(PythonLibs REQUIRED)
+find_package(Python COMPONENTS Interpreter Development)
+include_directories(${Python_INCLUDE_DIRS})
 
 # Boost
 find_package(Boost 1.63 REQUIRED)
