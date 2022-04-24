@@ -88,4 +88,50 @@ auto LineString::to_geojson() const -> pybind11::dict {
   return result;
 }
 
+template <typename Strategy>
+auto curvilinear_distance_impl(const LineString& ls, const Strategy& strategy,
+                               Vector<double>& result) {
+  auto total_distance = static_cast<double>(0);
+  result[0] = total_distance;
+
+  auto it = ls.begin() + 1;
+
+  for (auto ix = static_cast<Eigen::Index>(1); ix < ls.size(); ++ix) {
+    auto distance = boost::geometry::distance(*std::prev(it), *it, strategy);
+    total_distance += distance;
+    result[ix] = total_distance;
+    ++it;
+  }
+}
+
+auto LineString::curvilinear_distance(DistanceStrategy strategy,
+                                      const std::optional<System>& wgs) const
+    -> Vector<double> {
+  if (size() == 0) {
+    return Vector<double>{};
+  }
+
+  auto spheroid = wgs.has_value()
+                      ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
+                                                       wgs->semi_minor_axis())
+                      : boost::geometry::srs::spheroid<double>();
+  auto result = Vector<double>(size());
+
+  switch (strategy) {
+    case kAndoyer:
+      curvilinear_distance_impl(*this, Andoyer(spheroid), result);
+      break;
+    case kThomas:
+      curvilinear_distance_impl(*this, Thomas(spheroid), result);
+      break;
+    case kVincenty:
+      curvilinear_distance_impl(*this, Vincenty(spheroid), result);
+      break;
+    default:
+      throw std::invalid_argument("unknown strategy: " +
+                                  std::to_string(static_cast<int>(strategy)));
+  }
+  return result;
+}
+
 }  // namespace pyinterp::geodetic

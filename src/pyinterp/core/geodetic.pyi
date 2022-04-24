@@ -562,5 +562,5 @@ def coordinate_distances(
 
 
 def normalize_longitudes(lon: numpy.ndarray[numpy.float64],
-                         min_lon: float = ...) -> None:
+                         min_lon: float = ...) -> numpy.ndarray[numpy.float64]:
     ...

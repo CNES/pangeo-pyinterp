@@ -123,6 +123,11 @@ class LineString : public boost::geometry::model::linestring<Point> {
     ss << boost::geometry::dsv(*this);
     return ss.str();
   }
+
+  /// Returns the curvilinear distance along the linestring.
+  [[nodiscard]] auto curvilinear_distance(
+      DistanceStrategy strategy, const std::optional<System>& wgs) const
+      -> Vector<double>;
 };
 
 }  // namespace pyinterp::geodetic

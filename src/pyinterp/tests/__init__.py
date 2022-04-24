@@ -1,3 +1,7 @@
+# Copyright (c) 2022 CNES
+#
+# All rights reserved. Use of this source code is governed by a
+# BSD-style license that can be found in the LICENSE file.
 from typing import Optional
 import pathlib
 
@@ -73,6 +77,11 @@ def polygon_path():
 def multipolygon_path():
     """Return path to the polygon dataset."""
     return ROOT.joinpath("multipolygon.json")
+
+
+def swot_calval_ephemeris_path():
+    """Return path to the SWOT Calval ephemeris."""
+    return ROOT.joinpath("ephemeris_calval_sept2015.txt")
 
 
 def run(pattern: Optional[str] = None) -> None:

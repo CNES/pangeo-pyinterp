@@ -15,6 +15,7 @@
 #include "pyinterp/geodetic/multipolygon.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
+#include "pyinterp/geodetic/swath.hpp"
 #include "pyinterp/geodetic/system.hpp"
 
 namespace geodetic = pyinterp::geodetic;
@@ -1057,6 +1058,26 @@ Args:
              return py::make_iterator(self.begin(), self.end(),
                                       py::keep_alive<0, 1>());
            })
+      .def(
+          "curvilinear_distance",
+          [](const geodetic::LineString &self, const std::string &strategy,
+             const std::optional<geodetic::System> &system) {
+            return self.curvilinear_distance(parse_distance_strategy(strategy),
+                                             system);
+          },
+          py::arg("strategy") = "thomas", py::arg("wgs") = std::nullopt,
+          R"__doc__(
+Computes the curvilinear distance between the points of this instance.
+
+Args:
+    strategy: the distance strategy to use. This parameter can take the values
+        ``andoyer``, ``thomas`` or ``vincenty``
+    wgs: the reference system to use.
+
+Returns:
+    The curvilinear distance between the points of this instance.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def("intersects", &geodetic::LineString::intersects, py::arg("rhs"),
            R"__doc__(
 Test if this linestring intersects with another linestring.
@@ -1362,17 +1383,21 @@ Returns:
 
   m.def(
       "normalize_longitudes",
-      [](Eigen::Ref<Eigen::VectorXd> &lon, const double min_lon) -> void {
-        lon = lon.unaryExpr([min_lon](double x) {
+      [](const Eigen::Ref<const Eigen::VectorXd> &lon,
+         const double min_lon) -> Eigen::VectorXd {
+        return lon.unaryExpr([min_lon](double x) {
           return pyinterp::detail::math::normalize_angle(x, min_lon, 360.0);
         });
       },
       py::arg("lon"), py::arg("min_lon") = -180.0, R"__doc__(
-Normalizes longitudes to the range ``[min_lon, min_lon + 360)`` in place.
+Normalizes longitudes to the range ``[min_lon, min_lon + 360)``.
 
 Args:
     lon: Longitudes in degrees.
     min_lon: Minimum longitude. Defaults to ``-180.0``.
+
+Returns:
+    Longitudes normalized to the range ``[min_lon, min_lon + 360)``.
 )__doc__",
       py::call_guard<py::gil_scoped_release>());
 
@@ -1410,4 +1435,9 @@ Returns:
     to the distances between the coordinates
     ``[..., (Point(lon1_i, lat1_i), Point(lon2_i, lat2_i)), ...]``.
 )__doc__");
+
+  m.def("calculate_swath", &geodetic::calculate_swath<double>,
+        py::arg("delta_ac"), py::arg("half_gap"), py::arg("half_swath"),
+        py::arg("radius"), py::arg("location"), py::arg("direction"),
+        py::call_guard<py::gil_scoped_release>());
 }
