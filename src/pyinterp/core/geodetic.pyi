@@ -179,6 +179,12 @@ class LineString:
     def append(self, point: Point) -> None:
         ...
 
+    def curvilinear_distance(
+            self,
+            strategy: str = 'thomas',
+            wgs: Optional[System] = None) -> numpy.ndarray[numpy.float64]:
+        ...
+
     @staticmethod
     def from_geojson(array: List[List[float]]) -> LineString:
         ...
@@ -550,6 +556,14 @@ class _System:
         ...
 
 
+def calculate_swath(
+    lon_nadir: numpy.ndarray[numpy.float64],
+    lat_nadir: numpy.ndarray[numpy.float64], delta_ac: float, half_gap: float,
+    half_swath: int, radius: float
+) -> Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64]]:
+    ...
+
+
 def coordinate_distances(
         lon1: numpy.ndarray[numpy.float64],
         lat1: numpy.ndarray[numpy.float64],
@@ -561,6 +575,7 @@ def coordinate_distances(
     ...
 
 
-def normalize_longitudes(lon: numpy.ndarray[numpy.float64],
-                         min_lon: float = ...) -> numpy.ndarray[numpy.float64]:
+def normalize_longitudes(
+        lon: numpy.ndarray[numpy.float64],
+        min_lon: float = -180.0) -> numpy.ndarray[numpy.float64]:
     ...
