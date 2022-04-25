@@ -1437,7 +1437,7 @@ Returns:
 )__doc__");
 
   m.def("calculate_swath", &geodetic::calculate_swath<double>,
-        py::arg("delta_ac"), py::arg("half_gap"), py::arg("half_swath"),
-        py::arg("radius"), py::arg("location"), py::arg("direction"),
+        py::arg("lon_nadir"), py::arg("lat_nadir"), py::arg("delta_ac"),
+        py::arg("half_gap"), py::arg("half_swath"), py::arg("radius"),
         py::call_guard<py::gil_scoped_release>());
 }

@@ -16,17 +16,17 @@ namespace pyinterp::geodetic {
 /// Calculate the swath coordinates from the swath center coordinates.
 template <typename T>
 [[nodiscard]] auto calculate_swath(
-    const T& delta_ac, const T& half_gap, const int half_swath, const T& radius,
-    const pybind11::EigenDRef<const Eigen::Matrix<T, Eigen::Dynamic, 3>>&
-        location,
-    const pybind11::EigenDRef<const Eigen::Matrix<T, Eigen::Dynamic, 3>>&
-        direction)
+    const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& lon_nadir,
+    const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& lat_nadir,
+    const T& delta_ac, const T& half_gap, const int half_swath, const T& radius)
     -> std::tuple<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>,
                   Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>> {
-  detail::check_eigen_shape("location", location, "direction", direction);
-  auto lon = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>(location.rows(),
+  //   detail::check_eigen_shape("lon_nadir", lon_nadir, "lat_nadir", lat_ndir);
+  auto location = detail::math::spherical2cartesian<T>(lon_nadir, lat_nadir);
+  auto direction = detail::math::satellite_direction<T>(location);
+  auto lon = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>(lon_nadir.rows(),
                                                               2 * half_swath);
-  auto lat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>(location.rows(),
+  auto lat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>(lon_nadir.rows(),
                                                               2 * half_swath);
   auto loc = Eigen::Matrix<T, 3, 1>();
 

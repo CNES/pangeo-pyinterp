@@ -71,6 +71,8 @@ def test_calculate_orbit():
     """Test the calculation of the orbit."""
     height, ephemeris, cycle_duration = load_test_ephemeris()
     orbit = orbit_propagator.calculate_orbit(height, ephemeris, cycle_duration)
+    assert orbit.height == height
+    assert orbit.passes_per_cycle() == 28
 
 
 def test_calculate_pass():

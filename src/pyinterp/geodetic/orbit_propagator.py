@@ -4,39 +4,20 @@
 # BSD-style license that can be found in the LICENSE file.
 from typing import Iterator, Optional, Tuple
 import dataclasses
+import functools
 
 import numpy as np
 
 from .. import core, geodetic
+from ..typing import (
+    NDArray,
+    NDArrayDateTime,
+    NDArrayStructured,
+    NDArrayTimeDelta,
+)
 
 
-def _spher2cart(lon: np.ndarray,
-                lat: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Convert spherical coordinates to cartesian coordinates."""
-    rlon = np.radians(lon)
-    rlat = np.radians(lat)
-    x = np.cos(rlon) * np.cos(rlat)
-    y = np.sin(rlon) * np.cos(rlat)
-    z = np.sin(rlat)
-    return x, y, z
-
-
-def _cart2spher(x: np.ndarray, y: np.ndarray,
-                z: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Convert cartesian coordinates to spherical coordinates."""
-    indexes = np.where((x == 0) & (y == 0))[0]
-    if indexes.size:
-        x[indexes] = np.nan
-        y[indexes] = np.nan
-    lat = np.arctan2(z, np.sqrt(x * x + y * y))  # type: ignore
-    lon = np.arctan2(y, x)
-    if indexes.size:
-        lon[indexes] = 0
-        lat[indexes] = np.pi * 0.5 * np.sign(z[indexes])
-    return np.degrees(lon), np.degrees(lat)
-
-
-def _satellite_direction(location: np.ndarray) -> np.ndarray:
+def _satellite_direction(location: NDArray) -> NDArray:
     """Calculate satellite direction."""
     direction = np.empty_like(location)
 
@@ -67,30 +48,50 @@ Ephemeris = np.dtype([
 ])
 
 
-def _interpolate(ephemeris: np.ndarray) -> np.ndarray:
-    """Interpolate the given orbit at high resolution (0.5 seconds)
+def _interpolate(
+    lon: NDArray,
+    lat: NDArray,
+    xi: NDArray,
+    xp: NDArray,
+    wgs: geodetic.Coordinates,
+) -> Tuple[NDArray, NDArray]:
+    """Interpolate the given orbit at the given coordinates.
+
     Args:
-        ephemeris: Ephemeris to interpolate.
+        lon: Longitudes (in degrees).
+        lat: Latitudes (in degrees).
+        xi: The x-coordinates at which to evaluate the interpolated values.
+        xp: The x-coordinates at which the orbit is defined.
+        wgs: The World Geodetic System used to convert the coordinates.
+
     Returns:
-        Ephemeris interpolated at 0.5 seconds.
+        Tuple[NDArray, NDArray]: The interpolated longitudes and latitudes.
     """
-    x, y, z = _spher2cart(ephemeris["longitude"], ephemeris["latitude"])
-    time_hr = np.arange(ephemeris["time"][0], ephemeris["time"][-1],
-                        np.timedelta64(500, "ms"))
+    mz = wgs.system.semi_major_axis / wgs.system.semi_minor_axis()
+    x, y, z = wgs.lla_to_ecef(lon, lat, np.full_like(lon, 0))
 
-    x = np.interp(time_hr.astype("i8"), ephemeris["time"].astype("i8"), x)
-    y = np.interp(time_hr.astype("i8"), ephemeris["time"].astype("i8"), y)
-    z = np.interp(time_hr.astype("i8"), ephemeris["time"].astype("i8"), z)
+    r = np.sqrt(x * x + y * y + z * z * mz * mz)
+    x = np.interp(xi, xp, x)
+    y = np.interp(xi, xp, y)
+    z = np.interp(xi, xp, z)
+    r = np.interp(xi, xp, r)
 
-    lon, lat = _cart2spher(x, y, z)
+    r /= np.sqrt(x * x + y * y + z * z)
+    x *= r
+    y *= r
+    z *= r * (1 / mz)
 
-    return np.rec.fromarrays([time_hr, lon, lat], dtype=Ephemeris)
+    lon, lat, _ = wgs.ecef_to_lla(x, y, z)
+
+    return lon, lat
 
 
 def _rearrange_orbit(
     cycle_duration: np.timedelta64,
-    ephemeris: np.ndarray,
-) -> np.ndarray:
+    lon: NDArray,
+    lat: NDArray,
+    time: NDArrayTimeDelta,
+) -> Tuple[NDArray, NDArray, NDArrayTimeDelta]:
     """Rearrange orbit starting from pass 1.
 
     Detect the beginning of pass 1 in the ephemeris. By definition, it is
@@ -98,12 +99,13 @@ def _rearrange_orbit(
 
     Args:
         cycle_duration: Cycle time in seconds.
-        ephemeris: Ephemeris to rearrange.
+        lon: Longitudes (in degrees).
+        lat: Latitudes (in degrees).
+        time: Time since the beginning of the orbit.
+
     Returns:
-        Ephemeris rearranged.
+        The orbit rearranged starting from pass 1.
     """
-    lon, lat, time = (ephemeris["longitude"], ephemeris["latitude"],
-                      ephemeris["time"])
     dy = np.roll(lat, 1) - lat  # type: ignore
     indexes = np.where((dy < 0) & (np.roll(dy, 1) >= 0))[0]
 
@@ -117,18 +119,19 @@ def _rearrange_orbit(
     time = (time - time[0]) % cycle_duration
     if np.any(time < np.timedelta64(0, "s")):
         raise ValueError("Time is negative")
-    return np.rec.fromarrays([time, lon, lat], dtype=Ephemeris)
+    return lon, lat, time
 
 
-def _calculate_pass_time(lat: np.ndarray, time: np.ndarray) -> np.ndarray:
+def _calculate_pass_time(lat: NDArray,
+                         time: NDArrayTimeDelta) -> NDArrayTimeDelta:
     """Compute the initial time of each pass.
 
     Args:
-        lat (np.ndarray): Latitudes (in degrees)
-        time (np.ndarray): Date of the latitudes (in seconds).
+        lat: Latitudes (in degrees)
+        time: Date of the latitudes (in seconds).
 
     Returns:
-        np.ndarray: Start date of half-orbits.
+        Start date of half-orbits.
     """
     dy = np.roll(lat, 1) - lat  # type: ignore
     indexes = np.where(((dy < 0) & (np.roll(dy, 1) >= 0))
@@ -150,16 +153,14 @@ class Orbit:
         pass_time: Start date of half-orbits.
         time: Time elapsed since the beginning of the orbit.
         x_al: Along track distance (in meters).
-        curvlinear_distance: Curvilinear distance (in meters).
         wgs: World Geodetic System used.
     """
     height: float
-    latitude: np.ndarray
-    longitude: np.ndarray
-    pass_time: np.ndarray
-    time: np.ndarray
-    x_al: np.ndarray
-    curvlinear_distance: np.ndarray
+    latitude: NDArray
+    longitude: NDArray
+    pass_time: NDArrayTimeDelta
+    time: NDArrayTimeDelta
+    x_al: NDArray
     wgs: geodetic.System
 
     def cycle_duration(self) -> np.timedelta64:
@@ -176,6 +177,13 @@ class Orbit:
             "timedelta64[us]") / np.timedelta64(
                 int(self.passes_per_cycle() // 2), 'us')
         return np.timedelta64(int(duration), "us")
+
+    @functools.cached_property
+    def curvilinear_distance(self) -> np.ndarray:
+        """Get the curvilinear distance."""
+        return geodetic.LineString(self.longitude,
+                                   self.latitude).curvilinear_distance(
+                                       strategy="thomas", wgs=self.wgs)
 
     def pass_duration(self, number: int) -> np.timedelta64:
         """Get the duration of a given pass.
@@ -269,28 +277,28 @@ class Orbit:
 class Pass:
     """Class representing a pass of an orbit."""
     #: Nadir longitude of the pass (degrees)
-    lon_nadir: np.ndarray
+    lon_nadir: NDArray
     #: Nadir latitude of the pass (degrees)
-    lat_nadir: np.ndarray
+    lat_nadir: NDArray
     #: Longitude of the pass (degrees)
-    lon: np.ndarray
+    lon: NDArray
     #: Latitude of the pass (degrees)
-    lat: np.ndarray
+    lat: NDArray
     #: Time of the pass
-    time: np.ndarray
+    time: NDArrayDateTime
     #: Along track distance of the pass (km)
-    x_al: np.ndarray
+    x_al: NDArray
     #: Across track distance of the pass (km)
-    x_ac: np.ndarray
+    x_ac: NDArray
 
 
 def calculate_orbit(
     height: float,
-    ephemeris: np.ndarray,
+    ephemeris: NDArrayStructured,
     cycle_duration: Optional[np.timedelta64] = None,
     along_track_resolution: Optional[float] = None,
-    wgs: Optional[geodetic.System] = None,
-):
+    system: Optional[geodetic.System] = None,
+) -> Orbit:
     """Calculate the orbit at the given height.
 
     Args:
@@ -302,51 +310,56 @@ def calculate_orbit(
         wgs: Geodetic system to use. Defaults to WGS84.
 
     Returns:
-        Ephemeris of the orbit.
+        Orbit object.
     """
-    wgs = wgs or geodetic.System()
-
-    if np.mean(np.diff(ephemeris["time"])) > np.timedelta64(500, "ms"):
-        ephemeris = _interpolate(ephemeris)
+    wgs = geodetic.Coordinates(system)
 
     lon = geodetic.normalize_longitudes(ephemeris["longitude"])
+    lat = ephemeris["latitude"]
+    time = ephemeris["time"]
+
+    if np.mean(np.diff(time)) > np.timedelta64(500, "ms"):
+        time_hr = np.arange(time[0],
+                            time[-1],
+                            np.timedelta64(500, "ms"),
+                            dtype=time.dtype)
+        lon, lat = _interpolate(lon, lat, time_hr.astype("i8"),
+                                time.astype("i8"), wgs)
+        time = time_hr
 
     if cycle_duration is not None:
-        indexes = np.where(ephemeris["time"] < cycle_duration)[0]
-        ephemeris[indexes] = ephemeris[indexes]
+        indexes = np.where(time < cycle_duration)[0]
+        lon = lon[indexes]
+        lat = lat[indexes]
+        time = time[indexes]
         del indexes
 
-    cycle_duration = (ephemeris["time"][-1] + ephemeris["time"][1] -
-                      ephemeris["time"][0])
-
     # Rearrange orbit starting from pass 1
-    ephemeris = _rearrange_orbit(cycle_duration, ephemeris)  # type: ignore
+    lon, lat, time = _rearrange_orbit(
+        time[-1] + time[1] - time[0],
+        lon,
+        lat,
+        time,
+    )
 
     # Calculates the along track distance (km)
-    distance = geodetic.LineString(ephemeris["longitude"],
-                                   ephemeris["latitude"]).curvilinear_distance(
-                                       strategy="andoyer", wgs=wgs) * 1e-3
+    distance = geodetic.LineString(lon, lat).curvilinear_distance(
+        strategy="thomas", wgs=system) * 1e-3
 
     # Interpolate the final orbit according the given along track resolution
     x_al = np.arange(distance[0],
                      distance[-2],
                      along_track_resolution or 2,
                      dtype=distance.dtype)
+    lon, lat = _interpolate(lon[:-1], lat[:-1], x_al, distance[:-1], wgs)
 
-    x, y, z = _spher2cart(ephemeris["longitude"], ephemeris["latitude"])
-    x = np.interp(x_al, distance[:-1], x[:-1])  # type: ignore
-    y = np.interp(x_al, distance[:-1], y[:-1])  # type: ignore
-    z = np.interp(x_al, distance[:-1], z[:-1])  # type: ignore
-    lon, lat = _cart2spher(x, y, z)
-
-    time = ephemeris["time"]
     time = np.interp(
         x_al,  # type: ignore
         distance[:-1],  # type: ignore
         time[:-1].astype("i8")).astype(time.dtype)
 
     return Orbit(height, lat, lon, np.sort(_calculate_pass_time(lat, time)),
-                 time, x_al, distance, wgs)
+                 time, x_al, wgs.system)  # type: ignore
 
 
 def calculate_pass(
@@ -414,16 +427,13 @@ def calculate_pass(
                      dtype=float) * along_track_resolution + half_gap
     x_ac = np.hstack((-np.flip(x_ac), x_ac))
 
-    location = np.ascontiguousarray(
-        np.vstack(_spher2cart(lon_nadir, lat_nadir)).T)
-    satellite_direction = _satellite_direction(location)
     lon, lat = core.geodetic.calculate_swath(
+        lon_nadir,
+        lat_nadir,
         across_track_resolution,
         half_gap,
         half_swath,
         orbit.wgs.mean_radius() * 1e-3,
-        location,
-        satellite_direction,
     )
 
     return Pass(lon_nadir, lat_nadir, lon, lat, time, x_al, x_ac)
