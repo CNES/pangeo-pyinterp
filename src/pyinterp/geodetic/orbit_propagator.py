@@ -274,6 +274,20 @@ class Orbit:
 
 
 @dataclasses.dataclass(frozen=True)
+class EquatorCoordinates:
+    """Coordinates of the satellite at the equator."""
+    #: Longitude
+    longitude: float
+    #: Product dataset name
+    time: np.datetime64
+
+    @classmethod
+    def undefined(cls) -> "EquatorCoordinates":
+        """Create an undefined instance."""
+        return cls(np.nan, np.datetime64("NaT"))
+
+
+@dataclasses.dataclass(frozen=True)
 class Pass:
     """Class representing a pass of an orbit."""
     #: Nadir longitude of the pass (degrees)
@@ -290,6 +304,46 @@ class Pass:
     x_al: NDArray
     #: Across track distance of the pass (km)
     x_ac: NDArray
+    #: Coordinates of the satellite at the equator
+    equator_coordinates: EquatorCoordinates
+
+
+def equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
+                       time: NDArrayTimeDelta,
+                       wgs: geodetic.System) -> EquatorCoordinates:
+    """Calculate the position of the satellite at the equator."""
+    if lon_nadir.size < 2:
+        return EquatorCoordinates.undefined()
+
+    # Search the nearest point to the equator
+    i1 = (np.abs(lat_nadir)).argmin()
+    i0 = i1 - 1
+    if lat_nadir[i0] * lat_nadir[i1] > 0:
+        i0, i1 = i1, i1 + 1
+    lon1 = lon_nadir[i0:i1 + 1]
+    lat1 = lat_nadir[i0:i1 + 1]
+
+    # Calculate the position of the satellite at the equator
+    point = geodetic.LineString(lon1, lat1).intersection(
+        geodetic.LineString(lon1, np.array([0, 0], dtype="float64")))
+    if point is None:
+        return EquatorCoordinates.undefined()
+
+    # Calculate the time of the point on the equator
+    lon1 = np.insert(lon1, 1, point.lon)
+    lat1 = np.insert(lat1, 1, 0)
+    x_al = geodetic.LineString(lon1,
+                               lat1).curvilinear_distance(strategy="thomas",
+                                                          wgs=wgs)
+
+    # Pop the along track distance at the equator
+    x_eq = x_al[1]
+    x_al = np.delete(x_al, 1)
+
+    return EquatorCoordinates(point.lon,
+                              np.interp(x_eq, x_al,
+                                        time[i0:i1 + 1].astype("i8")).astype(
+                                            time.dtype))  # type: ignore
 
 
 def calculate_orbit(
@@ -420,6 +474,9 @@ def calculate_pass(
         time = time[mask]
         x_al = x_al[mask]
 
+    equator_coordinates = equator_properties(lon_nadir, lat_nadir, time,
+                                             orbit.wgs)
+
     # Compute across track distances from nadir
     # Number of points in half of the swath
     half_swath = int((half_swath - half_gap) / across_track_resolution) + 1
@@ -436,4 +493,5 @@ def calculate_pass(
         orbit.wgs.mean_radius() * 1e-3,
     )
 
-    return Pass(lon_nadir, lat_nadir, lon, lat, time, x_al, x_ac)
+    return Pass(lon_nadir, lat_nadir, lon, lat, time, x_al, x_ac,
+                equator_coordinates)
