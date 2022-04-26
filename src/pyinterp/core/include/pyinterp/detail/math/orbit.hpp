@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <cmath>
 #include <tuple>
 
@@ -35,8 +36,7 @@ auto satellite_direction(const Eigen::Matrix<T, Eigen::Dynamic, 3>& location)
 }
 
 template <typename T>
-auto spherical2cartesian(const Eigen::Matrix<T, Eigen::Dynamic, 1>& lon,
-                         const Eigen::Matrix<T, Eigen::Dynamic, 1>& lat)
+auto spherical2cartesian(const Vector<T>& lon, const Vector<T>& lat)
     -> Eigen::Matrix<T, Eigen::Dynamic, 3> {
   auto result = Eigen::Matrix<T, Eigen::Dynamic, 3>(lon.rows(), 3);
   for (auto ix = 0; ix < lon.rows(); ++ix) {
@@ -52,29 +52,10 @@ auto spherical2cartesian(const Eigen::Matrix<T, Eigen::Dynamic, 1>& lon,
 /// Calculate the rotation matrix for a rotation of angle θ around the axis
 template <typename T>
 inline auto rotation_3d_matrix(const T& theta,
-                               const Eigen::Vector3<T>& axis) noexcept
+                               const Eigen::Matrix<T, 3, 1>& axis) noexcept
     -> Eigen::Matrix<T, 3, 3> {
-  auto coefs = -axis.normalized() * std::sin(theta * static_cast<T>(0.5));
-
-  auto result = Eigen::Matrix<T, 3, 3>();
-  const auto a = std::cos(theta * 0.5);
-  const auto b = coefs[0];
-  const auto c = coefs[1];
-  const auto d = coefs[2];
-  const auto a2 = a * a;
-  const auto b2 = b * b;
-  const auto c2 = c * c;
-  const auto d2 = d * d;
-  const auto bc = b * c;
-  const auto ad = a * d;
-  const auto bd = b * d;
-  const auto ac = a * c;
-  const auto cd = c * d;
-  const auto ab = a * b;
-  result << a2 + b2 - c2 - d2, 2 * (bc - ad), 2 * (bd + ac), 2 * (bc + ad),
-      a2 - b2 + c2 - d2, 2 * (cd - ab), 2 * (bd - ac), 2 * (cd + ab),
-      a2 - b2 - c2 + d2;
-  return result;
+  auto angle_axis = Eigen::AngleAxis<T>(theta, -axis.normalized());
+  return angle_axis.toRotationMatrix();
 }
 
 /// Convert cartesian coordinates to spherical coordinates

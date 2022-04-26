@@ -12,7 +12,8 @@ from ..geodetic import orbit_propagator
 
 
 def load_ephemeris(
-        filename: os.PathLike) -> Tuple[float, np.ndarray, np.timedelta64]:
+    filename: os.PathLike
+) -> Tuple[float, orbit_propagator.Ephemeris, np.timedelta64]:
     """Loads the ephemeris from a text file.
 
     Args:
@@ -50,19 +51,17 @@ def load_ephemeris(
 
     return (
         settings["height"],
-        np.rec.fromarrays(
-            [
-                ephemeris["time"].astype("timedelta64[s]"),
-                ephemeris["longitude"],
-                ephemeris["latitude"],
-            ],
-            dtype=orbit_propagator.Ephemeris,
+        orbit_propagator.Ephemeris(
+            ephemeris["time"].astype("timedelta64[s]"),
+            ephemeris["longitude"],
+            ephemeris["latitude"],
         ),
         np.timedelta64(int(settings["cycle_duration"] * 86400.0 * 1e9), "ns"),
     )
 
 
-def load_test_ephemeris() -> Tuple[float, np.ndarray, np.timedelta64]:
+def load_test_ephemeris(
+) -> Tuple[float, orbit_propagator.Ephemeris, np.timedelta64]:
     """Loads the test ephemeris."""
     return load_ephemeris(swot_calval_ephemeris_path())
 

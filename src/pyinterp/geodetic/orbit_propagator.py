@@ -9,12 +9,7 @@ import functools
 import numpy as np
 
 from .. import core, geodetic
-from ..typing import (
-    NDArray,
-    NDArrayDateTime,
-    NDArrayStructured,
-    NDArrayTimeDelta,
-)
+from ..typing import NDArray, NDArrayDateTime, NDArrayTimeDelta
 
 
 def _satellite_direction(location: NDArray) -> NDArray:
@@ -39,13 +34,6 @@ def _satellite_direction(location: NDArray) -> NDArray:
     direction[-1, :] = direction[-2, :]
 
     return direction
-
-
-Ephemeris = np.dtype([
-    ("time", "timedelta64[ns]"),
-    ("longitude", "float64"),
-    ("latitude", "float64"),
-])
 
 
 def _interpolate(
@@ -140,6 +128,13 @@ def _calculate_pass_time(lat: NDArray,
     # The duration of the first pass is zero.
     indexes[0] = 0
     return time[indexes]
+
+
+@dataclasses.dataclass(frozen=True)
+class Ephemeris:
+    time: NDArrayDateTime
+    lon: NDArray
+    lat: NDArray
 
 
 @dataclasses.dataclass(frozen=True)
@@ -294,18 +289,23 @@ class Pass:
     lon_nadir: NDArray
     #: Nadir latitude of the pass (degrees)
     lat_nadir: NDArray
-    #: Longitude of the pass (degrees)
-    lon: NDArray
-    #: Latitude of the pass (degrees)
-    lat: NDArray
     #: Time of the pass
     time: NDArrayDateTime
     #: Along track distance of the pass (km)
     x_al: NDArray
-    #: Across track distance of the pass (km)
-    x_ac: NDArray
     #: Coordinates of the satellite at the equator
     equator_coordinates: EquatorCoordinates
+
+
+@dataclasses.dataclass(frozen=True)
+class Swath(Pass):
+    """Class representing a pass of an orbit."""
+    #: Longitude of the swath (degrees)
+    lon: NDArray
+    #: Latitude of the swath (degrees)
+    lat: NDArray
+    #: Across track distance of the pass (km)
+    x_ac: NDArray
 
 
 def equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
@@ -348,7 +348,7 @@ def equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
 
 def calculate_orbit(
     height: float,
-    ephemeris: NDArrayStructured,
+    ephemeris: Ephemeris,
     cycle_duration: Optional[np.timedelta64] = None,
     along_track_resolution: Optional[float] = None,
     system: Optional[geodetic.System] = None,
@@ -368,9 +368,9 @@ def calculate_orbit(
     """
     wgs = geodetic.Coordinates(system)
 
-    lon = geodetic.normalize_longitudes(ephemeris["longitude"])
-    lat = ephemeris["latitude"]
-    time = ephemeris["time"]
+    lon = geodetic.normalize_longitudes(ephemeris.lon)
+    lat = ephemeris.lat
+    time = ephemeris.time.astype("m8[ns]")
 
     if np.mean(np.diff(time)) > np.timedelta64(500, "ms"):
         time_hr = np.arange(time[0],
@@ -421,33 +421,21 @@ def calculate_pass(
     orbit: Orbit,
     *,
     bbox: Optional[geodetic.Box] = None,
-    across_track_resolution: Optional[float] = None,
     along_track_resolution: Optional[float] = None,
-    half_swath: Optional[float] = None,
-    half_gap: Optional[float] = None,
 ) -> Optional[Pass]:
-    """Get the properties of an half-orbit.
+    """Get the properties of a swath of an half-orbit.
 
     Args:
         pass_number: Pass number
         orbit: Orbit describing the pass to be calculated.
         bbox: Bounding box of the pass. Defaults to the whole Earth.
-        across_track_resolution: Distance, in km, between two points across
-            track direction. Defaults to 2 km.
         along_track_resolution: Distance, in km, between two points along track
             direction. Defaults to 2 km.
-        half_swath: Distance, in km, between the nadir and the center of the
-            last pixel of the swath. Defaults to 70 km.
-        half_gap: Distance, in km, between the nadir and the center of the first
-            pixel of the swath. Defaults to 2 km.
 
     Returns:
         The properties of the pass.
     """
-    across_track_resolution = across_track_resolution or 2.0
     along_track_resolution = along_track_resolution or 2.0
-    half_swath = half_swath or 70.0
-    half_gap = half_gap or 2.0
     index = pass_number - 1
     # Selected indexes corresponding to the current pass
     if index == len(orbit.pass_time) - 1:
@@ -467,7 +455,7 @@ def calculate_pass(
     # Selects the orbit in the defined box
     if bbox is not None:
         mask = bbox.covered_by(lon_nadir, lat_nadir)
-        if np.all(~mask):
+        if np.all(mask == 0):
             return None
         lon_nadir = lon_nadir[mask]
         lat_nadir = lat_nadir[mask]
@@ -477,6 +465,47 @@ def calculate_pass(
     equator_coordinates = equator_properties(lon_nadir, lat_nadir, time,
                                              orbit.wgs)
 
+    return Pass(lon_nadir, lat_nadir, time, x_al, equator_coordinates)
+
+
+def calculate_swath(
+    pass_number: int,
+    orbit: Orbit,
+    *,
+    bbox: Optional[geodetic.Box] = None,
+    across_track_resolution: Optional[float] = None,
+    along_track_resolution: Optional[float] = None,
+    half_swath: Optional[float] = None,
+    half_gap: Optional[float] = None,
+) -> Optional[Swath]:
+    """Get the properties of a swath of an half-orbit.
+
+    Args:
+        pass_number: Pass number
+        orbit: Orbit describing the pass to be calculated.
+        bbox: Bounding box of the pass. Defaults to the whole Earth.
+        across_track_resolution: Distance, in km, between two points across
+            track direction. Defaults to 2 km.
+        along_track_resolution: Distance, in km, between two points along track
+            direction. Defaults to 2 km.
+        half_swath: Distance, in km, between the nadir and the center of the
+            last pixel of the swath. Defaults to 70 km.
+        half_gap: Distance, in km, between the nadir and the center of the first
+            pixel of the swath. Defaults to 2 km.
+
+    Returns:
+        The properties of the pass.
+    """
+    pass_ = calculate_pass(pass_number,
+                           orbit,
+                           bbox=bbox,
+                           along_track_resolution=along_track_resolution)
+    if pass_ is None:
+        return None
+    across_track_resolution = across_track_resolution or 2.0
+    half_swath = half_swath or 70.0
+    half_gap = half_gap or 2.0
+
     # Compute across track distances from nadir
     # Number of points in half of the swath
     half_swath = int((half_swath - half_gap) / across_track_resolution) + 1
@@ -485,13 +514,13 @@ def calculate_pass(
     x_ac = np.hstack((-np.flip(x_ac), x_ac))
 
     lon, lat = core.geodetic.calculate_swath(
-        lon_nadir,
-        lat_nadir,
+        pass_.lon_nadir,
+        pass_.lat_nadir,
         across_track_resolution,
         half_gap,
         half_swath,
         orbit.wgs.mean_radius() * 1e-3,
     )
 
-    return Pass(lon_nadir, lat_nadir, lon, lat, time, x_al, x_ac,
-                equator_coordinates)
+    return Swath(pass_.lon_nadir, pass_.lat_nadir, pass_.time, pass_.x_al,
+                 pass_.equator_coordinates, lon, lat, x_ac)

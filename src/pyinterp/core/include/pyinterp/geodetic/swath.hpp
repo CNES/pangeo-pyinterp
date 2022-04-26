@@ -15,10 +15,10 @@ namespace pyinterp::geodetic {
 
 /// Calculate the swath coordinates from the swath center coordinates.
 template <typename T>
-[[nodiscard]] auto calculate_swath(
-    const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& lon_nadir,
-    const Eigen::Ref<const Eigen::Matrix<T, -1, -1>>& lat_nadir,
-    const T& delta_ac, const T& half_gap, const int half_swath, const T& radius)
+[[nodiscard]] auto calculate_swath(const Eigen::Ref<const Vector<T>>& lon_nadir,
+                                   const Eigen::Ref<const Vector<T>>& lat_nadir,
+                                   const T& delta_ac, const T& half_gap,
+                                   const int half_swath, const T& radius)
     -> std::tuple<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>,
                   Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>> {
   //   detail::check_eigen_shape("lon_nadir", lon_nadir, "lat_nadir", lat_ndir);
@@ -32,7 +32,7 @@ template <typename T>
 
   for (auto ix = 0; ix < location.rows(); ++ix) {
     const auto loc_row = location.row(ix).transpose();
-    const auto& dir_row = direction.row(ix);
+    const auto dir_row = direction.row(ix);
 
     for (auto jx = 0; jx < half_swath; ++jx) {
       auto rotation = detail::math::rotation_3d_matrix<T>(
