@@ -218,7 +218,7 @@ Returns:
           [](const geodetic::Box &self,
              const Eigen::Ref<const Eigen::VectorXd> &lon,
              const Eigen::Ref<const Eigen::VectorXd> &lat,
-             const size_t num_threads) -> py::array_t<int8_t> {
+             const size_t num_threads) -> py::array_t<bool> {
             return self.covered_by(lon, lat, num_threads);
           },
           py::arg("lon"), py::arg("lat"), py::arg("num_threads") = 1,
@@ -479,7 +479,7 @@ Returns:
           [](const geodetic::Polygon &self,
              const Eigen::Ref<const Eigen::VectorXd> &lon,
              const Eigen::Ref<const Eigen::VectorXd> &lat,
-             const size_t num_threads) -> py::array_t<int8_t> {
+             const size_t num_threads) -> py::array_t<bool> {
             return self.covered_by(lon, lat, num_threads);
           },
           py::arg("lon"), py::arg("lat"), py::arg("num_threads") = 1,
@@ -829,7 +829,7 @@ Returns:
           [](const geodetic::MultiPolygon &self,
              const Eigen::Ref<const Eigen::VectorXd> &lon,
              const Eigen::Ref<const Eigen::VectorXd> &lat,
-             const size_t num_threads) -> py::array_t<int8_t> {
+             const size_t num_threads) -> py::array_t<bool> {
             return self.covered_by(lon, lat, num_threads);
           },
           py::arg("lon"), py::arg("lat"), py::arg("num_threads") = 1,

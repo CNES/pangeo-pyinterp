@@ -96,7 +96,7 @@ class Polygon : public boost::geometry::model::polygon<Point> {
   [[nodiscard]] auto covered_by(const Eigen::Ref<const Eigen::VectorXd> &lon,
                                 const Eigen::Ref<const Eigen::VectorXd> &lat,
                                 const size_t num_threads) const
-      -> pybind11::array_t<int8_t> {
+      -> pybind11::array_t<bool> {
     return geodetic::covered_by<Point, Polygon>(*this, lon, lat, num_threads);
   }
 

@@ -57,11 +57,11 @@ template <typename Geometry1, typename Geometry2>
 [[nodiscard]] inline auto covered_by(
     const Geometry2 &geometry2, const Eigen::Ref<const Eigen::VectorXd> &lon,
     const Eigen::Ref<const Eigen::VectorXd> &lat, const size_t num_threads)
-    -> pybind11::array_t<int8_t> {
+    -> pybind11::array_t<bool> {
   detail::check_eigen_shape("lon", lon, "lat", lat);
   auto size = lon.size();
   auto result =
-      pybind11::array_t<int8_t>(pybind11::array::ShapeContainer{{size}});
+      pybind11::array_t<bool>(pybind11::array::ShapeContainer{{size}});
   auto _result = result.template mutable_unchecked<1>();
 
   {
@@ -76,8 +76,8 @@ template <typename Geometry1, typename Geometry2>
           try {
             for (auto ix = static_cast<int64_t>(start);
                  ix < static_cast<int64_t>(end); ++ix) {
-              _result(ix) = static_cast<int8_t>(boost::geometry::covered_by(
-                  Geometry1(lon(ix), lat(ix)), geometry2));
+              _result(ix) = boost::geometry::covered_by(
+                  Geometry1(lon(ix), lat(ix)), geometry2);
             }
           } catch (...) {
             except = std::current_exception();
