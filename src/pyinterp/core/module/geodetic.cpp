@@ -1079,21 +1079,27 @@ Returns:
 )__doc__",
           py::call_guard<py::gil_scoped_release>())
       .def("intersects", &geodetic::LineString::intersects, py::arg("rhs"),
+           py::arg("wgs") = std::nullopt,
            R"__doc__(
 Test if this linestring intersects with another linestring.
 
 Args:
     rhs: The linestring to test.
+    wgs: If specified, searches for the intersection using geographic
+        coordinates with the specified world geodetic system, otherwise
+        searches for the intersection using spherical coordinates.
 Returns:
     True if the linestring intersects this instance.
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
       .def("intersection", &geodetic::LineString::intersection, py::arg("rhs"),
+           py::arg("wgs") = std::nullopt,
            R"__doc__(
 Get the coordinate of the intersection between this linestring and another one.
 
 Args:
     rhs: The linestring to test.
+    wgs: The World Geodetic System to use. Defaults to WGS84.
 
 Returns:
     The coordinates of the intersection or None if there is no intersection.
@@ -1129,16 +1135,26 @@ Args:
       .def_property_readonly("half_orbit_2",
                              &geodetic::Crossover::get_half_orbit_2,
                              "Returns the second half-orbit.")
-      .def("search", &geodetic::Crossover::search, R"__doc__(
+      .def("search", &geodetic::Crossover::search,
+           py::arg("wgs") = std::nullopt,
+           R"__doc__(
 Search for the crossover between the two half-orbits.
-
+Args:
+    wgs: If specified, searches for the intersection using geographic
+        coordinates with the specified world geodetic system, otherwise
+        searches for the intersection using spherical coordinates.
 Returns:
     The crossover or None if there is no crossover.
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
-      .def("exists", &geodetic::Crossover::exists, R"__doc__(
+      .def("exists", &geodetic::Crossover::exists,
+           py::arg("wgs") = std::nullopt,
+           R"__doc__(
 Test if there is a crossover between the two half-orbits.
-
+Args:
+    wgs: If specified, searches for the intersection using geographic
+        coordinates with the specified world geodetic system, otherwise
+        searches for the intersection using spherical coordinates.
 Returns:
     True if there is a crossover.
 )__doc__",

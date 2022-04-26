@@ -78,4 +78,4 @@ def test_calculate_pass():
     """Test the calculation of the pass."""
     height, ephemeris, cycle_duration = load_test_ephemeris()
     orbit = orbit_propagator.calculate_orbit(height, ephemeris, cycle_duration)
-    pass_ = orbit_propagator.calculate_pass(1, orbit)
+    pass_ = orbit_propagator.calculate_pass(2, orbit)

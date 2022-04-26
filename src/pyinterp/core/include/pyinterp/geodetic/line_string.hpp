@@ -14,6 +14,7 @@
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/point.hpp"
+#include "pyinterp/geodetic/system.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -53,16 +54,16 @@ class LineString : public boost::geometry::model::linestring<Point> {
   ///
   /// @param rhs the linestring to test.
   /// @return true if the linestrings intersect.
-  [[nodiscard]] auto intersects(const LineString& rhs) const -> bool {
-    return boost::geometry::intersects(*this, rhs);
-  }
+  [[nodiscard]] auto intersects(const LineString& rhs,
+                                const std::optional<System>& wgs) const -> bool;
 
   /// Get the coordinate of the intersection between this linestring and
   /// another one.
   ///
   /// @param rhs the linestring to test.
   /// @return the intersection point or none if no intersection is found.
-  [[nodiscard]] auto intersection(const LineString& rhs) const
+  [[nodiscard]] auto intersection(const LineString& rhs,
+                                  const std::optional<System>& wgs) const
       -> std::optional<Point>;
 
   /// Get the length of the linestring

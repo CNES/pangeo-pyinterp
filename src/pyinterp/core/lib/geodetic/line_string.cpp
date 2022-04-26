@@ -25,10 +25,34 @@ auto LineString::from_geojson(const pybind11::list& array) -> LineString {
   return result;
 }
 
-auto LineString::intersection(const LineString& rhs) const
+auto LineString::intersects(const LineString& rhs,
+                            const std::optional<System>& wgs) const -> bool {
+  if (wgs) {
+    return boost::geometry::intersects(
+        *this, rhs,
+        boost::geometry::strategy::intersection::geographic_segments<>(
+            static_cast<boost::geometry::srs::spheroid<double>>(*wgs)));
+  } else {
+    return boost::geometry::intersects(
+        *this, rhs,
+        boost::geometry::strategy::intersection::spherical_segments<>());
+  }
+}
+
+auto LineString::intersection(const LineString& rhs,
+                              const std::optional<System>& wgs) const
     -> std::optional<Point> {
   std::deque<Point> output;
-  boost::geometry::intersection(*this, rhs, output);
+  if (wgs) {
+    boost::geometry::intersection(
+        *this, rhs, output,
+        boost::geometry::strategy::intersection::geographic_segments<>(
+            static_cast<boost::geometry::srs::spheroid<double>>(*wgs)));
+  } else {
+    boost::geometry::intersection(
+        *this, rhs, output,
+        boost::geometry::strategy::intersection::spherical_segments<>());
+  }
 
   if (output.empty()) {
     // There is no intersection.
@@ -111,10 +135,10 @@ auto LineString::curvilinear_distance(DistanceStrategy strategy,
     return Vector<double>{};
   }
 
-  auto spheroid = wgs.has_value()
-                      ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
-                                                       wgs->semi_minor_axis())
-                      : boost::geometry::srs::spheroid<double>();
+  auto spheroid =
+      wgs.has_value()
+          ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
+          : boost::geometry::srs::spheroid<double>();
   auto result = Vector<double>(size());
 
   switch (strategy) {

@@ -43,7 +43,7 @@ class Box:
     def covered_by(self,
                    lon: numpy.ndarray[numpy.float64],
                    lat: numpy.ndarray[numpy.float64],
-                   num_threads: int = ...) -> numpy.ndarray[numpy.int8]:
+                   num_threads: int = ...) -> numpy.ndarray[bool]:
         ...
 
     @overload
@@ -132,7 +132,7 @@ class Crossover:
                  half_orbit_2: LineString) -> None:
         ...
 
-    def exists(self) -> bool:
+    def exists(self, wgs: Optional[System] = None) -> bool:
         ...
 
     def nearest(self,
@@ -142,7 +142,7 @@ class Crossover:
                 wgs: Optional[System] = ...) -> Optional[Tuple[int, int]]:
         ...
 
-    def search(self) -> Optional[Point]:
+    def search(self, wgs: Optional[System] = None) -> Optional[Point]:
         ...
 
     def __getstate__(self) -> tuple:
@@ -189,10 +189,14 @@ class LineString:
     def from_geojson(array: List[List[float]]) -> LineString:
         ...
 
-    def intersection(self, rhs: LineString) -> Optional[Point]:
+    def intersection(self,
+                     rhs: LineString,
+                     wgs: Optional[System] = None) -> Optional[Point]:
         ...
 
-    def intersects(self, rhs: LineString) -> bool:
+    def intersects(self,
+                   rhs: LineString,
+                   wgs: Optional[System] = None) -> bool:
         ...
 
     @staticmethod
@@ -255,7 +259,7 @@ class MultiPolygon:
     def covered_by(self,
                    lon: numpy.ndarray[numpy.float64],
                    lat: numpy.ndarray[numpy.float64],
-                   num_threads: int = ...) -> numpy.ndarray[numpy.int8]:
+                   num_threads: int = ...) -> numpy.ndarray[bool]:
         ...
 
     @overload
@@ -418,7 +422,7 @@ class Polygon:
     def covered_by(self,
                    lon: numpy.ndarray[numpy.float64],
                    lat: numpy.ndarray[numpy.float64],
-                   num_threads: int = ...) -> numpy.ndarray[numpy.int8]:
+                   num_threads: int = ...) -> numpy.ndarray[bool]:
         ...
 
     @overload

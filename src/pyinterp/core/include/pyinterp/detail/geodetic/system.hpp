@@ -3,6 +3,7 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <boost/geometry/srs/spheroid.hpp>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -170,6 +171,13 @@ class System {
   constexpr auto operator!=(const System &rhs) const noexcept -> bool {
     return semi_major_axis_ != rhs.semi_major_axis_ ||
            flattening_ != rhs.flattening_;
+  }
+
+  /// Converts this instance to a boost::geometry::srs::spheroid equivalent.
+  ///
+  /// @return A boost::geometry::srs::spheroid equivalent
+  explicit inline operator boost::geometry::srs::spheroid<double>() const {
+    return {semi_major_axis_, semi_minor_axis()};
   }
 
   /// Get a string representing this instance.

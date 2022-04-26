@@ -36,15 +36,17 @@ class Crossover {
   /// Get the crossover point between the two passes.
   ///
   /// @return the crossover location.
-  [[nodiscard]] inline auto search() const -> std::optional<Point> {
-    return half_orbit_1_.intersection(half_orbit_2_);
+  [[nodiscard]] inline auto search(const std::optional<System>& wgs) const
+      -> std::optional<Point> {
+    return half_orbit_1_.intersection(half_orbit_2_, wgs);
   }
 
   /// Test if there is a crossover point between the two passes.
   ///
   /// @return true if there is a crossover point.
-  [[nodiscard]] inline auto exists() const -> bool {
-    return half_orbit_1_.intersects(half_orbit_2_);
+  [[nodiscard]] inline auto exists(const std::optional<System>& wgs) const
+      -> bool {
+    return half_orbit_1_.intersects(half_orbit_2_, wgs);
   }
 
   /// Search nearest indexes from a given point.

@@ -42,10 +42,10 @@ using Vincenty = boost::geometry::strategy::distance::vincenty<
 template <typename Geometry>
 [[nodiscard]] inline auto area(const Geometry &geometry,
                                const std::optional<System> &wgs) -> double {
-  auto spheroid = wgs.has_value()
-                      ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
-                                                       wgs->semi_minor_axis())
-                      : boost::geometry::srs::spheroid<double>();
+  auto spheroid =
+      wgs.has_value()
+          ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
+          : boost::geometry::srs::spheroid<double>();
   auto strategy = boost::geometry::strategy::area::geographic<
       boost::geometry::strategy::vincenty, 5>(spheroid);
   return boost::geometry::area(geometry, strategy);
@@ -98,10 +98,10 @@ template <typename Geometry1, typename Geometry2>
                                    const Geometry2 &geometry2,
                                    const DistanceStrategy strategy,
                                    const std::optional<System> &wgs) -> double {
-  auto spheroid = wgs.has_value()
-                      ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
-                                                       wgs->semi_minor_axis())
-                      : boost::geometry::srs::spheroid<double>();
+  auto spheroid =
+      wgs.has_value()
+          ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
+          : boost::geometry::srs::spheroid<double>();
   switch (strategy) {
     case kAndoyer:
       return boost::geometry::distance(geometry1, geometry2, Andoyer(spheroid));
@@ -178,10 +178,10 @@ template <typename Geometry>
     const size_t num_threads) -> pybind11::array_t<double> {
   detail::check_eigen_shape("lon1", lon1, "lat1", lat1, "lon2", lon2, "lat2",
                             lat2);
-  auto spheroid = wgs.has_value()
-                      ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
-                                                       wgs->semi_minor_axis())
-                      : boost::geometry::srs::spheroid<double>();
+  auto spheroid =
+      wgs.has_value()
+          ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
+          : boost::geometry::srs::spheroid<double>();
   switch (strategy) {
     case kAndoyer:
       return coordinate_distances<Geometry, Andoyer>(

@@ -165,10 +165,10 @@ auto area(const pybind11::array &hash,
   auto count = info.strides[0];
   auto result = Eigen::VectorXd(info.shape[0]);
   auto *ptr = static_cast<char *>(info.ptr);
-  auto spheroid = wgs.has_value()
-                      ? boost::geometry::srs::spheroid(wgs->semi_major_axis(),
-                                                       wgs->semi_minor_axis())
-                      : boost::geometry::srs::spheroid<double>();
+  auto spheroid =
+      wgs.has_value()
+          ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
+          : boost::geometry::srs::spheroid<double>();
   auto strategy = boost::geometry::strategy::area::geographic<
       boost::geometry::strategy::vincenty, 5>(spheroid);
   {

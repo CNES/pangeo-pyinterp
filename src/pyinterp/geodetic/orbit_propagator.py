@@ -455,12 +455,13 @@ def calculate_pass(
     # Selects the orbit in the defined box
     if bbox is not None:
         mask = bbox.covered_by(lon_nadir, lat_nadir)
-        if np.all(mask == 0):
+        if np.all(~mask):
             return None
-        lon_nadir = lon_nadir[mask]
-        lat_nadir = lat_nadir[mask]
-        time = time[mask]
-        x_al = x_al[mask]
+        if np.any(mask):
+            lon_nadir = lon_nadir[mask]
+            lat_nadir = lat_nadir[mask]
+            time = time[mask]
+            x_al = x_al[mask]
 
     equator_coordinates = equator_properties(lon_nadir, lat_nadir, time,
                                              orbit.wgs)
