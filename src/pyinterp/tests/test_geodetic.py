@@ -10,7 +10,7 @@ from .. import geodetic
 
 
 def test_system():
-    with pytest.raises(DeprecationWarning):
+    with pytest.warns(DeprecationWarning):
         geodetic.System()
 
 

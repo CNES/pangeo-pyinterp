@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from . import swot_calval_ephemeris_path
-from .. import orbit
+from ..orbit import calculate_orbit, calculate_swath
 from ..typing import NDArray
 
 
@@ -61,13 +61,11 @@ def load_test_ephemeris(
 
 def test_calculate_orbit():
     """Test the calculation of the orbit."""
-    orbit = orbit.calculate_orbit(
-        *load_test_ephemeris(swot_calval_ephemeris_path()))
+    orbit = calculate_orbit(*load_test_ephemeris(swot_calval_ephemeris_path()))
     assert orbit.passes_per_cycle() == 28
 
 
 def test_calculate_pass():
     """Test the calculation of the pass."""
-    orbit = orbit.calculate_orbit(
-        *load_test_ephemeris(swot_calval_ephemeris_path()))
-    pass_ = orbit.calculate_swath(2, orbit)
+    orbit = calculate_orbit(*load_test_ephemeris(swot_calval_ephemeris_path()))
+    pass_ = calculate_swath(2, orbit)

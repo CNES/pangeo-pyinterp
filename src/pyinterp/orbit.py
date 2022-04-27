@@ -8,7 +8,6 @@ Orbit interpolation.
 """
 from typing import Iterator, Optional, Tuple
 import dataclasses
-import functools
 
 import numpy as np
 
@@ -136,7 +135,7 @@ class Orbit:
     #: Along track distance (in meters).
     x_al: NDArray
     #: Spheroid model used.
-    wgs: geodetic.Spheroid
+    wgs: Optional[geodetic.Spheroid]
 
     def cycle_duration(self) -> np.timedelta64:
         """Get the cycle duration."""
@@ -153,7 +152,6 @@ class Orbit:
                 int(self.passes_per_cycle() // 2), 'us')
         return np.timedelta64(int(duration), "us")
 
-    @functools.cached_property
     def curvilinear_distance(self) -> np.ndarray:
         """Get the curvilinear distance."""
         return geodetic.LineString(self.longitude,
@@ -495,13 +493,16 @@ def calculate_swath(
                      dtype=float) * along_track_resolution + half_gap
     x_ac = np.hstack((-np.flip(x_ac), x_ac))
 
+    mean_radius = (orbit.wgs.mean_radius()
+                   if orbit.wgs is not None else 6371008.7714)
+
     lon, lat = core.geodetic.calculate_swath(
         pass_.lon_nadir,
         pass_.lat_nadir,
         across_track_resolution,
         half_gap,
         half_swath,
-        orbit.wgs.mean_radius() * 1e-3,
+        mean_radius * 1e-3,
     )
 
     return Swath(pass_.lon_nadir, pass_.lat_nadir, pass_.time, pass_.x_al,
