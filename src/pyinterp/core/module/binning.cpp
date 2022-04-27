@@ -20,7 +20,7 @@ void implement_binning(py::module &m, const std::string &suffix) {
       ("Binning2D" + suffix +
        "(self, x: pyinterp.core.Axis,"
        " y: pyinterp.core.Axis,"
-       " wgs: Optional[pyinterp.core.geodetic.System] = None)"
+       " wgs: Optional[pyinterp.core.geodetic.Spheroid] = None)"
        R"__doc__(
 
 Group a number of more or less continuous values into a smaller number of
@@ -37,9 +37,9 @@ Args:
           .c_str())
       .def(py::init<std::shared_ptr<pyinterp::Axis<double>>,
                     std::shared_ptr<pyinterp::Axis<double>>,
-                    std::optional<pyinterp::geodetic::System>>(),
+                    std::optional<pyinterp::geodetic::Spheroid>>(),
            py::arg("x"), py::arg("y"),
-           py::arg("wgs") = std::optional<pyinterp::geodetic::System>())
+           py::arg("wgs") = std::optional<pyinterp::geodetic::Spheroid>())
       .def_property_readonly(
           "x", [](const pyinterp::Binning2D<Type> &self) { return self.x(); },
           R"__doc__(

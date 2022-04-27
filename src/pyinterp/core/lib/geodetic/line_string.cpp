@@ -26,53 +26,30 @@ auto LineString::from_geojson(const pybind11::list& array) -> LineString {
 }
 
 auto LineString::intersects(const LineString& rhs,
-                            const std::optional<System>& wgs) const -> bool {
+                            const std::optional<Spheroid>& wgs) const -> bool {
   if (wgs) {
     return boost::geometry::intersects(
         *this, rhs,
         boost::geometry::strategy::intersection::geographic_segments<>(
             static_cast<boost::geometry::srs::spheroid<double>>(*wgs)));
   } else {
-    return boost::geometry::intersects(
-        *this, rhs,
-        boost::geometry::strategy::intersection::spherical_segments<>());
+    return boost::geometry::intersects(*this, rhs);
   }
 }
 
 auto LineString::intersection(const LineString& rhs,
-                              const std::optional<System>& wgs) const
-    -> std::optional<Point> {
-  std::deque<Point> output;
+                              const std::optional<Spheroid>& wgs) const
+    -> LineString {
+  LineString output;
   if (wgs) {
     boost::geometry::intersection(
         *this, rhs, output,
         boost::geometry::strategy::intersection::geographic_segments<>(
             static_cast<boost::geometry::srs::spheroid<double>>(*wgs)));
   } else {
-    boost::geometry::intersection(
-        *this, rhs, output,
-        boost::geometry::strategy::intersection::spherical_segments<>());
+    boost::geometry::intersection(*this, rhs, output);
   }
-
-  if (output.empty()) {
-    // There is no intersection.
-    return {};
-  }
-
-  if (output.size() != 1) {
-    // If there is a merged point between lines #1 and #2 then the method will
-    // find this point for each of the segments tested.
-    std::set<std::tuple<double, double>> points;
-    for (auto& item : output) {
-      points.insert(std::make_tuple(item.get<0>(), item.get<1>()));
-    }
-    if (points.size() != 1) {
-      // If the intersection is not a point then an exception is thrown.
-      throw std::runtime_error(
-          "The geometry of the intersection is not a point");
-    }
-  }
-  return output[0];
+  return output;
 }
 
 auto LineString::getstate() const -> pybind11::tuple {
@@ -129,7 +106,7 @@ auto curvilinear_distance_impl(const LineString& ls, const Strategy& strategy,
 }
 
 auto LineString::curvilinear_distance(DistanceStrategy strategy,
-                                      const std::optional<System>& wgs) const
+                                      const std::optional<Spheroid>& wgs) const
     -> Vector<double> {
   if (size() == 0) {
     return Vector<double>{};

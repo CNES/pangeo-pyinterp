@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/system.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 #include "pyinterp/geohash/base32.hpp"
 #include "pyinterp/geohash/int64.hpp"
 #include "pyinterp/geohash/string.hpp"
@@ -132,7 +132,7 @@ class GeoHash {
   ///
   /// @return The area of the geohash in square meters.
   [[nodiscard]] inline auto area(
-      const std::optional<geodetic::System> &wgs) const -> double {
+      const std::optional<geodetic::Spheroid> &wgs) const -> double {
     return string::area(code_.data(), precision(), wgs);
   }
 

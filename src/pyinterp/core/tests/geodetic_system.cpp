@@ -6,13 +6,13 @@
 
 #include <random>
 
-#include "pyinterp/detail/geodetic/system.hpp"
+#include "pyinterp/detail/geodetic/spheroid.hpp"
 
 namespace geodetic = pyinterp::detail::geodetic;
 
 TEST(geometry_geodetic_system, wgs84) {
   // WGS-84.
-  auto wgs84 = geodetic::System();
+  auto wgs84 = geodetic::Spheroid();
   // https://fr.wikipedia.org/wiki/WGS_84
   // https://en.wikipedia.org/wiki/Geodetic_datum
   // http://earth-info.nga.mil/GandG/publications/tr8350.2/wgs84fin.pdf
@@ -37,9 +37,9 @@ TEST(geometry_geodetic_system, wgs84) {
 }
 
 TEST(geometry_geodetic_system, operator) {
-  auto wgs84 = geodetic::System();
+  auto wgs84 = geodetic::Spheroid();
   // https://en.wikipedia.org/wiki/Geodetic_Reference_System_1980
-  auto grs80 = geodetic::System(6'378'137, 1 / 298.257'222'101);
+  auto grs80 = geodetic::Spheroid(6'378'137, 1 / 298.257'222'101);
   EXPECT_DOUBLE_EQ(grs80.semi_major_axis(), 6'378'137);
   EXPECT_DOUBLE_EQ(grs80.flattening(), 1 / 298.257'222'101);
   EXPECT_EQ(wgs84, wgs84);

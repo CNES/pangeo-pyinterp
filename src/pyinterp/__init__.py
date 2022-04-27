@@ -16,6 +16,15 @@ from .interpolator.bicubic import bicubic
 from .interpolator.bivariate import bivariate
 from .interpolator.quadrivariate import quadrivariate
 from .interpolator.trivariate import trivariate
+from .orbit import (
+    EquatorCoordinates,
+    Orbit,
+    Pass,
+    Swath,
+    calculate_orbit,
+    calculate_pass,
+    calculate_swath,
+)
 from .rtree import RTree
 from .statistics import DescriptiveStatistics, StreamingHistogram
 
@@ -31,8 +40,12 @@ __all__ = [
     "Binning1D",
     "Binning2D",
     "bivariate",
+    "calculate_orbit",
+    "calculate_pass",
+    "calculate_swath",
     "dateutils",
     "DescriptiveStatistics",
+    "EquatorCoordinates",
     "geodetic",
     "geohash",
     "GeoHash",
@@ -40,9 +53,12 @@ __all__ = [
     "Grid3D",
     "Grid4D",
     "Histogram2D",
+    "Orbit",
+    "Pass",
     "quadrivariate",
     "RTree",
     "StreamingHistogram",
+    "Swath",
     "TemporalAxis",
     "trivariate",
 ]

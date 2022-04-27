@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <optional>
 
-#include "pyinterp/detail/geodetic/system.hpp"
+#include "pyinterp/detail/geodetic/spheroid.hpp"
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/detail/math.hpp"
 
@@ -16,8 +16,8 @@ namespace pyinterp::detail::geodetic {
 class Coordinates {
  public:
   /// Default constructor.
-  explicit Coordinates(const std::optional<System> &system) {
-    auto _system = system.value_or(System());
+  explicit Coordinates(const std::optional<Spheroid> &spheroid) {
+    auto _system = spheroid.value_or(Spheroid());
     // semi-major axis
     a_ = _system.semi_major_axis();
     // flatenning (is only necessary for serialization/deserialization)
@@ -53,8 +53,8 @@ class Coordinates {
   /// Move assignment operator
   auto operator=(Coordinates &&) noexcept -> Coordinates & = default;
 
-  /// Gets the WGS used by this instance
-  [[nodiscard]] inline auto system() const noexcept -> System {
+  /// Gets the spheroid model used by this coordinate system
+  [[nodiscard]] inline auto spheroid() const noexcept -> Spheroid {
     return {a_, f_};
   }
 

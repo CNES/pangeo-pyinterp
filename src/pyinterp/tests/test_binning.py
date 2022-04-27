@@ -24,7 +24,7 @@ def build_binning2d_instance(dtype):
 
     x_axis = Axis(np.arange(-180, 180, 5), is_circle=True)
     y_axis = Axis(np.arange(-90, 95, 5))
-    binning = Binning2D(x_axis, y_axis, geodetic.System(), dtype=dtype)
+    binning = Binning2D(x_axis, y_axis, geodetic.Spheroid(), dtype=dtype)
     assert x_axis == binning.x
     assert y_axis == binning.y
     assert isinstance(str(binning), str)

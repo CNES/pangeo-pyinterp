@@ -16,7 +16,7 @@
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/point.hpp"
-#include "pyinterp/geodetic/system.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -108,7 +108,7 @@ class Box : public boost::geometry::model::box<Point> {
   }
 
   /// Calculate the area
-  [[nodiscard]] auto area(const std::optional<System> &wgs) const -> double;
+  [[nodiscard]] auto area(const std::optional<Spheroid> &wgs) const -> double;
 
   /// Calculate the distance between two boxes
   [[nodiscard]] auto distance(const Box &other) const -> double;

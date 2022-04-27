@@ -5,18 +5,18 @@
 #pragma once
 #include <pybind11/pybind11.h>
 
-#include "pyinterp/detail/geodetic/system.hpp"
+#include "pyinterp/detail/geodetic/spheroid.hpp"
 
 namespace pyinterp::geodetic {
 
 /// Wrapper
-class System : public detail::geodetic::System {
+class Spheroid : public detail::geodetic::Spheroid {
  public:
-  using detail::geodetic::System::System;
+  using detail::geodetic::Spheroid::Spheroid;
 
   /// Construction of the class from the base class.
-  explicit System(detail::geodetic::System &&base)
-      : detail::geodetic::System(base) {}
+  explicit Spheroid(detail::geodetic::Spheroid &&base)
+      : detail::geodetic::Spheroid(base) {}
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
@@ -25,7 +25,7 @@ class System : public detail::geodetic::System {
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
-  static auto setstate(const pybind11::tuple &state) -> System {
+  static auto setstate(const pybind11::tuple &state) -> Spheroid {
     if (state.size() != 2) {
       throw std::runtime_error("invalid state");
     }

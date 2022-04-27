@@ -6,9 +6,11 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <cmath>
+#include <limits>
 #include <tuple>
 
 #include "pyinterp/detail/math.hpp"
+#include "pyinterp/eigen.hpp"
 
 namespace pyinterp::detail::math {
 

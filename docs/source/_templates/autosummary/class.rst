@@ -43,6 +43,17 @@
       {%- endif -%}
    {%- endfor %}
 
+   {%- if fullname == 'pyinterp.Swath' %}
+      {# autodoc doesn't handle inherited attributes of dataclasses. #}
+      {%- for item in ['equator_coordinates',
+                       'lon_nadir',
+                       'lat_nadir',
+                       'time',
+                       'x_al'] %}
+         {{ attributes.remove(item) or "" }}
+      {%- endfor -%}
+   {%- endif %}
+
    {%- if attributes %}
    .. rubric:: {{ _('Attributes') }}
    .. autosummary::

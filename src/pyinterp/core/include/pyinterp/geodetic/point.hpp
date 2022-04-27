@@ -12,7 +12,7 @@
 
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/geodetic/algorithm.hpp"
-#include "pyinterp/geodetic/system.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -68,7 +68,7 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
   /// Calculate the distance between the two points
   [[nodiscard]] auto distance(const Point &other,
                               const DistanceStrategy strategy,
-                              const std::optional<System> &wgs) const
+                              const std::optional<Spheroid> &wgs) const
       -> double {
     return geodetic::distance(*this, other, strategy, wgs);
   }

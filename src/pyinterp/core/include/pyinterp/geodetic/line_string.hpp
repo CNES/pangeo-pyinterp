@@ -14,7 +14,7 @@
 #include "pyinterp/detail/geometry/point.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geodetic/point.hpp"
-#include "pyinterp/geodetic/system.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -55,16 +55,16 @@ class LineString : public boost::geometry::model::linestring<Point> {
   /// @param rhs the linestring to test.
   /// @return true if the linestrings intersect.
   [[nodiscard]] auto intersects(const LineString& rhs,
-                                const std::optional<System>& wgs) const -> bool;
+                                const std::optional<Spheroid>& wgs) const
+      -> bool;
 
-  /// Get the coordinate of the intersection between this linestring and
-  /// another one.
+  /// Compute the intersection of this linestring with another linestring.
   ///
   /// @param rhs the linestring to test.
-  /// @return the intersection point or none if no intersection is found.
+  /// @return the intersection of the two linestrings.
   [[nodiscard]] auto intersection(const LineString& rhs,
-                                  const std::optional<System>& wgs) const
-      -> std::optional<Point>;
+                                  const std::optional<Spheroid>& wgs) const
+      -> LineString;
 
   /// Get the length of the linestring
   ///
@@ -127,7 +127,7 @@ class LineString : public boost::geometry::model::linestring<Point> {
 
   /// Returns the curvilinear distance along the linestring.
   [[nodiscard]] auto curvilinear_distance(
-      DistanceStrategy strategy, const std::optional<System>& wgs) const
+      DistanceStrategy strategy, const std::optional<Spheroid>& wgs) const
       -> Vector<double>;
 };
 

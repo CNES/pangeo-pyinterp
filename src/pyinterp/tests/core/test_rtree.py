@@ -50,7 +50,7 @@ def load_data(packing=True):
         y = y.astype("float32")
         z = z.astype("float32")
         x, y = np.meshgrid(x, y, indexing='ij')
-        mesh = core.RTree3DFloat32(core.geodetic.System())
+        mesh = core.RTree3DFloat32(core.geodetic.Spheroid())
         if packing:
             mesh.packing(np.vstack((x.ravel(), y.ravel())).T, z.data.ravel())
         else:

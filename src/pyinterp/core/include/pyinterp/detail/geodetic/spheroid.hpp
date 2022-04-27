@@ -13,40 +13,40 @@
 namespace pyinterp::detail::geodetic {
 
 /// World Geodetic System (WGS)
-class System {
+class Spheroid {
  public:
   /// The constructor defaults the ellipsoid parameters to WGS84.
-  System() noexcept = default;
+  Spheroid() noexcept = default;
 
   /// Destructor
-  virtual ~System() = default;
+  virtual ~Spheroid() = default;
 
   /// Copy constructor
   ///
   /// @param rhs right value
-  System(const System &rhs) = default;
+  Spheroid(const Spheroid &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  System(System &&rhs) = default;
+  Spheroid(Spheroid &&rhs) = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const System &rhs) -> System & = default;
+  auto operator=(const Spheroid &rhs) -> Spheroid & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(System &&rhs) -> System & = default;
+  auto operator=(Spheroid &&rhs) -> Spheroid & = default;
 
   /// Obtains an instance of System with the given ellipsoid
   /// parameters
   ///
   /// @param semi_major_axis  Semi-major axis of ellipsoid, in meters
   /// @param flattening  Flattening of ellipsoid
-  constexpr System(double semi_major_axis, double flattening) noexcept
+  constexpr Spheroid(double semi_major_axis, double flattening) noexcept
       : semi_major_axis_(semi_major_axis), flattening_(flattening) {}
 
   /// Gets the Semi-major axis of the defined ellipsoid
@@ -155,20 +155,20 @@ class System {
     return std::pow(math::sqr(semi_major_axis_) * semi_minor_axis(), 1.0 / 3.0);
   }
 
-  /// Tests if two Geodetic system are equal
+  /// Tests if two spheroid objects are equal
   ///
-  /// @param rhs Other geodetic system to compare
+  /// @param rhs Other spheroid
   /// @return rue if the two instances are equal
-  constexpr auto operator==(const System &rhs) const noexcept -> bool {
+  constexpr auto operator==(const Spheroid &rhs) const noexcept -> bool {
     return semi_major_axis_ == rhs.semi_major_axis_ &&
            flattening_ == rhs.flattening_;
   }
 
-  /// Tests if two Geodetic system are different
+  /// Tests if two spheroid objects are not equal
   ///
-  /// @param rhs Other geodetic system to compare
+  /// @param rhs Other spheroid
   /// @return rue if the two instances are different
-  constexpr auto operator!=(const System &rhs) const noexcept -> bool {
+  constexpr auto operator!=(const Spheroid &rhs) const noexcept -> bool {
     return semi_major_axis_ != rhs.semi_major_axis_ ||
            flattening_ != rhs.flattening_;
   }

@@ -3,14 +3,12 @@ Geographic coordinate system
 ----------------------------
 """
 from typing import List, Optional, Tuple
+import warnings
+
+import numpy
 
 from ..core import geodetic
-from ..core.geodetic import (
-    Crossover,
-    LineString,
-    coordinate_distances,
-    normalize_longitudes,
-)
+from ..core.geodetic import Crossover, LineString, coordinate_distances
 
 __all__ = [
     "Box",
@@ -22,11 +20,11 @@ __all__ = [
     "normalize_longitudes",
     "Point",
     "Polygon",
-    "System",
+    "Spheroid",
 ]
 
 
-class System(geodetic.System):
+class Spheroid(geodetic.Spheroid):
     """World Geodetic System (WGS).
 
     Args:
@@ -41,16 +39,31 @@ class System(geodetic.System):
 
     Examples:
         >>> import pyinterp
-        >>> wgs84 = pyinterp.geodetic.System()
+        >>> wgs84 = pyinterp.geodetic.Spheroid()
         >>> wgs84
-        System(6378137.0, 0.0033528106647474805)
-        >>> grs80 = pyinterp.geodetic.System((6378137, 1 / 298.257222101))
+        Spheroid(6378137.0, 0.0033528106647474805)
+        >>> grs80 = pyinterp.geodetic.Spheroid((6378137, 1 / 298.257222101))
         >>> grs80
-        System(6378137.0, 0.003352810681182319)
+        Spheroid(6378137.0, 0.003352810681182319)
     """
 
     def __init__(self, parameters: Optional[Tuple[float, float]] = None):
-        super(System, self).__init__(*(parameters or ()))
+        super(Spheroid, self).__init__(*(parameters or ()))
+
+    def __repr__(self):
+        return f"Spheroid({self.semi_major_axis}, {self.flattening})"
+
+
+class System(Spheroid):
+    """Old name for Spheroid.
+
+    .. deprecated:: 0.10.0     Use :class:`Spheroid`
+    """
+
+    def __init__(self, parameters: Optional[Tuple[float, float]] = None):
+        warnings.warn("System is deprecated. Use Spheroid instead.",
+                      DeprecationWarning)
+        super(System, self).__init__(parameters)
 
     def __repr__(self):
         return f"System({self.semi_major_axis}, {self.flattening})"
@@ -60,11 +73,11 @@ class Coordinates(geodetic.Coordinates):
     """World Geodetic Coordinates System.
 
     Args:
-        system: WGS System. If this argument is not defined, the instance
+        spheroid: WGS System. If this argument is not defined, the instance
             manages a WGS84 ellipsoid.
     """
 
-    def __init__(self, system: Optional[System] = None):
+    def __init__(self, system: Optional[Spheroid] = None):
         super().__init__(system)
 
 
@@ -130,3 +143,20 @@ class MultiPolygon(geodetic.MultiPolygon):
     def __init__(self, polygons: Optional[List[Polygon]] = None) -> None:
         args = (polygons, ) if polygons is not None else ()
         super().__init__(*args)
+
+
+def normalize_longitudes(lon: numpy.ndarray,
+                         min_lon: float = -180.0) -> numpy.ndarray:
+    """Normalizes longitudes to the range ``[min_lon, min_lon + 360)``.
+
+    Args:
+        lon: Longitudes in degrees.
+        min_lon: Minimum longitude. Defaults to ``-180.0``.
+
+    Returns:
+        Longitudes normalized to the range ``[min_lon, min_lon + 360)``.
+    """
+    if lon.flags.writeable:
+        geodetic.normalize_longitudes(lon, min_lon)
+        return lon
+    return geodetic.normalize_longitudes(lon, min_lon)  # type: ignore

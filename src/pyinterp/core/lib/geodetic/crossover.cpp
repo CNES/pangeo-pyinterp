@@ -40,9 +40,33 @@ Crossover::Crossover(LineString half_orbit_1, LineString half_orbit_2)
     : half_orbit_1_(std::move(half_orbit_1)),
       half_orbit_2_(std::move(half_orbit_2)) {}
 
+auto Crossover::search(const std::optional<Spheroid>& wgs) const
+    -> std::optional<Point> {
+  auto line_string = half_orbit_1_.intersection(half_orbit_2_, wgs);
+  if (line_string.empty()) {
+    // There is no intersection.
+    return {};
+  }
+
+  if (line_string.size() != 1) {
+    // If there is a merged point between lines #1 and #2 then the method will
+    // find this point for each of the segments tested.
+    std::set<std::tuple<double, double>> points;
+    for (auto& item : line_string) {
+      points.insert(std::make_tuple(item.get<0>(), item.get<1>()));
+    }
+    if (points.size() != 1) {
+      // If the intersection is not a point then an exception is thrown.
+      throw std::runtime_error(
+          "The geometry of the intersection is not a point");
+    }
+  }
+  return line_string[0];
+}
+
 auto Crossover::nearest(const Point& point, const double predicate,
                         const DistanceStrategy strategy,
-                        const std::optional<System>& wgs) const
+                        const std::optional<Spheroid>& wgs) const
     -> std::optional<std::tuple<size_t, size_t>> {
   auto ix1 = NearestPoint(half_orbit_1_)(point);
   if (half_orbit_1_[ix1].distance(point, strategy, wgs) > predicate) {

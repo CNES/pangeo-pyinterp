@@ -101,7 +101,7 @@ namespace pyinterp::geohash::int64 {
 
 // Returns the area covered by the GeoHash
 [[nodiscard]] inline auto area(uint64_t hash, uint32_t precision,
-                               const std::optional<geodetic::System> &wgs)
+                               const std::optional<geodetic::Spheroid> &wgs)
     -> double {
   return bounding_box(hash, precision).area(wgs);
 }

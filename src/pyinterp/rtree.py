@@ -28,7 +28,7 @@ class RTree:
     """
 
     def __init__(self,
-                 system: Optional[geodetic.System] = None,
+                 system: Optional[geodetic.Spheroid] = None,
                  dtype: Optional[np.dtype] = None,
                  ndims: int = 3):
         """Initialize a new R*Tree."""

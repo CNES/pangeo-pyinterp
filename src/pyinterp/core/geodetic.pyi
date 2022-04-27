@@ -26,7 +26,7 @@ class Box:
     def __init__(self, min_corner: Point, max_corner: Point) -> None:
         ...
 
-    def area(self, wgs: Optional[System] = ...) -> float:
+    def area(self, wgs: Optional[Spheroid] = ...) -> float:
         ...
 
     def as_polygon(self, *args, **kwargs) -> Any:
@@ -90,7 +90,7 @@ class Box:
 
 class Coordinates:
 
-    def __init__(self, system: Optional[System] = None) -> None:
+    def __init__(self, system: Optional[Spheroid] = None) -> None:
         ...
 
     def ecef_to_lla(self,
@@ -122,7 +122,7 @@ class Coordinates:
         ...
 
     @property
-    def system(self) -> System:
+    def spheroid(self) -> Spheroid:
         ...
 
 
@@ -132,17 +132,17 @@ class Crossover:
                  half_orbit_2: LineString) -> None:
         ...
 
-    def exists(self, wgs: Optional[System] = None) -> bool:
+    def exists(self, wgs: Optional[Spheroid] = None) -> bool:
         ...
 
     def nearest(self,
                 point: Point,
                 predicate: Optional[float] = ...,
                 strategy: str = ...,
-                wgs: Optional[System] = ...) -> Optional[Tuple[int, int]]:
+                wgs: Optional[Spheroid] = ...) -> Optional[Tuple[int, int]]:
         ...
 
-    def search(self, wgs: Optional[System] = None) -> Optional[Point]:
+    def search(self, wgs: Optional[Spheroid] = None) -> Optional[Point]:
         ...
 
     def __getstate__(self) -> tuple:
@@ -182,7 +182,7 @@ class LineString:
     def curvilinear_distance(
             self,
             strategy: str = 'thomas',
-            wgs: Optional[System] = None) -> numpy.ndarray[numpy.float64]:
+            wgs: Optional[Spheroid] = None) -> numpy.ndarray[numpy.float64]:
         ...
 
     @staticmethod
@@ -191,12 +191,12 @@ class LineString:
 
     def intersection(self,
                      rhs: LineString,
-                     wgs: Optional[System] = None) -> Optional[Point]:
+                     wgs: Optional[Spheroid] = None) -> LineString:
         ...
 
     def intersects(self,
                    rhs: LineString,
-                   wgs: Optional[System] = None) -> bool:
+                   wgs: Optional[Spheroid] = None) -> bool:
         ...
 
     @staticmethod
@@ -248,7 +248,7 @@ class MultiPolygon:
     def append(self, polygon: Polygon) -> None:
         ...
 
-    def area(self, wgs: Optional[System] = None) -> float:
+    def area(self, wgs: Optional[Spheroid] = None) -> float:
         ...
 
     @overload
@@ -376,7 +376,7 @@ class Point:
     def distance(self,
                  other: Point,
                  strategy: str = ...,
-                 wgs: Optional[System] = ...) -> float:
+                 wgs: Optional[Spheroid] = ...) -> float:
         ...
 
     @staticmethod
@@ -411,7 +411,7 @@ class Polygon:
     def __init__(self, outer: list, inners: Optional[list] = ...) -> None:
         ...
 
-    def area(self, wgs: Optional[System] = ...) -> float:
+    def area(self, wgs: Optional[Spheroid] = ...) -> float:
         ...
 
     @overload
@@ -489,7 +489,7 @@ class Polygon:
         ...
 
 
-class System(_System):
+class Spheroid(_Spheroid):
     __hash__: ClassVar[None] = ...
 
     @overload
@@ -533,13 +533,13 @@ class System(_System):
     def volumetric_radius(self) -> float:
         ...
 
-    def __eq__(self, other: _System) -> bool:
+    def __eq__(self, other: _Spheroid) -> bool:
         ...
 
     def __getstate__(self) -> tuple:
         ...
 
-    def __ne__(self, other: _System) -> bool:
+    def __ne__(self, other: _Spheroid) -> bool:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -554,7 +554,7 @@ class System(_System):
         ...
 
 
-class _System:
+class _Spheroid:
 
     def __init__(self, *args, **kwargs) -> None:
         ...
@@ -574,12 +574,18 @@ def coordinate_distances(
         lon2: numpy.ndarray[numpy.float64],
         lat2: numpy.ndarray[numpy.float64],
         strategy: str = ...,
-        wgs: Optional[System] = ...,
+        wgs: Optional[Spheroid] = ...,
         num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
     ...
 
 
-def normalize_longitudes(
-        lon: numpy.ndarray[numpy.float64],
-        min_lon: float = -180.0) -> numpy.ndarray[numpy.float64]:
+@overload
+def normalize_longitudes(lon: numpy.ndarray[numpy.float64],
+                         min_lon: float = ...) -> None:
+    ...
+
+
+@overload
+def normalize_longitudes(lon: numpy.ndarray[numpy.float64],
+                         min_lon: float = ...) -> numpy.ndarray[numpy.float64]:
     ...

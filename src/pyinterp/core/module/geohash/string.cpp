@@ -67,7 +67,7 @@ Returns:
       .def(
           "area",
           [](const pybind11::array &hash,
-             const std::optional<geodetic::System> &wgs) -> Eigen::VectorXd {
+             const std::optional<geodetic::Spheroid> &wgs) -> Eigen::VectorXd {
             return geohash::string::area(hash, wgs);
           },
           py::arg("hash"), py::arg("wgs") = py::none(),

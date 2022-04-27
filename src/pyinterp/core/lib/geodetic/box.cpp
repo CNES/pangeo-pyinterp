@@ -9,7 +9,7 @@
 namespace pyinterp::geodetic {
 
 /// Calculate the area
-auto Box::area(const std::optional<System> &wgs) const -> double {
+auto Box::area(const std::optional<Spheroid> &wgs) const -> double {
   return static_cast<Polygon>(*this).area(wgs);
 }
 

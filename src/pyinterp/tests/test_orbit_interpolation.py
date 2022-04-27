@@ -8,12 +8,13 @@ import os
 import numpy as np
 
 from . import swot_calval_ephemeris_path
-from ..geodetic import orbit_propagator
+from .. import orbit
+from ..typing import NDArray
 
 
-def load_ephemeris(
+def load_test_ephemeris(
     filename: os.PathLike
-) -> Tuple[float, orbit_propagator.Ephemeris, np.timedelta64]:
+) -> Tuple[float, NDArray, NDArray, NDArray, np.timedelta64]:
     """Loads the ephemeris from a text file.
 
     Args:
@@ -51,31 +52,22 @@ def load_ephemeris(
 
     return (
         settings["height"],
-        orbit_propagator.Ephemeris(
-            ephemeris["time"].astype("timedelta64[s]"),
-            ephemeris["longitude"],
-            ephemeris["latitude"],
-        ),
+        ephemeris["longitude"],
+        ephemeris["latitude"],
+        ephemeris["time"].astype("timedelta64[s]"),
         np.timedelta64(int(settings["cycle_duration"] * 86400.0 * 1e9), "ns"),
     )
 
 
-def load_test_ephemeris(
-) -> Tuple[float, orbit_propagator.Ephemeris, np.timedelta64]:
-    """Loads the test ephemeris."""
-    return load_ephemeris(swot_calval_ephemeris_path())
-
-
 def test_calculate_orbit():
     """Test the calculation of the orbit."""
-    height, ephemeris, cycle_duration = load_test_ephemeris()
-    orbit = orbit_propagator.calculate_orbit(height, ephemeris, cycle_duration)
-    assert orbit.height == height
+    orbit = orbit.calculate_orbit(
+        *load_test_ephemeris(swot_calval_ephemeris_path()))
     assert orbit.passes_per_cycle() == 28
 
 
 def test_calculate_pass():
     """Test the calculation of the pass."""
-    height, ephemeris, cycle_duration = load_test_ephemeris()
-    orbit = orbit_propagator.calculate_orbit(height, ephemeris, cycle_duration)
-    pass_ = orbit_propagator.calculate_pass(2, orbit)
+    orbit = orbit.calculate_orbit(
+        *load_test_ephemeris(swot_calval_ephemeris_path()))
+    pass_ = orbit.calculate_swath(2, orbit)

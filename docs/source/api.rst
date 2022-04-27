@@ -71,15 +71,15 @@ Geodetic systems
   :toctree: generated/
 
   geodetic.Box
+  geodetic.coordinate_distances
   geodetic.Coordinates
   geodetic.Crossover
   geodetic.LineString
   geodetic.MultiPolygon
+  geodetic.normalize_longitudes
   geodetic.Point
   geodetic.Polygon
-  geodetic.System
-  geodetic.coordinate_distances
-  geodetic.normalize_longitudes
+  geodetic.Spheroid
 
 .. _cartesian_interpolators:
 
@@ -111,6 +111,21 @@ Univariate statistics
 
   DescriptiveStatistics
   StreamingHistogram
+
+Orbit Interpolation
+===================
+
+.. autosummary::
+  :toctree: generated/
+
+  calculate_orbit
+  calculate_pass
+  calculate_swath
+  EquatorCoordinates
+  Orbit
+  Pass
+  Swath
+
 
 Xarray
 ======

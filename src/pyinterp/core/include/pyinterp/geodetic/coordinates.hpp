@@ -12,7 +12,7 @@
 #include "pyinterp/detail/geodetic/coordinates.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/eigen.hpp"
-#include "pyinterp/geodetic/system.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -20,12 +20,12 @@ namespace pyinterp::geodetic {
 class Coordinates : public detail::geodetic::Coordinates {
  public:
   /// The constructor defaults the ellipsoid parameters to WGS84.
-  explicit Coordinates(const std::optional<System> &system)
-      : detail::geodetic::Coordinates(system) {}
+  explicit Coordinates(const std::optional<Spheroid> &spheroid)
+      : detail::geodetic::Coordinates(spheroid) {}
 
-  /// Gets the WGS used by this instance
-  [[nodiscard]] inline auto system() const noexcept -> System {
-    return System(detail::geodetic::Coordinates::system());
+  /// Gets the spheroid model used by this coordinate system
+  [[nodiscard]] inline auto spheroid() const noexcept -> Spheroid {
+    return Spheroid(detail::geodetic::Coordinates::spheroid());
   }
 
   /// Converts Cartesian coordinates to Geographic latitude, longitude, and
@@ -173,13 +173,13 @@ class Coordinates : public detail::geodetic::Coordinates {
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
-    return system().getstate();
+    return spheroid().getstate();
   }
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
   static auto setstate(const pybind11::tuple &state) -> Coordinates {
-    return Coordinates(System::setstate(state));
+    return Coordinates(Spheroid::setstate(state));
   }
 };
 

@@ -98,14 +98,14 @@ auto encode(const geodetic::Point &point, char *buffer, uint32_t precision)
 
 /// Returns the area covered by the GeoHash
 [[nodiscard]] inline auto area(const char *const hash, size_t count,
-                               const std::optional<geodetic::System> &wgs)
+                               const std::optional<geodetic::Spheroid> &wgs)
     -> double {
   return bounding_box(hash, count).area(wgs);
 }
 
 /// Returns the area covered by the GeoHash codes
 [[nodiscard]] auto area(const pybind11::array &hash,
-                        const std::optional<geodetic::System> &wgs)
+                        const std::optional<geodetic::Spheroid> &wgs)
     -> Eigen::MatrixXd;
 
 /// Returns all GeoHash within the given region

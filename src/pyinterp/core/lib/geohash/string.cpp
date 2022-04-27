@@ -160,7 +160,7 @@ auto neighbors(const char *const hash, const size_t count) -> pybind11::array {
 
 // ---------------------------------------------------------------------------
 auto area(const pybind11::array &hash,
-          const std::optional<geodetic::System> &wgs) -> Eigen::MatrixXd {
+          const std::optional<geodetic::Spheroid> &wgs) -> Eigen::MatrixXd {
   auto info = Array::get_info(hash, 1);
   auto count = info.strides[0];
   auto result = Eigen::VectorXd(info.shape[0]);

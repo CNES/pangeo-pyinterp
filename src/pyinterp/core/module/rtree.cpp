@@ -51,19 +51,19 @@ static void implement_rtree(py::module &m, const char *const suffix) {
   py::class_<RTree>(
       m, class_name<dimension_t::value>(suffix).c_str(),
       (class_name<dimension_t::value>(suffix) +
-       "(self, system: Optional[pyinterp.core.geodetic.System] = None)" +
+       "(self, spheroid: Optional[pyinterp.core.geodetic.Spheroid] = None)" +
        R"__doc__(
 
 RTree spatial index for geodetic scalar values
 
 Args:
-    system: WGS of the coordinate system used to transform equatorial spherical
+    spheroid: WGS of the coordinate system used to transform equatorial spherical
         positions (longitudes, latitudes, altitude) into ECEF coordinates. If
         not set the geodetic system used is WGS-84.
 )__doc__")
           .c_str())
-      .def(py::init<std::optional<pyinterp::geodetic::System>>(),
-           py::arg("system") = std::nullopt)
+      .def(py::init<std::optional<pyinterp::geodetic::Spheroid>>(),
+           py::arg("spheroid") = std::nullopt)
       .def("bounds", &RTree::equatorial_bounds,
            R"__doc__(
   Returns the box able to contain all values stored in the container.
@@ -237,66 +237,25 @@ Args:
 void init_rtree(py::module &m) {
   py::enum_<pyinterp::RadialBasisFunction>(m, "RadialBasisFunction",
                                            "Radial basis functions")
-      .value("Cubic", pyinterp::RadialBasisFunction::Cubic,
-             R"(:math:`\varphi(r) = r^3`)")
-      .value("Gaussian", pyinterp::RadialBasisFunction::Gaussian,
-             R"(:math:`\varphi(r) = e^{-(\dfrac{r}{\varepsilon})^2}`)")
+      .value("Cubic", pyinterp::RadialBasisFunction::Cubic)
+      .value("Gaussian", pyinterp::RadialBasisFunction::Gaussian)
       .value("InverseMultiquadric",
-             pyinterp::RadialBasisFunction::InverseMultiquadric,
-             R"(:math:`\varphi(r) = \dfrac{1}"
-             "{\sqrt{1+(\dfrac{r}{\varepsilon})^2}}`)")
-      .value("Linear", pyinterp::RadialBasisFunction::Linear,
-             R"(:math:`\varphi(r) = r`)")
-      .value("Multiquadric", pyinterp::RadialBasisFunction::Multiquadric,
-             R"(:math:`\varphi(r) = \sqrt{1+(\dfrac{r}{\varepsilon}^2})`)")
-      .value("ThinPlate", pyinterp::RadialBasisFunction::ThinPlate,
-             R"(:math:`\varphi(r) = r^2 \ln(r)`.)");
+             pyinterp::RadialBasisFunction::InverseMultiquadric)
+      .value("Linear", pyinterp::RadialBasisFunction::Linear)
+      .value("Multiquadric", pyinterp::RadialBasisFunction::Multiquadric)
+      .value("ThinPlate", pyinterp::RadialBasisFunction::ThinPlate);
 
   py::enum_<pyinterp::WindowFunction>(m, "WindowFunction", "Window functions")
-      .value("Blackman", pyinterp::WindowFunction::kBlackman,
-             R"(:math:`w(d) = 0.42659 - 0.49656 \cos(\frac{\pi (d + r)}{r}) + "
-             "0.076849 \cos(\frac{2 \pi (d + r)}{r})`)")
-      .value("BlackmanHarris", pyinterp::WindowFunction::kBlackmanHarris,
-             R"(:math:`w(d) = 0.35875 - 0.48829 \cos(\frac{\pi (d + r)}{r}) + "
-             "0.14128 \cos(\frac{2 \pi (d + r)}{r}) - 0.01168 "
-             "\cos(\frac{3 \pi (d + r)}{r})`)")
-      .value("Boxcar", pyinterp::WindowFunction::kBoxcar, ":math:`w(d) = 1`")
-      .value("FlatTop", pyinterp::WindowFunction::kFlatTop,
-             R"(:math:`w(d) = 0.21557895 - "
-             "0.41663158 \cos(\frac{\pi (d + r)}{r}) + "
-             "0.277263158 \cos(\frac{2 \pi (d + r)}{r}) - "
-             "0.083578947 \cos(\frac{3 \pi (d + r)}{r}) + "
-             "0.006947368 \cos(\frac{4 \pi (d + r)}{r})`)")
-      .value("Gaussian", pyinterp::WindowFunction::kGaussian,
-             R"(:math:`w(d) = e^{ -\frac{1}{2}\left("
-             "\frac{d}{\sigma}\right)^2 }`)")
-      .value("Hamming", pyinterp::WindowFunction::kHamming,
-             R"(:math:`w(d) = 0.53836 - 0.46164 \cos(\frac{\pi (d + r)}{r})`)")
-      .value("Lanczos", pyinterp::WindowFunction::kLanczos,
-             R"(:math:`w(d) = \left\{\begin{array}{ll}"
-             "sinc(\frac{d}{r}) \times sinc(\frac{d}{nlobes \times r}),"
-             " & d \le nlobes \times r \\ "
-             "0, & d \gt nlobes \times r \end{array} \right\}`)")
-      .value("Nuttall", pyinterp::WindowFunction::kNuttall,
-             R"(:math:`w(d) = 0.3635819 - 0.4891775 "
-             "\cos(\frac{\pi (d + r)}{r}) + 0.1365995 "
-             "\cos(\frac{2 \pi (d + r)}{r})`)")
-      .value("Parzen", pyinterp::WindowFunction::kParzen,
-             R"(:math:`w(d) = \left\{ \begin{array}{ll} 1 - 6 "
-             "\left(\frac{2*d}{2*r}\right)^2 "
-             "\left(1 - \frac{2*d}{2*r}\right), & "
-             "d \le \frac{2r + arg}{4} \\ "
-             "2\left(1 - \frac{2*d}{2*r}\right)^3 & "
-             "\frac{2r + arg}{2} \le d \lt \frac{2r +arg}{4} "
-             "\end{array} \right\}`)")
-      .value("ParzenSWOT", pyinterp::WindowFunction::kParzenSWOT,
-             R"(:math:`w(d) = w(d) = \left\{\begin{array}{ll} "
-             "1 - 6\left(\frac{2 * d}{2 * r}\right)^2 + "
-             "6\left(1 - \frac{2 * d}{2 * r}\right), & "
-             "d \le \frac{2r}{4} \\ "
-             "2\left(1 - \frac{2 * d}{2 * r}\right)^3 & "
-             "\frac{2r}{2} \ge d \gt \frac{2r}{4} \end{array} "
-             "\right\}`)");
+      .value("Blackman", pyinterp::WindowFunction::kBlackman)
+      .value("BlackmanHarris", pyinterp::WindowFunction::kBlackmanHarris)
+      .value("Boxcar", pyinterp::WindowFunction::kBoxcar)
+      .value("FlatTop", pyinterp::WindowFunction::kFlatTop)
+      .value("Gaussian", pyinterp::WindowFunction::kGaussian)
+      .value("Hamming", pyinterp::WindowFunction::kHamming)
+      .value("Lanczos", pyinterp::WindowFunction::kLanczos)
+      .value("Nuttall", pyinterp::WindowFunction::kNuttall)
+      .value("Parzen", pyinterp::WindowFunction::kParzen)
+      .value("ParzenSWOT", pyinterp::WindowFunction::kParzenSWOT);
 
   implement_rtree<pyinterp::detail::geometry::Point3D<double>, double>(
       m, "Float64");

@@ -2,38 +2,18 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""
+Orbit interpolation.
+====================
+"""
 from typing import Iterator, Optional, Tuple
 import dataclasses
 import functools
 
 import numpy as np
 
-from .. import core, geodetic
-from ..typing import NDArray, NDArrayDateTime, NDArrayTimeDelta
-
-
-def _satellite_direction(location: NDArray) -> NDArray:
-    """Calculate satellite direction."""
-    direction = np.empty_like(location)
-
-    denominator = np.sqrt(
-        np.power(location[1:-1, 0], 2) + np.power(location[1:-1, 1], 2) +
-        np.power(location[1:-1, 2], 2))
-    direction[1:-1, 0] = (location[2:, 0] -
-                          location[:-2, 0]) / denominator  # type: ignore
-    direction[1:-1, 1] = (location[2:, 1] -
-                          location[:-2, 1]) / denominator  # type: ignore
-    direction[1:-1, 2] = (location[2:, 2] -
-                          location[:-2, 2]) / denominator  # type: ignore
-
-    direction[0, :] = direction[1, :]
-    direction[0, :] = direction[1, :]
-    direction[0, :] = direction[1, :]
-    direction[-1, :] = direction[-2, :]
-    direction[-1, :] = direction[-2, :]
-    direction[-1, :] = direction[-2, :]
-
-    return direction
+from . import core, geodetic
+from .typing import NDArray, NDArrayDateTime, NDArrayTimeDelta
 
 
 def _interpolate(
@@ -55,7 +35,7 @@ def _interpolate(
     Returns:
         Tuple[NDArray, NDArray]: The interpolated longitudes and latitudes.
     """
-    mz = wgs.system.semi_major_axis / wgs.system.semi_minor_axis()
+    mz = wgs.spheroid.semi_major_axis / wgs.spheroid.semi_minor_axis()
     x, y, z = wgs.lla_to_ecef(lon, lat, np.full_like(lon, 0))
 
     r = np.sqrt(x * x + y * y + z * z * mz * mz)
@@ -131,13 +111,6 @@ def _calculate_pass_time(lat: NDArray,
 
 
 @dataclasses.dataclass(frozen=True)
-class Ephemeris:
-    time: NDArrayDateTime
-    lon: NDArray
-    lat: NDArray
-
-
-@dataclasses.dataclass(frozen=True)
 class Orbit:
     """Properties of the orbit.
 
@@ -150,13 +123,20 @@ class Orbit:
         x_al: Along track distance (in meters).
         wgs: World Geodetic System used.
     """
+    #: Height of the satellite (in meters).
     height: float
+    #: Latitudes (in degrees).
     latitude: NDArray
+    #: Longitudes (in degrees).
     longitude: NDArray
+    #: Start date of half-orbits.
     pass_time: NDArrayTimeDelta
+    #: Time elapsed since the beginning of the orbit.
     time: NDArrayTimeDelta
+    #: Along track distance (in meters).
     x_al: NDArray
-    wgs: geodetic.System
+    #: Spheroid model used.
+    wgs: geodetic.Spheroid
 
     def cycle_duration(self) -> np.timedelta64:
         """Get the cycle duration."""
@@ -308,9 +288,8 @@ class Swath(Pass):
     x_ac: NDArray
 
 
-def equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
-                       time: NDArrayTimeDelta,
-                       wgs: geodetic.System) -> EquatorCoordinates:
+def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
+                        time: NDArrayTimeDelta) -> EquatorCoordinates:
     """Calculate the position of the satellite at the equator."""
     if lon_nadir.size < 2:
         return EquatorCoordinates.undefined()
@@ -324,96 +303,105 @@ def equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
     lat1 = lat_nadir[i0:i1 + 1]
 
     # Calculate the position of the satellite at the equator
-    point = geodetic.LineString(lon1, lat1).intersection(
-        geodetic.LineString(lon1, np.array([0, 0], dtype="float64")))
-    if point is None:
+    intersection = geodetic.LineString(lon1, lat1).intersection(
+        geodetic.LineString(np.array([lon1[0] - 0.5, lon1[1] + 0.5]),
+                            np.array([0, 0], dtype="float64")))
+    if len(intersection) == 0:
         return EquatorCoordinates.undefined()
+
+    point = intersection[0]
 
     # Calculate the time of the point on the equator
     lon1 = np.insert(lon1, 1, point.lon)
     lat1 = np.insert(lat1, 1, 0)
     x_al = geodetic.LineString(lon1,
-                               lat1).curvilinear_distance(strategy="thomas",
-                                                          wgs=wgs)
+                               lat1).curvilinear_distance(strategy="thomas")
 
     # Pop the along track distance at the equator
     x_eq = x_al[1]
     x_al = np.delete(x_al, 1)
 
-    return EquatorCoordinates(point.lon,
-                              np.interp(x_eq, x_al,
-                                        time[i0:i1 + 1].astype("i8")).astype(
-                                            time.dtype))  # type: ignore
+    return EquatorCoordinates(
+        point.lon,
+        np.interp(x_eq, x_al, time[i0:i1 + 1].astype("i8")).astype(
+            time.dtype),  # type: ignore
+    )
 
 
 def calculate_orbit(
     height: float,
-    ephemeris: Ephemeris,
+    lon_nadir: NDArray,
+    lat_nadir: NDArray,
+    time: NDArrayTimeDelta,
     cycle_duration: Optional[np.timedelta64] = None,
     along_track_resolution: Optional[float] = None,
-    system: Optional[geodetic.System] = None,
+    spheroid: Optional[geodetic.Spheroid] = None,
 ) -> Orbit:
     """Calculate the orbit at the given height.
 
     Args:
         height: Height of the orbit.
-        ephemeris: Ephemeris to propagate.
+        lon_nadir: Nadir longitude of the orbit (degrees).
+        lat_nadir: Nadir latitude of the orbit (degrees).
+        time: Time elapsed since the start of the orbit.
         cycle_duration: Duration of the cycle.
         along_track_resolution: Resolution of the along-track interpolation in
             kilometers. Defaults to 2 kilometers.
-        wgs: Geodetic system to use. Defaults to WGS84.
+        spheroid: Spheroid to use for the calculations. Defaults to WGS84.
 
     Returns:
         Orbit object.
     """
-    wgs = geodetic.Coordinates(system)
+    wgs = geodetic.Coordinates(spheroid)
 
-    lon = geodetic.normalize_longitudes(ephemeris.lon)
-    lat = ephemeris.lat
-    time = ephemeris.time.astype("m8[ns]")
+    lon_nadir = geodetic.normalize_longitudes(lon_nadir)
+    time = time.astype("m8[ns]")
 
     if np.mean(np.diff(time)) > np.timedelta64(500, "ms"):
         time_hr = np.arange(time[0],
                             time[-1],
                             np.timedelta64(500, "ms"),
                             dtype=time.dtype)
-        lon, lat = _interpolate(lon, lat, time_hr.astype("i8"),
-                                time.astype("i8"), wgs)
+        lon_nadir, lat_nadir = _interpolate(lon_nadir, lat_nadir,
+                                            time_hr.astype("i8"),
+                                            time.astype("i8"), wgs)
         time = time_hr
 
     if cycle_duration is not None:
         indexes = np.where(time < cycle_duration)[0]
-        lon = lon[indexes]
-        lat = lat[indexes]
+        lon_nadir = lon_nadir[indexes]
+        lat_nadir = lat_nadir[indexes]
         time = time[indexes]
         del indexes
 
     # Rearrange orbit starting from pass 1
-    lon, lat, time = _rearrange_orbit(
+    lon_nadir, lat_nadir, time = _rearrange_orbit(
         time[-1] + time[1] - time[0],
-        lon,
-        lat,
+        lon_nadir,
+        lat_nadir,
         time,
     )
 
     # Calculates the along track distance (km)
-    distance = geodetic.LineString(lon, lat).curvilinear_distance(
-        strategy="thomas", wgs=system) * 1e-3
+    distance = geodetic.LineString(lon_nadir, lat_nadir).curvilinear_distance(
+        strategy="thomas", wgs=spheroid) * 1e-3
 
     # Interpolate the final orbit according the given along track resolution
     x_al = np.arange(distance[0],
                      distance[-2],
                      along_track_resolution or 2,
                      dtype=distance.dtype)
-    lon, lat = _interpolate(lon[:-1], lat[:-1], x_al, distance[:-1], wgs)
+    lon_nadir, lat_nadir = _interpolate(lon_nadir[:-1], lat_nadir[:-1], x_al,
+                                        distance[:-1], wgs)
 
     time = np.interp(
         x_al,  # type: ignore
         distance[:-1],  # type: ignore
         time[:-1].astype("i8")).astype(time.dtype)
 
-    return Orbit(height, lat, lon, np.sort(_calculate_pass_time(lat, time)),
-                 time, x_al, wgs.system)  # type: ignore
+    return Orbit(height, lat_nadir, lon_nadir,
+                 np.sort(_calculate_pass_time(lat_nadir, time)), time, x_al,
+                 wgs.spheroid)  # type: ignore
 
 
 def calculate_pass(
@@ -421,7 +409,6 @@ def calculate_pass(
     orbit: Orbit,
     *,
     bbox: Optional[geodetic.Box] = None,
-    along_track_resolution: Optional[float] = None,
 ) -> Optional[Pass]:
     """Get the properties of a swath of an half-orbit.
 
@@ -429,13 +416,10 @@ def calculate_pass(
         pass_number: Pass number
         orbit: Orbit describing the pass to be calculated.
         bbox: Bounding box of the pass. Defaults to the whole Earth.
-        along_track_resolution: Distance, in km, between two points along track
-            direction. Defaults to 2 km.
 
     Returns:
         The properties of the pass.
     """
-    along_track_resolution = along_track_resolution or 2.0
     index = pass_number - 1
     # Selected indexes corresponding to the current pass
     if index == len(orbit.pass_time) - 1:
@@ -463,8 +447,7 @@ def calculate_pass(
             time = time[mask]
             x_al = x_al[mask]
 
-    equator_coordinates = equator_properties(lon_nadir, lat_nadir, time,
-                                             orbit.wgs)
+    equator_coordinates = _equator_properties(lon_nadir, lat_nadir, time)
 
     return Pass(lon_nadir, lat_nadir, time, x_al, equator_coordinates)
 
@@ -497,13 +480,11 @@ def calculate_swath(
     Returns:
         The properties of the pass.
     """
-    pass_ = calculate_pass(pass_number,
-                           orbit,
-                           bbox=bbox,
-                           along_track_resolution=along_track_resolution)
+    pass_ = calculate_pass(pass_number, orbit, bbox=bbox)
     if pass_ is None:
         return None
     across_track_resolution = across_track_resolution or 2.0
+    along_track_resolution = along_track_resolution or 2
     half_swath = half_swath or 70.0
     half_gap = half_gap or 2.0
 

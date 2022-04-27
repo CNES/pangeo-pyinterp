@@ -16,7 +16,7 @@ from ...core import geodetic
 
 def test_system_wgs84():
     """Checking expected WGS-84 properties."""
-    wgs84 = core.geodetic.System()
+    wgs84 = core.geodetic.Spheroid()
     # https://fr.wikipedia.org/wiki/WGS_84
     # https://en.wikipedia.org/wiki/Geodetic_datum
     # http://earth-info.nga.mil/GandG/publications/tr8350.2/wgs84fin.pdf
@@ -48,9 +48,9 @@ def test_system_wgs84():
 
 def test_system_operators():
     """Test operators."""
-    wgs84 = core.geodetic.System()
+    wgs84 = core.geodetic.Spheroid()
     # https://en.wikipedia.org/wiki/Geodetic_Reference_System_1980
-    grs80 = core.geodetic.System(6378137, 1 / 298.257222101)
+    grs80 = core.geodetic.Spheroid(6378137, 1 / 298.257222101)
     assert 6378137 == pytest.approx(grs80.semi_major_axis)
     assert 1 / 298.257222101 == pytest.approx(grs80.flattening)
     assert wgs84 == wgs84
@@ -59,7 +59,7 @@ def test_system_operators():
 
 def test_system_pickle():
     """Serialization test."""
-    wgs84 = core.geodetic.System()
+    wgs84 = core.geodetic.Spheroid()
     assert wgs84 == pickle.loads(pickle.dumps(wgs84))
 
 

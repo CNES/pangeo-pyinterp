@@ -107,10 +107,12 @@ Geodetic System
 
   core.geodetic.Box
   core.geodetic.Coordinates
+  core.geodetic.Crossover
+  core.geodetic.LineString
   core.geodetic.MultiPolygon
   core.geodetic.Point
   core.geodetic.Polygon
-  core.geodetic.System
+  core.geodetic.Spheroid
 
 Geohash integer
 ---------------

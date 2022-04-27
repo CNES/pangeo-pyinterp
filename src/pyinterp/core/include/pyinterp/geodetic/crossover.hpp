@@ -10,7 +10,7 @@
 #include "pyinterp/geodetic/algorithm.hpp"
 #include "pyinterp/geodetic/line_string.hpp"
 #include "pyinterp/geodetic/point.hpp"
-#include "pyinterp/geodetic/system.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -36,15 +36,13 @@ class Crossover {
   /// Get the crossover point between the two passes.
   ///
   /// @return the crossover location.
-  [[nodiscard]] inline auto search(const std::optional<System>& wgs) const
-      -> std::optional<Point> {
-    return half_orbit_1_.intersection(half_orbit_2_, wgs);
-  }
+  [[nodiscard]] auto search(const std::optional<Spheroid>& wgs) const
+      -> std::optional<Point>;
 
   /// Test if there is a crossover point between the two passes.
   ///
   /// @return true if there is a crossover point.
-  [[nodiscard]] inline auto exists(const std::optional<System>& wgs) const
+  [[nodiscard]] inline auto exists(const std::optional<Spheroid>& wgs) const
       -> bool {
     return half_orbit_1_.intersects(half_orbit_2_, wgs);
   }
@@ -57,7 +55,7 @@ class Crossover {
   ///         crossover point is found.
   [[nodiscard]] auto nearest(const Point& point, double predicate,
                              DistanceStrategy strategy,
-                             const std::optional<System>& wgs) const
+                             const std::optional<Spheroid>& wgs) const
       -> std::optional<std::tuple<size_t, size_t>>;
 
   /// Get a tuple that fully encodes the state of this instance

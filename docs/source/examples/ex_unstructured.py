@@ -8,8 +8,8 @@ Interpolation of unstructured grids.
 The interpolation of this object is based on a :py:class:`R*Tree
 <pyinterp.RTree>` structure. To begin with, we start by building this
 object. By default, this object considers the WGS-84 geodetic coordinate system.
-But you can define another one using the class :py:class:`System
-<pyinterp.geodetic.System>`.
+But you can define another one using the class :py:class:`Spheroid
+<pyinterp.geodetic.Spheroid>`.
 """
 
 # %%

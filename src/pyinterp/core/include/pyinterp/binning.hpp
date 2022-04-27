@@ -19,7 +19,7 @@
 #include "pyinterp/detail/math/binning.hpp"
 #include "pyinterp/detail/math/descriptive_statistics.hpp"
 #include "pyinterp/eigen.hpp"
-#include "pyinterp/geodetic/system.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 
 namespace pyinterp {
 
@@ -41,7 +41,7 @@ class Binning2D {
   /// considered as Cartesian coordinates. Otherwise, "x" and "y" are considered
   /// to represents the longitudes and latitudes on a grid.
   Binning2D(std::shared_ptr<Axis<double>> x, std::shared_ptr<Axis<double>> y,
-            std::optional<geodetic::System> wgs)
+            std::optional<geodetic::Spheroid> wgs)
       : x_(std::move(x)),
         y_(std::move(y)),
         acc_(x_->size(), y_->size()),
@@ -160,7 +160,7 @@ class Binning2D {
 
   /// Gets the WGS system
   [[nodiscard]] inline auto wgs() const
-      -> const std::optional<geodetic::System> & {
+      -> const std::optional<geodetic::Spheroid> & {
     return wgs_;
   }
 
@@ -187,10 +187,10 @@ class Binning2D {
     *y = Axis<double>::setstate(state[1].cast<pybind11::tuple>());
 
     // Unmarshalling WGS system
-    auto wgs = std::optional<geodetic::System>();
+    auto wgs = std::optional<geodetic::Spheroid>();
     auto wgs_state = state[2].cast<pybind11::tuple>();
     if (!wgs_state.empty()) {
-      *wgs = geodetic::System::setstate(wgs_state);
+      *wgs = geodetic::Spheroid::setstate(wgs_state);
     }
 
     // Unmarshalling computed statistics
@@ -257,7 +257,7 @@ class Binning2D {
  private:
   /// Geodetic coordinate system required to calculate areas (optional if the
   /// user wishes to handle Cartesian coordinates).
-  std::optional<geodetic::System> wgs_;
+  std::optional<geodetic::Spheroid> wgs_;
 
   /// Calculation of a given statistical variable.
   template <typename Func, typename Type = T, typename... Args>

@@ -46,7 +46,7 @@ class Binning2D:
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
-                 wgs: Optional[geodetic.System] = None,
+                 wgs: Optional[geodetic.Spheroid] = None,
                  dtype: np.dtype = np.dtype("float64")):
         if dtype == np.dtype("float64"):
             self._instance = core.Binning2DFloat64(x, y, wgs)
@@ -67,7 +67,7 @@ class Binning2D:
         return self._instance.y
 
     @property
-    def wgs(self) -> Optional[core.geodetic.System]:
+    def wgs(self) -> Optional[core.geodetic.Spheroid]:
         """Gets the geodetic system handled of the grid."""
         return self._instance.wgs
 

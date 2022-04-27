@@ -24,12 +24,12 @@ import numpy
 
 import pyinterp.geodetic
 
-wgs84 = pyinterp.geodetic.System()
+wgs84 = pyinterp.geodetic.Spheroid()
 wgs84
 
 # %%
 # You can instantiate other systems.
-grs80 = pyinterp.geodetic.System((6378137, 1 / 298.257222101))
+grs80 = pyinterp.geodetic.Spheroid((6378137, 1 / 298.257222101))
 grs80
 
 # %%

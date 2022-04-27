@@ -15,8 +15,8 @@
 #include "pyinterp/geodetic/multipolygon.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 #include "pyinterp/geodetic/swath.hpp"
-#include "pyinterp/geodetic/system.hpp"
 
 namespace geodetic = pyinterp::geodetic;
 namespace py = pybind11;
@@ -65,7 +65,7 @@ Args:
           "distance",
           [](const geodetic::Point &self, const geodetic::Point &other,
              const std::string &strategy,
-             const std::optional<geodetic::System> &wgs) -> double {
+             const std::optional<geodetic::Spheroid> &wgs) -> double {
             return self.distance(other, parse_distance_strategy(strategy), wgs);
           },
           py::arg("other"), py::arg("strategy") = "thomas",
@@ -77,7 +77,8 @@ Args:
     other: The other point to consider.
     strategy: The calculation method used to calculate the distance. This
         parameter can take the values ``andoyer``, ``thomas`` or ``vincenty``.
-    wgs: WGS system used for the calculation, default to WGS84.
+    wgs: The spheroid used to calculate the distance. If not provided, the
+        WGS-84 spheroid is used.
 
 Returns:
     The distance between the two points in meters.
@@ -241,7 +242,8 @@ Returns:
 Calculates the area.
 
 Args:
-    wgs: WGS system used for the calculation, default to WGS84.
+    wgs: The spheroid used to calculate the area. If not provided, the
+        WGS-84 spheroid is used.
 
 Returns:
     The calculated area.
@@ -502,7 +504,8 @@ Returns:
 Calculates the area.
 
 Args:
-    wgs: WGS system used for the calculation, default to WGS84.
+    wgs: The spheroid used to calculate the distance. If not provided, the
+        WGS-84 spheroid is used.
 
 Returns:
     The calculated area.
@@ -852,7 +855,8 @@ Returns:
 Calculates the area.
 
 Args:
-    wgs: WGS system used for the calculation, default to WGS84.
+    wgs: The spheroid used to calculate the area. If not provided, the
+        WGS-84 spheroid is used.
 
 Returns:
     The calculated area.
@@ -1061,9 +1065,9 @@ Args:
       .def(
           "curvilinear_distance",
           [](const geodetic::LineString &self, const std::string &strategy,
-             const std::optional<geodetic::System> &system) {
+             const std::optional<geodetic::Spheroid> &spheroid) {
             return self.curvilinear_distance(parse_distance_strategy(strategy),
-                                             system);
+                                             spheroid);
           },
           py::arg("strategy") = "thomas", py::arg("wgs") = std::nullopt,
           R"__doc__(
@@ -1072,7 +1076,7 @@ Computes the curvilinear distance between the points of this instance.
 Args:
     strategy: the distance strategy to use. This parameter can take the values
         ``andoyer``, ``thomas`` or ``vincenty``
-    wgs: the reference system to use.
+    wgs: the spheroid to use. If not provided, the WGS84 spheroid is used.
 
 Returns:
     The curvilinear distance between the points of this instance.
@@ -1086,8 +1090,8 @@ Test if this linestring intersects with another linestring.
 Args:
     rhs: The linestring to test.
     wgs: If specified, searches for the intersection using geographic
-        coordinates with the specified world geodetic system, otherwise
-        searches for the intersection using spherical coordinates.
+    coordinates with the specified spheroid, otherwise searches for the
+    intersection using spherical coordinates.
 Returns:
     True if the linestring intersects this instance.
 )__doc__",
@@ -1095,14 +1099,14 @@ Returns:
       .def("intersection", &geodetic::LineString::intersection, py::arg("rhs"),
            py::arg("wgs") = std::nullopt,
            R"__doc__(
-Get the coordinate of the intersection between this linestring and another one.
+Computes the intersection between this linestring and another linestring.
 
 Args:
     rhs: The linestring to test.
     wgs: The World Geodetic System to use. Defaults to WGS84.
 
 Returns:
-    The coordinates of the intersection or None if there is no intersection.
+    The intersection between this linestring and the other linestring.
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
@@ -1139,10 +1143,12 @@ Args:
            py::arg("wgs") = std::nullopt,
            R"__doc__(
 Search for the crossover between the two half-orbits.
+
 Args:
     wgs: If specified, searches for the intersection using geographic
-        coordinates with the specified world geodetic system, otherwise
-        searches for the intersection using spherical coordinates.
+        coordinates with the specified spheroid, otherwise searches for the
+        intersection using spherical coordinates.
+
 Returns:
     The crossover or None if there is no crossover.
 )__doc__",
@@ -1151,10 +1157,12 @@ Returns:
            py::arg("wgs") = std::nullopt,
            R"__doc__(
 Test if there is a crossover between the two half-orbits.
+
 Args:
     wgs: If specified, searches for the intersection using geographic
-        coordinates with the specified world geodetic system, otherwise
-        searches for the intersection using spherical coordinates.
+        coordinates with the specified spheroid, otherwise searches for the
+        intersection using spherical coordinates.
+
 Returns:
     True if there is a crossover.
 )__doc__",
@@ -1164,7 +1172,7 @@ Returns:
           [](const geodetic::Crossover &self, const geodetic::Point &point,
              const std::optional<double> &predicate,
              const std::string &strategy,
-             const std::optional<geodetic::System> &wgs)
+             const std::optional<geodetic::Spheroid> &wgs)
               -> std::optional<std::tuple<size_t, size_t>> {
             return self.nearest(point, predicate.value_or(40'075'000.0),
                                 parse_distance_strategy(strategy), wgs);
@@ -1178,7 +1186,8 @@ Args:
     point: The point to consider.
     predicate: The distance predicate, in meters.
     strategy: The distance calculation strategy.
-    wgs: The WGS system to use.
+    wgs: The spheroid used to calculate the distance. If not provided, the
+        WGS-84 spheroid is used.
 
 Returns:
     The indices of the nearest points or None if no intersection is found.
@@ -1192,12 +1201,13 @@ Returns:
 }
 
 void init_geodetic(py::module &m) {
-  auto _system = py::class_<pyinterp::detail::geodetic::System>(
-      m, "_System", "C++ implementation of the WGS system.");
+  auto _spheroid = py::class_<pyinterp::detail::geodetic::Spheroid>(
+      m, "_Spheroid", "C++ implementation of the WGS system.");
 
-  py::class_<geodetic::System, pyinterp::detail::geodetic::System>(m, "System",
-                                                                   R"(
-System(self, semi_major_axis: float, flattening: float)
+  py::class_<geodetic::Spheroid, pyinterp::detail::geodetic::Spheroid>(
+      m, "Spheroid",
+      R"(
+Spheroid(self, semi_major_axis: float, flattening: float)
 
 World Geodetic System (WGS).
 
@@ -1211,33 +1221,33 @@ Args:
       .def(py::init<double, double>(), py::arg("semi_major_axis"),
            py::arg("flattening"))
       .def_property_readonly(
-          "semi_major_axis", &geodetic::System::semi_major_axis,
+          "semi_major_axis", &geodetic::Spheroid::semi_major_axis,
           "Semi-major axis of ellipsoid, in meters (:math:`a`).")
       .def_property_readonly(
-          "flattening", &geodetic::System::flattening,
+          "flattening", &geodetic::Spheroid::flattening,
           "Flattening of ellipsoid (:math:`f=\\frac{a-b}{a}`).")
-      .def("semi_minor_axis", &geodetic::System::semi_minor_axis, R"__doc__(
+      .def("semi_minor_axis", &geodetic::Spheroid::semi_minor_axis, R"__doc__(
 Gets the semiminor axis.
 
 Returns:
     :math:`b=a(1-f)`
 )__doc__")
       .def("first_eccentricity_squared",
-           &geodetic::System::first_eccentricity_squared, R"__doc__(
+           &geodetic::Spheroid::first_eccentricity_squared, R"__doc__(
 Gets the first eccentricity squared.
 
 Returns:
     :math:`e^2=\frac{a^2-b^2}{a^2}`
 )__doc__")
       .def("second_eccentricity_squared",
-           &geodetic::System::second_eccentricity_squared, R"__doc__(
+           &geodetic::Spheroid::second_eccentricity_squared, R"__doc__(
 Gets the second eccentricity squared.
 
 Returns:
     float: :math:`e^2=\frac{a^2-b^2}{b^2}`
 )__doc__")
       .def("equatorial_circumference",
-           &geodetic::System::equatorial_circumference,
+           &geodetic::Spheroid::equatorial_circumference,
            py::arg("semi_major_axis") = true, R"__doc__(
 Gets the equatorial circumference.
 
@@ -1249,7 +1259,7 @@ Returns:
     :math:`2\pi \times b`.
 )__doc__")
       .def("polar_radius_of_curvature",
-           &geodetic::System::polar_radius_of_curvature,
+           &geodetic::Spheroid::polar_radius_of_curvature,
            R"__doc__(
 Gets the polar radius of curvature.
 
@@ -1257,70 +1267,69 @@ Returns:
     :math:`\frac{a^2}{b}`
 )__doc__")
       .def("equatorial_radius_of_curvature",
-           &geodetic::System::equatorial_radius_of_curvature,
+           &geodetic::Spheroid::equatorial_radius_of_curvature,
            R"__doc__(
 Gets the equatorial radius of curvature for a meridian.
 
 Returns:
     :math:`\frac{b^2}{a}`
 )__doc__")
-      .def("axis_ratio", &geodetic::System::axis_ratio, R"__doc__(
+      .def("axis_ratio", &geodetic::Spheroid::axis_ratio, R"__doc__(
 Gets the axis ratio.
 
 Returns:
     :math:`\frac{b}{a}`
 )__doc__")
-      .def("linear_eccentricity", &geodetic::System::linear_eccentricity,
+      .def("linear_eccentricity", &geodetic::Spheroid::linear_eccentricity,
            R"__doc__(
 Gets the linear eccentricity.
 
 Returns:
     :math:`E=\sqrt{{a^2}-{b^2}}`
 )__doc__")
-      .def("mean_radius", &geodetic::System::mean_radius, R"__doc__(
+      .def("mean_radius", &geodetic::Spheroid::mean_radius, R"__doc__(
 Gets the mean radius.
 
 Returns:
     :math:`R_1=\frac{2a+b}{3}`
 )__doc__")
-      .def("authalic_radius", &geodetic::System::authalic_radius, R"__doc__(
+      .def("authalic_radius", &geodetic::Spheroid::authalic_radius, R"__doc__(
 Gets the authalic radius.
 
 Returns:
     :math:`R_2=\sqrt{\frac{a^2+\frac{ab^2}{E}ln(\frac{a + E}{b})}{2}}`
 )__doc__")
-      .def("volumetric_radius", &geodetic::System::volumetric_radius,
+      .def("volumetric_radius", &geodetic::Spheroid::volumetric_radius,
            R"__doc__(
 Gets the volumetric radius.
 
 Returns:
     :math:`R_3=\sqrt[3]{a^{2}b}`
 )__doc__")
-      .def("__eq__", &geodetic::System::operator==, py::arg("other"),
+      .def("__eq__", &geodetic::Spheroid::operator==, py::arg("other"),
            "Overrides the default behavior of the ``==`` operator.")
-      .def("__ne__", &geodetic::System::operator!=, py::arg("other"),
+      .def("__ne__", &geodetic::Spheroid::operator!=, py::arg("other"),
            "Overrides the default behavior of the ``!=`` operator.")
       .def(py::pickle(
-          [](const geodetic::System &self) { return self.getstate(); },
+          [](const geodetic::Spheroid &self) { return self.getstate(); },
           [](const py::tuple &state) {
-            return geodetic::System::setstate(state);
+            return geodetic::Spheroid::setstate(state);
           }));
 
   py::class_<geodetic::Coordinates>(
       m, "Coordinates",
       "Coordinates(self, "
-      "system: Optional[pyinterp.core.geodetic.System] = None)"
+      "spheroid: Optional[pyinterp.core.geodetic.Spheroid] = None)"
       R"(
 
 World Geodetic Coordinates System.
 
 Args:
-    system: WGS System. If this option is not defined, the instance manages a
-        WGS84 ellipsoid.
+    spheroid: Optional spheroid to use. Defaults to WGS-84.
 )")
-      .def(py::init<std::optional<geodetic::System>>(),
-           py::arg("system") = std::nullopt)
-      .def_property_readonly("system", &geodetic::Coordinates::system,
+      .def(py::init<std::optional<geodetic::Spheroid>>(),
+           py::arg("spheroid") = std::nullopt)
+      .def_property_readonly("spheroid", &geodetic::Coordinates::spheroid,
                              "WGS used to transform the coordinates.")
       .def("ecef_to_lla", &geodetic::Coordinates::ecef_to_lla<double>,
            py::arg("x"), py::arg("y"), py::arg("z"), py::arg("num_threads") = 0,
@@ -1399,13 +1408,32 @@ Returns:
 
   m.def(
       "normalize_longitudes",
+      [](Eigen::Ref<Eigen::VectorXd> &lon, const double min_lon) -> void {
+        auto *lon_ptr = lon.data();
+        std::for_each(lon_ptr, lon_ptr + lon.size(), [min_lon](double &x) {
+          x = pyinterp::detail::math::normalize_angle(x, min_lon, 360.0);
+        });
+      },
+      py::arg("lon"), py::arg("min_lon") = -180.0,
+      R"__doc__(
+Normalizes longitudes to the range ``[min_lon, min_lon + 360)`` in place.
+
+Args:
+    lon: Longitudes in degrees.
+    min_lon: Minimum longitude. Defaults to ``-180.0``.
+)__doc__",
+      py::call_guard<py::gil_scoped_release>());
+
+  m.def(
+      "normalize_longitudes",
       [](const Eigen::Ref<const Eigen::VectorXd> &lon,
          const double min_lon) -> Eigen::VectorXd {
         return lon.unaryExpr([min_lon](double x) {
           return pyinterp::detail::math::normalize_angle(x, min_lon, 360.0);
         });
       },
-      py::arg("lon"), py::arg("min_lon") = -180.0, R"__doc__(
+      py::arg("lon"), py::arg("min_lon") = -180.0,
+      R"__doc__(
 Normalizes longitudes to the range ``[min_lon, min_lon + 360)``.
 
 Args:
@@ -1424,7 +1452,7 @@ Returns:
          const Eigen::Ref<const Eigen::VectorXd> &lon2,
          const Eigen::Ref<const Eigen::VectorXd> &lat2,
          const std::string &strategy,
-         const std::optional<geodetic::System> &wgs,
+         const std::optional<geodetic::Spheroid> &wgs,
          const size_t num_threads) -> py::array_t<double> {
         return geodetic::coordinate_distances<geodetic::Point>(
             lon1, lat1, lon2, lat2, parse_distance_strategy(strategy), wgs,
@@ -1442,7 +1470,8 @@ Args:
     lat2: Latitudes in degrees.
     strategy: The calculation method used to calculate the distance. This
         parameter can take the values "andoyer", "thomas" or "vincenty".
-    wgs: WGS system used for the calculation, default to WGS84.
+    wgs: The spheroid used to calculate the distance. Defaults to ``None``,
+        which means the WGS-84 spheroid is used.
     num_threads: The number of threads to use for the computation. If 0 all CPUs
         are used. If 1 is given, no parallel computing code is used at all,
         which is useful for debugging. Defaults to ``0``.

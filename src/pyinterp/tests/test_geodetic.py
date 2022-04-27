@@ -10,21 +10,26 @@ from .. import geodetic
 
 
 def test_system():
-    wgs = geodetic.System()
-    assert isinstance(wgs, geodetic.System)
+    with pytest.raises(DeprecationWarning):
+        geodetic.System()
+
+
+def test_spheroid():
+    wgs = geodetic.Spheroid()
+    assert isinstance(wgs, geodetic.Spheroid)
     with pytest.raises(TypeError):
-        wgs = geodetic.System(12.0)  # type: ignore
+        wgs = geodetic.Spheroid(12.0)  # type: ignore
     with pytest.raises(TypeError):
-        wgs = geodetic.System((12.0, 3.0, 5))  # type: ignore
-    wgs = geodetic.System((1, 1))
-    assert isinstance(wgs, geodetic.System)
-    assert str(wgs) == "System(1.0, 1.0)"
+        wgs = geodetic.Spheroid((12.0, 3.0, 5))  # type: ignore
+    wgs = geodetic.Spheroid((1, 1))
+    assert isinstance(wgs, geodetic.Spheroid)
+    assert str(wgs) == "Spheroid(1.0, 1.0)"
 
 
 def test_coordinates():
     wgs = geodetic.Coordinates()
     assert isinstance(wgs, geodetic.Coordinates)
-    wgs = geodetic.Coordinates(geodetic.System())
+    wgs = geodetic.Coordinates(geodetic.Spheroid())
     assert isinstance(wgs, geodetic.Coordinates)
 
 

@@ -16,11 +16,11 @@
 
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/geodetic/coordinates.hpp"
-#include "pyinterp/detail/geodetic/system.hpp"
+#include "pyinterp/detail/geodetic/spheroid.hpp"
 #include "pyinterp/detail/geometry/rtree.hpp"
 #include "pyinterp/detail/thread.hpp"
 #include "pyinterp/eigen.hpp"
-#include "pyinterp/geodetic/system.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 
 namespace pyinterp {
 
@@ -72,9 +72,9 @@ class RTree : public detail::geometry::RTree<Point, Type> {
       const Point &, const uint32_t) const;
 
   /// Default constructor
-  explicit RTree(const std::optional<detail::geodetic::System> &wgs)
+  explicit RTree(const std::optional<detail::geodetic::Spheroid> &wgs)
       : detail::geometry::RTree<Point, Type>(),
-        coordinates_(wgs.value_or(detail::geodetic::System())) {}
+        coordinates_(wgs.value_or(detail::geodetic::Spheroid())) {}
 
   /// Returns the box able to contain all values stored in the container.
   ///
@@ -274,8 +274,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                     _u(ix) = item.second;
                     ++ix;
                   });
-    auto system = geodetic::System(this->coordinates_.system());
-    return pybind11::make_tuple(system.getstate(), x, u);
+    auto spheroid = geodetic::Spheroid(this->coordinates_.spheroid());
+    return pybind11::make_tuple(spheroid.getstate(), x, u);
   }
 
   /// Create a new instance from a registered state of an instance of this
@@ -284,7 +284,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     if (state.size() != 3) {
       throw std::runtime_error("invalid state");
     }
-    auto system = geodetic::System::setstate(state[0].cast<pybind11::tuple>());
+    auto spheroid =
+        geodetic::Spheroid::setstate(state[0].cast<pybind11::tuple>());
     auto x = state[1].cast<pybind11::array_t<coordinate_t>>();
     auto u = state[2].cast<pybind11::array_t<Type>>();
 
@@ -306,7 +307,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
       }
       vector.emplace_back(std::make_pair(point, _u(ix)));
     }
-    auto result = RTree<Point, Type>(system);
+    auto result = RTree<Point, Type>(spheroid);
     static_cast<detail::geometry::RTree<Point, Type>>(result).packing(vector);
     return result;
   }

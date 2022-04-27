@@ -44,7 +44,7 @@ class MultiPolygon : public boost::geometry::model::multi_polygon<Polygon> {
   }
 
   /// Calculate the area
-  [[nodiscard]] auto area(const std::optional<System> &wgs) const -> double {
+  [[nodiscard]] auto area(const std::optional<Spheroid> &wgs) const -> double {
     return geodetic::area(*this, wgs);
   }
 

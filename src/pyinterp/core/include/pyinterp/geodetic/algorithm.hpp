@@ -24,7 +24,7 @@
 
 #include "pyinterp/detail/broadcast.hpp"
 #include "pyinterp/detail/thread.hpp"
-#include "pyinterp/geodetic/system.hpp"
+#include "pyinterp/geodetic/spheroid.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -41,7 +41,7 @@ using Vincenty = boost::geometry::strategy::distance::vincenty<
 /// Calculate the area
 template <typename Geometry>
 [[nodiscard]] inline auto area(const Geometry &geometry,
-                               const std::optional<System> &wgs) -> double {
+                               const std::optional<Spheroid> &wgs) -> double {
   auto spheroid =
       wgs.has_value()
           ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
@@ -97,7 +97,8 @@ template <typename Geometry1, typename Geometry2>
 [[nodiscard]] inline auto distance(const Geometry1 &geometry1,
                                    const Geometry2 &geometry2,
                                    const DistanceStrategy strategy,
-                                   const std::optional<System> &wgs) -> double {
+                                   const std::optional<Spheroid> &wgs)
+    -> double {
   auto spheroid =
       wgs.has_value()
           ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
@@ -174,7 +175,7 @@ template <typename Geometry>
     const Eigen::Ref<const Eigen::VectorXd> &lat1,
     const Eigen::Ref<const Eigen::VectorXd> &lon2,
     const Eigen::Ref<const Eigen::VectorXd> &lat2,
-    const DistanceStrategy strategy, const std::optional<System> &wgs,
+    const DistanceStrategy strategy, const std::optional<Spheroid> &wgs,
     const size_t num_threads) -> pybind11::array_t<double> {
   detail::check_eigen_shape("lon1", lon1, "lat1", lat1, "lon2", lon2, "lat2",
                             lat2);
