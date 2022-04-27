@@ -97,7 +97,7 @@ auto curvilinear_distance_impl(const LineString& ls, const Strategy& strategy,
 
   auto it = ls.begin() + 1;
 
-  for (auto ix = static_cast<Eigen::Index>(1); ix < ls.size(); ++ix) {
+  for (auto ix = static_cast<size_t>(1); ix < ls.size(); ++ix) {
     auto distance = boost::geometry::distance(*std::prev(it), *it, strategy);
     total_distance += distance;
     result[ix] = total_distance;
