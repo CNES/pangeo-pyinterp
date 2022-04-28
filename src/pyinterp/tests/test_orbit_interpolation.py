@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 from . import swot_calval_ephemeris_path
-from ..orbit import calculate_orbit, calculate_swath
+from ..orbit import calculate_orbit, calculate_pass, calculate_swath
 from ..typing import NDArray
 
 
@@ -68,4 +68,6 @@ def test_calculate_orbit():
 def test_calculate_pass():
     """Test the calculation of the pass."""
     orbit = calculate_orbit(*load_test_ephemeris(swot_calval_ephemeris_path()))
-    pass_ = calculate_swath(2, orbit)
+    pass_ = calculate_pass(2, orbit)
+    assert pass_ is not None
+    swath = calculate_swath(pass_)

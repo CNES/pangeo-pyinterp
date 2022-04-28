@@ -269,10 +269,14 @@ class Pass:
     lat_nadir: NDArray
     #: Time of the pass
     time: NDArrayDateTime
-    #: Along track distance of the pass (km)
+    #: Along track distance of the pass (in meters)
     x_al: NDArray
     #: Coordinates of the satellite at the equator
     equator_coordinates: EquatorCoordinates
+
+    def __len__(self) -> int:
+        """Get the number of points in the pass."""
+        return len(self.time)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -282,8 +286,48 @@ class Swath(Pass):
     lon: NDArray
     #: Latitude of the swath (degrees)
     lat: NDArray
-    #: Across track distance of the pass (km)
+    #: Across track distance of the pass (m)
     x_ac: NDArray
+
+    def mask(self, requirement_bounds: Tuple[float, float]) -> NDArray:
+        """Obtain a mask to set NaN values outside the mission requirements.
+
+        Args:
+            requirement_bounds (tuple): Limits of SWOT swath requirements:
+                absolute value of the minimum and maximum across track
+                distance.
+
+        Returns:
+            Mask set true, if the swath is outside the requirements of the
+            mission.
+        """
+        valid = np.full_like(self.x_ac, np.nan)
+        valid[(np.abs(self.x_ac) >= requirement_bounds[0])
+              & (np.abs(self.x_ac) <= requirement_bounds[1])] = 1
+        along_track = np.full(self.lon_nadir.shape, 1, dtype=np.float64)
+        return along_track[:, np.newaxis] * valid
+
+    def insert_central_pixel(self) -> "Swath":
+        """Return a swath with a central pixel dividing the swath in two by the
+        reference ground track."""
+
+        def _insert(array: NDArray, central_pixel: int,
+                    fill_value: NDArray) -> NDArray:
+            """Insert a central pixel in a given array."""
+            return np.c_[array[:, :central_pixel], fill_value[:, np.newaxis],
+                         array[:, central_pixel:]]
+
+        num_pixels = self.lon.shape[1] + 1
+        num_lines = self.lon.shape[0]
+        central_pixel = num_pixels // 2
+
+        return Swath(
+            self.lon_nadir, self.lat_nadir, self.time, self.x_al,
+            self.equator_coordinates,
+            _insert(self.lon, central_pixel, self.lon_nadir),
+            _insert(self.lat, central_pixel, self.lat_nadir),
+            _insert(self.x_ac, central_pixel,
+                    np.zeros(num_lines, dtype=self.x_ac.dtype)))
 
 
 def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
@@ -451,20 +495,18 @@ def calculate_pass(
 
 
 def calculate_swath(
-    pass_number: int,
-    orbit: Orbit,
+    half_orbit: Pass,
     *,
-    bbox: Optional[geodetic.Box] = None,
     across_track_resolution: Optional[float] = None,
     along_track_resolution: Optional[float] = None,
     half_swath: Optional[float] = None,
     half_gap: Optional[float] = None,
-) -> Optional[Swath]:
+    mean_radius: Optional[float] = None,
+) -> Swath:
     """Get the properties of a swath of an half-orbit.
 
     Args:
-        pass_number: Pass number
-        orbit: Orbit describing the pass to be calculated.
+        half_orbit: Half-orbit used to calculate the swath.
         bbox: Bounding box of the pass. Defaults to the whole Earth.
         across_track_resolution: Distance, in km, between two points across
             track direction. Defaults to 2 km.
@@ -474,15 +516,14 @@ def calculate_swath(
             last pixel of the swath. Defaults to 70 km.
         half_gap: Distance, in km, between the nadir and the center of the first
             pixel of the swath. Defaults to 2 km.
+        mean_radius: Mean radius of the orbit. Defaults to the WGS84 spheroid.
 
     Returns:
         The properties of the pass.
     """
-    pass_ = calculate_pass(pass_number, orbit, bbox=bbox)
-    if pass_ is None:
-        return None
     across_track_resolution = across_track_resolution or 2.0
     along_track_resolution = along_track_resolution or 2
+    mean_radius = mean_radius or 6371008.7714
     half_swath = half_swath or 70.0
     half_gap = half_gap or 2.0
 
@@ -491,19 +532,18 @@ def calculate_swath(
     half_swath = int((half_swath - half_gap) / across_track_resolution) + 1
     x_ac = np.arange(half_swath,
                      dtype=float) * along_track_resolution + half_gap
-    x_ac = np.hstack((-np.flip(x_ac), x_ac))
-
-    mean_radius = (orbit.wgs.mean_radius()
-                   if orbit.wgs is not None else 6371008.7714)
+    x_ac = np.hstack((-np.flip(x_ac), x_ac)) * 1e3
+    x_ac = np.full((len(half_orbit), x_ac.size), x_ac)
 
     lon, lat = core.geodetic.calculate_swath(
-        pass_.lon_nadir,
-        pass_.lat_nadir,
+        half_orbit.lon_nadir,
+        half_orbit.lat_nadir,
         across_track_resolution,
         half_gap,
         half_swath,
         mean_radius * 1e-3,
     )
 
-    return Swath(pass_.lon_nadir, pass_.lat_nadir, pass_.time, pass_.x_al,
-                 pass_.equator_coordinates, lon, lat, x_ac)
+    return Swath(half_orbit.lon_nadir, half_orbit.lat_nadir, half_orbit.time,
+                 half_orbit.x_al, half_orbit.equator_coordinates, lon, lat,
+                 x_ac)
