@@ -555,7 +555,6 @@ class Test(setuptools.Command):
     def run(self):
         """Run tests."""
         import pytest
-        print(str(build_dirname()))
         sys.path.insert(0, str(build_dirname()))
 
         errno = pytest.main(
