@@ -124,6 +124,8 @@ class RTree:
             the distance, in meters, between the provided position and the found
             neighbors and a matrix containing the value of the different
             neighbors found for all provided positions.
+            If no neighbors are found, the distance and the value are set to
+            ``-1``.
         """
         return self._instance.query(coordinates, k, within, num_threads)
 
