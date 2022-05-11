@@ -160,6 +160,9 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   endif()
 endif()
 
+# Python
+find_package(Python COMPONENTS Interpreter Development)
+
 # Boost
 find_package(Boost 1.63 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
