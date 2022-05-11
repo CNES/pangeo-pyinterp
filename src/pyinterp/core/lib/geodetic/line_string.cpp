@@ -19,7 +19,7 @@ LineString::LineString(const Eigen::Ref<const Vector<double>>& lon,
 auto LineString::from_geojson(const pybind11::list& array) -> LineString {
   auto result = LineString{};
   auto* base = dynamic_cast<Base*>(&result);
-  for (auto& point : array) {
+  for (auto point : array) {
     base->push_back(Point::from_geojson(point.cast<pybind11::list>()));
   }
   return result;

@@ -161,7 +161,7 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 # Python
-find_package(Python COMPONENTS Interpreter Development)
+find_package(Python3 COMPONENTS Interpreter Development)
 
 # Boost
 find_package(Boost 1.63 REQUIRED)

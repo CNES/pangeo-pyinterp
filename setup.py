@@ -384,8 +384,14 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         cmake_args = [
             "-DCMAKE_BUILD_TYPE=" + cfg, "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" +
-            str(extdir), "-DPython_EXECUTABLE=" + sys.executable
+            str(extdir), "-DPython3_EXECUTABLE=" + sys.executable
         ] + self.set_cmake_user_options()
+
+        if platform.python_implementation() == "PyPy":
+            cmake_args.append("-DPython3_FIND_IMPLEMENTATIONS=PyPy")
+        elif "Pyston" in sys.version:
+            cmake_args.append("-DPython3_INCLUDE_DIR=" +
+                              sysconfig.get_path("include"))
 
         build_args = ['--config', cfg]
 
@@ -648,14 +654,15 @@ def main():
             "Development Status :: 4 - Beta",
             "Topic :: Scientific/Engineering :: Physics",
             "License :: OSI Approved :: BSD License",
-            "Natural Language :: English", "Operating System :: POSIX",
+            "Natural Language :: English",
+            "Operating System :: POSIX",
             "Operating System :: MacOS",
             "Operating System :: Microsoft :: Windows",
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
-            "Programming Language :: Python :: 3.10"
+            "Programming Language :: Python :: 3.10",
         ],
         cmdclass={
             'build': Build,

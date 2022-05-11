@@ -6,7 +6,7 @@ include_directories(include)
 
 file(GLOB_RECURSE IMPLEMENT "lib/*.cpp")
 add_library(pyinterp STATIC ${IMPLEMENT})
-target_include_directories(pyinterp PUBLIC ${Python_INCLUDE_DIRS})
+target_include_directories(pyinterp PUBLIC ${Python3_INCLUDE_DIRS})
 target_link_libraries(
   pyinterp
   PRIVATE
