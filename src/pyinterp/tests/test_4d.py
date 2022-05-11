@@ -11,14 +11,13 @@ import xarray as xr
 
 import pyinterp
 
-from . import grid4d_path, make_or_compare_reference
+from . import load_grid4d, make_or_compare_reference
 from .. import Axis, Grid4D, TemporalAxis, bicubic
 from ..backends import xarray as xr_backend
 
 
 def test_4d(pytestconfig):
-    grid = xr_backend.Grid4D(xr.load_dataset(grid4d_path()).pressure,
-                             increasing_axes=True)
+    grid = xr_backend.Grid4D(load_grid4d().pressure, increasing_axes=True)
 
     assert isinstance(grid, xr_backend.Grid4D)
     assert isinstance(grid, Grid4D)
@@ -73,15 +72,14 @@ def test_4d(pytestconfig):
                                                         time=t.ravel()),
                                 bounds_error=True)
 
-    grid = xr_backend.RegularGridInterpolator(xr.load_dataset(
-        grid4d_path()).pressure,
+    grid = xr_backend.RegularGridInterpolator(load_grid4d().pressure,
                                               increasing_axes=True)
     assert grid.ndim, 4
     assert isinstance(grid.grid, xr_backend.Grid4D)
 
 
 def test_4d_swap_dim():
-    ds = xr.load_dataset(grid4d_path())
+    ds = load_grid4d()
     ds = ds.transpose('level', 'latitude', 'longitude', 'time')
     grid = xr_backend.Grid4D(ds.pressure, increasing_axes=True)
     assert isinstance(grid.z, pyinterp.TemporalAxis)
@@ -93,8 +91,7 @@ def test_4d_swap_dim():
 
 
 def test_4d_degraded():
-    grid = xr_backend.Grid4D(xr.load_dataset(grid4d_path()).pressure,
-                             increasing_axes=True)
+    grid = xr_backend.Grid4D(load_grid4d().pressure, increasing_axes=True)
     zero = np.array([0])
     with pytest.raises(ValueError):
         bicubic(grid, zero, zero, zero)

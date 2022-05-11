@@ -640,7 +640,7 @@ def main():
     install_requires = [
         "dask", "fsspec", "numpy", "numcodecs", "toolz", "xarray >= 0.13"
     ]
-    tests_require = install_requires + ["NetCDF4", "pytest"]
+    tests_require = install_requires + ["pytest"]
     setuptools.setup(
         author='CNES/CLS',
         author_email='fbriol@gmail.com',

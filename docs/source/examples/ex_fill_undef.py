@@ -12,7 +12,6 @@ import cartopy.crs
 import cartopy.feature
 import matplotlib.pyplot
 import numpy
-import xarray
 
 import pyinterp.backends.xarray
 # Module that handles the filling of undefined values.
@@ -71,7 +70,7 @@ fig.show()
 # considered in the calculation.
 #
 # Let's start by building the object handling our grid.
-ds = xarray.open_dataset(pyinterp.tests.grid2d_path())
+ds = pyinterp.tests.load_grid2d()
 grid = pyinterp.backends.xarray.Grid2D(ds.mss)
 
 # %%

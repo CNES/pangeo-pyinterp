@@ -7,7 +7,6 @@ dependencies:
   - intake
   - intake-xarray
   - jupyter
-  - netCDF4
   - numcodecs
   - pandas
   - pyinterp>=0.14.0

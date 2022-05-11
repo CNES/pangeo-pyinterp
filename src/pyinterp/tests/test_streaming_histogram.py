@@ -4,14 +4,11 @@
 # BSD-style license that can be found in the LICENSE file.
 import pickle
 
-#
 import dask.array as da
 import numpy as np
 import pytest
-import xarray as xr
 
-from . import grid2d_path, grid3d_path, grid4d_path
-#
+from . import load_grid2d, load_grid3d, load_grid4d
 from .. import StreamingHistogram
 from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 
@@ -123,14 +120,14 @@ def test_axis():
 
 def test_grid():
     """Test the computation of streaming histogram for a grid."""
-    data = xr.load_dataset(grid2d_path()).mss
+    data = load_grid2d().mss
     histogram = StreamingHistogram(data)
     assert histogram.mean()[0] == pytest.approx(data.mean(), abs=1e-4)
 
-    data = xr.load_dataset(grid3d_path()).tcw
+    data = load_grid3d().tcw
     histogram = StreamingHistogram(data, axis=(0, ))
     assert histogram.mean() == pytest.approx(data.mean(axis=0), abs=1e-4)
 
-    data = xr.load_dataset(grid4d_path()).pressure
+    data = load_grid4d().pressure
     histogram = StreamingHistogram(data, axis=(0, 1))
     assert histogram.mean() == pytest.approx(data.mean(axis=(0, 1)), abs=1e-4)

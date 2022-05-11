@@ -5,7 +5,6 @@
 import os
 import pickle
 
-import netCDF4
 import pytest
 
 try:
@@ -16,7 +15,7 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 
-from .. import grid3d_path, make_or_compare_reference
+from .. import load_grid3d, make_or_compare_reference
 from ... import core
 
 
@@ -35,27 +34,19 @@ def plot(x, y, z, filename):
 
 
 def load_data(temporal_axis=False):
-    with netCDF4.Dataset(grid3d_path()) as ds:  # type: ignore
-        z = np.flip(ds.variables['tcw'][:].T, axis=1)
-        z[z.mask] = float("nan")
-        if temporal_axis:
-            z_axis = core.TemporalAxis(
-                netCDF4.num2date(  # type: ignore
-                    ds.variables['time'][:],
-                    ds.variables['time'].units,
-                    only_use_cftime_datetimes=False,
-                    only_use_python_datetimes=True).astype("datetime64[h]"))
-            class_ = (core.TemporalGrid3DFloat64
-                      if temporal_axis else core.Grid3DFloat64)
-
-            return core.TemporalGrid3DFloat64(
-                core.Axis(ds.variables['longitude'][:], is_circle=True),
-                core.Axis(np.flip(ds.variables['latitude'][:])), z_axis,
-                z.data)
-        return core.Grid3DFloat64(
-            core.Axis(ds.variables['longitude'][:], is_circle=True),
-            core.Axis(np.flip(ds.variables['latitude'][:])),
-            core.Axis(ds.variables['time'][:]), z.data)
+    ds = load_grid3d()
+    z = np.flip(ds['tcw'].values.T, axis=1)
+    if temporal_axis:
+        z_axis = core.TemporalAxis(ds["time"].values.astype("M8[h]"))
+        return core.TemporalGrid3DFloat64(
+            core.Axis(ds['longitude'].values, is_circle=True),
+            core.Axis(np.flip(ds['latitude'].values)), z_axis, z.data)
+    int64 = (ds['time'].values -
+             np.datetime64("1900-01-01")).astype("m8[h]").astype("int64")
+    return core.Grid3DFloat64(
+        core.Axis(ds['longitude'].values, is_circle=True),
+        core.Axis(np.flip(ds.variables['latitude'][:])), core.Axis(int64),
+        z.data)
 
 
 def test_grid3d_accessors():
@@ -172,13 +163,7 @@ def test_grid3d_z_method(pytestconfig):
     interpolator = core.TemporalBilinear3D()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
-    time = np.array([
-        netCDF4.num2date(  # type: ignore
-            898500 + 3,
-            "hours since 1900-01-01 00:00:0.0",
-            only_use_cftime_datetimes=False,
-            only_use_python_datetimes=True)
-    ]).astype("datetime64[h]").astype("int64")
+    time = np.array(['2002-07-02T15'], dtype='datetime64[h]').astype("int64")
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z0 = core.trivariate_float64(
         grid,  # type: ignore
@@ -242,13 +227,7 @@ def test_invalid_data():
     interpolator = core.TemporalBilinear3D()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
-    time = np.array([
-        netCDF4.num2date(  # type: ignore
-            898500 + 3,
-            "hours since 1900-01-01 00:00:0.0",
-            only_use_cftime_datetimes=False,
-            only_use_python_datetimes=True)
-    ]).astype("datetime64[h]").astype("int64")
+    time = np.array(['2002-07-02T15'], dtype='datetime64[h]').astype("int64")
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z0 = core.trivariate_float64(
         grid,  # type: ignore

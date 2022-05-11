@@ -2,25 +2,23 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-import netCDF4
 import numpy as np
 import pytest
 
-from . import grid2d_path
+from . import load_grid2d
 from .. import Axis, Grid2D, Grid3D, fill
 
 
 def load_data(cube=False):
-    ds = netCDF4.Dataset(grid2d_path())  # type: ignore
-    x_axis = Axis(ds.variables["lon"][::5], is_circle=True)
-    y_axis = Axis(ds.variables["lat"][::5])
-    mss = ds.variables["mss"][::5, ::5].T
-    mss[mss.mask] = float("nan")
+    ds = load_grid2d()  # type: ignore
+    x_axis = Axis(ds["lon"].values[::5], is_circle=True)
+    y_axis = Axis(ds["lat"].values[::5])
+    mss = ds["mss"].values[::5, ::5].T
     if cube:
         z_axis = Axis(np.arange(2))
         mss = np.stack([mss.data] * len(z_axis)).transpose(1, 2, 0)
         return Grid3D(x_axis, y_axis, z_axis, mss)
-    return Grid2D(x_axis, y_axis, mss.data)
+    return Grid2D(x_axis, y_axis, mss)
 
 
 def test_loess():

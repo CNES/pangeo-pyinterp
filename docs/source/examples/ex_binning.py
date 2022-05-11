@@ -20,7 +20,6 @@ import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
-import xarray
 
 import pyinterp
 import pyinterp.backends.xarray
@@ -29,7 +28,7 @@ import pyinterp.tests
 # %%
 # The first step is to load the data into memory and create the interpolator
 # object:
-ds = xarray.open_dataset(pyinterp.tests.aoml_path())
+ds = pyinterp.tests.load_aoml()
 
 # %%
 # Let's start by calculating the standard for vectors u and v.

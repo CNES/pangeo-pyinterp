@@ -2,8 +2,6 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-import os
-
 import dask.array as da
 import pytest
 
@@ -13,14 +11,13 @@ try:
 except ImportError:
     HAVE_SCIPY = False
 import numpy as np
-import xarray as xr
 
-from . import grid2d_path
+from . import load_grid2d
 from .. import Axis, Binning1D, Binning2D, geodetic
 
 
 def build_binning2d_instance(dtype):
-    ds = xr.load_dataset(grid2d_path())
+    ds = load_grid2d()
 
     x_axis = Axis(np.arange(-180, 180, 5), is_circle=True)
     y_axis = Axis(np.arange(-90, 95, 5))
@@ -79,7 +76,7 @@ def test_binning2d_dask():
 
 
 def build_binning1d_instance(dtype):
-    ds = xr.load_dataset(grid2d_path())
+    ds = load_grid2d()
 
     x_axis = Axis(np.arange(-180, 180, 5))
     binning = Binning1D(x_axis, dtype=dtype)

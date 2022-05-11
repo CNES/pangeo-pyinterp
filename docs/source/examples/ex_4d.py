@@ -12,10 +12,6 @@ The :py:func:`quadrivariate <pyinterp.quadrivariate>` interpolation allows
 obtaining values at arbitrary points in a 4D space of a function defined on a
 grid.
 
-The distribution contains a 4D field ``pres_temp_4D.nc`` that will be used in
-this help. This file is located in the ``src/pyinterp/tests/dataset`` directory
-at the root of the project.
-
 This method performs a bilinear interpolation in 2D space by considering the
 axes of longitude and latitude of the grid, then performs a linear interpolation
 in the third and fourth dimensions. Its interface is similar to the
@@ -27,7 +23,6 @@ import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
-import xarray
 
 import pyinterp
 import pyinterp.backends.xarray
@@ -36,7 +31,7 @@ import pyinterp.tests
 # %%
 # The first step is to load the data into memory and create the interpolator
 # object:
-ds = xarray.open_dataset(pyinterp.tests.grid4d_path())
+ds = pyinterp.tests.load_grid4d()
 interpolator = pyinterp.backends.xarray.Grid4D(ds.pressure)
 
 # %%

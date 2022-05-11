@@ -73,7 +73,6 @@ Running tests require the following Python libraries:
     * `pytest <https://docs.pytest.org/en/latest/>`_
     * `numpy <https://www.numpy.org/>`_
     * `xarray <http://xarray.pydata.org/en/stable/>`_
-    * `netCDF4 <https://unidata.github.io/netcdf4-python/>`_
 
 
 Running tests

@@ -32,7 +32,7 @@ jobs:
     displayName: Install mamba
   - bash: |
       source activate Build
-      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen gsl boost-cpp numcodecs netCDF4 mkl-devel numpy pytest-cov setuptools xarray
+      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen gsl boost-cpp numcodecs mkl-devel numpy pytest-cov setuptools xarray
     displayName: Install build requirements
   - bash: |
       source activate Build
@@ -86,7 +86,7 @@ jobs:
     displayName: Install mamba
   - bash: |
       source activate Build
-      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen numcodecs gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools xarray
+      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen numcodecs gsl boost-cpp mkl-devel numpy pytest-cov setuptools xarray
     displayName: Install build requirements
   - bash: |
       source activate Build
@@ -127,7 +127,7 @@ jobs:
     displayName: Install mamba
   - bash: |
       source activate Build
-      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen numcodecs gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools xarray
+      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen numcodecs gsl boost-cpp mkl-devel numpy pytest-cov setuptools xarray
     displayName: Install build requirements
   - bash: |
       source activate Build
@@ -168,7 +168,7 @@ jobs:
     displayName: Install mamba
   - script: |
       call activate Build
-      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen numcodecs gsl boost-cpp netCDF4 mkl-devel numpy pytest-cov setuptools xarray
+      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen numcodecs gsl boost-cpp mkl-devel numpy pytest-cov setuptools xarray
     displayName: Install build requirements
   - script: |
       call activate Build

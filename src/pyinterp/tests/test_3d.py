@@ -8,16 +8,14 @@ import pickle
 
 import numpy as np
 import pytest
-import xarray as xr
 
-from . import grid3d_path
+from . import load_grid3d
 from .. import Axis, Grid3D, TemporalAxis
 from ..backends import xarray as xr_backend
 
 
 def test_3d():
-    grid = xr_backend.Grid3D(xr.load_dataset(grid3d_path()).tcw,
-                             increasing_axes=True)
+    grid = xr_backend.Grid3D(load_grid3d().tcw, increasing_axes=True)
 
     assert isinstance(grid, xr_backend.Grid3D)
     assert isinstance(grid, Grid3D)
@@ -56,7 +54,7 @@ def test_3d():
                                                 time=t.ravel()),
                         bounds_error=True)
 
-    array = xr.load_dataset(grid3d_path()).tcw
+    array = load_grid3d().tcw
     grid = xr_backend.Grid3D(array, increasing_axes=True)
     x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
     z = grid.trivariate(
@@ -65,8 +63,7 @@ def test_3d():
                                 time=t.ravel()))
     assert isinstance(z, np.ndarray)
 
-    grid = xr_backend.RegularGridInterpolator(xr.load_dataset(
-        grid3d_path()).tcw,
+    grid = xr_backend.RegularGridInterpolator(load_grid3d().tcw,
                                               increasing_axes=True)
     assert grid.ndim == 3
     assert isinstance(grid.grid, xr_backend.Grid3D)
@@ -76,7 +73,7 @@ def test_3d():
 
 
 def test_backend():
-    ds = xr.load_dataset(grid3d_path())
+    ds = load_grid3d()
     grid = xr_backend.Grid3D(ds.tcw, increasing_axes=True)
     lon = np.arange(-180, 180, 10)
     lat = np.arange(-90, 90, 10)

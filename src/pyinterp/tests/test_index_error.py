@@ -6,18 +6,14 @@ import collections
 import datetime
 
 import numpy as np
-#
 import pytest
-import xarray as xr
 
-#
-from . import grid3d_path, grid4d_path
-from .. import core
+from . import load_grid3d, load_grid4d
 from ..backends import xarray as xr_backend
 
 
 def test_index_error_3d():
-    ds = xr.load_dataset(grid3d_path())
+    ds = load_grid3d()
     grid = xr_backend.RegularGridInterpolator(ds.tcw, increasing_axes=True)
     lon = np.arange(-180, 180, 10)
     lat = np.arange(-80, 80, 10)
@@ -49,7 +45,7 @@ def test_index_error_3d():
 
 
 def test_index_error_4d():
-    ds = xr.load_dataset(grid4d_path())
+    ds = load_grid4d()
     grid = xr_backend.Grid4D(ds.pressure, increasing_axes=True)
 
     lon = np.arange(-120, -75, 0.25)

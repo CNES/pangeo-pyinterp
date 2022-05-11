@@ -5,15 +5,14 @@
 import dask.array as da
 import numpy as np
 import pytest
-import xarray as xr
 
-from . import grid2d_path
+from . import load_grid2d
 from .. import Axis, Histogram2D
 
 
 def build_instance(dtype):
     """Build an instance of Histogram2D with a given dtype."""
-    ds = xr.load_dataset(grid2d_path())
+    ds = load_grid2d()
 
     x_axis = Axis(np.arange(-180, 180, 5), is_circle=True)
     y_axis = Axis(np.arange(-90, 95, 5))

@@ -5,8 +5,6 @@
 import os
 import pickle
 
-import netCDF4
-
 try:
     import matplotlib.colors
     import matplotlib.pyplot
@@ -15,7 +13,7 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 
-from .. import grid2d_path
+from .. import load_grid2d
 from ... import core
 
 
@@ -35,27 +33,26 @@ def plot(x, y, z, filename):
 
 def load_data(packing=True):
     """Creating the search tree."""
-    with netCDF4.Dataset(grid2d_path()) as ds:  # type: ignore
-        z = ds.variables['mss'][:].T
-        z[z.mask] = float("nan")
-        x = ds.variables['lon'][:]
-        y = ds.variables['lat'][:]
-        # Since insertion is slower, the data are sub-sampled to avoid
-        # the test being too long.
-        if not packing:
-            x = x[::5]
-            y = y[::5]
-            z = z[::5, ::5]
-        x = x.astype("float32")
-        y = y.astype("float32")
-        z = z.astype("float32")
-        x, y = np.meshgrid(x, y, indexing='ij')
-        mesh = core.RTree3DFloat32(core.geodetic.Spheroid())
-        if packing:
-            mesh.packing(np.vstack((x.ravel(), y.ravel())).T, z.data.ravel())
-        else:
-            mesh.insert(np.vstack((x.ravel(), y.ravel())).T, z.data.ravel())
-        return mesh
+    ds = load_grid2d()
+    z = ds['mss'].values.T
+    x = ds['lon'].values
+    y = ds['lat'].values
+    # Since insertion is slower, the data are sub-sampled to avoid
+    # the test being too long.
+    if not packing:
+        x = x[::5]
+        y = y[::5]
+        z = z[::5, ::5]
+    x = x.astype("float32")
+    y = y.astype("float32")
+    z = z.astype("float32")
+    x, y = np.meshgrid(x, y, indexing='ij')
+    mesh = core.RTree3DFloat32(core.geodetic.Spheroid())
+    if packing:
+        mesh.packing(np.vstack((x.ravel(), y.ravel())).T, z.ravel())
+    else:
+        mesh.insert(np.vstack((x.ravel(), y.ravel())).T, z.ravel())
+    return mesh
 
 
 def test_rtree_idw(pytestconfig):

@@ -2,11 +2,10 @@ name: RTD
 dependencies:
   - cartopy>=0.20.0
   - furo
-  - netcdf4
   - numcodecs
   - pandas
   - pip
-  - pyinterp>=0.14.0
+  - pyinterp>=0.14.0.dev15
   - pypandoc
   - pytest
   - python=3.9

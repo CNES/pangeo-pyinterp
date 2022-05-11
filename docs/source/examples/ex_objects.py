@@ -9,30 +9,26 @@ interpolations.
 Before starting, we will examine the properties of a Cartesian grid and the
 different classes associated with these objects.
 
-The first step is to open the NetCDF file and load the data. We use here the
-NetCDF4 library to detail the different steps, but we will see that we can
-automate the steps described below using the xarray objects library.
 
 Step-by-step creation of grids
 ##############################
 """
 import timeit
 
-import netCDF4
 import numpy
 import pandas
-import xarray
 
 import pyinterp
 import pyinterp.backends.xarray
 import pyinterp.tests
 
-with netCDF4.Dataset(pyinterp.tests.grid3d_path()) as ds:
-    lon, lat, time, time_units, tcw = ds.variables[
-        "longitude"][:], ds.variables["latitude"][:], ds.variables[
-            "time"][:], ds.variables["time"].units, ds.variables["tcw"][:]
-    time = numpy.array(netCDF4.num2date(time, time_units),
-                       dtype="datetime64[us]")
+ds = pyinterp.tests.load_grid3d()
+lon, lat, time, tcw = (
+    ds["longitude"].values,
+    ds["latitude"].values,
+    ds["time"].values,
+    ds["tcw"].values,
+)
 
 # %%
 # This regular 3-dimensional grid is associated with three axes:
@@ -96,8 +92,11 @@ print("pyinterp.Axis %f" % timeit.timeit(
 #   * The shape of the tensor must be (len(x_axis), len(y_axis), len(t_axis))
 tcw = tcw.T
 # %%
-#   * The undefined values must be set to nan.
-tcw[tcw.mask] = float("nan")
+# .. warning::
+#
+#   If the array handled is a masked array, the masked values must be set to
+#   nan.
+#
 
 # %%
 # Now we can build the object handling the regular 3-dimensional grid.
@@ -118,5 +117,5 @@ grid_3d
 # using the `xarray <http://xarray.pydata.org/>`_ library and `CF
 # <https://cfconventions.org/>`_ convention usually found in NetCDF files.
 interpolator = pyinterp.backends.xarray.RegularGridInterpolator(
-    xarray.open_dataset(pyinterp.tests.grid3d_path()).tcw)
+    pyinterp.tests.load_grid3d().tcw)
 interpolator.grid

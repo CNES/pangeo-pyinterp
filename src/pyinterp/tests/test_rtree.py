@@ -6,12 +6,11 @@ import pickle
 
 import numpy as np
 import pytest
-import xarray as xr
 
 import pyinterp
 import pyinterp.backends.xarray
 
-from . import grid2d_path, make_or_compare_reference
+from . import load_grid2d, make_or_compare_reference
 
 
 def build_rtree(dtype):
@@ -57,7 +56,7 @@ def test_init():
 
 
 def load_data():
-    ds = xr.load_dataset(grid2d_path())
+    ds = load_grid2d()
     z = ds.mss.T
     x, y = np.meshgrid(ds.lon.values, ds.lat.values, indexing='ij')
     mesh = pyinterp.RTree()

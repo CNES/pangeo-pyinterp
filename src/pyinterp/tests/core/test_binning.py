@@ -6,9 +6,6 @@ import copy
 import os
 import pickle
 
-import netCDF4
-import pytest
-
 try:
     import matplotlib.colors
     import matplotlib.pyplot
@@ -17,7 +14,7 @@ except ImportError:
     HAVE_PLT = False
 import numpy as np
 
-from .. import grid2d_path, make_or_compare_reference
+from .. import load_grid2d, make_or_compare_reference
 from ... import core
 
 
@@ -36,10 +33,8 @@ def plot(x, y, z, filename):
 
 
 def load_data():
-    with netCDF4.Dataset(grid2d_path()) as ds:  # type: ignore
-        z = ds.variables['mss'][:].T
-        z[z.mask] = float("nan")
-        return ds.variables['lon'][:], ds.variables['lat'][:], z.data
+    ds = load_grid2d()
+    return ds["lon"].values, ds["lat"].values, ds["mss"].values.T
 
 
 def test_binning2d_accessors():

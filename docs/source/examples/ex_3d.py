@@ -11,10 +11,6 @@ Trivariate
 The :py:func:`trivariate <pyinterp.trivariate>` interpolation allows obtaining
 values at arbitrary points in a 3D space of a function defined on a grid.
 
-The distribution contains a 3D field ``tcw.nc`` that will be used in this help.
-This file is located in the ``src/pyinterp/tests/dataset`` directory at the root
-of the project.
-
 This method performs a bilinear interpolation in 2D space by considering the
 axes of longitude and latitude of the grid, then performs a linear
 interpolation in the third dimension. Its interface is similar to the
@@ -32,7 +28,6 @@ import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
-import xarray
 
 import pyinterp
 import pyinterp.backends.xarray
@@ -41,7 +36,7 @@ import pyinterp.tests
 # %%
 # The first step is to load the data into memory and create the interpolator
 # object:
-ds = xarray.open_dataset(pyinterp.tests.grid3d_path())
+ds = pyinterp.tests.load_grid3d()
 interpolator = pyinterp.backends.xarray.Grid3D(ds.tcw)
 
 # %%

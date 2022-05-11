@@ -10,23 +10,11 @@ Bivariate
 
 Perform a :py:func:`bivariate <pyinterp.bivariate>` interpolation of gridded
 data points.
-
-The distribution contains a 2D field ``mss.nc`` that will be used in this help.
-This file is located in the ``src/pyinterp/tests/dataset`` directory at the root
-of the project.
-
-.. warning ::
-
-    This file is an old version of the sub-sampled quarter step MSS CNES/CLS.
-    Please do not use it for scientific purposes, download the latest updated
-    high-resolution version instead `here
-    <https://www.aviso.altimetry.fr/en/data/products/auxiliary-products/mss.html>`_.
 """
 import cartopy.crs
 import matplotlib
 import matplotlib.pyplot
 import numpy
-import xarray
 
 import pyinterp
 import pyinterp.backends.xarray
@@ -43,7 +31,7 @@ import pyinterp.tests
 #     ``degrees_east`` and ``degrees_north`` attribute ``units``. If your grid
 #     does not contain geodetic coordinates, set the ``geodetic`` option of the
 #     constructor to ``False``.
-ds = xarray.open_dataset(pyinterp.tests.grid2d_path())
+ds = pyinterp.tests.load_grid2d()
 interpolator = pyinterp.backends.xarray.Grid2D(ds.mss)
 
 # %%
