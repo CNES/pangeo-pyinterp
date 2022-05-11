@@ -2,6 +2,9 @@
 #
 # All rights reserved. Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
+enable_testing()
+
+# Create a new test suite.
 macro(ADD_TESTCASE testname)
   set(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${testname}.cpp")
   add_executable(test_${testname} ${FILES})
