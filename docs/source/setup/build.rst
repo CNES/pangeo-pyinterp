@@ -43,7 +43,7 @@ Compilation
 ===========
 
 Once you have satisfied the requirements detailed above, to build the library,
-type the command ``python3 setup.py build`` at the root of the project.
+type the command ``python3 setup.py build_ext`` at the root of the project.
 
 You can specify, among other things, the following options:
     * ``--boost-root`` to specify the Preferred Boost installation prefix.
@@ -58,9 +58,9 @@ You can specify, among other things, the following options:
     * ``--gsl-root`` to specify the Preferred GSL installation prefix.
     * ``--mkl-root`` to specify the MKL directory.
     * ``--mkl`` to use MKL as BLAS library
-    * ``--reconfigure``  to force CMake to reconfigure the project.
+    * ``--reconfigure`` to force CMake to reconfigure the project.
 
-Run the ``python setup.py build --help`` command to view all the options
+Run the ``python setup.py build_ext --help`` command to view all the options
 available for building the library.
 
 Testing
@@ -97,7 +97,7 @@ following steps:
 
 .. code-block:: bash
 
-    python setup.py build --code-coverage --build-unittests
+    python setup.py build_ext --code-coverage --build-unittests
     python setup.py test --ext-coverage
 
 The first command compiles the extension to generate a coverage mapping to allow
@@ -143,9 +143,4 @@ To do this, type the following command: ::
 Install
 =======
 
-To install this library, type the command ``python3 setup.py``. You can specify
-an alternate installation path, with:
-
-.. code-block:: bash
-
-    python setup.py install --prefix=/opt/local
+To install this library, type the command ``python3 -m pip install .``.
