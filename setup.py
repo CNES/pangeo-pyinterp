@@ -33,19 +33,18 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 OSX_DEPLOYMENT_TARGET = '10.14'
 
 
-def distutils_dirname(dirname=None, extname=None) -> pathlib.Path:
+def distutils_dirname(prefix=None, extname=None) -> pathlib.Path:
     """Returns the name of the build directory."""
-    dirname = dirname or "build"
+    prefix = "lib" or prefix
     extname = '' if extname is None else os.sep.join(extname.split(".")[:-1])
     if packaging.version.parse(
             setuptools.__version__) >= packaging.version.parse("62.1"):
         return pathlib.Path(
-            WORKING_DIRECTORY, dirname,
-            f"lib.{sysconfig.get_platform()}-{sys.implementation.cache_tag}",
-            extname)
-    return pathlib.Path(WORKING_DIRECTORY, dirname,
-                        f"lib.{sysconfig.get_platform()}-{MAJOR}.{MINOR}",
-                        extname)
+            WORKING_DIRECTORY, "build", f"{prefix}.{sysconfig.get_platform()}-"
+            f"{sys.implementation.cache_tag}", extname)
+    return pathlib.Path(
+        WORKING_DIRECTORY, "build",
+        f"{prefix}.{sysconfig.get_platform()}-{MAJOR}.{MINOR}", extname)
 
 
 def execute(cmd) -> str:
