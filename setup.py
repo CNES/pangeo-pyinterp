@@ -403,7 +403,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             cmake_args.append("-G" + 'Visual Studio 16 2019')
 
         if self.verbose:  # type: ignore
-            build_args += ['/verbosity:n'] if is_windows else ['--verbose']
+            build_args += ['--verbose']
 
         if not is_windows:
             build_args += ['--', f'-j{os.cpu_count()}']
