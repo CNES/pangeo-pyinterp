@@ -172,7 +172,7 @@ jobs:
     displayName: Install build requirements
   - script: |
       call activate Build
-      python setup.py build --generator="Visual Studio 16 2019"
+      python setup.py build_ext --generator="Visual Studio 16 2019" build
     displayName: Build package
   - script: |
       call activate Build
