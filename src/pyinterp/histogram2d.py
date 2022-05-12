@@ -179,6 +179,6 @@ class Histogram2D:
         """
         try:
             return getattr(self._instance, statistics)(*args)
-        except AttributeError:
+        except AttributeError as exc:
             raise ValueError(
-                f"The statistical variable {statistics} is unknown.")
+                f"The statistical variable {statistics} is unknown.") from exc

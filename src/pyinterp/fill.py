@@ -102,10 +102,10 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
 
     if relaxation is None:
         if nx == ny:
-            N = nx
+            n = nx
         else:
-            N = nx * ny * np.sqrt(2 / (nx**2 + ny**2))
-        relaxation = 2 / (1 + np.pi / N)
+            n = nx * ny * np.sqrt(2 / (nx**2 + ny**2))
+        relaxation = 2 / (1 + np.pi / n)
 
     if max_iteration is None:
         max_iteration = nx * ny
