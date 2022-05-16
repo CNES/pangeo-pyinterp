@@ -95,7 +95,7 @@ def test_rtree_rbf(pytestconfig):
         epsilon=75000,  # 75 Km
         smooth=0,
         k=11,
-        num_threads=1)
+        num_threads=0)
     z1, _ = mesh.radial_basis_function(
         np.vstack((x.ravel(), y.ravel())).T,
         within=False,
@@ -124,7 +124,7 @@ def test_rtree_window_function(pytestconfig):
                                  radius=2_000_000,
                                  wf=core.WindowFunction.Hamming,
                                  k=11,
-                                 num_threads=1)
+                                 num_threads=0)
     z1, _ = mesh.window_function(np.vstack((x.ravel(), y.ravel())).T,
                                  within=False,
                                  radius=2_000_000,
