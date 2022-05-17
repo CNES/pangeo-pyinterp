@@ -150,17 +150,8 @@ Returns:
           }));
 }
 
-static void init_geodetic_box(py::module &m) {
-  py::class_<geodetic::Box>(m, "Box", R"__doc__(
-Box(self, min_corner: Point, max_corner: Point)
-
-Defines a box made of two describing points.
-
-Args:
-    min_corner: the minimum corner point (lower left) of the box.
-    max_corner: the maximum corner point (upper right) of the box.
-)__doc__")
-      .def(py::init<>())
+static void init_geodetic_box(py::class_<geodetic::Box> &class_) {
+  class_.def(py::init<>())
       .def(py::init<geodetic::Point, geodetic::Point>(), py::arg("min_corner"),
            py::arg("max_corner"))
       .def_static("from_geojson", &geodetic::Box::from_geojson,
@@ -345,20 +336,8 @@ Returns:
                       }));
 }
 
-static void init_geodetic_polygon(py::module &m) {
-  py::class_<geodetic::Polygon>(
-      m, "Polygon",
-      R"(Polygon(self, outer: list, inners: Optional[list] = None)
-
-The polygon contains an outer ring and zero or more inner rings.
-
-Args:
-    outer: outer ring.
-    inners: list of inner rings.
-Raises:
-    ValueError: if outer is not a list of pyinterp.geodetic.Point.
-    ValueError: if inners is not a list of list of pyinterp.geodetic.Point.
-)")
+static void init_geodetic_polygon(py::class_<geodetic::Polygon> &class_) {
+  class_
       .def(py::init([](const py::list &outer,
                        std::optional<const py::list> &inners) {
              return geodetic::Polygon(outer, inners.value_or(py::list()));
@@ -585,15 +564,9 @@ Returns:
           }));
 }
 
-static void init_geodetic_multipolygon(py::module &m) {
-  py::class_<geodetic::MultiPolygon>(m, "MultiPolygon",
-                                     R"__doc__(
-A MultiPolygon is a collection of polygons.
-
-Args:
-    polygons: The polygons to use.
-)__doc__")
-      .def(py::init<>(), "Defaults to an empty MultiPolygon.")
+static void init_geodetic_multipolygon(
+    py::class_<geodetic::MultiPolygon> &class_) {
+  class_.def(py::init<>(), "Defaults to an empty MultiPolygon.")
       .def(py::init<const py::list &>(), py::arg("polygons"), R"__doc__(
 Initializes a MultiPolygon from a list of polygons.
 
@@ -1399,10 +1372,42 @@ Returns:
             return geodetic::Coordinates::setstate(state);
           }));
 
+  auto box = py::class_<geodetic::Box>(m, "Box", R"__doc__(
+Box(self, min_corner: Point, max_corner: Point)
+
+Defines a box made of two describing points.
+
+Args:
+    min_corner: the minimum corner point (lower left) of the box.
+    max_corner: the maximum corner point (upper right) of the box.
+)__doc__");
+
+  auto polygon = py::class_<geodetic::Polygon>(
+      m, "Polygon",
+      R"(Polygon(self, outer: list, inners: Optional[list] = None)
+
+The polygon contains an outer ring and zero or more inner rings.
+
+Args:
+    outer: outer ring.
+    inners: list of inner rings.
+Raises:
+    ValueError: if outer is not a list of pyinterp.geodetic.Point.
+    ValueError: if inners is not a list of list of pyinterp.geodetic.Point.
+)");
+
+  auto multipolygon = py::class_<geodetic::MultiPolygon>(m, "MultiPolygon",
+                                                         R"__doc__(
+A MultiPolygon is a collection of polygons.
+
+Args:
+    polygons: The polygons to use.
+)__doc__");
+
   init_geodetic_point(m);
-  init_geodetic_box(m);
-  init_geodetic_polygon(m);
-  init_geodetic_multipolygon(m);
+  init_geodetic_box(box);
+  init_geodetic_polygon(polygon);
+  init_geodetic_multipolygon(multipolygon);
   init_geodetic_linestring(m);
   init_geodetic_crossover(m);
 
