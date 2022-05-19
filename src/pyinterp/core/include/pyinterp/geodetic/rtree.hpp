@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 #include <optional>
+#include <vector>
 
 #include "pyinterp/detail/geometry/rtree.hpp"
 #include "pyinterp/geodetic/box.hpp"
@@ -65,30 +66,30 @@ class RTree : public detail::geometry::RTree<
               const Eigen::Ref<const Vector<double>> &values);
 
   /// Search for the nearest K nearest neighbors of a given coordinates.
-  auto query(const Eigen::Ref<const Vector<double>> &lon,
-             const Eigen::Ref<const Vector<double>> &lat, const uint32_t k,
-             bool within, size_t num_threads) const -> pybind11::tuple;
+  [[nodiscard]] auto query(const Eigen::Ref<const Vector<double>> &lon,
+                           const Eigen::Ref<const Vector<double>> &lat,
+                           const uint32_t k, bool within,
+                           size_t num_threads) const -> pybind11::tuple;
 
-  auto inverse_distance_weighting(const Eigen::Ref<const Vector<double>> &lon,
-                                  const Eigen::Ref<const Vector<double>> &lat,
-                                  const std::optional<double> &radius,
-                                  uint32_t k, uint32_t p, bool within,
-                                  size_t num_threads) const -> pybind11::tuple;
+  [[nodiscard]] auto inverse_distance_weighting(
+      const Eigen::Ref<const Vector<double>> &lon,
+      const Eigen::Ref<const Vector<double>> &lat,
+      const std::optional<double> &radius, uint32_t k, uint32_t p, bool within,
+      size_t num_threads) const -> pybind11::tuple;
 
-  //   auto radial_basis_function(const Eigen::Ref<const Vector<double>> &lon,
-  //                              const Eigen::Ref<const Vector<double>> &lat,
-  //                              const std::optional<double> &radius,
-  //                              uint32_t k, detail::math::RadialBasisFunction
-  //                              rbf, const std::optional<double> &epsilon,
-  //                              double smooth, bool within,
-  //                              size_t num_threads) const -> pybind11::tuple;
+  //   [[nodiscard]] auto radial_basis_function(
+  //       const Eigen::Ref<const Vector<double>> &lon,
+  //       const Eigen::Ref<const Vector<double>> &lat,
+  //       const std::optional<double> &radius, uint32_t k,
+  //       detail::math::RadialBasisFunction rbf,
+  //       const std::optional<double> &epsilon, double smooth, bool within,
+  //       size_t num_threads) const -> pybind11::tuple;
 
-  auto window_function(const Eigen::Ref<const Vector<double>> &lon,
-                       const Eigen::Ref<const Vector<double>> &lat,
-                       double radius, uint32_t k,
-                       detail::math::window::Function wf,
-                       const std::optional<double> &arg, bool within,
-                       size_t num_threads) const -> pybind11::tuple;
+  [[nodiscard]] auto window_function(
+      const Eigen::Ref<const Vector<double>> &lon,
+      const Eigen::Ref<const Vector<double>> &lat, double radius, uint32_t k,
+      detail::math::window::Function wf, const std::optional<double> &arg,
+      bool within, size_t num_threads) const -> pybind11::tuple;
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple;
