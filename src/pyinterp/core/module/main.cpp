@@ -15,6 +15,7 @@ extern void init_bivariate_interpolator(py::module &);
 extern void init_bivariate(py::module &);
 extern void init_dateutils(py::module &);
 extern void init_descriptive_statistics(py::module &);
+extern void init_enum(py::module &, py::module &);
 extern void init_fill(py::module &);
 extern void init_geodetic(py::module &);
 extern void init_geohash_class(py::module &);
@@ -65,6 +66,8 @@ Replace undefined values
 )__doc__");
 
   pyinterp::detail::gsl::set_error_handler();
+
+  init_enum(m, fill);
 
   init_dateutils(dateutils);
   init_geodetic(geodetic);

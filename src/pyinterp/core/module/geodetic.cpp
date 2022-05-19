@@ -15,10 +15,12 @@
 #include "pyinterp/geodetic/multipolygon.hpp"
 #include "pyinterp/geodetic/point.hpp"
 #include "pyinterp/geodetic/polygon.hpp"
+#include "pyinterp/geodetic/rtree.hpp"
 #include "pyinterp/geodetic/spheroid.hpp"
 #include "pyinterp/geodetic/swath.hpp"
 
 namespace geodetic = pyinterp::geodetic;
+namespace math = pyinterp::detail::math;
 namespace py = pybind11;
 
 PYBIND11_MAKE_OPAQUE(geodetic::MultiPolygon)
@@ -1173,6 +1175,176 @@ Returns:
           }));
 }
 
+static auto init_geodetic_rtree(py::module &m) {
+  py::class_<geodetic::RTree>(m, "RTree")
+      .def(py::init<std::optional<geodetic::Spheroid>>(),
+           py::arg("spheroid") = std::nullopt)
+      .def(
+          "__copy__",
+          [](const geodetic::RTree &self) { return geodetic::RTree(self); },
+          "Implements the shallow copy operation.",
+          py::call_guard<py::gil_scoped_release>())
+      .def("__len__", &geodetic::RTree::size,
+           "Called to implement the built-in function ``len()``")
+      .def(
+          "__bool__", [](const geodetic::RTree &self) { return !self.empty(); },
+          "Called to implement truth value testing and the built-in "
+          "operation "
+          "``bool()``.")
+      .def("clear", &geodetic::RTree::clear,
+           "Removes all values stored in the container.")
+      .def("packing", &geodetic::RTree::packing, py::arg("lon"), py::arg("lat"),
+           py::arg("values"),
+           R"__doc__(
+The tree is created using packing algorithm (The old data is erased
+before construction.)
+
+Args:
+    lon: The longitude, in degrees, of the points to insert.
+    lat: The latitude, in degrees, of the points to insert.
+    values: The values to insert.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
+      .def("insert", &geodetic::RTree::insert, py::arg("lon"), py::arg("lat"),
+           py::arg("values"),
+           R"__doc__(
+Insert new data into the search tree.
+
+Args:
+    lon: The longitude, in degrees, of the points to insert.
+    lat: The latitude, in degrees, of the points to insert.
+    values: The values to insert.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
+      .def(
+          "query",
+          [](const geodetic::RTree &self,
+             const Eigen::Ref<pyinterp::Vector<double>> &lon,
+             const Eigen::Ref<pyinterp::Vector<double>> &lat, const uint32_t k,
+             const bool within, const size_t num_threads) -> py::tuple {
+            return self.query(lon, lat, k, within, num_threads);
+          },
+          py::arg("lon"), py::arg("lat"), py::arg("k") = 4,
+          py::arg("within") = false, py::arg("num_threads") = 0,
+          R"__doc__(
+Search for the nearest K nearest neighbors of a given point.
+
+Args:
+    lon: The longitude of the points in degrees.
+    lat: The latitude of the points in degrees.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``4``.
+    within: If true, the method ensures that the neighbors found are located
+        within the point of interest. Defaults to ``false``.
+    num_threads: The number of threads to use for the computation. If 0 all
+        CPUs are used. If 1 is given, no parallel computing code is used at
+        all, which is useful for debugging. Defaults to ``0``.
+Returns:
+    A tuple containing a matrix describing for each provided position, the
+    distance, in meters, between the provided position and the found neighbors
+    and a matrix containing the value of the different neighbors found for all
+    provided positions.
+)__doc__")
+      .def("inverse_distance_weighting",
+           &geodetic::RTree::inverse_distance_weighting, py::arg("lon"),
+           py::arg("lat"), py::arg("radius") = std::nullopt, py::arg("k") = 9,
+           py::arg("p") = 2, py::arg("within") = true,
+           py::arg("num_threads") = 0,
+           R"__doc__(
+Interpolation of the value at the requested position by inverse distance
+weighting method.
+
+Args:
+    lon: The longitude of the points, in degrees, to be interpolated.
+    lat: The latitude of the points, in degrees, to be interpolated.
+    radius: The maximum radius of the search (m). Defaults The maximum distance
+        between two points.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``9``.
+    p: The power parameters. Defaults to ``2``. within (bool, optional): If
+        true, the method ensures that the neighbors found are located around
+        the point of interest. In other words, this parameter ensures that the
+        calculated values will not be extrapolated. Defaults to ``true``.
+    num_threads: The number of threads to use for the computation. If 0 all
+        CPUs are used. If 1 is given, no parallel computing code is used at
+        all, which is useful for debugging. Defaults to ``0``.
+Returns:
+    The interpolated value and the number of neighbors used in the
+    calculation.
+)__doc__")
+      //       .def("radial_basis_function",
+      //       &geodetic::RTree::radial_basis_function,
+      //            py::arg("lon"), py::arg("lat"), py::arg("radius"),
+      //            py::arg("k") = 9, py::arg("rbf") =
+      //            math::RadialBasisFunction::Multiquadric, py::arg("epsilon")
+      //            = std::optional<double>(), py::arg("smooth") = 0,
+      //            py::arg("within") = true, py::arg("num_threads") = 0,
+      //            R"__doc__(
+      // Interpolation of the value at the requested position by radial basis
+      // function interpolation.
+
+      // Args:
+      //     lon: The longitude of the points, in degrees, to be interpolated.
+      //     lat: The latitude of the points, in degrees, to be interpolated.
+      //     radius: The maximum radius of the search (m). Default to the
+      //     largest value
+      //         that can be represented on a float.
+      //     k: The number of nearest neighbors to be used for calculating the
+      //         interpolated value. Defaults to ``9``.
+      //     rbf: The radial basis function, based on the radius, r, given by
+      //     the
+      //         distance between points. Default to
+      //         :py:attr:`pyinterp.core.RadialBasisFunction.Multiquadric`.
+      //     epsilon: Adjustable constant for gaussian or multiquadrics
+      //     functions.
+      //         Default to the average distance between nodes.
+      //     smooth: Values greater than zero increase the smoothness of the
+      //         approximation.
+      //     within: If true, the method ensures that the neighbors found are
+      //     located
+      //         around the point of interest. Defaults to ``true``.
+      //     num_threads: The number of threads to use for the computation. If 0
+      //     all CPUs
+      //         are used. If 1 is given, no parallel computing code is used at
+      //         all, which is useful for debugging. Defaults to ``0``.
+      // Returns:
+      //     The interpolated value and the number of neighbors used for the
+      //     calculation.
+      // )__doc__")
+      .def("window_function", &geodetic::RTree::window_function, py::arg("lon"),
+           py::arg("lat"), py::arg("radius"), py::arg("k") = 9,
+           py::arg("wf") = math::window::Function::kHamming,
+           py::arg("arg") = std::nullopt, py::arg("within") = true,
+           py::arg("num_threads") = 0,
+           R"__doc__(
+Interpolation of the value at the requested position by window function.
+
+Args:
+    lon: The longitude of the points, in degrees, to be interpolated.
+    lat: The latitude of the points, in degrees, to be interpolated.
+    radius: The maximum radius of the search (m). Default to the largest value
+        that can be represented on a float.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``9``.
+    wf: The window function to be used. Defaults to
+        :py:attr:`pyinterp.core.WindowFunction.Hamming`.
+    arg: The optional argument of the window function. Defaults to ``None``.
+    within: If true, the method ensures that the neighbors found are located
+        around the point of interest. Defaults to ``true``.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
+Returns:
+    The interpolated value and the number of neighbors used for the calculation.
+  )__doc__")
+
+      .def(py::pickle(
+          [](const geodetic::RTree &self) { return self.getstate(); },
+          [](const py::tuple &state) {
+            return geodetic::RTree::setstate(state);
+          }));
+}
+
 void init_geodetic(py::module &m) {
   auto _spheroid = py::class_<pyinterp::detail::geodetic::Spheroid>(
       m, "_Spheroid", "C++ implementation of the WGS system.");
@@ -1199,7 +1371,8 @@ Args:
       .def_property_readonly(
           "flattening", &geodetic::Spheroid::flattening,
           "Flattening of ellipsoid (:math:`f=\\frac{a-b}{a}`).")
-      .def("semi_minor_axis", &geodetic::Spheroid::semi_minor_axis, R"__doc__(
+      .def("semi_minor_axis", &geodetic::Spheroid::semi_minor_axis,
+           R"__doc__(
 Gets the semiminor axis.
 
 Returns:
@@ -1266,7 +1439,8 @@ Gets the mean radius.
 Returns:
     :math:`R_1=\frac{2a+b}{3}`
 )__doc__")
-      .def("authalic_radius", &geodetic::Spheroid::authalic_radius, R"__doc__(
+      .def("authalic_radius", &geodetic::Spheroid::authalic_radius,
+           R"__doc__(
 Gets the authalic radius.
 
 Returns:
@@ -1410,6 +1584,7 @@ Args:
   init_geodetic_multipolygon(multipolygon);
   init_geodetic_linestring(m);
   init_geodetic_crossover(m);
+  init_geodetic_rtree(m);
 
   m.def(
       "normalize_longitudes",

@@ -11,7 +11,7 @@ from typing import (
 
 import numpy
 
-from .. import geodetic
+from .. import core
 
 class Box:
     __hash__: ClassVar[None] = ...
@@ -486,6 +486,69 @@ class Polygon:
 
     @property
     def outer(self) -> LineString:
+        ...
+
+
+class RTree:
+
+    def __init__(self, spheroid: Optional[Spheroid] = ...) -> None:
+        ...
+
+    def clear(self) -> None:
+        ...
+
+    def insert(self, lon: numpy.ndarray[numpy.float64],
+               lat: numpy.ndarray[numpy.float64],
+               values: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def inverse_distance_weighting(self,
+                                   lon: numpy.ndarray[numpy.float64],
+                                   lat: numpy.ndarray[numpy.float64],
+                                   radius: Optional[float] = ...,
+                                   k: int = ...,
+                                   p: int = ...,
+                                   within: bool = ...,
+                                   num_threads: int = ...) -> tuple:
+        ...
+
+    def packing(self, lon: numpy.ndarray[numpy.float64],
+                lat: numpy.ndarray[numpy.float64],
+                values: numpy.ndarray[numpy.float64]) -> None:
+        ...
+
+    def query(self,
+              lon: numpy.ndarray[numpy.float64, flags.writeable],
+              lat: numpy.ndarray[numpy.float64, flags.writeable],
+              k: int = ...,
+              within: bool = ...,
+              num_threads: int = ...) -> tuple:
+        ...
+
+    def window_function(self,
+                        lon: numpy.ndarray[numpy.float64],
+                        lat: numpy.ndarray[numpy.float64],
+                        radius: float,
+                        k: int = ...,
+                        wf: core.WindowFunction = ...,
+                        arg: Optional[float] = ...,
+                        within: bool = ...,
+                        num_threads: int = ...) -> tuple:
+        ...
+
+    def __bool__(self) -> bool:
+        ...
+
+    def __copy__(self) -> RTree:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 

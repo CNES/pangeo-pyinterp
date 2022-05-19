@@ -73,7 +73,7 @@ class RTree {
   /// @returns The box able to contain all values stored in the container or an
   /// invalid box if there are no values in the container.
   virtual inline auto bounds() const
-      -> std::optional<boost::geometry::model::box<Point>> {
+      -> std::optional<typename rtree_t::bounds_type> {
     if (empty()) {
       return {};
     }
@@ -106,61 +106,89 @@ class RTree {
   /// @param point
   inline auto insert(const value_t &value) -> void { tree_->insert(value); }
 
-  /// Search for the K nearest neighbors of a given point.
+  /// Search for the K nearest neighbors of a given point using the given
+  /// strategy.
   ///
   /// @param point Point of interest
+  /// @param strategy Strategy used to calculate the distance between points.
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors:
-  auto query(const Point &point, const uint32_t k) const
-      -> std::vector<result_t> {
+  template <typename Strategy>
+  auto query(const Point &point, const Strategy &strategy,
+             const uint32_t k) const -> std::vector<result_t> {
     auto result = std::vector<result_t>();
-    std::for_each(
-        tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
-        [&point, &result](const auto &item) {
-          result.emplace_back(std::make_pair(
-              boost::geometry::distance(point, item.first), item.second));
-        });
+    std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
+                  tree_->qend(),
+                  [&point, &result, &strategy](const auto &item) {
+                    result.emplace_back(std::make_pair(
+                        boost::geometry::distance(point, item.first, strategy),
+                        item.second));
+                  });
     return result;
   }
 
-  /// Search for the nearest neighbors of a given point within a radius r.
+  /// @overload query(const Point &, const Strategy &, const uint32_t) const
+  ///
+  /// Overload of the query method with the default strategy.
+  auto query(const Point &point, const uint32_t k) const
+      -> std::vector<result_t> {
+    return query(point, boost::geometry::default_strategy(), k);
+  }
+
+  /// Search for the nearest neighbors of a given point within a radius r using
+  /// the given strategy.
   ///
   /// @param point Point of interest
+  /// @param strategy strategy used to compute the distance
   /// @param radius distance within which neighbors are returned
   /// @return the k nearest neighbors
-  auto query_ball(const Point &point, const coordinate_t radius) const
-      -> std::vector<result_t> {
+  template <typename Strategy>
+  auto query_ball(const Point &point, const Strategy &strategy,
+                  const coordinate_t radius) const -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     std::for_each(
         tree_->qbegin(boost::geometry::index::satisfies([&](const auto &item) {
           return boost::geometry::distance(item.first, point) <= radius;
         })),
-        tree_->qend(), [&point, &result](const auto &item) {
-          result.emplace_back(std::make_pair(
-              boost::geometry::distance(point, item.first), item.second));
+        tree_->qend(), [&point, &result, &strategy](const auto &item) {
+          result.emplace_back(
+              std::make_pair(boost::geometry::distance(point, item.first),
+                             item.second, strategy));
         });
     return result;
   }
 
-  /// Search for the nearest K neighbors around a given point.
+  /// @overload query_ball(const Point &, const Strategy &, const coordinate_t)
+  ///
+  /// Overload of the query_ball method with the default strategy.
+  auto query_ball(const Point &point, const coordinate_t radius) const
+      -> std::vector<result_t> {
+    return query_ball(point, boost::geometry::default_strategy(), radius);
+  }
+
+  /// Search for the nearest K neighbors around a given point using the given
+  /// strategy.
   ///
   /// @param point Point of interest
+  /// @param strategy strategy used to compute the distance
   /// @param k The number of nearest neighbors to search.
   /// @return the k nearest neighbors if the point is within by its
   /// neighbors.
-  auto query_within(const Point &point, const uint32_t k) const
-      -> std::vector<result_t> {
+  template <typename Strategy>
+  auto query_within(const Point &point, const Strategy &strategy,
+                    const uint32_t k) const -> std::vector<result_t> {
     auto result = std::vector<result_t>();
     auto points = boost::geometry::model::multi_point<Point>();
     points.reserve(k);
 
-    std::for_each(
-        tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
-        [&points, &point, &result](const auto &item) {
-          points.emplace_back(item.first);
-          result.emplace_back(std::make_pair(
-              boost::geometry::distance(point, item.first), item.second));
-        });
+    std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
+                  tree_->qend(),
+                  [&points, &point, &result, &strategy](const auto &item) {
+                    points.emplace_back(item.first);
+                    result.emplace_back(std::make_pair(
+                        boost::geometry::distance(point, item.first, strategy),
+                        item.second));
+                  });
 
     // Are found points located around the requested point?
     if (!boost::geometry::covered_by(
@@ -171,9 +199,18 @@ class RTree {
     return result;
   }
 
+  /// @overload query_within(const Point &, const Strategy &, const uint32_t)
+  ///
+  /// Overload of the query_within method with the default strategy.
+  auto query_within(const Point &point, const uint32_t k) const
+      -> std::vector<result_t> {
+    return query_within(point, boost::geometry::default_strategy(), k);
+  }
+
   /// Interpolation of the value at the requested position.
   ///
-  /// @param point Point of interest
+  /// @param point Point of interest.
+  /// @param strategy strategy used to compute the distance.
   /// @param radius The maximum radius of the search.
   /// @param k The number of nearest neighbors to be used for calculating the
   /// interpolated value.
@@ -183,14 +220,17 @@ class RTree {
   /// ensures that the calculated values will not be extrapolated.
   /// @return a tuple containing the interpolated value and the number of
   /// neighbors used in the calculation.
-  auto inverse_distance_weighting(const Point &point, coordinate_t radius,
-                                  uint32_t k, uint32_t p, bool within) const
+  template <typename Strategy>
+  auto inverse_distance_weighting(const Point &point, const Strategy &strategy,
+                                  coordinate_t radius, uint32_t k, uint32_t p,
+                                  bool within) const
       -> std::pair<coordinate_t, uint32_t> {
     coordinate_t result = 0;
     coordinate_t total_weight = 0;
 
     // We're looking for the nearest k points.
-    auto nearest = within ? query_within(point, k) : query(point, k);
+    auto nearest =
+        within ? query_within(point, strategy, k) : query(point, strategy, k);
     uint32_t neighbors = 0;
 
     // For each point, the distance between the point requested and the point
@@ -224,34 +264,49 @@ class RTree {
                                 static_cast<uint32_t>(0));
   }
 
-  /// Search for the nearest K neighbors of a given point.
+  /// @overload inverse_distance_weighting(const Point &, const Strategy &,
+  /// const coordinate_t, const uint32_t, const uint32_t, const bool)
   ///
-  /// @param point Point of interest
+  /// Overload of the inverse_distance_weighting method with the default
+  /// strategy.
+  auto inverse_distance_weighting(const Point &point, coordinate_t radius,
+                                  uint32_t k, uint32_t p, bool within) const {
+    return inverse_distance_weighting(
+        point, boost::geometry::default_strategy(), radius, k, p, within);
+  }
+
+  /// Search for the nearest K neighbors of a given point using the given
+  /// strategy.
+  ///
+  /// @param point Point of interest.
+  /// @param strategy strategy used to compute the distance.
   /// @param radius The maximum radius of the search.
   /// @param k The number of nearest neighbors to be used for calculating the
   /// interpolated value.
   /// @return A tuple containing the matrix describing the coordinates of the
   /// selected points and a vector of the values of the points. The arrays will
   /// be empty if no points are selected.
-  auto nearest(const Point &point, const coordinate_t radius,
-               const uint32_t k) const
+  template <typename Strategy>
+  auto nearest(const Point &point, const Strategy &strategy,
+               const coordinate_t radius, const uint32_t k) const
       -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
     auto coordinates = Matrix<promotion_t>(dimension_t::value, k);
     auto values = Vector<promotion_t>(k);
     auto jx = 0U;
 
-    std::for_each(
-        tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
-        [&](const auto &item) {
-          if (boost::geometry::distance(point, item.first) <= radius) {
-            // If the point is not too far away, it is inserted and
-            // its coordinates and value are stored.
-            for (size_t ix = 0; ix < dimension_t::value; ++ix) {
-              coordinates(ix, jx) = geometry::point::get(item.first, ix);
-            }
-            values(jx++) = item.second;
-          }
-        });
+    std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
+                  tree_->qend(), [&](const auto &item) {
+                    if (boost::geometry::distance(point, item.first,
+                                                  strategy) <= radius) {
+                      // If the point is not too far away, it is inserted and
+                      // its coordinates and value are stored.
+                      for (size_t ix = 0; ix < dimension_t::value; ++ix) {
+                        coordinates(ix, jx) =
+                            geometry::point::get(item.first, ix);
+                      }
+                      values(jx++) = item.second;
+                    }
+                  });
 
     // The arrays are resized according to the number of selected points. This
     // number can be zero.
@@ -260,17 +315,29 @@ class RTree {
     return std::make_tuple(coordinates, values);
   }
 
-  /// Search for the nearest K neighbors around a given point.
+  /// @overload nearest(const Point &, const Strategy &, const coordinate_t,
+  /// const uint32_t)
   ///
-  /// @param point Point of interest
+  /// Overload of the nearest method with the default strategy.
+  auto nearest(const Point &point, const coordinate_t radius,
+               const uint32_t k) const {
+    return nearest(point, boost::geometry::default_strategy(), radius, k);
+  }
+
+  /// Search for the nearest K neighbors around a given point using the given
+  /// strategy.
+  ///
+  /// @param point Point of interest.
+  /// @param strategy strategy used to compute the distance.
   /// @param radius The maximum radius of the search.
   /// @param k The number of nearest neighbors to be used for calculating the
   /// interpolated value.
   /// @return A tuple containing the matrix describing the coordinates of the
   /// selected points and a vector of the values of the points. The arrays will
   /// be empty if no points are selected.
-  auto nearest_within(const Point &point, const coordinate_t radius,
-                      const uint32_t k) const
+  template <typename Strategy>
+  auto nearest_within(const Point &point, const Strategy &strategy,
+                      const coordinate_t radius, const uint32_t k) const
       -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
     auto points = boost::geometry::model::multi_point<Point>();
     auto coordinates = Matrix<promotion_t>(dimension_t::value, k);
@@ -280,19 +347,20 @@ class RTree {
     // List of selected points ()
     points.reserve(k);
 
-    std::for_each(
-        tree_->qbegin(boost::geometry::index::nearest(point, k)), tree_->qend(),
-        [&](const auto &item) {
-          if (boost::geometry::distance(point, item.first) <= radius) {
-            // If the point is not too far away, it is inserted and
-            // its coordinates and value are stored.
-            points.emplace_back(item.first);
-            for (size_t ix = 0; ix < dimension_t::value; ++ix) {
-              coordinates(ix, jx) = geometry::point::get(item.first, ix);
-            }
-            values(jx++) = item.second;
-          }
-        });
+    std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
+                  tree_->qend(), [&](const auto &item) {
+                    if (boost::geometry::distance(point, item.first,
+                                                  strategy) <= radius) {
+                      // If the point is not too far away, it is inserted and
+                      // its coordinates and value are stored.
+                      points.emplace_back(item.first);
+                      for (size_t ix = 0; ix < dimension_t::value; ++ix) {
+                        coordinates(ix, jx) =
+                            geometry::point::get(item.first, ix);
+                      }
+                      values(jx++) = item.second;
+                    }
+                  });
 
     // If the point is not covered by its closest neighbors, an empty set will
     // be returned.
@@ -309,9 +377,22 @@ class RTree {
     return std::make_tuple(coordinates, values);
   }
 
-  /// Interpolate the value of a point using a Radial Basis Function.
+  /// @overload nearest_within(const Point &, const Strategy &, const
+  /// coordinate_t, const uint32_t)
+  ///
+  /// Overload of the nearest_within method with the default strategy.
+  auto nearest_within(const Point &point, const coordinate_t radius,
+                      const uint32_t k) const
+      -> std::tuple<Matrix<promotion_t>, Vector<promotion_t>> {
+    return nearest_within(point, boost::geometry::default_strategy(), radius,
+                          k);
+  }
+
+  /// Interpolate the value of a point using a Radial Basis Function using the
+  /// given strategy.
   ///
   /// @param point Point of interest
+  /// @param strategy strategy used to compute the distance.
   /// @param rbf The radial basis function to be used.
   /// @param radius The maximum radius of the search.
   /// @param k The number of nearest neighbors to be used for calculating the
@@ -321,12 +402,14 @@ class RTree {
   /// ensures that the calculated values will not be extrapolated.
   /// @return A pair containing the interpolated value and the number of
   /// neighbors used in the calculation.
-  auto radial_basis_function(const Point &point,
+  template <typename Strategy>
+  auto radial_basis_function(const Point &point, const Strategy &strategy,
                              const math::RBF<promotion_t> &rbf,
                              coordinate_t radius, uint32_t k, bool within) const
       -> std::pair<promotion_t, uint32_t> {
     auto [coordinates, values] =
-        within ? nearest_within(point, radius, k) : nearest(point, radius, k);
+        within ? nearest_within(point, strategy, radius, k)
+               : nearest(point, strategy, radius, k);
     if (values.size() == 0) {
       return std::make_pair(std::numeric_limits<promotion_t>::quiet_NaN(), 0);
     }
@@ -339,9 +422,23 @@ class RTree {
                           static_cast<uint32_t>(values.size()));
   }
 
-  /// Interpolate the value of a point using a Window Function.
+  /// @overload radial_basis_function(const Point &, const Strategy &, const
+  /// math::RBF<promotion_t> &, const coordinate_t, const uint32_t, const bool)
+  ///
+  /// Overload of the radial_basis_function method with the default strategy.
+  auto radial_basis_function(const Point &point,
+                             const math::RBF<promotion_t> &rbf,
+                             coordinate_t radius, uint32_t k, bool within) const
+      -> std::pair<promotion_t, uint32_t> {
+    return radial_basis_function(point, boost::geometry::default_strategy(),
+                                 rbf, radius, k, within);
+  }
+
+  /// Interpolate the value of a point using a Window Function using the given
+  /// strategy.
   ///
   /// @param point Point of interest
+  /// @param strategy strategy used to compute the distance.
   /// @param wf The window function to be used.
   /// @param radius The maximum radius of the search.
   /// @param k The number of nearest neighbors to be used for calculating the
@@ -351,14 +448,16 @@ class RTree {
   /// ensures that the calculated values will not be extrapolated.
   /// @return A pair containing the interpolated value and the number of
   /// neighbors used in the calculation.
-  auto window_function(const Point &point,
+  template <typename Strategy>
+  auto window_function(const Point &point, const Strategy &strategy,
                        const math::WindowFunction<coordinate_t> &wf,
                        const coordinate_t arg, coordinate_t radius, uint32_t k,
                        bool within) const -> std::pair<coordinate_t, uint32_t> {
     coordinate_t result = 0;
     coordinate_t total_weight = 0;
 
-    auto nearest = within ? query_within(point, k) : query(point, k);
+    auto nearest =
+        within ? query_within(point, strategy, k) : query(point, strategy, k);
     uint32_t neighbors = 0;
 
     for (const auto &item : nearest) {
@@ -376,6 +475,19 @@ class RTree {
                      neighbors)
                : std::make_pair(std::numeric_limits<coordinate_t>::quiet_NaN(),
                                 static_cast<uint32_t>(0));
+  }
+
+  /// @overload window_function(const Point &, const Strategy &, const
+  /// math::WindowFunction<coordinate_t> &, const coordinate_t, const
+  /// coordinate_t, const uint32_t, const bool)
+  ///
+  /// Overload of the window_function method with the default strategy.
+  auto window_function(const Point &point,
+                       const math::WindowFunction<coordinate_t> &wf,
+                       const coordinate_t arg, coordinate_t radius, uint32_t k,
+                       bool within) const -> std::pair<coordinate_t, uint32_t> {
+    return window_function(point, boost::geometry::default_strategy(), wf, arg,
+                           radius, k, within);
   }
 
  protected:

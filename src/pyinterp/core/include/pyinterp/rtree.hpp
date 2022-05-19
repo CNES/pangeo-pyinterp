@@ -41,23 +41,23 @@ using WindowFunction = detail::math::window::Function;
 template <typename Point, typename Type>
 class RTree : public detail::geometry::RTree<Point, Type> {
  public:
+  /// Base class
+  using base_t = detail::geometry::RTree<Point, Type>;
+
   /// Number of dimensions of the point
-  using dimension_t =
-      typename detail::geometry::RTree<Point, Type>::dimension_t;
+  using dimension_t = typename base_t::dimension_t;
 
   /// Type of point coordinates
-  using coordinate_t =
-      typename detail::geometry::RTree<Point, Type>::coordinate_t;
+  using coordinate_t = typename base_t::coordinate_t;
 
   /// Type of distance between two points
-  using distance_t = typename detail::geometry::RTree<Point, Type>::distance_t;
+  using distance_t = typename base_t::distance_t;
 
   /// Type of query results.
-  using result_t = typename detail::geometry::RTree<Point, Type>::result_t;
+  using result_t = typename base_t::result_t;
 
   /// Type of the implicit conversion between the type of coordinates and values
-  using promotion_t =
-      typename detail::geometry::RTree<Point, Type>::promotion_t;
+  using promotion_t = typename base_t::promotion_t;
 
   /// The tree must at least store the ECEF coordinates
   static_assert(dimension_t::value >= 3,
@@ -73,8 +73,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
 
   /// Default constructor
   explicit RTree(const std::optional<detail::geodetic::Spheroid> &wgs)
-      : detail::geometry::RTree<Point, Type>(),
-        coordinates_(wgs.value_or(detail::geodetic::Spheroid())) {}
+      : base_t(), coordinates_(wgs.value_or(detail::geodetic::Spheroid())) {}
 
   /// Returns the box able to contain all values stored in the container.
   ///
@@ -308,7 +307,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
       vector.emplace_back(std::make_pair(point, _u(ix)));
     }
     auto result = RTree<Point, Type>(spheroid);
-    static_cast<detail::geometry::RTree<Point, Type>>(result).packing(vector);
+    static_cast<base_t>(result).packing(vector);
     return result;
   }
 
@@ -400,7 +399,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
               Eigen::Map<const Vector<coordinate_t>>(&_coordinates(ix, 0), M)),
           _values(ix)));
     }
-    detail::geometry::RTree<Point, Type>::packing(vector);
+    base_t::packing(vector);
   }
 
   /// Insert coordinates
@@ -414,7 +413,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     auto _values = values.template unchecked<1>();
 
     for (auto ix = 0; ix < coordinates.shape(0); ++ix) {
-      detail::geometry::RTree<Point, Type>::insert(std::make_pair(
+      base_t::insert(std::make_pair(
           std::invoke(
               converter, *this,
               Eigen::Map<const Vector<coordinate_t>>(&_coordinates(ix, 0), M)),
@@ -428,9 +427,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
               const pybind11::array_t<coordinate_t> &coordinates,
               const uint32_t k, const bool within,
               const size_t num_threads) const -> pybind11::tuple {
-    Requester requester =
-        within ? &detail::geometry::RTree<Point, Type>::query_within
-               : &detail::geometry::RTree<Point, Type>::query;
+    Requester requester = within ? static_cast<Requester>(&base_t::query_within)
+                                 : static_cast<Requester>(&base_t::query);
 
     auto _coordinates = coordinates.template unchecked<2>();
     auto size = coordinates.shape(0);
@@ -587,9 +585,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                                 Eigen::Map<const Vector<coordinate_t>>(
                                     &_coordinates(ix, 0), M)));
 
-                auto result =
-                    detail::geometry::RTree<Point, Type>::radial_basis_function(
-                        point, rbf_handler, radius, k, within);
+                auto result = base_t::radial_basis_function(point, rbf_handler,
+                                                            radius, k, within);
                 _data(ix) = result.first;
                 _neighbors(ix) = result.second;
               }
@@ -646,9 +643,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                                 Eigen::Map<const Vector<coordinate_t>>(
                                     &_coordinates(ix, 0), M)));
 
-                auto result =
-                    detail::geometry::RTree<Point, Type>::window_function(
-                        point, wf_handler, arg, radius, k, within);
+                auto result = base_t::window_function(point, wf_handler, arg,
+                                                      radius, k, within);
                 _data(ix) = result.first;
                 _neighbors(ix) = result.second;
               }

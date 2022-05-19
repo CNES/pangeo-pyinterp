@@ -235,28 +235,6 @@ Args:
 }
 
 void init_rtree(py::module &m) {
-  py::enum_<pyinterp::RadialBasisFunction>(m, "RadialBasisFunction",
-                                           "Radial basis functions")
-      .value("Cubic", pyinterp::RadialBasisFunction::Cubic)
-      .value("Gaussian", pyinterp::RadialBasisFunction::Gaussian)
-      .value("InverseMultiquadric",
-             pyinterp::RadialBasisFunction::InverseMultiquadric)
-      .value("Linear", pyinterp::RadialBasisFunction::Linear)
-      .value("Multiquadric", pyinterp::RadialBasisFunction::Multiquadric)
-      .value("ThinPlate", pyinterp::RadialBasisFunction::ThinPlate);
-
-  py::enum_<pyinterp::WindowFunction>(m, "WindowFunction", "Window functions")
-      .value("Blackman", pyinterp::WindowFunction::kBlackman)
-      .value("BlackmanHarris", pyinterp::WindowFunction::kBlackmanHarris)
-      .value("Boxcar", pyinterp::WindowFunction::kBoxcar)
-      .value("FlatTop", pyinterp::WindowFunction::kFlatTop)
-      .value("Gaussian", pyinterp::WindowFunction::kGaussian)
-      .value("Hamming", pyinterp::WindowFunction::kHamming)
-      .value("Lanczos", pyinterp::WindowFunction::kLanczos)
-      .value("Nuttall", pyinterp::WindowFunction::kNuttall)
-      .value("Parzen", pyinterp::WindowFunction::kParzen)
-      .value("ParzenSWOT", pyinterp::WindowFunction::kParzenSWOT);
-
   implement_rtree<pyinterp::detail::geometry::Point3D<double>, double>(
       m, "Float64");
   implement_rtree<pyinterp::detail::geometry::Point3D<float>, float>(m,

@@ -324,16 +324,6 @@ Raises:
 }
 
 void init_axis(py::module &m) {
-  py::enum_<pyinterp::axis::Boundary>(m, "AxisBoundary", R"__doc__(
-Type of boundary handling.
-)__doc__")
-      .value("Expand", pyinterp::axis::kExpand,
-             "*Expand the boundary as a constant*.")
-      .value("Wrap", pyinterp::axis::kWrap, "*Circular boundary conditions*.")
-      .value("Sym", pyinterp::axis::kSym, "*Symmetrical boundary conditions*.")
-      .value("Undef", pyinterp::axis::kUndef,
-             "*Boundary violation is not defined*.");
-
   init_core_axis(m);
   init_temporal_axis(m);
 }

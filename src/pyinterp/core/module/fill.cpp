@@ -100,22 +100,6 @@ Returns:
 }
 
 void init_fill(py::module &m) {
-  py::enum_<pyinterp::fill::FirstGuess>(
-      m, "FirstGuess", "Type of first guess grid to solve Poisson's equation.")
-      .value("Zero", pyinterp::fill::kZero, "Use 0.0 as an initial guess")
-      .value("ZonalAverage", pyinterp::fill::kZonalAverage,
-             "Use zonal average in x direction");
-
-  py::enum_<pyinterp::fill::ValueType>(m, "ValueType",
-                                       R"__doc__(
-Type of values processed by the loess filter
-)__doc__")
-      .value("Undefined", pyinterp::fill::kUndefined,
-             "*Undefined values (fill undefined values)*.")
-      .value("Defined", pyinterp::fill::kDefined,
-             "*Defined values (smooth values)*.")
-      .value("All", pyinterp::fill::kAll, "*Smooth and fill values*.");
-
   implement_fill_functions<double>(m, "Float64");
   implement_fill_functions<float>(m, "Float32");
   implement_loess_3d<double, double>(m, "", "Float64");
