@@ -69,26 +69,26 @@ def test_geodetic_rtree_idw(pytestconfig):
              "mss_geodetic_rtree_idw.png")
 
 
-# def test_geodetic_rtree_rbf(pytestconfig):
-#     """Interpolation test."""
-#     mesh = load_data()
-#     lon = np.arange(-180, 180, 1)
-#     lat = np.arange(-90, 90, 1)
-#     x, y = np.meshgrid(lon, lat, indexing="ij")
-#     z, _ = mesh.radial_basis_function(x.ravel(),
-#                                       y.ravel(),
-#                                       within=True,
-#                                       radius=None,
-#                                       rbf=core.RadialBasisFunction.Linear,
-#                                       epsilon=2_000_000,
-#                                       smooth=0,
-#                                       k=11,
-#                                       num_threads=0)
-#     z = np.ma.fix_invalid(z)
+def test_geodetic_rtree_rbf(pytestconfig):
+    """Interpolation test."""
+    mesh = load_data()
+    lon = np.arange(-180, 180, 1)
+    lat = np.arange(-90, 90, 1)
+    x, y = np.meshgrid(lon, lat, indexing="ij")
+    z, _ = mesh.radial_basis_function(x.ravel(),
+                                      y.ravel(),
+                                      within=True,
+                                      radius=2_000_000,
+                                      rbf=core.RadialBasisFunction.ThinPlate,
+                                      epsilon=None,
+                                      smooth=0,
+                                      k=11,
+                                      num_threads=0)
+    z = np.ma.fix_invalid(z)
 
-#     if HAVE_PLT and pytestconfig.getoption("visualize"):
-#         plot(x, y, z.reshape((len(lon), len(lat))),
-#              "mss_geodetic_rtree_rbf.png")
+    if HAVE_PLT and pytestconfig.getoption("visualize"):
+        plot(x, y, z.reshape((len(lon), len(lat))),
+             "mss_geodetic_rtree_rbf.png")
 
 
 def test_geodetic_rtree_window_function(pytestconfig):

@@ -525,6 +525,18 @@ class RTree:
               num_threads: int = ...) -> tuple:
         ...
 
+    def radial_basis_function(self,
+                              lon: numpy.ndarray[numpy.float64],
+                              lat: numpy.ndarray[numpy.float64],
+                              radius: Optional[float],
+                              k: int = ...,
+                              rbf: core.RadialBasisFunction = ...,
+                              epsilon: Optional[float] = ...,
+                              smooth: float = ...,
+                              within: bool = ...,
+                              num_threads: int = ...) -> tuple:
+        ...
+
     def window_function(self,
                         lon: numpy.ndarray[numpy.float64],
                         lat: numpy.ndarray[numpy.float64],

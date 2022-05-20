@@ -6,10 +6,28 @@
 
 namespace pyinterp::geodetic {
 
+template <typename Point, typename Strategy, typename T>
+class RBF : public detail::math::RBF<T> {
+ public:
+  RBF(const Strategy &strategy, const T &epsilon, const T &smooth,
+      const detail::math::RadialBasisFunction rbf)
+      : detail::math::RBF<T>(epsilon, smooth, rbf), strategy_(strategy) {}
+
+  [[nodiscard]] inline auto calculate_distance(
+      const Eigen::Ref<const Vector<T>> &x,
+      const Eigen::Ref<const Vector<T>> &y) const -> T override {
+    return boost::geometry::distance(Point(x(0), x(1)), Point(y(0), y(1)),
+                                     strategy_);
+  }
+
+ private:
+  const Strategy &strategy_;
+};
+
 RTree::RTree(const std::optional<detail::geodetic::Spheroid> &wgs) : base_t() {
   auto spheroid = wgs.value_or(detail::geodetic::Spheroid());
-  strategy_ = std::move(strategy_t(boost::geometry::srs::spheroid<double>(
-      spheroid.semi_major_axis(), spheroid.semi_minor_axis())));
+  strategy_ = strategy_t(boost::geometry::srs::spheroid<double>(
+      spheroid.semi_major_axis(), spheroid.semi_minor_axis()));
 }
 
 auto RTree::equatorial_bounds() const -> std::optional<Box> {
@@ -169,63 +187,62 @@ auto RTree::inverse_distance_weighting(
   return pybind11::make_tuple(data, neighbors);
 }
 
-// auto RTree::radial_basis_function(const Eigen::Ref<const Vector<double>>
-// &lon,
-//                                   const Eigen::Ref<const Vector<double>>
-//                                   &lat, const std::optional<double> &radius,
-//                                   const uint32_t k,
-//                                   const detail::math::RadialBasisFunction
-//                                   rbf, const std::optional<double> &epsilon,
-//                                   const double smooth, const bool within,
-//                                   const size_t num_threads) const
-//     -> pybind11::tuple {
-//   detail::check_container_size("lon", lon, "lat", lat);
-//   auto _radius = radius.value_or(std::numeric_limits<double>::max());
-//   auto size = lon.size();
+auto RTree::radial_basis_function(const Eigen::Ref<const Vector<double>> &lon,
+                                  const Eigen::Ref<const Vector<double>> &lat,
+                                  const std::optional<double> &radius,
+                                  const uint32_t k,
+                                  const detail::math::RadialBasisFunction rbf,
+                                  const std::optional<double> &epsilon,
+                                  const double smooth, const bool within,
+                                  const size_t num_threads) const
+    -> pybind11::tuple {
+  detail::check_container_size("lon", lon, "lat", lat);
+  auto _radius = radius.value_or(std::numeric_limits<double>::max());
+  auto size = lon.size();
 
-//   // Construction of the interpolator.
-//   auto rbf_handler = detail::math::RBF<promotion_t>(
-//       epsilon.value_or(std::numeric_limits<promotion_t>::quiet_NaN()),
-//       smooth, rbf);
+  // Construction of the interpolator.
+  auto rbf_handler = RBF<point_t, strategy_t, double>(
+      strategy_,
+      epsilon.value_or(std::numeric_limits<promotion_t>::quiet_NaN()), smooth,
+      rbf);
 
-//   // Allocation of result vectors.
-//   auto data =
-//   pybind11::array_t<double>(pybind11::array::ShapeContainer{size}); auto
-//   neighbors =
-//       pybind11::array_t<uint32_t>(pybind11::array::ShapeContainer{size});
+  // Allocation of result vectors.
+  auto data = pybind11::array_t<double>(pybind11::array::ShapeContainer{size});
+  auto neighbors =
+      pybind11::array_t<uint32_t>(pybind11::array::ShapeContainer{size});
 
-//   auto _data = data.template mutable_unchecked<1>();
-//   auto _neighbors = neighbors.template mutable_unchecked<1>();
+  auto _data = data.template mutable_unchecked<1>();
+  auto _neighbors = neighbors.template mutable_unchecked<1>();
 
-//   {
-//     pybind11::gil_scoped_release release;
+  {
+    pybind11::gil_scoped_release release;
 
-//     // Captures the detected exceptions in the calculation function
-//     // (only the last exception captured is kept)
-//     auto except = std::exception_ptr(nullptr);
+    // Captures the detected exceptions in the calculation function
+    // (only the last exception captured is kept)
+    auto except = std::exception_ptr(nullptr);
 
-//     detail::dispatch(
-//         [&](size_t start, size_t end) {
-//           try {
-//             for (size_t ix = start; ix < end; ++ix) {
-//               auto result = base_t::radial_basis_function(
-//                   point_t(lon(ix), lat(ix)), strategy_, rbf_handler, _radius,
-//                   k, within);
-//               _data(ix) = result.first;
-//               _neighbors(ix) = result.second;
-//             }
-//           } catch (...) {
-//             except = std::current_exception();
-//           }
-//         },
-//         size, num_threads);
+    detail::dispatch(
+        [&](size_t start, size_t end) {
+          try {
+            for (size_t ix = start; ix < end; ++ix) {
+              auto result = base_t::radial_basis_function(
+                  point_t(lon(ix), lat(ix)), strategy_, rbf_handler, _radius, k,
+                  within);
+              _data(ix) = result.first;
+              _neighbors(ix) = result.second;
+            }
+          } catch (...) {
+            except = std::current_exception();
+          }
+        },
+        size, num_threads);
 
-//     if (except != nullptr) {
-//       std::rethrow_exception(except);
-//     }
-//   }
-//   return pybind11::make_tuple(data, neighbors);
-// }
+    if (except != nullptr) {
+      std::rethrow_exception(except);
+    }
+  }
+  return pybind11::make_tuple(data, neighbors);
+}
 
 auto RTree::window_function(const Eigen::Ref<const Vector<double>> &lon,
                             const Eigen::Ref<const Vector<double>> &lat,
@@ -324,7 +341,7 @@ auto RTree::setstate(const pybind11::tuple &state) -> RTree {
         point_t(_coordinates(ix, 0), _coordinates(ix, 1)), _data(ix)));
   }
   auto result = RTree();
-  result.strategy_ = std::move(strategy_t({a, b}));
+  result.strategy_ = strategy_t({a, b});
   static_cast<detail::geometry::RTree<RTree::point_t, double>>(result).packing(
       vector);
   return result;

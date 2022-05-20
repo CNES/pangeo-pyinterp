@@ -82,7 +82,7 @@ class RBF {
                                  const Eigen::Ref<const Matrix<T>> &xi) const
       -> Vector<T> {
     // Matrix of distances between the coordinates provided.
-    const auto r = RBF::distance_matrix(xk, xk);
+    const auto r = distance_matrix(xk, xk);
 
     // Default epsilon to approximate average distance between nodes
     const auto epsilon =
@@ -124,8 +124,9 @@ class RBF {
   };
 
   /// Returns the distance between two points in a euclidean space
-  static auto euclidean_distance(const Eigen::Ref<const Vector<T>> &x,
-                                 const Eigen::Ref<const Vector<T>> &y) -> T {
+  virtual auto calculate_distance(const Eigen::Ref<const Vector<T>> &x,
+                                  const Eigen::Ref<const Vector<T>> &y) const
+      -> T {
     return std::sqrt((x - y).array().pow(2).sum());
   }
 
@@ -166,8 +167,8 @@ class RBF {
   }
 
   /// Calculation of distances between the coordinates provided.
-  static auto distance_matrix(const Eigen::Ref<const Matrix<T>> &xk,
-                              const Eigen::Ref<const Matrix<T>> &xi)
+  auto distance_matrix(const Eigen::Ref<const Matrix<T>> &xk,
+                       const Eigen::Ref<const Matrix<T>> &xi) const
       -> Matrix<T> {
     assert(xk.rows() == xi.rows());
 
@@ -175,7 +176,7 @@ class RBF {
 
     for (Eigen::Index i0 = 0; i0 < xi.cols(); ++i0) {
       for (Eigen::Index i1 = 0; i1 < xk.cols(); ++i1) {
-        result(i0, i1) = euclidean_distance(xi.col(i0), xk.col(i1));
+        result(i0, i1) = calculate_distance(xi.col(i0), xk.col(i1));
       }
     }
     return result;

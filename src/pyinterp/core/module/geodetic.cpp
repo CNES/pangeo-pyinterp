@@ -1272,45 +1272,43 @@ Returns:
     The interpolated value and the number of neighbors used in the
     calculation.
 )__doc__")
-      //       .def("radial_basis_function",
-      //       &geodetic::RTree::radial_basis_function,
-      //            py::arg("lon"), py::arg("lat"), py::arg("radius"),
-      //            py::arg("k") = 9, py::arg("rbf") =
-      //            math::RadialBasisFunction::Multiquadric, py::arg("epsilon")
-      //            = std::optional<double>(), py::arg("smooth") = 0,
-      //            py::arg("within") = true, py::arg("num_threads") = 0,
-      //            R"__doc__(
-      // Interpolation of the value at the requested position by radial basis
-      // function interpolation.
+      .def("radial_basis_function", &geodetic::RTree::radial_basis_function,
+           py::arg("lon"), py::arg("lat"), py::arg("radius"), py::arg("k") = 9,
+           py::arg("rbf") = math::RadialBasisFunction::Multiquadric,
+           py::arg("epsilon") = std::optional<double>(), py::arg("smooth") = 0,
+           py::arg("within") = true, py::arg("num_threads") = 0,
+           R"__doc__(
+Interpolation of the value at the requested position by radial basis
+function interpolation.
 
-      // Args:
-      //     lon: The longitude of the points, in degrees, to be interpolated.
-      //     lat: The latitude of the points, in degrees, to be interpolated.
-      //     radius: The maximum radius of the search (m). Default to the
-      //     largest value
-      //         that can be represented on a float.
-      //     k: The number of nearest neighbors to be used for calculating the
-      //         interpolated value. Defaults to ``9``.
-      //     rbf: The radial basis function, based on the radius, r, given by
-      //     the
-      //         distance between points. Default to
-      //         :py:attr:`pyinterp.core.RadialBasisFunction.Multiquadric`.
-      //     epsilon: Adjustable constant for gaussian or multiquadrics
-      //     functions.
-      //         Default to the average distance between nodes.
-      //     smooth: Values greater than zero increase the smoothness of the
-      //         approximation.
-      //     within: If true, the method ensures that the neighbors found are
-      //     located
-      //         around the point of interest. Defaults to ``true``.
-      //     num_threads: The number of threads to use for the computation. If 0
-      //     all CPUs
-      //         are used. If 1 is given, no parallel computing code is used at
-      //         all, which is useful for debugging. Defaults to ``0``.
-      // Returns:
-      //     The interpolated value and the number of neighbors used for the
-      //     calculation.
-      // )__doc__")
+Args:
+    lon: The longitude of the points, in degrees, to be interpolated.
+    lat: The latitude of the points, in degrees, to be interpolated.
+    radius: The maximum radius of the search (m). Default to the
+    largest value
+        that can be represented on a float.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``9``.
+    rbf: The radial basis function, based on the radius, r, given by
+    the
+        distance between points. Default to
+        :py:attr:`pyinterp.core.RadialBasisFunction.Multiquadric`.
+    epsilon: Adjustable constant for gaussian or multiquadrics
+    functions.
+        Default to the average distance between nodes.
+    smooth: Values greater than zero increase the smoothness of the
+        approximation.
+    within: If true, the method ensures that the neighbors found are
+    located
+        around the point of interest. Defaults to ``true``.
+    num_threads: The number of threads to use for the computation. If 0
+    all CPUs
+        are used. If 1 is given, no parallel computing code is used at
+        all, which is useful for debugging. Defaults to ``0``.
+Returns:
+    The interpolated value and the number of neighbors used for the
+    calculation.
+)__doc__")
       .def("window_function", &geodetic::RTree::window_function, py::arg("lon"),
            py::arg("lat"), py::arg("radius"), py::arg("k") = 9,
            py::arg("wf") = math::window::Function::kHamming,

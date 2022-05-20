@@ -77,13 +77,13 @@ class RTree : public detail::geometry::RTree<
       const std::optional<double> &radius, uint32_t k, uint32_t p, bool within,
       size_t num_threads) const -> pybind11::tuple;
 
-  //   [[nodiscard]] auto radial_basis_function(
-  //       const Eigen::Ref<const Vector<double>> &lon,
-  //       const Eigen::Ref<const Vector<double>> &lat,
-  //       const std::optional<double> &radius, uint32_t k,
-  //       detail::math::RadialBasisFunction rbf,
-  //       const std::optional<double> &epsilon, double smooth, bool within,
-  //       size_t num_threads) const -> pybind11::tuple;
+  [[nodiscard]] auto radial_basis_function(
+      const Eigen::Ref<const Vector<double>> &lon,
+      const Eigen::Ref<const Vector<double>> &lat,
+      const std::optional<double> &radius, uint32_t k,
+      detail::math::RadialBasisFunction rbf,
+      const std::optional<double> &epsilon, double smooth, bool within,
+      size_t num_threads) const -> pybind11::tuple;
 
   [[nodiscard]] auto window_function(
       const Eigen::Ref<const Vector<double>> &lon,
