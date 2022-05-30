@@ -59,6 +59,18 @@ class isviewstream : private virtual sviewbuf, public std::istream {
  public:
   explicit isviewstream(const std::string_view &str)
       : sviewbuf(str), std::istream(static_cast<std::streambuf *>(this)) {}
+
+  /// Extract a string_view from the stream.
+  auto readview(const std::streamsize count) -> std::string_view {
+    auto avail = this->egptr() - this->gptr();
+    auto size = std::min(count, avail);
+    auto result = std::string_view(gptr(), size);
+    seekoff(size, std::ios_base::cur, std::ios_base::in);
+    if (avail < count) {
+      setstate(std::ios_base::badbit | std::ios_base::failbit);
+    }
+    return result;
+  }
 };
 
 }  // namespace pyinterp::detail

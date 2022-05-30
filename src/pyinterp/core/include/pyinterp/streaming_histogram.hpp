@@ -321,9 +321,8 @@ class StreamingHistogram {
       for (int ix = 0; ix < size; ++ix) {
         auto size = static_cast<size_t>(0);
         ss.read(reinterpret_cast<char *>(&size), sizeof(size));
-        auto marshal_hist = std::string(size, '\0');
-        ss.read(marshal_hist.data(), static_cast<std::streamsize>(size));
-        accumulators(ix) = std::move(Accumulators(marshal_hist));
+        accumulators(ix) = std::move(
+            Accumulators(ss.readview(static_cast<std::streamsize>(size))));
       }
       return accumulators;
     } catch (std::ios_base::failure &) {

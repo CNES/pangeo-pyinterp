@@ -315,9 +315,8 @@ class Histogram2D {
         for (int jx = 0; jx < cols; ++jx) {
           auto size = static_cast<size_t>(0);
           ss.read(reinterpret_cast<char *>(&size), sizeof(size));
-          auto marshal_hist = std::string(size, '\0');
-          ss.read(marshal_hist.data(), static_cast<std::streamsize>(size));
-          histogram(ix, jx) = std::move(StreamingHistogram(marshal_hist));
+          histogram(ix, jx) = std::move(StreamingHistogram(
+              ss.readview(static_cast<std::streamsize>(size))));
         }
       }
     } catch (std::ios_base::failure &) {
