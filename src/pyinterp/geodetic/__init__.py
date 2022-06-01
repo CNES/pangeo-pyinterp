@@ -8,7 +8,7 @@ import warnings
 import numpy
 
 from ..core import geodetic
-from ..core.geodetic import Crossover, LineString, coordinate_distances
+from ..core.geodetic import Crossover, LineString, RTree, coordinate_distances
 
 __all__ = [
     "Box",
@@ -20,6 +20,7 @@ __all__ = [
     "normalize_longitudes",
     "Point",
     "Polygon",
+    "RTree",
     "Spheroid",
 ]
 

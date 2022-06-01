@@ -79,6 +79,7 @@ Geodetic systems
   geodetic.normalize_longitudes
   geodetic.Point
   geodetic.Polygon
+  geodetic.RTree
   geodetic.Spheroid
 
 .. _cartesian_interpolators:
