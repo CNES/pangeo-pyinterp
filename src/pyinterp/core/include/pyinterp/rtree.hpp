@@ -258,10 +258,10 @@ class RTree : public detail::geometry::RTree<Point, Type> {
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
-    auto x = pybind11::array_t<coordinate_t>(
-        pybind11::array::ShapeContainer{{this->size(), dimension_t::value}});
-    auto u = pybind11::array_t<Type>(
-        pybind11::array::ShapeContainer{{this->size()}});
+    auto x = pybind11::array_t<coordinate_t>(pybind11::array::ShapeContainer{
+        {static_cast<pybind11::ssize_t>(this->size()), dimension_t::value}});
+    auto u = pybind11::array_t<Type>(pybind11::array::ShapeContainer{
+        {static_cast<pybind11::ssize_t>(this->size())}});
     auto _x = x.template mutable_unchecked<2>();
     auto _u = u.template mutable_unchecked<1>();
     size_t ix = 0;
