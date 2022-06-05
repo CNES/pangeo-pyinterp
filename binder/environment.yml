@@ -9,5 +9,5 @@ dependencies:
   - jupyter
   - numcodecs
   - pandas
-  - pyinterp>=0.14.0
+  - pyinterp>=0.15.0
   - pytest

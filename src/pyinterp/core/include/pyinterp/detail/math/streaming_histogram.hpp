@@ -86,11 +86,13 @@ template <typename T>
 class StreamingHistogram {
  public:
   /// Default constructor
-  StreamingHistogram() = default;
+  StreamingHistogram() { bins_.reserve(bin_count_); }
 
   /// Sets the properties of the histogram.
   StreamingHistogram(const size_t bin_count, const bool weighted_diff)
-      : weighted_diff_(weighted_diff), bin_count_(bin_count) {}
+      : weighted_diff_(weighted_diff), bin_count_(bin_count) {
+    bins_.reserve(bin_count_);
+  }
 
   /// Create of a new object from serialized data.
   explicit StreamingHistogram(const std::string_view &state) {
