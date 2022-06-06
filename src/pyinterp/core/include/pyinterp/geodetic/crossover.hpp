@@ -80,4 +80,11 @@ class Crossover {
   LineString half_orbit_2_;
 };
 
+auto crossover(const Eigen::Ref<const Eigen::VectorXd>& lon1,
+               const Eigen::Ref<const Eigen::VectorXd>& lat1,
+               const Eigen::Ref<const Eigen::VectorXd>& lon2,
+               const Eigen::Ref<const Eigen::VectorXd>& lat2, double predicate,
+               const DistanceStrategy strategy,
+               const std::optional<Spheroid>& wgs, bool cartesian_plane)
+    -> std::optional<std::tuple<Point, std::tuple<size_t, size_t>>>;
 }  // namespace pyinterp::geodetic

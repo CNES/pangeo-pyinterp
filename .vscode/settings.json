@@ -117,7 +117,8 @@
         "stop_token": "cpp",
         "regex": "cpp",
         "numbers": "cpp",
-        "semaphore": "cpp"
+        "semaphore": "cpp",
+        "__bits": "cpp"
     },
     "python.testing.pytestArgs": [
         "."

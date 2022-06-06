@@ -4,17 +4,26 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/geodetic/crossover.hpp"
 
+#include "pyinterp/detail/broadcast.hpp"
+#include "pyinterp/detail/geometry/crossover.hpp"
+#include "pyinterp/detail/math.hpp"
+
 namespace pyinterp::geodetic {
 
+/// Search for the nearest index of a point in this linestring to a given point.
 class NearestPoint {
  public:
   /// Default constructor
+  ///
+  /// @param line the line string to search.
   explicit NearestPoint(const LineString& line_string) {
     size_t ix = 0;
+    auto data = std::vector<std::pair<Point, size_t>>();
+    data.reserve(line_string.size());
     for (const auto& item : line_string) {
-      rtree_.insert(std::make_pair(item, ix));
-      ++ix;
+      data.emplace_back(std::make_pair(item, ix++));
     }
+    rtree_ = RTree(std::move(data));
   }
 
   /// Find the nearest index of a point in this linestring to a given
@@ -31,9 +40,10 @@ class NearestPoint {
   }
 
  private:
-  boost::geometry::index::rtree<std::pair<Point, size_t>,
-                                boost::geometry::index::quadratic<16>>
-      rtree_;
+  using RTree =
+      boost::geometry::index::rtree<std::pair<Point, size_t>,
+                                    boost::geometry::index::quadratic<16>>;
+  RTree rtree_;
 };
 
 Crossover::Crossover(LineString half_orbit_1, LineString half_orbit_2)
@@ -79,6 +89,53 @@ auto Crossover::nearest(const Point& point, const double predicate,
   }
 
   return std::make_tuple(ix1, ix2);
+}
+
+auto crossover(const Eigen::Ref<const Eigen::VectorXd>& lon1,
+               const Eigen::Ref<const Eigen::VectorXd>& lat1,
+               const Eigen::Ref<const Eigen::VectorXd>& lon2,
+               const Eigen::Ref<const Eigen::VectorXd>& lat2, double predicate,
+               const DistanceStrategy strategy,
+               const std::optional<Spheroid>& wgs, bool cartesian_plane)
+    -> std::optional<std::tuple<Point, std::tuple<size_t, size_t>>> {
+  detail::check_container_size("lon1", lon1, "lat1", lat1);
+  detail::check_container_size("lon2", lon2, "lat2", lat2);
+  if (cartesian_plane) {
+    // The intersection is computed in the cartesian plane.
+    auto xover = detail::geometry::Crossover<double>(
+        std::move(detail::geometry::LineString<double>(lon1, lat1)),
+        std::move(detail::geometry::LineString<double>(lon2, lat2)));
+
+    auto point = xover.search();
+    if (!point) {
+      return {};
+    }
+    auto [ix1, ix2] = xover.nearest(*point);
+    // From this point on, we start working in geodetic coordinates.
+    auto geodetic_point =
+        Point(detail::math::normalize_angle(point->get<0>(), -180.0, 360.0),
+              point->get<1>());
+    if (geodetic_point.distance(Point(lon1[ix1], lat1[ix1]), strategy, wgs) >
+        predicate) {
+      return {};
+    }
+    if (geodetic_point.distance(Point(lon2[ix2], lat2[ix2]), strategy, wgs) >
+        predicate) {
+      return {};
+    }
+    return std::make_tuple(geodetic_point, std::make_tuple(ix1, ix2));
+  }
+  // The intersection is computed on the geodetic sherical plane.
+  auto xover = Crossover(LineString(lon1, lat1), LineString(lon2, lat2));
+  auto point = xover.search(wgs);
+  if (!point) {
+    return {};
+  }
+  auto nearest = xover.nearest(*point, predicate, strategy, wgs);
+  if (!nearest) {
+    return {};
+  }
+  return std::make_tuple(*point, *nearest);
 }
 
 }  // namespace pyinterp::geodetic

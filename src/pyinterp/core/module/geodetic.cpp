@@ -1660,7 +1660,61 @@ Returns:
 )__doc__");
 
   m.def("calculate_swath", &geodetic::calculate_swath<double>,
+        R"__doc__(
+Calculate the swath coordinates from the nadir coordinates.
+
+Args:
+    lon_nadir: Longitudes in degrees of the nadir points.
+    lat_nadir: Latitudes in degrees of the nadir points.
+    delta_ac: Acrosstrack distance in meters.
+    hal_gap: The gap between the nadir and the first point of the swath in
+        meters.
+    half_swath: The half swath width in meters.
+    radius: The mean radius of the earth in meters.
+
+Returns:
+    A tuple containing the longitudes and latitudes of the swath points.
+)__doc__",
         py::arg("lon_nadir"), py::arg("lat_nadir"), py::arg("delta_ac"),
         py::arg("half_gap"), py::arg("half_swath"), py::arg("radius"),
         py::call_guard<py::gil_scoped_release>());
+
+  m.def(
+      "calculate_crossover",
+      [](const Eigen::Ref<const Eigen::VectorXd> &lon1,
+         const Eigen::Ref<const Eigen::VectorXd> &lat1,
+         const Eigen::Ref<const Eigen::VectorXd> &lon2,
+         const Eigen::Ref<const Eigen::VectorXd> &lat2,
+         const std::optional<double> &predicate, const std::string &strategy,
+         const std::optional<geodetic::Spheroid> &wgs,
+         const bool cartesian_plane) {
+        return geodetic::crossover(
+            lon1, lat1, lon2, lat2, predicate.value_or(40'075'000.0),
+            parse_distance_strategy(strategy), wgs, cartesian_plane);
+      },
+      R"__doc__(
+Calculate the crossover coordinates from the nadir coordinates.
+
+Args:
+    lon1: Longitudes in degrees of the nadir points of the first line.
+    lat1: Latitudes in degrees of the nadir points of the first line.
+    lon2: Longitudes in degrees of the nadir points of the second line.
+    lat2: Latitudes in degrees of the nadir points of the second line.
+    predicate: The maximum distance allowed between the nadir points closest
+        to the crossing point.
+    strategy: The calculation method used to calculate the distance. This
+        parameter can take the values "andoyer", "thomas" or "vincenty".
+    wgs: The spheroid used to calculate the distance. Defaults to ``None``,
+        which means the WGS-84 spheroid is used.
+    cartesian_plane: If ``True``, the crossing point is calculated in the
+        cartesian plane. Defaults to ``False``.
+
+Return:
+    A tuple containing the crossover coordinates and the indices of the nearest
+    nadir points on the first and second line.
+)__doc__",
+      py::arg("lon1"), py::arg("lat1"), py::arg("lon2"), py::arg("lat2"),
+      py::arg("predicate") = std::nullopt, py::arg("strategy") = "thomas",
+      py::arg("wgs") = std::nullopt, py::arg("cartesian_plane") = true,
+      py::call_guard<py::gil_scoped_release>());
 }
