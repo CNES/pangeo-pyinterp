@@ -80,6 +80,23 @@ class Crossover {
   LineString half_orbit_2_;
 };
 
+/// Calculate the crossover between two half-orbits.
+///
+/// @param[in] lon1 Longitude, in degrees, of the first half-orbit.
+/// @param[in] lat1 Latitude, in degrees, of the first half-orbit.
+/// @param[in] lon2 Longitude, in degrees, of the second half-orbit.
+/// @param[in] lat2 Latitude, in degrees, of the second half-orbit.
+/// @param[in] predicate the maximal distance predicate, in meters, to discard
+/// the crossover point if it is too far.
+/// @param[in] strategy the distance strategy.
+/// @param[in] wgs the spheroid to use.
+/// @param[in] cartesian_plane if true, the crossing point is calculated in the
+/// Cartesian plane, otherwise in the geodesic plane. Warning, the calculation
+/// in a Cartesian plane is valid if the entry positions in the half-orbits are
+/// not too far from each other (less than 10 km).
+/// @return A tuple containing the crossover point and the indexes closest to
+/// the crossover point on both half orbits, or None if the half orbits do not
+/// intersect.
 auto crossover(const Eigen::Ref<const Eigen::VectorXd>& lon1,
                const Eigen::Ref<const Eigen::VectorXd>& lat1,
                const Eigen::Ref<const Eigen::VectorXd>& lon2,
@@ -87,4 +104,5 @@ auto crossover(const Eigen::Ref<const Eigen::VectorXd>& lon1,
                const DistanceStrategy strategy,
                const std::optional<Spheroid>& wgs, bool cartesian_plane)
     -> std::optional<std::tuple<Point, std::tuple<size_t, size_t>>>;
+
 }  // namespace pyinterp::geodetic
