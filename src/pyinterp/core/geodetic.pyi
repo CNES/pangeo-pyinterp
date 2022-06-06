@@ -635,6 +635,19 @@ class _Spheroid:
         ...
 
 
+def calculate_crossover(
+        lon1: numpy.ndarray[numpy.float64],
+        lat1: numpy.ndarray[numpy.float64],
+        lon2: numpy.ndarray[numpy.float64],
+        lat2: numpy.ndarray[numpy.float64],
+        predicate: Optional[float] = ...,
+        strategy: str = ...,
+        wgs: Optional[Spheroid] = ...,
+        cartesian_plane: bool = ...
+) -> Optional[Tuple[Point, Tuple[int, int]]]:
+    ...
+
+
 def calculate_swath(
     lon_nadir: numpy.ndarray[numpy.float64],
     lat_nadir: numpy.ndarray[numpy.float64], delta_ac: float, half_gap: float,

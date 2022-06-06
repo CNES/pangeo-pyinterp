@@ -359,6 +359,15 @@ def test_crossover():
     assert list(crossover.half_orbit_1) == list(other.half_orbit_1)
     assert list(crossover.half_orbit_2) == list(other.half_orbit_2)
 
+    for flag in (True, False):
+        crossover_properties = core.geodetic.calculate_crossover(
+            lon1, lat1, lon2, lat2, cartesian_plane=flag)
+        assert crossover_properties is not None
+        point, (ix1, ix2) = crossover_properties
+        assert (ix1, ix2) == (3, 3) if flag else (4, 3)
+        assert pytest.approx(point.lon) == 4
+        assert pytest.approx(point.lat, rel=1e-3) == 4.0018282189756835
+
 
 def test_merged_point():
     """Try to compute a crossover from overlay tracks."""
@@ -379,6 +388,10 @@ def test_merged_point():
     assert not crossover.exists()
     assert crossover.search() is None
 
+    for flag in (True, False):
+        crossover_properties = core.geodetic.calculate_crossover(
+            lon1, lat1, lon1, lat1, cartesian_plane=flag)
+
 
 def test_missing_crossover():
     """Try to calculate a crossing point when the entry passes do not cross."""
@@ -391,6 +404,11 @@ def test_missing_crossover():
                                         core.geodetic.LineString(x2, y2))
     assert isinstance(crossover, core.geodetic.Crossover)
     assert crossover.exists()
+
+    for flag in (True, False):
+        crossover_properties = core.geodetic.calculate_crossover(
+            x1, y1, x2, y2, cartesian_plane=flag)
+        assert crossover_properties is not None
 
 
 def test_case_crossover_shift():
@@ -409,6 +427,16 @@ def test_case_crossover_shift():
     assert pytest.approx(coordinates.lon) == 15
     assert pytest.approx(coordinates.lat, rel=1e-3) == 1.6551107341906504
     assert crossover.nearest(coordinates, predicate=None) == (2, 1)
+
+    for flag in (True, False):
+        crossover_properties = core.geodetic.calculate_crossover(
+            lon1, lat1, lon2, lat2, cartesian_plane=flag)
+        assert crossover_properties is not None
+        point, (ix1, ix2) = crossover_properties
+        assert (ix1, ix2) == (1, 1) if flag else (2, 1)
+        assert pytest.approx(point.lon) == 15
+        assert pytest.approx(point.lat,
+                             rel=1e-3) == (1.5 if flag else 1.6551107341906504)
 
 
 def test_bbox_from_geojson():
