@@ -389,8 +389,14 @@ def test_merged_point():
     assert crossover.search() is None
 
     for flag in (True, False):
+        with pytest.raises(RuntimeError):
+            core.geodetic.calculate_crossover(lon1,
+                                              lat1,
+                                              lon1,
+                                              lat1,
+                                              cartesian_plane=flag)
         crossover_properties = core.geodetic.calculate_crossover(
-            lon1, lat1, lon1, lat1, cartesian_plane=flag)
+            lon1, lat1, lon1 + 10, lat1 + 10, cartesian_plane=flag)
 
 
 def test_missing_crossover():
