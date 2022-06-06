@@ -1,6 +1,19 @@
 Changelog
 #########
 
+0.15.1 (6 june 2022)
+--------------------
+* Calculate crossovers in a Cartesian plane.
+* Fix a bug in the documentation.
+
+0.15.0 (5 june 2022)
+--------------------
+* Geodetic RTree
+* Added support for PyPy and Pyston.
+* Removal of NetCDF4 dependency.
+* Orbit interpolation.
+* Intersection search using WGS/Spherical coordinates.
+
 0.14.0 (12 April 2022)
 ----------------------
 * Add a Gaussian filter function to window functions.
