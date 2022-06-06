@@ -66,6 +66,10 @@ def load_aoml():
     path = ROOT.joinpath("aoml_v2019.json")
     with path.open("r") as stream:
         data = json.load(stream)
+    for item in ('ud', 'vd'):
+        data['data_vars'][item]['data'] = list(
+            map(lambda x: x if x is not None else float("nan"),
+                data['data_vars'][item]['data']))
     ds = xarray.Dataset.from_dict(data)
     ds["time"] = xarray.DataArray(_decode_datetime64(ds["time"].values),
                                   dims=["time"],
