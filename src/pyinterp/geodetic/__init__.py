@@ -8,10 +8,17 @@ import warnings
 import numpy
 
 from ..core import geodetic
-from ..core.geodetic import Crossover, LineString, RTree, coordinate_distances
+from ..core.geodetic import (
+    Crossover,
+    LineString,
+    RTree,
+    calculate_crossover,
+    coordinate_distances,
+)
 
 __all__ = [
     "Box",
+    "calculate_crossover",
     "coordinate_distances",
     "Coordinates",
     "Crossover",
