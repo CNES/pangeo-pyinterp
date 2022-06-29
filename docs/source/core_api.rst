@@ -14,6 +14,7 @@ Axis
   :toctree: generated/
 
   core.Axis
+  core.AxisInt64
   core.TemporalAxis
 
 numpy datetime utilities

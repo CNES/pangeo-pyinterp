@@ -12,6 +12,8 @@
 
 namespace py = pybind11;
 
+using AxisInt64 = pyinterp::Axis<int64_t>;
+
 template <class Axis, class Coordinates>
 auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>> &axis,
                     const std::string &name) {
@@ -202,14 +204,65 @@ Returns:
   implement_axis<Axis, const py::array_t<double>>(axis, "pyinterp.core.Axis");
 }
 
-void init_temporal_axis(py::module &m) {
-  // Required to declare the relationship between C++ classes
-  // pyinterp::TemporalAxis & pyinterp::Axis<int64_t>. pyinterp::Axis<int64_t>
-  // is used by the time grids.
-  auto base_class =
-      py::class_<pyinterp::Axis<int64_t>,
-                 std::shared_ptr<pyinterp::Axis<int64_t>>>(m, "AxisInt64");
+auto init_axis_int64(py::module &m)
+    -> py::class_<AxisInt64, std::shared_ptr<AxisInt64>> {
+  auto axis = py::class_<AxisInt64, std::shared_ptr<AxisInt64>>(m, "AxisInt64",
+                                                                R"__doc__(
+AxisInt64(self, values: numpy.ndarray[numpy.int64])
 
+A coordinate axis is a Variable that specifies one of the coordinates
+of a variable's values.
+
+Args:
+    values: Axis values.
+)__doc__");
+
+  axis.def(py::init<>(
+               [](const py::array_t<int64_t, py::array::c_style> &values) {
+                 return std::make_shared<AxisInt64>(values, 0, false);
+               }),
+           py::arg("values"))
+      .def("front", &AxisInt64::front, R"__doc__(
+Get the first value of this axis.
+
+Returns:
+    The first value.
+)__doc__")
+      .def("back", &AxisInt64::back, R"__doc__(
+Get the last value of this axis.
+
+Returns:
+    The last value.
+)__doc__")
+      .def("increment", &AxisInt64::increment, R"__doc__(
+Get increment value if is_regular().
+
+Raises:
+    RuntimeError: if this instance does not represent a regular axis.
+Returns:
+    Increment value.
+)__doc__")
+      .def("min_value", &AxisInt64::min_value, R"__doc__(
+Get the minimum coordinate value.
+
+Returns:
+    The minimum coordinate value.
+)__doc__")
+      .def("max_value", &AxisInt64::max_value, R"__doc__(
+Get the maximum coordinate value.
+
+Returns:
+    The maximum coordinate value.
+)__doc__");
+
+  implement_axis<AxisInt64, const py::array_t<int64_t>>(
+      axis, "pyinterp.core.AxisInt64");
+  return axis;
+}
+
+void init_temporal_axis(
+    py::module &m,
+    const py::class_<AxisInt64, std::shared_ptr<AxisInt64>> &base_class) {
   auto axis = py::class_<pyinterp::TemporalAxis,
                          std::shared_ptr<pyinterp::TemporalAxis>>(
       m, "TemporalAxis", base_class,
@@ -325,5 +378,5 @@ Raises:
 
 void init_axis(py::module &m) {
   init_core_axis(m);
-  init_temporal_axis(m);
+  init_temporal_axis(m, init_axis_int64(m));
 }

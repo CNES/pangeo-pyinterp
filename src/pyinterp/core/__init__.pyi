@@ -79,7 +79,6 @@ class Axis:
 
 
 class AxisBoundary:
-    __doc__: ClassVar[str] = ...  # read-only
     __members__: ClassVar[dict] = ...  # read-only
     Expand: ClassVar[AxisBoundary] = ...
     Sym: ClassVar[AxisBoundary] = ...
@@ -121,8 +120,69 @@ class AxisBoundary:
 
 
 class AxisInt64:
+    __hash__: ClassVar[None] = ...
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, values: numpy.ndarray[numpy.int64]) -> None:
+        ...
+
+    def back(self) -> int:
+        ...
+
+    def find_index(self,
+                   coordinates: numpy.ndarray[numpy.int64],
+                   bounded: bool = ...) -> numpy.ndarray[numpy.int64]:
+        ...
+
+    def find_indexes(
+            self, coordinates: numpy.ndarray[numpy.int64]
+    ) -> numpy.ndarray[numpy.int64]:
+        ...
+
+    def flip(self, inplace: bool = ...) -> AxisInt64:
+        ...
+
+    def front(self) -> int:
+        ...
+
+    def increment(self) -> int:
+        ...
+
+    def is_ascending(self) -> bool:
+        ...
+
+    def is_regular(self) -> bool:
+        ...
+
+    def max_value(self) -> int:
+        ...
+
+    def min_value(self) -> int:
+        ...
+
+    def __copy__(self) -> AxisInt64:
+        ...
+
+    def __eq__(self, other: AxisInt64) -> bool:
+        ...
+
+    @overload
+    def __getitem__(self, index: int) -> int:
+        ...
+
+    @overload
+    def __getitem__(self, indices: slice) -> numpy.ndarray[numpy.int64]:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __ne__(self, other: AxisInt64) -> bool:
+        ...
+
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -191,7 +251,7 @@ class Binning2DFloat32:
     def __init__(self,
                  x: Axis,
                  y: Axis,
-                 wgs: Optional[geodetic.System] = ...) -> None:
+                 wgs: Optional[geodetic.Spheroid] = ...) -> None:
         ...
 
     def clear(self) -> None:
@@ -244,7 +304,7 @@ class Binning2DFloat32:
         ...
 
     @property
-    def wgs(self) -> Optional[geodetic.System]:
+    def wgs(self) -> Optional[geodetic.Spheroid]:
         ...
 
     @property
@@ -261,7 +321,7 @@ class Binning2DFloat64:
     def __init__(self,
                  x: Axis,
                  y: Axis,
-                 wgs: Optional[geodetic.System] = ...) -> None:
+                 wgs: Optional[geodetic.Spheroid] = ...) -> None:
         ...
 
     def clear(self) -> None:
@@ -314,7 +374,7 @@ class Binning2DFloat64:
         ...
 
     @property
-    def wgs(self) -> Optional[geodetic.System]:
+    def wgs(self) -> Optional[geodetic.Spheroid]:
         ...
 
     @property
@@ -456,7 +516,7 @@ class GeoHash:
                  precision: int = ...) -> None:
         ...
 
-    def area(self, wgs: Optional[geodetic.System] = ...) -> float:
+    def area(self, wgs: Optional[geodetic.Spheroid] = ...) -> float:
         ...
 
     def bounding_box(self) -> geodetic.Box:
@@ -930,7 +990,7 @@ class Nearest3D(BivariateInterpolator3D):
 
 class RTree3DFloat32:
 
-    def __init__(self, system: Optional[geodetic.System] = ...) -> None:
+    def __init__(self, spheroid: Optional[geodetic.Spheroid] = ...) -> None:
         ...
 
     def bounds(self) -> tuple:
@@ -1002,7 +1062,7 @@ class RTree3DFloat32:
 
 class RTree3DFloat64:
 
-    def __init__(self, system: Optional[geodetic.System] = ...) -> None:
+    def __init__(self, spheroid: Optional[geodetic.Spheroid] = ...) -> None:
         ...
 
     def bounds(self) -> tuple:
@@ -1073,7 +1133,6 @@ class RTree3DFloat64:
 
 
 class RadialBasisFunction:
-    __doc__: ClassVar[str] = ...  # read-only
     __members__: ClassVar[dict] = ...  # read-only
     Cubic: ClassVar[RadialBasisFunction] = ...
     Gaussian: ClassVar[RadialBasisFunction] = ...
@@ -1545,7 +1604,6 @@ class TemporalNearest3D(TemporalBivariateInterpolator3D):
 
 
 class WindowFunction:
-    __doc__: ClassVar[str] = ...  # read-only
     __members__: ClassVar[dict] = ...  # read-only
     Blackman: ClassVar[WindowFunction] = ...
     BlackmanHarris: ClassVar[WindowFunction] = ...

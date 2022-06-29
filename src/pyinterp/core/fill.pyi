@@ -12,7 +12,6 @@ from . import (
 )
 
 class FirstGuess:
-    __doc__: ClassVar[str] = ...  # read-only
     __members__: ClassVar[dict] = ...  # read-only
     Zero: ClassVar[FirstGuess] = ...
     ZonalAverage: ClassVar[FirstGuess] = ...
@@ -52,7 +51,6 @@ class FirstGuess:
 
 
 class ValueType:
-    __doc__: ClassVar[str] = ...  # read-only
     __members__: ClassVar[dict] = ...  # read-only
     All: ClassVar[ValueType] = ...
     Defined: ClassVar[ValueType] = ...

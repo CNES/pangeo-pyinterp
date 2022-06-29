@@ -12,6 +12,7 @@ Geographic indexers
   :toctree: generated/
 
   Axis
+  AxisInt64
   RTree
   TemporalAxis
 

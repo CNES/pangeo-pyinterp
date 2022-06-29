@@ -26,10 +26,10 @@ class Box:
     def __init__(self, min_corner: Point, max_corner: Point) -> None:
         ...
 
-    def area(self, wgs: Optional[Spheroid] = ...) -> float:
+    def area(self, wgs: Optional[Spheroid] = None) -> float:
         ...
 
-    def as_polygon(self, *args, **kwargs) -> Any:
+    def as_polygon(self) -> Polygon:
         ...
 
     def centroid(self) -> Point:
@@ -90,7 +90,7 @@ class Box:
 
 class Coordinates:
 
-    def __init__(self, system: Optional[Spheroid] = None) -> None:
+    def __init__(self, spheroid: Optional[Spheroid] = None) -> None:
         ...
 
     def ecef_to_lla(self,
@@ -139,7 +139,7 @@ class Crossover:
                 point: Point,
                 predicate: Optional[float] = ...,
                 strategy: str = ...,
-                wgs: Optional[Spheroid] = ...) -> Optional[Tuple[int, int]]:
+                wgs: Optional[Spheroid] = None) -> Optional[Tuple[int, int]]:
         ...
 
     def search(self, wgs: Optional[Spheroid] = None) -> Optional[Point]:
@@ -376,7 +376,7 @@ class Point:
     def distance(self,
                  other: Point,
                  strategy: str = ...,
-                 wgs: Optional[Spheroid] = ...) -> float:
+                 wgs: Optional[Spheroid] = None) -> float:
         ...
 
     @staticmethod
@@ -411,7 +411,7 @@ class Polygon:
     def __init__(self, outer: list, inners: Optional[list] = ...) -> None:
         ...
 
-    def area(self, wgs: Optional[Spheroid] = ...) -> float:
+    def area(self, wgs: Optional[Spheroid] = None) -> float:
         ...
 
     @overload
@@ -440,7 +440,7 @@ class Polygon:
     def from_geojson(array: List[List[List[float]]]) -> Polygon:
         ...
 
-    def intersection(self, *args, **kwargs) -> Any:
+    def intersection(self, other: Polygon) -> MultiPolygon:
         ...
 
     def intersects(self, other: Polygon) -> bool:
@@ -459,7 +459,7 @@ class Polygon:
     def touches(self, other: Polygon) -> bool:
         ...
 
-    def union(self, *args, **kwargs) -> Any:
+    def union(self, other: Polygon) -> MultiPolygon:
         ...
 
     def wkt(self) -> str:
@@ -491,7 +491,7 @@ class Polygon:
 
 class RTree:
 
-    def __init__(self, spheroid: Optional[Spheroid] = ...) -> None:
+    def __init__(self, spheroid: Optional[Spheroid] = None) -> None:
         ...
 
     def clear(self) -> None:
@@ -642,7 +642,7 @@ def calculate_crossover(
         lat2: numpy.ndarray[numpy.float64],
         predicate: Optional[float] = ...,
         strategy: str = ...,
-        wgs: Optional[Spheroid] = ...,
+        wgs: Optional[Spheroid] = None,
         cartesian_plane: bool = ...
 ) -> Optional[Tuple[Point, Tuple[int, int]]]:
     ...
@@ -662,7 +662,7 @@ def coordinate_distances(
         lon2: numpy.ndarray[numpy.float64],
         lat2: numpy.ndarray[numpy.float64],
         strategy: str = ...,
-        wgs: Optional[Spheroid] = ...,
+        wgs: Optional[Spheroid] = None,
         num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
     ...
 
