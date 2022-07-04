@@ -20,7 +20,7 @@ inline auto has_bmi2() noexcept -> bool {
   auto registers = std::array<int, 4>();
   __cpuidex(registers.data(), 7, 0);
   return (registers[1] & (1U << 8U)) != 0;
-#else
+#elif defined(__x86_64__)
   uint32_t ebx;
   asm("movl $7, %%eax;"
       "movl $0, %%ecx;"
@@ -30,6 +30,8 @@ inline auto has_bmi2() noexcept -> bool {
       :
       : "eax", "ecx", "ebx");
   return (ebx & (1U << 8U)) != 0;
+#else
+  return false;
 #endif
 }
 
@@ -97,7 +99,7 @@ inline auto shrq(const double x) -> uint64_t {
   uint64_t result;
 #ifdef _WIN32
   result = _mm_cvtsi128_si64(_mm_castpd_si128(_mm_loaddup_pd(&x))) >> 20U;
-#else
+#elif defined(__x86_64__)
   asm("movd %1, %%xmm0;"
       "movq %%xmm0, %%r8;"
       "shrq $20, %%r8;"
@@ -105,6 +107,8 @@ inline auto shrq(const double x) -> uint64_t {
       : "=r"(result)
       : "r"(x)
       : "r8", "xmm0");
+#else
+  throw std::runtime_error("shrq not implemented");
 #endif
   return result;
 }
@@ -116,7 +120,7 @@ inline auto pdepq(const uint64_t x, const uint64_t mask) -> uint64_t {
   uint64_t result;
 #ifdef _WIN32
   result = _pdep_u64(x, mask);
-#else
+#elif defined(__x86_64__)
   asm("movq %1, %%r9;"
       "movq %2, %%r8;"
       "pdepq %%r9, %%r8, %%r10;"
@@ -124,6 +128,8 @@ inline auto pdepq(const uint64_t x, const uint64_t mask) -> uint64_t {
       : "=r"(result)
       : "r"(mask), "r"(x)
       : "r8", "r9", "r10");
+#else
+  throw std::runtime_error("pdepq not implemented");
 #endif
   return result;
 }
@@ -135,7 +141,7 @@ inline auto pextq(const uint64_t x, const uint64_t mask) -> uint64_t {
   uint64_t result;
 #ifdef _WIN32
   result = _pext_u64(x, mask);
-#else
+#elif defined(__x86_64__)
   asm("movq %1, %%r9;"
       "movq %2, %%r8;"
       "pextq %%r9, %%r8, %%r10;"
@@ -143,6 +149,8 @@ inline auto pextq(const uint64_t x, const uint64_t mask) -> uint64_t {
       : "=r"(result)
       : "r"(mask), "r"(x)
       : "r8", "r9", "r10");
+#else
+  throw std::runtime_error("pextq not implemented");
 #endif
   return result;
 }
