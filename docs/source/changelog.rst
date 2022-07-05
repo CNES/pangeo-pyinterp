@@ -1,12 +1,18 @@
 Changelog
 #########
 
-0.15.1 (6 june 2022)
+0.15.2 (5 July 2022)
+--------------------
+* Disable assembly code on OSX/ARM64.
+* Publish AxisInt64.
+* Crossover point calculation is not accessible.
+
+0.15.1 (6 June 2022)
 --------------------
 * Calculate crossovers in a Cartesian plane.
 * Fix a bug in the documentation.
 
-0.15.0 (5 june 2022)
+0.15.0 (5 June 2022)
 --------------------
 * Geodetic RTree
 * Added support for PyPy and Pyston.
