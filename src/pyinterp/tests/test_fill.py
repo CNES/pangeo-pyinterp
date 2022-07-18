@@ -5,7 +5,10 @@
 import numpy as np
 import pytest
 
-from . import load_grid2d
+from pyinterp.core import TemporalAxis
+from pyinterp.grid import Grid4D
+
+from . import load_grid2d, load_grid4d
 from .. import Axis, Grid2D, Grid3D, fill
 
 
@@ -81,3 +84,16 @@ def test_gauss_seidel_3d():
     grid = load_data(True)
     _, filled0 = fill.gauss_seidel(grid, num_threads=0)
     assert (filled0[:, :, 0] - filled0[:, :, 1]).mean() == 0
+
+
+def test_loess_4d():
+    variable = load_grid4d().pressure
+    variable = variable.transpose("longitude", "latitude", "time", "level")
+    x_axis = Axis(variable["longitude"].values, is_circle=True)
+    y_axis = Axis(variable["latitude"].values)
+    z_axis = TemporalAxis(variable["time"].values)
+    u_axis = Axis(variable["level"].values)
+
+    grid = Grid4D(x_axis, y_axis, z_axis, u_axis, variable.values)
+    filled = fill.loess(grid, num_threads=0)
+    assert np.nanmean(filled - grid.array) == 0

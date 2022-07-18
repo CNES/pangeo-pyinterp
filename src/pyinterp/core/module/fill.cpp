@@ -10,6 +10,18 @@
 
 namespace py = pybind11;
 
+template <class T>
+using Grid3D = pyinterp::Grid3D<T, double>;
+
+template <class T>
+using Grid4D = pyinterp::Grid4D<T, double>;
+
+template <class T>
+using TemporalGrid3D = pyinterp::Grid3D<T, int64_t>;
+
+template <class T>
+using TemporalGrid4D = pyinterp::Grid4D<T, int64_t>;
+
 template <typename Type>
 void implement_fill_functions(py::module &m, const std::string &suffix) {
   auto function_suffix = suffix;
@@ -67,18 +79,23 @@ Returns:
         py::call_guard<py::gil_scoped_release>());
 }
 
-template <typename Type, typename AxisType>
-void implement_loess_3d(py::module &m, const std::string &prefix,
-                        const std::string &suffix) {
+template <typename Type, typename AxisType, typename GridType>
+void implement_loess(py::module &m, const std::string &prefix,
+                     const std::string &suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
-  m.def(("loess_" + function_suffix).c_str(),
-        &pyinterp::fill::loess<Type, AxisType>, py::arg("grid"),
-        py::arg("nx") = 3, py::arg("ny") = 3,
-        py::arg("value_type") = pyinterp::fill::kUndefined,
-        py::arg("num_threads") = 0,
-        R"__doc__(
+  m.def(
+      ("loess_" + function_suffix).c_str(),
+      [](const GridType &grid, const uint32_t nx, const uint32_t ny,
+         const pyinterp::fill::ValueType value_type, const size_t num_threads) {
+        return pyinterp::fill::loess<Type, AxisType>(grid, nx, ny, value_type,
+                                                     num_threads);
+      },
+      py::arg("grid"), py::arg("nx") = 3, py::arg("ny") = 3,
+      py::arg("value_type") = pyinterp::fill::kUndefined,
+      py::arg("num_threads") = 0,
+      R"__doc__(
 Fills undefined values using a locally weighted regression function or
 LOESS. The weight function used for LOESS is the tri-cube weight function,
 :math:`w(x)=(1-|d|^3)^3`.
@@ -102,8 +119,18 @@ Returns:
 void init_fill(py::module &m) {
   implement_fill_functions<double>(m, "Float64");
   implement_fill_functions<float>(m, "Float32");
-  implement_loess_3d<double, double>(m, "", "Float64");
-  implement_loess_3d<double, int64_t>(m, "Temporal", "Float64");
-  implement_loess_3d<float, double>(m, "", "Float32");
-  implement_loess_3d<float, int64_t>(m, "Temporal", "Float32");
+
+  implement_loess<double, double, Grid3D<double>>(m, "", "Float64");
+  implement_loess<float, double, Grid3D<float>>(m, "", "Float32");
+  implement_loess<double, int64_t, TemporalGrid3D<double>>(m, "Temporal",
+                                                           "Float64");
+  implement_loess<float, int64_t, TemporalGrid3D<float>>(m, "Temporal",
+                                                         "Float32");
+
+  implement_loess<double, double, Grid4D<double>>(m, "", "Float64");
+  implement_loess<float, double, Grid4D<float>>(m, "", "Float32");
+  implement_loess<double, int64_t, TemporalGrid4D<double>>(m, "Temporal",
+                                                           "Float64");
+  implement_loess<float, int64_t, TemporalGrid4D<float>>(m, "Temporal",
+                                                         "Float32");
 }
