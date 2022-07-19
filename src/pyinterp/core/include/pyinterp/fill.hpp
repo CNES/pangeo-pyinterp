@@ -441,6 +441,61 @@ auto loess(const Grid2D<Type> &grid, const uint32_t nx, const uint32_t ny,
   return result;
 }
 
+template <typename Type, typename GridType, typename... Index>
+auto loess_(const GridType &grid, const uint32_t nx, const uint32_t ny,
+            const ValueType value_type, const Axis<double> &x_axis,
+            const Axis<double> &y_axis, const std::vector<int64_t> &x_frame,
+            std::vector<int64_t> &y_frame, const double x0, const double x,
+            const int64_t ix, const int64_t iy, Index &&...index) -> Type {
+  auto z = grid.value(ix, iy, index...);
+
+  // If the current value is masked.
+  const auto undefined = std::isnan(z);
+  if (value_type == kAll || (value_type == kDefined && !undefined) ||
+      (value_type == kUndefined && undefined)) {
+    auto y = y_axis(iy);
+
+    // We retrieve the indexes framing the current value.
+    frame_index(iy, y_axis.size(), false, y_frame);
+
+    // Initialization of values to calculate the extrapolated
+    // value.
+    auto value = Type(0);
+    auto weight = Type(0);
+
+    // For all the coordinates of the frame.
+    for (auto wx : x_frame) {
+      auto xi = x_axis(wx);
+
+      // We normalize the window's coordinates to its first value.
+      if (x_axis.is_angle()) {
+        xi = detail::math::normalize_angle(xi, x0, 360.0);
+      }
+
+      for (auto wy : y_frame) {
+        auto zi = grid.value(wx, wy, index...);
+
+        // If the value is not masked, its weight is calculated
+        // from the tri-cube weight function
+        if (!std::isnan(zi)) {
+          const auto power = 3.0;
+          auto d = std::sqrt(detail::math::sqr(((xi - x)) / nx) +
+                             detail::math::sqr(((y_axis(wy) - y)) / ny));
+          auto wi = d <= 1 ? std::pow((1.0 - std::pow(d, power)), power) : 0.0;
+          value += static_cast<Type>(wi * zi);
+          weight += static_cast<Type>(wi);
+        }
+      }
+    }
+    // Finally, we calculate the extrapolated value if possible,
+    // otherwise we will recopy the masked original value.
+    if (weight != 0) {
+      z = value / weight;
+    }
+  }
+  return z;
+}
+
 template <typename Type, typename AxisType>
 auto loess(const Grid3D<Type, AxisType> &grid, const uint32_t nx,
            const uint32_t ny, const ValueType value_type,
@@ -479,57 +534,9 @@ auto loess(const Grid3D<Type, AxisType> &grid, const uint32_t nx,
           }
 
           for (int64_t iy = 0; iy < y_axis.size(); ++iy) {
-            auto z = grid.value(ix, iy, iz);
-
-            // If the current value is masked.
-            const auto undefined = std::isnan(z);
-            if (value_type == kAll || (value_type == kDefined && !undefined) ||
-                (value_type == kUndefined && undefined)) {
-              auto y = y_axis(iy);
-
-              // We retrieve the indexes framing the current value.
-              frame_index(iy, y_axis.size(), false, y_frame);
-
-              // Initialization of values to calculate the extrapolated
-              // value.
-              auto value = Type(0);
-              auto weight = Type(0);
-
-              // For all the coordinates of the frame.
-              for (auto wx : x_frame) {
-                auto xi = x_axis(wx);
-
-                // We normalize the window's coordinates to its first value.
-                if (x_axis.is_angle()) {
-                  xi = detail::math::normalize_angle(xi, x0, 360.0);
-                }
-
-                for (auto wy : y_frame) {
-                  auto zi = grid.value(wx, wy, iz);
-
-                  // If the value is not masked, its weight is calculated
-                  // from the tri-cube weight function
-                  if (!std::isnan(zi)) {
-                    const auto power = 3.0;
-                    auto d =
-                        std::sqrt(detail::math::sqr(((xi - x)) / nx) +
-                                  detail::math::sqr(((y_axis(wy) - y)) / ny));
-                    auto wi = d <= 1
-                                  ? std::pow((1.0 - std::pow(d, power)), power)
-                                  : 0.0;
-                    value += static_cast<Type>(wi * zi);
-                    weight += static_cast<Type>(wi);
-                  }
-                }
-              }
-
-              // Finally, we calculate the extrapolated value if possible,
-              // otherwise we will recopy the masked original value.
-              if (weight != 0) {
-                z = value / weight;
-              }
-            }
-            _result(ix, iy, iz) = z;
+            _result(ix, iy, iz) = loess_<Type, Grid3D<Type, AxisType>>(
+                grid, nx, ny, value_type, x_axis, y_axis, x_frame, y_frame, x0,
+                x, ix, iy, iz);
           }
         }
       }
@@ -585,57 +592,9 @@ auto loess(const Grid4D<Type, AxisType> &grid, const uint32_t nx,
 
           for (int64_t iy = 0; iy < y_axis.size(); ++iy) {
             for (int64_t iz = 0; iz < z_axis.size(); ++iz) {
-              auto z = grid.value(ix, iy, iz, iu);
-
-              // If the current value is masked.
-              const auto undefined = std::isnan(z);
-              if (value_type == kAll ||
-                  (value_type == kDefined && !undefined) ||
-                  (value_type == kUndefined && undefined)) {
-                auto y = y_axis(iy);
-
-                // We retrieve the indexes framing the current value.
-                frame_index(iy, y_axis.size(), false, y_frame);
-
-                // Initialization of values to calculate the extrapolated
-                // value.
-                auto value = Type(0);
-                auto weight = Type(0);
-
-                // For all the coordinates of the frame.
-                for (auto wx : x_frame) {
-                  auto xi = x_axis(wx);
-
-                  // We normalize the window's coordinates to its first value.
-                  if (x_axis.is_angle()) {
-                    xi = detail::math::normalize_angle(xi, x0, 360.0);
-                  }
-
-                  for (auto wy : y_frame) {
-                    auto zi = grid.value(wx, wy, iz, iu);
-
-                    // If the value is not masked, its weight is calculated
-                    // from the tri-cube weight function
-                    if (!std::isnan(zi)) {
-                      const auto power = 3.0;
-                      auto d =
-                          std::sqrt(detail::math::sqr(((xi - x)) / nx) +
-                                    detail::math::sqr(((y_axis(wy) - y)) / ny));
-                      auto wi =
-                          d <= 1 ? std::pow((1.0 - std::pow(d, power)), power)
-                                 : 0.0;
-                      value += static_cast<Type>(wi * zi);
-                      weight += static_cast<Type>(wi);
-                    }
-                  }
-                }
-                // Finally, we calculate the extrapolated value if possible,
-                // otherwise we will recopy the masked original value.
-                if (weight != 0) {
-                  z = value / weight;
-                }
-              }
-              _result(ix, iy, iz, iu) = z;
+              _result(ix, iy, iz, iu) = loess_<Type, Grid4D<Type, AxisType>>(
+                  grid, nx, ny, value_type, x_axis, y_axis, x_frame, y_frame,
+                  x0, x, ix, iy, iz, iu);
             }
           }
         }
