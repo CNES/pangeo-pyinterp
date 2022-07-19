@@ -340,14 +340,21 @@ class Axis {
       throw std::invalid_argument("The size must not be zero.");
     }
 
-    // Axis size
-    auto len = this->size();
-
     // Searches the initial indexes and populate the result
     auto indexes = find_indexes(coordinate);
     if (!indexes) {
+      // If it's not possible to frame the requested coordinate, we check if the
+      // given axis is a singleton. In this case, the result is defined as long
+      // as the requested coordinate is equal to the value stored in the axis.
+      if (size == 1 && coordinate == (*this)(0)) {
+        return std::vector<int64_t>(size << 1U, 0);
+      }
       return {};
     }
+
+    // Axis size
+    auto len = this->size();
+
     auto result = std::vector<int64_t>(size << 1U);
     std::tie(result[size - 1], result[size]) = *indexes;
 
