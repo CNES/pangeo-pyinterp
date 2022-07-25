@@ -97,9 +97,9 @@ jobs:
       python setup.py test
     displayName: Test cases
 - job:
-  displayName: macOS-10.15
+  displayName: macOS-12
   pool:
-    vmImage: 'macOS-10.15'
+    vmImage: 'macOS-12'
   strategy:
     matrix:
       Python37:
