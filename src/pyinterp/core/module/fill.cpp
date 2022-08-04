@@ -55,7 +55,7 @@ Returns:
         py::arg("first_guess") = pyinterp::fill::kZonalAverage,
         py::arg("is_circle") = true, py::arg("max_iterations") = 2000,
         py::arg("epsilon") = 1e-4, py::arg("relaxation") = 1.0,
-        py::arg("num_thread") = 0,
+        py::arg("num_threads") = 0,
         R"__doc__(
 Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
 method by relaxation.

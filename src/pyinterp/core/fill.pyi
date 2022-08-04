@@ -102,7 +102,7 @@ def gauss_seidel_float32(grid: numpy.ndarray[numpy.float32],
                          max_iterations: int = ...,
                          epsilon: float = ...,
                          relaxation: float = ...,
-                         num_thread: int = ...) -> Tuple[int, float]:
+                         num_threads: int = ...) -> Tuple[int, float]:
     ...
 
 
@@ -112,7 +112,7 @@ def gauss_seidel_float64(grid: numpy.ndarray[numpy.float64],
                          max_iterations: int = ...,
                          epsilon: float = ...,
                          relaxation: float = ...,
-                         num_thread: int = ...) -> Tuple[int, float]:
+                         num_threads: int = ...) -> Tuple[int, float]:
     ...
 
 
