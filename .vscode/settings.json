@@ -118,15 +118,17 @@
         "regex": "cpp",
         "numbers": "cpp",
         "semaphore": "cpp",
-        "__bits": "cpp"
+        "__bits": "cpp",
+        "shared_mutex": "cpp",
+        "*.inc": "cpp",
+        "version": "cpp",
+        "geometry": "cpp"
     },
     "python.testing.pytestArgs": [
         "."
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false,
     "python.testing.pytestEnabled": true,
-    "restructuredtext.languageServer.disabled": true,
     "python.formatting.provider": "yapf",
     "cmake.configureOnOpen": false
 }
