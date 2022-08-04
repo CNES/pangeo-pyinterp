@@ -9,7 +9,6 @@
 
 #include <Eigen/Core>
 #include <algorithm>
-#include <atomic>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
@@ -91,9 +90,6 @@ template <typename Type>
 auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>> &grid,
                   Matrix<bool> &mask, const bool is_circle,
                   const Type relaxation, const size_t num_threads) -> Type {
-  // Maximum residual values for each thread.
-  std::vector<Type> max_residuals(num_threads);
-
   // Shape of the grid
   auto x_size = grid.rows();
   auto y_size = grid.cols();
@@ -102,66 +98,51 @@ auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>> &grid,
   // (only the last exception captured is kept)
   auto except = std::exception_ptr(nullptr);
 
-  // Gets the index of the pixel (ix, iy) in the matrix.
-  auto coordinates = [](const int64_t ix, const int64_t iy,
-                        const int64_t size) -> int64_t {
-    return iy * size + ix;
-  };
-
-  // Thread worker responsible for processing several strips along the y-axis
-  // of the grid.
+  // Thread worker responsible for processing red or black cells.
   //
   // @param y_start First index y of the band to be processed.
   // @param y_end Last index y, excluded, of the band to be processed.
+  // @param red_black Whether the band is red or black.
   // @param max_residual Maximum residual of this strip.
-  // @param pipe_out Last index to be processed on in this band.
-  // @param pipe_in Last index processed in the previous band.
-  auto worker = [&](int64_t y_start, int64_t y_end, Type *max_residual,
-                    std::atomic<int64_t> *pipe_out,
-                    std::atomic<int64_t> *pipe_in) -> void {
-    // Modifies the value of a masked pixel.
+  auto worker = [&](const int64_t y_start, const int64_t y_end,
+                    const int red_black, Type *max_residual) -> void {
+    // Update the cell grid[ix, iy] using the Gauss-Seidel method.
+    //
+    // @param ix0 ix - 1
+    // @param ix Index of the pixel to be modified.
+    // @param ix1 ix + 1
+    // @param iy0 iy - 1
+    // @param iy Index of the pixel to be modified.
+    // @param iy1 iy + 1
     auto cell_fill = [&grid, &relaxation, &max_residual](
-                         int64_t ix0, int64_t ix, int64_t ix1, int64_t iy0,
-                         int64_t iy, int64_t iy1) {
+                         const int64_t ix0, const int64_t ix, const int64_t ix1,
+                         const int64_t iy0, const int64_t iy,
+                         const int64_t iy1) {
+      auto &cell = grid(ix, iy);
       auto residual = (Type(0.25) * (grid(ix0, iy) + grid(ix1, iy) +
                                      grid(ix, iy0) + grid(ix, iy1)) -
-                       grid(ix, iy)) *
+                       cell) *
                       relaxation;
-      grid(ix, iy) += residual;
+      cell += residual;
       *max_residual = std::max(*max_residual, std::fabs(residual));
     };
 
-    // Initialization of the maximum value of the residuals of the treated
-    // strips.
+    // Initialization of the maximum value of the residuals of the processed
+    // thread.
     *max_residual = Type(0);
 
     try {
       for (auto ix = 0; ix < x_size; ++ix) {
-        //
         auto ix0 = ix == 0 ? (is_circle ? x_size - 1 : 1) : ix - 1;
         auto ix1 = ix == x_size - 1 ? (is_circle ? 0 : x_size - 2) : ix + 1;
 
-        // If necessary, check that the last index required for this block has
-        // been processed in the previous band.
-        if (pipe_in) {
-          auto next_coordinates = coordinates(ix, y_start, y_size);
-          while (*pipe_in < next_coordinates) {
-            std::this_thread::sleep_for(std::chrono::nanoseconds(5));
-          }
-        }
-
         for (auto iy = y_start; iy < y_end; ++iy) {
-          auto iy0 = iy == 0 ? 1 : iy - 1;
-          auto iy1 = iy == y_size - 1 ? y_size - 2 : iy + 1;
-          if (mask(ix, iy)) {
+          if (mask(ix, iy) && ((ix + iy) % 2) == red_black) {
+            auto iy0 = iy == 0 ? 1 : iy - 1;
+            auto iy1 = iy == y_size - 1 ? y_size - 2 : iy + 1;
+
             cell_fill(ix0, ix, ix1, iy0, iy, iy1);
           }
-        }
-
-        // If necessary, the other thread responsible for processing the next
-        // band is notified.
-        if (pipe_out) {
-          *pipe_out = coordinates(ix, y_end, y_size);
         }
       }
     } catch (...) {
@@ -170,36 +151,51 @@ auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>> &grid,
   };
 
   if (num_threads == 1) {
-    worker(0, y_size, &max_residuals[0], nullptr, nullptr);
-  } else {
-    assert(num_threads >= 2);
-    std::vector<std::atomic<int64_t>> pipeline(num_threads);
-    std::vector<std::thread> threads;
+    // Single thread processing.
+    //
+    // @param red_black Whether the band is red or black.
+    // @return Maximum residual of this strip.
+    auto calculate = [&](int red_black) -> Type {
+      auto max_residual = Type(0);
+      worker(0, y_size, red_black, &max_residual);
+      if (except != nullptr) {
+        std::rethrow_exception(except);
+      }
+      return max_residual;
+    };
+    return std::max(calculate(0), calculate(1));
+  }
 
+  // Launches the threads for a red or black band.
+  //
+  // @param red_black Whether the band is red or black.
+  // @return The maximum residual of the processed band.
+  auto calculate = [&](const int red_black) -> Type {
     int64_t start = 0;
     int64_t shift = y_size / num_threads;
 
-    for (auto &item : pipeline) {
-      item = std::numeric_limits<int>::min();
-    }
+    // Handled threads
+    std::vector<std::thread> threads;
+
+    // Maximum residual values for each thread.
+    std::vector<Type> max_residuals(num_threads);
 
     for (size_t index = 0; index < num_threads - 1; ++index) {
-      threads.emplace_back(std::thread(
-          worker, start, start + shift, &max_residuals[index], &pipeline[index],
-          index == 0 ? nullptr : &pipeline[index - 1]));
+      threads.emplace_back(std::thread(worker, start, start + shift, red_black,
+                                       &max_residuals[index]));
       start += shift;
     }
-    threads.emplace_back(std::thread(worker, start, y_size,
-                                     &max_residuals[num_threads - 1], nullptr,
-                                     &pipeline[num_threads - 2]));
+    threads.emplace_back(std::thread(worker, start, y_size, red_black,
+                                     &max_residuals[num_threads - 1]));
     for (auto &&item : threads) {
       item.join();
     }
-  }
-  if (except != nullptr) {
-    std::rethrow_exception(except);
-  }
-  return *std::max_element(max_residuals.begin(), max_residuals.end());
+    if (except != nullptr) {
+      std::rethrow_exception(except);
+    }
+    return *std::max_element(max_residuals.begin(), max_residuals.end());
+  };
+  return std::max(calculate(0), calculate(1));
 }
 
 }  // namespace detail
