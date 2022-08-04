@@ -1,6 +1,13 @@
 Changelog
 #########
 
+0.16.0 (4 August 2022)
+----------------------
+* Using Red-Black Gauss-Seidel.
+* Refactor loess functions for 3D/4D grids.
+* Bicubic interpolation failed on singleton axis (#11)
+* Fill Grid4D with Loess filter (#10)
+
 0.15.2 (5 July 2022)
 --------------------
 * Disable assembly code on OSX/ARM64.
