@@ -24,7 +24,7 @@ def load_test_ephemeris(
         A tuple containing the height of the orbit, the ephemeris and the
         duration of the cycle.
     """
-    with open(filename, 'r') as stream:
+    with open(filename) as stream:
         lines = stream.readlines()
 
     def to_dict(comments) -> Dict[str, float]:

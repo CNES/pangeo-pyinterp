@@ -11,7 +11,7 @@ from ... import GeoHash, geodetic, geohash
 
 
 def test_neighbors():
-    with open(geohash_neighbors_path(), 'r') as stream:
+    with open(geohash_neighbors_path()) as stream:
         cases = json.load(stream)
 
     for (lat, lon, hash_int, bits, hash_int_neighbors, hash_str,

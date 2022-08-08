@@ -110,8 +110,8 @@ def main():
                     target.append(path)
 
     # Compiler options
-    options = '-std=c++17 ' + ' '.join(
-        (f'-I{item}' for item in includes)) + sysroot
+    options = '-std=c++17 ' + ' '.join(f'-I{item}'
+                                       for item in includes) + sysroot
 
     # Stream used to write in the logbook
     stream = sys.stderr if args.log is None else args.log

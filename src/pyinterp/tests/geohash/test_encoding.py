@@ -12,7 +12,7 @@ from ... import GeoHash, geohash
 
 
 def test_encoding_decoding():
-    with open(geohash_path(), 'r') as stream:
+    with open(geohash_path()) as stream:
         cases = json.load(stream)
     lon = numpy.array([item[3] for item in cases])
     lat = numpy.array([item[2] for item in cases])

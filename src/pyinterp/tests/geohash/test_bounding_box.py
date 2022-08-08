@@ -9,7 +9,7 @@ from ... import GeoHash, geodetic
 
 
 def test_bbox():
-    with open(geohash_bbox_path(), 'r') as stream:
+    with open(geohash_bbox_path()) as stream:
         cases = json.load(stream)
     for hash_str, (min_lat, max_lat, min_lng, max_lng) in cases:
         point = GeoHash.from_string(hash_str).center()

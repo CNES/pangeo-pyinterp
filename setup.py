@@ -60,7 +60,7 @@ def execute(cmd) -> str:
 
 def update_meta(path, version) -> None:
     """Updating the version number description in conda/meta.yaml."""
-    with open(path, 'r', encoding='utf-8') as stream:
+    with open(path, encoding='utf-8') as stream:
         lines = stream.readlines()
     pattern = re.compile(r'{% set version = ".*" %}')
 
@@ -75,7 +75,7 @@ def update_meta(path, version) -> None:
 
 def update_environment(path, version) -> None:
     """Updating the version number description in conda environment."""
-    with open(path, 'r', encoding='utf-8') as stream:
+    with open(path, encoding='utf-8') as stream:
         lines = stream.readlines()
     pattern = re.compile(r'(\s+-\s+pyinterp)\s*>=\s*(.+)')
 
@@ -97,7 +97,7 @@ def revision() -> str:
     # development environment, otherwise it's a release.
     if not pathlib.Path(WORKING_DIRECTORY, '.git').exists():
         pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
-        with open(module, 'r', encoding='utf-8') as stream:
+        with open(module, encoding='utf-8') as stream:
             for line in stream:
                 match = pattern.search(line)
                 if match:
@@ -139,7 +139,7 @@ def revision() -> str:
 
     # Updating the version number description for sphinx
     conf = pathlib.Path(WORKING_DIRECTORY, 'docs', 'source', 'conf.py')
-    with open(conf, 'r', encoding='utf-8') as stream:
+    with open(conf, encoding='utf-8') as stream:
         lines = stream.readlines()
     pattern = re.compile(r'(\w+)\s+=\s+(.*)')
 
@@ -565,7 +565,6 @@ def main():
             'Operating System :: POSIX',
             'Operating System :: MacOS',
             'Operating System :: Microsoft :: Windows',
-            'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',

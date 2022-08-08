@@ -25,7 +25,7 @@ def build_dirname(extname=None):
         return path
     return pathlib.Path(
         WORKING_DIRECTORY, 'build',
-        'lib.%s-%s' % (sysconfig.get_platform(), sys.implementation.cache_tag),
+        f'lib.{sysconfig.get_platform()}-{sys.implementation.cache_tag}',
         extname)
 
 

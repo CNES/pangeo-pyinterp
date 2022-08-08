@@ -56,7 +56,7 @@ class Spheroid(geodetic.Spheroid):
     """
 
     def __init__(self, parameters: Optional[Tuple[float, float]] = None):
-        super(Spheroid, self).__init__(*(parameters or ()))
+        super().__init__(*(parameters or ()))
 
     def __repr__(self):
         return f'Spheroid({self.semi_major_axis}, {self.flattening})'
@@ -71,7 +71,7 @@ class System(Spheroid):
     def __init__(self, parameters: Optional[Tuple[float, float]] = None):
         warnings.warn('System is deprecated. Use Spheroid instead.',
                       DeprecationWarning)
-        super(System, self).__init__(parameters)
+        super().__init__(parameters)
 
     def __repr__(self):
         return f'System({self.semi_major_axis}, {self.flattening})'
