@@ -202,13 +202,13 @@ class Undefined : public Abstract<T> {
 ///
 /// @tparam T type of data handled by this container
 template <typename T>
-class Irregular : public Abstract<T> {
+class AbstractIrregular : public Abstract<T> {
  public:
   /// Creation of a container representing an irregularly spaced coordinate
   /// system.
   ///
   /// @param points axis values
-  explicit Irregular(Vector<T> points) : points_(std::move(points)) {
+  explicit AbstractIrregular(Vector<T> points) : points_(std::move(points)) {
     if (points_.size() == 0) {
       throw std::invalid_argument("unable to create an empty container.");
     }
@@ -216,27 +216,28 @@ class Irregular : public Abstract<T> {
   }
 
   /// Destructor
-  ~Irregular() override = default;
+  ~AbstractIrregular() override = default;
 
   /// Copy constructor
   ///
   /// @param rhs right value
-  Irregular(const Irregular &rhs) = default;
+  AbstractIrregular(const AbstractIrregular &rhs) = default;
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Irregular(Irregular &&rhs) noexcept = default;
+  AbstractIrregular(AbstractIrregular &&rhs) noexcept = default;
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Irregular &rhs) -> Irregular & = default;
+  auto operator=(const AbstractIrregular &rhs) -> AbstractIrregular & = default;
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Irregular &&rhs) noexcept -> Irregular & = default;
+  auto operator=(AbstractIrregular &&rhs) noexcept
+      -> AbstractIrregular & = default;
 
   /// @copydoc Abstract::flip()
   auto flip() -> void override {
@@ -288,36 +289,51 @@ class Irregular : public Abstract<T> {
     return points_[points_.size() - 1];
   }
 
-  /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] constexpr auto find_index(const T coordinate,
-                                          const bool bounded) const
-      -> int64_t override {
-    if (this->is_ascending_) {
-      return this->find_index(coordinate, bounded, size(), std::less<T>());
-    }
-    return this->find_index(coordinate, bounded, size(), std::greater<T>());
-  }
-
   /// @copydoc Abstract::operator==(const Abstract&) const
   auto operator==(const Abstract<T> &rhs) const noexcept -> bool override {
-    const auto ptr = dynamic_cast<const Irregular<T> *>(&rhs);
+    const auto ptr = dynamic_cast<const AbstractIrregular<T> *>(&rhs);
     if (ptr != nullptr) {
       return ptr->points_.size() == points_.size() && ptr->points_ == points_;
     }
     return false;
   }
 
- private:
+ protected:
   Vector<T> points_{};
+};
 
+template <typename T, class Enable = void>
+class Irregular : public AbstractIrregular<T> {
+ public:
+  using AbstractIrregular<T>::AbstractIrregular;
+};
+
+template <typename T>
+class Irregular<T, typename std::enable_if<std::is_floating_point_v<T>>::type>
+    : public AbstractIrregular<T> {
+ public:
+  using AbstractIrregular<T>::AbstractIrregular;
+
+  [[nodiscard]] constexpr auto find_index(const T coordinate,
+                                          const bool bounded) const
+      -> int64_t override {
+    if (this->is_ascending_) {
+      return this->find_index(coordinate, bounded, this->size(),
+                              std::less<T>());
+    }
+    return this->find_index(coordinate, bounded, this->size(),
+                            std::greater<T>());
+  }
+
+ private:
   /// Search for the index corresponding to the requested value if the axis is
   /// sorted in ascending order.
   template <typename Compare>
   [[nodiscard]] constexpr auto find_index(const T coordinate,
                                           const bool bounded, int64_t size,
                                           Compare cmp) const -> int64_t {
-    auto begin = points_.data();
-    auto end = points_.data() + size;
+    auto begin = this->points_.data();
+    auto end = this->points_.data() + size;
     auto it = std::lower_bound(begin, end, coordinate, cmp);
 
     if (it == begin) {
@@ -338,6 +354,59 @@ class Irregular : public Abstract<T> {
       it--;
     }
     return std::distance(begin, it);
+  }
+};
+
+template <typename T>
+class Irregular<T, typename std::enable_if<std::is_integral_v<T>>::type>
+    : public AbstractIrregular<T> {
+ public:
+  using AbstractIrregular<T>::AbstractIrregular;
+
+  [[nodiscard]] constexpr auto find_index(const T coordinate,
+                                          const bool bounded) const
+      -> int64_t override {
+    if (this->is_ascending_) {
+      return this->find_index(
+          coordinate, bounded, 0, this->size() - 1,
+          [](const T &x) { return x + 1; }, [](const T &x) { return x - 1; },
+          std::less<T>());
+    }
+    return this->find_index(
+        coordinate, bounded, this->size() - 1, 0,
+        [](const T &x) { return x - 1; }, [](const T &x) { return x + 1; },
+        std::greater<T>());
+  }
+
+ private:
+  template <typename Compare, typename Next, typename Previous>
+  [[nodiscard]] inline auto find_index(T coordinate, const bool bounded,
+                                       int64_t low, int64_t high, Next next,
+                                       Previous previous, Compare cmp) const
+      -> int64_t {
+    const auto &points = this->points_;
+    int mid;
+
+    while ((points[high] != points[low]) && (coordinate >= points[low]) &&
+           (coordinate <= points[high])) {
+      mid = low + ((coordinate - points[low]) * (high - low) /
+                   (points[high] - points[low]));
+
+      if (points[mid] < coordinate) {
+        low = next(mid);
+      } else if (coordinate < points[mid]) {
+        high = previous(mid);
+      } else {
+        return mid;
+      }
+    }
+
+    if (coordinate == points[low]) {
+      return low;
+    } else {
+      return bounded ? (cmp(coordinate, points[low]) ? 0 : this->size() - 1)
+                     : -1;
+    }
   }
 };
 
