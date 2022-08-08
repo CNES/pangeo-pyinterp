@@ -585,7 +585,7 @@ def main():
         long_description_content_type='text/x-rst',
         name='pyinterp',
         package_data={
-            'pyinterp': ['py.typed'],
+            'pyinterp': ['py.typed', 'core/*.pyi', 'core/geohash/*.pyi'],
             'pyinterp.tests': ["dataset/*"],
         },
         package_dir={'': 'src'},
