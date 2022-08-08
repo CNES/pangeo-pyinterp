@@ -34,7 +34,7 @@ def plot(x, y, z, filename):
 
 def load_data():
     ds = load_grid2d()
-    return ds["lon"].values, ds["lat"].values, ds["mss"].values.T
+    return ds['lon'].values, ds['lat'].values, ds['mss'].values.T
 
 
 def test_binning2d_accessors():
@@ -73,24 +73,24 @@ def test_binning2d_methods(pytestconfig):
     simple_mean = np.ma.fix_invalid(binning.mean())
     if HAVE_PLT and visualize:
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
-        plot(mx, my, simple_mean, "binning2d_simple.png")
+        plot(mx, my, simple_mean, 'binning2d_simple.png')
 
     mx, my = np.meshgrid(x, y, indexing='ij')
     binning.clear()
     binning.push(mx.ravel(), my.ravel(), z.ravel(), simple=False)
-    make_or_compare_reference("binning2d_simple.npy", binning.mean(), dump)
+    make_or_compare_reference('binning2d_simple.npy', binning.mean(), dump)
 
     count = binning.count()
     assert count.max() != 0
     linear_mean = np.ma.fix_invalid(binning.mean())
     if HAVE_PLT and visualize:
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
-        plot(mx, my, linear_mean, "binning2d_linear.png")
+        plot(mx, my, linear_mean, 'binning2d_linear.png')
 
     assert not np.all(linear_mean == simple_mean)
 
     # Test of access to statistical variables
-    make_or_compare_reference("binning2d_linear.npy", binning.mean(), dump)
+    make_or_compare_reference('binning2d_linear.npy', binning.mean(), dump)
     assert isinstance(binning.kurtosis(), np.ndarray)
     assert isinstance(binning.max(), np.ndarray)
     assert isinstance(binning.min(), np.ndarray)

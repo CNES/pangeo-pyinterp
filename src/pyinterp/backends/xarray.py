@@ -84,8 +84,8 @@ def _dims_from_data_array(data_array: xr.DataArray,
     size = len(data_array.shape)
     if size != ndims:
         raise ValueError(
-            "The number of dimensions of the variable is incorrect. Expected "
-            f"{ndims}, found {size}.")
+            'The number of dimensions of the variable is incorrect. Expected '
+            f'{ndims}, found {size}.')
 
     if not geodetic:
         return tuple(data_array.coords)[:2]
@@ -124,13 +124,13 @@ def _coords(
         IndexError if one of the coordinates is not used by this grid.
     """
     if not isinstance(coords, dict):
-        raise TypeError("coords must be an instance of dict")
+        raise TypeError('coords must be an instance of dict')
     if len(coords) != len(dims):
-        raise IndexError("too many indices for array")
+        raise IndexError('too many indices for array')
     unknown = set(coords) - set(dims)
     if unknown:
-        raise IndexError("axes not handled by this grid: " +
-                         ", ".join([str(item) for item in unknown]))
+        raise IndexError('axes not handled by this grid: ' +
+                         ', '.join([str(item) for item in unknown]))
     # Is it necessary to manage a time axis?
     if datetime64 is not None:
         temporal_dim, temporal_axis = datetime64
@@ -254,7 +254,7 @@ class Grid3D(grid.Grid3D):
         self._dims = (x, y, z)
         # Should the grid manage a time axis?
         dtype = data_array.coords[z].dtype
-        if "datetime64" in dtype.name or "timedelta64" in dtype.name:
+        if 'datetime64' in dtype.name or 'timedelta64' in dtype.name:
             self._datetime64 = z, core.TemporalAxis(
                 data_array.coords[z].values)
         else:
@@ -345,13 +345,13 @@ class Grid4D(grid.Grid4D):
         # Should the grid manage a time axis?
         self._datetime64 = None
         dtype = data_array.coords[z].dtype
-        if "datetime64" in dtype.name:
+        if 'datetime64' in dtype.name:
             self._datetime64 = z, core.TemporalAxis(
                 data_array.coords[z].values)
         dtype = data_array.coords[u].dtype
-        if "datetime64" in dtype.name:
+        if 'datetime64' in dtype.name:
             if self._datetime64 is not None:
-                raise ValueError("unable to handle two time axes")
+                raise ValueError('unable to handle two time axes')
             self._datetime64 = u, core.TemporalAxis(
                 data_array.coords[u].values)
             # The time axis is the Z axis.
@@ -465,7 +465,7 @@ class RegularGridInterpolator:
             self._interp = self._grid.quadrivariate
         else:
             raise NotImplementedError(
-                "Only the 2D, 3D or 4D grids can be interpolated.")
+                'Only the 2D, 3D or 4D grids can be interpolated.')
 
     def __getstate__(self) -> Tuple[bytes]:
         # Walk around a bug with pybind11 and pickle starting with Python 3.9

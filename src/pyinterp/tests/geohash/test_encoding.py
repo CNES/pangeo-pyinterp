@@ -31,14 +31,14 @@ def test_encoding_decoding():
         numpy.array([item[0] for item in cases], dtype='uint64') == int_hashs)
 
     str_hashs = geohash.encode(lon, lat)
-    assert numpy.all([item[1] for item in cases] == str_hashs.astype("U"))
+    assert numpy.all([item[1] for item in cases] == str_hashs.astype('U'))
     decoded_lon, decoded_lat = geohash.decode(str_hashs, round=True)
     assert numpy.all(numpy.abs(lat - decoded_lat) < 1e-6)  # type: ignore
     assert numpy.all(numpy.abs(lon - decoded_lon) < 1e-6)  # type: ignore
 
     # Encode with longitude [0, 360] and latitude [-90, 90]
     str_hashs = geohash.encode(lon_0_360, lat)
-    assert numpy.all([item[1] for item in cases] == str_hashs.astype("U"))
+    assert numpy.all([item[1] for item in cases] == str_hashs.astype('U'))
 
     for item in cases:
         code = GeoHash.from_string(item[1])

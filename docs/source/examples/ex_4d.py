@@ -45,9 +45,9 @@ interpolator = pyinterp.backends.xarray.Grid4D(ds.pressure)
 #   will warn you if there is an inconsistency during the date conversion.
 mx, my, mz, mu = numpy.meshgrid(numpy.arange(-125, -70, 0.5),
                                 numpy.arange(25, 50, 0.5),
-                                numpy.datetime64("2000-01-01T12:00"),
+                                numpy.datetime64('2000-01-01T12:00'),
                                 0.5,
-                                indexing="ij")
+                                indexing='ij')
 
 # %%
 # We interpolate our grid using a :py:meth:`classical
@@ -106,7 +106,7 @@ pcm = ax1.pcolormesh(lons,
                      shading='auto',
                      transform=cartopy.crs.PlateCarree())
 ax1.coastlines()
-ax1.set_title("Trilinear")
+ax1.set_title('Trilinear')
 
 ax2 = fig.add_subplot(
     212, projection=cartopy.crs.PlateCarree(central_longitude=180))
@@ -117,6 +117,6 @@ pcm = ax2.pcolormesh(lons,
                      shading='auto',
                      transform=cartopy.crs.PlateCarree())
 ax2.coastlines()
-ax2.set_title("Spline & Linear in time")
+ax2.set_title('Spline & Linear in time')
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()

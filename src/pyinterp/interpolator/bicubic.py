@@ -20,8 +20,8 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
             u: Optional[np.ndarray] = None,
             nx: Optional[int] = 3,
             ny: Optional[int] = 3,
-            fitting_model: str = "c_spline",
-            boundary: str = "undef",
+            fitting_model: str = 'c_spline',
+            boundary: str = 'undef',
             bounds_error: bool = False,
             num_threads: int = 0) -> np.ndarray:
     """Bicubic gridded interpolator.
@@ -78,14 +78,14 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
             'akima_periodic', 'akima', 'bicubic', 'c_spline_periodic',
             'c_spline', 'linear', 'polynomial', 'steffen'
     ]:
-        raise ValueError(f"fitting model {fitting_model!r} is not defined")
+        raise ValueError(f'fitting model {fitting_model!r} is not defined')
 
     if boundary not in ['expand', 'wrap', 'sym', 'undef']:
-        raise ValueError(f"boundary {boundary!r} is not defined")
+        raise ValueError(f'boundary {boundary!r} is not defined')
 
     instance = mesh._instance
     function = interface._core_function(
-        "bicubic" if fitting_model == "bicubic" else "spline", instance)
+        'bicubic' if fitting_model == 'bicubic' else 'spline', instance)
     args = [
         instance,
         np.asarray(x),
@@ -95,11 +95,11 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
     if isinstance(mesh, (grid.Grid3D, grid.Grid4D)):
         if z is None:
             raise ValueError(
-                f"You must specify the Z-values for a {mesh._DIMENSIONS}D "
-                "grid.")
+                f'You must specify the Z-values for a {mesh._DIMENSIONS}D '
+                'grid.')
         args.insert(3, np.asarray(z))
     if isinstance(mesh, grid.Grid4D):
         if u is None:
-            raise ValueError("You must specify the U-values for a 4D grid.")
+            raise ValueError('You must specify the U-values for a 4D grid.')
         args.insert(4, np.asarray(u))
     return getattr(core, function)(*args)

@@ -63,7 +63,7 @@ def run_bivariate(interpolator, filename, visualize, dump):
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
 
     z0 = core.bivariate_float64(grid,
                                 x.ravel(),
@@ -76,7 +76,7 @@ def run_bivariate(interpolator, filename, visualize, dump):
                                 y.ravel(),
                                 interpolator,
                                 num_threads=1)
-    make_or_compare_reference(filename + ".npy", z1, dump)
+    make_or_compare_reference(filename + '.npy', z1, dump)
 
     # The data from the mono-threads and multi-threads execution must be
     # identical.
@@ -101,13 +101,13 @@ def run_bivariate(interpolator, filename, visualize, dump):
 
 def test_bivariate_interpolator(pytestconfig):
     """Testing of different interpolation methods."""
-    visualize = pytestconfig.getoption("visualize")
-    dump = pytestconfig.getoption("dump")
-    a = run_bivariate(core.Nearest2D(), "mss_bivariate_nearest", visualize,
+    visualize = pytestconfig.getoption('visualize')
+    dump = pytestconfig.getoption('dump')
+    a = run_bivariate(core.Nearest2D(), 'mss_bivariate_nearest', visualize,
                       dump)
-    b = run_bivariate(core.Bilinear2D(), "mss_bivariate_bilinear", visualize,
+    b = run_bivariate(core.Bilinear2D(), 'mss_bivariate_bilinear', visualize,
                       dump)
-    c = run_bivariate(core.InverseDistanceWeighting2D(), "mss_bivariate_idw",
+    c = run_bivariate(core.InverseDistanceWeighting2D(), 'mss_bivariate_idw',
                       visualize, dump)
     assert (a - b).std() != 0
     assert (a - c).std() != 0
@@ -127,41 +127,41 @@ def test_bivariate_pickle():
 
 def test_spline_interpolator(pytestconfig):
     """Testing of different spline interpolation methods."""
-    visualize = pytestconfig.getoption("visualize")
-    dump = pytestconfig.getoption("dump")
+    visualize = pytestconfig.getoption('visualize')
+    dump = pytestconfig.getoption('dump')
     grid = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
     z0 = core.spline_float64(grid,
                              x.ravel(),
                              y.ravel(),
-                             fitting_model="akima",
+                             fitting_model='akima',
                              num_threads=0)
     z1 = core.spline_float64(grid,
                              x.ravel(),
                              y.ravel(),
-                             fitting_model="akima",
+                             fitting_model='akima',
                              num_threads=1)
-    make_or_compare_reference("mss_spline_akima.npy", z1, dump)
+    make_or_compare_reference('mss_spline_akima.npy', z1, dump)
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
     if HAVE_PLT and visualize:
-        plot(x, y, z0.reshape((len(lon), len(lat))), "mss_akima.png")
+        plot(x, y, z0.reshape((len(lon), len(lat))), 'mss_akima.png')
 
     z0 = core.spline_float64(grid, x.ravel(), y.ravel())
     z0 = np.ma.fix_invalid(z0)
     assert not np.all(z1 == z0)
     if HAVE_PLT and visualize:
-        plot(x, y, z0.reshape((len(lon), len(lat))), "mss_cspline.png")
+        plot(x, y, z0.reshape((len(lon), len(lat))), 'mss_cspline.png')
 
     # Out of bounds interpolation
     with pytest.raises(ValueError):
         core.spline_float64(grid,
                             x.ravel(),
                             y.ravel(),
-                            fitting_model="akima",
+                            fitting_model='akima',
                             bounds_error=True,
                             num_threads=0)
 
@@ -171,7 +171,7 @@ def test_spline_degraded():
     grid = load_data(is_circle=False)
     lon = np.arange(-190, -170, 1 / 3.0)
     lat = np.arange(-40, 40, 1 / 3.0) + 1 / 3.0
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
 
     with pytest.raises(ValueError):
         core.spline_float64(grid,

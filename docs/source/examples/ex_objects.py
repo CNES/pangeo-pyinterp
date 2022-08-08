@@ -24,10 +24,10 @@ import pyinterp.tests
 
 ds = pyinterp.tests.load_grid3d()
 lon, lat, time, tcw = (
-    ds["longitude"].values,
-    ds["latitude"].values,
-    ds["time"].values,
-    ds["tcw"].values,
+    ds['longitude'].values,
+    ds['latitude'].values,
+    ds['time'].values,
+    ds['tcw'].values,
 )
 
 # %%
@@ -70,19 +70,19 @@ t_axis
 # indexes:
 values = lon[10:20] + 1 / 3
 index = pandas.Index(lon)
-print("pandas.Index: %f" % timeit.timeit(
-    "index.searchsorted(values)", globals=dict(index=index, values=values)))
-print("pyinterp.Axis %f" % timeit.timeit(
-    "x_axis.find_index(values)", globals=dict(x_axis=x_axis, values=values)))
+print('pandas.Index: %f' % timeit.timeit(
+    'index.searchsorted(values)', globals=dict(index=index, values=values)))
+print('pyinterp.Axis %f' % timeit.timeit(
+    'x_axis.find_index(values)', globals=dict(x_axis=x_axis, values=values)))
 
 # %%
 # This time axis is also very efficient compared to the pandas index.
 index = pandas.Index(time)
-values = time + numpy.timedelta64(1, "ns")
-print("pandas.Index: %f" % timeit.timeit(
-    "index.searchsorted(values)", globals=dict(index=index, values=values)))
-print("pyinterp.Axis %f" % timeit.timeit(
-    "t_axis.find_index(values)", globals=dict(t_axis=t_axis, values=values)))
+values = time + numpy.timedelta64(1, 'ns')
+print('pandas.Index: %f' % timeit.timeit(
+    'index.searchsorted(values)', globals=dict(index=index, values=values)))
+print('pyinterp.Axis %f' % timeit.timeit(
+    't_axis.find_index(values)', globals=dict(t_axis=t_axis, values=values)))
 
 # %%
 # Before constructing the tensor for pyinterp, we must begin to organize the

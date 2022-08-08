@@ -27,12 +27,12 @@ class AxisLatitudeUnit(AxisUnit):
 
     def __init__(self):
         super().__init__((
-            "degrees_north",
-            "degree_north",
-            "degree_N",
-            "degrees_N",
-            "degreeN",
-            "degreesN",
+            'degrees_north',
+            'degree_north',
+            'degree_N',
+            'degrees_N',
+            'degreeN',
+            'degreesN',
         ))
 
 
@@ -41,12 +41,12 @@ class AxisLongitudeUnit(AxisUnit):
 
     def __init__(self):
         super().__init__((
-            "degrees_east",
-            "degree_east",
-            "degree_E",
-            "degrees_E",
-            "degreeE",
-            "degreesE",
+            'degrees_east',
+            'degree_east',
+            'degree_E',
+            'degrees_E',
+            'degreeE',
+            'degreesE',
         ))
 
 
@@ -54,4 +54,4 @@ class AxisTimeUnit(AxisUnit):
     """Units known to the axis defining the time."""
 
     def __init__(self):
-        super().__init__(("days", "seconds"))
+        super().__init__(('days', 'seconds'))

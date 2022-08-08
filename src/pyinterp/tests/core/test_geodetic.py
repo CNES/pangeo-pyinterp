@@ -110,33 +110,33 @@ def test_point():
     pt = core.geodetic.Point(12, 24)
     assert pt.lon == 12
     assert pt.lat == 24
-    assert str(pt) == "(12, 24)"
-    assert repr(pt) == "(12, 24)"
+    assert str(pt) == '(12, 24)'
+    assert repr(pt) == '(12, 24)'
     pt.lon = 55
     assert pt.lon == 55
     pt.lat = 33
     assert pt.lat == 33
-    point = core.geodetic.Point.read_wkt("POINT(-2 2)")
-    assert point.wkt() == "POINT(-2 2)"
-    assert point.to_geojson() == {"type": "Point", "coordinates": [-2, 2]}
+    point = core.geodetic.Point.read_wkt('POINT(-2 2)')
+    assert point.wkt() == 'POINT(-2 2)'
+    assert point.to_geojson() == {'type': 'Point', 'coordinates': [-2, 2]}
 
 
 def test_point_distance():
     acropolis = core.geodetic.Point(23.725750, 37.971536)
     ulb = core.geodetic.Point(4.3826169, 50.8119483)
     assert 2088389.07865908 == pytest.approx(acropolis.distance(
-        ulb, strategy="andoyer"),
+        ulb, strategy='andoyer'),
                                              abs=1e-6)
     assert 2088384.36439399 == pytest.approx(acropolis.distance(
-        ulb, strategy="thomas"),
+        ulb, strategy='thomas'),
                                              abs=1e-6)
     assert 2088384.36606831 == pytest.approx(acropolis.distance(
-        ulb, strategy="vincenty"),
+        ulb, strategy='vincenty'),
                                              abs=1e-6)
     assert acropolis.distance(ulb,
-                              strategy="thomas") == acropolis.distance(ulb)
+                              strategy='thomas') == acropolis.distance(ulb)
     with pytest.raises(ValueError):
-        acropolis.distance(ulb, strategy="Thomas")
+        acropolis.distance(ulb, strategy='Thomas')
 
 
 def test_point_pickle():
@@ -156,7 +156,7 @@ def test_box():
     max_corner = core.geodetic.Point(2, 3)
 
     box = core.geodetic.Box(min_corner, max_corner)
-    assert str(box) == "((0, 1), (2, 3))"
+    assert str(box) == '((0, 1), (2, 3))'
     assert box.min_corner.lon == 0
     assert box.min_corner.lat == 1
     assert box.max_corner.lon == 2
@@ -180,16 +180,16 @@ def test_box():
     assert box.max_corner.lon == 0
     assert box.max_corner.lat == 1
 
-    assert box.wkt() == "POLYGON((2 3,2 1,0 1,0 3,2 3))"
+    assert box.wkt() == 'POLYGON((2 3,2 1,0 1,0 3,2 3))'
     assert box.to_geojson() == {
-        "type": "Polygon",
-        "coordinates": [[[2, 3], [2, 1], [0, 1], [0, 3], [2, 3]]]
+        'type': 'Polygon',
+        'coordinates': [[[2, 3], [2, 1], [0, 1], [0, 3], [2, 3]]]
     }
-    box = core.geodetic.Box.read_wkt("POLYGON((2 3,2 1,0 1,0 3,2 3))")
-    assert repr(box) == "((2, 3), (0, 1))"
+    box = core.geodetic.Box.read_wkt('POLYGON((2 3,2 1,0 1,0 3,2 3))')
+    assert repr(box) == '((2, 3), (0, 1))'
 
     box = core.geodetic.Box.whole_earth()
-    assert repr(box) == "((-180, -90), (180, 90))"
+    assert repr(box) == '((-180, -90), (180, 90))'
 
 
 def test_box_pickle():
@@ -207,8 +207,8 @@ def test_box_pickle():
 
 
 def test_polygon():
-    polygon = core.geodetic.Polygon.read_wkt("POLYGON((0 0,0 7,4 2,2 0,0 0))")
-    assert repr(polygon) == "(((0, 0), (0, 7), (4, 2), (2, 0), (0, 0)))"
+    polygon = core.geodetic.Polygon.read_wkt('POLYGON((0 0,0 7,4 2,2 0,0 0))')
+    assert repr(polygon) == '(((0, 0), (0, 7), (4, 2), (2, 0), (0, 0)))'
     assert polygon.envelope() == core.geodetic.Box(core.geodetic.Point(0, 0),
                                                    core.geodetic.Point(4, 7))
     polygon = core.geodetic.Polygon([
@@ -228,22 +228,22 @@ def test_polygon():
     assert polygon.distance(core.geodetic.Point(0, 0)) == 0
     assert polygon.distance(core.geodetic.Point(10, 10)) != 0
 
-    assert repr(polygon) == "(((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)), " \
-        "((1, 1), (4, 1), (4, 4), (1, 4), (1, 1)))"
-    assert polygon.wkt() == "POLYGON((0 0,0 5,5 5,5 0,0 0)," \
-        "(1 1,4 1,4 4,1 4,1 1))"
+    assert repr(polygon) == '(((0, 0), (0, 5), (5, 5), (5, 0), (0, 0)), ' \
+        '((1, 1), (4, 1), (4, 4), (1, 4), (1, 1)))'
+    assert polygon.wkt() == 'POLYGON((0 0,0 5,5 5,5 0,0 0),' \
+        '(1 1,4 1,4 4,1 4,1 1))'
     assert polygon.to_geojson() == {
-        "type":
-        "Polygon",
-        "coordinates": [[[0, 0], [0, 5], [5, 5], [5, 0], [0, 0]],
+        'type':
+        'Polygon',
+        'coordinates': [[[0, 0], [0, 5], [5, 5], [5, 0], [0, 0]],
                         [[1, 1], [4, 1], [4, 4], [1, 4], [1, 1]]]
     }
 
 
 def test_polygon_pickle():
     for item in [
-            "POLYGON((0 0,0 7,4 2,2 0,0 0))",
-            "POLYGON((0 0,0 5,5 5,5 0,0 0),(1 1,4 1,4 4,1 4,1 1))"
+            'POLYGON((0 0,0 7,4 2,2 0,0 0))',
+            'POLYGON((0 0,0 5,5 5,5 0,0 0),(1 1,4 1,4 4,1 4,1 1))'
     ]:
         polygon = core.geodetic.Polygon.read_wkt(item)
         other = pickle.loads(pickle.dumps(polygon))
@@ -296,8 +296,8 @@ def test_multipolygon():
     assert isinstance(multipolygon.envelope(), geodetic.Box)
     assert multipolygon.covered_by(polygons[0].outer[0])
 
-    lon = np.fromiter((item[0] for item in coordinates[0]), dtype="float64")
-    lat = np.fromiter((item[1] for item in coordinates[0]), dtype="float64")
+    lon = np.fromiter((item[0] for item in coordinates[0]), dtype='float64')
+    lat = np.fromiter((item[1] for item in coordinates[0]), dtype='float64')
 
     assert np.all(multipolygon.covered_by(lon, lat) == 1)
 
@@ -321,13 +321,13 @@ def test_coordinate_distance():
                                             my.ravel(),
                                             mx.ravel() + 1,
                                             my.ravel() + 1,
-                                            strategy="vincenty",
+                                            strategy='vincenty',
                                             num_threads=1)
     d0 = core.geodetic.coordinate_distances(mx.ravel(),
                                             my.ravel(),
                                             mx.ravel() + 1,
                                             my.ravel() + 1,
-                                            strategy="vincenty",
+                                            strategy='vincenty',
                                             num_threads=0)
     assert np.all(d0 == d1)
     d0 = d0.reshape(mx.shape)
@@ -554,20 +554,20 @@ def test_multipolygon_from_geojson():
 
 def test_union_polygon():
     a = core.geodetic.Polygon.read_wkt(
-        "POLYGON((2 1.3,2.4 1.7,2.8 1.8,3.4 1.2,3.7 1.6,3.4 2,4.1 3,5.3 2.6,"
-        "5.4 1.2,4.9 0.8,2.9 0.7,2 1.3)(4.0 2.0,4.2 1.4,4.8 1.9,4.4 2.2,"
-        "4.0 2.0))")
+        'POLYGON((2 1.3,2.4 1.7,2.8 1.8,3.4 1.2,3.7 1.6,3.4 2,4.1 3,5.3 2.6,'
+        '5.4 1.2,4.9 0.8,2.9 0.7,2 1.3)(4.0 2.0,4.2 1.4,4.8 1.9,4.4 2.2,'
+        '4.0 2.0))')
     b = core.geodetic.Polygon.read_wkt(
-        "POLYGON((4.0 -0.5,3.5 1.0,2.0 1.5,3.5 2.0,4.0 3.5,4.5 2.0,6.0 1.5,"
-        "4.5 1.0,4.0 -0.5))")
+        'POLYGON((4.0 -0.5,3.5 1.0,2.0 1.5,3.5 2.0,4.0 3.5,4.5 2.0,6.0 1.5,'
+        '4.5 1.0,4.0 -0.5))')
     union = a.union(b)
     assert len(union) == 1
 
 
 def test_linestring():
     a = core.geodetic.LineString.from_geojson([[1, 2], [2, 3], [3, 4]])
-    assert a.wkt() == "LINESTRING(1 2,2 3,3 4)"
-    assert a == core.geodetic.LineString.read_wkt("LINESTRING(1 2,2 3,3 4)")
+    assert a.wkt() == 'LINESTRING(1 2,2 3,3 4)'
+    assert a == core.geodetic.LineString.read_wkt('LINESTRING(1 2,2 3,3 4)')
     assert a == pickle.loads(pickle.dumps(a))
     assert a.to_geojson() == {
         'type': 'LineString',
@@ -628,7 +628,7 @@ def test_curvilinear_distance():
             geodetic.Point(lon[ix - 1],
                            lat[ix - 1]).distance(geodetic.Point(
                                lon[ix], lat[ix]),
-                                                 strategy="thomas"))
+                                                 strategy='thomas'))
 
-    assert np.all((ls.curvilinear_distance(strategy="thomas") -
+    assert np.all((ls.curvilinear_distance(strategy='thomas') -
                    np.cumsum(np.array(distance))) == np.zeros(50))

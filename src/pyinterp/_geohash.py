@@ -68,14 +68,14 @@ class GeoHash(BaseGeoHash):
                 dims=('lat', 'lon'),
                 coords=dict(
                     lon=xarray.DataArray(
-                        lon, dims=("lon", ), attrs=dict(
-                            units="degrees_north")),
+                        lon, dims=('lon', ), attrs=dict(
+                            units='degrees_north')),
                     lat=xarray.DataArray(
-                        lat, dims=("lat", ), attrs=dict(units="degrees_east")),
+                        lat, dims=('lat', ), attrs=dict(units='degrees_east')),
                 ))))
 
     @staticmethod
-    def from_string(code: str, round: bool = False) -> "GeoHash":
+    def from_string(code: str, round: bool = False) -> 'GeoHash':
         """Create from its string representation.
 
         Args:
@@ -93,7 +93,7 @@ class GeoHash(BaseGeoHash):
 
     def __repr__(self) -> str:
         lon, lat, precision = super().reduce()
-        return f"{self.__class__.__name__}({lon}, {lat}, {precision})"
+        return f'{self.__class__.__name__}({lon}, {lat}, {precision})'
 
     def __reduce__(self) -> Tuple[Type, Tuple[float, float, int]]:
         return (self.__class__, super().reduce())

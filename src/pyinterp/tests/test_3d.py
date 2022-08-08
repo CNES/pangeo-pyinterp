@@ -30,8 +30,8 @@ def test_3d():
 
     lon = np.arange(-180, 180, 1) + 1 / 3.0
     lat = np.arange(-90, 90, 1) + 1 / 3.0
-    time = np.array([datetime.datetime(2002, 7, 2, 15, 0)], dtype="datetime64")
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    time = np.array([datetime.datetime(2002, 7, 2, 15, 0)], dtype='datetime64')
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
 
     z = grid.trivariate(
         collections.OrderedDict(longitude=x.ravel(),
@@ -47,8 +47,8 @@ def test_3d():
 
     with pytest.raises(ValueError):
         time = np.array([datetime.datetime(2012, 7, 2, 15, 0)],
-                        dtype="datetime64")
-        x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+                        dtype='datetime64')
+        x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
         grid.trivariate(collections.OrderedDict(longitude=x.ravel(),
                                                 latitude=y.ravel(),
                                                 time=t.ravel()),
@@ -56,7 +56,7 @@ def test_3d():
 
     array = load_grid3d().tcw
     grid = xr_backend.Grid3D(array, increasing_axes=True)
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z = grid.trivariate(
         collections.OrderedDict(longitude=x.ravel(),
                                 latitude=y.ravel(),
@@ -67,7 +67,7 @@ def test_3d():
                                               increasing_axes=True)
     assert grid.ndim == 3
     assert isinstance(grid.grid, xr_backend.Grid3D)
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z = grid(dict(longitude=x.ravel(), latitude=y.ravel(), time=t.ravel()))
     assert isinstance(z, np.ndarray)
 
@@ -78,18 +78,18 @@ def test_backend():
     lon = np.arange(-180, 180, 10)
     lat = np.arange(-90, 90, 10)
     time = np.array([datetime.datetime(2002, 7, 2, 15, 0)],
-                    dtype="datetime64[ns]")
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+                    dtype='datetime64[ns]')
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
 
     z0 = grid.trivariate(
         collections.OrderedDict(longitude=x.ravel(),
                                 latitude=y.ravel(),
                                 time=t.ravel()))
 
-    ds = ds.assign_coords(time=ds.time.astype("int64"))
+    ds = ds.assign_coords(time=ds.time.astype('int64'))
     grid = xr_backend.Grid3D(ds.tcw, increasing_axes=True)
-    time = time.astype("int64")
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    time = time.astype('int64')
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
 
     z1 = grid.trivariate(
         collections.OrderedDict(longitude=x.ravel(),

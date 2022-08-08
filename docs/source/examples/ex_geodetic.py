@@ -47,10 +47,10 @@ alt = numpy.random.uniform(-10000, 100000, 1000000)
 a = pyinterp.geodetic.Coordinates(wgs84)
 b = pyinterp.geodetic.Coordinates(grs80)
 
-elapsed = timeit.timeit("a.transform(b, lon, lat, alt, num_threads=0)",
+elapsed = timeit.timeit('a.transform(b, lon, lat, alt, num_threads=0)',
                         number=100,
                         globals=dict(a=a, b=b, lon=lon, lat=lat, alt=alt))
-print("transform: %f seconds" % (float(elapsed) / 100))
+print('transform: %f seconds' % (float(elapsed) / 100))
 
 # %%
 # Geodetic Point
@@ -85,7 +85,7 @@ distances = pyinterp.geodetic.coordinate_distances(mx.ravel(),
                                                    my.ravel(),
                                                    mx.ravel() + 1,
                                                    my.ravel() + 1,
-                                                   strategy="vincenty",
+                                                   strategy='vincenty',
                                                    wgs=wgs84,
                                                    num_threads=1)
 distances = distances.reshape(mx.shape)
@@ -106,10 +106,10 @@ print(polygon.wkt())
 
 # %%
 # It's possible to use different algorithms on these objects.
-print(f"{polygon.area(wgs=wgs84) * 1e-3} km2")
+print(f'{polygon.area(wgs=wgs84) * 1e-3} km2')
 # %%
 # Transform this polygon into a bounding box
-polygon = pyinterp.geodetic.Polygon.read_wkt("POLYGON((0 0,0 7,4 2,2 0,0 0))")
+polygon = pyinterp.geodetic.Polygon.read_wkt('POLYGON((0 0,0 7,4 2,2 0,0 0))')
 print(polygon.envelope())
 
 # %%
@@ -423,7 +423,7 @@ ax.coastlines()
 ax.scatter(mx.ravel(),
            my.ravel(),
            c=mask,
-           cmap="bwr_r",
+           cmap='bwr_r',
            transform=cartopy.crs.PlateCarree(),
            vmin=0,
            vmax=1)
@@ -452,22 +452,22 @@ crossover = pyinterp.geodetic.Crossover(
 
 # %%
 # We can check if there is a crossing between these two lines.
-print(f"There is a crossover between these two lines: {crossover.exists()}")
+print(f'There is a crossover between these two lines: {crossover.exists()}')
 
 # %%
 # We can get the crossing point.
 coordinates = crossover.search()
 assert coordinates is not None
-print(f"The crossing point is: {coordinates}")
+print(f'The crossing point is: {coordinates}')
 
 # %%
 # It is possible to obtain the points on the two lines nearest to the crossing
 # point.
 nearest_indices = crossover.nearest(coordinates)
 assert nearest_indices is not None
-print("The nearest points on the line #1: " +
+print('The nearest points on the line #1: ' +
       str(crossover.half_orbit_1[nearest_indices[0]]))
-print("The nearest points on the line #2: " +
+print('The nearest points on the line #2: ' +
       str(crossover.half_orbit_2[nearest_indices[1]]))
 
 # %%

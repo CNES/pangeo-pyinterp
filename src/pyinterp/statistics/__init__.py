@@ -6,6 +6,6 @@ from .descriptive_descriptive import DescriptiveStatistics
 from .streaming_histogram import StreamingHistogram
 
 __all__ = [
-    "DescriptiveStatistics",
-    "StreamingHistogram",
+    'DescriptiveStatistics',
+    'StreamingHistogram',
 ]

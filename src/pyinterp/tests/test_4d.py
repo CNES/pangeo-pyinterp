@@ -35,7 +35,7 @@ def test_4d(pytestconfig):
     lat = np.arange(-25, 50, 0.25)
     level = 0.5
     time = np.datetime64('2000-01-01T12:00')
-    x, y, z, t = np.meshgrid(lon, lat, level, time, indexing="ij")
+    x, y, z, t = np.meshgrid(lon, lat, level, time, indexing='ij')
 
     pressure = grid.quadrivariate(
         collections.OrderedDict(longitude=x.ravel(),
@@ -43,8 +43,8 @@ def test_4d(pytestconfig):
                                 level=z.ravel(),
                                 time=t.ravel()))
     assert isinstance(pressure, np.ndarray)
-    make_or_compare_reference("4d_pressure_bilinear.npy", pressure,
-                              pytestconfig.getoption("dump"))
+    make_or_compare_reference('4d_pressure_bilinear.npy', pressure,
+                              pytestconfig.getoption('dump'))
 
     pressure = grid.bicubic(
         collections.OrderedDict(longitude=x.ravel(),
@@ -52,12 +52,12 @@ def test_4d(pytestconfig):
                                 level=z.ravel(),
                                 time=t.ravel()))
     assert isinstance(pressure, np.ndarray)
-    make_or_compare_reference("4d_pressure_bicubic.npy", pressure,
-                              pytestconfig.getoption("dump"))
+    make_or_compare_reference('4d_pressure_bicubic.npy', pressure,
+                              pytestconfig.getoption('dump'))
 
     with pytest.raises(ValueError):
         time = 5
-        x, y, t = np.meshgrid(lon, lat, level, time, indexing="ij")
+        x, y, t = np.meshgrid(lon, lat, level, time, indexing='ij')
         pressure = grid.quadrivariate(collections.OrderedDict(
             longitude=x.ravel(),
             latitude=y.ravel(),
@@ -85,7 +85,7 @@ def test_4d_swap_dim():
     assert isinstance(grid.z, pyinterp.TemporalAxis)
     assert grid.array.shape == (12, 6, 2, 2)
 
-    ds = ds.assign_coords(level=ds.level.values.astype("datetime64[s]"))
+    ds = ds.assign_coords(level=ds.level.values.astype('datetime64[s]'))
     with pytest.raises(ValueError):
         grid = xr_backend.Grid4D(ds.pressure, increasing_axes=True)
 

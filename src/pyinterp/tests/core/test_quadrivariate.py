@@ -96,8 +96,8 @@ def test_interpolator():
                                        mu.ravel(),
                                        interpolator,
                                        num_threads=0,
-                                       z_method="linear",
-                                       u_method="linear",
+                                       z_method='linear',
+                                       u_method='linear',
                                        bounds_error=False)
     assert np.nanstd(other - calculated) == pytest.approx(0)
 
@@ -108,8 +108,8 @@ def test_interpolator():
                                        mu.ravel(),
                                        interpolator,
                                        num_threads=0,
-                                       z_method="linear",
-                                       u_method="nearest",
+                                       z_method='linear',
+                                       u_method='nearest',
                                        bounds_error=False)
     assert np.nanstd(other - calculated) == pytest.approx(0, abs=1e-1)
 
@@ -122,8 +122,8 @@ def test_interpolator():
             None,
             interpolator,
             num_threads=0,
-            z_method="linear",
-            u_method="nearest",
+            z_method='linear',
+            u_method='nearest',
             bounds_error=False)
 
     with pytest.raises(ValueError):
@@ -134,8 +134,8 @@ def test_interpolator():
                                            mu.ravel(),
                                            interpolator,
                                            num_threads=0,
-                                           z_method="LINEAR",
-                                           u_method="nearest",
+                                           z_method='LINEAR',
+                                           u_method='nearest',
                                            bounds_error=False)
 
     with pytest.raises(ValueError):
@@ -146,6 +146,6 @@ def test_interpolator():
                                            mu.ravel(),
                                            interpolator,
                                            num_threads=0,
-                                           z_method="linear",
-                                           u_method="NEAREST",
+                                           z_method='linear',
+                                           u_method='NEAREST',
                                            bounds_error=False)

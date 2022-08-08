@@ -32,15 +32,15 @@ class RTree:
                  dtype: Optional[np.dtype] = None,
                  ndims: int = 3):
         """Initialize a new R*Tree."""
-        dtype = dtype or np.dtype("float64")
+        dtype = dtype or np.dtype('float64')
         if ndims < 3:
-            raise ValueError("ndims must be >= 3")
-        if dtype == np.dtype("float64"):
-            self._instance = getattr(core, f"RTree{ndims}DFloat64")(system)
-        elif dtype == np.dtype("float32"):
-            self._instance = getattr(core, f"RTree{ndims}DFloat32")(system)
+            raise ValueError('ndims must be >= 3')
+        if dtype == np.dtype('float64'):
+            self._instance = getattr(core, f'RTree{ndims}DFloat64')(system)
+        elif dtype == np.dtype('float32'):
+            self._instance = getattr(core, f'RTree{ndims}DFloat32')(system)
         else:
-            raise ValueError(f"dtype {dtype} not handled by the object")
+            raise ValueError(f'dtype {dtype} not handled by the object')
         self.dtype = dtype
 
     def bounds(
@@ -227,8 +227,8 @@ class RTree:
             raise ValueError(
                 f"epsilon must be None for {', '.join(non_adjustable)} RBF")
         if rbf not in adjustable + non_adjustable:
-            raise ValueError(f"Radial basis function {rbf!r} is not defined")
-        rbf = "".join(item.capitalize() for item in rbf.split("_"))
+            raise ValueError(f'Radial basis function {rbf!r} is not defined')
+        rbf = ''.join(item.capitalize() for item in rbf.split('_'))
 
         return self._instance.radial_basis_function(
             coordinates, radius, k, getattr(core.RadialBasisFunction, rbf),
@@ -325,46 +325,46 @@ class RTree:
             The interpolated value and the number of neighbors used in the
             calculation.
         """
-        wf = wf or "blackman"
+        wf = wf or 'blackman'
         if wf not in [
-                "blackman",
-                "blackman_harris",
-                "boxcar",
-                "flattop",
-                "gaussian",
-                "hamming",
-                "lanczos",
-                "nuttall",
-                "parzen",
-                "parzen_swot",
+                'blackman',
+                'blackman_harris',
+                'boxcar',
+                'flattop',
+                'gaussian',
+                'hamming',
+                'lanczos',
+                'nuttall',
+                'parzen',
+                'parzen_swot',
         ]:
-            raise ValueError(f"Window function {wf!r} is not defined")
+            raise ValueError(f'Window function {wf!r} is not defined')
 
-        if wf in ["gaussian", "lanczos", "parzen"]:
+        if wf in ['gaussian', 'lanczos', 'parzen']:
             if arg is None:
                 defaults = dict(gaussian=None, lanczos=1, parzen=0)
                 arg = defaults[wf]
 
-            if wf == "lanczos" and arg < 1:  # type: ignore
+            if wf == 'lanczos' and arg < 1:  # type: ignore
                 raise ValueError(
-                    f"The argument of the function {wf!r} must be "
-                    "greater than 1")
+                    f'The argument of the function {wf!r} must be '
+                    'greater than 1')
 
-            if wf == "parzen" and arg < 0:  # type: ignore
+            if wf == 'parzen' and arg < 0:  # type: ignore
                 raise ValueError(
-                    f"The argument of the function {wf!r} must be "
-                    "greater than 0")
+                    f'The argument of the function {wf!r} must be '
+                    'greater than 0')
 
-            if wf == "gaussian" and arg is None:
+            if wf == 'gaussian' and arg is None:
                 raise ValueError(
-                    f"The argument of the function {wf!r} must be "
-                    "specified")
+                    f'The argument of the function {wf!r} must be '
+                    'specified')
         else:
             if arg is not None:
-                raise ValueError(f"The function {wf!r} does not support the "
-                                 "optional argument")
+                raise ValueError(f'The function {wf!r} does not support the '
+                                 'optional argument')
 
-        wf = "".join(item.capitalize() for item in wf.split("_"))
+        wf = ''.join(item.capitalize() for item in wf.split('_'))
 
         return self._instance.window_function(coordinates, radius, k,
                                               getattr(core.WindowFunction, wf),
@@ -385,7 +385,7 @@ class RTree:
             state: The state of the object for pickling purposes.
         """
         if len(state) != 2:
-            raise ValueError("invalid state")
+            raise ValueError('invalid state')
         _class = RTree(None, state[0])
         self.dtype = _class.dtype
         _class._instance.__setstate__(state[1])

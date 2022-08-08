@@ -12,8 +12,8 @@ from .quadrivariate import quadrivariate
 from .trivariate import trivariate
 
 __all__ = [
-    "bicubic",
-    "bivariate",
-    "quadrivariate",
-    "trivariate",
+    'bicubic',
+    'bivariate',
+    'quadrivariate',
+    'trivariate',
 ]

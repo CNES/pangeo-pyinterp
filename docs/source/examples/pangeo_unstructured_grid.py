@@ -30,8 +30,8 @@ mesh = pyinterp.RTree()
 # in-memory structure, both in terms of construction time and queries. When this
 # is not possible, you can insert new information into the tree as you go along
 # using the :py:meth:`insert <pyinterp.RTree.insert>` method.
-cat_url = "https://raw.githubusercontent.com/pangeo-data/pangeo-datastore" \
-    "/master/intake-catalogs/ocean/llc4320.yaml"
+cat_url = 'https://raw.githubusercontent.com/pangeo-data/pangeo-datastore' \
+    '/master/intake-catalogs/ocean/llc4320.yaml'
 cat = intake.open_catalog(cat_url)
 
 # %%
@@ -41,13 +41,13 @@ indices = slice(0, None, 8)
 # %%
 # Reads longitudes and latitudes of the grid
 array = cat.LLC4320_grid.to_dask()
-lons = array["XC"].isel(i=indices, j=indices)
-lats = array["YC"].isel(i=indices, j=indices)
+lons = array['XC'].isel(i=indices, j=indices)
+lats = array['YC'].isel(i=indices, j=indices)
 
 # %%
 # Reads SSH values for the first time step of the time series
 ssh = cat.LLC4320_SSH.to_dask()
-ssh = ssh["Eta"].isel(time=0, i=indices, j=indices)
+ssh = ssh['Eta'].isel(time=0, i=indices, j=indices)
 
 # %%
 # Populates the search tree
@@ -80,7 +80,7 @@ y0, y1 = -45, 30
 res = 1 / 32.0
 mx, my = numpy.meshgrid(numpy.arange(x0, x1, res),
                         numpy.arange(y0, y1, res),
-                        indexing="ij")
+                        indexing='ij')
 
 # %%
 # IDW interpolation
@@ -119,7 +119,7 @@ ax.xaxis.set_major_formatter(lon_formatter)
 ax.yaxis.set_major_formatter(lat_formatter)
 ax.set_xticks(numpy.arange(x0, x1, 10.0))
 ax.set_yticks(numpy.arange(y0, y1, 10))
-ax.set_title("Eta (IDW)")
+ax.set_title('Eta (IDW)')
 
 ax = fig.add_subplot(122, projection=cartopy.crs.PlateCarree())
 ax.pcolormesh(mx,
@@ -133,7 +133,7 @@ ax.xaxis.set_major_formatter(lon_formatter)
 ax.yaxis.set_major_formatter(lat_formatter)
 ax.set_xticks(numpy.arange(x0, x1, 10.0))
 ax.set_yticks(numpy.arange(y0, y1, 10))
-ax.set_title("Eta (RBF)")
+ax.set_title('Eta (RBF)')
 fig.show()
 
 # %%

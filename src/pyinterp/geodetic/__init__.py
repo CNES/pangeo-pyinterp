@@ -17,18 +17,18 @@ from ..core.geodetic import (
 )
 
 __all__ = [
-    "Box",
-    "calculate_crossover",
-    "coordinate_distances",
-    "Coordinates",
-    "Crossover",
-    "LineString",
-    "MultiPolygon",
-    "normalize_longitudes",
-    "Point",
-    "Polygon",
-    "RTree",
-    "Spheroid",
+    'Box',
+    'calculate_crossover',
+    'coordinate_distances',
+    'Coordinates',
+    'Crossover',
+    'LineString',
+    'MultiPolygon',
+    'normalize_longitudes',
+    'Point',
+    'Polygon',
+    'RTree',
+    'Spheroid',
 ]
 
 
@@ -59,7 +59,7 @@ class Spheroid(geodetic.Spheroid):
         super(Spheroid, self).__init__(*(parameters or ()))
 
     def __repr__(self):
-        return f"Spheroid({self.semi_major_axis}, {self.flattening})"
+        return f'Spheroid({self.semi_major_axis}, {self.flattening})'
 
 
 class System(Spheroid):
@@ -69,12 +69,12 @@ class System(Spheroid):
     """
 
     def __init__(self, parameters: Optional[Tuple[float, float]] = None):
-        warnings.warn("System is deprecated. Use Spheroid instead.",
+        warnings.warn('System is deprecated. Use Spheroid instead.',
                       DeprecationWarning)
         super(System, self).__init__(parameters)
 
     def __repr__(self):
-        return f"System({self.semi_major_axis}, {self.flattening})"
+        return f'System({self.semi_major_axis}, {self.flattening})'
 
 
 class Coordinates(geodetic.Coordinates):

@@ -61,17 +61,17 @@ class Grid2D:
     _DIMENSIONS = 2
 
     def __init__(self, *args, increasing_axes: Optional[str] = None):
-        prefix = ""
+        prefix = ''
         for idx, item in enumerate(args):
             if isinstance(item, core.TemporalAxis):
-                prefix = "Temporal"
+                prefix = 'Temporal'
                 break
-        _class = f"{prefix}Grid{self._DIMENSIONS}D" + \
+        _class = f'{prefix}Grid{self._DIMENSIONS}D' + \
             interface._core_class_suffix(args[-1], handle_integer=True)
         if increasing_axes is not None:
             if increasing_axes not in ['inplace', 'copy']:
-                raise ValueError("increasing_axes "
-                                 f"{increasing_axes!r} is not defined")
+                raise ValueError('increasing_axes '
+                                 f'{increasing_axes!r} is not defined')
             inplace = increasing_axes == 'inplace'
             # Tuple does not support item assignment
             args = list(args)
@@ -90,20 +90,20 @@ class Grid2D:
 
         def pad(string, length):
             """Pad a string to a given length."""
-            return "\n".join([(" " * length if ix else "") + line
-                              for ix, line in enumerate(string.split("\n"))])
+            return '\n'.join([(' ' * length if ix else '') + line
+                              for ix, line in enumerate(string.split('\n'))])
 
         result = [
-            f"<{self.__module__}.{self.__class__.__name__}>",
+            f'<{self.__module__}.{self.__class__.__name__}>',
             repr(self.array),
         ]
-        result.append("Axis:")
+        result.append('Axis:')
         for item in dir(self):
             attr = getattr(self, item)
             if isinstance(attr, (core.Axis, core.TemporalAxis)):
-                prefix = f"* {item}: "
-                result.append(f" {prefix}{pad(repr(attr), len(prefix))}")
-        return "\n".join(result)
+                prefix = f'* {item}: '
+                result.append(f' {prefix}{pad(repr(attr), len(prefix))}')
+        return '\n'.join(result)
 
     @property
     def x(self) -> core.Axis:
@@ -222,16 +222,16 @@ def _core_variate_interpolator(instance: object, interpolator: str, **kwargs):
         if dimensions > 3:
             dimensions -= 1
     else:
-        raise TypeError("instance is not an object handling a grid.")
+        raise TypeError('instance is not an object handling a grid.')
 
     prefix = instance._prefix
 
-    if interpolator == "bilinear":
-        return getattr(core, f"{prefix}Bilinear{dimensions}D")(**kwargs)
-    if interpolator == "nearest":
-        return getattr(core, f"{prefix}Nearest{dimensions}D")(**kwargs)
-    if interpolator == "inverse_distance_weighting":
+    if interpolator == 'bilinear':
+        return getattr(core, f'{prefix}Bilinear{dimensions}D')(**kwargs)
+    if interpolator == 'nearest':
+        return getattr(core, f'{prefix}Nearest{dimensions}D')(**kwargs)
+    if interpolator == 'inverse_distance_weighting':
         return getattr(
-            core, f"{prefix}InverseDistanceWeighting{dimensions}D")(**kwargs)
+            core, f'{prefix}InverseDistanceWeighting{dimensions}D')(**kwargs)
 
-    raise ValueError(f"interpolator {interpolator!r} is not defined")
+    raise ValueError(f'interpolator {interpolator!r} is not defined')

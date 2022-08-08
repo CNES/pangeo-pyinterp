@@ -34,12 +34,12 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
     Returns:
         The grid will have NaN filled with extrapolated values.
     """
-    value_type = value_type or "undefined"
+    value_type = value_type or 'undefined'
     instance = mesh._instance
-    function = interface._core_function("loess", instance)
+    function = interface._core_function('loess', instance)
 
     if value_type not in ['undefined', 'defined', 'all']:
-        raise ValueError(f"value type {value_type!r} is not defined")
+        raise ValueError(f'value type {value_type!r} is not defined')
 
     return getattr(core.fill, function)(instance, nx, ny,
                                         getattr(core.fill.ValueType,
@@ -48,7 +48,7 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
 
 
 def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
-                 first_guess: str = "zonal_average",
+                 first_guess: str = 'zonal_average',
                  max_iteration: Optional[int] = None,
                  epsilon: float = 1e-4,
                  relaxation: Optional[float] = None,
@@ -94,7 +94,7 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
         the the grid will have the all NaN filled with extrapolated values.
     """
     if first_guess not in ['zero', 'zonal_average']:
-        raise ValueError(f"first_guess type {first_guess!r} is not defined")
+        raise ValueError(f'first_guess type {first_guess!r} is not defined')
 
     ny = len(mesh.y)
     nx = len(mesh.x)
@@ -111,11 +111,11 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
         max_iteration = nx * ny
 
     first_guess = getattr(
-        getattr(core.fill, "FirstGuess"),
-        "".join(item.capitalize() for item in first_guess.split("_")))
+        getattr(core.fill, 'FirstGuess'),
+        ''.join(item.capitalize() for item in first_guess.split('_')))
 
     instance = mesh._instance
-    function = interface._core_function("gauss_seidel", instance)
+    function = interface._core_function('gauss_seidel', instance)
     filled = np.copy(mesh.array)
     if nz == 0:
         _iterations, residual = getattr(core.fill,

@@ -55,8 +55,8 @@ interpolator = pyinterp.backends.xarray.Grid3D(ds.tcw)
 #   will warn you if there is an inconsistency during the date conversion.
 mx, my, mz = numpy.meshgrid(numpy.arange(-180, 180, 0.25) + 1 / 3.0,
                             numpy.arange(-80, 80, 0.25) + 1 / 3.0,
-                            numpy.array(["2002-07-02T15:00:00"],
-                                        dtype="datetime64"),
+                            numpy.array(['2002-07-02T15:00:00'],
+                                        dtype='datetime64'),
                             indexing='ij')
 
 # %%
@@ -73,7 +73,7 @@ trivariate = interpolator.trivariate(
 # constructor to flip this axis in order to correctly evaluate the bicubic
 # interpolation from this 3D cube (only necessary to perform a bicubic
 # interpolation).
-interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars["tcw"],
+interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars['tcw'],
                                                increasing_axes=True)
 
 # %%
@@ -105,7 +105,7 @@ pcm = ax1.pcolormesh(lons,
                      vmax=80)
 ax1.coastlines()
 ax1.set_extent([80, 170, -45, 30], crs=cartopy.crs.PlateCarree())
-ax1.set_title("Trilinear")
+ax1.set_title('Trilinear')
 
 ax2 = fig.add_subplot(
     212, projection=cartopy.crs.PlateCarree(central_longitude=180))
@@ -119,6 +119,6 @@ pcm = ax2.pcolormesh(lons,
                      vmax=80)
 ax2.coastlines()
 ax2.set_extent([80, 170, -45, 30], crs=cartopy.crs.PlateCarree())
-ax2.set_title("Spline & Linear in time")
+ax2.set_title('Spline & Linear in time')
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()

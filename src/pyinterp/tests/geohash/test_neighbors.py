@@ -17,8 +17,8 @@ def test_neighbors():
     for (lat, lon, hash_int, bits, hash_int_neighbors, hash_str,
          hash_str_neighbors) in cases:
         point = geodetic.Point(lon, lat)
-        hash = geohash.int64.encode(np.array([lon], dtype="float64"),
-                                    np.array([lat], dtype="float64"), bits)
+        hash = geohash.int64.encode(np.array([lon], dtype='float64'),
+                                    np.array([lat], dtype='float64'), bits)
         assert hash_int == hash[0]
         assert list(geohash.int64.neighbors(hash_int,
                                             bits)) == hash_int_neighbors

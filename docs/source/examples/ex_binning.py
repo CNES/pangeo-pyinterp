@@ -87,7 +87,7 @@ pcm = ax1.pcolormesh(lon,
                      vmax=1,
                      transform=cartopy.crs.PlateCarree())
 ax1.coastlines()
-ax1.set_title("Simple binning.")
+ax1.set_title('Simple binning.')
 
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
 lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
@@ -100,7 +100,7 @@ pcm = ax2.pcolormesh(lon,
                      vmax=1,
                      transform=cartopy.crs.PlateCarree())
 ax2.coastlines()
-ax2.set_title("Linear binning.")
+ax2.set_title('Linear binning.')
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()
 
@@ -143,19 +143,19 @@ pcm = ax1.pcolormesh(lon,
                      vmax=1,
                      transform=cartopy.crs.PlateCarree())
 ax1.coastlines()
-ax1.set_title("Mean")
+ax1.set_title('Mean')
 
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
 lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
 pcm = ax2.pcolormesh(lon,
                      lat,
-                     hist2d.variable("quantile", 0.5),
+                     hist2d.variable('quantile', 0.5),
                      cmap='jet',
                      shading='auto',
                      vmin=0,
                      vmax=1,
                      transform=cartopy.crs.PlateCarree())
 ax2.coastlines()
-ax2.set_title("Median")
+ax2.set_title('Median')
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()

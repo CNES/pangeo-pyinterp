@@ -21,7 +21,7 @@ def make_date(samples=10000):
     delta = datetime.datetime.now() - datetime.datetime(1970, 1, 1)
 
     pydates = [epoch + random.random() * delta for _ in range(samples)]
-    npdates = numpy.array(pydates).astype("datetime64[ns]")
+    npdates = numpy.array(pydates).astype('datetime64[ns]')
 
     return npdates
 

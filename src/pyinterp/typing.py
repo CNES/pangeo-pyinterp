@@ -19,7 +19,7 @@ import packaging.version
 
 if TYPE_CHECKING and packaging.version.Version(
         numpy.__version__) > packaging.version.Version(
-            "1.20") and sys.version_info > (3, 8):  # pragma: no cover
+            '1.20') and sys.version_info > (3, 8):  # pragma: no cover
     import numpy.typing
 
     NDArray = numpy.typing.NDArray

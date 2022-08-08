@@ -27,10 +27,10 @@ import pandas
 import pyinterp.backends.xarray
 import pyinterp.tests
 
-cat = intake.open_catalog("https://raw.githubusercontent.com/pangeo-data"
-                          "/pangeo-datastore/master/intake-catalogs/"
-                          "ocean.yaml")
-ds = cat["sea_surface_height"].to_dask()
+cat = intake.open_catalog('https://raw.githubusercontent.com/pangeo-data'
+                          '/pangeo-datastore/master/intake-catalogs/'
+                          'ocean.yaml')
+ds = cat['sea_surface_height'].to_dask()
 
 
 # %%
@@ -54,11 +54,11 @@ class TimeSeries:
 
         series = pandas.Series(time)
         frequency = set(
-            numpy.diff(series.values.astype("datetime64[s]")).astype("int64"))
+            numpy.diff(series.values.astype('datetime64[s]')).astype('int64'))
         if len(frequency) != 1:
             raise RuntimeError(
-                "Time series does not have a constant step between two "
-                f"grids: {frequency} seconds")
+                'Time series does not have a constant step between two '
+                f'grids: {frequency} seconds')
         return series, datetime.timedelta(seconds=float(frequency.pop()))
 
     def load_dataset(self, varname, start, end):
@@ -75,13 +75,13 @@ class TimeSeries:
         """
         if start < self.series.min() or end > self.series.max():
             raise IndexError(
-                f"period [{start}, {end}] out of range [{self.series.min()}, "
-                f"{self.series.max()}]")
+                f'period [{start}, {end}] out of range [{self.series.min()}, '
+                f'{self.series.max()}]')
         first = start - self.dt
         last = end + self.dt
 
         selected = self.series[(self.series >= first) & (self.series < last)]
-        print(f"fetch data from {selected.min()} to {selected.max()}")
+        print(f'fetch data from {selected.min()} to {selected.max()}')
 
         data_array = ds[varname].isel(time=selected.index)
         return pyinterp.backends.xarray.Grid3D(data_array)
@@ -103,17 +103,17 @@ def load_positions():
     """Loading and formatting the dataset."""
     df = pandas.read_csv(pyinterp.tests.positions_path(),
                          header=None,
-                         sep=r";",
+                         sep=r';',
                          usecols=[0, 1, 2, 3],
-                         names=["id", "time", "lon", "lat"],
+                         names=['id', 'time', 'lon', 'lat'],
                          dtype=dict(id=numpy.uint32,
                                     time=numpy.float64,
                                     lon=numpy.float64,
                                     lat=numpy.float64))
     df.mask(df == 1.8446744073709552e+19, numpy.nan, inplace=True)
-    df["time"] = df["time"].apply(cnes_jd_to_datetime)
+    df['time'] = df['time'].apply(cnes_jd_to_datetime)
     df.set_index('time', inplace=True)
-    df["sla"] = numpy.nan
+    df['sla'] = numpy.nan
     return df.sort_index()
 
 
@@ -126,7 +126,7 @@ df = load_positions()
 def periods(df, time_series, frequency='W'):
     """Return the list of periods covering the time series loaded in memory."""
     period_start = df.groupby(
-        df.index.to_period(frequency))["sla"].count().index
+        df.index.to_period(frequency))['sla'].count().index
 
     for start, end in zip(period_start, period_start[1:]):
         start = start.to_timestamp()
@@ -141,14 +141,14 @@ def periods(df, time_series, frequency='W'):
 # The second one will interpolate the DataFrame loaded in memory.
 def interpolate(df, time_series, start, end):
     """Interpolate the time series over the defined period."""
-    interpolator = time_series.load_dataset("sla", start, end)
+    interpolator = time_series.load_dataset('sla', start, end)
     mask = (df.index >= start) & (df.index < end)
-    selected = df.loc[mask, ["lon", "lat"]]
-    df.loc[mask, ["sla"]] = interpolator.trivariate(
-        dict(longitude=selected["lon"].values,
-             latitude=selected["lat"].values,
+    selected = df.loc[mask, ['lon', 'lat']]
+    df.loc[mask, ['sla']] = interpolator.trivariate(
+        dict(longitude=selected['lon'].values,
+             latitude=selected['lat'].values,
              time=selected.index.values),
-        interpolator="inverse_distance_weighting",
+        interpolator='inverse_distance_weighting',
         num_threads=0)
 
 
@@ -176,8 +176,8 @@ sc = ax.scatter(selected_float.lon,
                 transform=cartopy.crs.PlateCarree(),
                 cmap='jet')
 ax.coastlines()
-ax.set_title("Time series of SLA "
-             "(larger points are closer to the last date)")
+ax.set_title('Time series of SLA '
+             '(larger points are closer to the last date)')
 ax.add_feature(cartopy.feature.LAND)
 ax.add_feature(cartopy.feature.COASTLINE)
 ax.set_extent([80, 100, 13.5, 25], crs=cartopy.crs.PlateCarree())

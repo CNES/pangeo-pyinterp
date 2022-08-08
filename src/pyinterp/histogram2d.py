@@ -62,13 +62,13 @@ class Histogram2D:
                  x: core.Axis,
                  y: core.Axis,
                  bin_counts: Optional[int] = None,
-                 dtype: Optional[np.dtype] = np.dtype("float64")):
-        if dtype == np.dtype("float64"):
+                 dtype: Optional[np.dtype] = np.dtype('float64')):
+        if dtype == np.dtype('float64'):
             self._instance = core.Histogram2DFloat64(x, y, bin_counts)
-        elif dtype == np.dtype("float32"):
+        elif dtype == np.dtype('float32'):
             self._instance = core.Histogram2DFloat32(x, y, bin_counts)
         else:
-            raise ValueError(f"dtype {dtype} not handled by the object")
+            raise ValueError(f'dtype {dtype} not handled by the object')
         self.dtype = dtype
 
     @property
@@ -88,16 +88,16 @@ class Histogram2D:
     def __repr__(self) -> str:
         """Called by the ``repr()`` built-in function to compute the string
         representation of this instance."""
-        result = [f"<{self.__class__.__module__}.{self.__class__.__name__}>"]
-        result.append("Axis:")
-        result.append(f"  x: {self._instance.x}")
-        result.append(f"  y: {self._instance.y}")
-        return "\n".join(result)
+        result = [f'<{self.__class__.__module__}.{self.__class__.__name__}>']
+        result.append('Axis:')
+        result.append(f'  x: {self._instance.x}')
+        result.append(f'  y: {self._instance.y}')
+        return '\n'.join(result)
 
-    def __add__(self, other: "Histogram2D") -> "Histogram2D":
+    def __add__(self, other: 'Histogram2D') -> 'Histogram2D':
         """Overrides the default behavior of the ``+`` operator."""
         if self.dtype != other.dtype:
-            raise ValueError("dtype mismatch")
+            raise ValueError('dtype mismatch')
         result = copy.copy(self)
         result._instance += other._instance  # type: ignore
         return result
@@ -141,7 +141,7 @@ class Histogram2D:
         def _process_block(x, y, z, x_axis, y_axis, dtype):
             hist2d = Histogram2D(x_axis, y_axis, dtype=dtype)
             hist2d.push(x, y, z)
-            return np.array([hist2d], dtype="object")
+            return np.array([hist2d], dtype='object')
 
         return da.map_blocks(_process_block,
                              x.ravel(),
@@ -150,7 +150,7 @@ class Histogram2D:
                              self.x,
                              self.y,
                              self.dtype,
-                             dtype="object").sum()
+                             dtype='object').sum()
 
     def variable(self, statistics: str = 'mean', *args) -> np.ndarray:
         """Gets the regular grid containing the calculated statistics.
@@ -181,4 +181,4 @@ class Histogram2D:
             return getattr(self._instance, statistics)(*args)
         except AttributeError as exc:
             raise ValueError(
-                f"The statistical variable {statistics} is unknown.") from exc
+                f'The statistical variable {statistics} is unknown.') from exc

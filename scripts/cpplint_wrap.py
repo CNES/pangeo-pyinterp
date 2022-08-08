@@ -6,18 +6,18 @@ import pathlib
 import subprocess
 
 
-def main(output="emacs"):
+def main(output='emacs'):
     """main function."""
     # Root of project
-    root = pathlib.Path(__file__).parent.parent.joinpath("src")
+    root = pathlib.Path(__file__).parent.parent.joinpath('src')
     args = [
-        "cpplint",
-        "--filter=-runtime/references,-build/c++11,-build/include_order",
-        "--exclude=src/pyinterp/core/tests",
-        "--recursive",
+        'cpplint',
+        '--filter=-runtime/references,-build/c++11,-build/include_order',
+        '--exclude=src/pyinterp/core/tests',
+        '--recursive',
         str(root.resolve()),
     ]
-    process = subprocess.Popen(" ".join(args),
+    process = subprocess.Popen(' '.join(args),
                                shell=True,
                                bufsize=4096,
                                stdout=subprocess.PIPE,

@@ -14,9 +14,9 @@ from .. import Axis, Grid2D, Grid3D, fill
 
 def load_data(cube=False):
     ds = load_grid2d()  # type: ignore
-    x_axis = Axis(ds["lon"].values[::5], is_circle=True)
-    y_axis = Axis(ds["lat"].values[::5])
-    mss = ds["mss"].values[::5, ::5].T
+    x_axis = Axis(ds['lon'].values[::5], is_circle=True)
+    y_axis = Axis(ds['lat'].values[::5])
+    mss = ds['mss'].values[::5, ::5].T
     if cube:
         z_axis = Axis(np.arange(2))
         mss = np.stack([mss.data] * len(z_axis)).transpose(1, 2, 0)
@@ -37,7 +37,7 @@ def test_loess():
     assert (data - filled1).mean() != 0
 
     with pytest.raises(ValueError):
-        fill.loess(grid, value_type="x")
+        fill.loess(grid, value_type='x')
 
 
 def test_gauss_seidel():
@@ -88,11 +88,11 @@ def test_gauss_seidel_3d():
 
 def test_loess_4d():
     variable = load_grid4d().pressure
-    variable = variable.transpose("longitude", "latitude", "time", "level")
-    x_axis = Axis(variable["longitude"].values, is_circle=True)
-    y_axis = Axis(variable["latitude"].values)
-    z_axis = TemporalAxis(variable["time"].values)
-    u_axis = Axis(variable["level"].values)
+    variable = variable.transpose('longitude', 'latitude', 'time', 'level')
+    x_axis = Axis(variable['longitude'].values, is_circle=True)
+    y_axis = Axis(variable['latitude'].values)
+    z_axis = TemporalAxis(variable['time'].values)
+    u_axis = Axis(variable['level'].values)
 
     grid = Grid4D(x_axis, y_axis, z_axis, u_axis, variable.values)
     filled = fill.loess(grid, num_threads=0)

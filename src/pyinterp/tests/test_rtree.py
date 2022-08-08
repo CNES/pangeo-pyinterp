@@ -65,30 +65,30 @@ def load_data():
 
 
 def test_interpolate(pytestconfig):
-    dump = pytestconfig.getoption("dump")
+    dump = pytestconfig.getoption('dump')
     mesh = load_data()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
     coordinates = np.vstack((x.ravel(), y.ravel())).T
     data, _ = mesh.query(coordinates)
-    make_or_compare_reference("rtree_query.npy", data, dump)
+    make_or_compare_reference('rtree_query.npy', data, dump)
     data, _ = mesh.inverse_distance_weighting(coordinates)
-    make_or_compare_reference("rtree_idw.npy", data, dump)
+    make_or_compare_reference('rtree_idw.npy', data, dump)
     data, _ = mesh.radial_basis_function(coordinates)
-    make_or_compare_reference("rtree_rbf.npy", data, dump)
+    make_or_compare_reference('rtree_rbf.npy', data, dump)
     data, _ = mesh.window_function(coordinates, radius=2_000_000)
-    make_or_compare_reference("rtree_wf.npy", data, dump)
+    make_or_compare_reference('rtree_wf.npy', data, dump)
 
     with pytest.raises(ValueError):
-        mesh.radial_basis_function(coordinates, epsilon=1, rbf="cubic")
+        mesh.radial_basis_function(coordinates, epsilon=1, rbf='cubic')
     with pytest.raises(ValueError):
-        mesh.radial_basis_function(coordinates, rbf="X")
+        mesh.radial_basis_function(coordinates, rbf='X')
     with pytest.raises(ValueError):
-        mesh.window_function(coordinates, radius=1, wf="cubic")
+        mesh.window_function(coordinates, radius=1, wf='cubic')
     with pytest.raises(ValueError):
-        mesh.window_function(coordinates, radius=1, wf="parzen", arg=-1)
+        mesh.window_function(coordinates, radius=1, wf='parzen', arg=-1)
     with pytest.raises(ValueError):
-        mesh.window_function(coordinates, radius=1, wf="lanczos", arg=0)
+        mesh.window_function(coordinates, radius=1, wf='lanczos', arg=0)
     with pytest.raises(ValueError):
-        mesh.window_function(coordinates, radius=1, wf="blackman", arg=2)
+        mesh.window_function(coordinates, radius=1, wf='blackman', arg=2)

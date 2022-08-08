@@ -21,17 +21,17 @@ def to_xarray(hashes: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
     """
     if hashes.shape != data.shape:
         raise ValueError(
-            "hashes, data could not be broadcast together with shape "
-            f"{hashes.shape}, f{data.shape}")
+            'hashes, data could not be broadcast together with shape '
+            f'{hashes.shape}, f{data.shape}')
     if hashes.dtype.kind != 'S':
-        raise TypeError("hashes must be a string array")
+        raise TypeError('hashes must be a string array')
     lon, lat = geohash.decode(
         geohash.bounding_boxes(precision=hashes.dtype.itemsize))
     x_axis = core.Axis(numpy.unique(lon), is_circle=True)
     y_axis = core.Axis(numpy.unique(lat))
 
     dtype = data.dtype
-    if numpy.issubdtype(dtype, numpy.dtype("object")):
+    if numpy.issubdtype(dtype, numpy.dtype('object')):
         grid = numpy.empty((len(y_axis), len(x_axis)), dtype)
     else:
         grid = numpy.zeros((len(y_axis), len(x_axis)), dtype)
@@ -43,8 +43,8 @@ def to_xarray(hashes: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
         grid,
         dims=('lat', 'lon'),
         coords=dict(lon=xarray.DataArray(x_axis,
-                                         dims=("lon", ),
-                                         attrs=dict(units="degrees_north")),
+                                         dims=('lon', ),
+                                         attrs=dict(units='degrees_north')),
                     lat=xarray.DataArray(y_axis,
-                                         dims=("lat", ),
-                                         attrs=dict(units="degrees_east"))))
+                                         dims=('lat', ),
+                                         attrs=dict(units='degrees_east'))))

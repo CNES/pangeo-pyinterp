@@ -24,9 +24,9 @@ def directory_type(value):
 
 def usage():
     """Parse arguments."""
-    parser = argparse.ArgumentParser(description="Parallel clang-tidy runner")
+    parser = argparse.ArgumentParser(description='Parallel clang-tidy runner')
     parser.add_argument('--include',
-                        nargs="+",
+                        nargs='+',
                         type=directory_type,
                         help='Add directory to include search path')
     parser.add_argument('--jobs',
@@ -34,24 +34,24 @@ def usage():
                         default=multiprocessing.cpu_count(),
                         help='number of tidy instances to be run in parallel.')
     parser.add_argument('--fix',
-                        action="store_true",
-                        help="Apply suggested fixes. Without -fix-errors "
-                        "clang-tidy will bail out if any compilation "
-                        "errors were found")
-    parser.add_argument("--log",
-                        type=argparse.FileType("w"),
-                        help="path to the file containing the execution log.")
-    parser.add_argument("--pattern",
-                        help="Pattern to select files to be taken into "
-                        "account in the processing.")
+                        action='store_true',
+                        help='Apply suggested fixes. Without -fix-errors '
+                        'clang-tidy will bail out if any compilation '
+                        'errors were found')
+    parser.add_argument('--log',
+                        type=argparse.FileType('w'),
+                        help='path to the file containing the execution log.')
+    parser.add_argument('--pattern',
+                        help='Pattern to select files to be taken into '
+                        'account in the processing.')
     parser.add_argument(
-        "--clang-tidy",
+        '--clang-tidy',
         help='path to the "clang-tidy" program to be executed.',
-        default="clang-tidy")
+        default='clang-tidy')
     return parser.parse_args()
 
 
-def run(program, fix, path, options=""):
+def run(program, fix, path, options=''):
     """Launch clang-tidy."""
     args = [
         program, '-checks=-*,boost-*,concurrency-*,modernize-*,'
@@ -61,8 +61,8 @@ def run(program, fix, path, options=""):
         options
     ]
     if fix:
-        args.insert(2, "-fix")
-    process = subprocess.Popen(" ".join(args),
+        args.insert(2, '-fix')
+    process = subprocess.Popen(' '.join(args),
                                shell=True,
                                bufsize=4096,
                                stdout=subprocess.PIPE,
@@ -71,7 +71,7 @@ def run(program, fix, path, options=""):
     stdout = stdout.decode('utf8')
     if process.returncode != 0:
         raise RuntimeError(stdout)
-    return " ".join(args) + "\n" + stdout
+    return ' '.join(args) + '\n' + stdout
 
 
 def main():
@@ -85,20 +85,20 @@ def main():
     # Directories to include in search path
     includes = [] if args.include is None else args.include
     if platform.system() == 'Darwin':
-        sysroot = (" -isysroot "
-                   "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk")
+        sysroot = (' -isysroot '
+                   '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk')
     else:
-        sysroot = ""
+        sysroot = ''
     includes.insert(0, sysconfig.get_config_var('INCLUDEPY'))
-    includes.insert(0, f"{sys.prefix}/include/eigen3")
-    includes.insert(0, f"{sys.prefix}/include")
-    includes.insert(0, f"{root}/third_party/pybind11/include")
-    includes.insert(0, f"{root}/src/pyinterp/core/include")
+    includes.insert(0, f'{sys.prefix}/include/eigen3')
+    includes.insert(0, f'{sys.prefix}/include')
+    includes.insert(0, f'{root}/third_party/pybind11/include')
+    includes.insert(0, f'{root}/src/pyinterp/core/include')
 
     pattern = re.compile(args.pattern).search if args.pattern else None
 
     # Enumerates files to be processed
-    for dirname in [f"{root}/src/pyinterp/core"]:
+    for dirname in [f'{root}/src/pyinterp/core']:
         for root, dirs, files in os.walk(dirname):
             if 'tests' in dirs:
                 dirs.remove('tests')
@@ -106,12 +106,12 @@ def main():
                 path = os.path.join(root, item)
                 if pattern is not None and pattern(path) is None:
                     continue
-                if item.endswith(".cpp") or item.endswith(".hpp"):
+                if item.endswith('.cpp') or item.endswith('.hpp'):
                     target.append(path)
 
     # Compiler options
-    options = "-std=c++17 " + " ".join(
-        (f"-I{item}" for item in includes)) + sysroot
+    options = '-std=c++17 ' + ' '.join(
+        (f'-I{item}' for item in includes)) + sysroot
 
     # Stream used to write in the logbook
     stream = sys.stderr if args.log is None else args.log
@@ -128,12 +128,12 @@ def main():
             path = future_to_lint[future]
             print(path)
             try:
-                stream.write(future.result() + "\n")
+                stream.write(future.result() + '\n')
                 stream.flush()
             except Exception as exc:
                 raise RuntimeError('%r generated an exception: %s' %
                                    (path, exc))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

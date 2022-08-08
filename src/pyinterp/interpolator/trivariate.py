@@ -15,8 +15,8 @@ def trivariate(grid3d: grid.Grid3D,
                x: np.ndarray,
                y: np.ndarray,
                z: np.ndarray,
-               interpolator: str = "bilinear",
-               z_method: str = "linear",
+               interpolator: str = 'bilinear',
+               z_method: str = 'linear',
                bounds_error: bool = False,
                num_threads: int = 0,
                **kwargs) -> np.ndarray:
@@ -46,7 +46,7 @@ def trivariate(grid3d: grid.Grid3D,
         Values interpolated.
     """
     instance = grid3d._instance
-    function = interface._core_function("trivariate", instance)
+    function = interface._core_function('trivariate', instance)
     return getattr(core, function)(instance,
                                    np.asarray(x),
                                    np.asarray(y),

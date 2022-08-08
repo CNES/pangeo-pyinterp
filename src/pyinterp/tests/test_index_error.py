@@ -18,8 +18,8 @@ def test_index_error_3d():
     lon = np.arange(-180, 180, 10)
     lat = np.arange(-80, 80, 10)
     time = np.array([datetime.datetime(2020, 7, 2, 15, 0)],
-                    dtype="datetime64[ns]")
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+                    dtype='datetime64[ns]')
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
 
     with pytest.raises(ValueError):
         grid(collections.OrderedDict(longitude=x.ravel(),
@@ -27,20 +27,20 @@ def test_index_error_3d():
                                      time=t.ravel()),
              bounds_error=True)
 
-    with pytest.raises(ValueError, match="2020-07-02T15:00:00.000000000"):
+    with pytest.raises(ValueError, match='2020-07-02T15:00:00.000000000'):
         grid(collections.OrderedDict(longitude=x.ravel(),
                                      latitude=y.ravel(),
                                      time=t.ravel()),
-             method="bicubic",
+             method='bicubic',
              bounds_error=True)
 
-    ds = ds.assign_coords(time=ds.time.astype("int64"))
+    ds = ds.assign_coords(time=ds.time.astype('int64'))
     grid = xr_backend.RegularGridInterpolator(ds.tcw, increasing_axes=True)
 
-    with pytest.raises(ValueError, match="1593702000000000000.000000"):
+    with pytest.raises(ValueError, match='1593702000000000000.000000'):
         grid(collections.OrderedDict(longitude=x.ravel(),
                                      latitude=y.ravel(),
-                                     time=t.astype("int64").ravel()),
+                                     time=t.astype('int64').ravel()),
              bounds_error=True)
 
 
@@ -52,21 +52,21 @@ def test_index_error_4d():
     lat = np.arange(34, 40, 0.25)
     level = 0.5
     time = np.datetime64('2010-01-01T12:00')
-    x, y, z, t = np.meshgrid(lon, lat, level, time, indexing="ij")
+    x, y, z, t = np.meshgrid(lon, lat, level, time, indexing='ij')
 
-    with pytest.raises(ValueError, match="2010-01-01T12:00:00.000000000"):
+    with pytest.raises(ValueError, match='2010-01-01T12:00:00.000000000'):
         grid.quadrivariate(collections.OrderedDict(longitude=x.ravel(),
                                                    latitude=y.ravel(),
                                                    level=z.ravel(),
                                                    time=t.ravel()),
                            bounds_error=True)
 
-    ds = ds.assign_coords(time=ds.time.astype("int64"))
+    ds = ds.assign_coords(time=ds.time.astype('int64'))
     grid = xr_backend.RegularGridInterpolator(ds.pressure,
                                               increasing_axes=True)
-    with pytest.raises(ValueError, match="21039120"):
+    with pytest.raises(ValueError, match='21039120'):
         grid(collections.OrderedDict(longitude=x.ravel(),
                                      latitude=y.ravel(),
                                      level=z.ravel(),
-                                     time=t.astype("int64").ravel()),
+                                     time=t.astype('int64').ravel()),
              bounds_error=True)

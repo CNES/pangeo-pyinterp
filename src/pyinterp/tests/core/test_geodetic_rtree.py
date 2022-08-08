@@ -55,7 +55,7 @@ def test_geodetic_rtree_idw(pytestconfig):
     mesh = load_data()
     lon = np.arange(-180, 180, 1)
     lat = np.arange(-90, 90, 1)
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
     z, _ = mesh.inverse_distance_weighting(x.ravel(),
                                            y.ravel(),
                                            within=False,
@@ -64,9 +64,9 @@ def test_geodetic_rtree_idw(pytestconfig):
                                            num_threads=0)
     z = np.ma.fix_invalid(z)
 
-    if HAVE_PLT and pytestconfig.getoption("visualize"):
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
         plot(x, y, z.reshape((len(lon), len(lat))),
-             "mss_geodetic_rtree_idw.png")
+             'mss_geodetic_rtree_idw.png')
 
 
 def test_geodetic_rtree_rbf(pytestconfig):
@@ -74,7 +74,7 @@ def test_geodetic_rtree_rbf(pytestconfig):
     mesh = load_data()
     lon = np.arange(-180, 180, 1)
     lat = np.arange(-90, 90, 1)
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
     z, _ = mesh.radial_basis_function(x.ravel(),
                                       y.ravel(),
                                       within=True,
@@ -86,9 +86,9 @@ def test_geodetic_rtree_rbf(pytestconfig):
                                       num_threads=0)
     z = np.ma.fix_invalid(z)
 
-    if HAVE_PLT and pytestconfig.getoption("visualize"):
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
         plot(x, y, z.reshape((len(lon), len(lat))),
-             "mss_geodetic_rtree_rbf.png")
+             'mss_geodetic_rtree_rbf.png')
 
 
 def test_geodetic_rtree_window_function(pytestconfig):
@@ -96,7 +96,7 @@ def test_geodetic_rtree_window_function(pytestconfig):
     mesh = load_data()
     lon = np.arange(-180, 180, 1)
     lat = np.arange(-90, 90, 1)
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
     z0, _ = mesh.window_function(x.ravel(),
                                  y.ravel(),
                                  within=False,
@@ -106,9 +106,9 @@ def test_geodetic_rtree_window_function(pytestconfig):
                                  num_threads=0)
     z0 = np.ma.fix_invalid(z0)
 
-    if HAVE_PLT and pytestconfig.getoption("visualize"):
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
         plot(x, y, z0.reshape((len(lon), len(lat))),
-             "mss_geodetic_rtree_wf.png")
+             'mss_geodetic_rtree_wf.png')
 
 
 def test_geodetic_rtree_insert():

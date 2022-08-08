@@ -14,7 +14,7 @@ from .. import core, grid, interface
 def bivariate(grid2d: grid.Grid2D,
               x: np.ndarray,
               y: np.ndarray,
-              interpolator: str = "bilinear",
+              interpolator: str = 'bilinear',
               bounds_error: bool = False,
               num_threads: int = 0,
               **kwargs) -> np.ndarray:
@@ -40,7 +40,7 @@ def bivariate(grid2d: grid.Grid2D,
         Values interpolated.
     """
     instance = grid2d._instance
-    function = interface._core_function("bivariate", instance)
+    function = interface._core_function('bivariate', instance)
     return getattr(core, function)(instance, np.asarray(x), np.asarray(y),
                                    grid._core_variate_interpolator(
                                        grid2d, interpolator, **kwargs),

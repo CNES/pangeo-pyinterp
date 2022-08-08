@@ -30,7 +30,7 @@ def check_stats(ds, values, dtype, error):
     assert ds.skewness() == pytest.approx(skewness, rel=error, abs=error)
 
 
-@pytest.mark.parametrize("dtype,error", [(np.float32, 1e-4),
+@pytest.mark.parametrize('dtype,error', [(np.float32, 1e-4),
                                          (np.float64, 1e-6)])
 def test_descriptive_statistics_1d(dtype, error):
     """Test the computation of descriptive statistics for a 1D array."""
@@ -51,7 +51,7 @@ def test_descriptive_statistics_1d(dtype, error):
     assert isinstance(str(ds), str)
 
 
-@pytest.mark.parametrize("dtype,error", [(np.float32, 1e-4),
+@pytest.mark.parametrize('dtype,error', [(np.float32, 1e-4),
                                          (np.float64, 1e-6)])
 def test_descriptive_statistics_iadd(dtype, error):
     v0 = np.random.random_sample((5000, )).astype(dtype)
@@ -70,7 +70,7 @@ def test_descriptive_statistics_iadd(dtype, error):
         ds += ds2
 
 
-@pytest.mark.parametrize("dtype,error", [(np.float32, 1e-4),
+@pytest.mark.parametrize('dtype,error', [(np.float32, 1e-4),
                                          (np.float64, 1e-6)])
 def test_descriptive_statistics_add(dtype, error):
     v0 = np.random.random_sample((5000, )).astype(dtype)
@@ -97,15 +97,15 @@ def test_array():
     array = ds.array()
     assert array.shape == (20, 30)
 
-    assert np.all(ds.count() == array["count"])
-    assert np.all(ds.max() == array["max"])
-    assert np.all(ds.mean() == array["mean"])
-    assert np.all(ds.min() == array["min"])
-    assert np.all(ds.sum() == array["sum"])
-    assert np.all(ds.sum_of_weights() == array["sum_of_weights"])
-    assert np.all(ds.var() == array["var"])
-    assert np.all(ds.kurtosis() == array["kurtosis"])
-    assert np.all(ds.skewness() == array["skewness"])
+    assert np.all(ds.count() == array['count'])
+    assert np.all(ds.max() == array['max'])
+    assert np.all(ds.mean() == array['mean'])
+    assert np.all(ds.min() == array['min'])
+    assert np.all(ds.sum() == array['sum'])
+    assert np.all(ds.sum_of_weights() == array['sum_of_weights'])
+    assert np.all(ds.var() == array['var'])
+    assert np.all(ds.kurtosis() == array['kurtosis'])
+    assert np.all(ds.skewness() == array['skewness'])
 
     with pytest.raises(ValueError):
         ds = DescriptiveStatistics(values, axis=(0, ), dtype=np.dtype('S1'))

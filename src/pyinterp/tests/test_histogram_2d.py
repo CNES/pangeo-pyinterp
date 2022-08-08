@@ -36,7 +36,7 @@ def build_instance(dtype):
     assert np.all(hist2d.variable('count') == 0)
 
     with pytest.raises(ValueError):
-        hist2d.variable("_")
+        hist2d.variable('_')
 
 
 def test_histogram2d():
@@ -54,13 +54,13 @@ def test_dask():
     y_axis = Axis(np.linspace(-80, 80, 1))
     hist2d = Histogram2D(x_axis, y_axis)
 
-    x = da.full((4096 * 8, ), -180.0, dtype="f8", chunks=4096)
-    y = da.full((4096 * 8, ), -80.0, dtype="f8", chunks=4096)
+    x = da.full((4096 * 8, ), -180.0, dtype='f8', chunks=4096)
+    y = da.full((4096 * 8, ), -80.0, dtype='f8', chunks=4096)
     z = da.random.uniform(size=4096 * 8, chunks=4096)
 
     hist2d = hist2d.push_delayed(x, y, z).compute()
 
-    assert np.all(hist2d.variable("count") == 32768)
-    assert hist2d.variable("mean")[0, 0] == pytest.approx(z.mean().compute())
-    assert hist2d.variable("variance")[0, 0] == pytest.approx(
+    assert np.all(hist2d.variable('count') == 32768)
+    assert hist2d.variable('mean')[0, 0] == pytest.approx(z.mean().compute())
+    assert hist2d.variable('variance')[0, 0] == pytest.approx(
         z.std().compute()**2, rel=1e-4, abs=1e-4)  # type: ignore

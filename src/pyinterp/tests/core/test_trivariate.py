@@ -37,12 +37,12 @@ def load_data(temporal_axis=False):
     ds = load_grid3d()
     z = np.flip(ds['tcw'].values.T, axis=1)
     if temporal_axis:
-        z_axis = core.TemporalAxis(ds["time"].values.astype("M8[h]"))
+        z_axis = core.TemporalAxis(ds['time'].values.astype('M8[h]'))
         return core.TemporalGrid3DFloat64(
             core.Axis(ds['longitude'].values, is_circle=True),
             core.Axis(np.flip(ds['latitude'].values)), z_axis, z.data)
     int64 = (ds['time'].values -
-             np.datetime64("1900-01-01")).astype("m8[h]").astype("int64")
+             np.datetime64('1900-01-01')).astype('m8[h]').astype('int64')
     return core.Grid3DFloat64(
         core.Axis(ds['longitude'].values, is_circle=True),
         core.Axis(np.flip(ds.variables['latitude'][:])), core.Axis(int64),
@@ -75,7 +75,7 @@ def run_interpolator(interpolator, filename, visualize, dump):
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
     time = 898500 + 3
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z0 = core.trivariate_float64(grid,
                                  x.ravel(),
                                  y.ravel(),
@@ -88,7 +88,7 @@ def run_interpolator(interpolator, filename, visualize, dump):
                                  t.ravel(),
                                  interpolator,
                                  num_threads=1)
-    make_or_compare_reference(filename + ".npy", z1, dump)
+    make_or_compare_reference(filename + '.npy', z1, dump)
     shape = (len(lon), len(lat))
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
@@ -109,25 +109,25 @@ def test_trivariate_spline(pytestconfig):
                              x.ravel(),
                              y.ravel(),
                              t.ravel(),
-                             fitting_model="akima",
+                             fitting_model='akima',
                              bounds_error=True,
                              num_threads=0)
     z1 = core.spline_float64(grid,
                              x.ravel(),
                              y.ravel(),
                              t.ravel(),
-                             fitting_model="akima",
+                             fitting_model='akima',
                              bounds_error=True,
                              num_threads=1)
-    make_or_compare_reference("test_trivariate_spline.npy", z1,
-                              pytestconfig.getoption("dump"))
+    make_or_compare_reference('test_trivariate_spline.npy', z1,
+                              pytestconfig.getoption('dump'))
     shape = (len(lon), len(lat))
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
-    if HAVE_PLT and pytestconfig.getoption("visualize"):
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
         plot(x.reshape(shape), y.reshape(shape), z0.reshape(shape),
-             "tcw_spline.png")
+             'tcw_spline.png')
 
 
 def test_grid3d_bounds_error():
@@ -137,7 +137,7 @@ def test_grid3d_bounds_error():
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
     time = 898500 + 3
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     core.trivariate_float64(
         grid,  # type: ignore
         x.ravel(),
@@ -158,13 +158,13 @@ def test_grid3d_bounds_error():
 
 def test_grid3d_z_method(pytestconfig):
     """Test of the interpolation method used on Z-axis."""
-    dump = pytestconfig.getoption("dump")
+    dump = pytestconfig.getoption('dump')
     grid = load_data(temporal_axis=True)
     interpolator = core.TemporalBilinear3D()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
-    time = np.array(['2002-07-02T15'], dtype='datetime64[h]').astype("int64")
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    time = np.array(['2002-07-02T15'], dtype='datetime64[h]').astype('int64')
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z0 = core.trivariate_float64(
         grid,  # type: ignore
         x.ravel(),
@@ -178,9 +178,9 @@ def test_grid3d_z_method(pytestconfig):
         y.ravel(),
         t.ravel(),
         interpolator,
-        z_method="linear",
+        z_method='linear',
         num_threads=0)
-    make_or_compare_reference("test_grid3d_z_method_linear.npy", z1, dump)
+    make_or_compare_reference('test_grid3d_z_method_linear.npy', z1, dump)
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z0 == z1)
@@ -190,9 +190,9 @@ def test_grid3d_z_method(pytestconfig):
         y.ravel(),
         t.ravel(),
         interpolator,
-        z_method="nearest",
+        z_method='nearest',
         num_threads=0)
-    make_or_compare_reference("test_grid3d_z_method_nearest.npy", z1, dump)
+    make_or_compare_reference('test_grid3d_z_method_nearest.npy', z1, dump)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z0 != z1)
     with pytest.raises(ValueError):
@@ -202,20 +202,20 @@ def test_grid3d_z_method(pytestconfig):
             y.ravel(),
             t.ravel(),
             interpolator,
-            z_method="NEAREST",
+            z_method='NEAREST',
             num_threads=0)
 
 
 def test_grid3d_interpolator(pytestconfig):
     """Testing of different interpolation methods."""
-    visualize = pytestconfig.getoption("visualize")
-    dump = pytestconfig.getoption("dump")
-    a = run_interpolator(core.Nearest3D(), "tcw_trivariate_nearest", visualize,
+    visualize = pytestconfig.getoption('visualize')
+    dump = pytestconfig.getoption('dump')
+    a = run_interpolator(core.Nearest3D(), 'tcw_trivariate_nearest', visualize,
                          dump)
-    b = run_interpolator(core.Bilinear3D(), "tcw_trivariate_bilinear",
+    b = run_interpolator(core.Bilinear3D(), 'tcw_trivariate_bilinear',
                          visualize, dump)
     c = run_interpolator(core.InverseDistanceWeighting3D(),
-                         "tcw_trivariate_idw", visualize, dump)
+                         'tcw_trivariate_idw', visualize, dump)
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0
@@ -227,8 +227,8 @@ def test_invalid_data():
     interpolator = core.TemporalBilinear3D()
     lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
     lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
-    time = np.array(['2002-07-02T15'], dtype='datetime64[h]').astype("int64")
-    x, y, t = np.meshgrid(lon, lat, time, indexing="ij")
+    time = np.array(['2002-07-02T15'], dtype='datetime64[h]').astype('int64')
+    x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z0 = core.trivariate_float64(
         grid,  # type: ignore
         x.ravel(),
@@ -239,7 +239,7 @@ def test_invalid_data():
     indices = np.random.randint(0, len(x), size=100)
     x.ravel()[indices] = np.nan
     y.ravel()[indices] = np.nan
-    t.ravel()[indices] = np.datetime64("NaT")
+    t.ravel()[indices] = np.datetime64('NaT')
     z1 = core.trivariate_float64(
         grid,  # type: ignore
         x.ravel(),

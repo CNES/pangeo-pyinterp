@@ -23,14 +23,14 @@ def _delayed(
 ) -> Union[core.StreamingHistogramFloat64, core.StreamingHistogramFloat32]:
     """Calculate the descriptive statistics of a dask array."""
     if weights is not None and values.shape != weights.shape:
-        raise ValueError("values and weights must have the same shape")
+        raise ValueError('values and weights must have the same shape')
 
     def _process_block(attr, x, w, axis, bin_count):
         instance = getattr(core, attr)(values=x,
                                        weights=w,
                                        axis=axis,
                                        bin_count=bin_count)
-        return np.array([instance], dtype="object")
+        return np.array([instance], dtype='object')
 
     drop_axis = list(range(values.ndim))[1:]
 
@@ -41,7 +41,7 @@ def _delayed(
                          axis,
                          bin_count,
                          drop_axis=drop_axis,
-                         dtype="object").sum().compute()  # type: ignore
+                         dtype='object').sum().compute()  # type: ignore
 
 
 class StreamingHistogram:
@@ -95,13 +95,13 @@ class StreamingHistogram:
                  dtype: Optional[np.dtype] = None) -> None:
         if isinstance(axis, int):
             axis = (axis, )
-        dtype = dtype or np.dtype("float64")
-        if dtype == np.dtype("float64"):
-            attr = "StreamingHistogramFloat64"
-        elif dtype == np.dtype("float32"):
-            attr = "StreamingHistogramFloat32"
+        dtype = dtype or np.dtype('float64')
+        if dtype == np.dtype('float64'):
+            attr = 'StreamingHistogramFloat64'
+        elif dtype == np.dtype('float32'):
+            attr = 'StreamingHistogramFloat32'
         else:
-            raise ValueError(f"dtype {dtype} not handled by the object")
+            raise ValueError(f'dtype {dtype} not handled by the object')
         if isinstance(values, da.Array) or isinstance(weights, da.Array):
             self._instance = _delayed(
                 attr,
@@ -117,7 +117,7 @@ class StreamingHistogram:
                                                   axis=axis,
                                                   bin_count=bin_count)
 
-    def __iadd__(self, other: Any) -> "StreamingHistogram":
+    def __iadd__(self, other: Any) -> 'StreamingHistogram':
         """Adds a new histogram to the current one.
 
         Args:
@@ -128,10 +128,10 @@ class StreamingHistogram:
         """
         if isinstance(other, StreamingHistogram):
             if type(self._instance) != type(other._instance):  # noqa: E721
-                raise TypeError("StreamingHistogram types must match")
+                raise TypeError('StreamingHistogram types must match')
             self._instance += other._instance  # type: ignore
         else:
-            raise TypeError("unsupported operand type(s) for +="
+            raise TypeError('unsupported operand type(s) for +='
                             f": '{type(self)}' and '{type(other)}'")
         return self
 

@@ -64,7 +64,7 @@ mesh.packing(numpy.vstack((lons, lats)).T, data)
 STEP = 1 / 32
 mx, my = numpy.meshgrid(numpy.arange(X0, X1 + STEP, STEP),
                         numpy.arange(Y0, Y1 + STEP, STEP),
-                        indexing="ij")
+                        indexing='ij')
 
 idw, neighbors = mesh.inverse_distance_weighting(
     numpy.vstack((mx.ravel(), my.ravel())).T,
@@ -81,7 +81,7 @@ rbf, neighbors = mesh.radial_basis_function(
     within=False,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbors
     radius=600000,
-    rbf="thin_plate",
+    rbf='thin_plate',
     num_threads=0)
 rbf = rbf.reshape(mx.shape)
 
@@ -92,7 +92,7 @@ wf, neighbors = mesh.window_function(
     within=False,  # Extrapolation is forbidden
     k=11,
     radius=600000,
-    wf="parzen",
+    wf='parzen',
     num_threads=0)
 wf = wf.reshape(mx.shape)
 
@@ -101,12 +101,12 @@ wf = wf.reshape(mx.shape)
 fig = matplotlib.pyplot.figure(figsize=(10, 20))
 ax1 = fig.add_subplot(311)
 pcm = ax1.pcolormesh(mx, my, idw, cmap='jet', shading='auto', vmin=0, vmax=1)
-ax1.set_title("IDW interpolation")
+ax1.set_title('IDW interpolation')
 ax2 = fig.add_subplot(312)
 pcm = ax2.pcolormesh(mx, my, rbf, cmap='jet', shading='auto', vmin=0, vmax=1)
-ax2.set_title("RBF interpolation")
+ax2.set_title('RBF interpolation')
 ax3 = fig.add_subplot(313)
 pcm = ax3.pcolormesh(mx, my, wf, cmap='jet', shading='auto', vmin=0, vmax=1)
-ax3.set_title("Window function interpolation")
+ax3.set_title('Window function interpolation')
 fig.colorbar(pcm, ax=[ax1, ax2, ax3], shrink=0.8)
 fig.show()

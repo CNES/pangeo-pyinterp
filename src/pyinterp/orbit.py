@@ -84,8 +84,8 @@ def _rearrange_orbit(
     lat = np.hstack([lat[shift:], lat[:shift]])
     time = np.hstack([time[shift:], time[:shift]])
     time = (time - time[0]) % cycle_duration
-    if np.any(time < np.timedelta64(0, "s")):
-        raise ValueError("Time is negative")
+    if np.any(time < np.timedelta64(0, 's')):
+        raise ValueError('Time is negative')
     return lon, lat, time
 
 
@@ -148,15 +148,15 @@ class Orbit:
     def orbit_duration(self) -> np.timedelta64:
         """Get the orbit duration."""
         duration = self.cycle_duration().astype(
-            "timedelta64[us]") / np.timedelta64(
+            'timedelta64[us]') / np.timedelta64(
                 int(self.passes_per_cycle() // 2), 'us')
-        return np.timedelta64(int(duration), "us")
+        return np.timedelta64(int(duration), 'us')
 
     def curvilinear_distance(self) -> np.ndarray:
         """Get the curvilinear distance."""
         return geodetic.LineString(self.longitude,
                                    self.latitude).curvilinear_distance(
-                                       strategy="thomas", wgs=self.wgs)
+                                       strategy='thomas', wgs=self.wgs)
 
     def pass_duration(self, number: int) -> np.timedelta64:
         """Get the duration of a given pass.
@@ -169,7 +169,7 @@ class Orbit:
         """
         passes_per_cycle = self.passes_per_cycle()
         if number < 1 or number > passes_per_cycle:
-            raise ValueError(f"number must be in [1, {passes_per_cycle}]")
+            raise ValueError(f'number must be in [1, {passes_per_cycle}]')
         if number == passes_per_cycle:
             return (self.time[-1] - self.pass_time[-1] + self.time[1] -
                     self.time[0])
@@ -200,7 +200,7 @@ class Orbit:
         """
         passes_per_cycle = self.passes_per_cycle()
         if not 1 <= pass_number <= passes_per_cycle:
-            raise ValueError(f"pass_number must be in [1, {passes_per_cycle}")
+            raise ValueError(f'pass_number must be in [1, {passes_per_cycle}')
         return (cycle_number - 1) * self.passes_per_cycle() + pass_number
 
     def delta_t(self) -> np.timedelta64:
@@ -230,7 +230,7 @@ class Orbit:
             iterator: An iterator for all passes in the interval pointing to
             the cycle number, pass number and start date of the half-orbit.
         """
-        date = first_date or np.datetime64("now")
+        date = first_date or np.datetime64('now')
         last_date = last_date or date + self.cycle_duration()
         while date <= last_date:
             cycle_number, pass_number = self.decode_absolute_pass_number(
@@ -255,9 +255,9 @@ class EquatorCoordinates:
     time: np.datetime64
 
     @classmethod
-    def undefined(cls) -> "EquatorCoordinates":
+    def undefined(cls) -> 'EquatorCoordinates':
         """Create an undefined instance."""
-        return cls(np.nan, np.datetime64("NaT"))
+        return cls(np.nan, np.datetime64('NaT'))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -307,7 +307,7 @@ class Swath(Pass):
         along_track = np.full(self.lon_nadir.shape, 1, dtype=np.float64)
         return along_track[:, np.newaxis] * valid
 
-    def insert_central_pixel(self) -> "Swath":
+    def insert_central_pixel(self) -> 'Swath':
         """Return a swath with a central pixel dividing the swath in two by the
         reference ground track."""
 
@@ -347,7 +347,7 @@ def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
     # Calculate the position of the satellite at the equator
     intersection = geodetic.LineString(lon1, lat1).intersection(
         geodetic.LineString(np.array([lon1[0] - 0.5, lon1[1] + 0.5]),
-                            np.array([0, 0], dtype="float64")))
+                            np.array([0, 0], dtype='float64')))
     if len(intersection) == 0:
         return EquatorCoordinates.undefined()
 
@@ -357,7 +357,7 @@ def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
     lon1 = np.insert(lon1, 1, point.lon)
     lat1 = np.insert(lat1, 1, 0)
     x_al = geodetic.LineString(lon1,
-                               lat1).curvilinear_distance(strategy="thomas")
+                               lat1).curvilinear_distance(strategy='thomas')
 
     # Pop the along track distance at the equator
     x_eq = x_al[1]
@@ -365,7 +365,7 @@ def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
 
     return EquatorCoordinates(
         point.lon,
-        np.interp(x_eq, x_al, time[i0:i1 + 1].astype("i8")).astype(
+        np.interp(x_eq, x_al, time[i0:i1 + 1].astype('i8')).astype(
             time.dtype),  # type: ignore
     )
 
@@ -397,16 +397,16 @@ def calculate_orbit(
     wgs = geodetic.Coordinates(spheroid)
 
     lon_nadir = geodetic.normalize_longitudes(lon_nadir)
-    time = time.astype("m8[ns]")
+    time = time.astype('m8[ns]')
 
-    if np.mean(np.diff(time)) > np.timedelta64(500, "ms"):
+    if np.mean(np.diff(time)) > np.timedelta64(500, 'ms'):
         time_hr = np.arange(time[0],
                             time[-1],
-                            np.timedelta64(500, "ms"),
+                            np.timedelta64(500, 'ms'),
                             dtype=time.dtype)
         lon_nadir, lat_nadir = _interpolate(lon_nadir, lat_nadir,
-                                            time_hr.astype("i8"),
-                                            time.astype("i8"), wgs)
+                                            time_hr.astype('i8'),
+                                            time.astype('i8'), wgs)
         time = time_hr
 
     if cycle_duration is not None:
@@ -426,7 +426,7 @@ def calculate_orbit(
 
     # Calculates the along track distance (km)
     distance = geodetic.LineString(lon_nadir, lat_nadir).curvilinear_distance(
-        strategy="thomas", wgs=spheroid) * 1e-3
+        strategy='thomas', wgs=spheroid) * 1e-3
 
     # Interpolate the final orbit according the given along track resolution
     x_al = np.arange(distance[0],
@@ -439,7 +439,7 @@ def calculate_orbit(
     time = np.interp(
         x_al,  # type: ignore
         distance[:-1],  # type: ignore
-        time[:-1].astype("i8")).astype(time.dtype)
+        time[:-1].astype('i8')).astype(time.dtype)
 
     return Orbit(height, lat_nadir, lon_nadir,
                  np.sort(_calculate_pass_time(lat_nadir, time)), time, x_al,

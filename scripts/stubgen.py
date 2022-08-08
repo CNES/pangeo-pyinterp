@@ -11,22 +11,22 @@ import sys
 import mypy.stubgen
 import yapf
 
-PATTERN = re.compile(r"(numpy\.\w+\d+)(\[\w+,\w+\])").search
-GRID = re.compile(r"class (.*Grid\dD\w+):").search
+PATTERN = re.compile(r'(numpy\.\w+\d+)(\[\w+,\w+\])').search
+GRID = re.compile(r'class (.*Grid\dD\w+):').search
 
 
 def fix_core(src: pathlib.Path):
     grids = []
-    core = src / "pyinterp" / "core" / "__init__.pyi"
-    with core.open("r") as stream:
+    core = src / 'pyinterp' / 'core' / '__init__.pyi'
+    with core.open('r') as stream:
         lines = stream.readlines()
 
-    lines[0] = lines[0].rstrip() + ", overload\n"
+    lines[0] = lines[0].rstrip() + ', overload\n'
     lines.pop(1)
     lines.pop(1)
     for item in reversed([
-            "from . import dateutils\n", "from . import geodetic\n",
-            "from . import geohash\n", "from . import fill\n", "\n"
+            'from . import dateutils\n', 'from . import geodetic\n',
+            'from . import geohash\n', 'from . import fill\n', '\n'
     ]):
         lines.insert(2, item)
 
@@ -35,21 +35,21 @@ def fix_core(src: pathlib.Path):
         if m:
             grids.append(m.group(1))
 
-    with core.open("w") as stream:
+    with core.open('w') as stream:
         stream.writelines(lines)
 
     return grids
 
 
 def fix_core_geodetic(src: pathlib.Path):
-    core = src / "pyinterp" / "core" / "geodetic.pyi"
-    with core.open("r") as stream:
+    core = src / 'pyinterp' / 'core' / 'geodetic.pyi'
+    with core.open('r') as stream:
         lines = stream.readlines()
 
     for ix, item in enumerate(
-        ["", "import numpy\n"
-         "from .. import geodetic\n", "", "", ""]):
-        lines[ix] = item if ix else lines[ix].rstrip() + ", overload\n"
+        ['', 'import numpy\n'
+         'from .. import geodetic\n', '', '', '']):
+        lines[ix] = item if ix else lines[ix].rstrip() + ', overload\n'
 
     for ix, item in enumerate(lines):
         m = PATTERN(item)
@@ -58,65 +58,65 @@ def fix_core_geodetic(src: pathlib.Path):
             m = PATTERN(item)
         lines[ix] = item
 
-    with core.open("w") as stream:
+    with core.open('w') as stream:
         stream.writelines(lines)
 
 
 def fix_core_fill(src: pathlib.Path, grids: List[str]):
-    core = src / "pyinterp" / "core" / "fill.pyi"
-    with core.open("r") as stream:
+    core = src / 'pyinterp' / 'core' / 'fill.pyi'
+    with core.open('r') as stream:
         lines = stream.readlines()
 
     lines[1] = f"from . import ({','.join(grids)},)\n"
-    lines[3] = ""
-    lines[5] = ""
+    lines[3] = ''
+    lines[5] = ''
 
     for ix, item in enumerate(lines):
-        item = item.replace("pyinterp.core.", "")
-        item = item.replace(",flags.writeable", "")
+        item = item.replace('pyinterp.core.', '')
+        item = item.replace(',flags.writeable', '')
         m = PATTERN(item)
         while m:
             item = item.replace(m.group(1) + m.group(2), m.group(1))
             m = PATTERN(item)
         lines[ix] = item
 
-    with core.open("w") as stream:
+    with core.open('w') as stream:
         stream.writelines(lines)
 
 
 def fix_core_geohash(src: pathlib.Path):
-    for stub in ["int64.pyi", "__init__.pyi"]:
-        core = src / "pyinterp" / "core" / "geohash" / stub
-        with core.open("r") as stream:
+    for stub in ['int64.pyi', '__init__.pyi']:
+        core = src / 'pyinterp' / 'core' / 'geohash' / stub
+        with core.open('r') as stream:
             lines = stream.readlines()
 
         for ix, item in enumerate(
-            ["", "import numpy\n"
-             "from .. import geodetic\n", "", "", ""]):
-            lines[ix] = item if ix else lines[ix].rstrip() + ", overload\n"
+            ['', 'import numpy\n'
+             'from .. import geodetic\n', '', '', '']):
+            lines[ix] = item if ix else lines[ix].rstrip() + ', overload\n'
 
         for ix, item in enumerate(lines):
-            item = item.replace("pyinterp.core.geodetic", "geodetic")
+            item = item.replace('pyinterp.core.geodetic', 'geodetic')
             m = PATTERN(item)
             while m:
                 item = item.replace(m.group(1) + m.group(2), m.group(1))
                 m = PATTERN(item)
             lines[ix] = item
 
-        with core.open("w") as stream:
+        with core.open('w') as stream:
             stream.writelines(lines)
 
 
 def main():
     modules = [
         # "pyinterp.core.dateutils",
-        "pyinterp.core.fill",
-        "pyinterp.core.geodetic",
-        "pyinterp.core.geohash.int64",
-        "pyinterp.core.geohash",
-        "pyinterp.core",
+        'pyinterp.core.fill',
+        'pyinterp.core.geodetic',
+        'pyinterp.core.geohash.int64',
+        'pyinterp.core.geohash',
+        'pyinterp.core',
     ]
-    out = pathlib.Path(__file__).parent.parent / "src"
+    out = pathlib.Path(__file__).parent.parent / 'src'
     options = mypy.stubgen.Options(pyversion=(sys.version_info[0],
                                               sys.version_info[1]),
                                    no_import=False,
@@ -144,9 +144,9 @@ def main():
     stubs = []
     for root, dirs, files in os.walk(str(out)):
         for name in files:
-            if name.endswith(".pyi"):
+            if name.endswith('.pyi'):
                 stubs.append(str(pathlib.Path(root) / name))
-    yapf.main([sys.argv[0], "-i"] + stubs)
+    yapf.main([sys.argv[0], '-i'] + stubs)
 
 
 if __name__ == '__main__':

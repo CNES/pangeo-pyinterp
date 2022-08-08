@@ -24,15 +24,15 @@ def load_test_ephemeris(
         A tuple containing the height of the orbit, the ephemeris and the
         duration of the cycle.
     """
-    with open(filename, "r") as stream:
+    with open(filename, 'r') as stream:
         lines = stream.readlines()
 
     def to_dict(comments) -> Dict[str, float]:
         """Returns a dictionary describing the parameters of the orbit."""
         result = dict()
         for item in comments:
-            assert item.startswith("#"), "Comments must start with #"
-            key, value = item[1:].split("=")
+            assert item.startswith('#'), 'Comments must start with #'
+            key, value = item[1:].split('=')
             result[key.strip()] = float(value)
         return result
 
@@ -43,19 +43,19 @@ def load_test_ephemeris(
 
     # The rest of the lines are the ephemeris
     ephemeris = np.loadtxt(lines,
-                           delimiter=" ",
+                           delimiter=' ',
                            dtype={
-                               "names":
-                               ("time", "longitude", "latitude", "height"),
-                               "formats": ("f8", "f8", "f8", "f8")
+                               'names':
+                               ('time', 'longitude', 'latitude', 'height'),
+                               'formats': ('f8', 'f8', 'f8', 'f8')
                            })
 
     return (
-        settings["height"],
-        ephemeris["longitude"],
-        ephemeris["latitude"],
-        ephemeris["time"].astype("timedelta64[s]"),
-        np.timedelta64(int(settings["cycle_duration"] * 86400.0 * 1e9), "ns"),
+        settings['height'],
+        ephemeris['longitude'],
+        ephemeris['latitude'],
+        ephemeris['time'].astype('timedelta64[s]'),
+        np.timedelta64(int(settings['cycle_duration'] * 86400.0 * 1e9), 'ns'),
     )
 
 

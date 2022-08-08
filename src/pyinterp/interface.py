@@ -13,7 +13,7 @@ import numpy as np
 from . import core
 
 #: Regular expression to extract the grid type from the class name.
-PATTERN = re.compile(r"((?:Float|Int)\d+)").search
+PATTERN = re.compile(r'((?:Float|Int)\d+)').search
 
 
 def _core_class_suffix(x: np.ndarray, handle_integer: bool = False) -> str:
@@ -46,7 +46,7 @@ def _core_class_suffix(x: np.ndarray, handle_integer: bool = False) -> str:
         return 'Float32' if not handle_integer else 'Int8'
     if dtype == np.uint8:
         return 'Float32'
-    raise ValueError("Unhandled dtype: " + str(dtype))
+    raise ValueError('Unhandled dtype: ' + str(dtype))
 
 
 def _core_function(function: str, instance: object) -> str:
@@ -71,9 +71,9 @@ def _core_function(function: str, instance: object) -> str:
             core.TemporalGrid4DFloat64,
             core.TemporalGrid4DFloat32,
     )):
-        raise TypeError("instance is not an object handling a grid.")
+        raise TypeError('instance is not an object handling a grid.')
     name = instance.__class__.__name__
     match = PATTERN(name)
     assert match is not None
     suffix = match.group(1).lower()
-    return f"{function}_{suffix}"
+    return f'{function}_{suffix}'

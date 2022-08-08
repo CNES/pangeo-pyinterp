@@ -24,20 +24,20 @@ def test_dims_from_data_array():
     array = xr.DataArray()
     with pytest.raises(ValueError):
         xr_backend._dims_from_data_array(array, True, 1)
-    array = xr.DataArray(data=np.zeros((2, 2), dtype="float64"))
+    array = xr.DataArray(data=np.zeros((2, 2), dtype='float64'))
     with pytest.raises(ValueError):
         xr_backend._dims_from_data_array(array, True, 2)
-    array = xr.DataArray(data=np.zeros((2, 2), dtype="float64"),
-                         coords=[("lon", np.arange(2),
-                                  dict(units="degrees_east")),
-                                 ("lat", np.arange(2))],
+    array = xr.DataArray(data=np.zeros((2, 2), dtype='float64'),
+                         coords=[('lon', np.arange(2),
+                                  dict(units='degrees_east')),
+                                 ('lat', np.arange(2))],
                          dims=['lon', 'lat'])
     with pytest.raises(ValueError):
         xr_backend._dims_from_data_array(array, True, 2)
 
 
 def test_biavariate(pytestconfig):
-    dump = pytestconfig.getoption("dump")
+    dump = pytestconfig.getoption('dump')
     grid = xr_backend.Grid2D(load_grid2d().mss)
 
     assert isinstance(grid, xr_backend.Grid2D)
@@ -52,27 +52,27 @@ def test_biavariate(pytestconfig):
 
     lon = np.arange(-180, 180, 1) + 1 / 3.0
     lat = np.arange(-90, 90, 1) + 1 / 3.0
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
 
     z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()))
     assert isinstance(z, np.ndarray)
-    make_or_compare_reference("bivariate_bilinear.npy", z, dump)
+    make_or_compare_reference('bivariate_bilinear.npy', z, dump)
 
     z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
-                       interpolator="nearest")
+                       interpolator='nearest')
     assert isinstance(z, np.ndarray)
-    make_or_compare_reference("bivariate_nearest.npy", z, dump)
+    make_or_compare_reference('bivariate_nearest.npy', z, dump)
 
     z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
-                       interpolator="inverse_distance_weighting")
+                       interpolator='inverse_distance_weighting')
     assert isinstance(z, np.ndarray)
-    make_or_compare_reference("idw.npy", z, dump)
+    make_or_compare_reference('idw.npy', z, dump)
 
     grid = xr_backend.Grid2D(load_grid2d().mss, geodetic=False)
 
     assert isinstance(grid, xr_backend.Grid2D)
     w = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
-                       interpolator="inverse_distance_weighting")
+                       interpolator='inverse_distance_weighting')
     assert np.ma.fix_invalid(z).mean() != np.ma.fix_invalid(w).mean()
 
     with pytest.raises(TypeError):
@@ -109,7 +109,7 @@ def test_biavariate(pytestconfig):
 
     grid = xr_backend.RegularGridInterpolator(load_grid2d().mss)
     z = grid(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
-             method="bilinear")
+             method='bilinear')
     assert isinstance(z, np.ndarray)
 
     # This is necessary in order for Dask to scatter the callable instances.
@@ -118,12 +118,12 @@ def test_biavariate(pytestconfig):
 
 
 def test_bicubic(pytestconfig):
-    dump = pytestconfig.getoption("dump")
+    dump = pytestconfig.getoption('dump')
     grid = xr_backend.Grid2D(load_grid2d().mss)
 
     lon = np.arange(-180, 180, 1) + 1 / 3.0
     lat = np.arange(-90, 90, 1) + 1 / 3.0
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
 
     z = grid.bicubic(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()))
     assert isinstance(z, np.ndarray)
@@ -135,7 +135,7 @@ def test_bicubic(pytestconfig):
         other = grid.bicubic(collections.OrderedDict(lon=x.ravel(),
                                                      lat=y.ravel()),
                              fitting_model=fitting_model)
-        make_or_compare_reference(f"bicubic_{fitting_model}.npy", other, dump)
+        make_or_compare_reference(f'bicubic_{fitting_model}.npy', other, dump)
         assert (z - other).mean() != 0  # type: ignore
 
     with pytest.raises(ValueError):
@@ -145,7 +145,7 @@ def test_bicubic(pytestconfig):
     with pytest.raises(ValueError):
         grid.bicubic(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                      bounds_error=True,
-                     boundary="sym")
+                     boundary='sym')
 
     x_axis = Axis(np.linspace(-180, 179, 360), is_circle=True)
     y_axis = Axis(np.linspace(-90, 90, 181), is_circle=False)
@@ -175,13 +175,13 @@ def test_bicubic(pytestconfig):
     assert grid.ndim == 2
     assert isinstance(grid.grid, xr_backend.Grid2D)
     z = grid(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
-             method="bicubic",
+             method='bicubic',
              bicubic_kwargs=dict(nx=3, ny=3))
     assert isinstance(z, np.ndarray)
 
 
 def test_grid_2d_int8(pytestconfig):
-    dump = pytestconfig.getoption("dump")
+    dump = pytestconfig.getoption('dump')
     mss = load_grid2d()
 
     grid = load_grid2d().mss
@@ -194,9 +194,9 @@ def test_grid_2d_int8(pytestconfig):
 
     lon = np.arange(-180, 180, 1) + 1 / 3.0
     lat = np.arange(-90, 90, 1) + 1 / 3.0
-    x, y = np.meshgrid(lon, lat, indexing="ij")
+    x, y = np.meshgrid(lon, lat, indexing='ij')
 
     z = interpolator(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
-                     method="nearest")
-    make_or_compare_reference("nearest_int8.npy", z, dump)
+                     method='nearest')
+    make_or_compare_reference('nearest_int8.npy', z, dump)
     assert np.mean(z) != 0

@@ -47,13 +47,13 @@ class Binning2D:
                  x: core.Axis,
                  y: core.Axis,
                  wgs: Optional[geodetic.Spheroid] = None,
-                 dtype: np.dtype = np.dtype("float64")):
-        if dtype == np.dtype("float64"):
+                 dtype: np.dtype = np.dtype('float64')):
+        if dtype == np.dtype('float64'):
             self._instance = core.Binning2DFloat64(x, y, wgs)
-        elif dtype == np.dtype("float32"):
+        elif dtype == np.dtype('float32'):
             self._instance = core.Binning2DFloat32(x, y, wgs)
         else:
-            raise ValueError(f"dtype {dtype} not handled by the object")
+            raise ValueError(f'dtype {dtype} not handled by the object')
         self.dtype = dtype
 
     @property
@@ -78,17 +78,17 @@ class Binning2D:
     def __repr__(self) -> str:
         """Called by the ``repr()`` built-in function to compute the string
         representation of this instance."""
-        result = [f"<{self.__class__.__module__}.{self.__class__.__name__}>"]
-        result.append("Axis:")
-        result.append(f"  x: {self._instance.x}")
-        result.append(f"  y: {self._instance.y}")
-        return "\n".join(result)
+        result = [f'<{self.__class__.__module__}.{self.__class__.__name__}>']
+        result.append('Axis:')
+        result.append(f'  x: {self._instance.x}')
+        result.append(f'  y: {self._instance.y}')
+        return '\n'.join(result)
 
-    def __add__(self, other: "Binning2D") -> "Binning2D":
+    def __add__(self, other: 'Binning2D') -> 'Binning2D':
         """Overrides the default behavior of the ``+`` operator."""
         result = copy.copy(self)
         if type(result._instance) != type(other._instance):  # noqa: E721
-            raise TypeError("Binning2D instance must be of the same type")
+            raise TypeError('Binning2D instance must be of the same type')
         result._instance += other._instance  # type: ignore
         return result
 
@@ -176,7 +176,7 @@ class Binning2D:
         def _process_block(x, y, z, x_axis, y_axis, wgs, simple):
             binning = Binning2D(x_axis, y_axis, wgs)
             binning.push(x, y, z, simple)
-            return np.array([binning], dtype="object")
+            return np.array([binning], dtype='object')
 
         return da.map_blocks(_process_block,
                              x.ravel(),
@@ -186,7 +186,7 @@ class Binning2D:
                              self.y,
                              self.wgs,
                              simple,
-                             dtype="object").sum()
+                             dtype='object').sum()
 
     def variable(self, statistics: str = 'mean') -> np.ndarray:
         """Gets the regular grid containing the calculated statistics.
@@ -218,7 +218,7 @@ class Binning2D:
             return getattr(self._instance, statistics)()
         except AttributeError as exc:
             raise ValueError(
-                f"The statistical variable {statistics} is unknown.") from exc
+                f'The statistical variable {statistics} is unknown.') from exc
 
 
 class Binning1D:
@@ -235,13 +235,13 @@ class Binning1D:
         statistics will be calculated.
     """
 
-    def __init__(self, x: core.Axis, dtype: np.dtype = np.dtype("float64")):
-        if dtype == np.dtype("float64"):
+    def __init__(self, x: core.Axis, dtype: np.dtype = np.dtype('float64')):
+        if dtype == np.dtype('float64'):
             self._instance = core.Binning1DFloat64(x)
-        elif dtype == np.dtype("float32"):
+        elif dtype == np.dtype('float32'):
             self._instance = core.Binning1DFloat32(x)
         else:
-            raise ValueError(f"dtype {dtype} not handled by the object")
+            raise ValueError(f'dtype {dtype} not handled by the object')
         self.dtype = dtype
 
     @property
@@ -256,16 +256,16 @@ class Binning1D:
     def __repr__(self) -> str:
         """Called by the ``repr()`` built-in function to compute the string
         representation of this instance."""
-        result = [f"<{self.__class__.__module__}{self.__class__.__name__}>"]
-        result.append("Axis:")
-        result.append(f"  {self._instance.x}")
-        return "\n".join(result)
+        result = [f'<{self.__class__.__module__}{self.__class__.__name__}>']
+        result.append('Axis:')
+        result.append(f'  {self._instance.x}')
+        return '\n'.join(result)
 
-    def __add__(self, other: "Binning1D") -> "Binning1D":
+    def __add__(self, other: 'Binning1D') -> 'Binning1D':
         """Overrides the default behavior of the ``+`` operator."""
         result = copy.copy(self)
         if type(result._instance) != type(other._instance):  # noqa: E721
-            raise TypeError("Binning1D instance must be of the same type")
+            raise TypeError('Binning1D instance must be of the same type')
         result._instance += other._instance  # type: ignore
         return result
 
@@ -320,14 +320,14 @@ class Binning1D:
         def _process_block(x, z, weights, x_axis):
             binning = Binning1D(x_axis)
             binning.push(x, z, weights)
-            return np.array([binning], dtype="object")
+            return np.array([binning], dtype='object')
 
         return da.map_blocks(_process_block,
                              x.ravel(),
                              z.ravel(),
                              weights,
                              self.x,
-                             dtype="object").sum()
+                             dtype='object').sum()
 
     def variable(self, statistics: str = 'mean') -> np.ndarray:
         """Gets the regular grid containing the calculated statistics.
@@ -348,4 +348,4 @@ class Binning1D:
             return getattr(self._instance, statistics)()
         except AttributeError as exc:
             raise ValueError(
-                f"The statistical variable {statistics} is unknown.") from exc
+                f'The statistical variable {statistics} is unknown.') from exc

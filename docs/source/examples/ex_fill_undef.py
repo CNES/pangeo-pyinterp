@@ -43,7 +43,7 @@ mask = numpy.array([
 ax.scatter(lons.ravel(),
            lats.ravel(),
            c=mask,
-           cmap="bwr_r",
+           cmap='bwr_r',
            transform=cartopy.crs.PlateCarree(),
            vmin=0,
            vmax=1)
@@ -92,7 +92,7 @@ pcm = ax1.pcolormesh(lons,
                      vmin=-0.1,
                      vmax=0.1)
 ax1.coastlines()
-ax1.set_title("Original MSS")
+ax1.set_title('Original MSS')
 ax1.set_extent([0, 170, -45, 30], crs=cartopy.crs.PlateCarree())
 ax2 = fig.add_subplot(
     212, projection=cartopy.crs.PlateCarree(central_longitude=180))
@@ -105,7 +105,7 @@ pcm = ax2.pcolormesh(lons,
                      vmin=-0.1,
                      vmax=0.1)
 ax2.coastlines()
-ax2.set_title("MSS modified using the LOESS filter")
+ax2.set_title('MSS modified using the LOESS filter')
 ax2.set_extent([0, 170, -45, 30], crs=cartopy.crs.PlateCarree())
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()
@@ -134,7 +134,7 @@ pcm = ax1.pcolormesh(lons,
                      vmin=-0.1,
                      vmax=0.1)
 ax1.coastlines()
-ax1.set_title("Original MSS")
+ax1.set_title('Original MSS')
 ax1.set_extent([0, 170, -45, 30], crs=cartopy.crs.PlateCarree())
 ax2 = fig.add_subplot(
     212, projection=cartopy.crs.PlateCarree(central_longitude=180))
@@ -147,7 +147,7 @@ pcm = ax2.pcolormesh(lons,
                      vmin=-0.1,
                      vmax=0.1)
 ax2.coastlines()
-ax2.set_title("MSS modified using Gauss-Seidel")
+ax2.set_title('MSS modified using Gauss-Seidel')
 ax2.set_extent([0, 170, -45, 30], crs=cartopy.crs.PlateCarree())
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 fig.show()

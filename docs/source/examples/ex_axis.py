@@ -31,9 +31,9 @@ axis
 
 # %%
 # This object can be queried to obtain its properties.
-print(f"is ascending ? {axis.is_ascending()}")
-print(f"is regular ? {axis.is_regular()}")
-print(f"is circle ? {axis.is_circle}")
+print(f'is ascending ? {axis.is_ascending()}')
+print(f'is regular ? {axis.is_regular()}')
+print(f'is circle ? {axis.is_circle}')
 
 # %%
 # The most useful interfaces allow you to search for the index of the closest
@@ -83,9 +83,9 @@ axis
 
 # %%
 # Let's display its properties.
-print(f"is ascending ? {axis.is_ascending()}")
-print(f"is regular ? {axis.is_regular()}")
-print(f"is circle ? {axis.is_circle}")
+print(f'is ascending ? {axis.is_ascending()}')
+print(f'is regular ? {axis.is_regular()}')
+print(f'is circle ? {axis.is_circle}')
 
 # %%
 # It is possible to query this axis as before.
@@ -122,8 +122,8 @@ axis.find_index([-180]), axis.find_index([180])
 # .. note::
 #
 #   These axes can be regular or irregular as before.
-dates = numpy.datetime64("2020-01-01") + numpy.arange(
-    10**6, step=500).astype("timedelta64[ms]")
+dates = numpy.datetime64('2020-01-01') + numpy.arange(
+    10**6, step=500).astype('timedelta64[ms]')
 axis = pyinterp.TemporalAxis(dates)
 axis
 

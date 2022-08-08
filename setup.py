@@ -35,16 +35,16 @@ OSX_DEPLOYMENT_TARGET = '10.14'
 
 def distutils_dirname(prefix=None, extname=None) -> pathlib.Path:
     """Returns the name of the build directory."""
-    prefix = "lib" or prefix
-    extname = '' if extname is None else os.sep.join(extname.split(".")[:-1])
+    prefix = 'lib' or prefix
+    extname = '' if extname is None else os.sep.join(extname.split('.')[:-1])
     if packaging.version.parse(
-            setuptools.__version__) >= packaging.version.parse("62.1"):
+            setuptools.__version__) >= packaging.version.parse('62.1'):
         return pathlib.Path(
-            WORKING_DIRECTORY, "build", f"{prefix}.{sysconfig.get_platform()}-"
-            f"{sys.implementation.cache_tag}", extname)
+            WORKING_DIRECTORY, 'build', f'{prefix}.{sysconfig.get_platform()}-'
+            f'{sys.implementation.cache_tag}', extname)
     return pathlib.Path(
-        WORKING_DIRECTORY, "build",
-        f"{prefix}.{sysconfig.get_platform()}-{MAJOR}.{MINOR}", extname)
+        WORKING_DIRECTORY, 'build',
+        f'{prefix}.{sysconfig.get_platform()}-{MAJOR}.{MINOR}', extname)
 
 
 def execute(cmd) -> str:
@@ -60,7 +60,7 @@ def execute(cmd) -> str:
 
 def update_meta(path, version) -> None:
     """Updating the version number description in conda/meta.yaml."""
-    with open(path, "r", encoding="utf-8") as stream:
+    with open(path, 'r', encoding='utf-8') as stream:
         lines = stream.readlines()
     pattern = re.compile(r'{% set version = ".*" %}')
 
@@ -69,23 +69,23 @@ def update_meta(path, version) -> None:
         if match is not None:
             lines[idx] = f'{{% set version = "{version}" %}}\n'
 
-    with open(path, "w", encoding="utf-8") as stream:
-        stream.write("".join(lines))
+    with open(path, 'w', encoding='utf-8') as stream:
+        stream.write(''.join(lines))
 
 
 def update_environment(path, version) -> None:
     """Updating the version number description in conda environment."""
-    with open(path, 'r', encoding="utf-8") as stream:
+    with open(path, 'r', encoding='utf-8') as stream:
         lines = stream.readlines()
     pattern = re.compile(r'(\s+-\s+pyinterp)\s*>=\s*(.+)')
 
     for idx, line in enumerate(lines):
         match = pattern.search(line)
         if match is not None:
-            lines[idx] = f"{match.group(1)}>={version}\n"
+            lines[idx] = f'{match.group(1)}>={version}\n'
 
-    with open(path, "w", encoding="utf-8") as stream:
-        stream.write("".join(lines))
+    with open(path, 'w', encoding='utf-8') as stream:
+        stream.write(''.join(lines))
 
 
 def revision() -> str:
@@ -97,29 +97,29 @@ def revision() -> str:
     # development environment, otherwise it's a release.
     if not pathlib.Path(WORKING_DIRECTORY, '.git').exists():
         pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
-        with open(module, "r", encoding="utf-8") as stream:
+        with open(module, 'r', encoding='utf-8') as stream:
             for line in stream:
                 match = pattern.search(line)
                 if match:
                     return match.group(1)
         raise AssertionError()
 
-    stdout = execute("git describe --tags --dirty --long --always").strip()
+    stdout = execute('git describe --tags --dirty --long --always').strip()
     pattern = re.compile(r'([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?')
     match = pattern.search(stdout)
     if match is None:
         # No tag found, use the last commit
         pattern = re.compile(r'([\w\d]+)(?:-(dirty))?')
         match = pattern.search(stdout)
-        assert match is not None, f"Unable to parse git output {stdout!r}"
-        version = "0.0"
+        assert match is not None, f'Unable to parse git output {stdout!r}'
+        version = '0.0'
         sha1 = match.group(1)
     else:
         version = match.group(1)
         commits = int(match.group(2))
         sha1 = match.group(3)
         if commits != 0:
-            version += f".dev{commits}"
+            version += f'.dev{commits}'
 
     stdout = execute(f"git log  {sha1} -1 --format=\"%H %at\"")
     stdout = stdout.strip().split()
@@ -139,7 +139,7 @@ def revision() -> str:
 
     # Updating the version number description for sphinx
     conf = pathlib.Path(WORKING_DIRECTORY, 'docs', 'source', 'conf.py')
-    with open(conf, "r", encoding="utf-8") as stream:
+    with open(conf, 'r', encoding='utf-8') as stream:
         lines = stream.readlines()
     pattern = re.compile(r'(\w+)\s+=\s+(.*)')
 
@@ -147,17 +147,17 @@ def revision() -> str:
         match = pattern.search(line)
         if match is not None:
             if match.group(1) == 'version':
-                lines[idx] = f"version = {version!r}\n"
+                lines[idx] = f'version = {version!r}\n'
             elif match.group(1) == 'release':
-                lines[idx] = f"release = {version!r}\n"
+                lines[idx] = f'release = {version!r}\n'
             elif match.group(1) == 'copyright':
                 lines[idx] = f"copyright = '({date.year}, CNES/CLS)'\n"
 
-    with open(conf, "w", encoding="utf-8") as stream:
-        stream.write("".join(lines))
+    with open(conf, 'w', encoding='utf-8') as stream:
+        stream.write(''.join(lines))
 
     # Finally, write the file containing the version number.
-    with open(module, 'w', encoding="utf-8") as handler:
+    with open(module, 'w', encoding='utf-8') as handler:
         handler.write(f'''# Copyright (c) {date.year} CNES
 #
 # All rights reserved. Use of this source code is governed by a
@@ -196,8 +196,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     user_options = setuptools.command.build_ext.build_ext.user_options
     user_options += [
         ('boost-root=', None, 'Preferred Boost installation prefix'),
-        ('build-unittests', None, "Build the unit tests of the C++ extension"),
-        ('conda-forge', None, "Generation of the conda-forge package"),
+        ('build-unittests', None, 'Build the unit tests of the C++ extension'),
+        ('conda-forge', None, 'Generation of the conda-forge package'),
         ('code-coverage', None, 'Enable coverage reporting'),
         ('c-compiler=', None, 'Preferred C compiler'),
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
@@ -210,7 +210,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     ]
 
     boolean_options = setuptools.command.build_ext.build_ext.boolean_options
-    boolean_options += ["mkl", "conda-forge"]
+    boolean_options += ['mkl', 'conda-forge']
 
     def initialize_options(self) -> None:
         """Set default values for all the options that this command
@@ -233,12 +233,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         """Set final values for all the options that this command supports."""
         super().finalize_options()
         if self.code_coverage is not None and platform.system() == 'Windows':
-            raise RuntimeError("Code coverage is not supported on Windows")
+            raise RuntimeError('Code coverage is not supported on Windows')
         if self.mkl_root is not None:
             self.mkl = True
         if not self.mkl and self.mkl_root:
             raise RuntimeError(
-                "argument --mkl_root not allowed with argument --mkl=no")
+                'argument --mkl_root not allowed with argument --mkl=no')
 
     def run(self) -> None:
         """Carry out the action."""
@@ -249,57 +249,57 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     def gsl(self) -> Optional[str]:
         """Get the default boost path in Anaconda's environment."""
         gsl_root = sys.prefix
-        if pathlib.Path(gsl_root, "include", "gsl").exists():
-            return f"-DGSL_ROOT_DIR={gsl_root}"
-        gsl_root = pathlib.Path(sys.prefix, "Library")
-        if not gsl_root.joinpath("include", "gsl").exists():
+        if pathlib.Path(gsl_root, 'include', 'gsl').exists():
+            return f'-DGSL_ROOT_DIR={gsl_root}'
+        gsl_root = pathlib.Path(sys.prefix, 'Library')
+        if not gsl_root.joinpath('include', 'gsl').exists():
             if self.conda_forge:
                 raise RuntimeError(
-                    "Unable to find the GSL library in the conda distribution "
-                    "used.")
+                    'Unable to find the GSL library in the conda distribution '
+                    'used.')
             return None
-        return f"-DGSL_ROOT_DIR={gsl_root}"
+        return f'-DGSL_ROOT_DIR={gsl_root}'
 
     def boost(self) -> Optional[List[str]]:
         """Get the default boost path in Anaconda's environment."""
         # Do not search system for Boost & disable the search for boost-cmake
-        boost_option = "-DBoost_NO_SYSTEM_PATHS=TRUE " \
-            "-DBoost_NO_BOOST_CMAKE=TRUE"
+        boost_option = '-DBoost_NO_SYSTEM_PATHS=TRUE ' \
+            '-DBoost_NO_BOOST_CMAKE=TRUE'
         boost_root = sys.prefix
-        if pathlib.Path(boost_root, "include", "boost").exists():
-            return f"{boost_option} -DBOOST_ROOT={boost_root}".split()
-        boost_root = pathlib.Path(sys.prefix, "Library", "include")
+        if pathlib.Path(boost_root, 'include', 'boost').exists():
+            return f'{boost_option} -DBOOST_ROOT={boost_root}'.split()
+        boost_root = pathlib.Path(sys.prefix, 'Library', 'include')
         if not boost_root.exists():
             if self.conda_forge:
                 raise RuntimeError(
-                    "Unable to find the Boost library in the conda "
-                    "distribution used.")
+                    'Unable to find the Boost library in the conda '
+                    'distribution used.')
             return None
-        return f"{boost_option} -DBoost_INCLUDE_DIR={boost_root}".split()
+        return f'{boost_option} -DBoost_INCLUDE_DIR={boost_root}'.split()
 
     def eigen(self) -> Optional[str]:
         """Get the default Eigen3 path in Anaconda's environment."""
-        eigen_include_dir = pathlib.Path(sys.prefix, "include", "eigen3")
+        eigen_include_dir = pathlib.Path(sys.prefix, 'include', 'eigen3')
         if eigen_include_dir.exists():
-            return f"-DEIGEN3_INCLUDE_DIR={eigen_include_dir}"
-        eigen_include_dir = pathlib.Path(sys.prefix, "Library", "include",
-                                         "eigen3")
+            return f'-DEIGEN3_INCLUDE_DIR={eigen_include_dir}'
+        eigen_include_dir = pathlib.Path(sys.prefix, 'Library', 'include',
+                                         'eigen3')
         if not eigen_include_dir.exists():
             eigen_include_dir = eigen_include_dir.parent
         if not eigen_include_dir.exists():
             if self.conda_forge:
                 raise RuntimeError(
-                    "Unable to find the Eigen3 library in the conda "
-                    "distribution used.")
+                    'Unable to find the Eigen3 library in the conda '
+                    'distribution used.')
             return None
-        return f"-DEIGEN3_INCLUDE_DIR={eigen_include_dir}"
+        return f'-DEIGEN3_INCLUDE_DIR={eigen_include_dir}'
 
     @staticmethod
     def set_conda_mklroot() -> None:
         """Set the default MKL path in Anaconda's environment."""
-        mkl_header = pathlib.Path(sys.prefix, "include", "mkl.h")
+        mkl_header = pathlib.Path(sys.prefix, 'include', 'mkl.h')
         if mkl_header.exists():
-            os.environ["MKLROOT"] = sys.prefix
+            os.environ['MKLROOT'] = sys.prefix
             return
 
         # Walkaround a problem of generation with Windows and CMake
@@ -335,37 +335,37 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         result = []
 
         if self.c_compiler is not None:
-            result.append("-DCMAKE_C_COMPILER=" + self.c_compiler)
+            result.append('-DCMAKE_C_COMPILER=' + self.c_compiler)
 
         if self.cxx_compiler is not None:
-            result.append("-DCMAKE_CXX_COMPILER=" + self.cxx_compiler)
+            result.append('-DCMAKE_CXX_COMPILER=' + self.cxx_compiler)
 
         if self.conda_forge:
-            result.append("-DCONDA_FORGE=ON")
+            result.append('-DCONDA_FORGE=ON')
 
         if self.boost_root is not None:
-            result.append("-DBOOSTROOT=" + self.boost_root)
+            result.append('-DBOOSTROOT=' + self.boost_root)
         elif is_conda:
             cmake_variable = self.boost()
             if cmake_variable:
                 result += cmake_variable
 
         if self.gsl_root is not None:
-            result.append("-DGSL_ROOT_DIR=" + self.gsl_root)
+            result.append('-DGSL_ROOT_DIR=' + self.gsl_root)
         elif is_conda:
             cmake_variable = self.gsl()
             if cmake_variable:
                 result.append(cmake_variable)
 
         if self.eigen_root is not None:
-            result.append("-DEIGEN3_INCLUDE_DIR=" + self.eigen_root)
+            result.append('-DEIGEN3_INCLUDE_DIR=' + self.eigen_root)
         elif is_conda:
             cmake_variable = self.eigen()
             if cmake_variable:
                 result.append(cmake_variable)
 
         if self.mkl_root is not None:
-            os.environ["MKLROOT"] = self.mkl_root
+            os.environ['MKLROOT'] = self.mkl_root
         elif is_conda and self.mkl:
             self.set_conda_mklroot()
 
@@ -383,24 +383,24 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         cfg = 'Debug' if self.debug or self.code_coverage else 'Release'
 
         cmake_args = [
-            "-DCMAKE_BUILD_TYPE=" + cfg, "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" +
-            str(extdir), "-DPython3_EXECUTABLE=" + sys.executable
+            '-DCMAKE_BUILD_TYPE=' + cfg, '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' +
+            str(extdir), '-DPython3_EXECUTABLE=' + sys.executable
         ] + self.set_cmake_user_options()
 
-        if platform.python_implementation() == "PyPy":
-            cmake_args.append("-DPython3_FIND_IMPLEMENTATIONS=PyPy")
-        elif "Pyston" in sys.version:
-            cmake_args.append("-DPython3_INCLUDE_DIR=" +
-                              sysconfig.get_path("include"))
+        if platform.python_implementation() == 'PyPy':
+            cmake_args.append('-DPython3_FIND_IMPLEMENTATIONS=PyPy')
+        elif 'Pyston' in sys.version:
+            cmake_args.append('-DPython3_INCLUDE_DIR=' +
+                              sysconfig.get_path('include'))
 
         build_args = ['--config', cfg]
 
-        is_windows = platform.system() == "Windows"
+        is_windows = platform.system() == 'Windows'
 
         if self.generator is not None:
-            cmake_args.append("-G" + self.generator)
+            cmake_args.append('-G' + self.generator)
         elif is_windows:
-            cmake_args.append("-G" + 'Visual Studio 16 2019')
+            cmake_args.append('-G' + 'Visual Studio 16 2019')
 
         if self.verbose:  # type: ignore
             build_args += ['--verbose']
@@ -412,7 +412,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                     f'-DCMAKE_OSX_DEPLOYMENT_TARGET={OSX_DEPLOYMENT_TARGET}'
                 ]
             if self.code_coverage:
-                cmake_args += ["-DCODE_COVERAGE=ON"]
+                cmake_args += ['-DCODE_COVERAGE=ON']
         else:
             cmake_args += [
                 '-DCMAKE_GENERATOR_PLATFORM=x64',
@@ -423,8 +423,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         os.chdir(str(build_temp))
 
         # Has CMake ever been executed?
-        if pathlib.Path(build_temp, "CMakeFiles",
-                        "TargetDirectories.txt").exists():
+        if pathlib.Path(build_temp, 'CMakeFiles',
+                        'TargetDirectories.txt').exists():
             # The user must force the reconfiguration
             configure = self.reconfigure is not None
         else:
@@ -444,10 +444,10 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
 class Test(setuptools.Command):
     """Test runner."""
-    description = "run pytest"
+    description = 'run pytest'
     user_options = [('ext-coverage', None,
-                     "Generate C++ extension coverage reports"),
-                    ("pytest-args=", None, "Arguments to pass to pytest")]
+                     'Generate C++ extension coverage reports'),
+                    ('pytest-args=', None, 'Arguments to pass to pytest')]
 
     def initialize_options(self):
         """Set default values for all the options that this command
@@ -459,7 +459,7 @@ class Test(setuptools.Command):
         """Set final values for all the options that this command supports."""
         if self.pytest_args is None:
             self.pytest_args = ''
-        self.pytest_args = " --pyargs pyinterp " + self.pytest_args
+        self.pytest_args = ' --pyargs pyinterp ' + self.pytest_args
 
     def run(self):
         """Run tests."""
@@ -477,41 +477,41 @@ class Test(setuptools.Command):
             sys.exit(errno)
 
         # Directory used during the generating the C++ extension.
-        tempdir = distutils_dirname("temp")
+        tempdir = distutils_dirname('temp')
 
         # We work in the extension generation directory (CMake directory)
         os.chdir(str(tempdir))
 
         # If the C++ unit tests have been generated, they are executed.
-        if pathlib.Path(tempdir, "src", "pyinterp", "core", "tests",
-                        "test_axis").exists():
-            self.spawn(["ctest", "--output-on-failure"])
+        if pathlib.Path(tempdir, 'src', 'pyinterp', 'core', 'tests',
+                        'test_axis').exists():
+            self.spawn(['ctest', '--output-on-failure'])
 
         # Generation of the code coverage of the C++ extension?
         if not self.ext_coverage:
             return
 
         # Directory for writing the HTML coverage report.
-        htmllcov = str(pathlib.Path(tempdir.parent.parent, "htmllcov"))
+        htmllcov = str(pathlib.Path(tempdir.parent.parent, 'htmllcov'))
 
         # File containing the coverage report.
-        coverage_info = str(pathlib.Path(tempdir, "coverage.info"))
+        coverage_info = str(pathlib.Path(tempdir, 'coverage.info'))
 
         # Collect coverage data from python/C++ unit tests
         self.spawn([
-            "lcov", "--capture", "--directory",
-            str(tempdir), "--output-file", coverage_info
+            'lcov', '--capture', '--directory',
+            str(tempdir), '--output-file', coverage_info
         ])
 
         # The coverage of third-party libraries is removed.
         self.spawn([
-            'lcov', '-r', coverage_info, "*/Xcode.app/*", "*/third_party/*",
-            "*/boost/*", "*/eigen3/*", "*/tests/*", "*/usr/*", '--output-file',
+            'lcov', '-r', coverage_info, '*/Xcode.app/*', '*/third_party/*',
+            '*/boost/*', '*/eigen3/*', '*/tests/*', '*/usr/*', '--output-file',
             coverage_info
         ])
 
         # Finally, we generate the HTML coverage report.
-        self.spawn(["genhtml", coverage_info, "--output-directory", htmllcov])
+        self.spawn(['genhtml', coverage_info, '--output-directory', htmllcov])
 
 
 class SDist(setuptools.command.sdist.sdist):
@@ -521,8 +521,8 @@ class SDist(setuptools.command.sdist.sdist):
 
     def run(self):
         """Carry out the action."""
-        source = WORKING_DIRECTORY.joinpath("conftest.py")
-        target = WORKING_DIRECTORY.joinpath("src", "pyinterp", "conftest.py")
+        source = WORKING_DIRECTORY.joinpath('conftest.py')
+        target = WORKING_DIRECTORY.joinpath('src', 'pyinterp', 'conftest.py')
         source.rename(target)
         try:
             super().run()
@@ -533,7 +533,7 @@ class SDist(setuptools.command.sdist.sdist):
 def long_description():
     """Reads the README file."""
     with pathlib.Path(WORKING_DIRECTORY,
-                      "README.rst").open(encoding="utf-8") as stream:
+                      'README.rst').open(encoding='utf-8') as stream:
         return stream.read()
 
 
@@ -551,25 +551,25 @@ def typehints():
 def main():
     """Main function."""
     install_requires = [
-        "dask", "fsspec", "numpy", "numcodecs", "toolz", "xarray >= 0.13"
+        'dask', 'fsspec', 'numpy', 'numcodecs', 'toolz', 'xarray >= 0.13'
     ]
-    tests_require = install_requires + ["pytest"]
+    tests_require = install_requires + ['pytest']
     setuptools.setup(
         author='CNES/CLS',
         author_email='fbriol@gmail.com',
         classifiers=[
-            "Development Status :: 4 - Beta",
-            "Topic :: Scientific/Engineering :: Physics",
-            "License :: OSI Approved :: BSD License",
-            "Natural Language :: English",
-            "Operating System :: POSIX",
-            "Operating System :: MacOS",
-            "Operating System :: Microsoft :: Windows",
-            "Programming Language :: Python :: 3.6",
-            "Programming Language :: Python :: 3.7",
-            "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
-            "Programming Language :: Python :: 3.10",
+            'Development Status :: 4 - Beta',
+            'Topic :: Scientific/Engineering :: Physics',
+            'License :: OSI Approved :: BSD License',
+            'Natural Language :: English',
+            'Operating System :: POSIX',
+            'Operating System :: MacOS',
+            'Operating System :: Microsoft :: Windows',
+            'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: 3.7',
+            'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
         ],
         cmdclass={
             'build_ext': BuildExt,
@@ -578,15 +578,15 @@ def main():
         },  # type: ignore
         data_files=typehints(),
         description='Interpolation of geo-referenced data for Python.',
-        ext_modules=[CMakeExtension(name="pyinterp.core")],
+        ext_modules=[CMakeExtension(name='pyinterp.core')],
         install_requires=install_requires,
-        license="BSD License",
+        license='BSD License',
         long_description=long_description(),
         long_description_content_type='text/x-rst',
         name='pyinterp',
         package_data={
             'pyinterp': ['py.typed', 'core/*.pyi', 'core/geohash/*.pyi'],
-            'pyinterp.tests': ["dataset/*"],
+            'pyinterp.tests': ['dataset/*'],
         },
         package_dir={'': 'src'},
         packages=setuptools.find_namespace_packages(
@@ -602,7 +602,7 @@ def main():
     )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if platform.system() == 'Darwin':
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = OSX_DEPLOYMENT_TARGET
     main()

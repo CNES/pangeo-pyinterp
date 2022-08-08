@@ -34,7 +34,7 @@ def plot(x, y, z, filename):
 
 def load_data():
     ds = load_grid2d()
-    return ds["lon"].values, ds["lat"].values, ds["mss"].values.T
+    return ds['lon'].values, ds['lat'].values, ds['mss'].values.T
 
 
 def test_histogram2d_constructor():
@@ -69,9 +69,9 @@ def test_binning2d_methods(pytestconfig):
     count = hist2d.count()
     assert count.max() != 0
     simple_mean = np.ma.fix_invalid(hist2d.mean())
-    if HAVE_PLT and pytestconfig.getoption("visualize"):
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
-        plot(mx, my, simple_mean, "hist2d_mean.png")
+        plot(mx, my, simple_mean, 'hist2d_mean.png')
 
     # Test of access to statistical variables
     assert isinstance(hist2d.max(), np.ndarray)
@@ -81,14 +81,14 @@ def test_binning2d_methods(pytestconfig):
     assert isinstance(hist2d.kurtosis(), np.ndarray)
     median = np.ma.fix_invalid(hist2d.quantile())
     assert isinstance(median, np.ndarray)
-    if HAVE_PLT and pytestconfig.getoption("visualize"):
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
         mx, my = np.meshgrid(x_axis[:], y_axis[:], indexing='ij')
-        plot(mx, my, median, "hist2d_median.png")
+        plot(mx, my, median, 'hist2d_median.png')
 
     histograms = hist2d.histograms()
     assert isinstance(histograms, np.ndarray)
     assert histograms.ndim == 3
-    assert histograms.dtype == np.dtype([("value", "f8"), ("weight", "f8")])
+    assert histograms.dtype == np.dtype([('value', 'f8'), ('weight', 'f8')])
 
 
 def test_binning2d_pickle():

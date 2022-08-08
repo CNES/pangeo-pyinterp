@@ -88,9 +88,9 @@ html_title = 'PyInterp'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 html_theme_options = {
-    "light_logo": "pyinterp-light.svg",
-    "dark_logo": "pyinterp-dark.svg",
-    "sidebar_hide_name": True,
+    'light_logo': 'pyinterp-light.svg',
+    'dark_logo': 'pyinterp-dark.svg',
+    'sidebar_hide_name': True,
 }
 
 # Custom sidebar templates, must be a dictionary that maps document names
@@ -170,7 +170,7 @@ epub_exclude_files = ['search.html']
 
 # -- Extension configuration -------------------------------------------------
 sphinx_gallery_conf = {
-    'examples_dirs': [HERE.joinpath("examples")],
+    'examples_dirs': [HERE.joinpath('examples')],
     'filename_pattern': r'[\\\/]ex_',
     'pypandoc': True,
     'binder': {
@@ -179,7 +179,7 @@ sphinx_gallery_conf = {
         'branch': 'master',
         'binderhub_url': 'https://binder.pangeo.io',
         'dependencies':
-        [HERE.joinpath("..", "..", "binder", "environment.yml")]
+        [HERE.joinpath('..', '..', 'binder', 'environment.yml')]
     }
 }
 
@@ -193,11 +193,11 @@ intersphinx_mapping = {
     'xarray': ('http://xarray.pydata.org/en/stable/', None),
 }
 
-README = HERE.joinpath("readme.rst")
+README = HERE.joinpath('readme.rst')
 
 if not README.exists():
-    with HERE.joinpath("..", "..", "README.rst").open() as stream:
+    with HERE.joinpath('..', '..', 'README.rst').open() as stream:
         contents = stream.read()
 
-    with README.open("w") as stream:
+    with README.open('w') as stream:
         stream.write(contents)

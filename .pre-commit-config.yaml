@@ -8,6 +8,7 @@ repos:
         exclude: "(conda/meta.yaml|.clang\\-format)$"
       - id: debug-statements
       - id: end-of-file-fixer
+      - id: double-quote-string-fixer
       - id: mixed-line-ending
         args: [--fix=lf]
         exclude: docs/make.bat

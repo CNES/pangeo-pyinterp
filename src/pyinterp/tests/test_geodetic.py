@@ -23,7 +23,7 @@ def test_spheroid():
         wgs = geodetic.Spheroid((12.0, 3.0, 5))  # type: ignore
     wgs = geodetic.Spheroid((1, 1))
     assert isinstance(wgs, geodetic.Spheroid)
-    assert str(wgs) == "Spheroid(1.0, 1.0)"
+    assert str(wgs) == 'Spheroid(1.0, 1.0)'
 
 
 def test_coordinates():

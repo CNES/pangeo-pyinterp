@@ -48,7 +48,7 @@ def _plot_box(ax, code, color, caption=True):
                                        dy,
                                        alpha=0.5,
                                        color=color,
-                                       ec="black",
+                                       ec='black',
                                        lw=1,
                                        transform=cartopy.crs.PlateCarree())
     ax.add_artist(box)
@@ -127,10 +127,10 @@ plot_geohash_grid(4,
 # into a GeoHash code in order to examine its properties: precision, number of
 # bits, code, coordinates of the grid cell, etc.
 code = pyinterp.GeoHash(-67.5, 22.5, precision=4)
-print(f"code = {code!s})")
-print(f"precision = {code.precision()}")
-print(f"number of bits = {code.number_of_bits()}")
-print(f"lon/lat = {code.center()}")
+print(f'code = {code!s})')
+print(f'precision = {code.precision()}')
+print(f'number of bits = {code.number_of_bits()}')
+print(f'lon/lat = {code.center()}')
 
 # %%
 # You can also use this class to get the neighboring GeoHash codes of this
@@ -160,7 +160,7 @@ codes
 # %%
 # This algorithm is very fast, which makes it possible to process a lot of data
 # quickly.
-timeit.timeit("pyinterp.geohash.encode(lon, lat)",
+timeit.timeit('pyinterp.geohash.encode(lon, lat)',
               number=50,
               globals=dict(pyinterp=pyinterp, lon=lon, lat=lat)) / 50
 
@@ -266,9 +266,9 @@ df = pandas.DataFrame(
          lat=lat,
          measures=measures,
          geohash=pyinterp.geohash.encode(lon, lat, precision=3)))
-df.set_index("geohash", inplace=True)
-df = df.groupby("geohash").count()["measures"].rename("count").to_frame()
-df["density"] = df["count"] / (
+df.set_index('geohash', inplace=True)
+df = df.groupby('geohash').count()['measures'].rename('count').to_frame()
+df['density'] = df['count'] / (
     pyinterp.geohash.area(df.index.values.astype('S')) / 1e6)
 array = pyinterp.geohash.to_xarray(df.index.values.astype('S'), df.density)
 array = array.where(array != 0, numpy.nan)

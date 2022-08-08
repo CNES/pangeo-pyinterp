@@ -24,11 +24,11 @@ def _delayed(
            core.DescriptiveStatisticsFloat32]:
     """Calculate the descriptive statistics of a dask array."""
     if weights is not None and values.shape != weights.shape:
-        raise ValueError("values and weights must have the same shape")
+        raise ValueError('values and weights must have the same shape')
 
     def _process_block(attr, x, w, axis):
         instance = getattr(core, attr)(values=x, weights=w, axis=axis)
-        return np.array([instance], dtype="object")
+        return np.array([instance], dtype='object')
 
     drop_axis = list(range(values.ndim))[1:]
 
@@ -38,7 +38,7 @@ def _delayed(
                          weights,
                          axis,
                          drop_axis=drop_axis,
-                         dtype="object").sum().compute()  # type: ignore
+                         dtype='object').sum().compute()  # type: ignore
 
 
 class DescriptiveStatistics:
@@ -80,13 +80,13 @@ class DescriptiveStatistics:
                  dtype: Optional[np.dtype] = None) -> None:
         if isinstance(axis, int):
             axis = (axis, )
-        dtype = dtype or np.dtype("float64")
-        if dtype == np.dtype("float64"):
-            attr = "DescriptiveStatisticsFloat64"
-        elif dtype == np.dtype("float32"):
-            attr = "DescriptiveStatisticsFloat32"
+        dtype = dtype or np.dtype('float64')
+        if dtype == np.dtype('float64'):
+            attr = 'DescriptiveStatisticsFloat64'
+        elif dtype == np.dtype('float32'):
+            attr = 'DescriptiveStatisticsFloat32'
         else:
-            raise ValueError(f"dtype {dtype} not handled by the object")
+            raise ValueError(f'dtype {dtype} not handled by the object')
         if isinstance(values, da.Array) or isinstance(weights, da.Array):
             self._instance = _delayed(
                 attr, da.asarray(values),
@@ -96,18 +96,18 @@ class DescriptiveStatistics:
                                   core.DescriptiveStatisticsFloat32] = getattr(
                                       core, attr)(values, weights, axis)
 
-    def copy(self) -> "DescriptiveStatistics":
+    def copy(self) -> 'DescriptiveStatistics':
         """Creates a copy of the current descriptive statistics container.
 
         Returns:
             Returns a copy of the current descriptive statistics container.
         """
         cls = type(self)
-        result = getattr(cls, "__new__")(cls)
+        result = getattr(cls, '__new__')(cls)
         result._instance = self._instance.copy()
         return result
 
-    def __iadd__(self, other: Any) -> "DescriptiveStatistics":
+    def __iadd__(self, other: Any) -> 'DescriptiveStatistics':
         """Adds a new descriptive statistics container to the current one.
 
         Returns:
@@ -116,13 +116,13 @@ class DescriptiveStatistics:
         if isinstance(other, DescriptiveStatistics):
             if type(self._instance) != type(other._instance):  # noqa: E721
                 raise TypeError(
-                    "Descriptive statistics must have the same type")
+                    'Descriptive statistics must have the same type')
             self._instance += other._instance  # type: ignore
             return self
-        raise TypeError("unsupported operand type(s) for +="
+        raise TypeError('unsupported operand type(s) for +='
                         f": '{type(self)}' and '{type(other)}'")
 
-    def __add__(self, other: Any) -> "DescriptiveStatistics":
+    def __add__(self, other: Any) -> 'DescriptiveStatistics':
         """Adds a new descriptive statistics container to the current one.
 
         Returns:
@@ -132,11 +132,11 @@ class DescriptiveStatistics:
         if isinstance(other, DescriptiveStatistics):
             if type(self._instance) != type(other._instance):  # noqa: E721
                 raise TypeError(
-                    "Descriptive statistics must have the same type")
+                    'Descriptive statistics must have the same type')
             result = copy.copy(self)
             result += other
             return result
-        raise TypeError("unsupported operand type(s) for +="
+        raise TypeError('unsupported operand type(s) for +='
                         f": '{type(self)}' and '{type(other)}'")
 
     def count(self) -> np.ndarray:

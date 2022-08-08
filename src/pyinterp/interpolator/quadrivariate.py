@@ -16,9 +16,9 @@ def quadrivariate(grid4d: grid.Grid4D,
                   y: np.ndarray,
                   z: np.ndarray,
                   u: np.ndarray,
-                  interpolator: str = "bilinear",
-                  z_method: str = "linear",
-                  u_method: str = "linear",
+                  interpolator: str = 'bilinear',
+                  z_method: str = 'linear',
+                  u_method: str = 'linear',
                   bounds_error: bool = False,
                   num_threads: int = 0,
                   **kwargs) -> np.ndarray:
@@ -51,7 +51,7 @@ def quadrivariate(grid4d: grid.Grid4D,
         Values interpolated.
     """
     instance = grid4d._instance
-    function = interface._core_function("quadrivariate", instance)
+    function = interface._core_function('quadrivariate', instance)
     return getattr(core, function)(instance,
                                    np.asarray(x),
                                    np.asarray(y),
