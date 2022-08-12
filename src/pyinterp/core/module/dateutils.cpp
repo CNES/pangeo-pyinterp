@@ -15,6 +15,14 @@
 namespace py = pybind11;
 namespace dateutils = pyinterp::dateutils;
 
+namespace pyinterp::dateutils {
+
+const std::regex DType::pattern_(
+    R"((datetime64|timedelta64)\[(Y|M|W|D|h|m|s|(?:[munpfa]s))\])",
+    std::regex::optimize);
+
+}
+
 namespace detail {
 
 static auto fractional_seconds_from_dtype(const pybind11::dtype &dtype)

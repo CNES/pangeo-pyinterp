@@ -72,10 +72,8 @@ class DType {
 
   /// Default constructor
   explicit inline DType(const std::string &dtype) {
-    const auto pattern = std::regex{
-        R"((datetime64|timedelta64)\[(Y|M|W|D|h|m|s|(?:[munpfa]s))\])"};
     auto match = std::smatch{};
-    if (!std::regex_search(dtype, match, pattern)) {
+    if (!std::regex_search(dtype, match, pattern_)) {
       throw std::invalid_argument("unknown numpy date type: " + dtype);
     }
 
@@ -227,6 +225,7 @@ class DType {
   }
 
  private:
+  static const std::regex pattern_;
   DateType datetype_;
   Resolution resolution_;
 
