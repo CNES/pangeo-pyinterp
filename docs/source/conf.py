@@ -169,16 +169,17 @@ epub_exclude_files = ['search.html']
 
 # -- Extension configuration -------------------------------------------------
 sphinx_gallery_conf = {
-    'examples_dirs': [HERE.joinpath('examples')],
+    'examples_dirs': [HERE.parent.parent.joinpath('examples')],
     'filename_pattern': r'[\\\/]ex_',
-    'pypandoc': True,
+    'pypandoc': False,
     'binder': {
         'org': 'CNES',
         'repo': 'pangeo-pyinterp',
         'branch': 'master',
-        'binderhub_url': 'https://binder.pangeo.io',
+        'binderhub_url': 'https://mybinder.org',
         'dependencies':
-        [HERE.joinpath('..', '..', 'binder', 'environment.yml')]
+        [HERE.joinpath('..', '..', 'binder', 'environment.yml')],
+        'use_jupyter_lab': True,
     }
 }
 
