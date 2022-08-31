@@ -155,6 +155,23 @@ class Spheroid {
     return std::pow(math::sqr(semi_major_axis_) * semi_minor_axis(), 1.0 / 3.0);
   }
 
+  /// Gets the geocentric radius at the given latitude
+  ///
+  /// @param latitude  Latitude, in degrees
+  /// @return \f$R(\phi)=\sqrt{\frac{{(a^{2}\cos(\phi))}^{2} +
+  /// (b^{2}\sin(\phi))^{2}}{(a\cos(\phi))^{2} + (b\cos(\phi))^{2}}}\f$
+  [[nodiscard]] inline auto geocentric_radius(double latitude) const noexcept
+      -> double {
+    const auto cos_phi = math::cosd(latitude);
+    const auto sin_phi = math::sind(latitude);
+    const auto a2 = math::sqr(semi_major_axis_);
+    const auto b2 = math::sqr(semi_minor_axis());
+    return std::sqrt(math::sqr(a2 * cos_phi) +
+                     math::sqr(b2 * sin_phi) /
+                         (math::sqr(semi_major_axis_ * cos_phi) +
+                          math::sqr(semi_minor_axis() * sin_phi)));
+  }
+
   /// Tests if two spheroid objects are equal
   ///
   /// @param rhs Other spheroid

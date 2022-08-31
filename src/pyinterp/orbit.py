@@ -20,6 +20,7 @@ def _interpolate(
     lat: NDArray,
     xi: NDArray,
     xp: NDArray,
+    height: float,
     wgs: geodetic.Coordinates,
 ) -> Tuple[NDArray, NDArray]:
     """Interpolate the given orbit at the given coordinates.
@@ -29,13 +30,14 @@ def _interpolate(
         lat: Latitudes (in degrees).
         xi: The x-coordinates at which to evaluate the interpolated values.
         xp: The x-coordinates at which the orbit is defined.
+        height: Height of the satellite above the Earth's surface (in meters).
         wgs: The World Geodetic System used to convert the coordinates.
 
     Returns:
         Tuple[NDArray, NDArray]: The interpolated longitudes and latitudes.
     """
     mz = wgs.spheroid.semi_major_axis / wgs.spheroid.semi_minor_axis()
-    x, y, z = wgs.lla_to_ecef(lon, lat, np.full_like(lon, 0))
+    x, y, z = wgs.lla_to_ecef(lon, lat, np.full_like(lon, height))
 
     r = np.sqrt(x * x + y * y + z * z * mz * mz)
     x = np.interp(xi, xp, x)
@@ -382,7 +384,7 @@ def calculate_orbit(
     """Calculate the orbit at the given height.
 
     Args:
-        height: Height of the orbit.
+        height: Height of the orbit, in meters.
         lon_nadir: Nadir longitude of the orbit (degrees).
         lat_nadir: Nadir latitude of the orbit (degrees).
         time: Time elapsed since the start of the orbit.
@@ -406,7 +408,7 @@ def calculate_orbit(
                             dtype=time.dtype)
         lon_nadir, lat_nadir = _interpolate(lon_nadir, lat_nadir,
                                             time_hr.astype('i8'),
-                                            time.astype('i8'), wgs)
+                                            time.astype('i8'), height, wgs)
         time = time_hr
 
     if cycle_duration is not None:
@@ -434,7 +436,7 @@ def calculate_orbit(
                      along_track_resolution or 2,
                      dtype=distance.dtype)
     lon_nadir, lat_nadir = _interpolate(lon_nadir[:-1], lat_nadir[:-1], x_al,
-                                        distance[:-1], wgs)
+                                        distance[:-1], height, wgs)
 
     time = np.interp(
         x_al,  # type: ignore
@@ -501,7 +503,7 @@ def calculate_swath(
     along_track_resolution: Optional[float] = None,
     half_swath: Optional[float] = None,
     half_gap: Optional[float] = None,
-    mean_radius: Optional[float] = None,
+    spheroid: Optional[geodetic.Spheroid] = None,
 ) -> Swath:
     """Get the properties of a swath of an half-orbit.
 
@@ -516,14 +518,14 @@ def calculate_swath(
             last pixel of the swath. Defaults to 70 km.
         half_gap: Distance, in km, between the nadir and the center of the first
             pixel of the swath. Defaults to 2 km.
-        mean_radius: Mean radius of the orbit. Defaults to the WGS84 spheroid.
+        spheroid: The spheroid to use for the calculation. Defaults to ``None``,
+            which means the WGS-84 spheroid is used.
 
     Returns:
         The properties of the pass.
     """
     across_track_resolution = across_track_resolution or 2.0
     along_track_resolution = along_track_resolution or 2
-    mean_radius = mean_radius or 6371008.7714
     half_swath = half_swath or 70.0
     half_gap = half_gap or 2.0
 
@@ -541,7 +543,7 @@ def calculate_swath(
         across_track_resolution,
         half_gap,
         half_swath,
-        mean_radius * 1e-3,
+        spheroid,
     )
 
     return Swath(half_orbit.lon_nadir, half_orbit.lat_nadir, half_orbit.time,

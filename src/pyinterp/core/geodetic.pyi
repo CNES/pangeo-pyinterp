@@ -590,6 +590,9 @@ class Spheroid(_Spheroid):
     def first_eccentricity_squared(self) -> float:
         ...
 
+    def geocentric_radius(self, lat: float) -> float:
+        ...
+
     def linear_eccentricity(self) -> float:
         ...
 
@@ -650,8 +653,11 @@ def calculate_crossover(
 
 def calculate_swath(
     lon_nadir: numpy.ndarray[numpy.float64],
-    lat_nadir: numpy.ndarray[numpy.float64], delta_ac: float, half_gap: float,
-    half_swath: int, radius: float
+    lat_nadir: numpy.ndarray[numpy.float64],
+    delta_ac: float,
+    half_gap: float,
+    half_swath: int,
+    spheroid: Optional[Spheroid] = None,
 ) -> Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64]]:
     ...
 

@@ -1437,6 +1437,18 @@ Gets the mean radius.
 Returns:
     :math:`R_1=\frac{2a+b}{3}`
 )__doc__")
+      .def("geocentric_radius", &geodetic::Spheroid::geocentric_radius,
+           py::arg("lat"),
+           R"__doc__(
+Gets the geocentric radius at the given latitude $\phi$.
+
+Args:
+    lat: The latitude, in degrees.
+
+Returns:
+    :math:`R(\phi)=\sqrt{\frac{{(a^{2}\cos(\phi))}^{2} + (b^{2}\sin(\phi))^{2}}
+    {(a\cos(\phi))^{2} + (b\cos(\phi))^{2}}}`
+)__doc__")
       .def("authalic_radius", &geodetic::Spheroid::authalic_radius,
            R"__doc__(
 Gets the authalic radius.
@@ -1670,13 +1682,15 @@ Args:
     hal_gap: The gap between the nadir and the first point of the swath in
         meters.
     half_swath: The half swath width in meters.
-    radius: The mean radius of the earth in meters.
+    spheroid: The spheroid to use for the calculation. Defaults to ``None``,
+        which means the WGS-84 spheroid is used.
 
 Returns:
     A tuple containing the longitudes and latitudes of the swath points.
 )__doc__",
         py::arg("lon_nadir"), py::arg("lat_nadir"), py::arg("delta_ac"),
-        py::arg("half_gap"), py::arg("half_swath"), py::arg("radius"),
+        py::arg("half_gap"), py::arg("half_swath"),
+        py::arg("spheroid") = std::nullopt,
         py::call_guard<py::gil_scoped_release>());
 
   m.def(
