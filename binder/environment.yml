@@ -11,3 +11,5 @@ dependencies:
   - pandas
   - pyinterp>=0.16.0
   - pytest
+  - sphinx-gallery
+  - sphinx-inline-tabs
