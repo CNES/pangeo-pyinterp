@@ -3,7 +3,7 @@ set -e
 
 TMP_CONTENT_DIR=/tmp/pyinterp
 mkdir -p $TMP_CONTENT_DIR
-cp -r docs/source/examples binder $TMP_CONTENT_DIR
+cp -r examples binder $TMP_CONTENT_DIR
 
 find . -delete
 
