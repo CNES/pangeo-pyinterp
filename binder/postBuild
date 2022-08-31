@@ -14,7 +14,7 @@ find $GENERATED_NOTEBOOKS_DIR -name '*.py' -exec sphx_glr_python_to_jupyter.py '
 NON_NOTEBOOKS=$(find $GENERATED_NOTEBOOKS_DIR -type f | grep -v '\.ipynb')
 rm -f $NON_NOTEBOOKS
 
-mv $TMP_CONTENT_DIR/.binder .
+mv $TMP_CONTENT_DIR/binder .
 rm -rf $TMP_CONTENT_DIR
 
 mkdir notebooks
