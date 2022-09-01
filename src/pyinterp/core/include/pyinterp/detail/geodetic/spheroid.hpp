@@ -202,7 +202,7 @@ class Spheroid {
   /// @return a string holding the converted instance.
   explicit operator std::string() const {
     auto ss = std::stringstream();
-    ss << std::setprecision(9) << "System(a=" << semi_major_axis_
+    ss << std::setprecision(9) << "Spheroid(a=" << semi_major_axis_
        << ", b=" << semi_minor_axis() << ", f=" << flattening_ << ")";
     return ss.str();
   }

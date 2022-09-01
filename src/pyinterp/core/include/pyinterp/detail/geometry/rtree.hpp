@@ -151,9 +151,9 @@ class RTree {
           return boost::geometry::distance(item.first, point) <= radius;
         })),
         tree_->qend(), [&point, &result, &strategy](const auto &item) {
-          result.emplace_back(
-              std::make_pair(boost::geometry::distance(point, item.first),
-                             item.second, strategy));
+          result.emplace_back(std::make_pair(
+              boost::geometry::distance(point, item.first, strategy),
+              item.second));
         });
     return result;
   }

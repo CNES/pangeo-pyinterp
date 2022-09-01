@@ -33,7 +33,7 @@ TEST(geometry_geodetic_system, wgs84) {
   EXPECT_NEAR(wgs84.authalic_radius(), 6371007.1809, 1e-4);
   EXPECT_NEAR(wgs84.volumetric_radius(), 6371000.7900, 1e-4);
   EXPECT_EQ(static_cast<std::string>(wgs84),
-            "System(a=6378137, b=6356752.31, f=0.00335281066)");
+            "Spheroid(a=6378137, b=6356752.31, f=0.00335281066)");
 }
 
 TEST(geometry_geodetic_system, operator) {
@@ -45,5 +45,5 @@ TEST(geometry_geodetic_system, operator) {
   EXPECT_EQ(wgs84, wgs84);
   EXPECT_NE(wgs84, grs80);
   EXPECT_EQ(static_cast<std::string>(grs80),
-            "System(a=6378137, b=6356752.31, f=0.00335281068)");
+            "Spheroid(a=6378137, b=6356752.31, f=0.00335281068)");
 }
