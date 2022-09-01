@@ -3,7 +3,6 @@ Geographic coordinate system
 ----------------------------
 """
 from typing import List, Optional, Tuple
-import warnings
 
 import numpy
 
@@ -60,21 +59,6 @@ class Spheroid(geodetic.Spheroid):
 
     def __repr__(self):
         return f'Spheroid({self.semi_major_axis}, {self.flattening})'
-
-
-class System(Spheroid):
-    """Old name for Spheroid.
-
-    .. deprecated:: 0.10.0     Use :class:`Spheroid`
-    """
-
-    def __init__(self, parameters: Optional[Tuple[float, float]] = None):
-        warnings.warn('System is deprecated. Use Spheroid instead.',
-                      DeprecationWarning)
-        super().__init__(parameters)
-
-    def __repr__(self):
-        return f'System({self.semi_major_axis}, {self.flattening})'
 
 
 class Coordinates(geodetic.Coordinates):
