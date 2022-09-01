@@ -1,6 +1,13 @@
 Changelog
 #########
 
+2022.9.0
+--------
+* Improves the accuracy of swath calculation.
+* Improves TemporalAxis performance.
+* Fixes bugs in the documentation.
+* Python interface files are not installed properly.
+
 0.16.0 (4 August 2022)
 ----------------------
 * Using Red-Black Gauss-Seidel.

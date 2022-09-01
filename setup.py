@@ -558,7 +558,7 @@ def main():
         author='CNES/CLS',
         author_email='fbriol@gmail.com',
         classifiers=[
-            'Development Status :: 4 - Beta',
+            'Development Status :: 5 - Production/Stable',
             'Topic :: Scientific/Engineering :: Physics',
             'License :: OSI Approved :: BSD License',
             'Natural Language :: English',
