@@ -164,12 +164,10 @@ class Spheroid {
       -> double {
     const auto cos_phi = math::cosd(latitude);
     const auto sin_phi = math::sind(latitude);
-    const auto a2 = math::sqr(semi_major_axis_);
-    const auto b2 = math::sqr(semi_minor_axis());
-    return std::sqrt(math::sqr(a2 * cos_phi) +
-                     math::sqr(b2 * sin_phi) /
-                         (math::sqr(semi_major_axis_ * cos_phi) +
-                          math::sqr(semi_minor_axis() * sin_phi)));
+    return std::sqrt((math::sqr(math::sqr(semi_major_axis_) * cos_phi) +
+                      math::sqr(math::sqr(semi_minor_axis()) * sin_phi)) /
+                     (math::sqr(semi_major_axis_ * cos_phi) +
+                      math::sqr(semi_minor_axis() * sin_phi)));
   }
 
   /// Tests if two spheroid objects are equal

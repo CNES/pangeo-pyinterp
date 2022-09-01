@@ -55,9 +55,9 @@ template <typename T>
   for (auto ix = 0; ix < location.rows(); ++ix) {
     const auto loc_row = location.row(ix).transpose();
     const auto dir_row = direction.row(ix);
+    const auto radius = spheroid_.geocentric_radius(lat_nadir(ix));
 
     for (auto jx = 0; jx < half_swath; ++jx) {
-      auto radius = spheroid_.geocentric_radius(lat_nadir(ix));
       auto rotation = detail::math::rotation_3d_matrix<T>(
           (-(jx * delta_ac + half_gap) / radius), dir_row);
       auto kx = half_swath + jx;

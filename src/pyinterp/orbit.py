@@ -540,8 +540,8 @@ def calculate_swath(
     lon, lat = core.geodetic.calculate_swath(
         half_orbit.lon_nadir,
         half_orbit.lat_nadir,
-        across_track_resolution,
-        half_gap,
+        across_track_resolution * 1e3,
+        half_gap * 1e3,
         half_swath,
         spheroid,
     )
