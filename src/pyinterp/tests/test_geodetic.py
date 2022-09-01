@@ -9,11 +9,6 @@ import pytest
 from .. import geodetic
 
 
-def test_system():
-    with pytest.warns(DeprecationWarning):
-        geodetic.System()
-
-
 def test_spheroid():
     wgs = geodetic.Spheroid()
     assert isinstance(wgs, geodetic.Spheroid)
