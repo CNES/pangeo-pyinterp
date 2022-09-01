@@ -1446,8 +1446,10 @@ Args:
     lat: The latitude, in degrees.
 
 Returns:
-    :math:`R(\phi)=\sqrt{\frac{{(a^{2}\cos(\phi))}^{2} + (b^{2}\sin(\phi))^{2}}
-    {(a\cos(\phi))^{2} + (b\cos(\phi))^{2}}}`
+    .. math::
+
+        R(\phi)=\sqrt{\frac{{(a^{2}\cos(\phi))}^{2} + \\
+        (b^{2}\sin(\phi))^{2}}{(a\cos(\phi))^{2} + (b\cos(\phi))^{2}}}
 )__doc__")
       .def("authalic_radius", &geodetic::Spheroid::authalic_radius,
            R"__doc__(
