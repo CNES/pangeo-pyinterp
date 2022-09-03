@@ -65,6 +65,14 @@ class Abstract {
   /// @return coordinate value
   [[nodiscard]] virtual auto coordinate_value(int64_t index) const -> T = 0;
 
+  /// Get a slice of the axis.
+  ///
+  /// @param start index of the first element to include in the slice
+  /// @param count number of elements to include in the slice
+  /// @return a slice of the axis
+  [[nodiscard]] virtual auto slice(int64_t start, int64_t count) const
+      -> Vector<T> = 0;
+
   /// Get the minimum coordinate value.
   ///
   /// @return minimum coordinate value
@@ -157,6 +165,15 @@ class Undefined : public Abstract<T> {
   [[nodiscard]] constexpr auto coordinate_value(
       const int64_t /* index */) const noexcept -> T override {
     return math::Fill<T>::value();
+  }
+
+  /// @copydoc Abstract::slice(const int64_t, const int64_t) const
+  [[nodiscard]] constexpr auto slice(const int64_t /* start */,
+                                     const int64_t /* count */) const noexcept
+      -> Vector<T> override {
+    auto result = Vector<T>(1);
+    result[0] = math::Fill<T>::value();
+    return result;
   }
 
   /// @copydoc Abstract::min_value() const
@@ -261,6 +278,13 @@ class Irregular : public Abstract<T> {
   [[nodiscard]] constexpr auto coordinate_value(const int64_t index) const
       -> T override {
     return points_[index];
+  }
+
+  /// @copydoc Abstract::slice(const int64_t, const int64_t) const
+  [[nodiscard]] constexpr auto slice(const int64_t start,
+                                     const int64_t count) const noexcept
+      -> Vector<T> override {
+    return points_.segment(start, count);
   }
 
   /// @copydoc Abstract::min_value() const
@@ -403,6 +427,17 @@ class AbstractRegular : public Abstract<T> {
   [[nodiscard]] constexpr auto coordinate_value(
       const int64_t index) const noexcept -> T override {
     return static_cast<T>(start_ + index * step_);
+  }
+
+  /// @copydoc Abstract::slice(const int64_t, const int64_t) const
+  [[nodiscard]] constexpr auto slice(const int64_t start,
+                                     const int64_t count) const noexcept
+      -> Vector<T> override {
+    auto result = Vector<T>(count);
+    for (int64_t ix = 0; ix < count; ++ix) {
+      result[ix] = coordinate_value(start + ix);
+    }
+    return result;
   }
 
   /// @copydoc Abstract::min_value() const

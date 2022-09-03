@@ -121,6 +121,19 @@ class Axis {
     return axis_->coordinate_value(index);
   }
 
+  /// Get a slice of the axis.
+  ///
+  /// @param start index of the first element to include in the slice
+  /// @param count number of elements to include in the slice
+  /// @return a slice of the axis
+  [[nodiscard]] constexpr auto slice(int64_t start, int64_t count) const
+      -> Vector<T> {
+    if (start < 0 || start + count > size()) {
+      throw std::out_of_range("axis index out of range");
+    }
+    return axis_->slice(start, count);
+  };
+
   /// Get the minimum coordinate value.
   ///
   /// @return minimum coordinate value

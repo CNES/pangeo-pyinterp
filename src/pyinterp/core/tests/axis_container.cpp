@@ -26,6 +26,11 @@ TYPED_TEST(UndefinedTest, undefined) {
   EXPECT_TRUE(math::Fill<TypeParam>::is(a1.back()));
   EXPECT_TRUE(math::Fill<TypeParam>::is(a1.min_value()));
   EXPECT_TRUE(math::Fill<TypeParam>::is(a1.max_value()));
+  EXPECT_TRUE(math::Fill<TypeParam>::is(a1.coordinate_value(0)));
+  auto slice = a1.slice(0, 1);
+  EXPECT_TRUE(slice.size() == 1);
+  EXPECT_TRUE(math::Fill<TypeParam>::is(slice[0]));
+
   EXPECT_EQ(a1.size(), 0);
   EXPECT_EQ(a1.find_index(360, true), -1);
   EXPECT_EQ(a1.find_index(360, false), -1);
@@ -50,6 +55,11 @@ TYPED_TEST(IrregularTest, irregular) {
   EXPECT_EQ(a1.min_value(), 0);
   EXPECT_EQ(a1.max_value(), 20);
   EXPECT_EQ(a1.coordinate_value(2), 4);
+  auto slice = a1.slice(1, 3);
+  EXPECT_EQ(slice.size(), 3);
+  EXPECT_EQ(slice[0], 1);
+  EXPECT_EQ(slice[1], 4);
+  EXPECT_EQ(slice[2], 8);
   EXPECT_EQ(a1.find_index(8, false), 3);
   EXPECT_EQ(a1.find_index(static_cast<TypeParam>(8.3), false), 3);
   EXPECT_EQ(a1.find_index(30, true), 4);
@@ -63,6 +73,11 @@ TYPED_TEST(IrregularTest, irregular) {
   EXPECT_EQ(a1.min_value(), 0);
   EXPECT_EQ(a1.max_value(), 20);
   EXPECT_EQ(a1.coordinate_value(2), 4);
+  slice = a1.slice(1, 3);
+  EXPECT_EQ(slice.size(), 3);
+  EXPECT_EQ(slice[0], 8);
+  EXPECT_EQ(slice[1], 4);
+  EXPECT_EQ(slice[2], 1);
   EXPECT_EQ(a1.find_index(8, false), 1);
   EXPECT_EQ(a1.find_index(static_cast<TypeParam>(8.3), false), 1);
   EXPECT_EQ(a1.find_index(30, true), 0);
@@ -94,6 +109,11 @@ TYPED_TEST(RegularTest, irregular) {
   EXPECT_EQ(a1.min_value(), 0);
   EXPECT_EQ(a1.max_value(), 359);
   EXPECT_EQ(a1.coordinate_value(2), 2);
+  auto slice = a1.slice(1, 3);
+  EXPECT_EQ(slice.size(), 3);
+  EXPECT_EQ(slice[0], 1);
+  EXPECT_EQ(slice[1], 2);
+  EXPECT_EQ(slice[2], 3);
   EXPECT_EQ(a1.find_index(180, false), 180);
   EXPECT_EQ(a1.find_index(360, false), -1);
   EXPECT_EQ(a1.find_index(360, true), 359);
@@ -105,6 +125,11 @@ TYPED_TEST(RegularTest, irregular) {
   EXPECT_EQ(a1.min_value(), 0);
   EXPECT_EQ(a1.max_value(), 359);
   EXPECT_EQ(a1.coordinate_value(2), 357);
+  slice = a1.slice(1, 3);
+  EXPECT_EQ(slice.size(), 3);
+  EXPECT_EQ(slice[0], 358);
+  EXPECT_EQ(slice[1], 357);
+  EXPECT_EQ(slice[2], 356);
   EXPECT_EQ(a1.find_index(180, false), 179);
   EXPECT_EQ(a1.find_index(360, false), -1);
   EXPECT_EQ(a1.find_index(360, true), 0);

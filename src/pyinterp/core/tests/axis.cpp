@@ -46,6 +46,7 @@ TYPED_TEST(AxisTest, default_constructor) {
   EXPECT_EQ(axis.is_regular(), false);
   EXPECT_EQ(axis.size(), 0);
   EXPECT_THROW((void)axis.coordinate_value(0), std::out_of_range);
+  EXPECT_THROW((void)axis.slice(0, 1), std::out_of_range);
   EXPECT_EQ(axis.find_index(360, true), -1);
   EXPECT_EQ(axis.find_index(360, false), -1);
   auto indexes = axis.find_indexes(360);
@@ -71,7 +72,11 @@ TYPED_TEST(AxisTest, singleton) {
   EXPECT_EQ(axis.is_regular(), true);
   EXPECT_EQ(axis.size(), 1);
   EXPECT_EQ(axis.coordinate_value(0), 0);
+  auto slice = axis.slice(0, 1);
+  EXPECT_EQ(slice.size(), 1);
+  EXPECT_EQ(slice[0], 0);
   EXPECT_THROW((void)axis.coordinate_value(1), std::exception);
+  EXPECT_THROW((void)axis.slice(0, 2), std::exception);
 }
 
 TYPED_TEST(AxisTest, binary) {
@@ -119,6 +124,11 @@ TYPED_TEST(AxisTest, binary) {
   value = axis.coordinate_value(1);
   EXPECT_EQ(value, 1);
   EXPECT_THROW(value = axis.coordinate_value(2), std::exception);
+  auto slice = axis.slice(0, 2);
+  EXPECT_EQ(slice.size(), 2);
+  EXPECT_EQ(slice[0], 0);
+  EXPECT_EQ(slice[1], 1);
+  EXPECT_THROW((void)axis.slice(0, 3), std::exception);
 }
 
 TYPED_TEST(AxisTest, wrap_longitude) {
@@ -179,6 +189,11 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_EQ(a1.coordinate_value(0), 359);
   EXPECT_EQ(a1.coordinate_value(180), 179);
   EXPECT_THROW((void)a1.coordinate_value(520), std::exception);
+  auto slice = a1.slice(0, 2);
+  EXPECT_EQ(slice.size(), 2);
+  EXPECT_EQ(slice[0], 359);
+  EXPECT_EQ(slice[1], 358);
+  EXPECT_THROW((void)a1.slice(0, 520), std::exception);
   i1 = a1.find_index(0, false);
   EXPECT_EQ(i1, 359);
   i1 = a1.find_index(359, true);
@@ -224,6 +239,10 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_EQ(a2.max_value(), 179);
   EXPECT_EQ(a2.coordinate_value(0), -180);
   EXPECT_EQ(a2.coordinate_value(180), 0);
+  slice = a2.slice(0, 2);
+  EXPECT_EQ(slice.size(), 2);
+  EXPECT_EQ(slice[0], -180);
+  EXPECT_EQ(slice[1], -179);
   EXPECT_NE(a1, a2);
 
   a2 = detail::Axis<TypeParam>(180, -179, 360, static_cast<TypeParam>(1e-6),
@@ -415,7 +434,12 @@ TEST(axis, irregular) {
   EXPECT_EQ(axis.size(), values.size());
   EXPECT_EQ(axis.coordinate_value(0), -89);
   EXPECT_EQ(axis.coordinate_value(108), 88.940374);
+  auto slice = axis.slice(1, 2);
+  EXPECT_EQ(slice.size(), 2);
+  EXPECT_EQ(slice[0], -88.908818);
+  EXPECT_EQ(slice[1], -88.809323);
   EXPECT_THROW((void)axis.coordinate_value(360), std::exception);
+  EXPECT_THROW((void)axis.slice(0, 360), std::exception);
   i1 = axis.find_index(-1.659041, false);
   EXPECT_EQ(i1, 54);
   i1 = axis.find_index(-88.700757, false);
@@ -445,6 +469,11 @@ TEST(axis, irregular) {
   EXPECT_EQ(axis.min_value(), -89);
   EXPECT_EQ(axis.max_value(), 88.940374);
   EXPECT_EQ(axis.size(), values.size());
+
+  slice = axis.slice(1, 2);
+  EXPECT_EQ(slice.size(), 2);
+  EXPECT_EQ(slice[1], 88.738328);
+  EXPECT_EQ(slice[0], 88.843755);
 
   i1 = axis.find_index(-1.659041, false);
   EXPECT_EQ(i1, 54);
