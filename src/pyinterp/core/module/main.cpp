@@ -16,6 +16,7 @@ extern void init_bivariate(py::module &);
 extern void init_dateutils(py::module &);
 extern void init_descriptive_statistics(py::module &);
 extern void init_enum(py::module &, py::module &);
+extern void init_interpolate1d(py::module &);
 extern void init_fill(py::module &);
 extern void init_geodetic(py::module &);
 extern void init_geohash_class(py::module &);
@@ -77,6 +78,7 @@ Replace undefined values
   init_histogram2d(m);
   init_bivariate_interpolator(m);
   init_descriptive_statistics(m);
+  init_interpolate1d(m);
   init_grid(m);
   init_bivariate(m);
   init_trivariate(m);

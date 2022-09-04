@@ -74,6 +74,32 @@ class Interpolate1D {
     return gsl_spline_eval_integ(workspace_.get(), a, b, acc_);
   }
 
+  static inline auto parse_interp_type(const std::string &kind)
+      -> const gsl_interp_type * {
+    if (kind == "linear") {
+      return gsl_interp_linear;
+    }
+    if (kind == "polynomial") {
+      return gsl_interp_polynomial;
+    }
+    if (kind == "c_spline") {
+      return gsl_interp_cspline;
+    }
+    if (kind == "c_spline_periodic") {
+      return gsl_interp_cspline_periodic;
+    }
+    if (kind == "akima") {
+      return gsl_interp_akima;
+    }
+    if (kind == "akima_periodic") {
+      return gsl_interp_akima_periodic;
+    }
+    if (kind == "steffen") {
+      return gsl_interp_steffen;
+    }
+    throw std::invalid_argument("Invalid spline type: " + kind);
+  }
+
  private:
   std::unique_ptr<gsl_spline, std::function<void(gsl_spline *)>> workspace_;
   Accelerator acc_;

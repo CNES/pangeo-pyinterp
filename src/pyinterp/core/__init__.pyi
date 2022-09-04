@@ -1819,6 +1819,15 @@ def bivariate_int8(grid: Grid2DInt8,
     ...
 
 
+def interpolate1d(x: Axis,
+                  y: numpy.ndarray[numpy.float64[m, 1]],
+                  xi: numpy.ndarray[numpy.float64[m, 1]],
+                  half_window_size: int = ...,
+                  bounds_error: bool = ...,
+                  kind: str = ...) -> numpy.ndarray[numpy.float64[m, 1]]:
+    ...
+
+
 @overload
 def quadrivariate_float32(
         grid: TemporalGrid4DFloat32,
