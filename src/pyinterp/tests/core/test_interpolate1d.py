@@ -9,14 +9,13 @@ from ... import core
 
 
 def test_interpolate1d():
-    x = numpy.linspace(0, 100, endpoint=True)
-    y = numpy.cos(-x**2 / 9.0)
     xi = numpy.linspace(0, 100, num=200, endpoint=True)
+    x = numpy.concatenate((xi[::4], xi[-1:]))
+    y = numpy.cos(-x**2 / 9.0)
     yi = core.interpolate1d(core.Axis(x), y, xi, half_window_size=20)
+    index = numpy.searchsorted(xi, x)
 
-    mask = xi == x
-
-    assert pytest.approx(numpy.cos(-xi[mask]**2 / 9.0), rel=1e-6) == yi[mask]
+    assert pytest.approx(numpy.cos(-x**2 / 9.0), rel=1e-6) == yi[index]
 
     with pytest.raises(RuntimeError):
         core.interpolate1d(core.Axis(x), y, xi, half_window_size=0)
