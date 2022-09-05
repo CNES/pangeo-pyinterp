@@ -284,7 +284,7 @@ class Irregular : public Abstract<T> {
   [[nodiscard]] constexpr auto slice(const int64_t start,
                                      const int64_t count) const noexcept
       -> Vector<T> override {
-    return Vector<T>(points_.segment(start, count));
+    return points_.segment(start, count);
   }
 
   /// @copydoc Abstract::min_value() const

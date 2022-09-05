@@ -77,11 +77,13 @@ auto interpolate_1d(const pyinterp::Axis<double>& x,
     const auto [start, end, n] =
         detail::calculate_start_end_size(index, axis->size(), half_window_size);
 
+    // Select the data in the current window
+    const Vector<double> yw = y.segment(start, n);
+
     // Interpolation of the current value
     auto interpolator =
         detail::gsl::Interpolate1D(n, interp_type, detail::gsl::Accelerator());
-    result(ix) = interpolator.interpolate(axis->slice(start, n),
-                                          y.segment(start, n), xi(ix));
+    result(ix) = interpolator.interpolate(axis->slice(start, n), yw, xi(ix));
   }
   return result;
 }
