@@ -22,6 +22,7 @@ def _interpolate(
     xp: NDArray,
     height: float,
     wgs: geodetic.Coordinates,
+    half_window_size: int,
 ) -> Tuple[NDArray, NDArray]:
     """Interpolate the given orbit at the given coordinates.
 
@@ -32,6 +33,8 @@ def _interpolate(
         xp: The x-coordinates at which the orbit is defined.
         height: Height of the satellite above the Earth's surface (in meters).
         wgs: The World Geodetic System used to convert the coordinates.
+        half_window_size: Half size of the window used to interpolate the
+            orbit.
 
     Returns:
         Tuple[NDArray, NDArray]: The interpolated longitudes and latitudes.
@@ -40,10 +43,14 @@ def _interpolate(
     x, y, z = wgs.lla_to_ecef(lon, lat, np.full_like(lon, height))
 
     r = np.sqrt(x * x + y * y + z * z * mz * mz)
-    x = np.interp(xi, xp, x)
-    y = np.interp(xi, xp, y)
-    z = np.interp(xi, xp, z)
-    r = np.interp(xi, xp, r)
+
+    x_axis = core.Axis((xp - xp[0]).astype(np.float64), 1e-6, False)
+    xi = (xi - xp[0]).astype(np.float64)
+
+    x = core.interpolate1d(x_axis, x, xi, half_window_size=half_window_size)
+    y = core.interpolate1d(x_axis, y, xi, half_window_size=half_window_size)
+    z = core.interpolate1d(x_axis, z, xi, half_window_size=half_window_size)
+    r = core.interpolate1d(x_axis, r, xi, half_window_size=half_window_size)
 
     r /= np.sqrt(x * x + y * y + z * z)
     x *= r
@@ -406,9 +413,13 @@ def calculate_orbit(
                             time[-1],
                             np.timedelta64(500, 'ms'),
                             dtype=time.dtype)
-        lon_nadir, lat_nadir = _interpolate(lon_nadir, lat_nadir,
+        lon_nadir, lat_nadir = _interpolate(lon_nadir,
+                                            lat_nadir,
                                             time_hr.astype('i8'),
-                                            time.astype('i8'), height, wgs)
+                                            time.astype('i8'),
+                                            height,
+                                            wgs,
+                                            half_window_size=50)
         time = time_hr
 
     if cycle_duration is not None:
@@ -435,8 +446,13 @@ def calculate_orbit(
                      distance[-2],
                      along_track_resolution or 2,
                      dtype=distance.dtype)
-    lon_nadir, lat_nadir = _interpolate(lon_nadir[:-1], lat_nadir[:-1], x_al,
-                                        distance[:-1], height, wgs)
+    lon_nadir, lat_nadir = _interpolate(lon_nadir[:-1],
+                                        lat_nadir[:-1],
+                                        x_al,
+                                        distance[:-1],
+                                        height,
+                                        wgs,
+                                        half_window_size=10)
 
     time = np.interp(
         x_al,  # type: ignore
