@@ -1,6 +1,10 @@
 Changelog
 #########
 
+2022.9.1
+--------
+* Orbit interpolation improvement.
+
 2022.9.0
 --------
 * Improves the accuracy of swath calculation.

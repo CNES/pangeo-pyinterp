@@ -17,9 +17,9 @@ copyright = '(2022, CNES/CLS)'
 author = 'CNES/CLS'
 
 # The short X.Y version
-version = '2022.9.0'
+version = '2022.9.1'
 # The full version, including alpha/beta/rc tags
-release = '2022.9.0'
+release = '2022.9.1'
 
 # -- General configuration ---------------------------------------------------
 
