@@ -5,7 +5,7 @@
 import numpy as np
 import pytest
 
-from .. import Axis, Grid2D, TemporalAxis, core, grid, interface
+from .. import Axis, Grid2D, Grid3D, Grid4D, TemporalAxis, core, grid, interface
 
 
 def test_core_class_suffix():
@@ -22,6 +22,51 @@ def test_core_class_suffix():
 
     with pytest.raises(ValueError):
         Grid2D(lon, lat, matrix.astype(complex))
+
+
+def test_core_grid2d():
+    x = Axis(np.arange(0, 360, 10), is_circle=True)
+    y = Axis(np.arange(0, 360, 10), is_circle=False)
+
+    tensor, _, = np.meshgrid(x[:], y[:])
+    assert isinstance(Grid2D(x, y, tensor), Grid2D)
+
+    with pytest.raises(ValueError):
+        Grid2D(y, x, tensor)
+
+
+def test_core_grid3d():
+    x = Axis(np.arange(0, 360, 10), is_circle=True)
+    y = Axis(np.arange(0, 360, 10), is_circle=False)
+    z = Axis(np.arange(0, 360, 10), is_circle=False)
+
+    tensor, _, _ = np.meshgrid(x[:], y[:], z[:])
+    assert isinstance(Grid3D(x, y, z, tensor), Grid3D)
+
+    with pytest.raises(ValueError):
+        Grid3D(y, x, z, tensor)
+
+    with pytest.raises(ValueError):
+        Grid3D(y, z, x, tensor)
+
+
+def test_core_grid4d():
+    x = Axis(np.arange(0, 360, 10), is_circle=True)
+    y = Axis(np.arange(0, 360, 10), is_circle=False)
+    z = Axis(np.arange(0, 360, 10), is_circle=False)
+    u = Axis(np.arange(0, 360, 10), is_circle=False)
+
+    tensor, _, _, _ = np.meshgrid(x[:], y[:], z[:], u[:])
+    assert isinstance(Grid4D(x, y, z, u, tensor), Grid4D)
+
+    with pytest.raises(ValueError):
+        Grid4D(y, x, z, u, tensor),
+
+    with pytest.raises(ValueError):
+        Grid4D(y, z, x, u, tensor),
+
+    with pytest.raises(ValueError):
+        Grid4D(y, z, u, x, tensor),
 
 
 def test__core_function_suffix():

@@ -29,6 +29,9 @@ class Grid2D {
         array_(std::move(array)),
         ptr_(array_.template unchecked<Dimension>()) {
     check_shape(0, x_.get(), "x", "array", y_.get(), "y", "array");
+    if (y_->is_circle()) {
+      throw std::invalid_argument("Y-axis cannot be a circle.");
+    }
   }
 
   /// Default constructor
@@ -149,6 +152,9 @@ class Grid3D : public Grid2D<DataType, Dimension> {
          std::shared_ptr<Axis<AxisType>> z, pybind11::array_t<DataType> array)
       : Grid2D<DataType, Dimension>(x, y, std::move(array)), z_(std::move(z)) {
     this->check_shape(2, z_.get(), "z", "array");
+    if (z_->is_circle()) {
+      throw std::invalid_argument("Z-axis cannot be a circle.");
+    }
   }
 
   /// Gets the Y-Axis
@@ -196,6 +202,9 @@ class Grid4D : public Grid3D<DataType, AxisType, 4> {
       : Grid3D<DataType, AxisType, 4>(x, y, z, std::move(array)),
         u_(std::move(u)) {
     this->check_shape(3, u_.get(), "u", "array");
+    if (u_->is_circle()) {
+      throw std::invalid_argument("U-axis cannot be a circle.");
+    }
   }
 
   /// Gets the U-Axis
