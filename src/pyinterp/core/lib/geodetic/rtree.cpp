@@ -54,7 +54,8 @@ auto RTree::packing(const Eigen::Ref<const Vector<double>> &lon,
   auto _z = values.data();
 
   for (auto ix = 0; ix < lon.size(); ++ix) {
-    vector.emplace_back(std::make_pair(point_t(*_x, *_y), *_z));
+    vector.emplace_back(std::make_pair(
+        point_t(detail::math::normalize_angle(*_x, -180.0, 360.0), *_y), *_z));
     ++_x;
     ++_y;
     ++_z;
@@ -74,7 +75,8 @@ auto RTree::insert(const Eigen::Ref<const Vector<double>> &lon,
   auto _z = values.data();
 
   for (auto ix = 0; ix < lon.size(); ++ix) {
-    base_t::insert(std::make_pair(point_t(*_x, *_y), *_z));
+    base_t::insert(std::make_pair(
+        point_t(detail::math::normalize_angle(*_x, -180.0, 360.0), *_y), *_z));
     ++_x;
     ++_y;
     ++_z;
@@ -111,9 +113,11 @@ auto RTree::query(const Eigen::Ref<const Vector<double>> &lon,
         [&](size_t start, size_t end) {
           try {
             for (size_t ix = start; ix < end; ++ix) {
-              auto nearest =
-                  std::invoke(requester, static_cast<base_t>(*this),
-                              point_t(lon(ix), lat(ix)), strategy_, k);
+              auto nearest = std::invoke(
+                  requester, static_cast<base_t>(*this),
+                  point_t(detail::math::normalize_angle(lon(ix), -180.0, 360.0),
+                          lat(ix)),
+                  strategy_, k);
               auto jx = 0ULL;
 
               // Fill in the calculation result for all neighbors found
@@ -170,7 +174,9 @@ auto RTree::inverse_distance_weighting(
           try {
             for (size_t ix = start; ix < end; ++ix) {
               auto result = base_t::inverse_distance_weighting(
-                  point_t(lon(ix), lat(ix)), strategy_, _radius, k, p, within);
+                  point_t(detail::math::normalize_angle(lon(ix), -180.0, 360.0),
+                          lat(ix)),
+                  strategy_, _radius, k, p, within);
               _data(ix) = result.first;
               _neighbors(ix) = result.second;
             }
@@ -226,8 +232,9 @@ auto RTree::radial_basis_function(const Eigen::Ref<const Vector<double>> &lon,
           try {
             for (size_t ix = start; ix < end; ++ix) {
               auto result = base_t::radial_basis_function(
-                  point_t(lon(ix), lat(ix)), strategy_, rbf_handler, _radius, k,
-                  within);
+                  point_t(detail::math::normalize_angle(lon(ix), -180.0, 360.0),
+                          lat(ix)),
+                  strategy_, rbf_handler, _radius, k, within);
               _data(ix) = result.first;
               _neighbors(ix) = result.second;
             }
@@ -275,9 +282,10 @@ auto RTree::window_function(const Eigen::Ref<const Vector<double>> &lon,
         [&](size_t start, size_t end) {
           try {
             for (size_t ix = start; ix < end; ++ix) {
-              auto result =
-                  base_t::window_function(point_t(lon(ix), lat(ix)), strategy_,
-                                          wf_handler, _arg, radius, k, within);
+              auto result = base_t::window_function(
+                  point_t(detail::math::normalize_angle(lon(ix), -180.0, 360.0),
+                          lat(ix)),
+                  strategy_, wf_handler, _arg, radius, k, within);
               _data(ix) = result.first;
               _neighbors(ix) = result.second;
             }
