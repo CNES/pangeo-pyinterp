@@ -9,7 +9,14 @@ pyinterp
 from . import geodetic, geohash, version
 from ._geohash import GeoHash
 from .binning import Binning1D, Binning2D
-from .core import Axis, AxisInt64, TemporalAxis, dateutils
+from .core import (
+    Axis,
+    AxisInt64,
+    RadialBasisFunction,
+    TemporalAxis,
+    WindowFunction,
+    dateutils,
+)
 from .grid import Grid2D, Grid3D, Grid4D
 from .histogram2d import Histogram2D
 from .interpolator.bicubic import bicubic
@@ -57,9 +64,11 @@ __all__ = [
     'Orbit',
     'Pass',
     'quadrivariate',
+    'RadialBasisFunction',
     'RTree',
     'StreamingHistogram',
     'Swath',
     'TemporalAxis',
     'trivariate',
+    'WindowFunction',
 ]
