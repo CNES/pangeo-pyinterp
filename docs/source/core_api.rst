@@ -113,6 +113,7 @@ Geodetic System
   core.geodetic.MultiPolygon
   core.geodetic.Point
   core.geodetic.Polygon
+  core.geodetic.RTree
   core.geodetic.Spheroid
 
 Geohash integer
