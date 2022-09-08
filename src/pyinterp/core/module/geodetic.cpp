@@ -1265,6 +1265,8 @@ Args:
         true, the method ensures that the neighbors found are located around
         the point of interest. In other words, this parameter ensures that the
         calculated values will not be extrapolated. Defaults to ``true``.
+    within: If true, the method ensures that the neighbors found are located
+        within the point of interest. Defaults to ``false``.
     num_threads: The number of threads to use for the computation. If 0 all
         CPUs are used. If 1 is given, no parallel computing code is used at
         all, which is useful for debugging. Defaults to ``0``.
@@ -1290,20 +1292,16 @@ Args:
     k: The number of nearest neighbors to be used for calculating the
         interpolated value. Defaults to ``9``.
     rbf: The radial basis function, based on the radius, r, given by
-    the
-        distance between points. Default to
+        the distance between points. Default to
         :py:attr:`pyinterp.core.RadialBasisFunction.Multiquadric`.
     epsilon: Adjustable constant for gaussian or multiquadrics
-    functions.
-        Default to the average distance between nodes.
+        functions. Default to the average distance between nodes.
     smooth: Values greater than zero increase the smoothness of the
         approximation.
     within: If true, the method ensures that the neighbors found are
-    located
-        around the point of interest. Defaults to ``true``.
+        located around the point of interest. Defaults to ``true``.
     num_threads: The number of threads to use for the computation. If 0
-    all CPUs
-        are used. If 1 is given, no parallel computing code is used at
+        all CPUs are used. If 1 is given, no parallel computing code is used at
         all, which is useful for debugging. Defaults to ``0``.
 Returns:
     The interpolated value and the number of neighbors used for the
