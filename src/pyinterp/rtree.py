@@ -365,6 +365,7 @@ class RTree:
                                  'optional argument')
 
         wf = ''.join(item.capitalize() for item in wf.split('_'))
+        wf = wf.replace('Swot', 'SWOT')
 
         return self._instance.window_function(coordinates, radius, k,
                                               getattr(core.WindowFunction, wf),
