@@ -1176,7 +1176,15 @@ Returns:
 }
 
 static auto init_geodetic_rtree(py::module &m) {
-  py::class_<geodetic::RTree>(m, "RTree")
+  py::class_<geodetic::RTree>(
+      m, "RTree",
+      "RTree(self, spheroid: Optional[pyinterp.core.geodetic.Spheroid] = None)"
+      R"__doc__(
+R*Tree spatial index.
+
+Args:
+    spheroid: WGS of the coordinate system used to calculate the distance.
+)__doc__")
       .def(py::init<std::optional<geodetic::Spheroid>>(),
            py::arg("spheroid") = std::nullopt)
       .def(

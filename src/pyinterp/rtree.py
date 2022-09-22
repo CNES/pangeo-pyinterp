@@ -8,9 +8,9 @@ RTree spatial index
 """
 from typing import Optional, Tuple
 
-import numpy as np
+import numpy
 
-from . import core, geodetic
+from . import core, geodetic, interface
 
 
 class RTree:
@@ -29,15 +29,15 @@ class RTree:
 
     def __init__(self,
                  system: Optional[geodetic.Spheroid] = None,
-                 dtype: Optional[np.dtype] = None,
+                 dtype: Optional[numpy.dtype] = None,
                  ndims: int = 3):
         """Initialize a new R*Tree."""
-        dtype = dtype or np.dtype('float64')
+        dtype = dtype or numpy.dtype('float64')
         if ndims < 3:
             raise ValueError('ndims must be >= 3')
-        if dtype == np.dtype('float64'):
+        if dtype == numpy.dtype('float64'):
             self._instance = getattr(core, f'RTree{ndims}DFloat64')(system)
-        elif dtype == np.dtype('float32'):
+        elif dtype == numpy.dtype('float32'):
             self._instance = getattr(core, f'RTree{ndims}DFloat32')(system)
         else:
             raise ValueError(f'dtype {dtype} not handled by the object')
@@ -67,7 +67,8 @@ class RTree:
         """Returns true if the tree is not empty."""
         return self._instance.__bool__()
 
-    def packing(self, coordinates: np.ndarray, values: np.ndarray) -> None:
+    def packing(self, coordinates: numpy.ndarray,
+                values: numpy.ndarray) -> None:
         """The tree is created using packing algorithm (The old data is erased
         before construction.)
 
@@ -83,7 +84,8 @@ class RTree:
         """
         self._instance.packing(coordinates, values)
 
-    def insert(self, coordinates: np.ndarray, values: np.ndarray) -> None:
+    def insert(self, coordinates: numpy.ndarray,
+               values: numpy.ndarray) -> None:
         """Insert new data into the search tree.
 
         Args:
@@ -99,10 +101,10 @@ class RTree:
         self._instance.insert(coordinates, values)
 
     def query(self,
-              coordinates: np.ndarray,
-              k: Optional[int] = 4,
-              within: Optional[bool] = True,
-              num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
+              coordinates: numpy.ndarray,
+              k: int = 4,
+              within: bool = True,
+              num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """Search for the nearest K nearest neighbors of a given point.
 
         Args:
@@ -131,12 +133,12 @@ class RTree:
 
     def inverse_distance_weighting(
             self,
-            coordinates: np.ndarray,
+            coordinates: numpy.ndarray,
             radius: Optional[float] = None,
-            k: Optional[int] = 9,
-            p: Optional[int] = 2,
-            within: Optional[bool] = True,
-            num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
+            k: int = 9,
+            p: int = 2,
+            within: bool = True,
+            num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolation of the value at the requested position by inverse
         distance weighting method.
 
@@ -168,14 +170,14 @@ class RTree:
 
     def radial_basis_function(
             self,
-            coordinates: np.ndarray,
+            coordinates: numpy.ndarray,
             radius: Optional[float] = None,
-            k: Optional[int] = 9,
+            k: int = 9,
             rbf: Optional[str] = None,
             epsilon: Optional[float] = None,
-            smooth: Optional[float] = 0,
-            within: Optional[bool] = True,
-            num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
+            smooth: float = 0,
+            within: bool = True,
+            num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolation of the value at the requested position by radial basis
         function interpolation.
 
@@ -220,29 +222,20 @@ class RTree:
             The interpolated value and the number of neighbors used in the
             calculation.
         """
-        adjustable = ['gaussian', 'inverse_multiquadric', 'multiquadric']
-        non_adjustable = ['cubic', 'linear', 'thin_plate']
-        rbf = rbf or adjustable[-1]
-        if epsilon is not None and rbf in non_adjustable:
-            raise ValueError(
-                f"epsilon must be None for {', '.join(non_adjustable)} RBF")
-        if rbf not in adjustable + non_adjustable:
-            raise ValueError(f'Radial basis function {rbf!r} is not defined')
-        rbf = ''.join(item.capitalize() for item in rbf.split('_'))
-
         return self._instance.radial_basis_function(
-            coordinates, radius, k, getattr(core.RadialBasisFunction, rbf),
-            epsilon, smooth, within, num_threads)
+            coordinates, radius, k,
+            interface._core_radial_basis_function(rbf, epsilon), epsilon,
+            smooth, within, num_threads)
 
     def window_function(
             self,
-            coordinates: np.ndarray,
+            coordinates: numpy.ndarray,
             radius: float,
-            k: Optional[int] = 9,
+            k: int = 9,
             wf: Optional[str] = None,
             arg: Optional[float] = None,
-            within: Optional[bool] = True,
-            num_threads: Optional[int] = 0) -> Tuple[np.ndarray, np.ndarray]:
+            within: bool = True,
+            num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolation of the value at the requested position by window
         function.
 
@@ -325,51 +318,9 @@ class RTree:
             The interpolated value and the number of neighbors used in the
             calculation.
         """
-        wf = wf or 'blackman'
-        if wf not in [
-                'blackman',
-                'blackman_harris',
-                'boxcar',
-                'flat_top',
-                'gaussian',
-                'hamming',
-                'lanczos',
-                'nuttall',
-                'parzen',
-                'parzen_swot',
-        ]:
-            raise ValueError(f'Window function {wf!r} is not defined')
-
-        if wf in ['gaussian', 'lanczos', 'parzen']:
-            if arg is None:
-                defaults = dict(gaussian=None, lanczos=1, parzen=0)
-                arg = defaults[wf]
-
-            if wf == 'lanczos' and arg < 1:  # type: ignore
-                raise ValueError(
-                    f'The argument of the function {wf!r} must be '
-                    'greater than 1')
-
-            if wf == 'parzen' and arg < 0:  # type: ignore
-                raise ValueError(
-                    f'The argument of the function {wf!r} must be '
-                    'greater than 0')
-
-            if wf == 'gaussian' and arg is None:
-                raise ValueError(
-                    f'The argument of the function {wf!r} must be '
-                    'specified')
-        else:
-            if arg is not None:
-                raise ValueError(f'The function {wf!r} does not support the '
-                                 'optional argument')
-
-        wf = ''.join(item.capitalize() for item in wf.split('_'))
-        wf = wf.replace('Swot', 'SWOT')
-
-        return self._instance.window_function(coordinates, radius, k,
-                                              getattr(core.WindowFunction, wf),
-                                              arg, within, num_threads)
+        return self._instance.window_function(
+            coordinates, radius, k, interface._core_window_function(wf, arg),
+            arg, within, num_threads)
 
     def __getstate__(self) -> Tuple:
         """Return the state of the object for pickling purposes.

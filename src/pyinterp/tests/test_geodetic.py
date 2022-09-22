@@ -2,11 +2,45 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+import os
 import pickle
 
+import numpy
 import pytest
 
+try:
+    import matplotlib.colors
+    import matplotlib.pyplot
+    HAVE_PLT = True
+except ImportError:
+    HAVE_PLT = False
+
 from .. import geodetic
+from ..tests import load_grid2d, make_or_compare_reference
+
+
+def plot(x, y, z, filename):
+    figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
+    z = numpy.ma.fix_invalid(z)
+    value = z.mean()
+    std = z.std()
+    normalize = matplotlib.colors.Normalize(vmin=value - 3 * std,
+                                            vmax=value + 3 * std)
+    axe = figure.add_subplot(2, 1, 1)
+    axe.pcolormesh(x, y, z, cmap='jet', norm=normalize, shading='auto')
+    figure.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                filename),
+                   bbox_inches='tight',
+                   pad_inches=0.4)
+
+
+def load_data():
+    ds = load_grid2d()
+    z = ds.mss.T
+    mesh = geodetic.RTree()
+    x, y = numpy.meshgrid(ds.lon.values, ds.lat.values, indexing='ij')
+    mesh.packing(x.ravel(), y.ravel(), z.values.ravel())
+    return mesh
 
 
 def test_spheroid():
@@ -106,3 +140,51 @@ def test_multipolygon():
     assert geodetic.MultiPolygon.read_wkt(
         'MULTIPOLYGON(((0 0,0 5,5 5,5 0,0 0)))').wkt(
         ) == 'MULTIPOLYGON(((0 0,0 5,5 5,5 0,0 0)))'
+
+
+def test_rtree(pytestconfig):
+    mesh = load_data()
+    lon = numpy.arange(-180, 180, 1) + 1 / 3.0
+    lat = numpy.arange(-90, 90, 1) + 1 / 3.0
+    x, y = numpy.meshgrid(lon, lat, indexing='ij')
+    data, _ = mesh.query(x.ravel(), y.ravel())
+    data, _ = mesh.inverse_distance_weighting(x.ravel(), y.ravel())
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
+        plot(x, y, data.reshape((len(lon), len(lat))),
+             'mss_geodetic_rtree_idw.png')
+    data, _ = mesh.radial_basis_function(x.ravel(), y.ravel())
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
+        plot(x, y, data.reshape((len(lon), len(lat))),
+             'mss_geodetic_rtree_rbf.png')
+    data, _ = mesh.window_function(x.ravel(), y.ravel(), radius=2_000_000)
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
+        plot(x, y, data.reshape((len(lon), len(lat))),
+             'mss_geodetic_rtree_wf.png')
+
+    with pytest.raises(ValueError):
+        mesh.radial_basis_function(x.ravel(),
+                                   y.ravel(),
+                                   epsilon=1,
+                                   rbf='cubic')
+    with pytest.raises(ValueError):
+        mesh.radial_basis_function(x.ravel(), y.ravel(), rbf='X')
+    with pytest.raises(ValueError):
+        mesh.window_function(x.ravel(), y.ravel(), radius=1, wf='cubic')
+    with pytest.raises(ValueError):
+        mesh.window_function(x.ravel(),
+                             y.ravel(),
+                             radius=1,
+                             wf='parzen',
+                             arg=-1)
+    with pytest.raises(ValueError):
+        mesh.window_function(x.ravel(),
+                             y.ravel(),
+                             radius=1,
+                             wf='lanczos',
+                             arg=0)
+    with pytest.raises(ValueError):
+        mesh.window_function(x.ravel(),
+                             y.ravel(),
+                             radius=1,
+                             wf='blackman',
+                             arg=2)
