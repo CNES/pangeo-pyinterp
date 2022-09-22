@@ -8,22 +8,22 @@ Bicubic interpolation
 """
 from typing import Optional, Union
 
-import numpy as np
+import numpy
 
 from .. import core, grid, interface
 
 
 def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
-            x: np.ndarray,
-            y: np.ndarray,
-            z: Optional[np.ndarray] = None,
-            u: Optional[np.ndarray] = None,
-            nx: Optional[int] = 3,
-            ny: Optional[int] = 3,
+            x: numpy.ndarray,
+            y: numpy.ndarray,
+            z: Optional[numpy.ndarray] = None,
+            u: Optional[numpy.ndarray] = None,
+            nx: int = 3,
+            ny: int = 3,
             fitting_model: str = 'c_spline',
             boundary: str = 'undef',
             bounds_error: bool = False,
-            num_threads: int = 0) -> np.ndarray:
+            num_threads: int = 0) -> numpy.ndarray:
     """Bicubic gridded interpolator.
 
     Args:
@@ -88,8 +88,8 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
         'bicubic' if fitting_model == 'bicubic' else 'spline', instance)
     args = [
         instance,
-        np.asarray(x),
-        np.asarray(y), nx, ny, fitting_model, boundary, bounds_error,
+        numpy.asarray(x),
+        numpy.asarray(y), nx, ny, fitting_model, boundary, bounds_error,
         num_threads
     ]
     if isinstance(mesh, (grid.Grid3D, grid.Grid4D)):
@@ -97,9 +97,9 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
             raise ValueError(
                 f'You must specify the Z-values for a {mesh._DIMENSIONS}D '
                 'grid.')
-        args.insert(3, np.asarray(z))
+        args.insert(3, numpy.asarray(z))
     if isinstance(mesh, grid.Grid4D):
         if u is None:
             raise ValueError('You must specify the U-values for a 4D grid.')
-        args.insert(4, np.asarray(u))
+        args.insert(4, numpy.asarray(u))
     return getattr(core, function)(*args)

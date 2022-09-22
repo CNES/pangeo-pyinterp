@@ -5,7 +5,7 @@ Replace undefined values
 from typing import Optional, Union
 import concurrent.futures
 
-import numpy as np
+import numpy
 
 from . import core, grid, interface
 
@@ -104,8 +104,8 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
         if nx == ny:
             n = nx
         else:
-            n = nx * ny * np.sqrt(2 / (nx**2 + ny**2))
-        relaxation = 2 / (1 + np.pi / n)
+            n = nx * ny * numpy.sqrt(2 / (nx**2 + ny**2))
+        relaxation = 2 / (1 + numpy.pi / n)
 
     if max_iteration is None:
         max_iteration = nx * ny
@@ -116,7 +116,7 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
 
     instance = mesh._instance
     function = interface._core_function('gauss_seidel', instance)
-    filled = np.copy(mesh.array)
+    filled = numpy.copy(mesh.array)
     if nz == 0:
         _iterations, residual = getattr(core.fill,
                                         function)(filled, first_guess,

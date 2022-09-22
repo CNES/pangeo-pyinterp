@@ -9,8 +9,8 @@ Histogram 2D
 from typing import Optional, Union
 import copy
 
-import dask.array as da
-import numpy as np
+import dask.array.core
+import numpy
 
 from . import core
 
@@ -62,10 +62,10 @@ class Histogram2D:
                  x: core.Axis,
                  y: core.Axis,
                  bin_counts: Optional[int] = None,
-                 dtype: Optional[np.dtype] = np.dtype('float64')):
-        if dtype == np.dtype('float64'):
+                 dtype: Optional[numpy.dtype] = numpy.dtype('float64')):
+        if dtype == numpy.dtype('float64'):
             self._instance = core.Histogram2DFloat64(x, y, bin_counts)
-        elif dtype == np.dtype('float32'):
+        elif dtype == numpy.dtype('float32'):
             self._instance = core.Histogram2DFloat32(x, y, bin_counts)
         else:
             raise ValueError(f'dtype {dtype} not handled by the object')
@@ -102,7 +102,8 @@ class Histogram2D:
         result._instance += other._instance  # type: ignore
         return result
 
-    def push(self, x: np.ndarray, y: np.ndarray, z: np.ndarray) -> None:
+    def push(self, x: numpy.ndarray, y: numpy.ndarray,
+             z: numpy.ndarray) -> None:
         """Push new samples into the defined bins.
 
         Args:
@@ -110,14 +111,17 @@ class Histogram2D:
             y: Y coordinates of the samples.
             z: New samples to push into the defined bins.
         """
-        x = np.asarray(x).ravel()
-        y = np.asarray(y).ravel()
-        z = np.asarray(z).ravel()
+        x = numpy.asarray(x).ravel()
+        y = numpy.asarray(y).ravel()
+        z = numpy.asarray(z).ravel()
         self._instance.push(x, y, z)
 
-    def push_delayed(self, x: Union[np.ndarray, da.Array], y: Union[np.ndarray,
-                                                                    da.Array],
-                     z: Union[np.ndarray, da.Array]) -> da.Array:
+    def push_delayed(
+        self,
+        x: Union[numpy.ndarray, dask.array.core.Array],
+        y: Union[numpy.ndarray, dask.array.core.Array],
+        z: Union[numpy.ndarray, dask.array.core.Array],
+    ) -> dask.array.core.Array:
         """Push new samples into the defined bins from dask array.
 
         Args:
@@ -134,25 +138,25 @@ class Histogram2D:
 
             :py:meth:`push <pyinterp.Histogram2D.push>`
         """
-        x = da.asarray(x)
-        y = da.asarray(y)
-        z = da.asarray(z)
+        x = dask.array.core.asarray(x)
+        y = dask.array.core.asarray(y)
+        z = dask.array.core.asarray(z)
 
         def _process_block(x, y, z, x_axis, y_axis, dtype):
             hist2d = Histogram2D(x_axis, y_axis, dtype=dtype)
             hist2d.push(x, y, z)
-            return np.array([hist2d], dtype='object')
+            return numpy.array([hist2d], dtype='object')
 
-        return da.map_blocks(_process_block,
-                             x.ravel(),
-                             y.ravel(),
-                             z.ravel(),
-                             self.x,
-                             self.y,
-                             self.dtype,
-                             dtype='object').sum()
+        return dask.array.core.map_blocks(_process_block,
+                                          x.ravel(),
+                                          y.ravel(),
+                                          z.ravel(),
+                                          self.x,
+                                          self.y,
+                                          self.dtype,
+                                          dtype='object').sum()
 
-    def variable(self, statistics: str = 'mean', *args) -> np.ndarray:
+    def variable(self, statistics: str = 'mean', *args) -> numpy.ndarray:
         """Gets the regular grid containing the calculated statistics.
 
         Args:

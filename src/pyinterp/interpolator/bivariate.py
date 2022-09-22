@@ -6,18 +6,18 @@
 Bivariate interpolation
 =======================
 """
-import numpy as np
+import numpy
 
 from .. import core, grid, interface
 
 
 def bivariate(grid2d: grid.Grid2D,
-              x: np.ndarray,
-              y: np.ndarray,
+              x: numpy.ndarray,
+              y: numpy.ndarray,
               interpolator: str = 'bilinear',
               bounds_error: bool = False,
               num_threads: int = 0,
-              **kwargs) -> np.ndarray:
+              **kwargs) -> numpy.ndarray:
     """Interpolate the values provided on the defined bivariate function.
 
     Args:
@@ -41,7 +41,8 @@ def bivariate(grid2d: grid.Grid2D,
     """
     instance = grid2d._instance
     function = interface._core_function('bivariate', instance)
-    return getattr(core, function)(instance, np.asarray(x), np.asarray(y),
-                                   grid._core_variate_interpolator(
-                                       grid2d, interpolator, **kwargs),
-                                   bounds_error, num_threads)
+    return getattr(core,
+                   function)(instance, numpy.asarray(x), numpy.asarray(y),
+                             grid._core_variate_interpolator(
+                                 grid2d, interpolator, **kwargs), bounds_error,
+                             num_threads)

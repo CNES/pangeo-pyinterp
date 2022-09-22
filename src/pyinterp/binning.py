@@ -9,8 +9,8 @@ Data binning
 from typing import Optional, Union
 import copy
 
-import dask.array as da
-import numpy as np
+import dask.array.core
+import numpy
 
 from . import core, geodetic
 
@@ -47,10 +47,10 @@ class Binning2D:
                  x: core.Axis,
                  y: core.Axis,
                  wgs: Optional[geodetic.Spheroid] = None,
-                 dtype: np.dtype = np.dtype('float64')):
-        if dtype == np.dtype('float64'):
+                 dtype: numpy.dtype = numpy.dtype('float64')):
+        if dtype == numpy.dtype('float64'):
             self._instance = core.Binning2DFloat64(x, y, wgs)
-        elif dtype == np.dtype('float32'):
+        elif dtype == numpy.dtype('float32'):
             self._instance = core.Binning2DFloat32(x, y, wgs)
         else:
             raise ValueError(f'dtype {dtype} not handled by the object')
@@ -93,9 +93,9 @@ class Binning2D:
         return result
 
     def push(self,
-             x: np.ndarray,
-             y: np.ndarray,
-             z: np.ndarray,
+             x: numpy.ndarray,
+             y: numpy.ndarray,
+             z: numpy.ndarray,
              simple: bool = True) -> None:
         """Push new samples into the defined bins.
 
@@ -140,16 +140,16 @@ class Binning2D:
             1996,
             Pages 165-184,
         """
-        x = np.asarray(x).ravel()
-        y = np.asarray(y).ravel()
-        z = np.asarray(z).ravel()
+        x = numpy.asarray(x).ravel()
+        y = numpy.asarray(y).ravel()
+        z = numpy.asarray(z).ravel()
         self._instance.push(x, y, z, simple)
 
     def push_delayed(self,
-                     x: Union[np.ndarray, da.Array],
-                     y: Union[np.ndarray, da.Array],
-                     z: Union[np.ndarray, da.Array],
-                     simple: bool = True) -> da.Array:
+                     x: Union[numpy.ndarray, dask.array.core.Array],
+                     y: Union[numpy.ndarray, dask.array.core.Array],
+                     z: Union[numpy.ndarray, dask.array.core.Array],
+                     simple: bool = True) -> dask.array.core.Array:
         """Push new samples into the defined bins from dask array.
 
         Args:
@@ -169,26 +169,26 @@ class Binning2D:
 
             :py:meth:`push <pyinterp.Binning2D.push>`
         """
-        x = da.asarray(x)
-        y = da.asarray(y)
-        z = da.asarray(z)
+        x = dask.array.core.asarray(x)
+        y = dask.array.core.asarray(y)
+        z = dask.array.core.asarray(z)
 
         def _process_block(x, y, z, x_axis, y_axis, wgs, simple):
             binning = Binning2D(x_axis, y_axis, wgs)
             binning.push(x, y, z, simple)
-            return np.array([binning], dtype='object')
+            return numpy.array([binning], dtype='object')
 
-        return da.map_blocks(_process_block,
-                             x.ravel(),
-                             y.ravel(),
-                             z.ravel(),
-                             self.x,
-                             self.y,
-                             self.wgs,
-                             simple,
-                             dtype='object').sum()
+        return dask.array.core.map_blocks(_process_block,
+                                          x.ravel(),
+                                          y.ravel(),
+                                          z.ravel(),
+                                          self.x,
+                                          self.y,
+                                          self.wgs,
+                                          simple,
+                                          dtype='object').sum()
 
-    def variable(self, statistics: str = 'mean') -> np.ndarray:
+    def variable(self, statistics: str = 'mean') -> numpy.ndarray:
         """Gets the regular grid containing the calculated statistics.
 
         Args:
@@ -235,10 +235,12 @@ class Binning1D:
         statistics will be calculated.
     """
 
-    def __init__(self, x: core.Axis, dtype: np.dtype = np.dtype('float64')):
-        if dtype == np.dtype('float64'):
+    def __init__(self,
+                 x: core.Axis,
+                 dtype: numpy.dtype = numpy.dtype('float64')):
+        if dtype == numpy.dtype('float64'):
             self._instance = core.Binning1DFloat64(x)
-        elif dtype == np.dtype('float32'):
+        elif dtype == numpy.dtype('float32'):
             self._instance = core.Binning1DFloat32(x)
         else:
             raise ValueError(f'dtype {dtype} not handled by the object')
@@ -271,9 +273,9 @@ class Binning1D:
 
     def push(
         self,
-        x: np.ndarray,
-        z: np.ndarray,
-        weights: Optional[np.ndarray] = None,
+        x: numpy.ndarray,
+        z: numpy.ndarray,
+        weights: Optional[numpy.ndarray] = None,
     ) -> None:
         """Push new samples into the defined bins.
 
@@ -284,16 +286,16 @@ class Binning1D:
                 value in a only contributes its associated weight towards the
                 bin count (instead of 1).
         """
-        x = np.asarray(x).ravel()
-        z = np.asarray(z).ravel()
+        x = numpy.asarray(x).ravel()
+        z = numpy.asarray(z).ravel()
         self._instance.push(x, z, weights)
 
     def push_delayed(
         self,
-        x: Union[np.ndarray, da.Array],
-        z: Union[np.ndarray, da.Array],
-        weights: Optional[Union[np.ndarray, da.Array]] = None,
-    ) -> da.Array:
+        x: Union[numpy.ndarray, dask.array.core.Array],
+        z: Union[numpy.ndarray, dask.array.core.Array],
+        weights: Optional[Union[numpy.ndarray, dask.array.core.Array]] = None,
+    ) -> dask.array.core.Array:
         """Push new samples into the defined bins from dask array.
 
         Args:
@@ -312,24 +314,24 @@ class Binning1D:
 
             :py:meth:`push <pyinterp.Binning1D.push>`
         """
-        x = da.asarray(x)
-        z = da.asarray(z)
+        x = dask.array.core.asarray(x)
+        z = dask.array.core.asarray(z)
         if weights is not None:
-            weights = da.asarray(weights).ravel()
+            weights = dask.array.core.asarray(weights).ravel()
 
         def _process_block(x, z, weights, x_axis):
             binning = Binning1D(x_axis)
             binning.push(x, z, weights)
-            return np.array([binning], dtype='object')
+            return numpy.array([binning], dtype='object')
 
-        return da.map_blocks(_process_block,
-                             x.ravel(),
-                             z.ravel(),
-                             weights,
-                             self.x,
-                             dtype='object').sum()
+        return dask.array.core.map_blocks(_process_block,
+                                          x.ravel(),
+                                          z.ravel(),
+                                          weights,
+                                          self.x,
+                                          dtype='object').sum()
 
-    def variable(self, statistics: str = 'mean') -> np.ndarray:
+    def variable(self, statistics: str = 'mean') -> numpy.ndarray:
         """Gets the regular grid containing the calculated statistics.
 
         Args:

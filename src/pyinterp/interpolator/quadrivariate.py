@@ -6,22 +6,22 @@
 Quadrivariate interpolation
 ===========================
 """
-import numpy as np
+import numpy
 
 from .. import core, grid, interface
 
 
 def quadrivariate(grid4d: grid.Grid4D,
-                  x: np.ndarray,
-                  y: np.ndarray,
-                  z: np.ndarray,
-                  u: np.ndarray,
+                  x: numpy.ndarray,
+                  y: numpy.ndarray,
+                  z: numpy.ndarray,
+                  u: numpy.ndarray,
                   interpolator: str = 'bilinear',
                   z_method: str = 'linear',
                   u_method: str = 'linear',
                   bounds_error: bool = False,
                   num_threads: int = 0,
-                  **kwargs) -> np.ndarray:
+                  **kwargs) -> numpy.ndarray:
     """Interpolate the values provided on the defined quadrivariate function.
 
     Args:
@@ -53,10 +53,10 @@ def quadrivariate(grid4d: grid.Grid4D,
     instance = grid4d._instance
     function = interface._core_function('quadrivariate', instance)
     return getattr(core, function)(instance,
-                                   np.asarray(x),
-                                   np.asarray(y),
-                                   np.asarray(z),
-                                   np.asarray(u),
+                                   numpy.asarray(x),
+                                   numpy.asarray(y),
+                                   numpy.asarray(z),
+                                   numpy.asarray(u),
                                    grid._core_variate_interpolator(
                                        grid4d, interpolator, **kwargs),
                                    z_method=z_method,

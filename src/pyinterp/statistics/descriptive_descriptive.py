@@ -9,16 +9,16 @@ Descriptive statistics
 from typing import Any, Iterable, Optional, Union
 import copy
 
-import dask.array as da
-import numpy as np
+import dask.array.core
+import numpy
 
 from .. import core
 
 
 def _delayed(
     attr: str,
-    values: da.Array,
-    weights: Optional[da.Array] = None,
+    values: dask.array.core.Array,
+    weights: Optional[dask.array.core.Array] = None,
     axis: Optional[Iterable[int]] = None,
 ) -> Union[core.DescriptiveStatisticsFloat64,
            core.DescriptiveStatisticsFloat32]:
@@ -28,17 +28,18 @@ def _delayed(
 
     def _process_block(attr, x, w, axis):
         instance = getattr(core, attr)(values=x, weights=w, axis=axis)
-        return np.array([instance], dtype='object')
+        return numpy.array([instance], dtype='object')
 
     drop_axis = list(range(values.ndim))[1:]
 
-    return da.map_blocks(_process_block,
-                         attr,
-                         values,
-                         weights,
-                         axis,
-                         drop_axis=drop_axis,
-                         dtype='object').sum().compute()  # type: ignore
+    return dask.array.core.map_blocks(
+        _process_block,
+        attr,
+        values,
+        weights,
+        axis,
+        drop_axis=drop_axis,
+        dtype='object').sum().compute()  # type: ignore
 
 
 class DescriptiveStatistics:
@@ -51,7 +52,7 @@ class DescriptiveStatistics:
     Args:
         values: Array containing numbers whose statistics are desired.
 
-            .. note::
+            . note::
 
                 NaNs are automatically ignored.
 
@@ -62,7 +63,7 @@ class DescriptiveStatistics:
         dtype: Data type of the returned array. By default, the data type is
             ``numpy.float64``.
 
-    .. seealso::
+    . seealso::
 
         Pébay, P., Terriberry, T.B., Kolla, H. et al.
         Numerically stable, scalable formulas for parallel and online
@@ -74,23 +75,26 @@ class DescriptiveStatistics:
     """
 
     def __init__(self,
-                 values: Union[da.Array, np.ndarray],
-                 weights: Optional[Union[da.Array, np.ndarray]] = None,
+                 values: Union[dask.array.core.Array, numpy.ndarray],
+                 weights: Optional[Union[dask.array.core.Array,
+                                         numpy.ndarray]] = None,
                  axis: Optional[Union[int, Iterable[int]]] = None,
-                 dtype: Optional[np.dtype] = None) -> None:
+                 dtype: Optional[numpy.dtype] = None) -> None:
         if isinstance(axis, int):
             axis = (axis, )
-        dtype = dtype or np.dtype('float64')
-        if dtype == np.dtype('float64'):
+        dtype = dtype or numpy.dtype('float64')
+        if dtype == numpy.dtype('float64'):
             attr = 'DescriptiveStatisticsFloat64'
-        elif dtype == np.dtype('float32'):
+        elif dtype == numpy.dtype('float32'):
             attr = 'DescriptiveStatisticsFloat32'
         else:
             raise ValueError(f'dtype {dtype} not handled by the object')
-        if isinstance(values, da.Array) or isinstance(weights, da.Array):
+        if isinstance(values, dask.array.core.Array) or isinstance(
+                weights, dask.array.core.Array):
             self._instance = _delayed(
-                attr, da.asarray(values),
-                da.asarray(weights) if weights is not None else None, axis)
+                attr, dask.array.core.asarray(values),
+                dask.array.core.asarray(weights)
+                if weights is not None else None, axis)
         else:
             self._instance: Union[core.DescriptiveStatisticsFloat64,
                                   core.DescriptiveStatisticsFloat32] = getattr(
@@ -104,7 +108,7 @@ class DescriptiveStatistics:
         """
         cls = type(self)
         result = getattr(cls, '__new__')(cls)
-        result._instance = self._instance.copy()
+        result._instance = self._instance.__copy__()
         return result
 
     def __iadd__(self, other: Any) -> 'DescriptiveStatistics':
@@ -139,7 +143,7 @@ class DescriptiveStatistics:
         raise TypeError('unsupported operand type(s) for +='
                         f": '{type(self)}' and '{type(other)}'")
 
-    def count(self) -> np.ndarray:
+    def count(self) -> numpy.ndarray:
         """Returns the count of samples.
 
         Returns:
@@ -147,7 +151,7 @@ class DescriptiveStatistics:
         """
         return self._instance.count()
 
-    def kurtosis(self) -> np.ndarray:
+    def kurtosis(self) -> numpy.ndarray:
         """Returns the kurtosis of samples.
 
         Returns:
@@ -155,7 +159,7 @@ class DescriptiveStatistics:
         """
         return self._instance.kurtosis()
 
-    def max(self) -> np.ndarray:
+    def max(self) -> numpy.ndarray:
         """Returns the maximum of samples.
 
         Returns:
@@ -163,7 +167,7 @@ class DescriptiveStatistics:
         """
         return self._instance.max()
 
-    def mean(self) -> np.ndarray:
+    def mean(self) -> numpy.ndarray:
         """Returns the mean of samples.
 
         Returns:
@@ -171,7 +175,7 @@ class DescriptiveStatistics:
         """
         return self._instance.mean()
 
-    def min(self) -> np.ndarray:
+    def min(self) -> numpy.ndarray:
         """Returns the minimum of samples.
 
         Returns:
@@ -179,7 +183,7 @@ class DescriptiveStatistics:
         """
         return self._instance.min()
 
-    def skewness(self) -> np.ndarray:
+    def skewness(self) -> numpy.ndarray:
         """Returns the skewness of samples.
 
         Returns:
@@ -187,7 +191,7 @@ class DescriptiveStatistics:
         """
         return self._instance.skewness()
 
-    def sum(self) -> np.ndarray:
+    def sum(self) -> numpy.ndarray:
         """Returns the sum of samples.
 
         Returns:
@@ -195,7 +199,7 @@ class DescriptiveStatistics:
         """
         return self._instance.sum()
 
-    def sum_of_weights(self) -> np.ndarray:
+    def sum_of_weights(self) -> numpy.ndarray:
         """Returns the sum of weights.
 
         Returns:
@@ -203,7 +207,7 @@ class DescriptiveStatistics:
         """
         return self._instance.sum_of_weights()
 
-    def var(self, ddof: int = 0) -> np.ndarray:
+    def var(self, ddof: int = 0) -> numpy.ndarray:
         """Returns the variance of samples.
 
         Args:
@@ -216,7 +220,7 @@ class DescriptiveStatistics:
         """
         return self._instance.variance(ddof)
 
-    def std(self, ddof: int = 0) -> np.ndarray:
+    def std(self, ddof: int = 0) -> numpy.ndarray:
         """Returns the standard deviation of samples.
 
         Args:
@@ -227,9 +231,9 @@ class DescriptiveStatistics:
         Returns:
             The standard deviation of samples.
         """
-        return np.sqrt(self.var(ddof=ddof))
+        return numpy.sqrt(self.var(ddof=ddof))
 
-    def array(self) -> np.ndarray:
+    def array(self) -> numpy.ndarray:
         """Returns the different statistical variables calculated in a numpy
         structured table with the following fields:
 
@@ -255,7 +259,7 @@ class DescriptiveStatistics:
         fields = [item[0] for item in dtype]
         field = fields.pop()
         buffer = getattr(self, field)()
-        result = np.empty(buffer.shape, dtype=dtype)
+        result = numpy.empty(buffer.shape, dtype=dtype)
         result[field] = buffer
         for field in fields:
             result[field] = getattr(self, field)()

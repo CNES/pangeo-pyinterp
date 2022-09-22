@@ -11,7 +11,7 @@ Build interpolation objects from xarray.DataArray instances
 from typing import Dict, Hashable, Optional, Tuple, Union
 import pickle
 
-import numpy as np
+import numpy
 import xarray as xr
 
 from .. import cf, core, grid, interpolator
@@ -181,7 +181,7 @@ class Grid2D(grid.Grid2D):
             data_array.transpose(*self._dims).values,
             increasing_axes='inplace' if increasing_axes else None)
 
-    def bivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def bivariate(self, coords: dict, *args, **kwargs) -> numpy.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -198,7 +198,7 @@ class Grid2D(grid.Grid2D):
         return interpolator.bivariate(self, *_coords(coords, self._dims),
                                       *args, **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def bicubic(self, coords: dict, *args, **kwargs) -> numpy.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -267,7 +267,7 @@ class Grid3D(grid.Grid3D):
             data_array.transpose(x, y, z).values,
             increasing_axes='inplace' if increasing_axes else None)
 
-    def trivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def trivariate(self, coords: dict, *args, **kwargs) -> numpy.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -287,7 +287,7 @@ class Grid3D(grid.Grid3D):
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def bicubic(self, coords: dict, *args, **kwargs) -> numpy.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -370,7 +370,7 @@ class Grid4D(grid.Grid4D):
             data_array.transpose(x, y, z, u).values,
             increasing_axes='inplace' if increasing_axes else None)
 
-    def quadrivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def quadrivariate(self, coords: dict, *args, **kwargs) -> numpy.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -390,7 +390,7 @@ class Grid4D(grid.Grid4D):
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def bicubic(self, coords: dict, *args, **kwargs) -> numpy.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -501,7 +501,7 @@ class RegularGridInterpolator:
                  method: str = 'bilinear',
                  bounds_error: bool = False,
                  bicubic_kwargs: Optional[Dict] = None,
-                 num_threads: int = 0) -> np.ndarray:
+                 num_threads: int = 0) -> numpy.ndarray:
         """Interpolation at coordinates.
 
         Args:

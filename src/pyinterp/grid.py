@@ -8,7 +8,7 @@ Regular grids
 """
 from typing import Optional, Union
 
-import numpy as np
+import numpy
 
 from . import core, interface
 
@@ -30,11 +30,11 @@ class Grid2D:
 
         >>> import numpy as np
         >>> import pyinterp
-        >>> x_axis = pyinterp.Axis(np.arange(-180.0, 180.0, 1.0),
+        >>> x_axis = pyinterp.Axis(numpy.arange(-180.0, 180.0, 1.0),
         ...                        is_circle=True)
-        >>> y_axis = pyinterp.Axis(np.arange(-80.0, 80.0, 1.0),
+        >>> y_axis = pyinterp.Axis(numpy.arange(-80.0, 80.0, 1.0),
         ...                        is_circle=False)
-        >>> array = np.zeros((len(x_axis), len(y_axis)))
+        >>> array = numpy.zeros((len(x_axis), len(y_axis)))
         >>> grid = pyinterp.Grid2D(x_axis, y_axis, array)
         >>> grid
         <pyinterp.grid.Grid2D>
@@ -80,7 +80,7 @@ class Grid2D:
                               (core.Axis,
                                core.TemporalAxis)) and not item.is_ascending():
                     args[idx] = item.flip(inplace=inplace)
-                    args[-1] = np.flip(args[-1], axis=idx)
+                    args[-1] = numpy.flip(args[-1], axis=idx)
         self._instance = getattr(core, _class)(*args)
         self._prefix = prefix
 
@@ -124,7 +124,7 @@ class Grid2D:
         return self._instance.y
 
     @property
-    def array(self) -> np.ndarray:
+    def array(self) -> numpy.ndarray:
         """Gets the values handled by this instance.
 
         Returns:
@@ -156,13 +156,13 @@ class Grid3D(Grid2D):
 
         >>> import numpy as np
         >>> import pyinterp
-        >>> x_axis = pyinterp.Axis(np.arange(-180.0, 180.0, 1.0),
+        >>> x_axis = pyinterp.Axis(numpy.arange(-180.0, 180.0, 1.0),
         ...                        is_circle=True)
-        >>> y_axis = pyinterp.Axis(np.arange(-80.0, 80.0, 1.0),
+        >>> y_axis = pyinterp.Axis(numpy.arange(-80.0, 80.0, 1.0),
         ...                        is_circle=False)
         >>> z_axis = pyinterp.TemporalAxis(
-        ...     np.array(['2000-01-01'], dtype="datetime64[s]"))
-        >>> array = np.zeros((len(x_axis), len(y_axis), len(z_axis)))
+        ...     numpy.array(['2000-01-01'], dtype="datetime64[s]"))
+        >>> array = numpy.zeros((len(x_axis), len(y_axis), len(z_axis)))
         >>> grid = pyinterp.Grid3D(x_axis, y_axis, z_axis, array)
     """
     _DIMENSIONS = 3
