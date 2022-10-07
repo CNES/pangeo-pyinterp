@@ -59,6 +59,11 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   /// Type of the implicit conversion between the type of coordinates and values
   using promotion_t = typename base_t::promotion_t;
 
+  /// Type of the numpy array used to store the input coordinates
+  using array_t =
+      pybind11::array_t<coordinate_t,
+                        pybind11::array::c_style | pybind11::array::forcecast>;
+
   /// The tree must at least store the ECEF coordinates
   static_assert(dimension_t::value >= 3,
                 "The RTree must at least store the ECEF coordinates: x, y, z");
@@ -110,8 +115,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   /// Populates the RTree with coordinates using the packaging algorithm
   ///
   /// @param coordinates Coordinates to be copied
-  void packing(const pybind11::array_t<coordinate_t, pybind11::array::c_style>
-                   &coordinates,
+  void packing(const array_t &coordinates,
                const pybind11::array_t<Type> &values) {
     detail::check_array_ndim("coordinates", 2, coordinates);
     detail::check_array_ndim("values", 1, values);
@@ -138,8 +142,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   /// Insert new data into the search tree
   ///
   /// @param coordinates Coordinates to be copied
-  void insert(const pybind11::array_t<coordinate_t, pybind11::array::c_style>
-                  &coordinates,
+  void insert(const array_t &coordinates,
               const pybind11::array_t<coordinate_t> &values) {
     detail::check_array_ndim("coordinates", 2, coordinates);
     detail::check_array_ndim("values", 1, values);
@@ -164,9 +167,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   }
 
   /// Search for the nearest K nearest neighbors of a given coordinates.
-  auto query(const pybind11::array_t<coordinate_t, pybind11::array::c_style>
-                 &coordinates,
-             const uint32_t k, const bool within,
+  auto query(const array_t &coordinates, const uint32_t k, const bool within,
              const size_t num_threads) const -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
@@ -182,12 +183,28 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     }
   }
 
+  /// Search for the nearest K nearest neighbors of a given coordinates.
+  auto value(const array_t &coordinates, const uint32_t k,
+             const size_t num_threads) const -> pybind11::tuple {
+    detail::check_array_ndim("coordinates", 2, coordinates);
+    switch (coordinates.shape(1)) {
+      case dimension_t::value - 1:
+        return _value<dimension_t::value - 1>(&RTree<Point, Type>::from_lon_lat,
+                                              coordinates, k, num_threads);
+      case dimension_t::value:
+        return _value<dimension_t::value>(&RTree<Point, Type>::from_lon_lat,
+                                          coordinates, k, num_threads);
+      default:
+        throw std::invalid_argument(RTree<Point, Type>::invalid_shape());
+    }
+  }
+
   /// TODO
-  auto inverse_distance_weighting(
-      const pybind11::array_t<coordinate_t, pybind11::array::c_style>
-          &coordinates,
-      const std::optional<coordinate_t> &radius, const uint32_t k,
-      const uint32_t p, const bool within, const size_t num_threads) const
+  auto inverse_distance_weighting(const array_t &coordinates,
+                                  const std::optional<coordinate_t> &radius,
+                                  const uint32_t k, const uint32_t p,
+                                  const bool within,
+                                  const size_t num_threads) const
       -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
 
@@ -208,13 +225,13 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   }
 
   /// TODO
-  auto radial_basis_function(
-      const pybind11::array_t<coordinate_t, pybind11::array::c_style>
-          &coordinates,
-      const std::optional<coordinate_t> &radius, const uint32_t k,
-      const RadialBasisFunction rbf, const std::optional<promotion_t> &epsilon,
-      const promotion_t smooth, const bool within,
-      const size_t num_threads) const -> pybind11::tuple {
+  auto radial_basis_function(const array_t &coordinates,
+                             const std::optional<coordinate_t> &radius,
+                             const uint32_t k, const RadialBasisFunction rbf,
+                             const std::optional<promotion_t> &epsilon,
+                             const promotion_t smooth, const bool within,
+                             const size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
@@ -235,12 +252,11 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   }
 
   /// TODO
-  auto window_function(
-      const pybind11::array_t<coordinate_t, pybind11::array::c_style>
-          &coordinates,
-      const coordinate_t &radius, const uint32_t k, const WindowFunction wf,
-      const std::optional<coordinate_t> &arg, const bool within,
-      const size_t num_threads) const -> pybind11::tuple {
+  auto window_function(const array_t &coordinates, const coordinate_t &radius,
+                       const uint32_t k, const WindowFunction wf,
+                       const std::optional<coordinate_t> &arg,
+                       const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
@@ -487,6 +503,80 @@ class RTree : public detail::geometry::RTree<Point, Type> {
       }
     }
     return pybind11::make_tuple(distance, value);
+  }
+
+  /// Search for the nearest K nearest neighbors of a given coordinates.
+  template <size_t M>
+  auto _value(Converter converter,
+              const pybind11::array_t<coordinate_t> &coordinates,
+              const uint32_t k, const size_t num_threads) const
+      -> pybind11::tuple {
+    auto _coordinates = coordinates.template unchecked<2>();
+    auto size = coordinates.shape(0);
+
+    // Allocation of result matrices.
+    auto points = pybind11::array_t<Type>(
+        pybind11::array::ShapeContainer{size, static_cast<pybind11::ssize_t>(k),
+                                        static_cast<pybind11::ssize_t>(M)});
+    auto value = pybind11::array_t<Type>(pybind11::array::ShapeContainer{
+        size, static_cast<pybind11::ssize_t>(k)});
+
+    auto _points = points.template mutable_unchecked<3>();
+    auto _value = value.template mutable_unchecked<2>();
+
+    {
+      pybind11::gil_scoped_release release;
+
+      // Captures the detected exceptions in the calculation function
+      // (only the last exception captured is kept)
+      auto except = std::exception_ptr(nullptr);
+
+      detail::dispatch(
+          [&](size_t start, size_t end) {
+            try {
+              auto point = Point();
+
+              for (size_t ix = start; ix < end; ++ix) {
+                point = std::move(
+                    std::invoke(converter, *this,
+                                Eigen::Map<const Vector<coordinate_t>>(
+                                    &_coordinates(ix, 0), M)));
+
+                auto nearest = base_t::value(point, k);
+                auto jx = 0ULL;
+
+                // Fill in the calculation result for all neighbors found
+                for (; jx < nearest.size(); ++jx) {
+                  auto lla = this->to_lla(nearest[jx].first);
+                  _points(ix, jx, 0) = boost::geometry::get<0>(lla);
+                  _points(ix, jx, 1) = boost::geometry::get<1>(lla);
+                  if (M == 3) {
+                    _points(ix, jx, 2) = boost::geometry::get<2>(lla);
+                  }
+                  _value(ix, jx) = nearest[jx].second;
+                }
+
+                // The rest of the result is filled with invalid values.
+                for (; jx < k; ++jx) {
+                  _points(ix, jx, 0) = std::numeric_limits<Type>::quiet_NaN();
+                  _points(ix, jx, 1) = std::numeric_limits<Type>::quiet_NaN();
+                  if (M == 3) {
+                    _points(ix, jx, 2) = std::numeric_limits<Type>::quiet_NaN();
+                  }
+                  _value(ix, jx) = std::numeric_limits<Type>::quiet_NaN();
+                }
+              }
+            } catch (...) {
+              except = std::current_exception();
+            }
+          },
+          size, num_threads);
+
+      if (except != nullptr) {
+        std::rethrow_exception(except);
+      }
+    }
+    return pybind11::make_tuple(points, value);
   }
 
   /// Inverse distance weighting interpolation

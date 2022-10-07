@@ -155,6 +155,10 @@ def test_rtree_query():
     assert values.shape == (1, 4)
     assert distances[0, 0] == 0
 
+    points, values = mesh.value(np.vstack((np.array([0]), np.array([0]))).T)
+    assert points.shape == (1, 4, 2)
+    assert values.shape == (1, 4)
+
 
 def test_rtree_pickle():
     """Serialization test."""

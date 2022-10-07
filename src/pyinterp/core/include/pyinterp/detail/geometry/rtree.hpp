@@ -207,6 +207,20 @@ class RTree {
     return query_within(point, boost::geometry::default_strategy(), k);
   }
 
+  /// Search for the nearest K neighbors around a given point.
+  ///
+  /// @param point Point of interest
+  /// @param k The number of nearest neighbors to search.
+  /// @return the k nearest neighbors.
+  auto value(const Point &point, const uint32_t k) const
+      -> std::vector<value_t> {
+    auto result = std::vector<value_t>();
+    std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
+                  tree_->qend(),
+                  [&result](const auto &item) { result.emplace_back(item); });
+    return result;
+  }
+
   /// Interpolation of the value at the requested position.
   ///
   /// @param point Point of interest.

@@ -70,7 +70,7 @@ class Axis:
     def __ne__(self, other: Axis) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -194,7 +194,7 @@ class Bilinear2D(BivariateInterpolator2D):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -206,7 +206,7 @@ class Bilinear3D(BivariateInterpolator3D):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -224,7 +224,7 @@ class Binning1DFloat32(Binning2DFloat32):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -242,7 +242,7 @@ class Binning1DFloat64(Binning2DFloat64):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -300,7 +300,7 @@ class Binning2DFloat32:
     def __iadd__(self, other: Binning2DFloat32) -> Binning2DFloat32:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -370,7 +370,7 @@ class Binning2DFloat64:
     def __iadd__(self, other: Binning2DFloat64) -> Binning2DFloat64:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -449,7 +449,7 @@ class DescriptiveStatisticsFloat32:
     ) -> DescriptiveStatisticsFloat32:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -504,7 +504,7 @@ class DescriptiveStatisticsFloat64:
     ) -> DescriptiveStatisticsFloat64:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -560,7 +560,7 @@ class Grid2DFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -585,7 +585,7 @@ class Grid2DFloat64:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -610,7 +610,7 @@ class Grid2DInt8:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -635,7 +635,7 @@ class Grid3DFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -664,7 +664,7 @@ class Grid3DFloat64:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -693,7 +693,7 @@ class Grid3DInt8:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -722,7 +722,7 @@ class Grid4DFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -755,7 +755,7 @@ class Grid4DFloat64:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -788,7 +788,7 @@ class Grid4DInt8:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -864,7 +864,7 @@ class Histogram2DFloat32:
     def __iadd__(self, other: Histogram2DFloat32) -> Histogram2DFloat32:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -928,7 +928,7 @@ class Histogram2DFloat64:
     def __iadd__(self, other: Histogram2DFloat64) -> Histogram2DFloat64:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -948,7 +948,7 @@ class InverseDistanceWeighting2D(BivariateInterpolator2D):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -960,7 +960,7 @@ class InverseDistanceWeighting3D(BivariateInterpolator3D):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -972,7 +972,7 @@ class Nearest2D(BivariateInterpolator2D):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -984,7 +984,7 @@ class Nearest3D(BivariateInterpolator3D):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -1034,6 +1034,12 @@ class RTree3DFloat32:
                               num_threads: int = ...) -> tuple:
         ...
 
+    def value(self,
+              coordinates: numpy.ndarray[numpy.float32],
+              k: int = ...,
+              num_threads: int = ...) -> tuple:
+        ...
+
     def window_function(self,
                         coordinates: numpy.ndarray[numpy.float32],
                         radius: float,
@@ -1056,7 +1062,7 @@ class RTree3DFloat32:
     def __len__(self) -> int:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -1106,6 +1112,12 @@ class RTree3DFloat64:
                               num_threads: int = ...) -> tuple:
         ...
 
+    def value(self,
+              coordinates: numpy.ndarray[numpy.float64],
+              k: int = ...,
+              num_threads: int = ...) -> tuple:
+        ...
+
     def window_function(self,
                         coordinates: numpy.ndarray[numpy.float64],
                         radius: float,
@@ -1128,7 +1140,7 @@ class RTree3DFloat64:
     def __len__(self) -> int:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -1235,7 +1247,7 @@ class StreamingHistogramFloat32:
             other: StreamingHistogramFloat32) -> StreamingHistogramFloat32:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -1299,7 +1311,7 @@ class StreamingHistogramFloat64:
             other: StreamingHistogramFloat64) -> StreamingHistogramFloat64:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -1371,7 +1383,7 @@ class TemporalAxis(AxisInt64):
     def __ne__(self, other: TemporalAxis) -> bool:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -1383,7 +1395,7 @@ class TemporalBilinear3D(TemporalBivariateInterpolator3D):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -1402,7 +1414,7 @@ class TemporalGrid3DFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -1431,7 +1443,7 @@ class TemporalGrid3DFloat64:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -1460,7 +1472,7 @@ class TemporalGrid3DInt8:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -1489,7 +1501,7 @@ class TemporalGrid4DFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -1522,7 +1534,7 @@ class TemporalGrid4DFloat64:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -1555,7 +1567,7 @@ class TemporalGrid4DInt8:
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
     @property
@@ -1587,7 +1599,7 @@ class TemporalInverseDistanceWeighting3D(TemporalBivariateInterpolator3D):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
@@ -1599,7 +1611,7 @@ class TemporalNearest3D(TemporalBivariateInterpolator3D):
     def __getstate__(self) -> tuple:
         ...
 
-    def __setstate__(self, arg0: tuple) -> None:
+    def __setstate__(self, state: tuple) -> None:
         ...
 
 
