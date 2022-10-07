@@ -71,6 +71,9 @@ def test_interpolate(pytestconfig):
     lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
     x, y = np.meshgrid(lon, lat, indexing='ij')
     coordinates = np.vstack((x.ravel(), y.ravel())).T
+    points, values = mesh.value(coordinates)
+    assert points.shape == (coordinates.shape[0], 4, 2)
+    assert values.shape == (coordinates.shape[0], 4)
     data, _ = mesh.query(coordinates)
     make_or_compare_reference('rtree_query.npy', data, dump)
     data, _ = mesh.inverse_distance_weighting(coordinates)

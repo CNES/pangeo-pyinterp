@@ -100,6 +100,36 @@ class RTree:
         """
         self._instance.insert(coordinates, values)
 
+    def value(self,
+              coordinates: numpy.ndarray,
+              k: int = 4,
+              num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        """Get the coordinates and values for the K-nearest neighbors of a
+        given point.
+
+        Args:
+            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
+                observations and ``ndims`` is the number of coordinates in
+                order: longitude and latitude in degrees, altitude in meters.
+                If ndims is equal to 2 then the altitude is considered to be
+                constant and equal to zero.
+            k: The number of nearest neighbors to return.
+            num_threads: The number of threads to use for the computation. If 0
+                all CPUs are used. If 1 is given, no parallel computing code is
+                used at all, which is useful for debugging. Defaults to ``0``.
+
+        Returns:
+            A tuple containing the coordinates and values of the K-nearest
+            neighbors of the given point.
+
+        .. note::
+            The matrix containing the coordinates of the neighbors is a matrix
+            of dimension ``(k, n)`` where ``n`` is equal to 2 if the provided
+            coordinates matrix defines only longitude and latitude, and 3 if the
+            defines longitude, latitude and altitude.
+        """
+        return self._instance.value(coordinates, k, num_threads)
+
     def query(self,
               coordinates: numpy.ndarray,
               k: int = 4,
@@ -110,10 +140,9 @@ class RTree:
         Args:
             coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
                 observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters and
-                then the other coordinates defined in Euclidean space if
-                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
-                the method considers the altitude constant and equal to zero.
+                order: longitude and latitude in degrees, altitude in meters.
+                If ndims is equal to 2 then the altitude is considered to be
+                constant and equal to zero.
             k: The number of nearest neighbors to be searched. Defaults to
                 ``4``.
             within: If true, the method ensures that the neighbors found are
@@ -145,10 +174,9 @@ class RTree:
         Args:
             coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
                 observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters and
-                then the other coordinates defined in Euclidean space if
-                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
-                the method considers the altitude constant and equal to zero.
+                order: longitude and latitude in degrees, altitude in meters.
+                If ndims is equal to 2 then the altitude is considered to be
+                constant and equal to zero.
             radius: The maximum radius of the search (m). Defaults The maximum
                 distance between two points.
             k: The number of nearest neighbors to be used for calculating the
@@ -184,10 +212,9 @@ class RTree:
         Args:
             coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
                 observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters and
-                then the other coordinates defined in Euclidean space if
-                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
-                the method considers the altitude constant and equal to zero.
+                order: longitude and latitude in degrees, altitude in meters.
+                If ndims is equal to 2 then the altitude is considered to be
+                constant and equal to zero.
             radius: The maximum radius of the search (m). Defaults The maximum
                 distance between two points.
             k: The number of nearest neighbors to be used for calculating the
@@ -255,10 +282,9 @@ class RTree:
         Args:
             coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
                 observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters and
-                then the other coordinates defined in Euclidean space if
-                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
-                the method considers the altitude constant and equal to zero.
+                order: longitude and latitude in degrees, altitude in meters.
+                If ndims is equal to 2 then the altitude is considered to be
+                constant and equal to zero.
             radius: The maximum radius of the search (m).
             k: The number of nearest neighbors to be used for calculating the
                 interpolated value. Defaults to ``9``.
