@@ -9,7 +9,7 @@ dependencies:
   - jupyter
   - numcodecs
   - pandas
-  - pyinterp>=2022.9.1
+  - pyinterp>=2022.10.0
   - pytest
   - sphinx-gallery
   - sphinx-inline-tabs

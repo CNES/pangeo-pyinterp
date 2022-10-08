@@ -1,6 +1,14 @@
 Changelog
 #########
 
+2022.10.0
+---------
+* issues #13: Extract coordinates of the K nearest neighbors of a point.
+* issues #12: Only the X-axis can be circular.
+* Pure geodetic RTree.
+* Bug fixes.
+* Documentation fixes.
+
 2022.9.1
 --------
 * Orbit interpolation improvement.
