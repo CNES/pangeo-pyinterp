@@ -159,6 +159,19 @@ def test_rtree_query():
     assert points.shape == (1, 4, 2)
     assert values.shape == (1, 4)
 
+    points, values = mesh.value(np.vstack(
+        (np.array([0.125]), np.array([0.125]))).T,
+                                radius=1)
+    assert points.shape == (1, 4, 2)
+    assert values.shape == (1, 4)
+    assert np.all(np.isnan(points))
+    assert np.all(np.isnan(values))
+
+    points, values = mesh.value(np.vstack((np.array([0]), np.array([0]))).T,
+                                within=True)
+    assert np.all(~np.isnan(points))
+    assert np.all(~np.isnan(values))
+
 
 def test_rtree_pickle():
     """Serialization test."""

@@ -1036,7 +1036,9 @@ class RTree3DFloat32:
 
     def value(self,
               coordinates: numpy.ndarray[numpy.float32],
+              radius: Optional[float] = ...,
               k: int = ...,
+              within: bool = ...,
               num_threads: int = ...) -> tuple:
         ...
 
@@ -1114,7 +1116,9 @@ class RTree3DFloat64:
 
     def value(self,
               coordinates: numpy.ndarray[numpy.float64],
+              radius: Optional[float] = ...,
               k: int = ...,
+              within: bool = ...,
               num_threads: int = ...) -> tuple:
         ...
 

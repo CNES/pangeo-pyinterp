@@ -210,15 +210,57 @@ class RTree {
   /// Search for the nearest K neighbors around a given point.
   ///
   /// @param point Point of interest
+  /// @param strategy strategy used to compute the distance
+  /// @param radius distance within which neighbors are returned
   /// @param k The number of nearest neighbors to search.
+  /// @param within if true, the method returns the k nearest neighbors if the
+  /// point is within by its neighbors.
   /// @return the k nearest neighbors.
-  auto value(const Point &point, const uint32_t k) const
-      -> std::vector<value_t> {
+  template <typename Strategy>
+  auto value(const Point &point, const Strategy &strategy,
+             const std::optional<coordinate_t> &radius, const uint32_t k,
+             const bool within) const -> std::vector<value_t> {
     auto result = std::vector<value_t>();
     std::for_each(tree_->qbegin(boost::geometry::index::nearest(point, k)),
                   tree_->qend(),
                   [&result](const auto &item) { result.emplace_back(item); });
+
+    // Remove points outside the radius
+    if (radius.has_value()) {
+      result.erase(std::remove_if(result.begin(), result.end(),
+                                  [&](const auto &item) {
+                                    return boost::geometry::distance(
+                                               item.first, point, strategy) >
+                                           radius.value();
+                                  }),
+                   result.end());
+    }
+
+    // If the point is not within the neighbors, return an empty vector
+    if (within) {
+      auto points = boost::geometry::model::multi_point<Point>();
+      points.reserve(result.size());
+      std::for_each(result.begin(), result.end(), [&points](const auto &item) {
+        points.emplace_back(item.first);
+      });
+
+      if (!boost::geometry::covered_by(
+              point, boost::geometry::return_envelope<
+                         boost::geometry::model::box<Point>>(points))) {
+        return {};
+      }
+    }
     return result;
+  }
+
+  /// @overload value(const Point &, const Strategy &, const
+  /// std::optional<coordinate_t> &, const uint32_t, const bool) const
+  ///
+  /// Overload of the value method with the default strategy.
+  auto value(const Point &point, const std::optional<coordinate_t> &radius,
+             const uint32_t k, const bool within) const
+      -> std::vector<value_t> {
+    return value(point, boost::geometry::default_strategy(), radius, k, within);
   }
 
   /// Interpolation of the value at the requested position.

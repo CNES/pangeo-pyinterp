@@ -226,16 +226,21 @@ Returns:
     The interpolated value and the number of neighbors used for the calculation.
 )__doc__")
                .c_str())
-      .def("value", &RTree::value, py::arg("coordinates"), py::arg("k") = 4,
-           py::arg("num_threads") = 0,
+      .def("value", &RTree::value, py::arg("coordinates"),
+           py::arg("radius") = std::nullopt, py::arg("k") = 4,
+           py::arg("within") = false, py::arg("num_threads") = 0,
            (R"__doc__(
 Get the K nearest neighbors of a given point.
 
 Args:
     )__doc__" +
             coordinates_help<dimension_t::value>() + R"__doc__(
+    radius: The maximum radius of the search (m). By default, no limit is
+        applied.
     k: The number of nearest neighbors to be used for calculating the
         interpolated value. Defaults to ``4``.
+    within: If true, the method ensures that the neighbors found are located
+        around the point of interest. Defaults to ``false``.
     num_threads: The number of threads to use for the computation. If 0 all CPUs
         are used. If 1 is given, no parallel computing code is used at all,
         which is useful for debugging. Defaults to ``0``.

@@ -184,16 +184,20 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   }
 
   /// Search for the nearest K nearest neighbors of a given coordinates.
-  auto value(const array_t &coordinates, const uint32_t k,
-             const size_t num_threads) const -> pybind11::tuple {
+  auto value(const array_t &coordinates,
+             const std::optional<coordinate_t> &radius, const uint32_t k,
+             const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
         return _value<dimension_t::value - 1>(&RTree<Point, Type>::from_lon_lat,
-                                              coordinates, k, num_threads);
+                                              coordinates, radius, k, within,
+                                              num_threads);
       case dimension_t::value:
         return _value<dimension_t::value>(&RTree<Point, Type>::from_lon_lat,
-                                          coordinates, k, num_threads);
+                                          coordinates, radius, k, within,
+                                          num_threads);
       default:
         throw std::invalid_argument(RTree<Point, Type>::invalid_shape());
     }
@@ -275,7 +279,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
     auto x = pybind11::array_t<coordinate_t>(pybind11::array::ShapeContainer{
-        {static_cast<pybind11::ssize_t>(this->size()), dimension_t::value}});
+        {static_cast<pybind11::ssize_t>(this->size()),
+         static_cast<pybind11::ssize_t>(dimension_t::value)}});
     auto u = pybind11::array_t<Type>(pybind11::array::ShapeContainer{
         {static_cast<pybind11::ssize_t>(this->size())}});
     auto _x = x.template mutable_unchecked<2>();
@@ -509,7 +514,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   template <size_t M>
   auto _value(Converter converter,
               const pybind11::array_t<coordinate_t> &coordinates,
-              const uint32_t k, const size_t num_threads) const
+              const std::optional<coordinate_t> &radius, const uint32_t k,
+              const bool within, const size_t num_threads) const
       -> pybind11::tuple {
     auto _coordinates = coordinates.template unchecked<2>();
     auto size = coordinates.shape(0);
@@ -542,7 +548,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                                 Eigen::Map<const Vector<coordinate_t>>(
                                     &_coordinates(ix, 0), M)));
 
-                auto nearest = base_t::value(point, k);
+                auto nearest = base_t::value(point, radius, k, within);
                 auto jx = 0ULL;
 
                 // Fill in the calculation result for all neighbors found

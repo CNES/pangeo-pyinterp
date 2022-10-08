@@ -102,7 +102,9 @@ class RTree:
 
     def value(self,
               coordinates: numpy.ndarray,
+              radius: Optional[float] = None,
               k: int = 4,
+              within: bool = True,
               num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """Get the coordinates and values for the K-nearest neighbors of a
         given point.
@@ -113,7 +115,12 @@ class RTree:
                 order: longitude and latitude in degrees, altitude in meters.
                 If ndims is equal to 2 then the altitude is considered to be
                 constant and equal to zero.
+            radius (optional): The maximum distance in meters to search for
+                neighbors. If not set, the search is performed on all the
+                neighbors.
             k: The number of nearest neighbors to return.
+            within: if true, the method returns the k nearest neighbors if the
+                point is within by its neighbors.
             num_threads: The number of threads to use for the computation. If 0
                 all CPUs are used. If 1 is given, no parallel computing code is
                 used at all, which is useful for debugging. Defaults to ``0``.
@@ -128,7 +135,8 @@ class RTree:
             coordinates matrix defines only longitude and latitude, and 3 if the
             defines longitude, latitude and altitude.
         """
-        return self._instance.value(coordinates, k, num_threads)
+        return self._instance.value(coordinates, radius, k, within,
+                                    num_threads)
 
     def query(self,
               coordinates: numpy.ndarray,
