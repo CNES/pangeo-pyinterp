@@ -85,7 +85,7 @@ closest to them.
 
 Args:
     coordinates: Positions in this coordinate system.
-    bounded: True if you want to obtain the closest value to a coordinate
+    bounded: False if you want to obtain the closest value to a coordinate
         outside the axis definition range.
 Returns:
     Index of the grid points containing them or -1 if the ``bounded`` parameter

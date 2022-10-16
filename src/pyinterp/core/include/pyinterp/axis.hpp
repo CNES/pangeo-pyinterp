@@ -117,7 +117,7 @@ class Axis : public detail::Axis<T>,
   /// Given a coordinate position, find what axis element contains it.
   ///
   /// @param coordinate positions in this coordinate system
-  /// @param bounded True if you want to obtain the closest value to an index
+  /// @param bounded False if you want to obtain the closest value to an index
   ///   outside the axis definition range.
   /// @return A vector containing the indexes corresponding to the nearest
   ///   points on the axis or the value -1 if the *bounded* parameter is set

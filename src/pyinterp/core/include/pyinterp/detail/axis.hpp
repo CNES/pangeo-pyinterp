@@ -250,7 +250,7 @@ class Axis {
   /// Given a coordinate position, find what axis element contains it.
   ///
   /// @param coordinate position in this coordinate system
-  /// @param bounded if true, returns "-1" if the value is located outside this
+  /// @param bounded if false, returns "-1" if the value is located outside this
   /// coordinate system, otherwise the value of the first element if the value
   /// is located before, or the value of the last element of this container if
   /// the requested value is located after.
@@ -267,7 +267,7 @@ class Axis {
   /// circle will not return the value -1.
   ///
   /// @param coordinate position in this coordinate system
-  /// @param bounded if true, returns "-1" if the value is located outside this
+  /// @param bounded if false, returns "-1" if the value is located outside this
   /// coordinate system, otherwise the value of the first element if the value
   /// is located before, or the value of the last element of this container if
   /// the requested value is located after.
