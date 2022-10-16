@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <optional>
+#include <tuple>
 #include <utility>
 
 #include "pyinterp/axis.hpp"
@@ -367,10 +368,18 @@ template <typename T>
 class Binning1D : public Binning2D<T> {
  public:
   /// Default constructor.
-  explicit Binning1D(std::shared_ptr<Axis<double>> x)
+  explicit Binning1D(std::shared_ptr<Axis<double>> x,
+                     const std::optional<std::tuple<double, double>> &range)
       : Binning2D<T>(std::move(x),
                      std::make_shared<Axis<double>>(0, 1, 1, 0, false),
-                     std::nullopt) {}
+                     std::nullopt) {
+    if (range.has_value()) {
+      std::tie(this->x_min_, this->x_max_) = *range;
+    } else {
+      this->x_min_ = this->x_->min_value();
+      this->x_max_ = this->x_->max_value();
+    }
+  }
 
   /// Push data on the nearest bin.
   ///
@@ -394,26 +403,35 @@ class Binning1D : public Binning2D<T> {
         auto value = _z(idx);
 
         if (!std::isnan(value)) {
-          auto ix = x_axis.find_index(_x(idx), true);
+          auto xi = _x(idx);
+          if (xi >= this->x_min_ && xi <= this->x_max_) {
+            auto ix = x_axis.find_index(xi, true);
 
-          if (ix != -1) {
-            auto weight = weights.has_value() ? _weights(idx) : 1;
-            this->acc_(ix)(value, weight);
+            if (ix != -1) {
+              auto weight = weights.has_value() ? _weights(idx) : 1;
+              this->acc_(ix)(value, weight);
+            }
           }
         }
       }
     }
   }
 
+  /// Get the defined range.
+  [[nodiscard]] auto range() const -> std::tuple<double, double> {
+    return {this->x_min_, this->x_max_};
+  }
+
   /// Pickle support: get state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
-    return pybind11::make_tuple(this->x_->getstate(), this->acc());
+    return pybind11::make_tuple(this->x_->getstate(), this->acc(),
+                                this->range());
   }
 
   /// Pickle support: set state of this instance
   static auto setstate(const pybind11::tuple &state)
       -> std::unique_ptr<Binning1D<T>> {
-    if (state.size() != 2) {
+    if (state.size() != 3) {
       throw std::invalid_argument("invalid state");
     }
 
@@ -427,8 +445,11 @@ class Binning1D : public Binning2D<T> {
       throw std::invalid_argument("invalid state");
     }
 
+    // Unmarshalling range
+    auto range = state[2].cast<std::tuple<double, double>>();
+
     // Unmarshalling instance
-    auto result = std::make_unique<Binning1D<T>>(x);
+    auto result = std::make_unique<Binning1D<T>>(x, range);
     {
       auto gil = pybind11::gil_scoped_release();
       result->acc_ = std::move(
@@ -436,6 +457,11 @@ class Binning1D : public Binning2D<T> {
     }
     return result;
   }
+
+ private:
+  /// The lower and upper range of the bins.
+  double x_min_;
+  double x_max_;
 };
 
 }  // namespace pyinterp

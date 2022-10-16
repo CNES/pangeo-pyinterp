@@ -101,7 +101,7 @@ class Abstract {
   /// Search for the index corresponding to the requested value.
   ///
   /// @param coordinate position in this coordinate system
-  /// @param bounded if true, returns "-1" if the value is located outside this
+  /// @param bounded if false, returns "-1" if the value is located outside this
   /// coordinate system, otherwise the value of the first element if the value
   /// is located before, or the value of the last element of this container if
   /// the requested value is located after.

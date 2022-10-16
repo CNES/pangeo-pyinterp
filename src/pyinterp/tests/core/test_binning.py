@@ -167,7 +167,10 @@ def test_binning1d_accessors():
     binning = core.Binning1DFloat64(x_axis)
     assert isinstance(binning.x, core.Axis)
     assert isinstance(binning.y, core.Axis)
+    assert isinstance(binning.range(), tuple)
     assert binning.wgs is None
+
+    assert binning.range() == (x_axis.min_value(), x_axis.max_value())
 
     # The class must return a reference on the axes provided during
     # construction
@@ -259,3 +262,15 @@ def test_binning1d_iadd():
     assert np.all(other.variance() == 0)
     assert np.all(np.isnan(other.skewness()))
     assert np.all(np.isnan(other.kurtosis()))
+
+
+def test_binning1d_with_range():
+    x_axis = core.Axis(np.array([100, 105, 110]), is_circle=False)
+
+    binning = core.Binning1DFloat64(x_axis, range=(95, 115))
+    assert binning.range() == (95, 115)
+    binning.push(np.array([90, 100, 103, 110, 120]), np.array([0, 1, 2, 3, 4]))
+
+    assert np.all(binning.count() == np.array([1, 1, 1], dtype=np.int64))
+    assert np.all(
+        binning.mean() == np.array([[1], [2], [3]], dtype=np.float64))

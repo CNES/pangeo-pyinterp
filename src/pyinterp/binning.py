@@ -6,7 +6,7 @@
 Data binning
 ------------
 """
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 import copy
 
 import dask.array.core
@@ -227,6 +227,8 @@ class Binning1D:
 
     Args:
         x: Definition of the bin centers for the X axis of the grid.
+        range: The lower and upper range of the bins. If not provided, range
+            is simply ``(x.min_value(), x.max_value())``.
         dtype: Data type of the instance to create.
 
     .. note ::
@@ -237,11 +239,12 @@ class Binning1D:
 
     def __init__(self,
                  x: core.Axis,
+                 range: Optional[Tuple[float, float]] = None,
                  dtype: numpy.dtype = numpy.dtype('float64')):
         if dtype == numpy.dtype('float64'):
-            self._instance = core.Binning1DFloat64(x)
+            self._instance = core.Binning1DFloat64(x, range)
         elif dtype == numpy.dtype('float32'):
-            self._instance = core.Binning1DFloat32(x)
+            self._instance = core.Binning1DFloat32(x, range)
         else:
             raise ValueError(f'dtype {dtype} not handled by the object')
         self.dtype = dtype
@@ -250,6 +253,10 @@ class Binning1D:
     def x(self) -> core.Axis:
         """Gets the bin centers for the X Axis of the grid."""
         return self._instance.x
+
+    def range(self) -> Tuple[float, float]:
+        """Gets the lower and upper range of the bins."""
+        return self._instance.range()
 
     def clear(self) -> None:
         """Clears the data inside each bin."""
@@ -261,6 +268,8 @@ class Binning1D:
         result = [f'<{self.__class__.__module__}{self.__class__.__name__}>']
         result.append('Axis:')
         result.append(f'  {self._instance.x}')
+        result.append('Range:')
+        result.append(f'  {self._instance.range()}')
         return '\n'.join(result)
 
     def __add__(self, other: 'Binning1D') -> 'Binning1D':

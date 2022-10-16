@@ -171,9 +171,13 @@ Group a number of more or less continuous values into a smaller number of
 
 Args:
     x: Definition of the bin centers for the X Axis.
+    range: Range of the binning. If not provided, range is simply
+        ``(x.min_value(), x.max_value())``.
 )__doc__")
           .c_str())
-      .def(py::init<std::shared_ptr<pyinterp::Axis<double>>>(), py::arg("x"))
+      .def(py::init<std::shared_ptr<pyinterp::Axis<double>>,
+                    const std::optional<std::tuple<double, double>> &>(),
+           py::arg("x"), py::arg("range") = std::nullopt)
       .def("push", &pyinterp::Binning1D<Type>::push, py::arg("x"), py::arg("z"),
            py::arg("weights") = std::nullopt, R"__doc__(
 Push new samples into the defined bins.
@@ -182,6 +186,13 @@ Args:
     x: X coordinates of the values to push.
     z: New samples to push.
     weights: Weights of the new samples. Defaults to None.
+)__doc__")
+      .def("range", &pyinterp::Binning1D<Type>::range,
+           R"__doc__(
+Gets the range of the binning.
+
+Returns:
+    Range of the binning.
 )__doc__")
       .def(py::pickle(
           [](const pyinterp::Binning1D<Type> &self) { return self.getstate(); },
