@@ -85,6 +85,14 @@ Geodetic systems
 
 .. _cartesian_interpolators:
 
+1D interpolators
+================
+
+.. autosummary::
+  :toctree: generated/
+
+  interpolate1d
+
 Cartesian interpolators
 =======================
 

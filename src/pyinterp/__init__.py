@@ -16,6 +16,7 @@ from .core import (
     TemporalAxis,
     WindowFunction,
     dateutils,
+    interpolate1d,
 )
 from .grid import Grid2D, Grid3D, Grid4D
 from .histogram2d import Histogram2D
@@ -61,6 +62,7 @@ __all__ = [
     'Grid3D',
     'Grid4D',
     'Histogram2D',
+    'interpolate1d',
     'Orbit',
     'Pass',
     'quadrivariate',
