@@ -1,6 +1,13 @@
 Changelog
 #########
 
+2022.10.1
+---------
+* Add an option to calculate the 1D binning to limit the upper and lower range
+  of bins used.
+* Add missing prerequisites for pip install.
+* Documentation fixes.
+
 2022.10.0
 ---------
 * issues #13: Extract coordinates of the K nearest neighbors of a point.
