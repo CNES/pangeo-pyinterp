@@ -15,19 +15,25 @@ using Implementations = testing::Types<int32_t, int64_t, float, double>;
 template <typename T>
 class AxisTest : public testing::Test {
  protected:
-  AxisTest() : axis(std::unique_ptr<detail::Axis<T>>(new detail::Axis<T>())) {}
+  AxisTest() : axis(std::make_unique<detail::Axis<T>>()) {}
+
+  virtual ~AxisTest() = default;
+
   void reset_axis(const T start, const T stop, const T num, const T epsilon,
                   const bool is_circle) {
-    axis.release();
-    axis.reset(new detail::Axis<T>(start, stop, num, epsilon, is_circle));
+    axis = std::move(std::make_unique<detail::Axis<T>>(start, stop, num,
+                                                       epsilon, is_circle));
   }
+
   void reset_axis(Eigen::Ref<pyinterp::Vector<T>> values, T epsilon,
                   bool is_circle) {
-    axis.release();
-    axis.reset(new detail::Axis<T>(values, epsilon, is_circle));
+    axis = std::move(
+        std::make_unique<detail::Axis<T>>(values, epsilon, is_circle));
   }
+
   std::unique_ptr<detail::Axis<T>> axis{};
 };
+
 TYPED_TEST_SUITE(AxisTest, Implementations);
 
 TYPED_TEST(AxisTest, default_constructor) {

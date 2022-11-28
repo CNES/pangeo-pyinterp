@@ -27,6 +27,33 @@ if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  set(SANITIZE "address,undefined")
+  if(UNIX AND NOT APPLE)
+    set(SANITIZE "${SANITIZE},leak")
+  endif()
+
+  set(CMAKE_C_FLAGS_ASAN
+      "${CMAKE_C_FLAGS_RELWITHDEBINFO} -fsanitize=${SANITIZE} \
+      -fno-omit-frame-pointer -fno-common"
+      CACHE STRING "" FORCE)
+  set(CMAKE_CXX_FLAGS_ASAN
+      "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fsanitize=${SANITIZE} \
+      -fno-omit-frame-pointer -fno-common"
+      CACHE STRING "" FORCE)
+  set(CMAKE_EXE_LINKER_FLAGS_ASAN
+      "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} -fsanitize=${SANITIZE}"
+      CACHE STRING "" FORCE)
+  set(CMAKE_SHARED_LINKER_FLAGS_ASAN
+      "${CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO} -fsanitize=${SANITIZE}"
+      CACHE STRING "" FORCE)
+  message(STATUS "${CMAKE_CXX_FLAGS_ASAN}")
+endif()
+
+set_property(
+  CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel"
+                                  "RelWithDebInfo" "ASan")
+
 # CMake module search path
 set(CMAKE_MODULE_PATH
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/tools;"
@@ -76,7 +103,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   check_cxx_compiler_and_linker_flags(HAS_LIBCPP "-stdlib=libc++"
                                       "-stdlib=libc++")
   if(HAS_LIBCPP)
-    string(APPEND CMAKEcxx_flags " -stdlib=libc++")
+    string(APPEND CMAKE_CXX_FLAGS " -stdlib=libc++")
     string(APPEND CMAKE_EXE_linker_flags " -stdlib=libc++")
     string(APPEND CMAKE_SHARED_linker_flags " -stdlib=libc++")
     check_cxx_compiler_and_linker_flags(HAS_LIBCPPABI "-stdlib=libc++"
@@ -89,17 +116,17 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   check_cxx_compiler_and_linker_flags(HAS_SIZED_DEALLOCATION
                                       "-fsized-deallocation" "")
   if(HAS_SIZED_DEALLOCATION)
-    string(APPEND CMAKEcxx_flags " -fsized-deallocation")
+    string(APPEND CMAKE_CXX_FLAGS " -fsized-deallocation")
   endif()
 endif()
 
 if(NOT WIN32)
-  if(NOT CMAKEcxx_flags MATCHES "-Wall$")
-    string(APPEND CMAKEcxx_flags " -Wall")
+  if(NOT CMAKE_CXX_FLAGS MATCHES "-Wall$")
+    string(APPEND CMAKE_CXX_FLAGS " -Wall")
   endif()
-  if(NOT CMAKE_CXX_COMPILER MATCHES "icpc$" AND NOT CMAKEcxx_flags MATCHES
+  if(NOT CMAKE_CXX_COMPILER MATCHES "icpc$" AND NOT CMAKE_CXX_FLAGS MATCHES
                                                 "-Wpedantic$")
-    string(APPEND CMAKEcxx_flags " -Wpedantic")
+    string(APPEND CMAKE_CXX_FLAGS " -Wpedantic")
   endif()
 endif()
 

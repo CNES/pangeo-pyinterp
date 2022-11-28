@@ -51,9 +51,6 @@ auto interpolate_1d(const pyinterp::Axis<double>& x,
   // GSL Interpolation type
   const auto* interp_type = detail::gsl::Interpolate1D::parse_interp_type(kind);
 
-  // Full window size
-  const auto window_size = half_window_size * 2 + 1;
-
   // Downcast the axis to the raw C++ type
   auto* axis = dynamic_cast<const pyinterp::detail::Axis<double>*>(&x);
 

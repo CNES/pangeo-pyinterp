@@ -6,7 +6,6 @@
 #include <gsl/gsl_spline.h>
 
 #include <Eigen/Core>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -24,10 +23,9 @@ class Interpolate1D {
   /// @param type fitting model
   /// @param acc Accelerator
   Interpolate1D(const size_t size, const gsl_interp_type *type, Accelerator acc)
-      : workspace_(
-            std::unique_ptr<gsl_spline, std::function<void(gsl_spline *)>>(
-                gsl_spline_alloc(type, size),
-                [](gsl_spline *ptr) { gsl_spline_free(ptr); })),
+      : workspace_(std::unique_ptr<gsl_spline, void (*)(gsl_spline *)>(
+            gsl_spline_alloc(type, size),
+            [](gsl_spline *ptr) { gsl_spline_free(ptr); })),
         acc_(std::move(acc)) {}
 
   /// Returns the name of the interpolation type used
