@@ -103,8 +103,8 @@ auto crossover(const Eigen::Ref<const Eigen::VectorXd>& lon1,
   if (cartesian_plane) {
     // The intersection is computed in the cartesian plane.
     auto xover = detail::geometry::Crossover<double>(
-        std::move(detail::geometry::LineString<double>(lon1, lat1)),
-        std::move(detail::geometry::LineString<double>(lon2, lat2)));
+        detail::geometry::LineString<double>(lon1, lat1),
+        detail::geometry::LineString<double>(lon2, lat2));
 
     auto point = xover.search();
     if (!point) {
