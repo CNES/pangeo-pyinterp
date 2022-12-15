@@ -178,6 +178,8 @@ check_floating_point_is_iec559()
 add_library(cpp_coverage INTERFACE)
 
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
+option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
+
 if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(cpp_coverage INTERFACE -O0 -g --coverage)
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
@@ -254,6 +256,34 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 # GoogleTest
 find_package(GTest)
+
+# Enable clang-tidy
+if(ENABLE_CLANG_TIDY)
+  find_program(
+    CLANG_TIDY_EXE
+    NAMES "clang-tidy"
+    DOC "/usr/bin/clang-tidy")
+  if(NOT CLANG_TIDY_EXE)
+    message(
+      FATAL_ERROR
+        "clang-tidy not found. Please set CLANG_TIDY_EXE to clang-tidy "
+        "executable.")
+  endif()
+  string(
+    CONCAT
+      CLANG_TIDY_CMD
+      "clang-tidy;-checks=-*,boost-*,concurrency-*,modernize-*,performance-*,"
+      "clang-analyzer-*,portability-*,-portability-simd-intrinsics,google-*,"
+      ";-fix")
+  set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_CMD}")
+  unset(CLANG_TIDY_EXE CACHE)
+  unset(CLANG_TIDY_CMD CACHE)
+  message(STATUS "clang-tidy enabled.")
+endif()
+
+if(GTEST_FOUND AND ENABLE_CLANG_TIDY)
+  include(Dart)
+endif()
 
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
