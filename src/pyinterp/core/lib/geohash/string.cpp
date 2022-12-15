@@ -369,8 +369,9 @@ auto where(const pybind11::array &hash) -> std::unordered_map<
 
         auto it = result.find(current_code);
         if (it == result.end()) {
-          result.emplace(current_code, std::make_tuple(std::make_tuple(ix, ix),
-                                            std::make_tuple(jx, jx)));
+          result.emplace(current_code,
+                         std::make_tuple(std::make_tuple(ix, ix),
+                                         std::make_tuple(jx, jx)));
           continue;
         }
 
