@@ -54,8 +54,7 @@ auto RTree::packing(const Eigen::Ref<const Vector<double>> &lon,
   auto _z = values.data();
 
   for (auto ix = 0; ix < lon.size(); ++ix) {
-    vector.emplace_back(std::make_pair(
-        point_t(detail::math::normalize_angle(*_x, -180.0, 360.0), *_y), *_z));
+    vector.emplace_back(point_t(detail::math::normalize_angle(*_x, -180.0, 360.0), *_y), *_z);
     ++_x;
     ++_y;
     ++_z;
@@ -345,8 +344,7 @@ auto RTree::setstate(const pybind11::tuple &state) -> RTree {
   vector.reserve(data.size());
 
   for (auto ix = 0; ix < data.size(); ++ix) {
-    vector.emplace_back(std::make_pair(
-        point_t(_coordinates(ix, 0), _coordinates(ix, 1)), _data(ix)));
+    vector.emplace_back(point_t(_coordinates(ix, 0), _coordinates(ix, 1)), _data(ix));
   }
   auto result = RTree();
   result.strategy_ = strategy_t({a, b});

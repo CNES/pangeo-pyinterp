@@ -369,9 +369,8 @@ auto where(const pybind11::array &hash) -> std::unordered_map<
 
         auto it = result.find(current_code);
         if (it == result.end()) {
-          result.emplace(std::make_pair(
-              current_code, std::make_tuple(std::make_tuple(ix, ix),
-                                            std::make_tuple(jx, jx))));
+          result.emplace(current_code, std::make_tuple(std::make_tuple(ix, ix),
+                                            std::make_tuple(jx, jx)));
           continue;
         }
 
@@ -440,7 +439,7 @@ static auto zoom_out(char *ptr, pybind11::ssize_t size, uint32_t from_precision,
     for (auto ix = 0; ix < size; ++ix) {
       encode(decode(ptr, from_precision, false), current_code.data(),
              to_precision);
-      zoom_out_codes.emplace(std::string(current_code));
+      zoom_out_codes.emplace(current_code);
       ptr += from_precision;
     }
   }

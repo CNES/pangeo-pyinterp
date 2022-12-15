@@ -21,9 +21,9 @@ class NearestPoint {
     auto data = std::vector<std::pair<Point, size_t>>();
     data.reserve(line_string.size());
     for (const auto& item : line_string) {
-      data.emplace_back(std::make_pair(item, ix++));
+      data.emplace_back(item, ix++);
     }
-    rtree_ = RTree(std::move(data));
+    rtree_ = RTree(data);
   }
 
   /// Find the nearest index of a point in this linestring to a given
