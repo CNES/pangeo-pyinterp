@@ -569,6 +569,7 @@ def main():
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
+            'Programming Language :: Python :: 3.11',
         ],
         cmdclass={
             'build_ext': BuildExt,
@@ -593,7 +594,7 @@ def main():
             exclude=['pyinterp.core*'],
         ),
         platforms=['POSIX', 'MacOS', 'Windows'],
-        python_requires='>=3.6',
+        python_requires='>=3.8',
         tests_require=tests_require,
         url='https://github.com/CNES/pangeo-pyinterp',
         version=revision(),
