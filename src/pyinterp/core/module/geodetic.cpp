@@ -1084,6 +1084,30 @@ Returns:
     The intersection between this linestring and the other linestring.
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
+      .def(
+          "simplify",
+          [](const geodetic::LineString &self, const double tolerance,
+             const std::string &strategy,
+             const std::optional<geodetic::Spheroid> &spheroid)
+              -> geodetic::LineString {
+            return self.simplify(tolerance, parse_distance_strategy(strategy),
+                                 spheroid);
+          },
+          py::arg("tolerance"), py::arg("strategy") = "thomas",
+          py::arg("wgs") = std::nullopt,
+          R"__doc__(
+Simplifies this linestring using the Douglas-Peucker algorithm.
+
+Args:
+    tolerance: The tolerance to use.
+    strategy: The distance strategy to use. This parameter can take the values
+        ``andoyer``, ``thomas`` or ``vincenty``. Defaults to ``thomas``.
+    wgs: The World Geodetic System to use. Defaults to WGS84.
+
+Returns:
+    The simplified linestring.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const geodetic::LineString &self) { return self.getstate(); },
           [](const py::tuple &state) {

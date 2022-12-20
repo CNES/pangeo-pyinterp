@@ -4,6 +4,8 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/geodetic/line_string.hpp"
 
+#include <boost/geometry/algorithms/simplify.hpp>
+
 #include "pyinterp/detail/broadcast.hpp"
 
 namespace pyinterp::geodetic {
@@ -127,6 +129,43 @@ auto LineString::curvilinear_distance(DistanceStrategy strategy,
       break;
     case kVincenty:
       curvilinear_distance_impl(*this, Vincenty(spheroid), result);
+      break;
+    default:
+      throw std::invalid_argument("unknown strategy: " +
+                                  std::to_string(static_cast<int>(strategy)));
+  }
+  return result;
+}
+
+auto LineString::simplify(const double tolerance,
+                          const DistanceStrategy strategy,
+                          const std::optional<Spheroid>& wgs) const
+    -> LineString {
+  auto spheroid =
+      wgs.has_value()
+          ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
+          : boost::geometry::srs::spheroid<double>();
+  auto result = LineString{};
+
+  using SimplifyAndoyer = boost::geometry::strategies::simplify::geographic<
+      boost::geometry::strategy::andoyer>;
+  using SimplifyThomas = boost::geometry::strategies::simplify::geographic<
+      boost::geometry::strategy::thomas>;
+  using SimplifyVincenty = boost::geometry::strategies::simplify::geographic<
+      boost::geometry::strategy::vincenty>;
+
+  switch (strategy) {
+    case kAndoyer:
+      boost::geometry::simplify(*this, result, tolerance,
+                                SimplifyAndoyer(spheroid));
+      break;
+    case kThomas:
+      boost::geometry::simplify(*this, result, tolerance,
+                                SimplifyThomas(spheroid));
+      break;
+    case kVincenty:
+      boost::geometry::simplify(*this, result, tolerance,
+                                SimplifyVincenty(spheroid));
       break;
     default:
       throw std::invalid_argument("unknown strategy: " +

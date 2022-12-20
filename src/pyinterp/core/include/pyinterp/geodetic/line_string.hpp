@@ -129,6 +129,16 @@ class LineString : public boost::geometry::model::linestring<Point> {
   [[nodiscard]] auto curvilinear_distance(
       DistanceStrategy strategy, const std::optional<Spheroid>& wgs) const
       -> Vector<double>;
+
+  /// Simplify the linestring using the Douglas-Peucker algorithm.
+  ///
+  /// @param tolerance the tolerance to use, in meters.
+  /// @param strategy the strategy to use.
+  /// @param wgs the spheroid to use.
+  /// @return the simplified linestring.
+  [[nodiscard]] auto simplify(double tolerance, DistanceStrategy strategy,
+                              const std::optional<Spheroid>& wgs) const
+      -> LineString;
 };
 
 }  // namespace pyinterp::geodetic
