@@ -580,6 +580,7 @@ def main():
         description='Interpolation of geo-referenced data for Python.',
         ext_modules=[CMakeExtension(name='pyinterp.core')],
         install_requires=install_requires,
+        keywords='interpolation, geospatial, geohash, geodetic',
         license='BSD License',
         long_description=long_description(),
         long_description_content_type='text/x-rst',
