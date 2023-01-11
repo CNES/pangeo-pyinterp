@@ -382,6 +382,11 @@ class AbstractRegular : public Abstract<T> {
     if (num == 0) {
       throw std::invalid_argument("unable to create an empty container.");
     }
+    if (start == stop) {
+      throw std::invalid_argument(
+          "unable to create a container with a single "
+          "value.");
+    }
     step_ = num == 1 ? stop - start : (stop - start) / (num - 1);
     // The inverse step of this axis is stored in order to optimize the search
     // for an index for a given value by avoiding a division.
