@@ -54,7 +54,7 @@ class Axis {
   Axis(const T start, const T stop, const T num, const T epsilon,
        const bool is_circle)
       : circle_(is_circle ? T(360) : math::Fill<T>::value()),
-        axis_(std::make_shared<axis::container::Regular<T>>(
+        axis_(std::make_unique<axis::container::Regular<T>>(
             axis::container::Regular<T>(start, stop, num))) {
     compute_properties(epsilon);
   }
@@ -91,22 +91,40 @@ class Axis {
   /// Copy constructor
   ///
   /// @param rhs right value
-  Axis(const Axis &rhs) = default;
+  Axis(const Axis &rhs) {
+    is_circle_ = rhs.is_circle_;
+    circle_ = rhs.circle_;
+    axis_ = rhs.clone();
+  }
 
   /// Move constructor
   ///
   /// @param rhs right value
-  Axis(Axis &&rhs) noexcept = default;
+  Axis(Axis &&rhs) noexcept {
+    is_circle_ = rhs.is_circle_;
+    circle_ = rhs.circle_;
+    axis_ = std::move(rhs.axis_);
+  }
 
   /// Copy assignment operator
   ///
   /// @param rhs right value
-  auto operator=(const Axis &rhs) -> Axis & = default;
+  auto operator=(const Axis &rhs) -> Axis & {
+    is_circle_ = rhs.is_circle_;
+    circle_ = rhs.circle_;
+    axis_ = rhs.clone();
+    return *this;
+  }
 
   /// Move assignment operator
   ///
   /// @param rhs right value
-  auto operator=(Axis &&rhs) noexcept -> Axis & = default;
+  auto operator=(Axis &&rhs) noexcept -> Axis & {
+    is_circle_ = rhs.is_circle_;
+    circle_ = rhs.circle_;
+    axis_ = std::move(rhs.axis_);
+    return *this;
+  }
 
   /// Get the ith coordinate value.
   ///
@@ -436,8 +454,8 @@ class Axis {
   /// Gets the axis handler
   ///
   /// @return the axis handler
-  [[nodiscard]] inline auto handler() const noexcept
-      -> const std::shared_ptr<axis::container::Abstract<T>> & {
+  [[nodiscard]] constexpr auto handler() const noexcept
+      -> const std::unique_ptr<axis::container::Abstract<T>> & {
     return axis_;
   }
 
@@ -445,7 +463,7 @@ class Axis {
   ///
   /// @param axis Axis handler
   /// @param is_circle True, if the axis can represent a circle.
-  Axis(std::shared_ptr<axis::container::Abstract<T>> axis, const bool is_circle)
+  Axis(std::unique_ptr<axis::container::Abstract<T>> axis, const bool is_circle)
       : is_circle_(is_circle),
         circle_(is_circle_ ? T(360) : math::Fill<T>::value()),
         axis_(std::move(axis)) {}
@@ -459,8 +477,22 @@ class Axis {
 
   /// The object that handles access and searches for the values defined by
   /// the axis.
-  std::shared_ptr<axis::container::Abstract<T>> axis_{
-      std::make_shared<axis::container::Undefined<T>>()};
+  std::unique_ptr<axis::container::Abstract<T>> axis_{
+      std::make_unique<axis::container::Undefined<T>>()};
+
+  /// Clone the axis container
+  [[nodiscard]] inline auto clone() const
+      -> std::unique_ptr<axis::container::Abstract<T>> {
+    auto regular = dynamic_cast<axis::container::Regular<T> *>(axis_.get());
+    if (regular != nullptr) {
+      return std::make_unique<axis::container::Regular<T>>(*regular);
+    }
+    auto irregular = dynamic_cast<axis::container::Irregular<T> *>(axis_.get());
+    if (irregular == nullptr) {
+      throw std::invalid_argument("Unable to clone the axis.");
+    }
+    return std::make_unique<axis::container::Irregular<T>>(*irregular);
+  }
 
   /// Computes axis's properties
   void compute_properties(T epsilon) {
@@ -529,11 +561,11 @@ class Axis {
     // interval.
     auto increment = Axis<T>::is_evenly_spaced(values, epsilon);
     if (increment) {
-      axis_ = std::make_shared<axis::container::Regular<T>>(
+      axis_ = std::make_unique<axis::container::Regular<T>>(
           values[0], values[values.size() - 1], static_cast<T>(values.size()));
     } else {
       // Avoid data copy if possible.
-      axis_ = std::make_shared<axis::container::Irregular<T>>(
+      axis_ = std::make_unique<axis::container::Irregular<T>>(
           move ? std::move(values) : values);
     }
     compute_properties(epsilon);

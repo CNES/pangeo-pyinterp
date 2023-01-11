@@ -243,13 +243,13 @@ class Axis : public detail::Axis<T>,
       case detail::axis::IRREGULAR: {
         auto ndarray = state[1].cast<pybind11::array_t<T>>();
         return Axis(
-            std::shared_ptr<detail::axis::container::Abstract<T>>(
+            std::unique_ptr<detail::axis::container::Abstract<T>>(
                 new detail::axis::container::Irregular<T>(Eigen::Map<Vector<T>>(
                     ndarray.mutable_data(), ndarray.size()))),
             state[2].cast<bool>());
       }
       case detail::axis::REGULAR:
-        return Axis(std::shared_ptr<detail::axis::container::Abstract<T>>(
+        return Axis(std::unique_ptr<detail::axis::container::Abstract<T>>(
                         new detail::axis::container::Regular<T>(
                             state[1].cast<T>(), state[2].cast<T>(),
                             state[3].cast<T>())),
