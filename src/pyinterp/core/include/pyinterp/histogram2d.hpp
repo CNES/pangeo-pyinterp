@@ -159,12 +159,14 @@ class Histogram2D {
   }
 
   /// Gets the X-Axis
-  [[nodiscard]] inline auto x() const -> std::shared_ptr<Axis<double>> {
+  [[nodiscard]] constexpr auto x() const
+      -> const std::shared_ptr<Axis<double>> & {
     return x_;
   }
 
   /// Gets the Y-Axis
-  [[nodiscard]] inline auto y() const -> std::shared_ptr<Axis<double>> {
+  [[nodiscard]] constexpr auto y() const
+      -> const std::shared_ptr<Axis<double>> & {
     return y_;
   }
 

@@ -109,7 +109,7 @@ struct InverseDistanceWeighting : public Bivariate<Point, T> {
   explicit InverseDistanceWeighting(const int exp) : exp_(exp) {}
 
   /// Return the exponent used by this instance
-  [[nodiscard]] inline auto exp() const noexcept -> int { return exp_; }
+  [[nodiscard]] constexpr auto exp() const noexcept -> int { return exp_; }
 
   /// Default destructor
   virtual ~InverseDistanceWeighting() = default;
