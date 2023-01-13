@@ -5,7 +5,7 @@ dependencies:
   - numcodecs
   - pandas
   - pip
-  - pyinterp>=2022.10.1
+  - pyinterp>=2023.1.0
   - pypandoc
   - pytest
   - python=3.9
