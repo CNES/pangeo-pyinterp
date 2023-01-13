@@ -190,6 +190,7 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 # Python
+add_definitions(-DPYBIND11_ASSERT_GIL_HELD_INCREF_DECREF)
 find_package(Python3 COMPONENTS Interpreter Development)
 
 # Boost

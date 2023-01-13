@@ -409,18 +409,22 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     auto _coordinates = coordinates.template unchecked<2>();
     auto _values = values.template unchecked<1>();
     auto observations = coordinates.shape(0);
-    auto vector = std::vector<typename RTree<Point, Type>::value_t>();
 
-    vector.reserve(observations);
+    {
+      auto gil = pybind11::gil_scoped_release();
+      auto vector = std::vector<typename RTree<Point, Type>::value_t>();
 
-    for (auto ix = 0; ix < observations; ++ix) {
-      vector.emplace_back(std::make_pair(
-          std::invoke(
-              converter, *this,
-              Eigen::Map<const Vector<coordinate_t>>(&_coordinates(ix, 0), M)),
-          _values(ix)));
+      vector.reserve(observations);
+
+      for (auto ix = 0; ix < observations; ++ix) {
+        vector.emplace_back(
+            std::make_pair(std::invoke(converter, *this,
+                                       Eigen::Map<const Vector<coordinate_t>>(
+                                           &_coordinates(ix, 0), M)),
+                           _values(ix)));
+      }
+      base_t::packing(vector);
     }
-    base_t::packing(vector);
   }
 
   /// Insert coordinates
@@ -433,12 +437,16 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     auto _coordinates = coordinates.template unchecked<2>();
     auto _values = values.template unchecked<1>();
 
-    for (auto ix = 0; ix < coordinates.shape(0); ++ix) {
-      base_t::insert(std::make_pair(
-          std::invoke(
-              converter, *this,
-              Eigen::Map<const Vector<coordinate_t>>(&_coordinates(ix, 0), M)),
-          _values(ix)));
+    {
+      auto gil = pybind11::gil_scoped_release();
+
+      for (auto ix = 0; ix < coordinates.shape(0); ++ix) {
+        base_t::insert(
+            std::make_pair(std::invoke(converter, *this,
+                                       Eigen::Map<const Vector<coordinate_t>>(
+                                           &_coordinates(ix, 0), M)),
+                           _values(ix)));
+      }
     }
   }
 

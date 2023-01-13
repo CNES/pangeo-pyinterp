@@ -95,8 +95,7 @@ Args:
     values: An array of size ``(n)`` containing the values associated with the
         coordinates provided.
 )__doc__")
-               .c_str(),
-           py::call_guard<py::gil_scoped_release>())
+               .c_str())
       .def("insert", &RTree::insert, py::arg("coordinates"), py::arg("values"),
            (R"__doc__(
 Insert new data into the search tree.
@@ -107,8 +106,7 @@ Args:
     values: An array of size ``(n)`` containing the values associated with the
         coordinates provided.
 )__doc__")
-               .c_str(),
-           py::call_guard<py::gil_scoped_release>())
+               .c_str())
       .def(
           "query",
           [](const RTree &self, const py::array_t<Type> &coordinates,
