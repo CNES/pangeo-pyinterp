@@ -1,6 +1,13 @@
 Changelog
 #########
 
+2023.1.0
+--------
+* Add a method to simplify a line string.
+* Minor fixes.
+* Bug fixes with Python and the Global Interpreters Lock.
+* Update pybind11 to v2.10.3
+
 2022.10.1
 ---------
 * Add an option to calculate the 1D binning to limit the upper and lower range
