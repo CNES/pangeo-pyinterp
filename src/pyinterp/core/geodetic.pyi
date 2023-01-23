@@ -145,6 +145,9 @@ class Crossover:
     def search(self, wgs: Optional[Spheroid] = None) -> Optional[Point]:
         ...
 
+    def search_all(self, wgs: Optional[Spheroid] = None) -> List[Point]:
+        ...
+
     def __getstate__(self) -> tuple:
         ...
 

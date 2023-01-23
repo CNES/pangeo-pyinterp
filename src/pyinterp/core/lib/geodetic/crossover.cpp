@@ -74,6 +74,22 @@ auto Crossover::search(const std::optional<Spheroid>& wgs) const
   return line_string[0];
 }
 
+auto Crossover::search_all(const std::optional<Spheroid>& wgs) const
+    -> std::vector<Point> {
+  auto line_string = half_orbit_1_.intersection(half_orbit_2_, wgs);
+  if (line_string.empty()) {
+    // There is no intersection.
+    return {};
+  }
+
+  auto points = std::vector<Point>{};
+  points.reserve(line_string.size());
+  for (auto& item : line_string) {
+    points.emplace_back(item.get<0>(), item.get<1>());
+  }
+  return points;
+}
+
 auto Crossover::nearest(const Point& point, const double predicate,
                         const DistanceStrategy strategy,
                         const std::optional<Spheroid>& wgs) const

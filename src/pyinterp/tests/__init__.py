@@ -157,6 +157,11 @@ def swot_calval_ephemeris_path():
     return ROOT.joinpath('ephemeris_calval_sept2015.txt')
 
 
+def parallel_lines():
+    """Return path to the parallel lines dataset."""
+    return ROOT.joinpath('parallel_lines.json')
+
+
 def run(pattern: Optional[str] = None) -> None:
     """Run tests.
 

@@ -9,7 +9,7 @@ import pickle
 import numpy as np
 import pytest
 
-from .. import multipolygon_path, polygon_path
+from .. import multipolygon_path, parallel_lines, polygon_path
 from ... import core
 from ...core import geodetic
 
@@ -367,6 +367,21 @@ def test_crossover():
         assert (ix1, ix2) == (3, 3) if flag else (4, 3)
         assert pytest.approx(point.lon) == 4
         assert pytest.approx(point.lat, rel=1e-3) == 4.0018282189756835
+
+
+def test_search_all():
+    """Search for all crossovers."""
+    with parallel_lines().open() as stream:
+        data = json.load(stream)
+    l1 = core.geodetic.LineString.from_geojson(
+        data['features'][0]['geometry']['coordinates'])
+    l2 = core.geodetic.LineString.from_geojson(
+        data['features'][1]['geometry']['coordinates'])
+    crossovers = core.geodetic.Crossover(l1, l2).search_all()
+    assert all(
+        isinstance(crossover, core.geodetic.Point) for crossover in crossovers)
+    with pytest.raises(RuntimeError):
+        core.geodetic.Crossover(l1, l1).search()
 
 
 def test_merged_point():

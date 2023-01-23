@@ -36,8 +36,15 @@ class Crossover {
   /// Get the crossover point between the two passes.
   ///
   /// @return the crossover location.
+  /// @throw std::runtime_error if there is more than one crossover point.
   [[nodiscard]] auto search(const std::optional<Spheroid>& wgs) const
       -> std::optional<Point>;
+
+  /// Get the list of the crossover points between the two passes.
+  ///
+  /// @return the list of crossover locations.
+  [[nodiscard]] auto search_all(const std::optional<Spheroid>& wgs) const
+      -> std::vector<Point>;
 
   /// Test if there is a crossover point between the two passes.
   ///

@@ -1150,6 +1150,23 @@ Args:
 
 Returns:
     The crossover or None if there is no crossover.
+
+Raises:
+    RuntimeError: If there is more than one crossover.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
+      .def("search_all", &geodetic::Crossover::search_all,
+           py::arg("wgs") = std::nullopt,
+           R"__doc__(
+Get the list of the crossover points between the two passes.
+
+Args:
+    wgs: If specified, searches for the intersection using geographic
+        coordinates with the specified spheroid, otherwise searches for the
+        intersection using spherical coordinates.
+
+Returns:
+    The crossover points.
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
       .def("exists", &geodetic::Crossover::exists,
