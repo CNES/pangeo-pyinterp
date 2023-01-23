@@ -161,6 +161,24 @@ class Crossover {
     return line_string.front();
   }
 
+  /// Search all crossover points between the two passes.
+  ///
+  /// @return the crossover locations.
+  [[nodiscard]] auto search_all() const -> std::vector<Point2D<T>> {
+    auto line_string = half_orbit_1_.intersection(half_orbit_2_);
+    if (line_string.empty()) {
+      // There is no intersection.
+      return {};
+    }
+
+    auto points = std::vector<Point2D<T>>{};
+    points.reserve(line_string.size());
+    for (auto& item : line_string) {
+      points.emplace_back(item.template get<0>(), item.template get<1>());
+    }
+    return points;
+  }
+
   /// Search nearest indexes from a given point.
   ///
   /// @param point the point to search.

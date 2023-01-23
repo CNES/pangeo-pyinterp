@@ -646,11 +646,23 @@ def calculate_crossover(
         lat1: numpy.ndarray[numpy.float64],
         lon2: numpy.ndarray[numpy.float64],
         lat2: numpy.ndarray[numpy.float64],
-        predicate: Optional[float] = ...,
-        strategy: str = ...,
+        predicate: Optional[float] = None,
+        strategy: str = "thomas",
         wgs: Optional[Spheroid] = None,
-        cartesian_plane: bool = ...
+        cartesian_plane: bool = True
 ) -> Optional[Tuple[Point, Tuple[int, int]]]:
+    ...
+
+
+def calculate_crossover_list(
+        lon1: numpy.ndarray[numpy.float64],
+        lat1: numpy.ndarray[numpy.float64],
+        lon2: numpy.ndarray[numpy.float64],
+        lat2: numpy.ndarray[numpy.float64],
+        predicate: Optional[float] = None,
+        strategy: str = "thomas",
+        wgs: Optional[Spheroid] = None,
+        cartesian_plane: bool = True) -> List[Tuple[Point, Tuple[int, int]]]:
     ...
 
 

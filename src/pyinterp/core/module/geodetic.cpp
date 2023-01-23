@@ -1743,19 +1743,19 @@ Returns:
         py::call_guard<py::gil_scoped_release>());
 
   m.def(
-      "calculate_crossover",
-      [](const Eigen::Ref<const Eigen::VectorXd> &lon1,
-         const Eigen::Ref<const Eigen::VectorXd> &lat1,
-         const Eigen::Ref<const Eigen::VectorXd> &lon2,
-         const Eigen::Ref<const Eigen::VectorXd> &lat2,
-         const std::optional<double> &predicate, const std::string &strategy,
-         const std::optional<geodetic::Spheroid> &wgs,
-         const bool cartesian_plane) {
-        return geodetic::crossover(
-            lon1, lat1, lon2, lat2, predicate.value_or(40'075'000.0),
-            parse_distance_strategy(strategy), wgs, cartesian_plane);
-      },
-      R"__doc__(
+       "calculate_crossover",
+       [](const Eigen::Ref<const Eigen::VectorXd> &lon1,
+          const Eigen::Ref<const Eigen::VectorXd> &lat1,
+          const Eigen::Ref<const Eigen::VectorXd> &lon2,
+          const Eigen::Ref<const Eigen::VectorXd> &lat2,
+          const std::optional<double> &predicate, const std::string &strategy,
+          const std::optional<geodetic::Spheroid> &wgs,
+          const bool cartesian_plane) {
+         return geodetic::crossover(
+             lon1, lat1, lon2, lat2, predicate.value_or(40'075'000.0),
+             parse_distance_strategy(strategy), wgs, cartesian_plane);
+       },
+       R"__doc__(
 Calculate the crossover coordinates from the nadir coordinates.
 
 Args:
@@ -1776,8 +1776,47 @@ Return:
     A tuple containing the crossover coordinates and the indices of the nearest
     nadir points on the first and second line.
 )__doc__",
-      py::arg("lon1"), py::arg("lat1"), py::arg("lon2"), py::arg("lat2"),
-      py::arg("predicate") = std::nullopt, py::arg("strategy") = "thomas",
-      py::arg("wgs") = std::nullopt, py::arg("cartesian_plane") = true,
-      py::call_guard<py::gil_scoped_release>());
+       py::arg("lon1"), py::arg("lat1"), py::arg("lon2"), py::arg("lat2"),
+       py::arg("predicate") = std::nullopt, py::arg("strategy") = "thomas",
+       py::arg("wgs") = std::nullopt, py::arg("cartesian_plane") = true,
+       py::call_guard<py::gil_scoped_release>())
+      .def(
+          "calculate_crossover_list",
+          [](const Eigen::Ref<const Eigen::VectorXd> &lon1,
+             const Eigen::Ref<const Eigen::VectorXd> &lat1,
+             const Eigen::Ref<const Eigen::VectorXd> &lon2,
+             const Eigen::Ref<const Eigen::VectorXd> &lat2,
+             const std::optional<double> &predicate,
+             const std::string &strategy,
+             const std::optional<geodetic::Spheroid> &wgs,
+             const bool cartesian_plane) {
+            return geodetic::crossover_list(
+                lon1, lat1, lon2, lat2, predicate.value_or(40'075'000.0),
+                parse_distance_strategy(strategy), wgs, cartesian_plane);
+          },
+          R"__doc__(
+Calculate all crossover coordinates from the nadir coordinates.
+
+Args:
+    lon1: Longitudes in degrees of the nadir points of the first line.
+    lat1: Latitudes in degrees of the nadir points of the first line.
+    lon2: Longitudes in degrees of the nadir points of the second line.
+    lat2: Latitudes in degrees of the nadir points of the second line.
+    predicate: The maximum distance allowed between the nadir points closest
+        to the crossing point.
+    strategy: The calculation method used to calculate the distance. This
+        parameter can take the values "andoyer", "thomas" or "vincenty".
+    wgs: The spheroid used to calculate the distance. Defaults to ``None``,
+        which means the WGS-84 spheroid is used.
+    cartesian_plane: If ``True``, the crossing point is calculated in the
+        cartesian plane. Defaults to ``False``.
+
+Return:
+    A list of tuples containing the crossover coordinates and the indices of
+    the nearest nadir points on the first and second line.
+)__doc__",
+          py::arg("lon1"), py::arg("lat1"), py::arg("lon2"), py::arg("lat2"),
+          py::arg("predicate") = std::nullopt, py::arg("strategy") = "thomas",
+          py::arg("wgs") = std::nullopt, py::arg("cartesian_plane") = true,
+          py::call_guard<py::gil_scoped_release>());
 }

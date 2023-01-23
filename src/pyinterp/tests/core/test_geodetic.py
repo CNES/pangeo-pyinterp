@@ -414,6 +414,34 @@ def test_merged_point():
             lon1, lat1, lon1 + 10, lat1 + 10, cartesian_plane=flag)
 
 
+def test_calculate_crossover_list():
+    """Calculate the location of all crossovers."""
+    with parallel_lines().open() as stream:
+        data = json.load(stream)
+    lon1, lat1 = zip(*data['features'][0]['geometry']['coordinates'])
+    lon2, lat2 = zip(*data['features'][1]['geometry']['coordinates'])
+    lon1 = np.array(lon1, dtype=np.float64)
+    lat1 = np.array(lat1, dtype=np.float64)
+    lon2 = np.array(lon2, dtype=np.float64)
+    lat2 = np.array(lat2, dtype=np.float64)
+
+    crossovers = core.geodetic.calculate_crossover_list(lon1, lat1, lon2, lat2)
+    assert len(crossovers) != 0
+    assert all(
+        isinstance(crossover[0], core.geodetic.Point)
+        for crossover in crossovers)
+    assert all(isinstance(crossover[1], tuple) for crossover in crossovers)
+    assert all(isinstance(crossover[1][0], int) for crossover in crossovers)
+    assert all(isinstance(crossover[1][1], int) for crossover in crossovers)
+
+    crossovers = core.geodetic.calculate_crossover_list(lon1,
+                                                        lat1,
+                                                        lon2,
+                                                        lat2,
+                                                        cartesian_plane=True)
+    assert len(crossovers) != 0
+
+
 def test_missing_crossover():
     """Try to calculate a crossing point when the entry passes do not cross."""
     x1 = np.array([0, 1, 2, 3, 4, 5, 6], dtype=np.float64)

@@ -154,4 +154,63 @@ auto crossover(const Eigen::Ref<const Eigen::VectorXd>& lon1,
   return std::make_tuple(*point, *nearest);
 }
 
+auto crossover_list(const Eigen::Ref<const Eigen::VectorXd>& lon1,
+                    const Eigen::Ref<const Eigen::VectorXd>& lat1,
+                    const Eigen::Ref<const Eigen::VectorXd>& lon2,
+                    const Eigen::Ref<const Eigen::VectorXd>& lat2,
+                    double predicate, const DistanceStrategy strategy,
+                    const std::optional<Spheroid>& wgs, bool cartesian_plane)
+    -> std::vector<std::tuple<Point, std::tuple<size_t, size_t>>> {
+  detail::check_container_size("lon1", lon1, "lat1", lat1);
+  detail::check_container_size("lon2", lon2, "lat2", lat2);
+
+  if (cartesian_plane) {
+    // The intersection is computed in the cartesian plane.
+    auto xover = detail::geometry::Crossover<double>(
+        detail::geometry::LineString<double>(lon1, lat1),
+        detail::geometry::LineString<double>(lon2, lat2));
+
+    auto points = xover.search_all();
+    if (points.empty()) {
+      return {};
+    }
+
+    auto result = std::vector<std::tuple<Point, std::tuple<size_t, size_t>>>{};
+    result.reserve(points.size());
+    for (auto& point : points) {
+      auto [ix1, ix2] = xover.nearest(point);
+      // From this point on, we start working in geodetic coordinates.
+      auto geodetic_point =
+          Point(detail::math::normalize_angle(point.get<0>(), -180.0, 360.0),
+                point.get<1>());
+      if (geodetic_point.distance(Point(lon1[ix1], lat1[ix1]), strategy, wgs) >
+          predicate) {
+        continue;
+      }
+      if (geodetic_point.distance(Point(lon2[ix2], lat2[ix2]), strategy, wgs) >
+          predicate) {
+        continue;
+      }
+      result.emplace_back(geodetic_point, std::make_tuple(ix1, ix2));
+    }
+    return result;
+  }
+  // The intersection is computed on the geodetic sherical plane.
+  auto xover = Crossover(LineString(lon1, lat1), LineString(lon2, lat2));
+  auto points = xover.search_all(wgs);
+  if (points.empty()) {
+    return {};
+  }
+  auto result = std::vector<std::tuple<Point, std::tuple<size_t, size_t>>>{};
+  result.reserve(points.size());
+  for (auto& point : points) {
+    auto nearest = xover.nearest(point, predicate, strategy, wgs);
+    if (!nearest) {
+      continue;
+    }
+    result.emplace_back(point, *nearest);
+  }
+  return result;
+}
+
 }  // namespace pyinterp::geodetic
