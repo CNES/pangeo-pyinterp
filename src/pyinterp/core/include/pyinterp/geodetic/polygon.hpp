@@ -19,6 +19,7 @@ namespace pyinterp::geodetic {
 
 /// Forward declaration
 class Box;
+class LineString;
 class MultiPolygon;
 
 class Polygon : public boost::geometry::model::polygon<Point> {
@@ -119,6 +120,9 @@ class Polygon : public boost::geometry::model::polygon<Point> {
 
   /// Calculates the intersection between this instance and another one.
   [[nodiscard]] auto intersection(const Polygon &other) const -> MultiPolygon;
+
+  /// Calculates the intersection between this instance and another one.
+  [[nodiscard]] auto intersection(const LineString &other) const -> LineString;
 
   /// Checks if this polygon intersects with another one.
   [[nodiscard]] auto intersects(const Polygon &other) const -> bool {

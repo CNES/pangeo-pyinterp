@@ -443,7 +443,12 @@ class Polygon:
     def from_geojson(array: List[List[List[float]]]) -> Polygon:
         ...
 
+    @overload
     def intersection(self, other: Polygon) -> MultiPolygon:
+        ...
+
+    @overload
+    def intersection(self, line_string: LineString) -> LineString:
         ...
 
     def intersects(self, other: Polygon) -> bool:

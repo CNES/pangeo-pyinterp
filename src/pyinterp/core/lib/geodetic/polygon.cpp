@@ -7,6 +7,7 @@
 #include <pybind11/pybind11.h>
 
 #include "pyinterp/geodetic/box.hpp"
+#include "pyinterp/geodetic/line_string.hpp"
 #include "pyinterp/geodetic/multipolygon.hpp"
 
 namespace pyinterp::geodetic {
@@ -105,6 +106,12 @@ auto Polygon::union_(const Polygon &other) const -> MultiPolygon {
 
 auto Polygon::intersection(const Polygon &other) const -> MultiPolygon {
   auto result = MultiPolygon();
+  boost::geometry::intersection(*this, other, result);
+  return result;
+}
+
+auto Polygon::intersection(const LineString &other) const -> LineString {
+  auto result = LineString();
   boost::geometry::intersection(*this, other, result);
   return result;
 }

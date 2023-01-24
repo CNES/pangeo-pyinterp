@@ -417,6 +417,23 @@ Returns:
 )__doc__",
           py::call_guard<py::gil_scoped_release>())
       .def(
+          "intersection",
+          [](const geodetic::Polygon &self,
+             const geodetic::LineString &line_string) -> geodetic::LineString {
+            return self.intersection(line_string);
+          },
+          py::arg("line_string"),
+          R"__doc__(
+Computes the intersection of this polygon with a line string.
+
+Args:
+    other: The line string to compute the intersection with.
+
+Returns:
+    The intersection of this polygon with the provided line string.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
           "intersects",
           [](const geodetic::Polygon &self, const geodetic::Polygon &other)
               -> bool { return self.intersects(other); },
@@ -1639,9 +1656,9 @@ Args:
 
   init_geodetic_point(m);
   init_geodetic_box(box);
+  init_geodetic_linestring(m);
   init_geodetic_polygon(polygon);
   init_geodetic_multipolygon(multipolygon);
-  init_geodetic_linestring(m);
   init_geodetic_crossover(m);
   init_geodetic_rtree(m);
 
