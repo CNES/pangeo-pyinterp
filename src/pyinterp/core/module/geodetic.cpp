@@ -388,6 +388,26 @@ Returns:
            py::call_guard<py::gil_scoped_release>())
       .def("num_interior_rings", &geodetic::Polygon::num_interior_rings,
            "Returns the number of the interior rings.")
+      .def_property_readonly(
+          "is_valid",
+          [](const geodetic::Polygon &self) {
+            return boost::geometry::is_valid(self);
+          },
+          "Returns whether the polygon is valid.")
+      .def(
+          "correct",
+          [](const geodetic::Polygon &self) {
+            auto polygon = self;
+            boost::geometry::correct(polygon);
+            return polygon;
+          },
+          R"__doc__(
+Corrects a Polygon
+
+Returns:
+    The corrected polygon.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "union",
           [](const geodetic::Polygon &self, const geodetic::Polygon &other)
