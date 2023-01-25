@@ -12,12 +12,14 @@ from ..core.geodetic import (
     Crossover,
     LineString,
     calculate_crossover,
+    calculate_crossover_list,
     coordinate_distances,
 )
 
 __all__ = [
     'Box',
     'calculate_crossover',
+    'calculate_crossover_list',
     'coordinate_distances',
     'Coordinates',
     'Crossover',
