@@ -129,6 +129,18 @@ class Polygon : public boost::geometry::model::polygon<Point> {
     return boost::geometry::intersects(*this, other);
   }
 
+  /// Simplifies this polygon.
+  [[nodiscard]] auto simplify(double tolerance) const -> Polygon;
+
+  /// Calculates the difference between this instance and another one.
+  [[nodiscard]] auto difference(const Polygon &other) const -> MultiPolygon;
+
+  /// Returns the perimeter of this polygon.
+  [[nodiscard]] auto perimeter(const std::optional<Spheroid> &wgs) const
+      -> double {
+    return geodetic::perimeter(*this, wgs);
+  }
+
   /// Checks if this polygon touches another one.
   [[nodiscard]] auto touches(const Polygon &other) const -> bool {
     return boost::geometry::touches(*this, other);

@@ -9,6 +9,7 @@
 #include <Eigen/Core>
 #include <boost/geometry/algorithms/area.hpp>
 #include <boost/geometry/algorithms/covered_by.hpp>
+#include <boost/geometry/algorithms/perimeter.hpp>
 #include <boost/geometry/srs/spheroid.hpp>
 #if BOOST_VERSION >= 107500
 #include <boost/geometry/strategy/area.hpp>
@@ -49,6 +50,19 @@ template <typename Geometry>
   auto strategy = boost::geometry::strategy::area::geographic<
       boost::geometry::strategy::vincenty, 5>(spheroid);
   return boost::geometry::area(geometry, strategy);
+}
+
+/// Calculate the perimeter
+template <typename Geometry>
+[[nodiscard]] inline auto perimeter(const Geometry &geometry,
+                                    const std::optional<Spheroid> &wgs)
+    -> double {
+  auto spheroid =
+      wgs.has_value()
+          ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
+          : boost::geometry::srs::spheroid<double>();
+  auto strategy = boost::geometry::strategy::distance::geographic<>(spheroid);
+  return boost::geometry::perimeter(geometry, strategy);
 }
 
 /// Checks if the first geometry is inside or on border the second geometry

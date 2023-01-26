@@ -408,6 +408,44 @@ Returns:
     The corrected polygon.
 )__doc__",
           py::call_guard<py::gil_scoped_release>())
+      .def("simplify", &geodetic::Polygon::simplify, py::arg("tolerance"),
+           R"__doc__(
+Simplifies a polygon.
+
+Args:
+    tolerance: The tolerance to use when simplifying the polygon.
+
+Returns:
+    The simplified polygon.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
+      .def(
+          "difference",
+          [](const geodetic::Polygon &self, const geodetic::Polygon &other)
+              -> geodetic::MultiPolygon { return self.difference(other); },
+          py::arg("other"),
+          R"__doc__(
+Computes the difference of this polygon with another.
+
+Args:
+    other: The polygon to compute the difference with.
+
+Returns:
+    The difference of this polygon with the provided polygon.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def("perimeter", &geodetic::Polygon::perimeter,
+           py::arg("wgs") = std::nullopt,
+           R"__doc__(
+Computes the perimeter of this polygon.
+
+Args:
+    wgs: The WGS84 ellipsoid to use when computing the perimeter.
+
+Returns:
+    The perimeter of this polygon.
+)__doc__",
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "union",
           [](const geodetic::Polygon &self, const geodetic::Polygon &other)

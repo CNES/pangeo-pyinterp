@@ -116,4 +116,16 @@ auto Polygon::intersection(const LineString &other) const -> LineString {
   return result;
 }
 
+auto Polygon::simplify(double tolerance) const -> Polygon {
+  auto result = Polygon();
+  boost::geometry::simplify(*this, result, tolerance);
+  return result;
+}
+
+auto Polygon::difference(const Polygon &other) const -> MultiPolygon {
+  auto result = MultiPolygon();
+  boost::geometry::difference(*this, other, result);
+  return result;
+}
+
 }  // namespace pyinterp::geodetic

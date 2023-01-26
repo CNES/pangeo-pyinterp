@@ -428,6 +428,9 @@ class Polygon:
                    num_threads: int = ...) -> numpy.ndarray[bool]:
         ...
 
+    def difference(self, other: Polygon) -> MultiPolygon:
+        ...
+
     @overload
     def distance(self, other: Polygon) -> float:
         ...
@@ -457,8 +460,14 @@ class Polygon:
     def num_interior_rings(self) -> int:
         ...
 
+    def perimeter(self, wgs: Optional[Spheroid] = None) -> float:
+        ...
+
     @staticmethod
     def read_wkt(wkt: str) -> Polygon:
+        ...
+
+    def simplify(self, tolerance: float) -> Polygon:
         ...
 
     def to_geojson(self) -> Dict[str, Any]:
