@@ -194,7 +194,7 @@ add_definitions(-DPYBIND11_ASSERT_GIL_HELD_INCREF_DECREF)
 find_package(Python3 COMPONENTS Interpreter Development)
 
 # Boost
-find_package(Boost 1.63 REQUIRED)
+find_package(Boost 1.79 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # We prefer the use of static libraries for the GSL.

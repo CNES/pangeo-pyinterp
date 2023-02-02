@@ -73,6 +73,11 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
     return geodetic::distance(*this, other, strategy, wgs);
   }
 
+  /// Returns the azimuth between the two points
+  [[nodiscard]] auto azimuth(const Point &other,
+                             const std::optional<Spheroid> &wgs) const
+      -> double;
+
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
     return pybind11::make_tuple(lon(), lat());

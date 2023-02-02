@@ -139,6 +139,12 @@ def test_point_distance():
         acropolis.distance(ulb, strategy='Thomas')
 
 
+def test_point_azimuth():
+    acropolis = core.geodetic.Point(23.725750, 37.971536)
+    ulb = core.geodetic.Point(4.3826169, 50.8119483)
+    assert -40.6961829843325 == pytest.approx(acropolis.azimuth(ulb))
+
+
 def test_point_pickle():
     """Serialization tests."""
     a = core.geodetic.Point(1, 2)
@@ -412,6 +418,32 @@ def test_merged_point():
                                               cartesian_plane=flag)
         crossover_properties = core.geodetic.calculate_crossover(
             lon1, lat1, lon1 + 10, lat1 + 10, cartesian_plane=flag)
+
+
+def test_line_string_closest():
+    """Calculate the closest point on a line string."""
+    lon1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
+    lat1 = np.array([0, 1, 2, 3, 5, 6, 7, 8], dtype=np.float64)
+    ls = core.geodetic.LineString(lon1, lat1)
+    point = ls.closest_point(core.geodetic.Point(5, 3))
+    assert pytest.approx(point.lon, rel=1e-5) == 4.00409
+    assert pytest.approx(point.lat, rel=1e-5) == 4.00594
+
+    lon2 = lon1 + 0.5
+    lat2 = lat1
+    lon3, lat3 = ls.closest_point(lon2, lat2)
+    assert np.allclose(
+        lon3,
+        np.array([
+            0.25164205, 1.25152691, 2.25133454, 3.25060547, 5.25029275,
+            6.24978998, 7.24920902, 8.0
+        ]))
+    assert np.allclose(
+        lat3,
+        np.array([[
+            0.25168094, 1.25165222, 2.25154618, 3.25136395, 5.25076241,
+            6.25034513, 7.24984932, 8.0
+        ]]))
 
 
 def test_calculate_crossover_list():

@@ -86,6 +86,25 @@ Returns:
     The distance between the two points in meters.
 )__doc__",
           py::call_guard<py::gil_scoped_release>())
+      .def(
+          "azimuth",
+          [](const geodetic::Point &self, const geodetic::Point &other,
+             const std::optional<geodetic::Spheroid> &wgs) -> double {
+            return self.azimuth(other, wgs);
+          },
+          py::arg("other"), py::arg("wgs") = std::nullopt,
+          R"__doc__(
+Calculate the azimuth between the two points.
+
+Args:
+    other: The other point to consider.
+    wgs: The spheroid used to calculate the distance. If not provided, the
+        WGS-84 spheroid is used.
+
+Returns:
+    The azimuth between the two points in degrees.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def("to_geojson", &geodetic::Point::to_geojson,
            R"__doc__(
 Return the point as a GeoJSON type.
@@ -1181,6 +1200,50 @@ Args:
 
 Returns:
     The simplified linestring.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "closest_point",
+          [](const geodetic::LineString &self, const geodetic::Point &point,
+             const std::optional<geodetic::Spheroid> &wgs) -> geodetic::Point {
+            return self.closest_point(point, wgs);
+          },
+          py::arg("point"), py::arg("wgs") = std::nullopt,
+          R"__doc__(
+Computes the closest point on this linestring to the given point.
+
+Args:
+    point: The point to test.
+    wgs: The World Geodetic System to use. Defaults to WGS84.
+
+Returns:
+    The closest point on this linestring to the given point.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "closest_point",
+          [](const geodetic::LineString &self,
+             const Eigen::Ref<const Eigen::VectorXd> &lon,
+             const Eigen::Ref<const Eigen::VectorXd> &lat,
+             const std::optional<geodetic::Spheroid> &wgs,
+             int num_threads) -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
+            return self.closest_point(lon, lat, wgs, num_threads);
+          },
+          py::arg("lon"), py::arg("lat"), py::arg("wgs") = std::nullopt,
+          py::arg("num_threads") = 0,
+          R"__doc__(
+Computes the closest point on this linestring to the given points.
+
+Args:
+    lon: The longitude of the points to test.
+    lat: The latitude of the points to test.
+    wgs: The World Geodetic System to use. Defaults to WGS84.
+    num_threads: The number of threads to use. Defaults to 0, which means
+        that the number of threads is automatically determined.
+
+Returns:
+    A tuple containing the closest point on this linestring to the given
+    points.
 )__doc__",
           py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(

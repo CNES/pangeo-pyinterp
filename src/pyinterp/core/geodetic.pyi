@@ -182,6 +182,22 @@ class LineString:
     def append(self, point: Point) -> None:
         ...
 
+    @overload
+    def closest_point(self,
+                      point: Point,
+                      wgs: Optional[Spheroid] = None) -> Point:
+        ...
+
+    @overload
+    def closest_point(
+        self,
+        lon: numpy.ndarray[numpy.float64],
+        lat: numpy.ndarray[numpy.float64],
+        wgs: Optional[Spheroid] = None,
+        num_threads: int = 0,
+    ) -> Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64]]:
+        ...
+
     def curvilinear_distance(
             self,
             strategy: str = 'thomas',
@@ -374,6 +390,9 @@ class Point:
 
     @overload
     def __init__(self, lon: float, lat: float) -> None:
+        ...
+
+    def azimuth(self, other: Point, wgs: Optional[Spheroid] = None) -> float:
         ...
 
     def distance(self,

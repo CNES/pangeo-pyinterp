@@ -139,6 +139,29 @@ class LineString : public boost::geometry::model::linestring<Point> {
   [[nodiscard]] auto simplify(double tolerance, DistanceStrategy strategy,
                               const std::optional<Spheroid>& wgs) const
       -> LineString;
+
+  /// Compute the closest point on this linestring to a given point.
+  ///
+  /// @param point the point to project.
+  /// @param wgs the spheroid to use.
+  /// @return the closest point on this linestring to the given point.
+  [[nodiscard]] auto closest_point(const Point& point,
+                                   const std::optional<Spheroid>& wgs) const
+      -> Point;
+
+  /// Compute the closest point on this linestring to a given points.
+  ///
+  /// @param lon the longitudes of the points to project.
+  /// @param lat the latitudes of the points to project.
+  /// @param wgs the spheroid to use.
+  /// @param num_threads the number of threads to use.
+  /// @return a tuple containing the closest points on this linestring to the
+  /// given points.
+  [[nodiscard]] auto closest_point(const Eigen::Ref<const Eigen::VectorXd>& lon,
+                                   const Eigen::Ref<const Eigen::VectorXd>& lat,
+                                   const std::optional<Spheroid>& wgs,
+                                   const size_t num_threads) const
+      -> std::tuple<Eigen::VectorXd, Eigen::VectorXd>;
 };
 
 }  // namespace pyinterp::geodetic

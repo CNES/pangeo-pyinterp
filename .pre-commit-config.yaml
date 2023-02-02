@@ -14,7 +14,7 @@ repos:
         exclude: docs/make.bat
       - id: trailing-whitespace
   - repo: https://github.com/asottile/pyupgrade
-    rev: "v3.2.2"
+    rev: "v3.3.1"
     hooks:
     - id: pyupgrade
       args: [--py38-plus]
@@ -24,7 +24,7 @@ repos:
       - id: flake8
         exclude: tests
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 5.12.0
     hooks:
       - id: isort
         name: isort (python)
@@ -37,7 +37,7 @@ repos:
       - id: yapf
         files: \.py(?:i)?
   - repo: https://github.com/myint/docformatter
-    rev: "v1.5.0"
+    rev: "v1.5.1"
     hooks:
     - id: docformatter
   - repo: https://github.com/cheshirekow/cmake-format-precommit
@@ -54,7 +54,7 @@ repos:
     - id: codespell
       exclude: "(cf.py|pyinterp/.*json)$"
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v14.0.6
+    rev: v15.0.7
     hooks:
       - id: clang-format
         exclude: "(dataset.*json)$"
