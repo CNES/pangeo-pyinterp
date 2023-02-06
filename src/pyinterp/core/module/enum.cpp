@@ -5,6 +5,7 @@
 #include <pybind11/pybind11.h>
 
 #include "pyinterp/detail/axis.hpp"
+#include "pyinterp/detail/math/kriging.hpp"
 #include "pyinterp/detail/math/radial_basis_functions.hpp"
 #include "pyinterp/detail/math/window_functions.hpp"
 #include "pyinterp/fill.hpp"
@@ -49,6 +50,19 @@ void init_enum(py::module& core, py::module& fill) {
       .value("Zero", fill::kZero, "Use 0.0 as an initial guess")
       .value("ZonalAverage", fill::kZonalAverage,
              "Use zonal average in x direction");
+
+  py::enum_<math::CovarianceFunction>(core, "CovarianceFunction",
+                                      "Covariance functions")
+      .value("Mattern_12", math::CovarianceFunction::kMatern_12,
+             "Matern covariance function with nu=1/2")
+      .value("Mattern_32", math::CovarianceFunction::kMatern_32,
+             "Matern covariance function with nu=3/2")
+      .value("Mattern_52", math::CovarianceFunction::kMatern_52,
+             "Matern covariance function with nu=5/2")
+      .value("WhittleMatern", math::CovarianceFunction::kWhittleMatern,
+             "Whittle-Matern covariance function")
+      .value("Cauchy", math::CovarianceFunction::kCauchy,
+             "Cauchy covariance function");
 
   py::enum_<pyinterp::fill::ValueType>(fill, "ValueType",
                                        R"__doc__(

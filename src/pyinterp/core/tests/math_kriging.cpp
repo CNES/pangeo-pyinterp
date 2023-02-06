@@ -28,6 +28,8 @@ TEST(math_loess, loess) {
   values << 0, 1, 2, 1;
   query << 1.5, 0.5, 1;
 
-  auto x = math::universal_kriging<double>(coordinates, values, query, 1, 0.25);
+  auto interpolator = math::Kriging<double>(1, 0.25, math::kMatern_52);
+
+  auto x = interpolator.universal_kriging(coordinates, values, query);
   EXPECT_NEAR(x, 0.994599, 1e-6);
 }

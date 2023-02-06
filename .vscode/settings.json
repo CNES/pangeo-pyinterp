@@ -122,7 +122,8 @@
         "shared_mutex": "cpp",
         "*.inc": "cpp",
         "version": "cpp",
-        "geometry": "cpp"
+        "geometry": "cpp",
+        "cholesky": "cpp"
     },
     "python.testing.pytestArgs": [
         "."

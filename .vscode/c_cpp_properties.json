@@ -4,17 +4,17 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "~/anaconda3/include/",
-                "~/anaconda3/include/eigen3/",
-                "~/anaconda3/include/python3.9"
+                "/data/fbriol/mambaforge/include/",
+                "/data/fbriol/mambaforge/include/eigen3/",
+                "/data/fbriol/mambaforge/include/python3.10"
             ],
             "defines": [
                 "HAVE_IEC559=1"
             ],
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "/usr/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64"
+            "intelliSenseMode": "linux-gcc-x64"
         },
         {
             "name": "MacOSX",
