@@ -408,6 +408,48 @@ class BivariateInterpolator3D:
         ...
 
 
+class CovarianceFunction:
+    __members__: ClassVar[dict] = ...  # read-only
+    Cauchy: ClassVar[CovarianceFunction] = ...
+    Mattern_12: ClassVar[CovarianceFunction] = ...
+    Mattern_32: ClassVar[CovarianceFunction] = ...
+    Mattern_52: ClassVar[CovarianceFunction] = ...
+    WhittleMatern: ClassVar[CovarianceFunction] = ...
+    __entries: ClassVar[dict] = ...
+
+    def __init__(self, value: int) -> None:
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        ...
+
+    def __getstate__(self) -> int:
+        ...
+
+    def __hash__(self) -> int:
+        ...
+
+    def __index__(self) -> int:
+        ...
+
+    def __int__(self) -> int:
+        ...
+
+    def __ne__(self, other: object) -> bool:
+        ...
+
+    def __setstate__(self, state: int) -> None:
+        ...
+
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def value(self) -> int:
+        ...
+
+
 class DescriptiveStatisticsFloat32:
 
     def __init__(self,
@@ -1044,6 +1086,17 @@ class RTree3DFloat32:
                               num_threads: int = ...) -> tuple:
         ...
 
+    def universal_kriging(self,
+                          coordinates: numpy.ndarray[numpy.float32],
+                          radius: Optional[float],
+                          k: int = ...,
+                          covariance: CovarianceFunction = ...,
+                          sigma: float = ...,
+                          alpha: float = ...,
+                          within: bool = ...,
+                          num_threads: int = ...) -> tuple:
+        ...
+
     def value(self,
               coordinates: numpy.ndarray[numpy.float32],
               radius: Optional[float] = ...,
@@ -1122,6 +1175,17 @@ class RTree3DFloat64:
                               smooth: float = ...,
                               within: bool = ...,
                               num_threads: int = ...) -> tuple:
+        ...
+
+    def universal_kriging(self,
+                          coordinates: numpy.ndarray[numpy.float64],
+                          radius: Optional[float],
+                          k: int = ...,
+                          covariance: CovarianceFunction = ...,
+                          sigma: float = ...,
+                          alpha: float = ...,
+                          within: bool = ...,
+                          num_threads: int = ...) -> tuple:
         ...
 
     def value(self,

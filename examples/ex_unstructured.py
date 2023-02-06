@@ -40,7 +40,7 @@ data = numpy.random.random(size=(SIZE, ))
 mesh.packing(numpy.vstack((lons, lats)).T, data)
 
 # %%
-# When the tree is created, you can interpolate data with three algorithms:
+# When the tree is created, you can interpolate data with four algorithms:
 #
 # * :py:meth:`Inverse Distance Weighting
 #   <pyinterp.RTree.inverse_distance_weighting>` or IDW
@@ -48,17 +48,45 @@ mesh.packing(numpy.vstack((lons, lats)).T, data)
 #   <pyinterp.RTree.radial_basis_function>` or RBF
 # * :py:meth:`Window Function
 #   <pyinterp.RTree.window_function>`
+# * :py:meth:`Universal Kriging
+#   <pyinterp.RTree.universal_kriging>`
 #
-# .. note::
+# Inverse Distance Weighting (IDW), Radial Basis Function (RBF), and Kriging are
+# all interpolation methods used to estimate a value for a target location based
+# on the values of surrounding sample points. However, each method approaches
+# this estimation differently.
 #
-#     When comparing an RBF to IDW, IDW will never predict values higher than
-#     the maximum measured value or lower than the minimum measured value.
-#     However, RBFs can predict values higher than the maximum values and lower
-#     than the minimum measured values.
+# IDW uses a weighted average of the surrounding sample points, where the weight
+# assigned to each point is inversely proportional to its distance from the
+# target location. The further away a sample point is from the target location,
+# the less influence it has on the estimated value. This method is relatively
+# simple to implement and computationally efficient, but it can produce
+# over-smoothed results in areas with a lot of sample points and under-smoothed
+# results in areas with few sample points.
 #
-#     The window function restricts the analyzed data set to a range near the
-#     point of interest. The weighting factor decreases the effect of points
-#     further away from the interpolated section of the point.
+# RBF, on the other hand, models the spatial relationship between sample points
+# and the target location by using a mathematical function (radial basis
+# function) that is based on the distance between the points. The radial basis
+# function is usually Gaussian, multiquadric, or inverse multiquadric. The
+# estimated value at the target location is obtained by summing up the weighted
+# contributions of all sample points. This method is more flexible than IDW as
+# it can produce a wide range of interpolation results, but it can also be
+# computationally expensive and susceptible to overfitting if not implemented
+# carefully.
+#
+# Kriging, also known as Gaussian process regression, is a geostatistical method
+# that models the spatial structure of the underlying data by using a covariance
+# matrix. The estimated value at the target location is obtained by solving a
+# set of linear equations that balance the fit to the sample points and the
+# smoothness of the estimated surface. Kriging can produce more accurate results
+# than IDW and RBF in many cases, but it requires a good understanding of the
+# spatial structure of the data and can be computationally demanding.
+#
+# In summary, IDW is a simple and computationally efficient method, RBF is
+# flexible but can be susceptible to overfitting, and Kriging is more accurate
+# but requires a good understanding of the spatial structure of the data. The
+# choice of method depends on the nature of the data, the spatial resolution
+# required, and the computational resources available.
 #
 # We start by interpolating using the IDW method
 STEP = 1 / 32
@@ -97,9 +125,19 @@ wf, neighbors = mesh.window_function(
 wf = wf.reshape(mx.shape)
 
 # %%
+# Interpolation with aUniversal Kriging
+kriging, neighbors = mesh.universal_kriging(
+    numpy.vstack((mx.ravel(), my.ravel())).T,
+    within=False,  # Extrapolation is forbidden
+    k=11,
+    covariance='',
+    num_threads=0)
+kriging = kriging.reshape(mx.shape)
+
+# %%
 # Let's visualize our interpolated data
 fig = matplotlib.pyplot.figure(figsize=(10, 20))
-ax1 = fig.add_subplot(311)
+ax1 = fig.add_subplot(411)
 pcm = ax1.pcolormesh(mx, my, idw, cmap='jet', shading='auto', vmin=0, vmax=1)
 ax1.set_title('IDW interpolation')
 ax2 = fig.add_subplot(312)
@@ -108,5 +146,14 @@ ax2.set_title('RBF interpolation')
 ax3 = fig.add_subplot(313)
 pcm = ax3.pcolormesh(mx, my, wf, cmap='jet', shading='auto', vmin=0, vmax=1)
 ax3.set_title('Window function interpolation')
-fig.colorbar(pcm, ax=[ax1, ax2, ax3], shrink=0.8)
+ax4 = fig.add_subplot(313)
+pcm = ax4.pcolormesh(mx,
+                     my,
+                     kriging,
+                     cmap='jet',
+                     shading='auto',
+                     vmin=0,
+                     vmax=1)
+ax4.set_title('Universal Kriging interpolation')
+fig.colorbar(pcm, ax=[ax1, ax2, ax3, ax4], shrink=0.8)
 fig.show()

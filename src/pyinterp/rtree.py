@@ -356,6 +356,63 @@ class RTree:
             coordinates, radius, k, interface._core_window_function(wf, arg),
             arg, within, num_threads)
 
+    def universal_kriging(
+            self,
+            coordinates: numpy.ndarray,
+            radius: float,
+            k: int = 9,
+            covariance: Optional[str] = None,
+            sigma: float = 1.0,
+            alpha: float = 1_000_000.0,
+            within: bool = True,
+            num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        """Interpolate the values of a point using universal kriging.
+
+        Args:
+            coordinates: The coordinates of the point to be interpolated.
+            radius: The maximum radius of the search (m).
+            k: The number of nearest neighbors to be used for calculating the
+                interpolated value. Defaults to ``9``.
+            covariance: The covariance function, based on the distance between
+                points. This parameter can take one of the following values:
+
+                * ``matern_12``: :math:`\\sigma^2\\exp\\left(-\\frac{d}{\\rho}
+                    \\right)`
+                * ``matern_32``: :math:`\\sigma^2\\left(1+\\frac{\\sqrt{3}d}{
+                    \\rho}\\right)\\exp\\left(-\\frac{\\sqrt{3}d}{\\rho}
+                    \\right)`
+                * ``matern_52``: :math:`\\sigma^2\\left(1+\\frac{\\sqrt{5}d}{
+                    \\rho}+\\frac{5d^2}{3\\rho^2}\\right) \\exp\\left(-\\frac{
+                    \\sqrt{5}d}{\\rho} \\right)`
+                * ``whittle_matern``: :math:`\\sigma^2 \\left(1 + \\sqrt{3}
+                    \\frac{d}{r} \\right) \\exp \\left(-\\sqrt{3} \\frac{d}{r}
+                    \\right)`
+
+            sigma: The sigma parameter of the covariance function. Defaults to
+                ``1.0``. Determines the overall scale of the covariance
+                function. It represents the maximum possible covariance between
+                two points.
+            alpha: The alpha parameter of the covariance function. Defaults to
+                ``1_000_000.0``. Determines the rate at which the covariance
+                decreases. It represents the spatial scale of the covariance
+                function and can be used to control the smoothness of the
+                spatial dependence structure.
+            within: If true, the method ensures that the neighbors found are
+                located around the point of interest. In other words, this
+                parameter ensures that the calculated values will not be
+                extrapolated. Defaults to ``true``.
+            num_threads: The number of threads to use for the computation. If 0
+                all CPUs are used. If 1 is given, no parallel computing code is
+                used at all, which is useful for debugging. Defaults to ``0``.
+        Returns:
+            The interpolated value and the number of neighbors used in the
+            calculation.
+        """
+        return self._instance.universal_kriging(
+            coordinates, radius, k,
+            interface._core_covariance_function(covariance), sigma, alpha,
+            within, num_threads)
+
     def __getstate__(self) -> Tuple:
         """Return the state of the object for pickling purposes.
 

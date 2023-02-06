@@ -60,9 +60,7 @@ void init_enum(py::module& core, py::module& fill) {
       .value("Mattern_52", math::CovarianceFunction::kMatern_52,
              "Matern covariance function with nu=5/2")
       .value("WhittleMatern", math::CovarianceFunction::kWhittleMatern,
-             "Whittle-Matern covariance function")
-      .value("Cauchy", math::CovarianceFunction::kCauchy,
-             "Cauchy covariance function");
+             "Whittle-Matern covariance function");
 
   py::enum_<pyinterp::fill::ValueType>(fill, "ValueType",
                                        R"__doc__(

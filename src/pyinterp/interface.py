@@ -18,6 +18,7 @@ PATTERN = re.compile(r'((?:Float|Int)\d+)').search
 
 __all__ = [
     '_core_class_suffix',
+    '_core_covariance_function',
     '_core_function',
     '_core_radial_basis_function',
     '_core_window_function',
@@ -85,6 +86,21 @@ def _core_function(function: str, instance: object) -> str:
     assert match is not None
     suffix = match.group(1).lower()
     return f'{function}_{suffix}'
+
+
+def _core_covariance_function(
+        covariance: Optional[str]) -> core.CovarianceFunction:
+    """Get the covariance function."""
+    covariance = covariance or 'matern_32'
+    if covariance not in [
+            'matern_12',
+            'matern_32',
+            'matern_52',
+            'whittle_matern',
+    ]:
+        raise ValueError(f'Covariance function {covariance!r} is not defined')
+    covariance = '_'.join(item.capitalize() for item in covariance.split('_'))
+    return getattr(core.CovarianceFunction, covariance)
 
 
 def _core_radial_basis_function(

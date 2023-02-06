@@ -64,17 +64,8 @@ inline auto whittle_matern_covariance(
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T& sigma,
     const T& lambda) -> T {
   auto r = (p1 - p2).norm();
-  return sigma * std::pow(1 + std::sqrt(3) * r / lambda, -1.5) *
+  return math::sqr(sigma) * (1 + std::sqrt(3) * r / lambda) *
          std::exp(-std::sqrt(3) * r / lambda);
-}
-
-/// Cauchy covariance function
-template <typename T>
-auto cauchy_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
-                       const Eigen::Ref<const Eigen::Vector3<T>>& p2,
-                       const T& sigma, const T& lambda) -> T {
-  auto r = (p1 - p2).norm();
-  return sigma / (1 + r * r / (lambda * lambda));
 }
 
 /// Known Covariance functions.
@@ -83,7 +74,6 @@ enum CovarianceFunction : uint8_t {
   kMatern_32 = 1,
   kMatern_52 = 2,
   kWhittleMatern = 3,
-  kCauchy = 4,
 };
 
 /// @brief Krige the value of a point.
@@ -117,9 +107,6 @@ class Kriging {
         break;
       case CovarianceFunction::kWhittleMatern:
         function_ = whittle_matern_covariance<T>;
-        break;
-      case CovarianceFunction::kCauchy:
-        function_ = cauchy_covariance<T>;
         break;
       case CovarianceFunction::kMatern_52:
       default:
