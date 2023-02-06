@@ -47,7 +47,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   set(CMAKE_SHARED_LINKER_FLAGS_ASAN
       "${CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO} -fsanitize=${SANITIZE}"
       CACHE STRING "" FORCE)
-  message(STATUS "${CMAKE_CXX_FLAGS_ASAN}")
 endif()
 
 set_property(
@@ -196,6 +195,10 @@ find_package(Python3 COMPONENTS Interpreter Development)
 # Boost
 find_package(Boost 1.79 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
+
+# CGAL
+set(CGAL_Boost_USE_STATIC_LIBS ON)
+find_package(CGAL REQUIRED COMPONENTS Core)
 
 # We prefer the use of static libraries for the GSL.
 if(CONDA_FORGE)

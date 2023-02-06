@@ -197,6 +197,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     user_options += [
         ('boost-root=', None, 'Preferred Boost installation prefix'),
         ('build-unittests', None, 'Build the unit tests of the C++ extension'),
+        ('cgal-root=', None, 'Preferred CGAL installation prefix'),
         ('conda-forge', None, 'Generation of the conda-forge package'),
         ('code-coverage', None, 'Enable coverage reporting'),
         ('c-compiler=', None, 'Preferred C compiler'),
@@ -218,6 +219,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         super().initialize_options()
         self.boost_root = None
         self.build_unittests = None
+        self.cgal_root = None
         self.conda_forge = None
         self.code_coverage = None
         self.c_compiler = None
@@ -246,8 +248,22 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             self.build_cmake(ext)
         super().run()
 
+    def cgal(self) -> Optional[str]:
+        """Get the default CGAL path in Anaconda's environment."""
+        cgal_root = sys.prefix
+        if pathlib.Path(cgal_root, 'include', 'CGAL').exists():
+            return f'-DCGAL_ROOT={cgal_root}'
+        cgal_root = pathlib.Path(sys.prefix, 'Library')
+        if not cgal_root.joinpath('include', 'CGAL').exists():
+            if self.conda_forge:
+                raise RuntimeError(
+                    'Unable to find the CGAL library in the conda distribution '
+                    'used.')
+            return None
+        return f'-DCGAL_ROOT={cgal_root}'
+
     def gsl(self) -> Optional[str]:
-        """Get the default boost path in Anaconda's environment."""
+        """Get the default GSL path in Anaconda's environment."""
         gsl_root = sys.prefix
         if pathlib.Path(gsl_root, 'include', 'gsl').exists():
             return f'-DGSL_ROOT_DIR={gsl_root}'
@@ -349,6 +365,13 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             cmake_variable = self.boost()
             if cmake_variable:
                 result += cmake_variable
+
+        if self.cgal_root is not None:
+            result.append('-DCGAL_ROOT=' + self.cgal_root)
+        elif is_conda:
+            cmake_variable = self.cgal()
+            if cmake_variable:
+                result.append(cmake_variable)
 
         if self.gsl_root is not None:
             result.append('-DGSL_ROOT_DIR=' + self.gsl_root)

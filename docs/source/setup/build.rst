@@ -19,6 +19,7 @@ C++, you must have Python 3, at least Python version 3.6, a C++ compiler and
 
 The compiling C++ requires the following development library:
     * `Boost C++ Libraries <https://www.boost.org/>`_
+    * `CGAL <https://www.cgal.org/>`_
     * `Eigen3 <http://eigen.tuxfamily.org/>`_
     * `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_
 
@@ -26,7 +27,7 @@ You can install these packages on Ubuntu by typing the following command:
 
 .. code-block:: bash
 
-    sudo apt-get install g++ cmake libeigen3-dev libboost-dev libgsl-dev
+    sudo apt-get install g++ cmake libeigen3-dev libboost-dev libgsl-dev libcgal-dev
 
 You need, also, to install Python libraries before configuring and installing
 this software:
@@ -48,6 +49,7 @@ type the command ``python3 setup.py build_ext`` at the root of the project.
 You can specify, among other things, the following options:
     * ``--boost-root`` to specify the Preferred Boost installation prefix.
     * ``--build-unittests`` to build the unit tests of the C++ extension.
+    * ``--cgal-root`` to specify the CGAL installation prefix.
     * ``--conda-forge`` to use the generation parameters of the conda-forge
       package.
     * ``--code-coverage`` to enable coverage reporting on the C++ extension.

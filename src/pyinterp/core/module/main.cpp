@@ -9,6 +9,7 @@
 namespace py = pybind11;
 
 extern void init_axis(py::module &);
+extern void init_delaunay(py::module &);
 extern void init_bicubic(py::module &);
 extern void init_binning(py::module &);
 extern void init_bivariate_interpolator(py::module &);
@@ -91,4 +92,6 @@ Replace undefined values
   // geohash
   init_geohash(geohash);
   init_geohash_class(m);
+
+  init_delaunay(m);
 }
