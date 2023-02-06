@@ -276,6 +276,73 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     }
   }
 
+  auto linear(const array_t &coordinates,
+              const std::optional<coordinate_t> &radius, const uint32_t k,
+              const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
+    detail::check_array_ndim("coordinates", 2, coordinates);
+
+    switch (coordinates.shape(1)) {
+      case dimension_t::value - 1:
+        return _linear<dimension_t::value - 1>(
+            &RTree<Point, Type>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<coordinate_t>::max()), k,
+            within, num_threads);
+      case dimension_t::value:
+        return _linear<dimension_t::value>(
+            &RTree<Point, Type>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<coordinate_t>::max()), k,
+            within, num_threads);
+      default:
+        throw std::invalid_argument(RTree<Point, Type>::invalid_shape());
+    }
+  }
+
+  auto loess(const array_t &coordinates,
+             const std::optional<coordinate_t> &radius, const uint32_t k,
+             const coordinate_t &h, const bool within,
+             const size_t num_threads) const -> pybind11::tuple {
+    detail::check_array_ndim("coordinates", 2, coordinates);
+
+    switch (coordinates.shape(1)) {
+      case dimension_t::value - 1:
+        return _loess<dimension_t::value - 1>(
+            &RTree<Point, Type>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<coordinate_t>::max()), k, h,
+            within, num_threads);
+      case dimension_t::value:
+        return _loess<dimension_t::value>(
+            &RTree<Point, Type>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<coordinate_t>::max()), k, h,
+            within, num_threads);
+      default:
+        throw std::invalid_argument(RTree<Point, Type>::invalid_shape());
+    }
+  }
+
+  auto universal_kriging(const array_t &coordinates,
+                         const std::optional<coordinate_t> &radius,
+                         const uint32_t k, const coordinate_t &sigma,
+                         const coordinate_t &alpha, const bool within,
+                         const size_t num_threads) const -> pybind11::tuple {
+    detail::check_array_ndim("coordinates", 2, coordinates);
+
+    switch (coordinates.shape(1)) {
+      case dimension_t::value - 1:
+        return _universal_kriging<dimension_t::value - 1>(
+            &RTree<Point, Type>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<coordinate_t>::max()), k, sigma,
+            alpha, within, num_threads);
+      case dimension_t::value:
+        return _universal_kriging<dimension_t::value>(
+            &RTree<Point, Type>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<coordinate_t>::max()), k, sigma,
+            alpha, within, num_threads);
+      default:
+        throw std::invalid_argument(RTree<Point, Type>::invalid_shape());
+    }
+  }
+
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {
     auto x = pybind11::array_t<coordinate_t>(pybind11::array::ShapeContainer{
@@ -632,6 +699,169 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                 auto result = detail::geometry::RTree<
                     Point, Type>::inverse_distance_weighting(point, radius, k,
                                                              p, within);
+                _data(ix) = result.first;
+                _neighbors(ix) = result.second;
+              }
+            } catch (...) {
+              except = std::current_exception();
+            }
+          },
+          size, num_threads);
+
+      if (except != nullptr) {
+        std::rethrow_exception(except);
+      }
+    }
+    return pybind11::make_tuple(data, neighbors);
+  }
+
+  /// Linear interpolation
+  template <size_t M>
+  auto _linear(Converter converter,
+               const pybind11::array_t<coordinate_t> &coordinates,
+               const coordinate_t radius, const uint32_t k, const bool within,
+               const size_t num_threads) const -> pybind11::tuple {
+    auto _coordinates = coordinates.template unchecked<2>();
+    auto size = coordinates.shape(0);
+
+    // Allocation of result vectors.
+    auto data =
+        pybind11::array_t<promotion_t>(pybind11::array::ShapeContainer{size});
+    auto neighbors =
+        pybind11::array_t<uint32_t>(pybind11::array::ShapeContainer{size});
+
+    auto _data = data.template mutable_unchecked<1>();
+    auto _neighbors = neighbors.template mutable_unchecked<1>();
+
+    {
+      pybind11::gil_scoped_release release;
+
+      // Captures the detected exceptions in the calculation function
+      // (only the last exception captured is kept)
+      auto except = std::exception_ptr(nullptr);
+
+      detail::dispatch(
+          [&](size_t start, size_t end) {
+            try {
+              auto point = Point();
+
+              for (size_t ix = start; ix < end; ++ix) {
+                point = std::move(
+                    std::invoke(converter, *this,
+                                Eigen::Map<const Vector<coordinate_t>>(
+                                    &_coordinates(ix, 0), M)));
+
+                auto result = base_t::linear(point, radius, k, within);
+                _data(ix) = result.first;
+                _neighbors(ix) = result.second;
+              }
+            } catch (...) {
+              except = std::current_exception();
+            }
+          },
+          size, num_threads);
+
+      if (except != nullptr) {
+        std::rethrow_exception(except);
+      }
+    }
+    return pybind11::make_tuple(data, neighbors);
+  }
+
+  /// Linear interpolation
+  template <size_t M>
+  auto _loess(Converter converter,
+              const pybind11::array_t<coordinate_t> &coordinates,
+              const coordinate_t radius, const uint32_t k,
+              const coordinate_t &h, const bool within,
+              const size_t num_threads) const -> pybind11::tuple {
+    auto _coordinates = coordinates.template unchecked<2>();
+    auto size = coordinates.shape(0);
+
+    // Allocation of result vectors.
+    auto data =
+        pybind11::array_t<promotion_t>(pybind11::array::ShapeContainer{size});
+    auto neighbors =
+        pybind11::array_t<uint32_t>(pybind11::array::ShapeContainer{size});
+
+    auto _data = data.template mutable_unchecked<1>();
+    auto _neighbors = neighbors.template mutable_unchecked<1>();
+
+    {
+      pybind11::gil_scoped_release release;
+
+      // Captures the detected exceptions in the calculation function
+      // (only the last exception captured is kept)
+      auto except = std::exception_ptr(nullptr);
+
+      detail::dispatch(
+          [&](size_t start, size_t end) {
+            try {
+              auto point = Point();
+
+              for (size_t ix = start; ix < end; ++ix) {
+                point = std::move(
+                    std::invoke(converter, *this,
+                                Eigen::Map<const Vector<coordinate_t>>(
+                                    &_coordinates(ix, 0), M)));
+
+                auto result = base_t::loess(point, radius, k, within, h);
+                _data(ix) = result.first;
+                _neighbors(ix) = result.second;
+              }
+            } catch (...) {
+              except = std::current_exception();
+            }
+          },
+          size, num_threads);
+
+      if (except != nullptr) {
+        std::rethrow_exception(except);
+      }
+    }
+    return pybind11::make_tuple(data, neighbors);
+  }
+
+  /// Linear interpolation
+  template <size_t M>
+  auto _universal_kriging(Converter converter,
+                          const pybind11::array_t<coordinate_t> &coordinates,
+                          const coordinate_t radius, const uint32_t k,
+                          const coordinate_t &sigma, const coordinate_t &alpha,
+                          const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
+    auto _coordinates = coordinates.template unchecked<2>();
+    auto size = coordinates.shape(0);
+
+    // Allocation of result vectors.
+    auto data =
+        pybind11::array_t<promotion_t>(pybind11::array::ShapeContainer{size});
+    auto neighbors =
+        pybind11::array_t<uint32_t>(pybind11::array::ShapeContainer{size});
+
+    auto _data = data.template mutable_unchecked<1>();
+    auto _neighbors = neighbors.template mutable_unchecked<1>();
+
+    {
+      pybind11::gil_scoped_release release;
+
+      // Captures the detected exceptions in the calculation function
+      // (only the last exception captured is kept)
+      auto except = std::exception_ptr(nullptr);
+
+      detail::dispatch(
+          [&](size_t start, size_t end) {
+            try {
+              auto point = Point();
+
+              for (size_t ix = start; ix < end; ++ix) {
+                point = std::move(
+                    std::invoke(converter, *this,
+                                Eigen::Map<const Vector<coordinate_t>>(
+                                    &_coordinates(ix, 0), M)));
+
+                auto result = base_t::universal_kriging(point, radius, k,
+                                                        within, sigma, alpha);
                 _data(ix) = result.first;
                 _neighbors(ix) = result.second;
               }

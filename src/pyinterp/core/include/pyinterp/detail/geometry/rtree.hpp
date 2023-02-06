@@ -14,6 +14,9 @@
 #include <vector>
 
 #include "pyinterp/detail/geometry/point.hpp"
+#include "pyinterp/detail/math/kriging.hpp"
+#include "pyinterp/detail/math/linear.hpp"
+#include "pyinterp/detail/math/loess.hpp"
 #include "pyinterp/detail/math/radial_basis_functions.hpp"
 #include "pyinterp/detail/math/window_functions.hpp"
 
@@ -329,6 +332,101 @@ class RTree {
                                   uint32_t k, uint32_t p, bool within) const {
     return inverse_distance_weighting(
         point, boost::geometry::default_strategy(), radius, k, p, within);
+  }
+
+  /// Linear interpolation of the value at the requested position.
+  ///
+  /// @param point Point of interest.
+  /// @param radius The maximum radius of the search.
+  /// @param k The number of nearest neighbors to be used for calculating the
+  /// interpolated value.
+  /// @param within If true, the method ensures that the neighbors found are
+  /// located around the point of interest. In other words, this parameter
+  /// ensures that the calculated values will not be extrapolated.
+  /// @return a tuple containing the interpolated value and the number of
+  /// neighbors used in the calculation.
+  auto linear(const Point &point, coordinate_t radius, uint32_t k,
+              bool within) const -> std::pair<coordinate_t, uint32_t> {
+    // We're looking for the nearest k points.
+    auto [coordinates, values] =
+        within ? nearest_within(point, boost::geometry::default_strategy(),
+                                radius, k)
+               : nearest(point, boost::geometry::default_strategy(), radius, k);
+    if (values.size() == 0) {
+      return std::make_pair(std::numeric_limits<promotion_t>::quiet_NaN(), 0);
+    }
+    auto requested_point = Eigen::Vector3<promotion_t>(
+        boost::geometry::get<0>(point), boost::geometry::get<1>(point),
+        boost::geometry::get<2>(point));
+    return std::make_tuple(
+        math::linear<promotion_t>(coordinates, values, requested_point),
+        static_cast<uint32_t>(coordinates.cols()));
+  }
+
+  /// LOESS (Locally Estimated Scatterplot Smoothing) interpolation of the value
+  /// at the requested position.
+  ///
+  /// @param point Point of interest.
+  /// @param radius The maximum radius of the search.
+  /// @param k The number of nearest neighbors to be used for calculating the
+  /// interpolated value.
+  /// @param within If true, the method ensures that the neighbors found are
+  /// located around the point of interest. In other words, this parameter
+  /// ensures that the calculated values will not be extrapolated.
+  /// @param h The bandwidth parameter. Determines the extent of the local
+  /// neighborhood around the query point that will be used for the
+  /// interpolation.
+  /// @return a tuple containing the interpolated value and the number of
+  /// neighbors used in the calculation.
+  auto loess(const Point &point, coordinate_t radius, uint32_t k, bool within,
+             coordinate_t h) const -> std::pair<coordinate_t, uint32_t> {
+    auto [coordinates, values] =
+        within ? nearest_within(point, boost::geometry::default_strategy(),
+                                radius, k)
+               : nearest(point, boost::geometry::default_strategy(), radius, k);
+    if (values.size() == 0) {
+      return std::make_pair(std::numeric_limits<promotion_t>::quiet_NaN(), 0);
+    }
+    auto requested_point = Eigen::Vector3<promotion_t>(
+        boost::geometry::get<0>(point), boost::geometry::get<1>(point),
+        boost::geometry::get<2>(point));
+    return std::make_tuple(
+        math::loess<promotion_t>(coordinates, values, requested_point, h),
+        static_cast<uint32_t>(coordinates.cols()));
+  }
+
+  /// Kriging interpolation of the value at the requested position.
+  ///
+  /// @param point Point of interest.
+  /// @param radius The maximum radius of the search.
+  /// @param k The number of nearest neighbors to be used for calculating the
+  /// interpolated value.
+  /// @param within If true, the method ensures that the neighbors found are
+  /// located around the point of interest. In other words, this parameter
+  /// ensures that the calculated values will not be extrapolated.
+  /// @param sigma Magnitude of the covariance.
+  /// @param alpha Decay rate of the covariance, which controls the smoothness
+  /// of the interpolation
+  /// @return a tuple containing the interpolated value and the number of
+  /// neighbors used in the calculation.
+  auto universal_kriging(const Point &point, coordinate_t radius, uint32_t k,
+                         const bool within, const coordinate_t &sigma,
+                         const coordinate_t &alpha) const
+      -> std::pair<coordinate_t, uint32_t> {
+    auto [coordinates, values] =
+        within ? nearest_within(point, boost::geometry::default_strategy(),
+                                radius, k)
+               : nearest(point, boost::geometry::default_strategy(), radius, k);
+    if (values.size() == 0) {
+      return std::make_pair(std::numeric_limits<promotion_t>::quiet_NaN(), 0);
+    }
+    auto requested_point = Eigen::Vector3<promotion_t>(
+        boost::geometry::get<0>(point), boost::geometry::get<1>(point),
+        boost::geometry::get<2>(point));
+    return std::make_tuple(
+        math::universal_kriging<promotion_t>(coordinates, values,
+                                             requested_point, sigma, alpha),
+        static_cast<uint32_t>(coordinates.cols()));
   }
 
   /// Search for the nearest K neighbors of a given point using the given

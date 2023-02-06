@@ -224,6 +224,78 @@ Returns:
     The interpolated value and the number of neighbors used for the calculation.
 )__doc__")
                .c_str())
+      .def("linear", &RTree::linear, py::arg("coordinates"), py::arg("radius"),
+           py::arg("k") = 9, py::arg("within") = true,
+           py::arg("num_threads") = 0,
+           (R"__doc__(
+Linear interpolation of the value at the requested position.
+
+Args:
+    )__doc__" +
+            coordinates_help<dimension_t::value>() + R"__doc__(
+    radius: The maximum radius of the search (m). Default to the largest value
+        that can be represented on a float.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``9``.
+    within: If true, the method ensures that the neighbors found are located
+        around the point of interest. Defaults to ``true``.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
+Returns:
+    The interpolated value and the number of neighbors used for the calculation.
+)__doc__")
+               .c_str())
+      .def("loess", &RTree::loess, py::arg("coordinates"), py::arg("radius"),
+           py::arg("k") = 9, py::arg("h") = 1, py::arg("within") = true,
+           py::arg("num_threads") = 0,
+           (R"__doc__(
+LOESS (Locally Estimated Scatterplot Smoothing) interpolation of the value at
+the requested position.
+
+Args:
+    )__doc__" +
+            coordinates_help<dimension_t::value>() + R"__doc__(
+    radius: The maximum radius of the search (m). Default to the largest value
+        that can be represented on a float.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``9``.
+    h: The bandwidth parameter. Defaults to ``1``.
+    within: If true, the method ensures that the neighbors found are located
+        around the point of interest. Defaults to ``true``.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
+Returns:
+    The interpolated value and the number of neighbors used for the calculation.
+)__doc__")
+               .c_str())
+      .def("universal_kriging", &RTree::universal_kriging,
+           py::arg("coordinates"), py::arg("radius"), py::arg("k") = 9,
+           py::arg("sigma") = 1, py::arg("alpha") = 0.5,
+           py::arg("within") = true, py::arg("num_threads") = 0,
+           (R"__doc__(
+Universal Kriging interpolation of the value at the requested position.
+
+Args:
+    )__doc__" +
+            coordinates_help<dimension_t::value>() + R"__doc__(
+    radius: The maximum radius of the search (m). Default to the largest value
+        that can be represented on a float.
+    k: The number of nearest neighbors to be used for calculating the
+        interpolated value. Defaults to ``9``.
+    sigma: Magnitude of the covariance function. Defaults to ``1``.
+    alpha: Decay rate of the covariance function which controls the smoothness
+        of the interpolation. Defaults to ``0.5``.
+    within: If true, the method ensures that the neighbors found are located
+        around the point of interest. Defaults to ``true``.
+    num_threads: The number of threads to use for the computation. If 0 all CPUs
+        are used. If 1 is given, no parallel computing code is used at all,
+        which is useful for debugging. Defaults to ``0``.
+Returns:
+    The interpolated value and the number of neighbors used for the calculation.
+)__doc__")
+               .c_str())
       .def("value", &RTree::value, py::arg("coordinates"),
            py::arg("radius") = std::nullopt, py::arg("k") = 4,
            py::arg("within") = false, py::arg("num_threads") = 0,
