@@ -1,5 +1,5 @@
 {% set name = "pyinterp" %}
-{% set version = "2023.1.0" %}
+{% set version = "2023.2.0" %}
 
 package:
   name: {{ name|lower }}
@@ -23,7 +23,7 @@ requirements:
     - dask
     - eigen
     - gsl
-    - boost-cpp
+    - boost-cpp >= 1.79
     - mkl
     - mkl-devel
     - pip
