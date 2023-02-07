@@ -265,7 +265,7 @@ class RTree:
     def window_function(
             self,
             coordinates: numpy.ndarray,
-            radius: float,
+            radius: Optional[float] = None,
             k: int = 9,
             wf: Optional[str] = None,
             arg: Optional[float] = None,
@@ -377,27 +377,27 @@ class RTree:
                 points. This parameter can take one of the following values:
 
                 * ``matern_12``: :math:`\\sigma^2\\exp\\left(-\\frac{d}{\\rho}
-                    \\right)`
+                  \\right)`
                 * ``matern_32``: :math:`\\sigma^2\\left(1+\\frac{\\sqrt{3}d}{
-                    \\rho}\\right)\\exp\\left(-\\frac{\\sqrt{3}d}{\\rho}
-                    \\right)`
+                  \\rho}\\right)\\exp\\left(-\\frac{\\sqrt{3}d}{\\rho}
+                  \\right)`
                 * ``matern_52``: :math:`\\sigma^2\\left(1+\\frac{\\sqrt{5}d}{
-                    \\rho}+\\frac{5d^2}{3\\rho^2}\\right) \\exp\\left(-\\frac{
-                    \\sqrt{5}d}{\\rho} \\right)`
+                  \\rho}+\\frac{5d^2}{3\\rho^2}\\right) \\exp\\left(-\\frac{
+                  \\sqrt{5}d}{\\rho} \\right)`
                 * ``whittle_matern``: :math:`\\sigma^2 \\left(1 + \\sqrt{3}
-                    \\frac{d}{r} \\right) \\exp \\left(-\\sqrt{3} \\frac{d}{r}
-                    \\right)`
+                  \\frac{d}{r} \\right) \\exp \\left(-\\sqrt{3} \\frac{d}{r}
+                  \\right)`
                 * ``cauchy``: :math:`\\sigma^2 \\left(1 + \\frac{d}{\\rho}
-                    \\right)^{-1}`
+                  \\right)^{-1}`
                 * ``exponential``: :math:`\\sigma^2 \\exp \\left(-\\frac{d}{
-                    \\rho} \\right)`
+                  \\rho} \\right)`
                 * ``gaussian``: :math:`\\sigma^2 \\exp \\left(-\\frac{d^2}{
-                    \\rho^2} \\right)`
+                  \\rho^2} \\right)`
                 * ``spherical``: :math:`\\sigma^2 \\left(1 - \\frac{3d}{2r}
-                    + \\frac{3d^3}{2r^3} \\right) \\left(\\frac{d}{r} \\le 1
-                    \\right)`
+                  + \\frac{3d^3}{2r^3} \\right) \\left(\\frac{d}{r} \\le 1
+                  \\right)`
                 * ``linear``: :math:`\\sigma^2 \\left(1 - \\frac{d}{r}
-                    \\right) \\left(\\frac{d}{r} \\le 1 \\right)`
+                  \\right) \\left(\\frac{d}{r} \\le 1 \\right)`
             sigma: The sigma parameter of the covariance function. Defaults to
                 ``1.0``. Determines the overall scale of the covariance
                 function. It represents the maximum possible covariance between

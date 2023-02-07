@@ -279,8 +279,8 @@ class RTree {
   /// neighbors used in the calculation.
   template <typename Strategy>
   auto inverse_distance_weighting(const Point &point, const Strategy &strategy,
-                                  coordinate_t radius, uint32_t k, uint32_t p,
-                                  bool within) const
+                                  const coordinate_t radius, const uint32_t k,
+                                  const uint32_t p, const bool within) const
       -> std::pair<coordinate_t, uint32_t> {
     coordinate_t result = 0;
     coordinate_t total_weight = 0;
@@ -326,8 +326,9 @@ class RTree {
   ///
   /// Overload of the inverse_distance_weighting method with the default
   /// strategy.
-  auto inverse_distance_weighting(const Point &point, coordinate_t radius,
-                                  uint32_t k, uint32_t p, bool within) const {
+  auto inverse_distance_weighting(const Point &point, const coordinate_t radius,
+                                  const uint32_t k, const uint32_t p,
+                                  const bool within) const {
     return inverse_distance_weighting(
         point, boost::geometry::default_strategy(), radius, k, p, within);
   }
@@ -344,8 +345,8 @@ class RTree {
   /// @param kriging The kriging model to be used.
   /// @return a tuple containing the interpolated value and the number of
   /// neighbors used in the calculation.
-  auto universal_kriging(const Point &point, coordinate_t radius, uint32_t k,
-                         const bool within,
+  auto universal_kriging(const Point &point, const coordinate_t radius,
+                         const uint32_t k, const bool within,
                          const math::Kriging<promotion_t> &kriging) const
       -> std::pair<coordinate_t, uint32_t> {
     auto [coordinates, values] =
@@ -493,7 +494,8 @@ class RTree {
   template <typename Strategy>
   auto radial_basis_function(const Point &point, const Strategy &strategy,
                              const math::RBF<promotion_t> &rbf,
-                             coordinate_t radius, uint32_t k, bool within) const
+                             const coordinate_t radius, const uint32_t k,
+                             const bool within) const
       -> std::pair<promotion_t, uint32_t> {
     auto [coordinates, values] =
         within ? nearest_within(point, strategy, radius, k)
@@ -516,7 +518,8 @@ class RTree {
   /// Overload of the radial_basis_function method with the default strategy.
   auto radial_basis_function(const Point &point,
                              const math::RBF<promotion_t> &rbf,
-                             coordinate_t radius, uint32_t k, bool within) const
+                             const coordinate_t radius, const uint32_t k,
+                             const bool within) const
       -> std::pair<promotion_t, uint32_t> {
     return radial_basis_function(point, boost::geometry::default_strategy(),
                                  rbf, radius, k, within);
@@ -528,7 +531,6 @@ class RTree {
   /// @param point Point of interest
   /// @param strategy strategy used to compute the distance.
   /// @param wf The window function to be used.
-  /// @param radius The maximum radius of the search.
   /// @param k The number of nearest neighbors to be used for calculating the
   /// interpolated value.
   /// @param within If true, the method ensures that the neighbors found are
@@ -539,8 +541,9 @@ class RTree {
   template <typename Strategy>
   auto window_function(const Point &point, const Strategy &strategy,
                        const math::WindowFunction<coordinate_t> &wf,
-                       const coordinate_t arg, coordinate_t radius, uint32_t k,
-                       bool within) const -> std::pair<coordinate_t, uint32_t> {
+                       const coordinate_t arg, const coordinate_t radius,
+                       const uint32_t k, const bool within) const
+      -> std::pair<coordinate_t, uint32_t> {
     coordinate_t result = 0;
     coordinate_t total_weight = 0;
 
@@ -548,10 +551,19 @@ class RTree {
         within ? query_within(point, strategy, k) : query(point, strategy, k);
     uint32_t neighbors = 0;
 
+    // Get the distance of the furthest neighbor if radius is not specified.
+    const auto furthest_neighbor =
+        radius == std::numeric_limits<coordinate_t>::max()
+            ? (nearest.size() > 0 ? nearest.rbegin()->first : 0)
+            : radius;
+
     for (const auto &item : nearest) {
       const auto distance = item.first;
+      if (distance > radius) {
+        break;
+      }
 
-      auto wk = wf(static_cast<coordinate_t>(distance), radius, arg);
+      auto wk = wf(static_cast<coordinate_t>(distance), furthest_neighbor, arg);
       total_weight += wk;
       result += item.second * wk;
       ++neighbors;
@@ -572,8 +584,9 @@ class RTree {
   /// Overload of the window_function method with the default strategy.
   auto window_function(const Point &point,
                        const math::WindowFunction<coordinate_t> &wf,
-                       const coordinate_t arg, coordinate_t radius, uint32_t k,
-                       bool within) const -> std::pair<coordinate_t, uint32_t> {
+                       const coordinate_t arg, const coordinate_t radius,
+                       const uint32_t k, const bool within) const
+      -> std::pair<coordinate_t, uint32_t> {
     return window_function(point, boost::geometry::default_strategy(), wf, arg,
                            radius, k, within);
   }

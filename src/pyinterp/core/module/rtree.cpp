@@ -137,8 +137,8 @@ Returns:
 )__doc__")
               .c_str())
       .def("inverse_distance_weighting", &RTree::inverse_distance_weighting,
-           py::arg("coordinates"), py::arg("radius"), py::arg("k") = 9,
-           py::arg("p") = 2, py::arg("within") = true,
+           py::arg("coordinates"), py::arg("radius") = std::nullopt,
+           py::arg("k") = 9, py::arg("p") = 2, py::arg("within") = true,
            py::arg("num_threads") = 0,
            (R"__doc__(
 Interpolation of the value at the requested position by inverse distance
@@ -165,7 +165,8 @@ Returns:
 )__doc__")
                .c_str())
       .def("radial_basis_function", &RTree::radial_basis_function,
-           py::arg("coordinates"), py::arg("radius"), py::arg("k") = 9,
+           py::arg("coordinates"), py::arg("radius") = std::nullopt,
+           py::arg("k") = 9,
            py::arg("rbf") = pyinterp::RadialBasisFunction::Multiquadric,
            py::arg("epsilon") = std::optional<typename RTree::promotion_t>(),
            py::arg("smooth") = 0, py::arg("within") = true,
@@ -198,7 +199,7 @@ Returns:
 )__doc__")
                .c_str())
       .def("window_function", &RTree::window_function, py::arg("coordinates"),
-           py::arg("radius"), py::arg("k") = 9,
+           py::arg("radius") = std::nullopt, py::arg("k") = 9,
            py::arg("wf") = pyinterp::WindowFunction::kHamming,
            py::arg("arg") = std::nullopt, py::arg("within") = true,
            py::arg("num_threads") = 0,
@@ -225,7 +226,8 @@ Returns:
 )__doc__")
                .c_str())
       .def("universal_kriging", &RTree::universal_kriging,
-           py::arg("coordinates"), py::arg("radius"), py::arg("k") = 9,
+           py::arg("coordinates"), py::arg("radius") = std::nullopt,
+           py::arg("k") = 9,
            py::arg("covariance") = pyinterp::CovarianceFunction::kMatern_32,
            py::arg("sigma") = 1, py::arg("alpha") = 1'000'000,
            py::arg("within") = true, py::arg("num_threads") = 0,

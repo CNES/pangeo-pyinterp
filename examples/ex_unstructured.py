@@ -33,7 +33,7 @@ X0, X1 = 80, 170
 Y0, Y1 = -45, 30
 lons = numpy.random.uniform(low=X0, high=X1, size=(SIZE, ))
 lats = numpy.random.uniform(low=Y0, high=Y1, size=(SIZE, ))
-data = numpy.random.random(size=(SIZE, ))
+data = numpy.random.uniform(low=-1.0, high=1.0, size=(SIZE, ))
 
 # %%
 # Populates the search tree
@@ -98,7 +98,6 @@ idw, neighbors = mesh.inverse_distance_weighting(
     numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbors
-    radius=600000,
     num_threads=0)
 idw = idw.reshape(mx.shape)
 
@@ -108,8 +107,8 @@ rbf, neighbors = mesh.radial_basis_function(
     numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbors
-    radius=600000,
-    rbf='thin_plate',
+    rbf='linear',
+    smooth=1e-4,
     num_threads=0)
 rbf = rbf.reshape(mx.shape)
 
@@ -119,7 +118,6 @@ wf, neighbors = mesh.window_function(
     numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,
-    radius=600000,
     wf='parzen',
     num_threads=0)
 wf = wf.reshape(mx.shape)
@@ -130,21 +128,42 @@ kriging, neighbors = mesh.universal_kriging(
     numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,
-    covariance='matern_32',
+    covariance='matern_12',
+    alpha=100_000,
     num_threads=0)
 kriging = kriging.reshape(mx.shape)
 
 # %%
 # Let's visualize our interpolated data
+vmin = -1
+vmax = 1
 fig = matplotlib.pyplot.figure(figsize=(10, 20))
 ax1 = fig.add_subplot(411)
-pcm = ax1.pcolormesh(mx, my, idw, cmap='jet', shading='auto', vmin=0, vmax=1)
+pcm = ax1.pcolormesh(mx,
+                     my,
+                     idw,
+                     cmap='jet',
+                     shading='auto',
+                     vmin=vmin,
+                     vmax=vmax)
 ax1.set_title('IDW interpolation')
 ax2 = fig.add_subplot(412)
-pcm = ax2.pcolormesh(mx, my, rbf, cmap='jet', shading='auto', vmin=0, vmax=1)
+pcm = ax2.pcolormesh(mx,
+                     my,
+                     rbf,
+                     cmap='jet',
+                     shading='auto',
+                     vmin=vmin,
+                     vmax=vmax)
 ax2.set_title('RBF interpolation')
 ax3 = fig.add_subplot(413)
-pcm = ax3.pcolormesh(mx, my, wf, cmap='jet', shading='auto', vmin=0, vmax=1)
+pcm = ax3.pcolormesh(mx,
+                     my,
+                     wf,
+                     cmap='jet',
+                     shading='auto',
+                     vmin=vmin,
+                     vmax=vmax)
 ax3.set_title('Window function interpolation')
 ax4 = fig.add_subplot(414)
 pcm = ax4.pcolormesh(mx,
@@ -152,8 +171,7 @@ pcm = ax4.pcolormesh(mx,
                      kriging,
                      cmap='jet',
                      shading='auto',
-                     vmin=0,
-                     vmax=1)
+                     vmin=vmin,
+                     vmax=vmax)
 ax4.set_title('Universal Kriging interpolation')
 fig.colorbar(pcm, ax=[ax1, ax2, ax3, ax4], shrink=0.8)
-fig.show()

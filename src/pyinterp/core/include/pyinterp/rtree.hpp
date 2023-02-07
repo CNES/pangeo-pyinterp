@@ -259,7 +259,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   }
 
   /// TODO
-  auto window_function(const array_t &coordinates, const coordinate_t &radius,
+  auto window_function(const array_t &coordinates,
+                       const std::optional<coordinate_t> &radius,
                        const uint32_t k, const WindowFunction wf,
                        const std::optional<coordinate_t> &arg,
                        const bool within, const size_t num_threads) const
@@ -268,11 +269,13 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
         return _window_function<dimension_t::value - 1>(
-            &RTree<Point, Type>::from_lon_lat, coordinates, radius, k, wf,
+            &RTree<Point, Type>::from_lon_lat, coordinates,
+            radius.value_or(std::numeric_limits<coordinate_t>::max()), k, wf,
             arg.value_or(0), within, num_threads);
       case dimension_t::value:
         return _window_function<dimension_t::value>(
-            &RTree<Point, Type>::from_lon_lat_alt, coordinates, radius, k, wf,
+            &RTree<Point, Type>::from_lon_lat_alt, coordinates,
+            radius.value_or(std::numeric_limits<coordinate_t>::max()), k, wf,
             arg.value_or(0), within, num_threads);
       default:
         throw std::invalid_argument(RTree<Point, Type>::invalid_shape());

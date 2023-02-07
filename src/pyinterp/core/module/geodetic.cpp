@@ -1462,7 +1462,8 @@ Returns:
     calculation.
 )__doc__")
       .def("radial_basis_function", &geodetic::RTree::radial_basis_function,
-           py::arg("lon"), py::arg("lat"), py::arg("radius"), py::arg("k") = 9,
+           py::arg("lon"), py::arg("lat"), py::arg("radius") = std::nullopt,
+           py::arg("k") = 9,
            py::arg("rbf") = math::RadialBasisFunction::Multiquadric,
            py::arg("epsilon") = std::optional<double>(), py::arg("smooth") = 0,
            py::arg("within") = true, py::arg("num_threads") = 0,
@@ -1495,7 +1496,7 @@ Returns:
     calculation.
 )__doc__")
       .def("window_function", &geodetic::RTree::window_function, py::arg("lon"),
-           py::arg("lat"), py::arg("radius"), py::arg("k") = 9,
+           py::arg("lat"), py::arg("radius") = std::nullopt, py::arg("k") = 9,
            py::arg("wf") = math::window::Function::kHamming,
            py::arg("arg") = std::nullopt, py::arg("within") = true,
            py::arg("num_threads") = 0,

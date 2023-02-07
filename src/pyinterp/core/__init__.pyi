@@ -1061,7 +1061,7 @@ class RTree3DFloat32:
 
     def inverse_distance_weighting(self,
                                    coordinates: numpy.ndarray[numpy.float32],
-                                   radius: Optional[float],
+                                   radius: Optional[float] = ...,
                                    k: int = ...,
                                    p: int = ...,
                                    within: bool = ...,
@@ -1081,7 +1081,7 @@ class RTree3DFloat32:
 
     def radial_basis_function(self,
                               coordinates: numpy.ndarray[numpy.float32],
-                              radius: Optional[float],
+                              radius: Optional[float] = ...,
                               k: int = ...,
                               rbf: RadialBasisFunction = ...,
                               epsilon: Optional[float] = ...,
@@ -1092,7 +1092,7 @@ class RTree3DFloat32:
 
     def universal_kriging(self,
                           coordinates: numpy.ndarray[numpy.float32],
-                          radius: Optional[float],
+                          radius: Optional[float] = ...,
                           k: int = ...,
                           covariance: CovarianceFunction = ...,
                           sigma: float = ...,
@@ -1111,7 +1111,7 @@ class RTree3DFloat32:
 
     def window_function(self,
                         coordinates: numpy.ndarray[numpy.float32],
-                        radius: float,
+                        radius: Optional[float] = ...,
                         k: int = ...,
                         wf: WindowFunction = ...,
                         arg: Optional[float] = ...,
@@ -1152,7 +1152,7 @@ class RTree3DFloat64:
 
     def inverse_distance_weighting(self,
                                    coordinates: numpy.ndarray[numpy.float64],
-                                   radius: Optional[float],
+                                   radius: Optional[float] = ...,
                                    k: int = ...,
                                    p: int = ...,
                                    within: bool = ...,
@@ -1172,7 +1172,7 @@ class RTree3DFloat64:
 
     def radial_basis_function(self,
                               coordinates: numpy.ndarray[numpy.float64],
-                              radius: Optional[float],
+                              radius: Optional[float] = ...,
                               k: int = ...,
                               rbf: RadialBasisFunction = ...,
                               epsilon: Optional[float] = ...,
@@ -1183,7 +1183,7 @@ class RTree3DFloat64:
 
     def universal_kriging(self,
                           coordinates: numpy.ndarray[numpy.float64],
-                          radius: Optional[float],
+                          radius: Optional[float] = ...,
                           k: int = ...,
                           covariance: CovarianceFunction = ...,
                           sigma: float = ...,
@@ -1202,7 +1202,7 @@ class RTree3DFloat64:
 
     def window_function(self,
                         coordinates: numpy.ndarray[numpy.float64],
-                        radius: float,
+                        radius: Optional[float] = ...,
                         k: int = ...,
                         wf: WindowFunction = ...,
                         arg: Optional[float] = ...,
