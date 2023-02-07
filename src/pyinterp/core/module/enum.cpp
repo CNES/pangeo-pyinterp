@@ -53,14 +53,24 @@ void init_enum(py::module& core, py::module& fill) {
 
   py::enum_<math::CovarianceFunction>(core, "CovarianceFunction",
                                       "Covariance functions")
-      .value("Mattern_12", math::CovarianceFunction::kMatern_12,
+      .value("Matern_12", math::CovarianceFunction::kMatern_12,
              "Matern covariance function with nu=1/2")
-      .value("Mattern_32", math::CovarianceFunction::kMatern_32,
+      .value("Matern_32", math::CovarianceFunction::kMatern_32,
              "Matern covariance function with nu=3/2")
-      .value("Mattern_52", math::CovarianceFunction::kMatern_52,
+      .value("Matern_52", math::CovarianceFunction::kMatern_52,
              "Matern covariance function with nu=5/2")
       .value("WhittleMatern", math::CovarianceFunction::kWhittleMatern,
-             "Whittle-Matern covariance function");
+             "Whittle-Matern covariance function")
+      .value("Cauchy", math::CovarianceFunction::kCauchy,
+             "Cauchy covariance function")
+      .value("Exponential", math::CovarianceFunction::kExponential,
+             "Exponential covariance function")
+      .value("Gaussian", math::CovarianceFunction::kGaussian,
+             "Gaussian covariance function")
+      .value("Spherical", math::CovarianceFunction::kSpherical,
+             "Spherical covariance function")
+      .value("Linear", math::CovarianceFunction::kLinear,
+             "Linear covariance function");
 
   py::enum_<pyinterp::fill::ValueType>(fill, "ValueType",
                                        R"__doc__(

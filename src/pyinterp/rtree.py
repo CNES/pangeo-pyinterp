@@ -359,7 +359,7 @@ class RTree:
     def universal_kriging(
             self,
             coordinates: numpy.ndarray,
-            radius: float,
+            radius: Optional[float] = None,
             k: int = 9,
             covariance: Optional[str] = None,
             sigma: float = 1.0,
@@ -387,7 +387,17 @@ class RTree:
                 * ``whittle_matern``: :math:`\\sigma^2 \\left(1 + \\sqrt{3}
                     \\frac{d}{r} \\right) \\exp \\left(-\\sqrt{3} \\frac{d}{r}
                     \\right)`
-
+                * ``cauchy``: :math:`\\sigma^2 \\left(1 + \\frac{d}{\\rho}
+                    \\right)^{-1}`
+                * ``exponential``: :math:`\\sigma^2 \\exp \\left(-\\frac{d}{
+                    \\rho} \\right)`
+                * ``gaussian``: :math:`\\sigma^2 \\exp \\left(-\\frac{d^2}{
+                    \\rho^2} \\right)`
+                * ``spherical``: :math:`\\sigma^2 \\left(1 - \\frac{3d}{2r}
+                    + \\frac{3d^3}{2r^3} \\right) \\left(\\frac{d}{r} \\le 1
+                    \\right)`
+                * ``linear``: :math:`\\sigma^2 \\left(1 - \\frac{d}{r}
+                    \\right) \\left(\\frac{d}{r} \\le 1 \\right)`
             sigma: The sigma parameter of the covariance function. Defaults to
                 ``1.0``. Determines the overall scale of the covariance
                 function. It represents the maximum possible covariance between

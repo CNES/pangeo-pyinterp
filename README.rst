@@ -96,7 +96,6 @@ spatiotemporal grids to perform temporal interpolations.
 Unstructured Grids
 ------------------
 
-
 In the case of unstructured grids, the index used is a *R\*Tree*. These trees
 have better performance than the *KDTree* generally found in Python library
 implementations.

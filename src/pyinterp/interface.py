@@ -93,9 +93,13 @@ def _core_covariance_function(
     """Get the covariance function."""
     covariance = covariance or 'matern_32'
     if covariance not in [
+            'exponential',
+            'gaussian',
+            'linear',
             'matern_12',
             'matern_32',
             'matern_52',
+            'spherical',
             'whittle_matern',
     ]:
         raise ValueError(f'Covariance function {covariance!r} is not defined')

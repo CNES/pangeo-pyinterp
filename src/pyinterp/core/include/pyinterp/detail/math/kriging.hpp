@@ -68,12 +68,67 @@ inline auto whittle_matern_covariance(
          std::exp(-std::sqrt(3) * r / lambda);
 }
 
+/// Cauchy covariance function
+template <typename T>
+inline auto cauchy_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
+                              const Eigen::Ref<const Eigen::Vector3<T>>& p2,
+                              const T& sigma, const T& lambda) -> T {
+  auto r = (p1 - p2).norm();
+  return math::sqr(sigma) / (1 + math::sqr(r / lambda));
+}
+
+/// Exponential covariance function
+template <typename T>
+inline auto exponential_covariance(
+    const Eigen::Ref<const Eigen::Vector3<T>>& p1,
+    const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T& sigma,
+    const T& lambda) -> T {
+  auto r = (p1 - p2).norm();
+  return math::sqr(sigma) * std::exp(-r / lambda);
+}
+
+/// Spherical covariance function
+template <typename T>
+inline auto spherical_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
+                                 const Eigen::Ref<const Eigen::Vector3<T>>& p2,
+                                 const T& sigma, const T& lambda) -> T {
+  auto r = (p1 - p2).norm();
+  if (r > lambda) {
+    return 0;
+  }
+  return math::sqr(sigma) *
+         (1 - 1.5 * r / lambda + 0.5 * std::pow(r / lambda, 3));
+}
+
+/// Gaussian covariance function
+template <typename T>
+inline auto gaussian_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
+                                const Eigen::Ref<const Eigen::Vector3<T>>& p2,
+                                const T& sigma, const T& lambda) -> T {
+  auto r = (p1 - p2).norm();
+  return math::sqr(sigma) * std::exp(-math::sqr(r) / math::sqr(lambda));
+}
+
+/// Linear covariance function
+template <typename T>
+inline auto linear_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
+                              const Eigen::Ref<const Eigen::Vector3<T>>& p2,
+                              const T& sigma, const T& lambda) -> T {
+  auto r = (p1 - p2).norm();
+  return math::sqr(sigma) * r;
+}
+
 /// Known Covariance functions.
 enum CovarianceFunction : uint8_t {
   kMatern_12 = 0,
   kMatern_32 = 1,
   kMatern_52 = 2,
   kWhittleMatern = 3,
+  kCauchy = 4,
+  kExponential = 5,
+  kSpherical = 6,
+  kGaussian = 7,
+  kLinear = 8,
 };
 
 /// @brief Krige the value of a point.
@@ -105,13 +160,29 @@ class Kriging {
       case CovarianceFunction::kMatern_32:
         function_ = mattern_covariance_32<T>;
         break;
+      case CovarianceFunction::kMatern_52:
+        function_ = mattern_covariance_52<T>;
+        break;
       case CovarianceFunction::kWhittleMatern:
         function_ = whittle_matern_covariance<T>;
         break;
-      case CovarianceFunction::kMatern_52:
-      default:
-        function_ = mattern_covariance_52<T>;
+      case CovarianceFunction::kCauchy:
+        function_ = cauchy_covariance<T>;
         break;
+      case CovarianceFunction::kExponential:
+        function_ = exponential_covariance<T>;
+        break;
+      case CovarianceFunction::kSpherical:
+        function_ = spherical_covariance<T>;
+        break;
+      case CovarianceFunction::kGaussian:
+        function_ = gaussian_covariance<T>;
+        break;
+      case CovarianceFunction::kLinear:
+        function_ = linear_covariance<T>;
+        break;
+      default:
+        throw std::invalid_argument("Invalid covariance function");
     }
     if (sigma_ <= 0) {
       throw std::invalid_argument("sigma must be greater than 0");

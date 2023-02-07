@@ -139,6 +139,34 @@ def test_rtree_window_function(pytestconfig):
         plot(x, y, z0.reshape((len(lon), len(lat))), 'mss_rtree_wf.png')
 
 
+def test_rtree_kriging(pytestconfig):
+    """Interpolation test."""
+    mesh = load_data()
+    lon = np.arange(-180, 180, 1 / 3.0, dtype='float32') + 1 / 3.0
+    lat = np.arange(-90, 90, 1 / 3.0, dtype='float32') + 1 / 3.0
+    x, y = np.meshgrid(lon, lat, indexing='ij')
+    z0, _ = mesh.universal_kriging(
+        np.vstack((x.ravel(), y.ravel())).T,
+        within=False,
+        radius=None,
+        covariance=core.CovarianceFunction.Mattern_32,
+        k=11,
+        num_threads=0)
+    z1, _ = mesh.universal_kriging(
+        np.vstack((x.ravel(), y.ravel())).T,
+        within=False,
+        radius=None,
+        covariance=core.CovarianceFunction.Mattern_32,
+        k=11,
+        num_threads=1)
+    z0 = np.ma.fix_invalid(z0)
+    z1 = np.ma.fix_invalid(z1)
+    assert np.all(z1 == z0)
+
+    if HAVE_PLT and pytestconfig.getoption('visualize'):
+        plot(x, y, z0.reshape((len(lon), len(lat))), 'mss_rtree_kriging.png')
+
+
 def test_rtree_insert():
     """Data insertion test."""
     mesh = load_data(packing=False)

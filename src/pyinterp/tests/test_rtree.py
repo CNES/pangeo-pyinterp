@@ -82,6 +82,8 @@ def test_interpolate(pytestconfig):
     make_or_compare_reference('rtree_rbf.npy', data, dump)
     data, _ = mesh.window_function(coordinates, radius=2_000_000)
     make_or_compare_reference('rtree_wf.npy', data, dump)
+    data, _ = mesh.universal_kriging(coordinates)
+    make_or_compare_reference('rtree_uk.npy', data, dump)
 
     with pytest.raises(ValueError):
         mesh.radial_basis_function(coordinates, epsilon=1, rbf='cubic')
@@ -95,3 +97,5 @@ def test_interpolate(pytestconfig):
         mesh.window_function(coordinates, radius=1, wf='lanczos', arg=0)
     with pytest.raises(ValueError):
         mesh.window_function(coordinates, radius=1, wf='blackman', arg=2)
+    with pytest.raises(ValueError):
+        mesh.universal_kriging(coordinates, radius=1, covariance='blackman')

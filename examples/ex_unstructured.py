@@ -130,7 +130,7 @@ kriging, neighbors = mesh.universal_kriging(
     numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,
-    covariance='',
+    covariance='matern_32',
     num_threads=0)
 kriging = kriging.reshape(mx.shape)
 
@@ -140,13 +140,13 @@ fig = matplotlib.pyplot.figure(figsize=(10, 20))
 ax1 = fig.add_subplot(411)
 pcm = ax1.pcolormesh(mx, my, idw, cmap='jet', shading='auto', vmin=0, vmax=1)
 ax1.set_title('IDW interpolation')
-ax2 = fig.add_subplot(312)
+ax2 = fig.add_subplot(412)
 pcm = ax2.pcolormesh(mx, my, rbf, cmap='jet', shading='auto', vmin=0, vmax=1)
 ax2.set_title('RBF interpolation')
-ax3 = fig.add_subplot(313)
+ax3 = fig.add_subplot(413)
 pcm = ax3.pcolormesh(mx, my, wf, cmap='jet', shading='auto', vmin=0, vmax=1)
 ax3.set_title('Window function interpolation')
-ax4 = fig.add_subplot(313)
+ax4 = fig.add_subplot(414)
 pcm = ax4.pcolormesh(mx,
                      my,
                      kriging,
