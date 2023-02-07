@@ -149,14 +149,14 @@ def test_rtree_kriging(pytestconfig):
         np.vstack((x.ravel(), y.ravel())).T,
         within=False,
         radius=None,
-        covariance=core.CovarianceFunction.Mattern_32,
+        covariance=core.CovarianceFunction.Matern_32,
         k=11,
         num_threads=0)
     z1, _ = mesh.universal_kriging(
         np.vstack((x.ravel(), y.ravel())).T,
         within=False,
         radius=None,
-        covariance=core.CovarianceFunction.Mattern_32,
+        covariance=core.CovarianceFunction.Matern_32,
         k=11,
         num_threads=1)
     z0 = np.ma.fix_invalid(z0)

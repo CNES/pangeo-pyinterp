@@ -34,9 +34,9 @@ inline auto matern_covariance_12(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
 
 /// Matern covariance function for nu = 1.5
 template <typename T>
-inline auto mattern_covariance_32(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
-                                  const Eigen::Ref<const Eigen::Vector3<T>>& p2,
-                                  const T& sigma, const T& lambda) -> T {
+inline auto matern_covariance_32(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
+                                 const Eigen::Ref<const Eigen::Vector3<T>>& p2,
+                                 const T& sigma, const T& lambda) -> T {
   auto r = (p1 - p2).norm();
   auto d = r / lambda;
   auto result = math::sqr(sigma);
@@ -46,9 +46,9 @@ inline auto mattern_covariance_32(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
 
 /// Matern covariance function for nu = 2.5
 template <typename T>
-inline auto mattern_covariance_52(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
-                                  const Eigen::Ref<const Eigen::Vector3<T>>& p2,
-                                  const T& sigma, const T& lambda) -> T {
+inline auto matern_covariance_52(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
+                                 const Eigen::Ref<const Eigen::Vector3<T>>& p2,
+                                 const T& sigma, const T& lambda) -> T {
   auto r = (p1 - p2).norm();
   auto d = r / lambda;
   auto result = math::sqr(sigma);
@@ -158,10 +158,10 @@ class Kriging {
         function_ = matern_covariance_12<T>;
         break;
       case CovarianceFunction::kMatern_32:
-        function_ = mattern_covariance_32<T>;
+        function_ = matern_covariance_32<T>;
         break;
       case CovarianceFunction::kMatern_52:
-        function_ = mattern_covariance_52<T>;
+        function_ = matern_covariance_52<T>;
         break;
       case CovarianceFunction::kWhittleMatern:
         function_ = whittle_matern_covariance<T>;
