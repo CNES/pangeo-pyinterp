@@ -1,6 +1,14 @@
 Changelog
 #########
 
+2023.2.0
+--------
+* Looking for multiple crossovers.
+* Calculate intersection between polygon and linestring.
+* Added few utility methods for polygons.
+* Calculate the closest point on a linestring.
+* Added Universal Krige interpolation for unstructured grids.
+
 2023.1.0
 --------
 * Add a method to simplify a line string.
