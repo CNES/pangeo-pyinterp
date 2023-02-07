@@ -187,10 +187,10 @@ sphinx_gallery_conf = {
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'python': ('http://docs.python.org/3/', None),
+    'python': ('https://docs.python.org/3/', None),
     'dask': ('https://docs.dask.org/en/latest/', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-    'xarray': ('http://xarray.pydata.org/en/stable/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'xarray': ('https://docs.xarray.dev/en/stable/', None),
 }
 
 README = HERE.joinpath('readme.rst')
