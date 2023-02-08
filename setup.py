@@ -550,9 +550,7 @@ def typehints():
 
 def main():
     """Main function."""
-    install_requires = [
-        'dask', 'fsspec', 'numpy', 'numcodecs', 'toolz', 'xarray >= 0.13'
-    ]
+    install_requires = ['dask', 'numpy', 'xarray >= 0.13']
     tests_require = install_requires + ['pytest']
     setuptools.setup(
         author='CNES/CLS',

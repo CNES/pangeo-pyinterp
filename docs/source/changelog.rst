@@ -1,6 +1,11 @@
 Changelog
 #########
 
+2023.2.1
+--------
+* Cleanup module dependencies.
+* If MKL is not found, use the default BLAS implementation if available.
+
 2023.2.0
 --------
 * Looking for multiple crossovers.
