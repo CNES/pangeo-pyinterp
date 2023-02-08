@@ -199,7 +199,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 # We prefer the use of static libraries for the GSL.
 if(CONDA_FORGE)
   set(__CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ".a" ".so" ".dylib" ".lib")
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".a" ".so" ".dylib")
 endif()
 
 # GSL
@@ -247,6 +247,24 @@ if(BLAS_FOUND)
                  INTERFACE_INCLUDE_DIRECTORIES "${GSL_INCLUDE_DIRS}"
                  IMPORTED_LINK_INTERFACE_LANGUAGES "C"
                  INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
+  endif()
+else()
+  find_package(BLAS)
+  if(BLAS_FOUND)
+    add_definitions(-DEIGEN_USE_BLAS)
+    # If a BLAS library has been found, it is used instead of the BLAS library
+    # provided with GSL.
+    set_target_properties(
+      GSL::gsl
+      PROPERTIES IMPORTED_LOCATION "${GSL_LIBRARY}"
+                 INTERFACE_INCLUDE_DIRECTORIES "${GSL_INCLUDE_DIRS}"
+                 IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+                 INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
+  else()
+    message(
+      WARNING
+        "No BLAS library has been found. GSL & Eigen will use their own BLAS "
+        "implementation.")
   endif()
 endif()
 
