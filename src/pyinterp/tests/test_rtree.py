@@ -14,8 +14,8 @@ from . import load_grid2d, make_or_compare_reference
 
 
 def build_rtree(dtype):
-    lon = np.arange(-180, 180, 10, dtype=dtype)
-    lat = np.arange(-90, 90, 10, dtype=dtype)
+    lon = np.arange(-180, 180, 10).astype(dtype)
+    lat = np.arange(-90, 90, 10).astype(dtype)
     lon, lat = np.meshgrid(lon, lat)
     data = lon * 0
     mesh = pyinterp.RTree(dtype=dtype)
