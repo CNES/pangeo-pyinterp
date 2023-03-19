@@ -16,7 +16,6 @@ extern void init_bivariate(py::module &);
 extern void init_dateutils(py::module &);
 extern void init_descriptive_statistics(py::module &);
 extern void init_enum(py::module &, py::module &);
-extern void init_interpolate1d(py::module &);
 extern void init_fill(py::module &);
 extern void init_geodetic(py::module &);
 extern void init_geohash_class(py::module &);
@@ -24,6 +23,8 @@ extern void init_geohash_int64(py::module &);
 extern void init_geohash_string(py::module &);
 extern void init_grid(py::module &);
 extern void init_histogram2d(py::module &);
+extern void init_interpolate1d(py::module &);
+extern void init_period(py::module &);
 extern void init_quadrivariate(py::module &);
 extern void init_rtree(py::module &);
 extern void init_spline(py::module &);
@@ -72,6 +73,7 @@ Replace undefined values
 
   init_dateutils(dateutils);
   init_geodetic(geodetic);
+  init_period(m);
 
   init_axis(m);
   init_binning(m);
