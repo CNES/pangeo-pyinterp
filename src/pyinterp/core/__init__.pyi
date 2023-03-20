@@ -1044,6 +1044,119 @@ class Nearest3D(BivariateInterpolator3D):
         ...
 
 
+class Period:
+    __hash__: ClassVar[None] = ...
+
+    def __init__(self, begin: int, last: int, within: bool = ...) -> None:
+        ...
+
+    @overload
+    def contains(self, point: int) -> bool:
+        ...
+
+    @overload
+    def contains(self, other: Period) -> bool:
+        ...
+
+    def duration(self) -> int:
+        ...
+
+    def end(self) -> int:
+        ...
+
+    def intersection(self, other: Period) -> Period:
+        ...
+
+    def intersects(self, other: Period) -> bool:
+        ...
+
+    def is_adjacent(self, other: Period) -> bool:
+        ...
+
+    def is_after(self, point: int) -> bool:
+        ...
+
+    def is_before(self, point: int) -> bool:
+        ...
+
+    def is_null(self) -> bool:
+        ...
+
+    def merge(self, merge: Period) -> Period:
+        ...
+
+    def __eq__(self, other: Period) -> bool:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __lt__(self, other: Period) -> bool:
+        ...
+
+    def __ne__(self, other: Period) -> bool:
+        ...
+
+    @property
+    def begin(self) -> int:
+        ...
+
+    @property
+    def last(self) -> int:
+        ...
+
+
+class PeriodList:
+
+    def __init__(self, periods: numpy.ndarray[Period]) -> None:
+        ...
+
+    def are_periods_sorted_and_disjointed(self) -> bool:
+        ...
+
+    def belong_to_a_period(
+            self, dates: numpy.ndarray[numpy.int64]) -> numpy.ndarray[bool]:
+        ...
+
+    def cross_a_period(
+            self, dates: numpy.ndarray[numpy.int64]) -> numpy.ndarray[bool]:
+        ...
+
+    def filter(self, min_duration: int) -> PeriodList:
+        ...
+
+    def intersection(self, period: Period) -> PeriodList:
+        ...
+
+    def is_it_close(self, period: int, epsilon: int) -> bool:
+        ...
+
+    def join_adjacent_periods(self, epsilon: int) -> PeriodList:
+        ...
+
+    def merge(self, other: PeriodList) -> None:
+        ...
+
+    def sort(self) -> None:
+        ...
+
+    def within(self, period: Period) -> PeriodList:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __len__(self) -> int:
+        ...
+
+    def __setstate__(self, state: tuple) -> None:
+        ...
+
+    @property
+    def periods(self) -> numpy.ndarray[Period]:
+        ...
+
+
 class RTree3DFloat32:
 
     def __init__(self, spheroid: Optional[geodetic.Spheroid] = ...) -> None:
