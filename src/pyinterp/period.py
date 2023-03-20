@@ -35,24 +35,9 @@ def _min_time64_unit(*args: numpy.dtype) -> str:
     return RESOLUTION[index]
 
 
-def _cast_to_datetime64(values: Any, resolution: str) -> Any:
-    """Convert values to numpy.datetime64."""
-    return values.astype(f'M8[{resolution}]')
-
-
-def _cast_to_timedelta64(value: Any, resolution: str) -> Any:
-    """Convert values to numpy.timedelta64."""
-    return value.astype(f'm8[{resolution}]')
-
-
 def _datetime64_to_int64(value: Any, resolution: str) -> Any:
     """Convert values to numpy.int64."""
     return value.astype(f'M8[{resolution}]').astype(numpy.int64)
-
-
-def _timedelta64_to_int64(value: Any, resolution: str) -> Any:
-    """Convert values to numpy.int64."""
-    return value.astype(f'm8[{resolution}]').astype(numpy.int64)
 
 
 class Period(core.Period):
@@ -523,5 +508,5 @@ class PeriodList:
         """
         epsilon = epsilon or numpy.timedelta64(0, 's')
         return self._instance.is_it_close(
-            date.astype(self._datetime64).astype(int),
-            epsilon.astype(self._timedelta64).astype(int))
+            date.astype(self._datetime64).astype(numpy.int64),
+            epsilon.astype(self._timedelta64).astype(numpy.int64))
