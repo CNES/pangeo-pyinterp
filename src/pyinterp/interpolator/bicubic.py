@@ -20,7 +20,7 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
             u: Optional[numpy.ndarray] = None,
             nx: int = 3,
             ny: int = 3,
-            fitting_model: str = 'c_spline',
+            fitting_model: str = 'bicubic',
             boundary: str = 'undef',
             bounds_error: bool = False,
             num_threads: int = 0) -> numpy.ndarray:
