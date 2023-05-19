@@ -4,7 +4,7 @@
 # BSD-style license that can be found in the LICENSE file.
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import datetime
 import os
 import pathlib
@@ -15,7 +15,6 @@ import subprocess
 import sys
 import sysconfig
 
-import packaging.version
 import setuptools
 import setuptools.command.build_ext
 import setuptools.command.install
@@ -33,12 +32,17 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 OSX_DEPLOYMENT_TARGET = '10.14'
 
 
+def compare_setuptools_version(required: Tuple[int, ...]) -> bool:
+    """Compare the version of setuptools with the required version."""
+    current = tuple(map(int, setuptools.__version__.split('.')[:2]))
+    return current >= required
+
+
 def distutils_dirname(prefix=None, extname=None) -> pathlib.Path:
     """Returns the name of the build directory."""
     prefix = 'lib' or prefix
     extname = '' if extname is None else os.sep.join(extname.split('.')[:-1])
-    if packaging.version.parse(
-            setuptools.__version__) >= packaging.version.parse('62.1'):
+    if compare_setuptools_version((62, 1)):
         return pathlib.Path(
             WORKING_DIRECTORY, 'build', f'{prefix}.{sysconfig.get_platform()}-'
             f'{sys.implementation.cache_tag}', extname)
