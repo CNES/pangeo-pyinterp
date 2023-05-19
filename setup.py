@@ -400,7 +400,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if self.generator is not None:
             cmake_args.append('-G' + self.generator)
         elif is_windows:
-            cmake_args.append('-G' + 'Visual Studio 16 2019')
+            cmake_args.append(
+                '-G' + os.environ.get('CMAKE_GEN', 'Visual Studio 16 2019'))
 
         if self.verbose:  # type: ignore
             build_args += ['--verbose']
