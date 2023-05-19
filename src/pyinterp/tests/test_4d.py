@@ -85,7 +85,7 @@ def test_4d_swap_dim():
     assert isinstance(grid.z, pyinterp.TemporalAxis)
     assert grid.array.shape == (12, 6, 2, 2)
 
-    ds = ds.assign_coords(level=ds.level.values.astype('datetime64[s]'))
+    ds = ds.assign_coords(level=ds.level.values.astype('M8[ns]'))
     with pytest.raises(ValueError):
         grid = xr_backend.Grid4D(ds.pressure, increasing_axes=True)
 
