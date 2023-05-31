@@ -34,7 +34,15 @@ class Box : public boost::geometry::model::box<Point> {
   /// @param min_corner the minimum corner point
   /// @param max_corner the maximum corner point
   Box(const Point &min_corner, const Point &max_corner)
-      : boost::geometry::model::box<Point>(min_corner, max_corner) {}
+      : boost::geometry::model::box<Point>(min_corner, max_corner) {
+    if (min_corner.lon() > 180 || max_corner.lon() > 180 ||
+        min_corner.lon() < -180 || max_corner.lon() < -180) {
+      throw std::invalid_argument("longitude must be within [-180, 180[");
+    }
+    if (min_corner.lon() > max_corner.lon()) {
+      throw std::invalid_argument("min_corner.lon() > max_corner.lon()");
+    }
+  }
 
   /// Build a new box from a GeoJSON box.
   static auto from_geojson(const pybind11::list &data) -> Box {
