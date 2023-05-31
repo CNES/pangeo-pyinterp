@@ -36,7 +36,7 @@ jobs:
     displayName: Install build requirements
   - bash: |
       source activate Build
-      python setup.py build
+      python setup.py build_ext --mkl=true build
     displayName: Build package
   - bash: |
       source activate Build
@@ -90,7 +90,7 @@ jobs:
     displayName: Install build requirements
   - bash: |
       source activate Build
-      python setup.py build
+      python setup.py build_ext --mkl=true build
     displayName: Build package
   - bash: |
       source activate Build
@@ -127,7 +127,7 @@ jobs:
     displayName: Install mamba
   - bash: |
       source activate Build
-      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen gsl boost-cpp mkl-devel numpy pytest-cov setuptools xarray
+      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen gsl boost-cpp numpy pytest-cov setuptools xarray
     displayName: Install build requirements
   - bash: |
       source activate Build
@@ -168,11 +168,11 @@ jobs:
     displayName: Install mamba
   - script: |
       call activate Build
-      mamba install --yes --quiet -c conda-forge dask cmake coverage eigen gsl boost-cpp mkl-devel numpy pytest-cov setuptools xarray
+      mamba install --yes --quiet -c conda-forge dask cmake eigen gsl boost-cpp mkl-devel mkl numpy pytest setuptools xarray
     displayName: Install build requirements
   - script: |
       call activate Build
-      python setup.py build_ext --generator="Visual Studio 16 2019" build
+      python setup.py build_ext --generator="Visual Studio 16 2019" --mkl=true build
     displayName: Build package
   - script: |
       call activate Build

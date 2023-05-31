@@ -1,6 +1,11 @@
 Changelog
 #########
 
+2023.5.0
+--------
+* If MKL is not wanted, use the default BLAS implementation available. On MacOS
+  this is Accelerate. On Linux this is OpenBLAS or a Generic BLAS implementation.
+
 2023.2.1
 --------
 * Cleanup module dependencies.

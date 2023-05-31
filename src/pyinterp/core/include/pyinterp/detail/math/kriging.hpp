@@ -44,7 +44,7 @@ inline auto matern_covariance_32(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
   auto r = (p1 - p2).norm();
   auto d = r / lambda;
   auto result = math::sqr(sigma);
-  result *= (1 + std::sqrt(3.0) * d) * std::exp(-std::sqrt(3.0) * d);
+  result *= (1 + std::sqrt(T(3)) * d) * std::exp(-std::sqrt(T(3)) * d);
   return result;
 }
 
@@ -56,8 +56,8 @@ inline auto matern_covariance_52(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
   auto r = (p1 - p2).norm();
   auto d = r / lambda;
   auto result = math::sqr(sigma);
-  result *= (1.0 + std::sqrt(5.0) * d + 5.0 / 3.0 * math::sqr(d)) *
-            std::exp(-std::sqrt(5.0) * d);
+  result *= (1 + std::sqrt(T(5)) * d + T(5) / T(3) * math::sqr(d)) *
+            std::exp(-std::sqrt(T(5)) * d);
   return result;
 }
 
@@ -68,7 +68,7 @@ inline auto whittle_matern_covariance(
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T& sigma,
     const T& lambda) -> T {
   auto r = (p1 - p2).norm();
-  return math::sqr(sigma) * (1 + std::sqrt(3) * r / lambda) *
+  return math::sqr(sigma) * (1 + std::sqrt(T(3)) * r / lambda) *
          std::exp(-std::sqrt(3) * r / lambda);
 }
 
@@ -101,7 +101,7 @@ inline auto spherical_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
     return 0;
   }
   return math::sqr(sigma) *
-         (1 - 1.5 * r / lambda + 0.5 * std::pow(r / lambda, 3));
+         (1 - T(1.5) * r / lambda + T(0.5) * std::pow(r / lambda, 3));
 }
 
 /// Gaussian covariance function

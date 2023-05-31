@@ -11,15 +11,23 @@ Typing
     A numpy tensor with any type.
 
 """
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Tuple
 import sys
 
 import numpy
-import packaging.version
 
-if TYPE_CHECKING and packaging.version.Version(
-        numpy.__version__) > packaging.version.Version(
-            '1.20') and sys.version_info > (3, 8):  # pragma: no cover
+
+def numpy_version() -> Tuple[int, int]:
+    """Returns the version of the installed numpy library.
+
+    Returns:
+        Tuple[int, int]: The version of the installed numpy library.
+    """
+    return tuple(map(int, numpy.__version__.split('.')[:2]))
+
+
+if TYPE_CHECKING and numpy_version() >= (1, 20) and sys.version_info > (
+        3, 8):  # pragma: no cover
     import numpy.typing
 
     NDArray = numpy.typing.NDArray

@@ -7,7 +7,7 @@ import subprocess
 
 
 def main(output='emacs'):
-    """main function."""
+    """Main function."""
     # Root of project
     root = pathlib.Path(__file__).parent.parent.joinpath('src')
     args = [

@@ -1,5 +1,5 @@
 {% set name = "pyinterp" %}
-{% set version = "2023.2.0" %}
+{% set version = "2023.5.0" %}
 
 package:
   name: {{ name|lower }}
@@ -14,28 +14,36 @@ build:
   script: {{ PYTHON }} -m pip install . -vv --global-option=build_ext --global-option="--mkl=yes" --global-option="--conda-forge"
   skip: true  # [linux32 or win32 or py<36]
 
+  ignore_run_exports:
+    - mkl                                 # [blas == "mkl"]
+    - openblas                            # [blas == "openblas"]
+    - gsl
+
 requirements:
   build:
-    - {{ compiler('cxx') }}  # [linux or osx]
-    - vs2017_win-64          # [win]
+    - python                              # [build_platform != target_platform]
+    - cross-python_{{ target_platform }}  # [build_platform != target_platform]
+    - setuptools                          # [build_platform != target_platform]
+    - {{ compiler('cxx') }}               # [linux or osx]
+    - vs2017_win-64                       # [win]
     - cmake
+    - make                                # [linux]
   host:
     - dask
     - eigen
-    - gsl
-    - boost-cpp >= 1.79
+    - gsl >=2.7
+    - boost-cpp >=1.79.0
     - mkl
-    - mkl-devel
+    - numpy
     - pip
     - pytest
     - python
     - setuptools
     - xarray
   run:
+    - {{ pin_compatible('numpy') }}
     - dask
-    - fsspec
-    - mkl
-    - numcodecs
+    - mkl *
     - python
     - xarray
 

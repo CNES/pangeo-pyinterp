@@ -61,7 +61,7 @@ def load_aoml():
         """Decode datetime64 data."""
         array = array.astype('timedelta64[h]') + numpy.datetime64(
             '2001-12-19T18:00:00')
-        return array
+        return array.astype('M8[ns]')
 
     path = ROOT.joinpath('aoml_v2019.json')
     with path.open('r') as stream:
@@ -88,7 +88,7 @@ def load_grid3d() -> xarray.Dataset:
     def _decode_datetime64(array: numpy.ndarray) -> numpy.ndarray:
         """Decode datetime64 data."""
         array = array.astype('timedelta64[h]') + numpy.datetime64('1900-01-01')
-        return array
+        return array.astype('M8[ns]')
 
     path = ROOT.joinpath('tcw.json')
     with path.open('r') as stream:
@@ -107,7 +107,7 @@ def load_grid4d():
     def _decode_datetime64(array: numpy.ndarray) -> numpy.ndarray:
         """Decode datetime64 data."""
         array = array.astype('timedelta64[s]') + numpy.datetime64('1970-01-01')
-        return array
+        return array.astype('M8[ns]')
 
     path = ROOT.joinpath('pres_temp_4d.json')
 
