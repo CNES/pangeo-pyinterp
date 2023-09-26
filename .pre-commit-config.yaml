@@ -14,12 +14,12 @@ repos:
         exclude: docs/make.bat
       - id: trailing-whitespace
   - repo: https://github.com/asottile/pyupgrade
-    rev: "v3.4.0"
+    rev: "v3.13.0"
     hooks:
     - id: pyupgrade
       args: [--py38-plus]
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    rev: 6.1.0
     hooks:
       - id: flake8
         exclude: tests
@@ -37,7 +37,7 @@ repos:
       - id: yapf
         files: \.py(?:i)?
   - repo: https://github.com/myint/docformatter
-    rev: "v1.7.0"
+    rev: "v1.7.5"
     hooks:
     - id: docformatter
   - repo: https://github.com/cheshirekow/cmake-format-precommit
@@ -49,12 +49,12 @@ repos:
       types: [file]
       files: CMakeLists.txt
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.2.4"
+    rev: "v2.2.5"
     hooks:
     - id: codespell
       exclude: "(cf.py|pyinterp/.*json)$"
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v16.0.4
+    rev: v16.0.6
     hooks:
       - id: clang-format
         exclude: "(dataset.*json)$"
