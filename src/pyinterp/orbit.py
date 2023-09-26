@@ -86,6 +86,10 @@ def _rearrange_orbit(
     dy = numpy.roll(lat, 1) - lat  # type: ignore
     indexes = numpy.where((dy < 0) & (numpy.roll(dy, 1) >= 0))[0]
 
+    # If the orbit is already starting from pass 1, nothing to do
+    if indexes[0] < int(indexes.mean()):
+        return lon, lat, time
+
     # Shift coordinates, so that the first point of the orbit is the beginning
     # of pass 1
     shift = indexes[-1]
