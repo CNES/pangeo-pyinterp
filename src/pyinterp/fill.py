@@ -15,8 +15,8 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
           ny: int = 3,
           value_type: Optional[str] = None,
           num_threads: int = 0):
-    """Filter values using a locally weighted regression function or LOESS.
-    The weight function used for LOESS is the tri-cube weight function,
+    """Filter values using a locally weighted regression function or LOESS. The
+    weight function used for LOESS is the tri-cube weight function,
     :math:`w(x)=(1-|d|^3)^3`.
 
     Args:
