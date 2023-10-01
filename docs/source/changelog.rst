@@ -1,6 +1,13 @@
 Changelog
 #########
 
+2023.10.0
+---------
+* Period list management.
+* Documentation fixes.
+* Geohash box must be within [-180, 180[.
+* Fix a bug in the calculation of the orbit from the ephemeris.
+
 2023.5.0
 --------
 * If MKL is not wanted, use the default BLAS implementation available. On MacOS
