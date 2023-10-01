@@ -27,6 +27,10 @@ if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
 
+if(POLICY_CMP0144)
+  cmake_policy(SET CMP0144 NEW)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   set(SANITIZE "address,undefined")
   if(UNIX AND NOT APPLE)
