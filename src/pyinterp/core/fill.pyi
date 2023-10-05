@@ -204,3 +204,13 @@ def loess_float64(grid: TemporalGrid4DFloat64,
                   value_type: ValueType = ...,
                   num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
     ...
+
+
+def matrix_float32(x: numpy.ndarray[numpy.float32],
+                   y: numpy.ndarray[numpy.float32]) -> None:
+    ...
+
+
+def matrix_float64(x: numpy.ndarray[numpy.float64],
+                   y: numpy.ndarray[numpy.float64]) -> None:
+    ...

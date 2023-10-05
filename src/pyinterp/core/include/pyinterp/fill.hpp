@@ -198,6 +198,91 @@ auto gauss_seidel(pybind11::EigenDRef<pyinterp::Matrix<Type>> &grid,
   return std::max(calculate(0), calculate(1));
 }
 
+/// Fills in the gaps between defined points in a line with interpolated values.
+///
+/// @tparam T The type of the coordinates.
+/// @param x The x-coordinates of the points defining the line.
+/// @param y The y-coordinates of the points defining the line.
+/// @param is_undefined A boolean vector indicating which points are undefined.
+/// If is_undefined[i] is true, then the point (x[i], y[i]) is undefined.
+template <typename T>
+void fill_line(EigenRefBlock<T> x, EigenRefBlock<T> y,
+               EigenRefBlock<bool> is_undefined) {
+  T x0;
+  T x1;
+  T dx;
+  T y0;
+  T y1;
+  T dy;
+  Eigen::Index di;
+  Eigen::Index last_valid = -1;
+  Eigen::Index first_valid = -1;
+  const auto size = x.size();
+
+  for (Eigen::Index ix = 0; ix < size; ++ix) {
+    // If the point is undefined, then we can't interpolate it.
+    if (!is_undefined[ix]) {
+      // If there is a gap between the last valid point and this one, then
+      // interpolate the gap.
+      if (last_valid != -1 && (ix - last_valid) > 1) {
+        x0 = x[last_valid];
+        x1 = x[ix];
+        y0 = y[last_valid];
+        y1 = y[ix];
+        di = ix - last_valid;
+        dx = (x1 - x0) / di;
+        dy = (y1 - y0) / di;
+        for (Eigen::Index jx = last_valid + 1; jx < ix; ++jx) {
+          di = jx - last_valid;
+          x[jx] = dx * di + x0;
+          y[jx] = dy * di + y0;
+        }
+      } else if (first_valid == -1) {
+        // If this is the first valid point, then we can't interpolate the
+        // undefined points before it.
+        first_valid = ix;
+      }
+      // Update the last valid point.
+      last_valid = ix;
+    }
+  }
+
+  // If there are no valid points, then we can't interpolate anything.
+  if (last_valid == first_valid) {
+    is_undefined.setOnes();
+    return;
+  }
+
+  // If the last valid point is not the last point, then we can't interpolate
+  x0 = x[first_valid];
+  x1 = x[last_valid];
+  dx = (x1 - x0) / (last_valid - first_valid);
+  y0 = y[first_valid];
+  y1 = y[last_valid];
+  dy = (y1 - y0) / (last_valid - first_valid);
+
+  // If there is a gap between the last valid point and the end of the line,
+  // then interpolate the gap.
+  if (last_valid < (size - 1)) {
+    for (Eigen::Index jx = last_valid + 1; jx < size; ++jx) {
+      di = jx - last_valid;
+      x[jx] = dx * di + x1;
+      y[jx] = dy * di + y1;
+    }
+  }
+  // If there is a gap between the first valid point and the beginning of the
+  // line, then interpolate the gap.
+  if (first_valid > 0) {
+    for (Eigen::Index jx = 0; jx < first_valid; ++jx) {
+      di = first_valid - jx;
+      x[jx] = x0 - dx * di;
+      y[jx] = y0 - dy * di;
+    }
+  }
+  // Mark all points as defined.
+  is_undefined.setZero();
+}
+
 }  // namespace detail
 
 namespace fill {
@@ -605,6 +690,31 @@ auto loess(const Grid4D<Type, AxisType> &grid, const uint32_t nx,
     detail::dispatch(worker, grid.u()->size(), num_threads);
   }
   return result;
+}
+
+/// Fills in the gaps between defined points in a matrix with interpolated
+/// values.
+///
+/// @param x The x-coordinates of the points defining the matrix.
+/// @param y The y-coordinates of the points defining the matrix.
+template <typename T>
+void fill_matrix(pybind11::EigenDRef<Matrix<T>> x,
+                 pybind11::EigenDRef<Matrix<T>> y) {
+  auto mask = Matrix<bool>(Eigen::isnan(x.array()) || Eigen::isnan(y.array()));
+  auto num_rows = x.rows();
+  auto num_cols = y.cols();
+  // Fill in the rows.
+  for (int ix = 0; ix < num_rows; ix++) {
+    auto m = mask.row(ix);
+    if (m.all()) {
+      continue;
+    }
+    detail::fill_line<T>(x.row(ix), y.row(ix), m);
+  }
+  // Fill in the columns.
+  for (int ix = 0; ix < num_cols; ix++) {
+    detail::fill_line<T>(x.col(ix), y.col(ix), mask.col(ix));
+  }
 }
 
 }  // namespace fill

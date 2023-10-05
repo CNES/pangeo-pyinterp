@@ -77,6 +77,18 @@ Returns:
     The number of iterations performed and the maximum residual value.
 )__doc__",
         py::call_guard<py::gil_scoped_release>());
+
+  m.def(("matrix_" + function_suffix).c_str(),
+        &pyinterp::fill::fill_matrix<Type>, py::arg("x"), py::arg("y"),
+        R"__doc__(
+Fills in the gaps between defined points in a matrix with interpolated
+values.
+
+Args:
+    x: X coordinates of the points to be interpolated.
+    y: Y coordinates of the points to be interpolated.
+)__doc__",
+        py::call_guard<py::gil_scoped_release>());
 }
 
 template <typename Type, typename AxisType, typename GridType>

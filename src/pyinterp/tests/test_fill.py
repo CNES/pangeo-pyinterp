@@ -97,3 +97,25 @@ def test_loess_4d():
     grid = Grid4D(x_axis, y_axis, z_axis, u_axis, variable.values)
     filled = fill.loess(grid, num_threads=0)
     assert np.nanmean(filled - grid.array) == 0
+
+
+def test_matrix():
+    x = np.ndarray([10, 4])
+    x[:, 0] = np.array([0, 1, 2, 3, 4, 5, 6, np.nan, 8, 9], dtype=np.float64)
+    x[:, 1] = np.array([0, np.nan, 2, 3, 4, 5, 6, np.nan, 8, 9],
+                       dtype=np.float64)
+    x[:, 2] = np.full(10, np.nan, dtype=np.float64)
+    x[:, 3] = np.array([0, np.nan, 2, 3, 4, 5, 6, np.nan, 8, 9],
+                       dtype=np.float64)
+    y = np.copy(x)
+
+    fill.matrix(x, y)
+
+    assert np.all(x[:, 0] == np.arange(10))
+    assert np.all(x[:, 1] == np.arange(10))
+    assert np.all(x[:, 2] == np.arange(10))
+    assert np.all(x[:, 3] == np.arange(10))
+    assert np.all(y[:, 0] == np.arange(10))
+    assert np.all(y[:, 1] == np.arange(10))
+    assert np.all(y[:, 2] == np.arange(10))
+    assert np.all(y[:, 3] == np.arange(10))

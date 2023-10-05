@@ -8,6 +8,7 @@ import concurrent.futures
 import numpy
 
 from . import core, grid, interface
+from .typing import NDArray
 
 
 def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
@@ -137,3 +138,24 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
                 residuals.append(residual)
             residual = max(residuals)
     return residual <= epsilon, filled
+
+
+def matrix(x: NDArray, y: NDArray) -> None:
+    """Fills in the gaps between defined points in a matrix with interpolated
+    values.
+
+    Args:
+        x: X-axis coordinates of the grid.
+        y: Y-axis coordinates of the grid.
+    """
+    if len(x.shape) != 2:
+        raise ValueError('x must be a 2-dimensional array')
+    if len(y.shape) != 2:
+        raise ValueError('y must be a 2-dimensional array')
+    dtype_x = x.dtype
+    dtype_y = y.dtype
+    if (dtype_x != dtype_y):
+        return core.fill.matrix_float64(x, y)
+    if dtype_x == numpy.float32:
+        return core.fill.matrix_float32(x, y)
+    return core.fill.matrix_float64(x, y)
