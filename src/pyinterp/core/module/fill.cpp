@@ -145,4 +145,15 @@ void init_fill(py::module &m) {
                                                            "Float64");
   implement_loess<float, int64_t, TemporalGrid4D<float>>(m, "Temporal",
                                                          "Float32");
+
+  m.def("fill_time_series", &pyinterp::fill::fill_time_series<int64_t>,
+        py::arg("x"), py::arg("fill_value"),
+        R"__doc__(
+Fill gaps in a time series using linear interpolation.
+
+Args:
+    x: Time series to be filled.
+    fill_value: Value used to detect gaps in the time series.
+)__doc__",
+        py::call_guard<py::gil_scoped_release>());
 }

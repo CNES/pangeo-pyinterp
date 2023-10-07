@@ -717,5 +717,55 @@ void fill_matrix(pybind11::EigenDRef<Matrix<T>> x,
   }
 }
 
+/// Fill gaps in a time series using linear interpolation.
+///
+/// The time series is assumed to be monotonically increasing or decreasing.
+///
+/// @param array Array of dates.
+/// @param fill_value Value to use for missing data.
+template <typename T>
+auto fill_time_series(const Eigen::Ref<const Vector<T>> &array,
+                      const T fill_value) -> Vector<T> {
+  auto result = Vector<int64_t>(array);
+  auto size = array.size();
+  Eigen::Index last_valid = -1;
+  Eigen::Index first_valid = -1;
+
+  for (Eigen::Index ix = 0; ix < size; ++ix) {
+    auto item = array[ix];
+    if (item != fill_value) {
+      if (last_valid != -1 && (ix - last_valid) > 1) {
+        auto x0 = array[last_valid];
+        auto x1 = array[ix];
+        auto dx = (x1 - x0) / static_cast<T>(ix - last_valid);
+        for (Eigen::Index jx = last_valid + 1; jx < ix; ++jx) {
+          result[jx] = dx * static_cast<T>(jx - last_valid) + x0;
+        }
+      } else if (first_valid == -1) {
+        first_valid = ix;
+      }
+      last_valid = ix;
+    }
+  }
+
+  if (last_valid != first_valid) {
+    auto x0 = array[first_valid];
+    auto x1 = array[last_valid];
+    auto dx = (x1 - x0) / static_cast<T>(last_valid - first_valid);
+    if (last_valid < (size - 1)) {
+      for (Eigen::Index jx = last_valid + 1; jx < size; ++jx) {
+        result[jx] = dx * static_cast<T>(jx - last_valid) + x1;
+      }
+    }
+
+    if (first_valid > 0) {
+      for (Eigen::Index jx = 0; jx < first_valid; ++jx) {
+        result[jx] = x0 - dx * static_cast<T>(first_valid - jx);
+      }
+    }
+  }
+  return result;
+}
+
 }  // namespace fill
 }  // namespace pyinterp

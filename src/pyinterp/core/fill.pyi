@@ -96,6 +96,11 @@ class ValueType:
         ...
 
 
+def fill_time_series(x: numpy.ndarray[numpy.int64],
+                     fill_value: int) -> numpy.ndarray[numpy.int64]:
+    ...
+
+
 def gauss_seidel_float32(grid: numpy.ndarray[numpy.float32],
                          first_guess: FirstGuess = ...,
                          is_circle: bool = ...,

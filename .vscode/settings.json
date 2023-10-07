@@ -123,7 +123,9 @@
         "*.inc": "cpp",
         "version": "cpp",
         "geometry": "cpp",
-        "cholesky": "cpp"
+        "cholesky": "cpp",
+        "__verbose_abort": "cpp",
+        "specialfunctions": "cpp"
     },
     "python.testing.pytestArgs": [
         "."

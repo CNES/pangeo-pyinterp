@@ -159,3 +159,26 @@ def matrix(x: NDArray, y: NDArray) -> None:
     if dtype_x == numpy.float32:
         return core.fill.matrix_float32(x, y)
     return core.fill.matrix_float64(x, y)
+
+
+def time_series(x: NDArray, fill_value=numpy.datetime64('NaT')) -> NDArray:
+    """Fill undefined values in a time series.
+
+    Args:
+        x (numpy.ndarray[numpy.datetime64]): Time series to be filled.
+        fill_value (numpy.datetime64): Value used to fill undefined values.
+
+    Returns:
+        numpy.ndarray[numpy.datetime64]: Time series with undefined values
+            filled.
+    """
+    print(x.dtype)
+    if not isinstance(x, numpy.ndarray):
+        raise ValueError('x must be a numpy.ndarray')
+    if not numpy.issubdtype(x.dtype, numpy.datetime64):
+        raise ValueError('x must be a numpy.ndarray[numpy.datetime64]')
+    if not numpy.issubdtype(fill_value.dtype, numpy.datetime64):
+        raise ValueError('fill_value must be a numpy.datetime64')
+    return core.fill.fill_time_series(x.astype(numpy.int64),
+                                      fill_value.astype(numpy.int64)).astype(
+                                          x.dtype)
