@@ -736,7 +736,7 @@ auto fill_time_series(const Eigen::Ref<const Vector<T>> &array,
     if (item != fill_value) {
       if (last_valid != -1 && (ix - last_valid) > 1) {
         auto x0 = array[last_valid];
-        auto x1 = array[ix];
+        auto x1 = item;
         auto dx = (x1 - x0) / static_cast<T>(ix - last_valid);
         for (Eigen::Index jx = last_valid + 1; jx < ix; ++jx) {
           result[jx] = dx * static_cast<T>(jx - last_valid) + x0;

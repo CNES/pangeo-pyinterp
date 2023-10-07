@@ -172,7 +172,6 @@ def time_series(x: NDArray, fill_value=numpy.datetime64('NaT')) -> NDArray:
         numpy.ndarray[numpy.datetime64]: Time series with undefined values
             filled.
     """
-    print(x.dtype)
     if not isinstance(x, numpy.ndarray):
         raise ValueError('x must be a numpy.ndarray')
     if not numpy.issubdtype(x.dtype, numpy.datetime64):
