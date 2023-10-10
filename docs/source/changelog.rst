@@ -1,6 +1,11 @@
 Changelog
 #########
 
+2023.10.1
+---------
+* Fill time series by linear interpolation.
+* Fill unknown positions by linear interpolation.
+
 2023.10.0
 ---------
 * Period list management.
