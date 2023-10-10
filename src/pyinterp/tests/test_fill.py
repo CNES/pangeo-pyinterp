@@ -109,7 +109,8 @@ def test_matrix():
                        dtype=np.float64)
     y = np.copy(x)
 
-    fill.matrix(x, y)
+    fill.matrix(x)
+    fill.matrix(y)
 
     assert np.all(x[:, 0] == np.arange(10))
     assert np.all(x[:, 1] == np.arange(10))
@@ -121,7 +122,7 @@ def test_matrix():
     assert np.all(y[:, 3] == np.arange(10))
 
 
-def test_time_series():
+def test_vector():
     x = np.arange(np.datetime64('2000-01-01'), np.datetime64('2000-01-10'),
                   np.timedelta64(1, 'h'))
     random_indices = np.random.choice(len(x), 48, replace=False)
@@ -129,5 +130,5 @@ def test_time_series():
     xp[random_indices] = np.datetime64('NaT')
     xp[:2] = np.datetime64('NaT')
     xp[-2:] = np.datetime64('NaT')
-    yp = fill.time_series(xp)
+    yp = fill.vector(xp, fill_value=np.datetime64('NaT'))
     assert np.all(yp == x)

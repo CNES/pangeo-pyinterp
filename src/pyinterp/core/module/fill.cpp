@@ -78,15 +78,31 @@ Returns:
 )__doc__",
         py::call_guard<py::gil_scoped_release>());
 
-  m.def(("matrix_" + function_suffix).c_str(),
-        &pyinterp::fill::fill_matrix<Type>, py::arg("x"), py::arg("y"),
+  m.def(("matrix_" + function_suffix).c_str(), &pyinterp::fill::matrix<Type>,
+        py::arg("x"),
+        py::arg("fill_value") = std::numeric_limits<Type>::quiet_NaN(),
         R"__doc__(
 Fills in the gaps between defined points in a matrix with interpolated
 values.
 
 Args:
-    x: X coordinates of the points to be interpolated.
-    y: Y coordinates of the points to be interpolated.
+    x: data to be interpolated.
+    fill_value: Value used to detect gaps in the matrix. Defaults to
+        ``NaN``.
+)__doc__",
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def(("vector_" + function_suffix).c_str(), &pyinterp::fill::vector<Type>,
+        py::arg("x"),
+        py::arg("fill_value") = std::numeric_limits<Type>::quiet_NaN(),
+        R"__doc__(
+Fills in the gaps between defined points in a vector with interpolated
+values.
+
+Args:
+    x: data to be interpolated.
+    fill_value: Value used to detect gaps in the matrix. Defaults to
+        ``NaN``.
 )__doc__",
         py::call_guard<py::gil_scoped_release>());
 }
@@ -146,14 +162,14 @@ void init_fill(py::module &m) {
   implement_loess<float, int64_t, TemporalGrid4D<float>>(m, "Temporal",
                                                          "Float32");
 
-  m.def("fill_time_series", &pyinterp::fill::fill_time_series<int64_t>,
-        py::arg("x"), py::arg("fill_value"),
+  m.def("vector_int64", &pyinterp::fill::vector<int64_t>, py::arg("x"),
+        py::arg("fill_value"),
         R"__doc__(
-Fill gaps in a time series using linear interpolation.
+Fill gaps in a vector with interpolated values.
 
 Args:
-    x: Time series to be filled.
-    fill_value: Value used to detect gaps in the time series.
+    x: vector to be filled.
+    fill_value: Value used to detect gaps in the matrix.
 )__doc__",
         py::call_guard<py::gil_scoped_release>());
 }

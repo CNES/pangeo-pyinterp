@@ -16,7 +16,6 @@ from . import (
 )
 
 class FirstGuess:
-    __doc__: ClassVar[str] = ...  # read-only
     __members__: ClassVar[dict] = ...  # read-only
     Zero: ClassVar[FirstGuess] = ...
     ZonalAverage: ClassVar[FirstGuess] = ...
@@ -56,7 +55,6 @@ class FirstGuess:
 
 
 class ValueType:
-    __doc__: ClassVar[str] = ...  # read-only
     __members__: ClassVar[dict] = ...  # read-only
     All: ClassVar[ValueType] = ...
     Defined: ClassVar[ValueType] = ...
@@ -94,11 +92,6 @@ class ValueType:
     @property
     def value(self) -> int:
         ...
-
-
-def fill_time_series(x: numpy.ndarray[numpy.int64],
-                     fill_value: int) -> numpy.ndarray[numpy.int64]:
-    ...
 
 
 def gauss_seidel_float32(grid: numpy.ndarray[numpy.float32],
@@ -212,10 +205,24 @@ def loess_float64(grid: TemporalGrid4DFloat64,
 
 
 def matrix_float32(x: numpy.ndarray[numpy.float32],
-                   y: numpy.ndarray[numpy.float32]) -> None:
+                   fill_value: float = ...) -> None:
     ...
 
 
 def matrix_float64(x: numpy.ndarray[numpy.float64],
-                   y: numpy.ndarray[numpy.float64]) -> None:
+                   fill_value: float = ...) -> None:
+    ...
+
+
+def vector_float32(x: numpy.ndarray[numpy.float32],
+                   fill_value: float = ...) -> None:
+    ...
+
+
+def vector_float64(x: numpy.ndarray[numpy.float64],
+                   fill_value: float = ...) -> None:
+    ...
+
+
+def vector_int64(x: numpy.ndarray[numpy.int64], fill_value: int) -> None:
     ...

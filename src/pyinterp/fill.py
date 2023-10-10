@@ -2,7 +2,7 @@
 Replace undefined values
 ------------------------
 """
-from typing import Optional, Union
+from typing import Any, Optional, Union
 import concurrent.futures
 
 import numpy
@@ -140,44 +140,57 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
     return residual <= epsilon, filled
 
 
-def matrix(x: NDArray, y: NDArray) -> None:
-    """Fills in the gaps between defined points in a matrix with interpolated
-    values.
+def matrix(x: NDArray,
+           fill_value: Any = numpy.nan,
+           in_place: bool = True) -> None:
+    """Fills in the gaps between defined values in a 2-dimensional array.
 
     Args:
-        x: X-axis coordinates of the grid.
-        y: Y-axis coordinates of the grid.
+        x: data to be filled.
+        fill_value: Value used to fill undefined values.
+        in_place: If true, the data is filled in place. Defaults to ``True``.
     """
     if len(x.shape) != 2:
         raise ValueError('x must be a 2-dimensional array')
-    if len(y.shape) != 2:
-        raise ValueError('y must be a 2-dimensional array')
-    dtype_x = x.dtype
-    dtype_y = y.dtype
-    if (dtype_x != dtype_y):
-        return core.fill.matrix_float64(x, y)
-    if dtype_x == numpy.float32:
-        return core.fill.matrix_float32(x, y)
-    return core.fill.matrix_float64(x, y)
+    dtype = x.dtype
+    if not in_place:
+        x = numpy.copy(x)
+    if dtype == numpy.float32:
+        core.fill.matrix_float32(x, fill_value)
+    core.fill.matrix_float64(x, fill_value)
+    return x
 
 
-def time_series(x: NDArray, fill_value=numpy.datetime64('NaT')) -> NDArray:
-    """Fill undefined values in a time series.
+def vector(x: NDArray,
+           fill_value: Any = numpy.nan,
+           in_place: bool = True) -> NDArray:
+    """Fill in the gaps between defined values in a 1-dimensional array.
 
     Args:
-        x (numpy.ndarray[numpy.datetime64]): Time series to be filled.
-        fill_value (numpy.datetime64): Value used to fill undefined values.
+        x: data to be filled.
+        fill_value: Value used to fill undefined values.
+        in_place: If true, the data is filled in place. Defaults to ``True``.
 
     Returns:
-        numpy.ndarray[numpy.datetime64]: Time series with undefined values
-            filled.
+        The data filled.
     """
     if not isinstance(x, numpy.ndarray):
         raise ValueError('x must be a numpy.ndarray')
-    if not numpy.issubdtype(x.dtype, numpy.datetime64):
-        raise ValueError('x must be a numpy.ndarray[numpy.datetime64]')
-    if not numpy.issubdtype(fill_value.dtype, numpy.datetime64):
-        raise ValueError('fill_value must be a numpy.datetime64')
-    return core.fill.fill_time_series(x.astype(numpy.int64),
-                                      fill_value.astype(numpy.int64)).astype(
-                                          x.dtype)
+    if len(x.shape) != 1:
+        raise ValueError('x must be a 1-dimensional array')
+    dtype = x.dtype
+    if not in_place:
+        x = numpy.copy(x)
+    if dtype == numpy.float32:
+        core.fill.vector_float32(x, fill_value)
+    elif dtype == numpy.float64:
+        core.fill.vector_float64(x, fill_value)
+    elif dtype == numpy.int64:
+        core.fill.vector_int64(x, fill_value)
+    elif numpy.issubdtype(dtype, numpy.datetime64) or numpy.issubdtype(
+            dtype, numpy.timedelta64):
+        core.fill.vector_int64(x.view(numpy.int64),
+                               fill_value.view(numpy.int64))
+    else:
+        raise ValueError(f'unsupported data type {dtype}')
+    return x
