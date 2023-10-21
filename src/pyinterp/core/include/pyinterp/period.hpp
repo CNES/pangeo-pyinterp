@@ -1,4 +1,6 @@
 #pragma once
+#include <pybind11/pybind11.h>
+
 #include <Eigen/Core>
 #include <cstdint>
 #include <optional>
@@ -312,25 +314,29 @@ class PeriodList {
       -> Eigen::Matrix<bool, -1, 1> {
     // Flag equal to 1 if the date belongs to a period, 0 otherwise.
     auto flags = Eigen::Matrix<bool, -1, 1>(dates.size());
-    flags.setConstant(false);
 
-    // Index of the traversed date.
-    auto ix = int64_t(0);
-    auto it = periods_.array().begin();
-    auto end = periods_.array().end();
+    {
+      auto gil = pybind11::gil_scoped_release();
+      flags.setConstant(false);
 
-    while (ix < dates.size()) {
-      const auto date = dates(ix);
-      while (!it->contains(date) && !it->is_after(date) && it != end) {
-        ++it;
+      // Index of the traversed date.
+      auto ix = int64_t(0);
+      auto it = periods_.array().begin();
+      auto end = periods_.array().end();
+
+      while (ix < dates.size()) {
+        const auto date = dates(ix);
+        while (!it->contains(date) && !it->is_after(date) && it != end) {
+          ++it;
+        }
+        if (it == end) {
+          break;
+        }
+        if (it->contains(date)) {
+          flags(ix) = true;
+        }
+        ++ix;
       }
-      if (it == end) {
-        break;
-      }
-      if (it->contains(date)) {
-        flags(ix) = true;
-      }
-      ++ix;
     }
     return flags;
   }

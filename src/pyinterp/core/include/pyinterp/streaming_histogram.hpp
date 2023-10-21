@@ -295,17 +295,20 @@ class StreamingHistogram {
   }
 
   [[nodiscard]] auto marshal() const -> pybind11::bytes {
-    auto gil = pybind11::gil_scoped_release();
     auto ss = std::stringstream();
-    ss.exceptions(std::stringstream::failbit);
-    auto size = accumulators_.size();
-    ss.write(reinterpret_cast<const char *>(&size), sizeof(size));
-    for (int ix = 0; ix < size; ++ix) {
-      auto marshal_hist = static_cast<std::string>(accumulators_(ix));
-      auto size = marshal_hist.size();
+    {
+      auto gil = pybind11::gil_scoped_release();
+      ss.exceptions(std::stringstream::failbit);
+      auto size = accumulators_.size();
       ss.write(reinterpret_cast<const char *>(&size), sizeof(size));
-      ss.write(marshal_hist.c_str(), static_cast<std::streamsize>(size));
+      for (int ix = 0; ix < size; ++ix) {
+        auto marshal_hist = static_cast<std::string>(accumulators_(ix));
+        auto size = marshal_hist.size();
+        ss.write(reinterpret_cast<const char *>(&size), sizeof(size));
+        ss.write(marshal_hist.c_str(), static_cast<std::streamsize>(size));
+      }
     }
+    // Conversion to pybind11::bytes requires GIL.
     return ss.str();
   }
 

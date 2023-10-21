@@ -281,21 +281,24 @@ class Histogram2D {
   }
 
   [[nodiscard]] auto marshal() const -> pybind11::bytes {
-    auto gil = pybind11::gil_scoped_release();
     auto ss = std::stringstream();
-    ss.exceptions(std::stringstream::failbit);
-    auto rows = histogram_.rows();
-    ss.write(reinterpret_cast<const char *>(&rows), sizeof(rows));
-    auto cols = histogram_.cols();
-    ss.write(reinterpret_cast<const char *>(&cols), sizeof(cols));
-    for (int ix = 0; ix < histogram_.rows(); ++ix) {
-      for (int jx = 0; jx < histogram_.cols(); ++jx) {
-        auto marshal_hist = static_cast<std::string>(histogram_(ix, jx));
-        auto size = marshal_hist.size();
-        ss.write(reinterpret_cast<const char *>(&size), sizeof(size));
-        ss.write(marshal_hist.c_str(), static_cast<std::streamsize>(size));
+    {
+      auto gil = pybind11::gil_scoped_release();
+      ss.exceptions(std::stringstream::failbit);
+      auto rows = histogram_.rows();
+      ss.write(reinterpret_cast<const char *>(&rows), sizeof(rows));
+      auto cols = histogram_.cols();
+      ss.write(reinterpret_cast<const char *>(&cols), sizeof(cols));
+      for (int ix = 0; ix < histogram_.rows(); ++ix) {
+        for (int jx = 0; jx < histogram_.cols(); ++jx) {
+          auto marshal_hist = static_cast<std::string>(histogram_(ix, jx));
+          auto size = marshal_hist.size();
+          ss.write(reinterpret_cast<const char *>(&size), sizeof(size));
+          ss.write(marshal_hist.c_str(), static_cast<std::streamsize>(size));
+        }
       }
     }
+    // Conversion to pybind11::bytes requires GIL.
     return ss.str();
   }
 

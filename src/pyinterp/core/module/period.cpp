@@ -85,7 +85,7 @@ void init_period(py::module &m) {
       .def("cross_a_period", &pyinterp::PeriodList::cross_a_period,
            py::arg("dates"), py::call_guard<py::gil_scoped_release>())
       .def("belong_to_a_period", &pyinterp::PeriodList::belong_to_a_period,
-           py::arg("dates"), py::call_guard<py::gil_scoped_release>())
+           py::arg("dates"))
       .def("is_it_close", &pyinterp::PeriodList::is_close, py::arg("period"),
            py::arg("epsilon"), py::call_guard<py::gil_scoped_release>())
       .def("join_adjacent_periods",
