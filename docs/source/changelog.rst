@@ -1,6 +1,10 @@
 Changelog
 #########
 
+2023.10.2
+---------
+* Fix issues with Python 3.12
+
 2023.10.1
 ---------
 * Fill time series by linear interpolation.
