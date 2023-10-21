@@ -271,7 +271,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             '-DBoost_NO_BOOST_CMAKE=TRUE'
         boost_root = sys.prefix
         if pathlib.Path(boost_root, 'include', 'boost').exists():
-            return f'{boost_option} -DBOOST_ROOT={boost_root}'.split()
+            return f'{boost_option} -DBoost_ROOT={boost_root}'.split()
         boost_root = pathlib.Path(sys.prefix, 'Library', 'include')
         if not boost_root.exists():
             if self.conda_forge:
