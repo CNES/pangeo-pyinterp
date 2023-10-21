@@ -715,7 +715,7 @@ void matrix(pybind11::EigenDRef<Matrix<T>> x, const T &fill_value) {
 template <typename T>
 auto vector(Eigen::Ref<Vector<T>> array, const T &fill_value) {
   Vector<bool> mask;
-  if (std::isnan(fill_value)) {
+  if (detail::math::Fill<T>::is(fill_value)) {
     mask = Eigen::isnan(array.array());
   } else {
     mask = array.array() == fill_value;
