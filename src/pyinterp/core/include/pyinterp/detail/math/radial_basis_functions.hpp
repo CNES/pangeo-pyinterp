@@ -107,7 +107,7 @@ class RBF {
   /// Smooth factor
   T smooth_;
 
-  /// Radial bassis function, based on the radius
+  /// Radial basis function, based on the radius
   PtrRadialBasisFunction function_;
 
   // Calculates the distance average excluding the diagonal
