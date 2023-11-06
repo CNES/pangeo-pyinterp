@@ -111,6 +111,15 @@ def test_biavariate(pytestconfig):
     z = grid(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
              method='bilinear')
     assert isinstance(z, np.ndarray)
+    z = grid(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
+             method='inverse_distance_weighting',
+             p=1)
+    assert isinstance(z, np.ndarray)
+
+    with pytest.raises(TypeError):
+        z = grid(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
+                 method='nearest',
+                 p=1)
 
     # This is necessary in order for Dask to scatter the callable instances.
     other = pickle.loads(pickle.dumps(grid, protocol=0))

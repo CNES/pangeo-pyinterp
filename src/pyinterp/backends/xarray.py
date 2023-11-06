@@ -501,7 +501,8 @@ class RegularGridInterpolator:
                  method: str = 'bilinear',
                  bounds_error: bool = False,
                  bicubic_kwargs: Optional[Dict] = None,
-                 num_threads: int = 0) -> numpy.ndarray:
+                 num_threads: int = 0,
+                 **kwargs) -> numpy.ndarray:
         """Interpolation at coordinates.
 
         Args:
@@ -520,6 +521,11 @@ class RegularGridInterpolator:
             num_threads: The number of threads to use for the computation. If 0
                 all CPUs are used. If 1 is given, no parallel computing code is
                 used at all, which is useful for debugging. Defaults to ``0``.
+            **kwargs: List of keyword arguments provided to the interpolation
+                method :py:meth:`pyinterp.bivariate <pyinterp.bivariate>`,
+                :py:meth:`pyinterp.trivariate <pyinterp.trivariate>` or
+                :py:meth:`pyinterp.quadrivariate <pyinterp.quadrivariate>`
+                depending on the number of dimensions of the grid.
         Returns:
             New array on the new coordinates.
         """
@@ -532,4 +538,5 @@ class RegularGridInterpolator:
         return self._interp(coords,
                             interpolator=method,
                             bounds_error=bounds_error,
-                            num_threads=num_threads)
+                            num_threads=num_threads,
+                            **kwargs)
