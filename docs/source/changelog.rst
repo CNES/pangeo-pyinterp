@@ -1,6 +1,11 @@
 Changelog
 #########
 
+2023.11.0
+---------
+* Add intersection method to LineString class
+* RegularGridInterpolator does not handle interpolator keywords.
+
 2023.10.2
 ---------
 * Fix issues with Python 3.12
