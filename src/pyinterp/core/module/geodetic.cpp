@@ -1157,7 +1157,7 @@ Returns:
 Test if this linestring intersects with another linestring.
 
 Args:
-    rhs: The linestring to test.
+    rhs: The linestring to use.
     wgs: If specified, searches for the intersection using geographic
     coordinates with the specified spheroid, otherwise searches for the
     intersection using spherical coordinates.
@@ -1165,9 +1165,13 @@ Returns:
     True if the linestring intersects this instance.
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
-      .def("intersection", &geodetic::LineString::intersection, py::arg("rhs"),
-           py::arg("wgs") = std::nullopt,
-           R"__doc__(
+      .def(
+          "intersection",
+          [](const geodetic::LineString &self, const geodetic::LineString &rhs,
+             const std::optional<geodetic::Spheroid> &wgs)
+              -> geodetic::LineString { return self.intersection(rhs, wgs); },
+          py::arg("rhs"), py::arg("wgs") = std::nullopt,
+          R"__doc__(
 Computes the intersection between this linestring and another linestring.
 
 Args:
@@ -1177,7 +1181,26 @@ Args:
 Returns:
     The intersection between this linestring and the other linestring.
 )__doc__",
-           py::call_guard<py::gil_scoped_release>())
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "intersection",
+          [](const geodetic::LineString &self, const geodetic::Polygon &rhs,
+             const std::optional<geodetic::Spheroid> &wgs)
+              -> std::vector<geodetic::LineString> {
+            return self.intersection(rhs, wgs);
+          },
+          py::arg("rhs"), py::arg("wgs") = std::nullopt,
+          R"__doc__(
+Computes the intersection between this linestring and a polygon.
+
+Args:
+    rhs: The polygon to use.
+    wgs: The World Geodetic System to use. Defaults to WGS84.
+
+Returns:
+    The intersection between this linestring and the polygon.
+)__doc__",
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "simplify",
           [](const geodetic::LineString &self, const double tolerance,

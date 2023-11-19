@@ -7,6 +7,8 @@
 #include <boost/geometry/algorithms/simplify.hpp>
 
 #include "pyinterp/detail/broadcast.hpp"
+#include "pyinterp/geodetic/multipolygon.hpp"
+#include "pyinterp/geodetic/polygon.hpp"
 
 namespace pyinterp::geodetic {
 
@@ -43,6 +45,21 @@ auto LineString::intersection(const LineString& rhs,
                               const std::optional<Spheroid>& wgs) const
     -> LineString {
   LineString output;
+  if (wgs) {
+    boost::geometry::intersection(
+        *this, rhs, output,
+        boost::geometry::strategy::intersection::geographic_segments<>(
+            static_cast<boost::geometry::srs::spheroid<double>>(*wgs)));
+  } else {
+    boost::geometry::intersection(*this, rhs, output);
+  }
+  return output;
+}
+
+auto LineString::intersection(const Polygon& rhs,
+                              const std::optional<Spheroid>& wgs) const
+    -> std::vector<LineString> {
+  std::vector<LineString> output;
   if (wgs) {
     boost::geometry::intersection(
         *this, rhs, output,

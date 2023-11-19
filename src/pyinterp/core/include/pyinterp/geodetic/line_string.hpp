@@ -18,6 +18,9 @@
 
 namespace pyinterp::geodetic {
 
+/// Forward declaration
+class Polygon;
+
 /// A linestring (named so by OGC) is a collection of points.
 class LineString : public boost::geometry::model::linestring<Point> {
  public:
@@ -65,6 +68,10 @@ class LineString : public boost::geometry::model::linestring<Point> {
   [[nodiscard]] auto intersection(const LineString& rhs,
                                   const std::optional<Spheroid>& wgs) const
       -> LineString;
+
+  [[nodiscard]] auto intersection(const Polygon& rhs,
+                                  const std::optional<Spheroid>& wgs) const
+      -> std::vector<LineString>;
 
   /// Get the length of the linestring
   ///

@@ -208,9 +208,16 @@ class LineString:
     def from_geojson(array: List[List[float]]) -> LineString:
         ...
 
+    @overload
     def intersection(self,
                      rhs: LineString,
                      wgs: Optional[Spheroid] = None) -> LineString:
+        ...
+
+    @overload
+    def intersection(self,
+                     rhs: Polygon,
+                     wgs: Optional[Spheroid] = None) -> List[LineString]:
         ...
 
     def intersects(self,

@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+from typing import Tuple
 import json
 import math
 import pickle
@@ -701,8 +702,8 @@ def test_linestring():
     assert a == b
 
 
-def test_curvilinear_distance():
-    """Test the curvilinear distance calculation."""
+def get_coordinates() -> Tuple[np.ndarray, np.ndarray]:
+    """Get coordinates for a line string."""
     lon = np.array([
         -9.72270435, -9.58849868, -9.45429341, -9.32009001, -9.18588996,
         -9.05169472, -8.91750577, -8.78332458, -8.64915263, -8.51499137,
@@ -727,6 +728,12 @@ def test_curvilinear_distance():
         -77.6090989, -77.60641495, -77.60366627, -77.60085292, -77.59797493,
         -77.59503237, -77.59202528, -77.5889537, -77.5858177, -77.58261731
     ])
+    return lon, lat
+
+
+def test_curvilinear_distance():
+    """Test the curvilinear distance calculation."""
+    lon, lat = get_coordinates()
     ls = geodetic.LineString(lon, lat)
 
     distance = [0.0]
@@ -739,3 +746,18 @@ def test_curvilinear_distance():
 
     assert np.all((ls.curvilinear_distance(strategy='thomas') -
                    np.cumsum(np.array(distance))) == np.zeros(50))
+
+
+def test_linestring_intersection_with_polygon():
+    """Test the intersection of a line string with a polygon."""
+    lon, lat = get_coordinates()
+    ls = geodetic.LineString(lon, lat)
+    polygon = geodetic.Polygon.read_wkt(
+        'POLYGON((-60 -180,-60 180,60 180,60 -180,-60 -180))')
+    intersection = ls.intersection(polygon)
+    assert len(intersection) == 0
+    polygon = geodetic.Polygon.read_wkt(
+        'POLYGON((-90 -180,-90 180,90 180,90 -180,-90 -180))')
+    intersection = ls.intersection(polygon)
+    assert len(intersection) == 1
+    assert intersection[0] == geodetic.LineString(lon, lat)
