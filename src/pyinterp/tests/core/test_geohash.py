@@ -5,7 +5,7 @@
 import numpy
 import pytest
 
-from ...core import GeoHash, geohash
+from ...core import GeoHash, geodetic, geohash
 
 testcases = [['77mkh2hcj7mz', -26.015434642, -26.173663656],
              ['wthnssq3w00x', 29.291182895, 118.331595326],
@@ -68,6 +68,14 @@ def test_bounding_boxes():
 
     with pytest.raises(MemoryError):
         geohash.bounding_boxes(precision=12)
+
+    # Special case: the given polygon represents a single geohash
+    polygon = geodetic.Polygon.read_wkt(
+        'POLYGON((-158.4 -68.4,-158.4 -67.6,-157.6 -67.6,-157.6 -68.4,'
+        '-158.4 -68.4))')
+    bboxes = geohash.bounding_boxes(polygon, precision=3)
+    assert len(bboxes) == 1
+    assert bboxes[0] == b'07z'
 
 
 def test_bounding_zoom():

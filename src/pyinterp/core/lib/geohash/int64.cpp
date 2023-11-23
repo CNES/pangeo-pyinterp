@@ -304,6 +304,12 @@ auto grid_properties(const geodetic::Box &box, const uint32_t precision)
   auto hash_sw = encode(box.min_corner(), precision);
   auto box_sw = bounding_box(hash_sw, precision);
   auto box_ne = bounding_box(encode(box.max_corner(), precision), precision);
+
+  // Special case: the box is a single point
+  if (box_sw == box_ne) {
+    return std::make_tuple(hash_sw, 1, 1);
+  }
+
   auto lon_offset = box.max_corner().lon() == 180 ? 1 : 0;
   auto lat_offset = box.max_corner().lat() == 90 ? 1 : 0;
 
