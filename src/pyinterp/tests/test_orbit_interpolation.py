@@ -29,7 +29,7 @@ def load_test_ephemeris(
 
     def to_dict(comments) -> Dict[str, float]:
         """Returns a dictionary describing the parameters of the orbit."""
-        result = dict()
+        result = {}
         for item in comments:
             assert item.startswith('#'), 'Comments must start with #'
             key, value = item[1:].split('=')

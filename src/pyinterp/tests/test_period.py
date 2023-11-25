@@ -343,7 +343,7 @@ def test_period_list_cross_a_period():
                          numpy.datetime64('2019-12-02T01:40', 'ms'),
                          numpy.timedelta64(1, 's'))
     flags = handler.cross_a_period(dates)
-    indices = numpy.where(flags == False)
+    indices = numpy.where(flags is False)
     assert numpy.all(
         dates[indices] > numpy.datetime64('2019-12-02T01:33:25.794', 'ms'))
 
@@ -351,20 +351,20 @@ def test_period_list_cross_a_period():
                          numpy.datetime64('2019-12-02T01:33', 'ms'),
                          numpy.timedelta64(1, 's'))
     flags = handler.cross_a_period(dates)
-    assert numpy.all(flags == True)
+    assert numpy.all(flags is True)
 
     dates = numpy.arange(numpy.datetime64('2019-12-01T08:32', 'ms'),
                          numpy.datetime64('2019-12-02T00:40', 'ms'),
                          numpy.timedelta64(1, 's'))
     flags = handler.cross_a_period(dates)
-    assert numpy.all(flags == False)
+    assert numpy.all(flags is False)
 
     dates = numpy.arange(numpy.datetime64('2019-12-01T08:30', 'ms'),
                          numpy.datetime64('2019-12-02T00:40', 'us'),
                          numpy.timedelta64(1, 's'))
     flags = handler.cross_a_period(dates)
-    assert not numpy.all(flags == False)
-    index = numpy.max(numpy.where(flags == True)[0])
+    assert not numpy.all(flags is False)
+    index = numpy.max(numpy.where(flags is True)[0])
     assert dates[index] > numpy.datetime64('2019-12-01T08:30')
 
     other = pickle.loads(pickle.dumps(handler))
@@ -374,13 +374,13 @@ def test_period_list_cross_a_period():
                          numpy.datetime64('2019-12-01T04:00:00.000', 'ms'),
                          numpy.timedelta64(1, 's'))
     flags = handler.cross_a_period(dates)
-    assert numpy.all(flags == False)
+    assert numpy.all(flags is False)
 
     dates = numpy.arange(numpy.datetime64('2019-12-01T03:20:00.000', 'ms'),
                          numpy.datetime64('2019-12-01T04:00:00.000', 'ms'),
                          numpy.timedelta64(1, 's'))
     flags = handler.cross_a_period(dates)
-    assert dates[flags == False][0] > numpy.datetime64(
+    assert dates[flags is False][0] > numpy.datetime64(
         '2019-12-01T03:24:59.504', 'ms')
 
 
