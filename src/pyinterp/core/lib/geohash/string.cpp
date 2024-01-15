@@ -418,8 +418,8 @@ static auto zoom_in(char *ptr, pybind11::ssize_t size, uint32_t from_precision,
     for (auto ix = 0; ix < size; ++ix) {
       auto codes =
           int64::bounding_boxes(bounding_box(ptr, from_precision), bits);
-      for (auto jx = 0; jx < codes.size(); ++jx) {
-        Base32::encode(codes[jx], buffer, to_precision);
+      for (uint64_t code : codes) {
+        Base32::encode(code, buffer, to_precision);
         buffer += to_precision;
       }
       ptr += from_precision;
