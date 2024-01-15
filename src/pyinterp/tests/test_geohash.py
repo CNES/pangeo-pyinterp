@@ -48,8 +48,8 @@ def test_geohash():
 def test_geohash_grid():
     grid = GeoHash.grid()
     assert isinstance(grid, xarray.Dataset)
-    assert grid.dims['lon'] == 8
-    assert grid.dims['lat'] == 4
+    assert grid.sizes['lon'] == 8
+    assert grid.sizes['lat'] == 4
     assert grid.geohash.shape == (4, 8)
     assert grid.geohash.dtype == 'S1'
 
