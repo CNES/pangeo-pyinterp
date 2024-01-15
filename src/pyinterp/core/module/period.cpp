@@ -75,7 +75,7 @@ void init_period(py::module &m) {
           [](const py::tuple &state) -> pyinterp::PeriodList {
             auto periods =
                 state[0].cast<Eigen::Matrix<pyinterp::Period, -1, 1>>();
-            return pyinterp::PeriodList(std::move(periods));
+            return {std::move(periods)};
           }))
       .def("__len__", &pyinterp::PeriodList::size)
       .def_property_readonly("periods", &pyinterp::PeriodList::periods)
