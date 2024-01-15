@@ -1,6 +1,11 @@
 Changelog
 #########
 
+2024.1.0
+--------
+* Fix issues in the test suite.
+* Fix linter warnings.
+
 2023.11.0
 ---------
 * Add intersection method to LineString class
