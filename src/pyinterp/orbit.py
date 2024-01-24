@@ -353,9 +353,9 @@ def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
 
     # Search the nearest point to the equator
     i1 = (numpy.abs(lat_nadir)).argmin()
-    i0 = i1 - 1
+    i0 = i1 - 1 if i1 > 0 else 1
     if lat_nadir[i0] * lat_nadir[i1] > 0:
-        i0, i1 = i1, i1 + 1
+        i0, i1 = (i1, i1 + 1) if i1 < lat_nadir.size - 1 else (i1 - 1, i1)
     lon1 = lon_nadir[i0:i1 + 1]
     lat1 = lat_nadir[i0:i1 + 1]
 
