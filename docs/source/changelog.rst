@@ -1,6 +1,13 @@
 Changelog
 #########
 
+2024.2.0
+--------
+* Fix equator point selection in orbit.py
+* Fix skewing of first pass in calculate_orbit() function
+* Add support for Grid2DUInt8 interpolation
+* Swap min_corner and max_corner in geodetic box constructor if necessary
+
 2024.1.0
 --------
 * Fix issues in the test suite.
