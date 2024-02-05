@@ -411,6 +411,17 @@ def calculate_orbit(
     """
     wgs = geodetic.Coordinates(spheroid)
 
+    # If the first point of the given orbit starts at the equator, we need to
+    # skew this first pass.
+    if -40 <= lat_nadir[0] <= 40:
+        dy = numpy.roll(lat_nadir, 1) - lat_nadir
+        indexes = numpy.where(((dy < 0) & (numpy.roll(dy, 1) >= 0))
+                              | ((dy > 0)
+                                 & (numpy.roll(dy, 1) <= 0)))[0]
+        lat_nadir = lat_nadir[indexes[1:]]
+        lon_nadir = lon_nadir[indexes[1:]]
+        time = time[indexes[1:]]
+
     lon_nadir = geodetic.normalize_longitudes(lon_nadir)
     time = time.astype('m8[ns]')
 
