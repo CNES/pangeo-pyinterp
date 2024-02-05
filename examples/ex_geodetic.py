@@ -96,7 +96,7 @@ print(distances[:, 0])
 # ======================
 #
 # This class represents a box made of two describing points.
-box = pyinterp.geodetic.Box(paris, new_york)
+box = pyinterp.geodetic.Box(new_york, paris)
 print(box.wkt())
 
 #  %%
