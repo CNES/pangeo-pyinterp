@@ -22,7 +22,7 @@
                 "${workspaceFolder}/**",
                 "~/anaconda3/include/",
                 "~/anaconda3/include/eigen3/",
-                "~/anaconda3/include/python3.9"
+                "~/anaconda3/include/python3.11"
             ],
             "defines": [],
             "macFrameworkPath": [
