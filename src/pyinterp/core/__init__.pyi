@@ -5,7 +5,6 @@ import numpy
 from . import dateutils, fill, geodetic, geohash
 
 class Axis:
-    __hash__: ClassVar[None] = ...
 
     def __init__(self,
                  values: numpy.ndarray[numpy.float64],
@@ -64,6 +63,9 @@ class Axis:
     def __getstate__(self) -> tuple:
         ...
 
+    def __iter__(self) -> typing.Iterator[float]:
+        ...
+
     def __len__(self) -> int:
         ...
 
@@ -120,7 +122,6 @@ class AxisBoundary:
 
 
 class AxisInt64:
-    __hash__: ClassVar[None] = ...
 
     def __init__(self, values: numpy.ndarray[numpy.int64]) -> None:
         ...
@@ -174,6 +175,9 @@ class AxisInt64:
         ...
 
     def __getstate__(self) -> tuple:
+        ...
+
+    def __iter__(self) -> typing.Iterator[int]:
         ...
 
     def __len__(self) -> int:
@@ -582,7 +586,7 @@ class GeoHash:
         ...
 
     @staticmethod
-    def error_with_precision(precision: int) -> Tuple[float, float]:
+    def error_with_precision(precision: int = 1) -> Tuple[float, float]:
         ...
 
     @staticmethod
@@ -671,6 +675,31 @@ class Grid2DInt8:
 
     @property
     def array(self) -> numpy.ndarray[numpy.int8]:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+
+class Grid2DUInt8:
+
+    def __init__(self, x: Axis, y: Axis,
+                 array: numpy.ndarray[numpy.uint8]) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, state: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> numpy.ndarray[numpy.uint8]:
         ...
 
     @property
@@ -1045,7 +1074,6 @@ class Nearest3D(BivariateInterpolator3D):
 
 
 class Period:
-    __hash__: ClassVar[None] = ...
 
     def __init__(self, begin: int, last: int, within: bool = ...) -> None:
         ...
@@ -1511,7 +1539,6 @@ class StreamingHistogramFloat64:
 
 
 class TemporalAxis(AxisInt64):
-    __hash__: ClassVar[None] = ...
 
     def __init__(self, values: numpy.ndarray) -> None:
         ...
@@ -1570,6 +1597,9 @@ class TemporalAxis(AxisInt64):
         ...
 
     def __getstate__(self) -> tuple:
+        ...
+
+    def __iter__(self) -> typing.Iterator[numpy.ndarray]:
         ...
 
     def __len__(self) -> int:
@@ -2023,6 +2053,15 @@ def bivariate_int8(grid: Grid2DInt8,
                    interpolator: BivariateInterpolator2D,
                    bounds_error: bool = ...,
                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+    ...
+
+
+def bivariate_uint8(grid: Grid2DUInt8,
+                    x: numpy.ndarray[numpy.float64],
+                    y: numpy.ndarray[numpy.float64],
+                    interpolator: BivariateInterpolator2D,
+                    bounds_error: bool = ...,
+                    num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
     ...
 
 

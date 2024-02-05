@@ -16,4 +16,6 @@ void init_bivariate(py::module &m) {
       m, "Float32");
   pyinterp::implement_bivariate<geometry::EquatorialPoint2D, double, int8_t>(
       m, "Int8");
+  pyinterp::implement_bivariate<geometry::EquatorialPoint2D, double, uint8_t>(
+      m, "UInt8");
 }

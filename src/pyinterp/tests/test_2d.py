@@ -191,7 +191,6 @@ def test_bicubic(pytestconfig):
 
 def test_grid_2d_int8(pytestconfig):
     dump = pytestconfig.getoption('dump')
-    mss = load_grid2d()
 
     grid = load_grid2d().mss
     grid.values[~np.isnan(grid.values)] = 0
@@ -208,4 +207,25 @@ def test_grid_2d_int8(pytestconfig):
     z = interpolator(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                      method='nearest')
     make_or_compare_reference('nearest_int8.npy', z, dump)
+    assert np.mean(z) != 0
+
+
+def test_grid_2d_uint8(pytestconfig):
+    dump = pytestconfig.getoption('dump')
+
+    grid = load_grid2d().mss
+    grid.values[~np.isnan(grid.values)] = 0
+    grid.values[np.isnan(grid.values)] = 1
+    grid = grid.astype(np.uint8)
+
+    interpolator = xr_backend.RegularGridInterpolator(grid)
+    assert isinstance(interpolator.grid._instance, core.Grid2DUInt8)
+
+    lon = np.arange(-180, 180, 1) + 1 / 3.0
+    lat = np.arange(-90, 90, 1) + 1 / 3.0
+    x, y = np.meshgrid(lon, lat, indexing='ij')
+
+    z = interpolator(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
+                     method='nearest')
+    make_or_compare_reference('nearest_uint8.npy', z, dump)
     assert np.mean(z) != 0

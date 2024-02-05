@@ -218,6 +218,9 @@ template <template <class> class Point, typename Coordinate, typename Type>
 void implement_bivariate(pybind11::module &m, const std::string &suffix) {
   auto function_suffix = suffix;
   function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
+  if (function_suffix[1] == 'I') {
+    function_suffix[1] = static_cast<char>(std::tolower(function_suffix[1]));
+  }
   m.def(("bivariate_" + function_suffix).c_str(),
         &bivariate<Point, Coordinate, Type>, pybind11::arg("grid"),
         pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("interpolator"),

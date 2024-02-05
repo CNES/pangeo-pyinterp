@@ -14,7 +14,7 @@ import numpy
 from . import core
 
 #: Regular expression to extract the grid type from the class name.
-PATTERN = re.compile(r'((?:Float|Int)\d+)').search
+PATTERN = re.compile(r'((?:Float|Int|UInt)\d+)').search
 
 __all__ = [
     '_core_class_suffix',
@@ -54,7 +54,7 @@ def _core_class_suffix(x: numpy.ndarray, handle_integer: bool = False) -> str:
     if dtype == numpy.int8:
         return 'Float32' if not handle_integer else 'Int8'
     if dtype == numpy.uint8:
-        return 'Float32'
+        return 'Float32' if not handle_integer else 'UInt8'
     raise ValueError('Unhandled dtype: ' + str(dtype))
 
 
@@ -71,6 +71,7 @@ def _core_function(function: str, instance: object) -> str:
             core.Grid2DFloat64,
             core.Grid2DFloat32,
             core.Grid2DInt8,
+            core.Grid2DUInt8,
             core.Grid3DFloat64,
             core.Grid3DFloat32,
             core.Grid4DFloat64,
