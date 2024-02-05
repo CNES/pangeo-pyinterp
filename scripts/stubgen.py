@@ -67,9 +67,10 @@ def fix_core_fill(src: pathlib.Path, grids: List[str]):
     with core.open('r') as stream:
         lines = stream.readlines()
 
-    lines[1] = f"from . import ({','.join(grids)},)\n"
+    lines.insert(0, f"from . import ({','.join(grids)},)\n")
+    lines[1] = ''
+    lines[2] = ''
     lines[3] = ''
-    lines[5] = ''
 
     for ix, item in enumerate(lines):
         item = item.replace('pyinterp.core.', '')
@@ -117,22 +118,25 @@ def main():
         'pyinterp.core',
     ]
     out = pathlib.Path(__file__).parent.parent / 'src'
-    options = mypy.stubgen.Options(pyversion=(sys.version_info[0],
-                                              sys.version_info[1]),
-                                   no_import=False,
-                                   doc_dir='',
-                                   search_path=[''],
-                                   interpreter=sys.executable,
-                                   parse_only=False,
-                                   ignore_errors=False,
-                                   include_private=False,
-                                   output_dir=str(out),
-                                   modules=modules,
-                                   packages=[],
-                                   files=[],
-                                   verbose=False,
-                                   quiet=True,
-                                   export_less=False)
+    options = mypy.stubgen.Options(
+        pyversion=(sys.version_info[0], sys.version_info[1]),
+        inspect=True,
+        no_import=False,
+        doc_dir='',
+        search_path=[''],
+        interpreter=sys.executable,
+        parse_only=False,
+        ignore_errors=False,
+        include_private=False,
+        output_dir=str(out),
+        modules=modules,
+        packages=[],
+        files=[],
+        verbose=False,
+        quiet=True,
+        export_less=False,
+        include_docstrings=False,
+    )
     mypy.stubgen.generate_stubs(options)
     grids = fix_core(out)
     fix_core_fill(out, [
