@@ -2,8 +2,8 @@
 pangeo-pyinterp
 ###############
 
-|Build Status| |Azure DevOps Coverage| |Conda| |Downloads| |Platforms|
-|Latest Release Date| |License| |Binder|
+|Build Status| |Azure DevOps Coverage| |Downloads| |Platforms|
+|Latest Release Date| |License| |Binder| |Documentation Status|
 
 Python library for optimized geo-referenced interpolation.
 
@@ -137,8 +137,6 @@ storing a location in a database, or for indexing a location in a database.
 .. |Build Status| image:: https://dev.azure.com/fbriol/pangeo-pyinterp/_apis/build/status/CNES.pangeo-pyinterp?branchName=master
     :target: https://dev.azure.com/fbriol/pangeo-pyinterp/_build/latest?definitionId=2&branchName=master
 .. |Azure DevOps Coverage| image:: https://img.shields.io/azure-devops/coverage/fbriol/pangeo-pyinterp/2?style=flat-square
-.. |Conda| image:: https://anaconda.org/conda-forge/pyinterp/badges/installer/conda.svg?service=github
-    :target: https://www.anaconda.com/distribution/
 .. |Downloads| image:: https://anaconda.org/conda-forge/pyinterp/badges/downloads.svg?service=github
     :target: image:: https://www.anaconda.com/distribution/
 .. |Platforms| image:: https://anaconda.org/conda-forge/pyinterp/badges/platforms.svg?service=github
@@ -149,3 +147,5 @@ storing a location in a database, or for indexing a location in a database.
     :target: https://opensource.org/licenses/BSD-3-Clause
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
     :target: https://mybinder.org/v2/gh/CNES/pangeo-pyinterp/master?filepath=notebooks/auto_examples/
+.. |Documentation Status| image:: https://readthedocs.org/projects/pangeo-pyinterp/badge/?version=latest
+    :target: https://pangeo-pyinterp.readthedocs.io/en/latest/?badge=latest
