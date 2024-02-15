@@ -4,8 +4,6 @@
 // BSD-style license that can be found in the LICENSE file.
 #include <pybind11/pybind11.h>
 
-#include "pyinterp/detail/gsl/error_handler.hpp"
-
 namespace py = pybind11;
 
 extern void init_axis(py::module &);
@@ -66,8 +64,6 @@ GeoHash encoding/decoding
 Replace undefined values
 ------------------------
 )__doc__");
-
-  pyinterp::detail::gsl::set_error_handler();
 
   init_enum(m, fill);
 

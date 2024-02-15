@@ -207,7 +207,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
         ('eigen-root=', None, 'Preferred Eigen3 include directory'),
         ('generator=', None, 'Selected CMake generator'),
-        ('gsl-root=', None, 'Preferred GSL installation prefix'),
         ('mkl-root=', None, 'Preferred MKL installation prefix'),
         ('mkl=', None, 'Using MKL as BLAS library'),
         ('reconfigure', None, 'Forces CMake to reconfigure this project')
@@ -249,20 +248,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         for ext in self.extensions:
             self.build_cmake(ext)
         super().run()
-
-    def gsl(self) -> Optional[str]:
-        """Get the default boost path in Anaconda's environment."""
-        gsl_root = sys.prefix
-        if pathlib.Path(gsl_root, 'include', 'gsl').exists():
-            return f'-DGSL_ROOT_DIR={gsl_root}'
-        gsl_root = pathlib.Path(sys.prefix, 'Library')
-        if not gsl_root.joinpath('include', 'gsl').exists():
-            if self.conda_forge:
-                raise RuntimeError(
-                    'Unable to find the GSL library in the conda distribution '
-                    'used.')
-            return None
-        return f'-DGSL_ROOT_DIR={gsl_root}'
 
     def boost(self) -> Optional[List[str]]:
         """Get the default boost path in Anaconda's environment."""
@@ -345,13 +330,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             cmake_variable = self.boost()
             if cmake_variable:
                 result += cmake_variable
-
-        if self.gsl_root is not None:
-            result.append('-DGSL_ROOT_DIR=' + self.gsl_root)
-        elif is_conda:
-            cmake_variable = self.gsl()
-            if cmake_variable:
-                result.append(cmake_variable)
 
         if self.eigen_root is not None:
             result.append('-DEIGEN3_INCLUDE_DIR=' + self.eigen_root)

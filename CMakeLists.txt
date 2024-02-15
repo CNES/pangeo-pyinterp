@@ -206,13 +206,6 @@ if(CONDA_FORGE)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".a" ".so" ".dylib")
 endif()
 
-# GSL
-find_package(GSL 2.0 REQUIRED)
-include_directories(${GSL_INCLUDE_DIRS})
-if(WIN32)
-  add_compile_definitions(GSL_DLL)
-endif()
-
 # We restore the suffixes of the libraries to be found.
 if(CONDA_FORGE)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ${__CMAKE_FIND_LIBRARY_SUFFIXES})
@@ -243,14 +236,6 @@ if(BLAS_FOUND)
       add_definitions(-DMKL_LP64)
       include_directories(${MKL_INCLUDE_DIR})
     endif()
-    # If a BLAS library has been found, it is used instead of the BLAS library
-    # provided with GSL.
-    set_target_properties(
-      GSL::gsl
-      PROPERTIES IMPORTED_LOCATION "${GSL_LIBRARY}"
-                 INTERFACE_INCLUDE_DIRECTORIES "${GSL_INCLUDE_DIRS}"
-                 IMPORTED_LINK_INTERFACE_LANGUAGES "C"
-                 INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
   endif()
 else()
   set(BLA_VENDOR_LIST "Apple" "OpenBLAS" "Generic")
@@ -263,14 +248,6 @@ else()
   endforeach()
   if(BLAS_FOUND)
     add_definitions(-DEIGEN_USE_BLAS)
-    # If a BLAS library has been found, it is used instead of the BLAS library
-    # provided with GSL.
-    set_target_properties(
-      GSL::gsl
-      PROPERTIES IMPORTED_LOCATION "${GSL_LIBRARY}"
-                 INTERFACE_INCLUDE_DIRECTORIES "${GSL_INCLUDE_DIRS}"
-                 IMPORTED_LINK_INTERFACE_LANGUAGES "C"
-                 INTERFACE_LINK_LIBRARIES "${BLAS_LIBRARIES}")
   else()
     message(
       WARNING

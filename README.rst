@@ -30,9 +30,8 @@ You can also apply for a data `binning
 bivariate area by simple or linear binning.
 
 The library core is written in C++ using the `Boost C++ Libraries
-<https://www.boost.org/>`_, `Eigen3 <http://eigen.tuxfamily.org/>`_, `GNU
-Scientific Library <https://www.gnu.org/software/gsl/>`_, and `pybind11
-<https://github.com/pybind/pybind11/>`_ libraries.
+<https://www.boost.org/>`_, `Eigen3 <http://eigen.tuxfamily.org/>`_ and
+`pybind11 <https://github.com/pybind/pybind11/>`_ libraries.
 
 This software also uses `CMake <https://cmake.org/>`_ to configure the project
 and `Googletest <https://github.com/google/googletest>`_ to perform unit testing

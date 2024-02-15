@@ -20,7 +20,6 @@ C++, you must have Python 3, at least Python version 3.6, a C++ compiler and
 The compiling C++ requires the following development library:
     * `Boost C++ Libraries <https://www.boost.org/>`_
     * `Eigen3 <http://eigen.tuxfamily.org/>`_
-    * `GNU Scientific Library <https://www.gnu.org/software/gsl/>`_
 
 You can install these packages on Ubuntu by typing the following command:
 
@@ -55,7 +54,6 @@ You can specify, among other things, the following options:
     * ``--cxx-compiler`` to select the C++ compiler to use.
     * ``--debug`` to compile the C++ library in Debug mode.
     * ``--eigen-root`` to specify the Eigen3 include directory.
-    * ``--gsl-root`` to specify the Preferred GSL installation prefix.
     * ``--mkl-root`` to specify the MKL directory.
     * ``--mkl`` to use MKL as BLAS library
     * ``--reconfigure`` to force CMake to reconfigure the project.

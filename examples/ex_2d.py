@@ -91,8 +91,7 @@ fig.show()
 #
 # To interpolate data points on a regular two-dimensional grid. The interpolated
 # surface is smoother than the corresponding surfaces obtained by bilinear
-# interpolation. Spline functions provided by `GSL
-# <https://www.gnu.org/software/gsl/>`_ achieve bicubic interpolation.
+# interpolation.
 #
 # .. warning::
 #

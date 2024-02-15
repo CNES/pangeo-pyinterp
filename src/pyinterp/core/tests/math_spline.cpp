@@ -7,7 +7,6 @@
 #include "pyinterp/detail/math/spline2d.hpp"
 
 namespace math = pyinterp::detail::math;
-namespace gsl = pyinterp::detail::gsl;
 
 TEST(math_spline2d, frame_2d) {
   auto xr = math::Frame2D(3, 4);
@@ -175,7 +174,6 @@ TEST(math_spline2d, spline2d) {
   }
 
   auto interpolator = math::Spline2D(xr, "c_spline");
-  auto acc = gsl::Accelerator();
   for (auto ix = 0; ix < 6; ++ix) {
     for (auto iy = 0; iy < 6; ++iy) {
       EXPECT_EQ(interpolator.interpolate(ix * 0.1, iy * 0.1, xr),

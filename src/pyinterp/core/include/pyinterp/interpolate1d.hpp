@@ -9,8 +9,7 @@
 #include <tuple>
 
 #include "pyinterp/axis.hpp"
-#include "pyinterp/detail/gsl/error_handler.hpp"
-#include "pyinterp/detail/gsl/interpolate1d.hpp"
+#include "pyinterp/detail/interpolation/factory_1d.hpp"
 #include "pyinterp/eigen.hpp"
 
 namespace pyinterp {
@@ -48,8 +47,7 @@ auto interpolate_1d(const pyinterp::Axis<double>& x,
 
   // Note: if the window size is invalid, GSL will raise an exception.
 
-  // GSL Interpolation type
-  const auto* interp_type = detail::gsl::Interpolate1D::parse_interp_type(kind);
+  const auto interpolator = detail::interpolation::factory_1d<double>(kind);
 
   // Downcast the axis to the raw C++ type
   auto* axis = dynamic_cast<const pyinterp::detail::Axis<double>*>(&x);
@@ -78,9 +76,7 @@ auto interpolate_1d(const pyinterp::Axis<double>& x,
     const Vector<double> yw = y.segment(start, n);
 
     // Interpolation of the current value
-    auto interpolator =
-        detail::gsl::Interpolate1D(n, interp_type, detail::gsl::Accelerator());
-    result(ix) = interpolator.interpolate(axis->slice(start, n), yw, xi(ix));
+    result(ix) = (*interpolator)(axis->slice(start, n), yw, xi(ix));
   }
   return result;
 }

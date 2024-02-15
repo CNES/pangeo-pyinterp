@@ -1,5 +1,5 @@
 {% set name = "pyinterp" %}
-{% set version = "2024.2.0" %}
+{% set version = "2024.2.0.dev4" %}
 
 package:
   name: {{ name|lower }}
@@ -17,7 +17,6 @@ build:
   ignore_run_exports:
     - mkl                                 # [blas == "mkl"]
     - openblas                            # [blas == "openblas"]
-    - gsl
 
 requirements:
   build:
@@ -31,7 +30,6 @@ requirements:
   host:
     - dask
     - eigen
-    - gsl >=2.7
     - boost-cpp >=1.79.0
     - mkl
     - numpy

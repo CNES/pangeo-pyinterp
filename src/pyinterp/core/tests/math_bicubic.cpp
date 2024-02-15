@@ -7,7 +7,6 @@
 #include "pyinterp/detail/math/bicubic.hpp"
 
 namespace math = pyinterp::detail::math;
-namespace gsl = pyinterp::detail::gsl;
 
 TEST(math_bicubic, bicubic) {
   auto xr = math::Frame2D(2, 2);
