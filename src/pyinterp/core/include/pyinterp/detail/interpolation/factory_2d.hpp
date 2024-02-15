@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <stdexcept>
 
 #include "pyinterp/detail/interpolation/bicubic.hpp"
