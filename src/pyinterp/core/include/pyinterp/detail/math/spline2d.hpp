@@ -8,7 +8,7 @@
 #include <Eigen/Core>
 #include <string>
 
-#include "pyinterp/detail/gsl/interpolate1d.hpp"
+#include "pyinterp/detail/interpolation/factory_1d.hpp"
 #include "pyinterp/detail/math/frame.hpp"
 
 namespace pyinterp::detail::math {
@@ -22,53 +22,27 @@ class Spline2D {
   /// @param type method of calculation
   explicit Spline2D(const Frame2D &xr, const std::string &kind)
       : column_(xr.y()->size()),
-        x_interpolator_(xr.x()->size(),
-                        gsl::Interpolate1D::parse_interp_type(kind),
-                        gsl::Accelerator()),
-        y_interpolator_(xr.y()->size(),
-                        gsl::Interpolate1D::parse_interp_type(kind),
-                        gsl::Accelerator()) {}
+        x_interpolator_(interpolation::factory_1d<double>(kind)),
+        y_interpolator_(interpolation::factory_1d<double>(kind)) {}
 
   /// Return the interpolated value of y for a given point x
   auto interpolate(const double x, const double y, const Frame2D &xr)
       -> double {
-    return evaluate(&gsl::Interpolate1D::interpolate, x, y, xr);
-  }
-
-  /// Return the derivative for a given point x
-  auto derivative(const double x, const double y, const Frame2D &xr) -> double {
-    return evaluate(&gsl::Interpolate1D::derivative, x, y, xr);
-  }
-
-  /// Return the second derivative for a given point x
-  auto second_derivative(const double x, const double y, const Frame2D &xr)
-      -> double {
-    return evaluate(&gsl::Interpolate1D::second_derivative, x, y, xr);
+    // Spline interpolation as function of X-coordinate
+    for (Eigen::Index ix = 0; ix < xr.y()->size(); ++ix) {
+      column_(ix) = (*x_interpolator_)(*(xr.x()), xr.q()->col(ix), x);
+    }
+    return (*y_interpolator_)(*(xr.y()), column_, y);
   }
 
  private:
-  using InterpolateFunction = double (gsl::Interpolate1D::*)(
-      const Eigen::VectorXd &, const Eigen::VectorXd &, const double);
   /// Column of the interpolation window (interpolation according to Y
   /// coordinates)
   Eigen::VectorXd column_;
 
   /// GSL interpolators
-  gsl::Interpolate1D x_interpolator_;
-  gsl::Interpolate1D y_interpolator_;
-
-  /// Evaluation of the GSL function performing the calculation.
-  auto evaluate(
-      const std::function<double(gsl::Interpolate1D &, const Eigen::VectorXd &,
-                                 const Eigen::VectorXd &, const double)>
-          &function,
-      const double x, const double y, const Frame2D &xr) -> double {
-    // Spline interpolation as function of X-coordinate
-    for (Eigen::Index ix = 0; ix < xr.y()->size(); ++ix) {
-      column_(ix) = function(x_interpolator_, *(xr.x()), xr.q()->col(ix), x);
-    }
-    return function(y_interpolator_, *(xr.y()), column_, y);
-  }
+  std::unique_ptr<interpolation::Interpolator1D<double>> x_interpolator_;
+  std::unique_ptr<interpolation::Interpolator1D<double>> y_interpolator_;
 };
 
 }  // namespace pyinterp::detail::math
