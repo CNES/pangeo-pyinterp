@@ -27,33 +27,27 @@ class Bicubic : public Interpolator2D<T> {
   /// @param za Z-values of the data points.
   /// @param x The point where the interpolation must be calculated.
   /// @param y The point where the interpolation must be calculated.
-  /// @param ix The index of the last point found in the search.
-  /// @param jx The index of the last point found in the search.
   /// @return The interpolated value at the coordinates x, y.
-  auto operator()(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya,
-                  const Eigen::Ref<const Matrix<T>> &za, const T &x, const T &y,
-                  Eigen::Index *ix, Eigen::Index *jx) const -> T override;
+  auto interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                    const Matrix<T> &za, const T &x, const T &y) const
+      -> T override;
 
   /// Compute the coefficients of the bicubic interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   /// @param za Z-values of the data points.
-  auto compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
-                            const Eigen::Ref<const Vector<T>> &ya,
-                            const Eigen::Ref<const Matrix<T>> &za)
-      -> void override;
+  auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya,
+                            const Matrix<T> &za) -> void override;
 
   Matrix<T> zx_{};
   Matrix<T> zy_{};
   Matrix<T> zxy_{};
+  CSpline<T> spline_{};
 };
 
 template <typename T>
-auto Bicubic<T>::compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
-                                      const Eigen::Ref<const Vector<T>> &ya,
-                                      const Eigen::Ref<const Matrix<T>> &za)
-    -> void {
+auto Bicubic<T>::compute_coefficients(const Vector<T> &xa, const Vector<T> &ya,
+                                      const Matrix<T> &za) -> void {
   Interpolator2D<T>::compute_coefficients(xa, ya, za);
   auto xsize = xa.size();
   auto ysize = ya.size();
@@ -64,26 +58,23 @@ auto Bicubic<T>::compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
     zxy_ = Matrix<T>(xsize, ysize);
   }
 
-  auto spline = CSpline<T>();
   for (Eigen::Index j = 0; j < ysize; ++j) {
-    zx_.col(j) = spline.derivative(xa, za.col(j), xa);
+    zx_.col(j) = spline_.derivative(xa, za.col(j), xa);
   }
   for (Eigen::Index i = 0; i < xsize; ++i) {
-    zy_.row(i) = spline.derivative(ya, za.row(i), ya);
+    zy_.row(i) = spline_.derivative(ya, za.row(i), ya);
   }
   for (Eigen::Index j = 0; j < ysize; ++j) {
-    zxy_.col(j) = spline.derivative(xa, zy_.col(j), xa);
+    zxy_.col(j) = spline_.derivative(xa, zy_.col(j), xa);
   }
 }
 
 template <typename T>
-auto Bicubic<T>::operator()(const Eigen::Ref<const Vector<T>> &xa,
-                            const Eigen::Ref<const Vector<T>> &ya,
-                            const Eigen::Ref<const Matrix<T>> &za, const T &x,
-                            const T &y, Eigen::Index *ix,
-                            Eigen::Index *jx) const -> T {
-  auto search_x = this->search(xa, x, ix);
-  auto search_y = this->search(ya, y, jx);
+auto Bicubic<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                              const Matrix<T> &za, const T &x, const T &y) const
+    -> T {
+  auto search_x = this->search(xa, x);
+  auto search_y = this->search(ya, y);
   if (!search_x || !search_y) {
     throw std::numeric_limits<T>::quiet_NaN();
   }

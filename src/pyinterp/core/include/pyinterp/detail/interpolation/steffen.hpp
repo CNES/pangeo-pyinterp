@@ -23,28 +23,23 @@ class Steffen : public Interpolator1D<T> {
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the interpolation must be calculated.
-  /// @param i The index of the last point found in the search.
   /// @return The interpolated value at the point x.
-  auto operator()(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya, const T &x,
-                  Eigen::Index *i) const -> T override;
+  auto interpolate_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
+      -> T override;
 
   /// @brief Returns the derivative of the interpolation function at the point
   ///   x.
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the derivative must be calculated.
-  /// @param i The index of the last point found in the search.
-  auto derivative(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya, const T &x,
-                  Eigen::Index *i) const -> T override;
+  auto derivative_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
+      -> T override;
 
  private:
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  auto compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
-                            const Eigen::Ref<const Vector<T>> &ya)
+  auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
       -> void override;
 
   /// Return the sign of x multiplied by the sign of y
@@ -59,8 +54,7 @@ class Steffen : public Interpolator1D<T> {
 };
 
 template <typename T>
-auto Steffen<T>::compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
-                                      const Eigen::Ref<const Vector<T>> &ya)
+auto Steffen<T>::compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
     -> void {
   Interpolator1D<T>::compute_coefficients(xa, ya);
   auto size = xa.size();
@@ -99,10 +93,9 @@ auto Steffen<T>::compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
 }
 
 template <typename T>
-auto Steffen<T>::operator()(const Eigen::Ref<const Vector<T>> &xa,
-                            const Eigen::Ref<const Vector<T>> &ya, const T &x,
-                            Eigen::Index *i) const -> T {
-  auto where = this->search(xa, x, i);
+auto Steffen<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                              const T &x) const -> T {
+  auto where = this->search(xa, x);
   if (!where) {
     return std::numeric_limits<T>::quiet_NaN();
   }
@@ -118,10 +111,9 @@ auto Steffen<T>::operator()(const Eigen::Ref<const Vector<T>> &xa,
 }
 
 template <typename T>
-auto Steffen<T>::derivative(const Eigen::Ref<const Vector<T>> &xa,
-                            const Eigen::Ref<const Vector<T>> &ya, const T &x,
-                            Eigen::Index *i) const -> T {
-  auto where = this->search(xa, x, i);
+auto Steffen<T>::derivative_(const Vector<T> &xa, const Vector<T> &ya,
+                             const T &x) const -> T {
+  auto where = this->search(xa, x);
   if (!where) {
     return std::numeric_limits<T>::quiet_NaN();
   }

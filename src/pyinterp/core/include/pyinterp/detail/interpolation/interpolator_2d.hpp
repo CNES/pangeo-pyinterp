@@ -23,14 +23,10 @@ class Interpolator2D : public Interpolator<T> {
   /// @param x The point where the interpolation must be calculated.
   /// @param y The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  auto operator()(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya,
-                  const Eigen::Ref<const Matrix<T>> &za, const T &x, const T &y)
-      -> T {
+  auto operator()(const Vector<T> &xa, const Vector<T> &ya, const Matrix<T> &za,
+                  const T &x, const T &y) -> T {
     compute_coefficients(xa, ya, za);
-    auto ix = Eigen::Index{};
-    auto jx = Eigen::Index{};
-    return (*this)(xa, ya, za, x, y, &ix, &jx);
+    return interpolate_(xa, ya, za, x, y);
   }
 
   /// Interpolate the values of y at x.
@@ -40,34 +36,25 @@ class Interpolator2D : public Interpolator<T> {
   /// @param x The point where the interpolation must be calculated.
   /// @param y The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  auto operator()(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya,
-                  const Eigen::Ref<const Matrix<T>> &za,
-                  const Eigen::Ref<const Vector<T>> &x,
-                  const Eigen::Ref<const Vector<T>> &y) -> Vector<T> {
+  auto operator()(const Vector<T> &xa, const Vector<T> &ya, const Matrix<T> &za,
+                  const Vector<T> &x, const Vector<T> &y) -> Vector<T> {
     compute_coefficients(xa, ya, za);
-    auto ix = Eigen::Index{};
-    auto jx = Eigen::Index{};
     auto z = Vector<T>(x.size());
     for (Eigen::Index i = 0; i < x.size(); ++i) {
-      z(i) = (*this)(xa, ya, za, x(i), y(i), &ix, &jx);
+      z(i) = interpolate_(xa, ya, za, x(i), y(i));
     }
     return z;
   }
 
  protected:
   /// Interpolate the value of y at x using the index of the last search.
-  virtual auto operator()(const Eigen::Ref<const Vector<T>> &xa,
-                          const Eigen::Ref<const Vector<T>> &ya,
-                          const Eigen::Ref<const Matrix<T>> &za, const T &x,
-                          const T &y, Eigen::Index *ix, Eigen::Index *jx) const
+  virtual auto interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                            const Matrix<T> &za, const T &x, const T &y) const
       -> T = 0;
 
   /// Check if the arrays are valid.
-  virtual auto compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
-                                    const Eigen::Ref<const Vector<T>> &ya,
-                                    const Eigen::Ref<const Matrix<T>> &za)
-      -> void {
+  virtual auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya,
+                                    const Matrix<T> &za) -> void {
     if (xa.size() != za.rows()) {
       throw std::invalid_argument(
           "xa and za must have the same number of rows");

@@ -23,12 +23,10 @@ class Linear : public Interpolator1D<T> {
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the interpolation must be calculated.
-  /// @param i The index of the last point found in the search.
   /// @return The interpolated value at the point x.
-  auto operator()(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya, const T &x,
-                  Eigen::Index *i) const -> T override {
-    auto where = this->search(xa, x, i);
+  auto interpolate_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
+      -> T override {
+    auto where = this->search(xa, x);
     if (!where) {
       return std::numeric_limits<T>::quiet_NaN();
     }
@@ -41,12 +39,10 @@ class Linear : public Interpolator1D<T> {
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the derivative must be calculated.
-  /// @param i The index of the last point found in the search.
   /// @return The derivative of the interpolation function at the point x.
-  auto derivative(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya, const T &x,
-                  Eigen::Index *i) const -> T override {
-    auto where = this->search(xa, x, i);
+  auto derivative_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
+      -> T override {
+    auto where = this->search(xa, x);
     if (!where) {
       return std::numeric_limits<T>::quiet_NaN();
     }

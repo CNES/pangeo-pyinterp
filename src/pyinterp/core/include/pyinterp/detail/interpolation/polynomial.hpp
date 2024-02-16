@@ -25,42 +25,35 @@ class Polynomial : public Interpolator1D<T> {
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  auto compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
-                            const Eigen::Ref<const Vector<T>> &ya)
+  auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
       -> void override;
 
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param x The point where the interpolation must be calculated.
-  auto taylor(const Eigen::Ref<const Vector<T>> &xa, const T &x) const
-      -> Vector<T>;
+  auto taylor(const Vector<T> &xa, const T &x) const -> Vector<T>;
 
   /// Interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the interpolation must be calculated.
-  /// @param index The index of the last point found in the search.
   /// @return The interpolated value at the point x.
-  auto operator()(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya, const T &x,
-                  Eigen::Index *index) const -> T override;
+  auto interpolate_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
+      -> T override;
 
   /// @brief Returns the derivative of the interpolation function at the point
   ///   x.
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the derivative must be calculated.
-  /// @param index The index of the last point found in the search.
   /// @return The derivative of the interpolation function at the point x.
-  auto derivative(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya, const T &x,
-                  Eigen::Index *index) const -> T override;
+  auto derivative_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
+      -> T override;
 };
 
 template <typename T>
-auto Polynomial<T>::compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
-                                         const Eigen::Ref<const Vector<T>> &ya)
-    -> void {
+auto Polynomial<T>::compute_coefficients(const Vector<T> &xa,
+                                         const Vector<T> &ya) -> void {
   Interpolator1D<T>::compute_coefficients(xa, ya);
   auto size = xa.size();
   if (work_.size() < size) {
@@ -79,8 +72,7 @@ auto Polynomial<T>::compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
 }
 
 template <typename T>
-auto Polynomial<T>::taylor(const Eigen::Ref<const Vector<T>> &xa,
-                           const T &x) const -> Vector<T> {
+auto Polynomial<T>::taylor(const Vector<T> &xa, const T &x) const -> Vector<T> {
   auto size = xa.size();
   auto c = Vector<T>(size);
   auto w = Vector<T>(size);
@@ -99,10 +91,9 @@ auto Polynomial<T>::taylor(const Eigen::Ref<const Vector<T>> &xa,
 }
 
 template <typename T>
-auto Polynomial<T>::operator()(const Eigen::Ref<const Vector<T>> &xa,
-                               const Eigen::Ref<const Vector<T>> &ya,
-                               const T &x, Eigen::Index *index) const -> T {
-  auto search = this->search(xa, x, index);
+auto Polynomial<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                                 const T &x) const -> T {
+  auto search = this->search(xa, x);
   if (!search) {
     throw std::numeric_limits<T>::quiet_NaN();
   }
@@ -115,10 +106,9 @@ auto Polynomial<T>::operator()(const Eigen::Ref<const Vector<T>> &xa,
 }
 
 template <typename T>
-auto Polynomial<T>::derivative(const Eigen::Ref<const Vector<T>> &xa,
-                               const Eigen::Ref<const Vector<T>> &ya,
-                               const T &x, Eigen::Index *index) const -> T {
-  auto search = this->search(xa, x, index);
+auto Polynomial<T>::derivative_(const Vector<T> &xa, const Vector<T> &ya,
+                                const T &x) const -> T {
+  auto search = this->search(xa, x);
   if (!search) {
     throw std::numeric_limits<T>::quiet_NaN();
   }

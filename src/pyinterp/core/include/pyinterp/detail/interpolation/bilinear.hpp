@@ -25,21 +25,17 @@ class Bilinear : public Interpolator2D<T> {
   /// @param za Z-values of the data points.
   /// @param x The point where the interpolation must be calculated.
   /// @param y The point where the interpolation must be calculated.
-  /// @param ix The index of the last point found in the search.
-  auto operator()(const Eigen::Ref<const Vector<T>> &xa,
-                  const Eigen::Ref<const Vector<T>> &ya,
-                  const Eigen::Ref<const Matrix<T>> &za, const T &x, const T &y,
-                  Eigen::Index *ix, Eigen::Index *jx) const -> T override;
+  auto interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                    const Matrix<T> &za, const T &x, const T &y) const
+      -> T override;
 };
 
 template <typename T>
-auto Bilinear<T>::operator()(const Eigen::Ref<const Vector<T>> &xa,
-                             const Eigen::Ref<const Vector<T>> &ya,
-                             const Eigen::Ref<const Matrix<T>> &za, const T &x,
-                             const T &y, Eigen::Index *ix,
-                             Eigen::Index *jx) const -> T {
-  auto search_x = this->search(xa, x, ix);
-  auto search_y = this->search(ya, y, jx);
+auto Bilinear<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                               const Matrix<T> &za, const T &x,
+                               const T &y) const -> T {
+  auto search_x = this->search(xa, x);
+  auto search_y = this->search(ya, y);
   if (!search_x || !search_y) {
     throw std::numeric_limits<T>::quiet_NaN();
   }

@@ -33,35 +33,29 @@ class Akima : public Interpolator1D<T> {
   /// @brief Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  auto compute_coefficients(const Eigen::Ref<const Vector<T>>& xa,
-                            const Eigen::Ref<const Vector<T>>& ya)
+  auto compute_coefficients(const Vector<T>& xa, const Vector<T>& ya)
       -> void override;
 
   /// Interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the interpolation must be calculated.
-  /// @param index The index of the last point found in the search.
   /// @return The interpolated value at the point x.
-  auto operator()(const Eigen::Ref<const Vector<T>>& xa,
-                  const Eigen::Ref<const Vector<T>>& ya, const T& x,
-                  Eigen::Index* index) const -> T override;
+  auto interpolate_(const Vector<T>& xa, const Vector<T>& ya, const T& x) const
+      -> T override;
 
   /// @brief Returns the derivative of the interpolation function at the point
   ///   x.
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the derivative must be calculated.
-  /// @param index The index of the last point found in the search.
   /// @return The derivative of the interpolation function at the point x.
-  auto derivative(const Eigen::Ref<const Vector<T>>& xa,
-                  const Eigen::Ref<const Vector<T>>& ya, const T& x,
-                  Eigen::Index* index) const -> T override;
+  auto derivative_(const Vector<T>& xa, const Vector<T>& ya, const T& x) const
+      -> T override;
 };
 
 template <typename T>
-auto Akima<T>::compute_coefficients(const Eigen::Ref<const Vector<T>>& xa,
-                                    const Eigen::Ref<const Vector<T>>& ya)
+auto Akima<T>::compute_coefficients(const Vector<T>& xa, const Vector<T>& ya)
     -> void {
   Interpolator1D<T>::compute_coefficients(xa, ya);
   auto size = xa.size();
@@ -98,10 +92,9 @@ auto Akima<T>::compute_coefficients(const Eigen::Ref<const Vector<T>>& xa,
 }
 
 template <typename T>
-auto Akima<T>::operator()(const Eigen::Ref<const Vector<T>>& xa,
-                          const Eigen::Ref<const Vector<T>>& ya, const T& x,
-                          Eigen::Index* index) const -> T {
-  auto search = this->search(xa, x, index);
+auto Akima<T>::interpolate_(const Vector<T>& xa, const Vector<T>& ya,
+                            const T& x) const -> T {
+  auto search = this->search(xa, x);
   if (!search) {
     throw std::numeric_limits<T>::quiet_NaN();
   }
@@ -116,10 +109,9 @@ auto Akima<T>::operator()(const Eigen::Ref<const Vector<T>>& xa,
 }
 
 template <typename T>
-auto Akima<T>::derivative(const Eigen::Ref<const Vector<T>>& xa,
-                          const Eigen::Ref<const Vector<T>>& ya, const T& x,
-                          Eigen::Index* index) const -> T {
-  auto search = this->search(xa, x, index);
+auto Akima<T>::derivative_(const Vector<T>& xa, const Vector<T>& ya,
+                           const T& x) const -> T {
+  auto search = this->search(xa, x);
   if (!search) {
     throw std::numeric_limits<T>::quiet_NaN();
   }
