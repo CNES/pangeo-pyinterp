@@ -38,53 +38,58 @@ class CSplinePeriodic : public CSplineBase<T> {
 
 template <typename T>
 auto CSplinePeriodic<T>::solve_symmetric_cyclic_tridiagonal(T *x) -> void {
-  auto N = this->A_.rows();
-  if (N == 1) {
+  const auto size = this->A_.rows();
+  const auto size_m1 = size - 1;
+  const auto size_m2 = size - 2;
+  const auto size_m3 = size - 3;
+  if (size == 1) {
     x[0] = this->b_(0) / this->A_(0, 0);
     return;
   }
 
   alpha_(0) = this->A_(0, 0);
   gamma_(0) = this->A_(0, 1) / alpha_(0);
-  delta_(0) = this->A_(N - 1, 0) / alpha_(0);
+  delta_(0) = this->A_(size_m1, 0) / alpha_(0);
 
-  for (int i = 1; i < N - 2; i++) {
+  for (int i = 1; i < size_m2; i++) {
     alpha_(i) = this->A_(i, i) - this->A_(i, i - 1) * gamma_(i - 1);
     gamma_(i) = this->A_(i, i + 1) / alpha_(i);
     delta_(i) = -delta_(i - 1) * this->A_(i, i - 1) / alpha_(i);
   }
 
-  auto sum = alpha_.segment(0, N - 2)
-                 .cwiseProduct(delta_.segment(0, N - 2))
-                 .cwiseProduct(delta_.segment(0, N - 2))
+  auto sum = alpha_.segment(0, size_m2)
+                 .cwiseProduct(delta_.segment(0, size_m2))
+                 .cwiseProduct(delta_.segment(0, size_m2))
                  .sum();
 
-  alpha_(N - 2) =
-      this->A_(N - 2, N - 2) - this->A_(N - 2, N - 3) * gamma_(N - 3);
-  gamma_(N - 2) =
-      (this->A_(N - 2, N - 1) - this->A_(N - 2, N - 3) * delta_(N - 3)) /
-      alpha_(N - 2);
-  alpha_(N - 1) = this->A_(N - 1, N - 1) - sum -
-                  alpha_(N - 2) * gamma_(N - 2) * gamma_(N - 2);
+  alpha_(size_m2) =
+      this->A_(size_m2, size_m2) - this->A_(size_m2, size_m3) * gamma_(size_m3);
+  gamma_(size_m2) = (this->A_(size_m2, size_m1) -
+                     this->A_(size_m2, size_m3) * delta_(size_m3)) /
+                    alpha_(size_m2);
+  alpha_(size_m1) = this->A_(size_m1, size_m1) - sum -
+                    alpha_(size_m2) * gamma_(size_m2) * gamma_(size_m2);
 
   z_(0) = this->b_(0);
-  for (int i = 1; i < N - 1; i++) {
+  for (int i = 1; i < size_m1; i++) {
     z_(i) = this->b_(i) - z_(i - 1) * gamma_(i - 1);
   }
 
-  sum = delta_.segment(0, N - 2).cwiseProduct(z_.segment(0, N - 2)).sum();
+  sum = delta_.segment(0, size_m2).cwiseProduct(z_.segment(0, size_m2)).sum();
 
-  z_(N - 1) = this->b_(N - 1) - sum - gamma_(N - 2) * z_(N - 2);
-  c_.segment(0, N) = z_.segment(0, N).array() / alpha_.segment(0, N).array();
+  z_(size_m1) = this->b_(size_m1) - sum - gamma_(size_m2) * z_(size_m2);
+  c_.segment(0, size) =
+      z_.segment(0, size).array() / alpha_.segment(0, size).array();
 
-  x[N - 1] = c_(N - 1);
-  x[N - 2] = c_(N - 2) - gamma_(N - 2) * x[N - 1];
-  if (N >= 3) {
-    for (int i = N - 3, j = 0; j <= N - 3; j++, i--) {
-      x[i] = c_(i) - gamma_(i) * x[i + 1] - delta_(i) * x[N - 1];
+  x[size_m1] = c_(size_m1);
+  x[size_m2] = c_(size_m2) - gamma_(size_m2) * x[size_m1];
+  if (size >= 3) {
+    for (int i = size_m3, j = 0; j <= size_m3; j++, i--) {
+      x[i] = c_(i) - gamma_(i) * x[i + 1] - delta_(i) * x[size_m1];
     }
   }
 }
+
 template <typename T>
 auto CSplinePeriodic<T>::compute_coefficients(const Vector<T> &xa,
                                               const Vector<T> &ya) -> void {
