@@ -107,7 +107,7 @@ auto CSpline<T>::compute_coefficients(const Eigen::Ref<const Vector<T>> &xa,
     }
     b_(i) = 3 * (y_i1 * g_i1 - y_i0 * g_i0);
   }
-  x_.segment(1, size - 2) = A_.fullPivLu().solve(b_);
+  x_.segment(1, size - 2) = std::move(A_.fullPivLu().solve(b_));
   x_(0) = x_(size - 1) = 0;
 }
 

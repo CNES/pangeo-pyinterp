@@ -64,7 +64,8 @@ auto CSplinePeriodic<T>::compute_coefficients(
   this->A_(i, i) = 2 * (h_i0 + h_i1);
   this->A_(0, i) = h_i1;
   this->b_(i) = 3 * (y_i1 * g_i1 - y_i0 * g_i0);
-  this->x_.segment(1, size - 1) = this->A_.fullPivLu().solve(this->b_);
+  this->x_.segment(1, size - 1) =
+      std::move(this->A_.fullPivLu().solve(this->b_));
   this->x_(0) = this->x_(size - 1);
 }
 
