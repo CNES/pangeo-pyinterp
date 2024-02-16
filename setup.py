@@ -227,7 +227,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         self.cxx_compiler = None
         self.eigen_root = None
         self.generator = None
-        self.gsl_root = None
         self.mkl = None
         self.mkl_root = None
         self.reconfigure = None

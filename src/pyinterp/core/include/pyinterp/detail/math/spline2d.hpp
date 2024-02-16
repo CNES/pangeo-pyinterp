@@ -38,7 +38,7 @@ class Spline2D {
   /// coordinates)
   Eigen::VectorXd column_;
 
-  /// GSL interpolators
+  /// Interpolators
   std::unique_ptr<interpolation::Interpolator1D<double>> x_interpolator_;
   std::unique_ptr<interpolation::Interpolator1D<double>> y_interpolator_;
 };

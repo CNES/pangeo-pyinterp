@@ -28,7 +28,7 @@ class Bicubic {
   }
 
  private:
-  /// GSL interpolator
+  /// Interpolator
   std::unique_ptr<interpolation::Interpolator2D<double>> interpolator_;
 };
 

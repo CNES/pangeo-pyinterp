@@ -44,9 +44,6 @@ auto interpolate_1d(const pyinterp::Axis<double>& x,
   if (x.size() != y.size()) {
     throw std::invalid_argument("x and y must have the same size");
   }
-
-  // Note: if the window size is invalid, GSL will raise an exception.
-
   const auto interpolator = detail::interpolation::factory_1d<double>(kind);
 
   // Downcast the axis to the raw C++ type

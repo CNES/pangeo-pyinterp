@@ -25,7 +25,7 @@ You can install these packages on Ubuntu by typing the following command:
 
 .. code-block:: bash
 
-    sudo apt-get install g++ cmake libeigen3-dev libboost-dev libgsl-dev
+    sudo apt-get install g++ cmake libeigen3-dev libboost-dev
 
 You need, also, to install Python libraries before configuring and installing
 this software:

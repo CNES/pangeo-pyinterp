@@ -113,7 +113,7 @@ mss = interpolator.bicubic(coords=dict(lon=mx.ravel(), lat=my.ravel()),
 # .. warning::
 #
 #     The grid provided must have strictly increasing axes to meet the
-#     specifications of the GSL library. When building the grid, specify the
+#     specifications of the interpolation. When building the grid, specify the
 #     ``increasing_axes`` option to flip the decreasing axes and the grid
 #     automatically. For example:
 #

@@ -33,11 +33,6 @@ def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
             are performed along the other axes between the values obtained by
             the bicubic interpolation.
 
-            .. warning::
-
-                The GSL functions for calculating bicubic functions require
-                that the axes defined in the grids are strictly increasing.
-
         x: X-values.
         y: Y-values.
         z: None for a :py:class:`2D Grid <pyinterp.grid.Grid2D>` otherwise

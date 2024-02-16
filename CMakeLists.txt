@@ -200,18 +200,6 @@ find_package(Python3 COMPONENTS Interpreter Development)
 find_package(Boost 1.79 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-# We prefer the use of static libraries for the GSL.
-if(CONDA_FORGE)
-  set(__CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".a" ".so" ".dylib")
-endif()
-
-# We restore the suffixes of the libraries to be found.
-if(CONDA_FORGE)
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ${__CMAKE_FIND_LIBRARY_SUFFIXES})
-  unset(__CMAKE_FIND_LIBRARY_SUFFIXES)
-endif()
-
 # Blas
 if(DEFINED ENV{MKLROOT})
   # First try to use MKL as a single dynamic library (conda-forge)
@@ -250,9 +238,8 @@ else()
     add_definitions(-DEIGEN_USE_BLAS)
   else()
     message(
-      WARNING
-        "No BLAS library has been found. GSL & Eigen will use their own BLAS "
-        "implementation.")
+      WARNING "No BLAS library has been found. Eigen will use their own BLAS "
+              "implementation.")
   endif()
 endif()
 
