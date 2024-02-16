@@ -29,14 +29,14 @@ class CSpline : public CSplineBase<T> {
 
   /// @brief Solve a symmetric tridiagonal system
   /// @param x The solution of the system
-  auto solve_symmetric_tridiagonal(T *x) -> void;
+  constexpr auto solve_symmetric_tridiagonal(T *x) -> void;
 
   Vector<T> c_;
   Vector<T> d_;
 };
 
 template <typename T>
-auto CSpline<T>::solve_symmetric_tridiagonal(T *x) -> void {
+constexpr auto CSpline<T>::solve_symmetric_tridiagonal(T *x) -> void {
   const auto size = this->A_.rows();
   const auto size_m1 = size - 1;
   const auto size_m2 = size - 2;

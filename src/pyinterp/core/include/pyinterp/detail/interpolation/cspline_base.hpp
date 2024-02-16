@@ -46,8 +46,8 @@ class CSplineBase : public Interpolator1D<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  auto interpolate_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
-      -> T override;
+  constexpr auto interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                              const T &x) const -> T override;
 
   /// @brief Returns the derivative of the interpolation function at the point
   ///   x.
@@ -55,8 +55,8 @@ class CSplineBase : public Interpolator1D<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
-  auto derivative_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
-      -> T override;
+  constexpr auto derivative_(const Vector<T> &xa, const Vector<T> &ya,
+                             const T &x) const -> T override;
 
  protected:
   Matrix<T> A_;
@@ -65,8 +65,9 @@ class CSplineBase : public Interpolator1D<T> {
 };
 
 template <typename T>
-auto CSplineBase<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
-                                  const T &x) const -> T {
+constexpr auto CSplineBase<T>::interpolate_(const Vector<T> &xa,
+                                            const Vector<T> &ya,
+                                            const T &x) const -> T {
   auto where = this->search(xa, x);
   if (!where) {
     return std::numeric_limits<T>::quiet_NaN();
@@ -85,8 +86,9 @@ auto CSplineBase<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
 }
 
 template <typename T>
-auto CSplineBase<T>::derivative_(const Vector<T> &xa, const Vector<T> &ya,
-                                 const T &x) const -> T {
+constexpr auto CSplineBase<T>::derivative_(const Vector<T> &xa,
+                                           const Vector<T> &ya,
+                                           const T &x) const -> T {
   auto where = this->search(xa, x);
   if (!where) {
     return std::numeric_limits<T>::quiet_NaN();

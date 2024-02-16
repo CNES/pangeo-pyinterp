@@ -28,8 +28,8 @@ class Bicubic : public Interpolator2D<T> {
   /// @param x The point where the interpolation must be calculated.
   /// @param y The point where the interpolation must be calculated.
   /// @return The interpolated value at the coordinates x, y.
-  auto interpolate_(const Vector<T> &xa, const Vector<T> &ya,
-                    const Matrix<T> &za, const T &x, const T &y) const
+  constexpr auto interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                              const Matrix<T> &za, const T &x, const T &y) const
       -> T override;
 
   /// Compute the coefficients of the bicubic interpolation
@@ -70,9 +70,10 @@ auto Bicubic<T>::compute_coefficients(const Vector<T> &xa, const Vector<T> &ya,
 }
 
 template <typename T>
-auto Bicubic<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
-                              const Matrix<T> &za, const T &x, const T &y) const
-    -> T {
+constexpr auto Bicubic<T>::interpolate_(const Vector<T> &xa,
+                                        const Vector<T> &ya,
+                                        const Matrix<T> &za, const T &x,
+                                        const T &y) const -> T {
   auto search_x = this->search(xa, x);
   auto search_y = this->search(ya, y);
   if (!search_x || !search_y) {
@@ -90,6 +91,7 @@ auto Bicubic<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
   const auto z11 = za(i1, j1);
   const auto dx = x1 - x0;
   const auto dy = y1 - y0;
+  const auto dxdy = dx * dy;
   const auto t = (x - x0) / dx;
   const auto u = (y - y0) / dy;
   const auto zx00 = zx_(i0, j0) * dx;
@@ -100,10 +102,10 @@ auto Bicubic<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
   const auto zy01 = zy_(i0, j1) * dy;
   const auto zy10 = zy_(i1, j0) * dy;
   const auto zy11 = zy_(i1, j1) * dy;
-  const auto zxy00 = zxy_(i0, j0) * (dx * dy);
-  const auto zxy01 = zxy_(i0, j1) * (dx * dy);
-  const auto zxy10 = zxy_(i1, j0) * (dx * dy);
-  const auto zxy11 = zxy_(i1, j1) * (dx * dy);
+  const auto zxy00 = zxy_(i0, j0) * dxdy;
+  const auto zxy01 = zxy_(i0, j1) * dxdy;
+  const auto zxy10 = zxy_(i1, j0) * dxdy;
+  const auto zxy11 = zxy_(i1, j1) * dxdy;
   const auto t0 = 1;
   const auto t1 = t;
   const auto t2 = t * t;
@@ -113,60 +115,29 @@ auto Bicubic<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
   const auto u2 = u * u;
   const auto u3 = u * u2;
 
-  auto v = z00;
-  auto z = v * t0 * u0;
-
-  v = zy00;
-  z += v * t0 * u1;
-
-  v = 3 * (-z00 + z01) - 2 * zy00 - zy01;
-  z += v * t0 * u2;
-
-  v = 2 * (z00 - z01) + zy00 + zy01;
-  z += v * t0 * u3;
-
-  v = zx00;
-  z += v * t1 * u0;
-
-  v = zxy00;
-  z += v * t1 * u1;
-
-  v = 3 * (-zx00 + zx01) - 2 * zxy00 - zxy01;
-  z += v * t1 * u2;
-
-  v = 2 * (zx00 - zx01) + zxy00 + zxy01;
-  z += v * t1 * u3;
-
-  v = 3 * (-z00 + z10) - 2 * zx00 - zx10;
-  z += v * t2 * u0;
-
-  v = 3 * (-zy00 + zy10) - 2 * zxy00 - zxy10;
-  z += v * t2 * u1;
-
-  v = 9 * (z00 - z10 + z11 - z01) + 6 * (zx00 - zx01 + zy00 - zy10) +
-      3 * (zx10 - zx11 - zy11 + zy01) + 4 * zxy00 + 2 * (zxy10 + zxy01) + zxy11;
-  z += v * t2 * u2;
-
-  v = 6 * (-z00 + z10 - z11 + z01) + 4 * (-zx00 + zx01) +
-      3 * (-zy00 + zy10 + zy11 - zy01) + 2 * (-zx10 + zx11 - zxy00 - zxy01) -
-      zxy10 - zxy11;
-  z += v * t2 * u3;
-
-  v = 2 * (z00 - z10) + zx00 + zx10;
-  z += v * t3 * u0;
-
-  v = 2 * (zy00 - zy10) + zxy00 + zxy10;
-  z += v * t3 * u1;
-
-  v = 6 * (-z00 + z10 - z11 + z01) + 3 * (-zx00 - zx10 + zx11 + zx01) +
-      4 * (-zy00 + zy10) + 2 * (zy11 - zy01 - zxy00 - zxy10) - zxy11 - zxy01;
-  z += v * t3 * u2;
-
-  v = 4 * (z00 - z10 + z11 - z01) +
-      2 * (zx00 + zx10 - zx11 - zx01 + zy00 - zy10 - zy11 + zy01) + zxy00 +
-      zxy10 + zxy11 + zxy01;
-  z += v * t3 * u3;
-  return z;
+  return t0 * (u0 * z00 + u1 * zy00 + u2 * (3 * (z01 - z00) - 2 * zy00 - zy01) +
+               u3 * (2 * (z00 - z01) + zy00 + zy01)) +
+         t1 * (u0 * zx00 + u1 * zxy00 +
+               u2 * (3 * (zx01 - zx00) - 2 * zxy00 - zxy01) +
+               u3 * (2 * (zx00 - zx01) + zxy00 + zxy01)) +
+         t2 * (u0 * (3 * (z10 - z00) - 2 * zx00 - zx10) +
+               u1 * (3 * (zy10 - zy00) - 2 * zxy00 - zxy10) +
+               u2 * (9 * (z00 - z01 - z10 + z11) +
+                     6 * (zx00 - zx01 + zy00 - zy10) +
+                     3 * (zx10 - zx11 + zy01 - zy11) + 4 * zxy00 +
+                     2 * (zxy01 + zxy10) + zxy11) +
+               u3 * (6 * (z01 - z00 + z10 - z11) + 4 * (zx01 - zx00) +
+                     3 * (zy10 - zy00 - zy01 + zy11) +
+                     2 * (zx11 - zx10 - zxy00 - zxy01) - zxy10 - zxy11)) +
+         t3 * (u0 * (2 * (z00 - z10) + zx00 + zx10) +
+               u1 * (zxy00 + zxy10 + 2 * (zy00 - zy10)) +
+               u2 * (6 * (z01 - z00 + z10 - z11) + 4 * (-zy00 + zy10) +
+                     3 * (zx01 - zx00 - zx10 + zx11) +
+                     2 * (zy11 - zy01 - zxy00 - zxy10) - zxy01 - zxy11) +
+               u3 * (4 * (z00 - z01 - z10 + z11) +
+                     2 * (zx00 - zx01 + zx10 - zx11 + zy00 + zy01 - zy10 -
+                          zy11) +
+                     zxy00 + zxy01 + zxy10 + zxy11));
 }
 
 }  // namespace pyinterp::detail::interpolation
