@@ -177,7 +177,7 @@ static void init_geodetic_box(py::class_<geodetic::Box> &class_) {
              if (min_corner.lon() > max_corner.lon()) {
                std::swap(min_corner, max_corner);
              }
-             return geodetic::Box(std::move(min_corner), std::move(max_corner));
+             return geodetic::Box(min_corner, max_corner);
            }),
            py::arg("min_corner"), py::arg("max_corner"))
       .def_static("from_geojson", &geodetic::Box::from_geojson,
