@@ -37,20 +37,21 @@ class CSpline : public CSplineBase<T> {
 
 template <typename T>
 auto CSpline<T>::solve_symmetric_tridiagonal(T *x) -> void {
-  auto size = this->A_.rows();
-  c_(0) = this->A_(0, 1) / this->A_(0, 0);
-  d_(0) = this->b_(0) / this->A_(0, 0);
+  const auto size = this->A_.rows();
+  auto item = 1 / this->A_(0, 0);
+  c_(0) = this->A_(0, 1) * item;
+  d_(0) = this->b_(0) * item;
 
   for (Eigen::Index i = 1; i < size - 1; ++i) {
-    const auto inv_m = 1 / (this->A_(i, i) - this->A_(i, i - 1) * c_(i - 1));
+    item = this->A_(i, i - 1);
+    const auto inv_m = 1 / (this->A_(i, i) - item * c_(i - 1));
     c_(i) = this->A_(i, i + 1) * inv_m;
-    d_(i) = (this->b_(i) - this->A_(i, i - 1) * d_(i - 1)) * inv_m;
+    d_(i) = (this->b_(i) - item * d_(i - 1)) * inv_m;
   }
 
-  d_(size - 1) =
-      (this->b_(size - 1) - this->A_(size - 1, size - 2) * d_(size - 2)) /
-      (this->A_(size - 1, size - 1) -
-       this->A_(size - 1, size - 2) * c_(size - 2));
+  item = this->A_(size - 1, size - 2);
+  d_(size - 1) = (this->b_(size - 1) - item * d_(size - 2)) /
+                 (this->A_(size - 1, size - 1) - item * c_(size - 2));
   x[size - 1] = d_(size - 1);
 
   for (Eigen::Index i = size - 2; i >= 0; --i) {
@@ -62,18 +63,19 @@ template <typename T>
 auto CSpline<T>::compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
     -> void {
   Interpolator1D<T>::compute_coefficients(xa, ya);
-  auto size = xa.size();
+  const auto size = xa.size();
+  const auto size_2 = size - 2;
   if (this->x_.size() != size) {
-    this->A_.resize(size - 2, size - 2);
-    this->b_.resize(size - 2);
+    this->A_.resize(size_2, size_2);
+    this->b_.resize(size_2);
     this->x_.resize(size);
     this->A_.setZero();
     this->x_.setZero();
-    c_.resize(size - 2);
-    d_.resize(size - 2);
+    c_.resize(size_2);
+    d_.resize(size_2);
   }
 
-  for (auto i = 0; i < size - 2; ++i) {
+  for (auto i = 0; i < size_2; ++i) {
     const auto x1 = xa(i + 1);
     const auto y1 = ya(i + 1);
     const auto h_i0 = x1 - xa(i);
