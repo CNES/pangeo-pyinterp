@@ -238,8 +238,7 @@ else()
     add_definitions(-DEIGEN_USE_BLAS)
   else()
     message(
-      WARNING "No BLAS library has been found. Eigen will use their own BLAS "
-              "implementation.")
+      WARNING "No BLAS library found. Eigen uses its own BLAS implementation.")
   endif()
 endif()
 
