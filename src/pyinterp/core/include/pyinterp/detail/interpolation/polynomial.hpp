@@ -25,7 +25,7 @@ class Polynomial : public Interpolator1D<T> {
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
+  constexpr auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
       -> void override;
 
   /// Compute the coefficients of the interpolation
@@ -38,8 +38,8 @@ class Polynomial : public Interpolator1D<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  auto interpolate_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
-      -> T override;
+  constexpr auto interpolate_(const Vector<T> &xa, const Vector<T> &ya,
+                              const T &x) const -> T override;
 
   /// @brief Returns the derivative of the interpolation function at the point
   ///   x.
@@ -52,8 +52,9 @@ class Polynomial : public Interpolator1D<T> {
 };
 
 template <typename T>
-auto Polynomial<T>::compute_coefficients(const Vector<T> &xa,
-                                         const Vector<T> &ya) -> void {
+constexpr auto Polynomial<T>::compute_coefficients(const Vector<T> &xa,
+                                                   const Vector<T> &ya)
+    -> void {
   Interpolator1D<T>::compute_coefficients(xa, ya);
   auto size = xa.size();
   if (work_.size() < size) {
@@ -91,8 +92,9 @@ auto Polynomial<T>::taylor(const Vector<T> &xa, const T &x) const -> Vector<T> {
 }
 
 template <typename T>
-auto Polynomial<T>::interpolate_(const Vector<T> &xa, const Vector<T> &ya,
-                                 const T &x) const -> T {
+constexpr auto Polynomial<T>::interpolate_(const Vector<T> &xa,
+                                           const Vector<T> &ya,
+                                           const T &x) const -> T {
   auto search = this->search(xa, x);
   if (!search) {
     throw std::numeric_limits<T>::quiet_NaN();

@@ -41,8 +41,8 @@ class Akima : public Interpolator1D<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  auto interpolate_(const Vector<T>& xa, const Vector<T>& ya, const T& x) const
-      -> T override;
+  constexpr auto interpolate_(const Vector<T>& xa, const Vector<T>& ya,
+                              const T& x) const -> T override;
 
   /// @brief Returns the derivative of the interpolation function at the point
   ///   x.
@@ -50,8 +50,8 @@ class Akima : public Interpolator1D<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
-  auto derivative_(const Vector<T>& xa, const Vector<T>& ya, const T& x) const
-      -> T override;
+  constexpr auto derivative_(const Vector<T>& xa, const Vector<T>& ya,
+                             const T& x) const -> T override;
 };
 
 template <typename T>
@@ -92,8 +92,8 @@ auto Akima<T>::compute_coefficients(const Vector<T>& xa, const Vector<T>& ya)
 }
 
 template <typename T>
-auto Akima<T>::interpolate_(const Vector<T>& xa, const Vector<T>& ya,
-                            const T& x) const -> T {
+constexpr auto Akima<T>::interpolate_(const Vector<T>& xa, const Vector<T>& ya,
+                                      const T& x) const -> T {
   auto search = this->search(xa, x);
   if (!search) {
     throw std::numeric_limits<T>::quiet_NaN();
@@ -109,8 +109,8 @@ auto Akima<T>::interpolate_(const Vector<T>& xa, const Vector<T>& ya,
 }
 
 template <typename T>
-auto Akima<T>::derivative_(const Vector<T>& xa, const Vector<T>& ya,
-                           const T& x) const -> T {
+constexpr auto Akima<T>::derivative_(const Vector<T>& xa, const Vector<T>& ya,
+                                     const T& x) const -> T {
   auto search = this->search(xa, x);
   if (!search) {
     throw std::numeric_limits<T>::quiet_NaN();
