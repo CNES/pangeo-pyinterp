@@ -1,6 +1,12 @@
 Changelog
 #########
 
+2024.3.0
+--------
+* Enhance the performance of the spline/bicubic interpolation:
+  - The bicubic interpolation is now 40% faster.
+  - The cubic spline interpolation is now 30% faster.
+
 2024.2.0
 --------
 * Fix equator point selection in orbit.py
