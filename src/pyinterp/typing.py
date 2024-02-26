@@ -15,9 +15,12 @@ from typing import TYPE_CHECKING, Any, Tuple
 import sys
 
 import numpy
+import numpy.typing
+
+NDArray = numpy.typing.NDArray
 
 
-def numpy_version() -> Tuple[int, int]:
+def numpy_version() -> Tuple[int, ...]:
     """Returns the version of the installed numpy library.
 
     Returns:
@@ -28,15 +31,11 @@ def numpy_version() -> Tuple[int, int]:
 
 if TYPE_CHECKING and numpy_version() >= (1, 20) and sys.version_info > (
         3, 8):  # pragma: no cover
-    import numpy.typing
-
-    NDArray = numpy.typing.NDArray
     NDArrayDateTime = numpy.ndarray[Any, numpy.dtype[numpy.datetime64]]
     NDArrayStructured = numpy.ndarray[Any, numpy.dtype[numpy.void]]
     NDArrayTimeDelta = numpy.ndarray[Any, numpy.dtype[numpy.timedelta64]]
 
 else:  # pragma: no cover
-    NDArray = numpy.ndarray
     NDArrayDateTime = NDArray
     NDArrayStructured = NDArray
     NDArrayTimeDelta = NDArray
