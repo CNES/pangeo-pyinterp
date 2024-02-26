@@ -8,7 +8,9 @@ XArray
 
 Build interpolation objects from xarray.DataArray instances
 """
-from typing import Dict, Hashable, Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import Hashable
 import pickle
 
 import numpy
@@ -29,7 +31,7 @@ class AxisIdentifier:
     def __init__(self, data_array: xr.DataArray):
         self.data_array = data_array
 
-    def _axis(self, units: cf.AxisUnit) -> Optional[str]:
+    def _axis(self, units: cf.AxisUnit) -> str | None:
         """Returns the name of the dimension that defines an axis.
 
         Args:
@@ -40,10 +42,10 @@ class AxisIdentifier:
         """
         for name, coord in self.data_array.coords.items():
             if hasattr(coord, 'units') and coord.units in units:
-                return name
+                return name  # type: ignore
         return None
 
-    def longitude(self) -> Optional[str]:
+    def longitude(self) -> str | None:
         """Returns the name of the dimension that defines a longitude axis.
 
         Returns:
@@ -51,7 +53,7 @@ class AxisIdentifier:
         """
         return self._axis(cf.AxisLongitudeUnit())
 
-    def latitude(self) -> Optional[str]:
+    def latitude(self) -> str | None:
         """Returns the name of the dimension that defines a latitude axis.
 
         Returns:
@@ -62,7 +64,7 @@ class AxisIdentifier:
 
 def _dims_from_data_array(data_array: xr.DataArray,
                           geodetic: bool,
-                          ndims: Optional[int] = 2) -> Tuple[str, str]:
+                          ndims: int | None = 2) -> tuple[str, str]:
     """Gets the name of the dimensions that define the grid axes. the
     longitudes and latitudes of the data array.
 
@@ -88,7 +90,7 @@ def _dims_from_data_array(data_array: xr.DataArray,
             f'{ndims}, found {size}.')
 
     if not geodetic:
-        return tuple(data_array.coords)[:2]
+        return tuple(data_array.coords)[:2]  # type: ignore
 
     ident = AxisIdentifier(data_array)
     lon = ident.longitude()
@@ -102,9 +104,9 @@ def _dims_from_data_array(data_array: xr.DataArray,
 
 def _coords(
     coords: dict,
-    dims: Tuple,
-    datetime64: Optional[Tuple[Hashable, core.TemporalAxis]] = None,
-) -> Tuple:
+    dims: tuple,
+    datetime64: tuple[Hashable, core.TemporalAxis] | None = None,
+) -> tuple:
     """Get the list of arguments to provide to the grid interpolation
     functions.
 
@@ -254,6 +256,7 @@ class Grid3D(grid.Grid3D):
         self._dims = (x, y, z)
         # Should the grid manage a time axis?
         dtype = data_array.coords[z].dtype
+        self._datetime64: tuple[Hashable, core.TemporalAxis] | None
         if 'datetime64' in dtype.name or 'timedelta64' in dtype.name:
             self._datetime64 = z, core.TemporalAxis(
                 data_array.coords[z].values)
@@ -449,9 +452,8 @@ class RegularGridInterpolator:
                  increasing_axes: bool = True,
                  geodetic: bool = True):
         if len(array.shape) == 2:
-            self._grid = Grid2D(array,
-                                increasing_axes=increasing_axes,
-                                geodetic=geodetic)
+            self._grid: (Grid2D | Grid3D | Grid4D) = Grid2D(
+                array, increasing_axes=increasing_axes, geodetic=geodetic)
             self._interp = self._grid.bivariate
         elif len(array.shape) == 3:
             self._grid = Grid3D(array,
@@ -467,13 +469,13 @@ class RegularGridInterpolator:
             raise NotImplementedError(
                 'Only the 2D, 3D or 4D grids can be interpolated.')
 
-    def __getstate__(self) -> Tuple[bytes]:
+    def __getstate__(self) -> tuple[bytes]:
         # Walk around a bug with pybind11 and pickle starting with Python 3.9
         # Serialize the object here with highest protocol.
         return (pickle.dumps((self._grid, self._interp),
                              protocol=pickle.HIGHEST_PROTOCOL), )
 
-    def __setstate__(self, state: Tuple[bytes]) -> None:
+    def __setstate__(self, state: tuple[bytes]) -> None:
         # Walk around a bug with pybind11 and pickle starting with Python 3.9
         # Deserialize the object here with highest protocol.
         self._grid, self._interp = pickle.loads(state[0])
@@ -488,7 +490,7 @@ class RegularGridInterpolator:
         return self._grid.array.ndim
 
     @property
-    def grid(self) -> Union[Grid2D, Grid3D, Grid4D]:
+    def grid(self) -> Grid2D | Grid3D | Grid4D:
         """Gets the instance of handling the regular grid for interpolations.
 
         Returns:
@@ -497,10 +499,10 @@ class RegularGridInterpolator:
         return self._grid
 
     def __call__(self,
-                 coords: Dict,
+                 coords: dict,
                  method: str = 'bilinear',
                  bounds_error: bool = False,
-                 bicubic_kwargs: Optional[Dict] = None,
+                 bicubic_kwargs: dict | None = None,
                  num_threads: int = 0,
                  **kwargs) -> numpy.ndarray:
         """Interpolation at coordinates.

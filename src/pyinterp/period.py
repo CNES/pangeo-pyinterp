@@ -75,16 +75,16 @@ class Period(core.Period):
         return core.Period(super().begin, super().last, True)
 
     @property
-    def begin(self) -> numpy.datetime64:
+    def begin(self) -> numpy.datetime64:  # type: ignore[override]
         """Gets the beginning of the period."""
         return numpy.datetime64(super().begin, self.resolution)
 
     @property
-    def last(self) -> numpy.datetime64:
+    def last(self) -> numpy.datetime64:  # type: ignore[override]
         """Gets the beginning of the period."""
         return numpy.datetime64(super().last, self.resolution)
 
-    def end(self) -> numpy.datetime64:
+    def end(self) -> numpy.datetime64:  # type: ignore[override]
         """Gets the end of the period."""
         return numpy.datetime64(super().end(), self.resolution)
 
@@ -109,7 +109,7 @@ class Period(core.Period):
     def __str__(self) -> str:
         return f'[{self.begin}, {self.end()})'
 
-    def duration(self) -> numpy.timedelta64:
+    def duration(self) -> numpy.timedelta64:  # type: ignore[override]
         """Gets the duration of the period."""
         return numpy.timedelta64(super().duration(), self.resolution)
 
@@ -117,24 +117,24 @@ class Period(core.Period):
         """True if period is ill formed (length is zero or less)"""
         return super().is_null()
 
-    def __eq__(self, lhs: Period) -> bool:
+    def __eq__(self, lhs: Any) -> bool:
         if not isinstance(lhs, Period):
             return NotImplemented
         if self.resolution != lhs.resolution:
             return False
         return super().__eq__(lhs)
 
-    def __ne__(self, __value: Period) -> bool:
+    def __ne__(self, __value: Any) -> bool:
         return not self.__eq__(__value)
 
-    def __lt__(self, lhs: Period) -> bool:
+    def __lt__(self, lhs: Any) -> bool:
         if not isinstance(lhs, Period):
             return NotImplemented
         if self.resolution != lhs.resolution:
             return False
         return super().__lt__(lhs)
 
-    def contains(
+    def contains(  # type: ignore[override]
         self,
         other: numpy.datetime64 | Period,
     ) -> bool:
@@ -155,7 +155,7 @@ class Period(core.Period):
             return super().contains(other)
         return super().contains(_datetime64_to_int64(other, self.resolution))
 
-    def is_adjacent(self, other: Period) -> bool:
+    def is_adjacent(self, other: Period) -> bool:  # type: ignore[override]
         """True if periods are next to each other without a gap.
 
         In the example below, p1 and p2 are adjacent, but p3 is not adjacent
@@ -178,7 +178,8 @@ class Period(core.Period):
             other = other.as_resolution(self.resolution)
         return super().is_adjacent(other)
 
-    def is_before(self, point: numpy.datetime64) -> bool:
+    def is_before(self,
+                  point: numpy.datetime64) -> bool:  # type: ignore[override]
         """True if all of the period is prior to the passed point or end <=
         point.
 
@@ -198,7 +199,8 @@ class Period(core.Period):
         """
         return super().is_before(_datetime64_to_int64(point, self.resolution))
 
-    def is_after(self, point: numpy.datetime64) -> bool:
+    def is_after(self,
+                 point: numpy.datetime64) -> bool:  # type: ignore[override]
         """True if all of the period is prior or point < start.
 
         In the example below only point 1 would evaluate to true.
@@ -217,7 +219,7 @@ class Period(core.Period):
         """
         return super().is_after(_datetime64_to_int64(point, self.resolution))
 
-    def intersects(self, other: Period) -> bool:
+    def intersects(self, other: Period) -> bool:  # type: ignore[override]
         """True if the periods overlap in any way.
 
         In the example below p1 intersects with p2, p4, and p6.
@@ -241,7 +243,7 @@ class Period(core.Period):
             other = other.as_resolution(self.resolution)
         return super().intersects(other)
 
-    def intersection(self, other: Period) -> Period:
+    def intersection(self, other: Period) -> Period:  # type: ignore[override]
         """Returns the period of intersection or null period if no
         intersection.
 
@@ -260,7 +262,7 @@ class Period(core.Period):
             True,
         )
 
-    def merge(self, other: Period) -> Period:
+    def merge(self, other: Period) -> Period:  # type: ignore[override]
         """Returns the union of intersecting periods -- or null period.
 
         Args:

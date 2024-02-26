@@ -1,22 +1,21 @@
-from typing import Tuple, overload
+from __future__ import annotations
 
-import numpy
+from typing import Any, Literal, overload
 
 from .. import geodetic
+from ..array import Array1DFloat64, Array1DUInt64
 
-def decode(
-    hash: numpy.ndarray[numpy.uint64],
-    precision: int = ...,
-    round: bool = ...
-) -> Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64]]:
+def decode(hash: Array1DUInt64,
+           precision: int = ...,
+           round: bool = ...) -> tuple[Array1DFloat64, Array1DFloat64]:
     ...
 
 
-def encode(lon: numpy.ndarray[numpy.float64],
-           lat: numpy.ndarray[numpy.float64],
-           precision: int = ...) -> numpy.ndarray[numpy.uint64]:
+def encode(lon: Array1DFloat64,
+           lat: Array1DFloat64,
+           precision: int = ...) -> Array1DUInt64:
     ...
 
 
-def neighbors(hash: int, precision: int = ...) -> numpy.ndarray[numpy.uint64]:
+def neighbors(hash: int, precision: int = ...) -> Array1DUInt64:
     ...

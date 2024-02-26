@@ -78,13 +78,13 @@ print(paris.distance(new_york, strategy='vincenty', wgs=wgs84))
 # %%
 # It is possible to do the same calculation on a large number of coordinates
 # quickly.
-lon = numpy.arange(0, 360, 10)
-lat = numpy.arange(-90, 90.5, 10)
+lon = numpy.arange(0, 360, 10, dtype=numpy.float64)
+lat = numpy.arange(-90, 90.5, 10, dtype=numpy.float64)
 mx, my = numpy.meshgrid(lon, lat)
 distances = pyinterp.geodetic.coordinate_distances(mx.ravel(),
                                                    my.ravel(),
-                                                   mx.ravel() + 1,
-                                                   my.ravel() + 1,
+                                                   mx.ravel() + 1.0,
+                                                   my.ravel() + 1.0,
                                                    strategy='vincenty',
                                                    wgs=wgs84,
                                                    num_threads=1)
@@ -402,8 +402,8 @@ coordinates = [[-36.25, -54.9238], [-36.5, -54.9238], [-36.75, -54.9238],
                [-36, -54.9238], [-36.25, -54.9238]]
 
 # %%
-lon = numpy.arange(0, 360, 10)
-lat = numpy.arange(-80, 90, 10)
+lon = numpy.arange(0, 360, 10, dtype=numpy.float64)
+lat = numpy.arange(-80, 90, 10, dtype=numpy.float64)
 mx, my = numpy.meshgrid(lon, lat)
 
 # %%

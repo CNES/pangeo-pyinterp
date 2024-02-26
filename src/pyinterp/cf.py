@@ -6,14 +6,14 @@
 CF (Climate and Forecast)
 -------------------------
 """
-from typing import List
+from __future__ import annotations
 
 
 class AxisUnit(list):
     """Units management for axes."""
 
     @property
-    def units(self) -> List:
+    def units(self) -> list:
         """Get the list of known units.
 
         Returns:

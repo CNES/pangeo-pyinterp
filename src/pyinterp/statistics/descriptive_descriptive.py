@@ -6,7 +6,9 @@
 Descriptive statistics
 ----------------------
 """
-from typing import Any, Iterable, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Iterable
 import copy
 
 import dask.array.core
@@ -18,10 +20,9 @@ from .. import core
 def _delayed(
     attr: str,
     values: dask.array.core.Array,
-    weights: Optional[dask.array.core.Array] = None,
-    axis: Optional[Iterable[int]] = None,
-) -> Union[core.DescriptiveStatisticsFloat64,
-           core.DescriptiveStatisticsFloat32]:
+    weights: dask.array.core.Array | None = None,
+    axis: Iterable[int] | None = None,
+) -> (core.DescriptiveStatisticsFloat64 | core.DescriptiveStatisticsFloat32):
     """Calculate the descriptive statistics of a dask array."""
     if weights is not None and values.shape != weights.shape:
         raise ValueError('values and weights must have the same shape')
@@ -75,11 +76,11 @@ class DescriptiveStatistics:
     """
 
     def __init__(self,
-                 values: Union[dask.array.core.Array, numpy.ndarray],
-                 weights: Optional[Union[dask.array.core.Array,
-                                         numpy.ndarray]] = None,
-                 axis: Optional[Union[int, Iterable[int]]] = None,
-                 dtype: Optional[numpy.dtype] = None) -> None:
+                 values: dask.array.core.Array | numpy.ndarray,
+                 weights: None |
+                 (dask.array.core.Array | numpy.ndarray) = None,
+                 axis: int | Iterable[int] | None = None,
+                 dtype: numpy.dtype | None = None) -> None:
         if isinstance(axis, int):
             axis = (axis, )
         dtype = dtype or numpy.dtype('float64')
@@ -91,16 +92,15 @@ class DescriptiveStatistics:
             raise ValueError(f'dtype {dtype} not handled by the object')
         if isinstance(values, dask.array.core.Array) or isinstance(
                 weights, dask.array.core.Array):
-            self._instance = _delayed(
-                attr, dask.array.core.asarray(values),
-                dask.array.core.asarray(weights)
-                if weights is not None else None, axis)
+            self._instance: (core.DescriptiveStatisticsFloat64
+                             | core.DescriptiveStatisticsFloat32) = _delayed(
+                                 attr, dask.array.core.asarray(values),
+                                 dask.array.core.asarray(weights)
+                                 if weights is not None else None, axis)
         else:
-            self._instance: Union[core.DescriptiveStatisticsFloat64,
-                                  core.DescriptiveStatisticsFloat32] = getattr(
-                                      core, attr)(values, weights, axis)
+            self._instance = getattr(core, attr)(values, weights, axis)
 
-    def copy(self) -> 'DescriptiveStatistics':
+    def copy(self) -> DescriptiveStatistics:
         """Creates a copy of the current descriptive statistics container.
 
         Returns:
@@ -111,7 +111,7 @@ class DescriptiveStatistics:
         result._instance = self._instance.__copy__()
         return result
 
-    def __iadd__(self, other: Any) -> 'DescriptiveStatistics':
+    def __iadd__(self, other: Any) -> DescriptiveStatistics:
         """Adds a new descriptive statistics container to the current one.
 
         Returns:
@@ -126,7 +126,7 @@ class DescriptiveStatistics:
         raise TypeError('unsupported operand type(s) for +='
                         f": '{type(self)}' and '{type(other)}'")
 
-    def __add__(self, other: Any) -> 'DescriptiveStatistics':
+    def __add__(self, other: Any) -> DescriptiveStatistics:
         """Adds a new descriptive statistics container to the current one.
 
         Returns:

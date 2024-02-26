@@ -6,7 +6,7 @@
 RTree spatial index
 -------------------
 """
-from typing import Optional, Tuple
+from __future__ import annotations
 
 import numpy
 
@@ -28,8 +28,8 @@ class RTree:
     """
 
     def __init__(self,
-                 system: Optional[geodetic.Spheroid] = None,
-                 dtype: Optional[numpy.dtype] = None,
+                 system: geodetic.Spheroid | None = None,
+                 dtype: numpy.dtype | None = None,
                  ndims: int = 3):
         """Initialize a new R*Tree."""
         dtype = dtype or numpy.dtype('float64')
@@ -45,7 +45,7 @@ class RTree:
 
     def bounds(
             self
-    ) -> Tuple[Tuple[float, float, float], Tuple[float, float, float]]:
+    ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
         """Returns the box able to contain all values stored in the container.
 
         Returns:
@@ -102,10 +102,10 @@ class RTree:
 
     def value(self,
               coordinates: numpy.ndarray,
-              radius: Optional[float] = None,
+              radius: float | None = None,
               k: int = 4,
               within: bool = True,
-              num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
+              num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Get the coordinates and values for the K-nearest neighbors of a
         given point.
 
@@ -142,7 +142,7 @@ class RTree:
               coordinates: numpy.ndarray,
               k: int = 4,
               within: bool = True,
-              num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
+              num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Search for the nearest K nearest neighbors of a given point.
 
         Args:
@@ -171,11 +171,11 @@ class RTree:
     def inverse_distance_weighting(
             self,
             coordinates: numpy.ndarray,
-            radius: Optional[float] = None,
+            radius: float | None = None,
             k: int = 9,
             p: int = 2,
             within: bool = True,
-            num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
+            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolation of the value at the requested position by inverse
         distance weighting method.
 
@@ -207,13 +207,13 @@ class RTree:
     def radial_basis_function(
             self,
             coordinates: numpy.ndarray,
-            radius: Optional[float] = None,
+            radius: float | None = None,
             k: int = 9,
-            rbf: Optional[str] = None,
-            epsilon: Optional[float] = None,
+            rbf: str | None = None,
+            epsilon: float | None = None,
             smooth: float = 0,
             within: bool = True,
-            num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
+            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolation of the value at the requested position by radial basis
         function interpolation.
 
@@ -265,12 +265,12 @@ class RTree:
     def window_function(
             self,
             coordinates: numpy.ndarray,
-            radius: Optional[float] = None,
+            radius: float | None = None,
             k: int = 9,
-            wf: Optional[str] = None,
-            arg: Optional[float] = None,
+            wf: str | None = None,
+            arg: float | None = None,
             within: bool = True,
-            num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
+            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolation of the value at the requested position by window
         function.
 
@@ -359,13 +359,13 @@ class RTree:
     def universal_kriging(
             self,
             coordinates: numpy.ndarray,
-            radius: Optional[float] = None,
+            radius: float | None = None,
             k: int = 9,
-            covariance: Optional[str] = None,
+            covariance: str | None = None,
             sigma: float = 1.0,
             alpha: float = 1_000_000.0,
             within: bool = True,
-            num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
+            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolate the values of a point using universal kriging.
 
         Args:
@@ -423,7 +423,7 @@ class RTree:
             interface._core_covariance_function(covariance), sigma, alpha,
             within, num_threads)
 
-    def __getstate__(self) -> Tuple:
+    def __getstate__(self) -> tuple:
         """Return the state of the object for pickling purposes.
 
         Returns:
@@ -431,7 +431,7 @@ class RTree:
         """
         return (self.dtype, self._instance.__getstate__())
 
-    def __setstate__(self, state: Tuple):
+    def __setstate__(self, state: tuple):
         """Set the state of the object from pickling.
 
         Args:

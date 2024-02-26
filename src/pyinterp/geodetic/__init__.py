@@ -2,7 +2,7 @@
 Geographic coordinate system
 ----------------------------
 """
-from typing import List, Optional, Tuple
+from __future__ import annotations
 
 import numpy
 
@@ -56,7 +56,7 @@ class Spheroid(geodetic.Spheroid):
         Spheroid(6378137.0, 0.003352810681182319)
     """
 
-    def __init__(self, parameters: Optional[Tuple[float, float]] = None):
+    def __init__(self, parameters: tuple[float, float] | None = None):
         super().__init__(*(parameters or ()))
 
     def __repr__(self):
@@ -71,7 +71,7 @@ class Coordinates(geodetic.Coordinates):
             manages a WGS84 ellipsoid.
     """
 
-    def __init__(self, spheroid: Optional[Spheroid] = None):
+    def __init__(self, spheroid: Spheroid | None = None):
         super().__init__(spheroid)
 
 
@@ -97,8 +97,8 @@ class Box(geodetic.Box):
     """
 
     def __init__(self,
-                 min_corner: Optional[Point] = None,
-                 max_corner: Optional[Point] = None):
+                 min_corner: Point | None = None,
+                 max_corner: Point | None = None):
         super().__init__(min_corner or geodetic.Point(), max_corner
                          or geodetic.Point())
 
@@ -117,8 +117,8 @@ class Polygon(geodetic.Polygon):
     """
 
     def __init__(self,
-                 outer: List[Point],
-                 inners: Optional[List[List[Point]]] = None) -> None:
+                 outer: list[Point],
+                 inners: list[list[Point]] | None = None) -> None:
         super().__init__(outer, inners)  # type: ignore
 
 
@@ -134,7 +134,7 @@ class MultiPolygon(geodetic.MultiPolygon):
             :py:class:`pyinterp.geodetic.Polygon`.
     """
 
-    def __init__(self, polygons: Optional[List[Polygon]] = None) -> None:
+    def __init__(self, polygons: list[Polygon] | None = None) -> None:
         args = (polygons, ) if polygons is not None else ()
         super().__init__(*args)
 
@@ -165,18 +165,18 @@ class RTree(geodetic.RTree):
             ellipsoid.
     """
 
-    def __init__(self, spheroid: Optional[Spheroid] = None) -> None:
+    def __init__(self, spheroid: Spheroid | None = None) -> None:
         super().__init__(spheroid)
 
     def inverse_distance_weighting(
             self,
             lon: numpy.ndarray,
             lat: numpy.ndarray,
-            radius: Optional[float] = None,
+            radius: float | None = None,
             k: int = 9,
             p: int = 2,
             within: bool = True,
-            num_threads: int = 0) -> Tuple[numpy.ndarray, numpy.ndarray]:
+            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolation of the value at the requested position by inverse
         distance weighting method.
 
@@ -202,18 +202,18 @@ class RTree(geodetic.RTree):
         return super().inverse_distance_weighting(lon, lat, radius, k, p,
                                                   within, num_threads)
 
-    def radial_basis_function(
+    def radial_basis_function(  # type: ignore[override]
         self,
         lon: numpy.ndarray,
         lat: numpy.ndarray,
-        radius: Optional[float] = None,
+        radius: float | None = None,
         k: int = 9,
-        rbf: Optional[str] = None,
-        epsilon: Optional[float] = None,
+        rbf: str | None = None,
+        epsilon: float | None = None,
         smooth: float = 0,
         within: bool = True,
         num_threads: int = 0,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolation of the value at the requested position by radial basis
         function interpolation.
 
@@ -259,17 +259,17 @@ class RTree(geodetic.RTree):
             interface._core_radial_basis_function(rbf, epsilon), epsilon,
             smooth, within, num_threads)
 
-    def window_function(
+    def window_function(  # type: ignore[override]
         self,
         lon: numpy.ndarray,
         lat: numpy.ndarray,
         radius: float,
         k: int = 9,
-        wf: Optional[str] = None,
-        arg: Optional[float] = None,
+        wf: str | None = None,
+        arg: float | None = None,
         within: bool = True,
         num_threads: int = 0,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolation of the value at the requested position by window
         function.
 

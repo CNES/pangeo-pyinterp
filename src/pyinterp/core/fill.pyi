@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import ClassVar, Tuple, overload
 
 import numpy
@@ -13,6 +15,17 @@ from . import (
     TemporalGrid3DFloat64,
     TemporalGrid4DFloat32,
     TemporalGrid4DFloat64,
+)
+from .array import (
+    Array1DFloat32,
+    Array1DFloat64,
+    Array1DInt64,
+    Array2DFloat32,
+    Array2DFloat64,
+    Array3DFloat32,
+    Array3DFloat64,
+    Array4DFloat32,
+    Array4DFloat64,
 )
 
 class FirstGuess:
@@ -94,7 +107,7 @@ class ValueType:
         ...
 
 
-def gauss_seidel_float32(grid: numpy.ndarray[numpy.float32],
+def gauss_seidel_float32(grid: Array2DFloat32,
                          first_guess: FirstGuess = ...,
                          is_circle: bool = ...,
                          max_iterations: int = ...,
@@ -104,7 +117,7 @@ def gauss_seidel_float32(grid: numpy.ndarray[numpy.float32],
     ...
 
 
-def gauss_seidel_float64(grid: numpy.ndarray[numpy.float64],
+def gauss_seidel_float64(grid: Array2DFloat64,
                          first_guess: FirstGuess = ...,
                          is_circle: bool = ...,
                          max_iterations: int = ...,
@@ -119,7 +132,7 @@ def loess_float32(grid: Grid2DFloat32,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float32]:
+                  num_threads: int = ...) -> Array2DFloat32:
     ...
 
 
@@ -128,7 +141,7 @@ def loess_float32(grid: Grid3DFloat32,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float32]:
+                  num_threads: int = ...) -> Array3DFloat32:
     ...
 
 
@@ -137,7 +150,7 @@ def loess_float32(grid: TemporalGrid3DFloat32,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float32]:
+                  num_threads: int = ...) -> Array3DFloat32:
     ...
 
 
@@ -146,7 +159,7 @@ def loess_float32(grid: Grid4DFloat32,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float32]:
+                  num_threads: int = ...) -> Array4DFloat32:
     ...
 
 
@@ -155,7 +168,7 @@ def loess_float32(grid: TemporalGrid4DFloat32,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float32]:
+                  num_threads: int = ...) -> Array4DFloat32:
     ...
 
 
@@ -164,7 +177,7 @@ def loess_float64(grid: Grid2DFloat64,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+                  num_threads: int = ...) -> Array2DFloat64:
     ...
 
 
@@ -173,7 +186,7 @@ def loess_float64(grid: Grid3DFloat64,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+                  num_threads: int = ...) -> Array3DFloat64:
     ...
 
 
@@ -182,7 +195,7 @@ def loess_float64(grid: TemporalGrid3DFloat64,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+                  num_threads: int = ...) -> Array3DFloat64:
     ...
 
 
@@ -191,7 +204,7 @@ def loess_float64(grid: Grid4DFloat64,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+                  num_threads: int = ...) -> Array4DFloat64:
     ...
 
 
@@ -200,29 +213,25 @@ def loess_float64(grid: TemporalGrid4DFloat64,
                   nx: int = ...,
                   ny: int = ...,
                   value_type: ValueType = ...,
-                  num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+                  num_threads: int = ...) -> Array4DFloat64:
     ...
 
 
-def matrix_float32(x: numpy.ndarray[numpy.float32],
-                   fill_value: float = ...) -> None:
+def matrix_float32(x: Array2DFloat32, fill_value: float = ...) -> None:
     ...
 
 
-def matrix_float64(x: numpy.ndarray[numpy.float64],
-                   fill_value: float = ...) -> None:
+def matrix_float64(x: Array2DFloat64, fill_value: float = ...) -> None:
     ...
 
 
-def vector_float32(x: numpy.ndarray[numpy.float32],
-                   fill_value: float = ...) -> None:
+def vector_float32(x: Array1DFloat32, fill_value: float = ...) -> None:
     ...
 
 
-def vector_float64(x: numpy.ndarray[numpy.float64],
-                   fill_value: float = ...) -> None:
+def vector_float64(x: Array1DFloat64, fill_value: float = ...) -> None:
     ...
 
 
-def vector_int64(x: numpy.ndarray[numpy.int64], fill_value: int) -> None:
+def vector_int64(x: Array1DInt64, fill_value: int) -> None:
     ...

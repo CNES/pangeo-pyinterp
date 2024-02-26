@@ -6,13 +6,18 @@
 Data binning
 ------------
 """
-from typing import Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import Union
 import copy
 
 import dask.array.core
 import numpy
 
 from . import core, geodetic
+
+#: The supported data types for the binning 2D
+Binning2DTyped = Union[core.Binning2DFloat64, core.Binning2DFloat32]
 
 
 class Binning2D:
@@ -46,10 +51,10 @@ class Binning2D:
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
-                 wgs: Optional[geodetic.Spheroid] = None,
+                 wgs: geodetic.Spheroid | None = None,
                  dtype: numpy.dtype = numpy.dtype('float64')):
         if dtype == numpy.dtype('float64'):
-            self._instance = core.Binning2DFloat64(x, y, wgs)
+            self._instance: Binning2DTyped = core.Binning2DFloat64(x, y, wgs)
         elif dtype == numpy.dtype('float32'):
             self._instance = core.Binning2DFloat32(x, y, wgs)
         else:
@@ -67,7 +72,7 @@ class Binning2D:
         return self._instance.y
 
     @property
-    def wgs(self) -> Optional[core.geodetic.Spheroid]:
+    def wgs(self) -> core.geodetic.Spheroid | None:
         """Gets the geodetic system handled of the grid."""
         return self._instance.wgs
 
@@ -84,7 +89,7 @@ class Binning2D:
         result.append(f'  y: {self._instance.y}')
         return '\n'.join(result)
 
-    def __add__(self, other: 'Binning2D') -> 'Binning2D':
+    def __add__(self, other: Binning2D) -> Binning2D:
         """Overrides the default behavior of the ``+`` operator."""
         result = copy.copy(self)
         if type(result._instance) != type(other._instance):  # noqa: E721
@@ -146,9 +151,9 @@ class Binning2D:
         self._instance.push(x, y, z, simple)
 
     def push_delayed(self,
-                     x: Union[numpy.ndarray, dask.array.core.Array],
-                     y: Union[numpy.ndarray, dask.array.core.Array],
-                     z: Union[numpy.ndarray, dask.array.core.Array],
+                     x: numpy.ndarray | dask.array.core.Array,
+                     y: numpy.ndarray | dask.array.core.Array,
+                     z: numpy.ndarray | dask.array.core.Array,
                      simple: bool = True) -> dask.array.core.Array:
         """Push new samples into the defined bins from dask array.
 
@@ -239,10 +244,12 @@ class Binning1D:
 
     def __init__(self,
                  x: core.Axis,
-                 range: Optional[Tuple[float, float]] = None,
+                 range: tuple[float, float] | None = None,
                  dtype: numpy.dtype = numpy.dtype('float64')):
         if dtype == numpy.dtype('float64'):
-            self._instance = core.Binning1DFloat64(x, range)
+            self._instance: (core.Binning1DFloat64
+                             | core.Binning1DFloat32) = core.Binning1DFloat64(
+                                 x, range)
         elif dtype == numpy.dtype('float32'):
             self._instance = core.Binning1DFloat32(x, range)
         else:
@@ -254,7 +261,7 @@ class Binning1D:
         """Gets the bin centers for the X Axis of the grid."""
         return self._instance.x
 
-    def range(self) -> Tuple[float, float]:
+    def range(self) -> tuple[float, float]:
         """Gets the lower and upper range of the bins."""
         return self._instance.range()
 
@@ -272,7 +279,7 @@ class Binning1D:
         result.append(f'  {self._instance.range()}')
         return '\n'.join(result)
 
-    def __add__(self, other: 'Binning1D') -> 'Binning1D':
+    def __add__(self, other: Binning1D) -> Binning1D:
         """Overrides the default behavior of the ``+`` operator."""
         result = copy.copy(self)
         if type(result._instance) != type(other._instance):  # noqa: E721
@@ -284,7 +291,7 @@ class Binning1D:
         self,
         x: numpy.ndarray,
         z: numpy.ndarray,
-        weights: Optional[numpy.ndarray] = None,
+        weights: numpy.ndarray | None = None,
     ) -> None:
         """Push new samples into the defined bins.
 
@@ -301,9 +308,9 @@ class Binning1D:
 
     def push_delayed(
         self,
-        x: Union[numpy.ndarray, dask.array.core.Array],
-        z: Union[numpy.ndarray, dask.array.core.Array],
-        weights: Optional[Union[numpy.ndarray, dask.array.core.Array]] = None,
+        x: numpy.ndarray | dask.array.core.Array,
+        z: numpy.ndarray | dask.array.core.Array,
+        weights: numpy.ndarray | dask.array.core.Array | None = None,
     ) -> dask.array.core.Array:
         """Push new samples into the defined bins from dask array.
 

@@ -6,13 +6,18 @@
 Histogram 2D
 ------------
 """
-from typing import Optional, Union
+from __future__ import annotations
+
+from typing import Union
 import copy
 
 import dask.array.core
 import numpy
 
 from . import core
+
+#: The type of the histogram 2D
+Histogram2DTyped = Union[core.Histogram2DFloat64, core.Histogram2DFloat32]
 
 
 class Histogram2D:
@@ -61,10 +66,11 @@ class Histogram2D:
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
-                 bin_counts: Optional[int] = None,
-                 dtype: Optional[numpy.dtype] = numpy.dtype('float64')):
+                 bin_counts: int | None = None,
+                 dtype: numpy.dtype | None = numpy.dtype('float64')):
         if dtype == numpy.dtype('float64'):
-            self._instance = core.Histogram2DFloat64(x, y, bin_counts)
+            self._instance: Histogram2DTyped = core.Histogram2DFloat64(
+                x, y, bin_counts)
         elif dtype == numpy.dtype('float32'):
             self._instance = core.Histogram2DFloat32(x, y, bin_counts)
         else:
@@ -94,7 +100,7 @@ class Histogram2D:
         result.append(f'  y: {self._instance.y}')
         return '\n'.join(result)
 
-    def __add__(self, other: 'Histogram2D') -> 'Histogram2D':
+    def __add__(self, other: Histogram2D) -> Histogram2D:
         """Overrides the default behavior of the ``+`` operator."""
         if self.dtype != other.dtype:
             raise ValueError('dtype mismatch')
@@ -118,9 +124,9 @@ class Histogram2D:
 
     def push_delayed(
         self,
-        x: Union[numpy.ndarray, dask.array.core.Array],
-        y: Union[numpy.ndarray, dask.array.core.Array],
-        z: Union[numpy.ndarray, dask.array.core.Array],
+        x: numpy.ndarray | dask.array.core.Array,
+        y: numpy.ndarray | dask.array.core.Array,
+        z: numpy.ndarray | dask.array.core.Array,
     ) -> dask.array.core.Array:
         """Push new samples into the defined bins from dask array.
 

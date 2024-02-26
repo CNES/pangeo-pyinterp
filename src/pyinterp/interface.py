@@ -6,7 +6,8 @@
 Interface with the library core
 ===============================
 """
-from typing import Optional
+from __future__ import annotations
+
 import re
 
 import numpy
@@ -90,7 +91,7 @@ def _core_function(function: str, instance: object) -> str:
 
 
 def _core_covariance_function(
-        covariance: Optional[str]) -> core.CovarianceFunction:
+        covariance: str | None) -> core.CovarianceFunction:
     """Get the covariance function."""
     covariance = covariance or 'matern_32'
     if covariance not in [
@@ -109,8 +110,7 @@ def _core_covariance_function(
 
 
 def _core_radial_basis_function(
-        rbf: Optional[str],
-        epsilon: Optional[float]) -> core.RadialBasisFunction:
+        rbf: str | None, epsilon: float | None) -> core.RadialBasisFunction:
     """Get the radial basis function."""
     adjustable = ['gaussian', 'inverse_multiquadric', 'multiquadric']
     non_adjustable = ['cubic', 'linear', 'thin_plate']
@@ -124,8 +124,8 @@ def _core_radial_basis_function(
     return getattr(core.RadialBasisFunction, rbf)
 
 
-def _core_window_function(wf: Optional[str],
-                          arg: Optional[float]) -> core.WindowFunction:
+def _core_window_function(wf: str | None,
+                          arg: float | None) -> core.WindowFunction:
     """Get the window function."""
     wf = wf or 'blackman'
     if wf not in [

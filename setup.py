@@ -4,7 +4,9 @@
 # BSD-style license that can be found in the LICENSE file.
 """This script is the entry point for building, distributing and installing
 this module using distutils/setuptools."""
-from typing import List, Optional, Tuple
+from __future__ import annotations
+
+from typing import Any
 import datetime
 import os
 import pathlib
@@ -32,7 +34,7 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 OSX_DEPLOYMENT_TARGET = '10.14'
 
 
-def compare_setuptools_version(required: Tuple[int, ...]) -> bool:
+def compare_setuptools_version(required: tuple[int, ...]) -> bool:
     """Compare the version of setuptools with the required version."""
     current = tuple(map(int, setuptools.__version__.split('.')[:2]))
     return current >= required
@@ -108,7 +110,8 @@ def revision() -> str:
                     return match.group(1)
         raise AssertionError()
 
-    stdout = execute('git describe --tags --dirty --long --always').strip()
+    stdout: Any = execute(
+        'git describe --tags --dirty --long --always').strip()
     pattern = re.compile(r'([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?')
     match = pattern.search(stdout)
     if match is None:
@@ -248,13 +251,13 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             self.build_cmake(ext)
         super().run()
 
-    def boost(self) -> Optional[List[str]]:
+    def boost(self) -> list[str] | None:
         """Get the default boost path in Anaconda's environment."""
         # Do not search system for Boost & disable the search for boost-cmake
         boost_option = '-DBoost_NO_SYSTEM_PATHS=TRUE ' \
             '-DBoost_NO_BOOST_CMAKE=TRUE'
-        boost_root = sys.prefix
-        if pathlib.Path(boost_root, 'include', 'boost').exists():
+        boost_root = pathlib.Path(sys.prefix)
+        if (boost_root / 'include' / 'boost').exists():
             return f'{boost_option} -DBoost_ROOT={boost_root}'.split()
         boost_root = pathlib.Path(sys.prefix, 'Library', 'include')
         if not boost_root.exists():
@@ -265,7 +268,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             return None
         return f'{boost_option} -DBoost_INCLUDE_DIR={boost_root}'.split()
 
-    def eigen(self) -> Optional[str]:
+    def eigen(self) -> str | None:
         """Get the default Eigen3 path in Anaconda's environment."""
         eigen_include_dir = pathlib.Path(sys.prefix, 'include', 'eigen3')
         if eigen_include_dir.exists():
@@ -309,8 +312,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                 result = True
         return result
 
-    def set_cmake_user_options(self) -> List[str]:
+    def set_cmake_user_options(self) -> list[str]:
         """Sets the options defined by the user."""
+        cmake_variable: Any
         is_conda = self.is_conda()
         result = []
 

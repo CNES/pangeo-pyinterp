@@ -6,18 +6,18 @@
 Bicubic interpolation
 =====================
 """
-from typing import Optional, Union
+from __future__ import annotations
 
 import numpy
 
 from .. import core, grid, interface
 
 
-def bicubic(mesh: Union[grid.Grid2D, grid.Grid3D, grid.Grid4D],
+def bicubic(mesh: grid.Grid2D | grid.Grid3D | grid.Grid4D,
             x: numpy.ndarray,
             y: numpy.ndarray,
-            z: Optional[numpy.ndarray] = None,
-            u: Optional[numpy.ndarray] = None,
+            z: numpy.ndarray | None = None,
+            u: numpy.ndarray | None = None,
             nx: int = 3,
             ny: int = 3,
             fitting_model: str = 'bicubic',

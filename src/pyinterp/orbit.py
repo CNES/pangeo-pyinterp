@@ -6,7 +6,9 @@
 Orbit interpolation.
 ====================
 """
-from typing import Iterator, Optional, Tuple
+from __future__ import annotations
+
+from typing import Iterator
 import dataclasses
 
 import numpy
@@ -21,9 +23,9 @@ def interpolate(
     xp: NDArray,
     xi: NDArray,
     height: float = 0.0,
-    wgs: Optional[geodetic.Coordinates] = None,
+    wgs: geodetic.Coordinates | None = None,
     half_window_size: int = 10,
-) -> Tuple[NDArray, NDArray]:
+) -> tuple[NDArray, NDArray]:
     """Interpolate the given orbit at the given coordinates.
 
     Args:
@@ -41,17 +43,41 @@ def interpolate(
     """
     wgs = wgs or geodetic.Coordinates()
     mz = wgs.spheroid.semi_major_axis / wgs.spheroid.semi_minor_axis()
-    x, y, z = wgs.lla_to_ecef(lon, lat, numpy.full_like(lon, height))
+    x, y, z = wgs.lla_to_ecef(
+        lon,  # type: ignore
+        lat,  # type: ignore
+        numpy.full_like(lon, height),
+    )
 
     r = numpy.sqrt(x * x + y * y + z * z * mz * mz)
 
     x_axis = core.Axis((xp - xp[0]).astype(numpy.float64), 1e-6, False)
     xi = (xi - xp[0]).astype(numpy.float64)
 
-    x = core.interpolate1d(x_axis, x, xi, half_window_size=half_window_size)
-    y = core.interpolate1d(x_axis, y, xi, half_window_size=half_window_size)
-    z = core.interpolate1d(x_axis, z, xi, half_window_size=half_window_size)
-    r = core.interpolate1d(x_axis, r, xi, half_window_size=half_window_size)
+    x = core.interpolate1d(
+        x_axis,
+        x,
+        xi,  # type: ignore
+        half_window_size=half_window_size,
+    )
+    y = core.interpolate1d(
+        x_axis,
+        y,
+        xi,  # type: ignore
+        half_window_size=half_window_size,
+    )
+    z = core.interpolate1d(
+        x_axis,
+        z,
+        xi,  # type: ignore
+        half_window_size=half_window_size,
+    )
+    r = core.interpolate1d(
+        x_axis,
+        r,
+        xi,  # type: ignore
+        half_window_size=half_window_size,
+    )
 
     r /= numpy.sqrt(x * x + y * y + z * z)
     x *= r
@@ -68,7 +94,7 @@ def _rearrange_orbit(
     lon: NDArray,
     lat: NDArray,
     time: NDArrayTimeDelta,
-) -> Tuple[NDArray, NDArray, NDArrayTimeDelta]:
+) -> tuple[NDArray, NDArray, NDArrayTimeDelta]:
     """Rearrange orbit starting from pass 1.
 
     Detect the beginning of pass 1 in the ephemeris. By definition, it is
@@ -149,7 +175,7 @@ class Orbit:
     #: Along track distance (in meters).
     x_al: NDArray
     #: Spheroid model used.
-    wgs: Optional[geodetic.Spheroid]
+    wgs: geodetic.Spheroid | None
 
     def cycle_duration(self) -> numpy.timedelta64:
         """Get the cycle duration."""
@@ -168,9 +194,10 @@ class Orbit:
 
     def curvilinear_distance(self) -> numpy.ndarray:
         """Get the curvilinear distance."""
-        return geodetic.LineString(self.longitude,
-                                   self.latitude).curvilinear_distance(
-                                       strategy='thomas', wgs=self.wgs)
+        return geodetic.LineString(
+            self.longitude,  # type: ignore
+            self.latitude,  # type: ignore
+        ).curvilinear_distance(strategy='thomas', wgs=self.wgs)
 
     def pass_duration(self, number: int) -> numpy.timedelta64:
         """Get the duration of a given pass.
@@ -189,7 +216,7 @@ class Orbit:
                     self.time[0])
         return self.pass_time[number] - self.pass_time[number - 1]
 
-    def decode_absolute_pass_number(self, number: int) -> Tuple[int, int]:
+    def decode_absolute_pass_number(self, number: int) -> tuple[int, int]:
         """Calculate the cycle and pass number from a given absolute pass
         number.
 
@@ -227,10 +254,10 @@ class Orbit:
 
     def iterate(
         self,
-        first_date: Optional[numpy.datetime64] = None,
-        last_date: Optional[numpy.datetime64] = None,
+        first_date: numpy.datetime64 | None = None,
+        last_date: numpy.datetime64 | None = None,
         absolute_pass_number: int = 1
-    ) -> Iterator[Tuple[int, int, numpy.datetime64]]:
+    ) -> Iterator[tuple[int, int, numpy.datetime64]]:
         """Obtain all half-orbits within the defined time interval.
 
         Args:
@@ -269,7 +296,7 @@ class EquatorCoordinates:
     time: numpy.datetime64
 
     @classmethod
-    def undefined(cls) -> 'EquatorCoordinates':
+    def undefined(cls) -> EquatorCoordinates:
         """Create an undefined instance."""
         return cls(numpy.nan, numpy.datetime64('NaT'))
 
@@ -303,7 +330,7 @@ class Swath(Pass):
     #: Across track distance of the pass (m)
     x_ac: NDArray
 
-    def mask(self, requirement_bounds: Tuple[float, float]) -> NDArray:
+    def mask(self, requirement_bounds: tuple[float, float]) -> NDArray:
         """Obtain a mask to set NaN values outside the mission requirements.
 
         Args:
@@ -319,9 +346,9 @@ class Swath(Pass):
         valid[(numpy.abs(self.x_ac) >= requirement_bounds[0])
               & (numpy.abs(self.x_ac) <= requirement_bounds[1])] = 1
         along_track = numpy.full(self.lon_nadir.shape, 1, dtype=numpy.float64)
-        return along_track[:, numpy.newaxis] * valid
+        return along_track[:, numpy.newaxis] * valid  # type: ignore
 
-    def insert_central_pixel(self) -> 'Swath':
+    def insert_central_pixel(self) -> Swath:
         """Return a swath with a central pixel dividing the swath in two by the
         reference ground track."""
 
@@ -360,7 +387,10 @@ def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
     lat1 = lat_nadir[i0:i1 + 1]
 
     # Calculate the position of the satellite at the equator
-    intersection = geodetic.LineString(lon1, lat1).intersection(
+    intersection = geodetic.LineString(
+        lon1,  # type: ignore
+        lat1,  # type: ignore
+    ).intersection(
         geodetic.LineString(numpy.array([lon1[0] - 0.5, lon1[1] + 0.5]),
                             numpy.array([0, 0], dtype='float64')))
     if len(intersection) == 0:
@@ -371,8 +401,10 @@ def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
     # Calculate the time of the point on the equator
     lon1 = numpy.insert(lon1, 1, point.lon)
     lat1 = numpy.insert(lat1, 1, 0)
-    x_al = geodetic.LineString(lon1,
-                               lat1).curvilinear_distance(strategy='thomas')
+    x_al = geodetic.LineString(
+        lon1,  # type: ignore
+        lat1,  # type: ignore
+    ).curvilinear_distance(strategy='thomas')
 
     # Pop the along track distance at the equator
     x_eq = x_al[1]
@@ -390,9 +422,9 @@ def calculate_orbit(
     lon_nadir: NDArray,
     lat_nadir: NDArray,
     time: NDArrayTimeDelta,
-    cycle_duration: Optional[numpy.timedelta64] = None,
-    along_track_resolution: Optional[float] = None,
-    spheroid: Optional[geodetic.Spheroid] = None,
+    cycle_duration: numpy.timedelta64 | None = None,
+    along_track_resolution: float | None = None,
+    spheroid: geodetic.Spheroid | None = None,
 ) -> Orbit:
     """Calculate the orbit at the given height.
 
@@ -414,7 +446,7 @@ def calculate_orbit(
     # If the first point of the given orbit starts at the equator, we need to
     # skew this first pass.
     if -40 <= lat_nadir[0] <= 40:
-        dy = numpy.roll(lat_nadir, 1) - lat_nadir
+        dy = numpy.roll(lat_nadir, 1) - lat_nadir  # type: ignore
         indexes = numpy.where(((dy < 0) & (numpy.roll(dy, 1) >= 0))
                               | ((dy > 0)
                                  & (numpy.roll(dy, 1) <= 0)))[0]
@@ -430,13 +462,14 @@ def calculate_orbit(
                                time[-1],
                                numpy.timedelta64(500, 'ms'),
                                dtype=time.dtype)
-        lon_nadir, lat_nadir = interpolate(lon_nadir,
-                                           lat_nadir,
-                                           time.astype('i8'),
-                                           time_hr.astype('i8'),
-                                           height=height,
-                                           wgs=wgs,
-                                           half_window_size=50)
+        lon_nadir, lat_nadir = interpolate(
+            lon_nadir,  # type: ignore
+            lat_nadir,
+            time.astype('i8'),
+            time_hr.astype('i8'),
+            height=height,
+            wgs=wgs,
+            half_window_size=50)
         time = time_hr
 
     if cycle_duration is not None:
@@ -449,44 +482,53 @@ def calculate_orbit(
     # Rearrange orbit starting from pass 1
     lon_nadir, lat_nadir, time = _rearrange_orbit(
         time[-1] + time[1] - time[0],
-        lon_nadir,
+        lon_nadir,  # type: ignore
         lat_nadir,
-        time,
+        time,  # type: ignore
     )
 
     # Calculates the along track distance (km)
-    distance = geodetic.LineString(lon_nadir, lat_nadir).curvilinear_distance(
-        strategy='thomas', wgs=spheroid) * 1e-3
+    distance = geodetic.LineString(
+        lon_nadir,  # type: ignore[arg-type]
+        lat_nadir,  # type: ignore[arg-type]
+    ).curvilinear_distance(strategy='thomas', wgs=spheroid) * 1e-3
 
     # Interpolate the final orbit according the given along track resolution
     x_al = numpy.arange(distance[0],
                         distance[-2],
                         along_track_resolution or 2,
                         dtype=distance.dtype)
-    lon_nadir, lat_nadir = interpolate(lon_nadir[:-1],
-                                       lat_nadir[:-1],
-                                       distance[:-1],
-                                       x_al,
-                                       height=height,
-                                       wgs=wgs,
-                                       half_window_size=10)
+    lon_nadir, lat_nadir = interpolate(
+        lon_nadir[:-1],
+        lat_nadir[:-1],
+        distance[:-1],  # type: ignore
+        x_al,  # type: ignore
+        height=height,
+        wgs=wgs,
+        half_window_size=10)
 
     time = numpy.interp(
         x_al,  # type: ignore
         distance[:-1],  # type: ignore
         time[:-1].astype('i8')).astype(time.dtype)
 
-    return Orbit(height, lat_nadir, lon_nadir,
-                 numpy.sort(_calculate_pass_time(lat_nadir, time)), time, x_al,
-                 wgs.spheroid)  # type: ignore
+    return Orbit(
+        height,
+        lat_nadir,
+        lon_nadir,
+        numpy.sort(_calculate_pass_time(lat_nadir, time)),
+        time,
+        x_al,  # type: ignore
+        wgs.spheroid,  # type: ignore
+    )  # type: ignore
 
 
 def calculate_pass(
     pass_number: int,
     orbit: Orbit,
     *,
-    bbox: Optional[geodetic.Box] = None,
-) -> Optional[Pass]:
+    bbox: geodetic.Box | None = None,
+) -> Pass | None:
     """Get the properties of a swath of an half-orbit.
 
     Args:
@@ -532,11 +574,11 @@ def calculate_pass(
 def calculate_swath(
     half_orbit: Pass,
     *,
-    across_track_resolution: Optional[float] = None,
-    along_track_resolution: Optional[float] = None,
-    half_swath: Optional[float] = None,
-    half_gap: Optional[float] = None,
-    spheroid: Optional[geodetic.Spheroid] = None,
+    across_track_resolution: float | None = None,
+    along_track_resolution: float | None = None,
+    half_swath: float | None = None,
+    half_gap: float | None = None,
+    spheroid: geodetic.Spheroid | None = None,
 ) -> Swath:
     """Get the properties of a swath of an half-orbit.
 
@@ -571,14 +613,21 @@ def calculate_swath(
     x_ac = numpy.full((len(half_orbit), x_ac.size), x_ac)
 
     lon, lat = core.geodetic.calculate_swath(
-        half_orbit.lon_nadir,
-        half_orbit.lat_nadir,
+        half_orbit.lon_nadir,  # type: ignore
+        half_orbit.lat_nadir,  # type: ignore
         across_track_resolution * 1e3,
         half_gap * 1e3,
         half_swath,
         spheroid,
     )
 
-    return Swath(half_orbit.lon_nadir, half_orbit.lat_nadir, half_orbit.time,
-                 half_orbit.x_al, half_orbit.equator_coordinates, lon, lat,
-                 x_ac)
+    return Swath(
+        half_orbit.lon_nadir,
+        half_orbit.lat_nadir,
+        half_orbit.time,
+        half_orbit.x_al,
+        half_orbit.equator_coordinates,
+        lon,  # type: ignore
+        lat,  # type: ignore
+        x_ac,
+    )

@@ -2,13 +2,11 @@
 Geohash encoding and decoding
 -----------------------------
 """
-from typing import Optional, Tuple, Type
+from __future__ import annotations
 
-#
 import numpy
 import xarray
 
-#
 from . import geodetic
 from .core import GeoHash as BaseGeoHash, geohash
 
@@ -44,7 +42,7 @@ class GeoHash(BaseGeoHash):
 
     @classmethod
     def grid(cls,
-             box: Optional[geodetic.Box] = None,
+             box: geodetic.Box | None = None,
              precision: int = 1) -> xarray.Dataset:
         """Return the GeoHash grid covering the provided box.
 
@@ -85,7 +83,7 @@ class GeoHash(BaseGeoHash):
         })
 
     @staticmethod
-    def from_string(code: str, round: bool = False) -> 'GeoHash':
+    def from_string(code: str, round: bool = False) -> GeoHash:
         """Create from its string representation.
 
         Args:
@@ -105,5 +103,5 @@ class GeoHash(BaseGeoHash):
         lon, lat, precision = super().reduce()
         return f'{self.__class__.__name__}({lon}, {lat}, {precision})'
 
-    def __reduce__(self) -> Tuple[Type, Tuple[float, float, int]]:
+    def __reduce__(self) -> tuple[type, tuple[float, float, int]]:
         return (self.__class__, super().reduce())

@@ -11,16 +11,34 @@ Typing
     A numpy tensor with any type.
 
 """
-from typing import TYPE_CHECKING, Any, Tuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, TypeVar
 import sys
 
 import numpy
 import numpy.typing
 
+try:
+    from types import GenericAlias  # type: ignore[attr-defined]
+except ImportError:  # pragma: no cover
+    # pylint: disable=ungrouped-imports
+    # For Python < 3.9 we use a backport of GenericAlias provided by
+    # numpy
+    # isort: off
+    from numpy._typing._generic_alias import (  # type: ignore[misc,no-redef]
+        _GenericAlias as GenericAlias,  # yapf: disable
+    )
+    # isort: on
+    # pylint: enable=ungrouped-imports
+
 NDArray = numpy.typing.NDArray
+NDArrayDateTime: Any
+NDArrayStructured: Any
+NDArrayTimeDelta: Any
 
 
-def numpy_version() -> Tuple[int, ...]:
+def numpy_version() -> tuple[int, ...]:
     """Returns the version of the installed numpy library.
 
     Returns:
@@ -36,6 +54,22 @@ if TYPE_CHECKING and numpy_version() >= (1, 20) and sys.version_info > (
     NDArrayTimeDelta = numpy.ndarray[Any, numpy.dtype[numpy.timedelta64]]
 
 else:  # pragma: no cover
-    NDArrayDateTime = NDArray
-    NDArrayStructured = NDArray
-    NDArrayTimeDelta = NDArray
+    ScalarType_co = TypeVar('ScalarType_co',
+                            bound=numpy.generic,
+                            covariant=True)
+    _DType = GenericAlias(
+        numpy.dtype,
+        (ScalarType_co, ),
+    )
+    NDArrayDateTime = GenericAlias(
+        numpy.ndarray,
+        (Any, numpy.dtype(numpy.datetime64)),
+    )
+    NDArrayStructured = GenericAlias(
+        numpy.ndarray,
+        (Any, _DType),
+    )
+    NDArrayTimeDelta = GenericAlias(
+        numpy.ndarray,
+        (Any, numpy.dtype(numpy.timedelta64)),
+    )

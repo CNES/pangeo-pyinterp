@@ -2,7 +2,9 @@
 Replace undefined values
 ------------------------
 """
-from typing import Any, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 import concurrent.futures
 
 import numpy
@@ -11,10 +13,10 @@ from . import core, grid, interface
 from .typing import NDArray
 
 
-def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
+def loess(mesh: grid.Grid2D | grid.Grid3D,
           nx: int = 3,
           ny: int = 3,
-          value_type: Optional[str] = None,
+          value_type: str | None = None,
           num_threads: int = 0):
     """Filter values using a locally weighted regression function or LOESS. The
     weight function used for LOESS is the tri-cube weight function,
@@ -48,11 +50,11 @@ def loess(mesh: Union[grid.Grid2D, grid.Grid3D],
                                         num_threads)
 
 
-def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
+def gauss_seidel(mesh: grid.Grid2D | grid.Grid3D,
                  first_guess: str = 'zonal_average',
-                 max_iteration: Optional[int] = None,
+                 max_iteration: int | None = None,
                  epsilon: float = 1e-4,
-                 relaxation: Optional[float] = None,
+                 relaxation: float | None = None,
                  num_threads: int = 0):
     """Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
     method by relaxation.
@@ -142,13 +144,16 @@ def gauss_seidel(mesh: Union[grid.Grid2D, grid.Grid3D],
 
 def matrix(x: NDArray,
            fill_value: Any = numpy.nan,
-           in_place: bool = True) -> None:
+           in_place: bool = True) -> NDArray:
     """Fills in the gaps between defined values in a 2-dimensional array.
 
     Args:
         x: data to be filled.
         fill_value: Value used to fill undefined values.
         in_place: If true, the data is filled in place. Defaults to ``True``.
+
+    Returns:
+        The data filled.
     """
     if len(x.shape) != 2:
         raise ValueError('x must be a 2-dimensional array')

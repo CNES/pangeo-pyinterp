@@ -6,7 +6,9 @@
 Calculate statistics of a stream of values
 ------------------------------------------
 """
-from typing import Any, Iterable, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Iterable
 
 import dask.array.core
 import numpy
@@ -17,10 +19,10 @@ from .. import core
 def _delayed(
     attr: str,
     values: dask.array.core.Array,
-    weights: Optional[dask.array.core.Array] = None,
-    axis: Optional[Iterable[int]] = None,
-    bin_count: Optional[int] = None,
-) -> Union[core.StreamingHistogramFloat64, core.StreamingHistogramFloat32]:
+    weights: dask.array.core.Array | None = None,
+    axis: Iterable[int] | None = None,
+    bin_count: int | None = None,
+) -> core.StreamingHistogramFloat64 | core.StreamingHistogramFloat32:
     """Calculate the descriptive statistics of a dask array."""
     if weights is not None and values.shape != weights.shape:
         raise ValueError('values and weights must have the same shape')
@@ -89,12 +91,12 @@ class StreamingHistogram:
     """
 
     def __init__(self,
-                 values: Union[dask.array.core.Array, numpy.ndarray],
-                 weights: Optional[Union[dask.array.core.Array,
-                                         numpy.ndarray]] = None,
-                 axis: Optional[Union[int, Iterable[int]]] = None,
-                 bin_count: Optional[int] = None,
-                 dtype: Optional[numpy.dtype] = None) -> None:
+                 values: dask.array.core.Array | numpy.ndarray,
+                 weights: None |
+                 (dask.array.core.Array | numpy.ndarray) = None,
+                 axis: int | Iterable[int] | None = None,
+                 bin_count: int | None = None,
+                 dtype: numpy.dtype | None = None) -> None:
         if isinstance(axis, int):
             axis = (axis, )
         dtype = dtype or numpy.dtype('float64')
@@ -106,21 +108,21 @@ class StreamingHistogram:
             raise ValueError(f'dtype {dtype} not handled by the object')
         if isinstance(values, dask.array.core.Array) or isinstance(
                 weights, dask.array.core.Array):
-            self._instance = _delayed(attr,
-                                      dask.array.core.asarray(values),
-                                      weights=dask.array.core.asarray(weights)
-                                      if weights is not None else None,
-                                      axis=axis,
-                                      bin_count=bin_count)
+            self._instance: (core.StreamingHistogramFloat64
+                             | core.StreamingHistogramFloat32) = _delayed(
+                                 attr,
+                                 dask.array.core.asarray(values),
+                                 weights=dask.array.core.asarray(weights)
+                                 if weights is not None else None,
+                                 axis=axis,
+                                 bin_count=bin_count)
         else:
-            self._instance: Union[core.StreamingHistogramFloat64,
-                                  core.StreamingHistogramFloat32] = getattr(
-                                      core, attr)(values,
-                                                  weights=weights,
-                                                  axis=axis,
-                                                  bin_count=bin_count)
+            self._instance = getattr(core, attr)(values,
+                                                 weights=weights,
+                                                 axis=axis,
+                                                 bin_count=bin_count)
 
-    def __iadd__(self, other: Any) -> 'StreamingHistogram':
+    def __iadd__(self, other: Any) -> StreamingHistogram:
         """Adds a new histogram to the current one.
 
         Args:

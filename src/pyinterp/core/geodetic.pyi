@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import (
     Any,
     ClassVar,
@@ -12,9 +14,10 @@ from typing import (
 import numpy
 
 from .. import core
+from .array import Array1DBool, Array1DFloat64, Array2DFloat64
 
 class Box:
-    __hash__: ClassVar[None] = ...
+    __hash__: ClassVar[None] = ...  # type: ignore[assignment]
     max_corner: Point
     min_corner: Point
 
@@ -41,9 +44,9 @@ class Box:
 
     @overload
     def covered_by(self,
-                   lon: numpy.ndarray[numpy.float64],
-                   lat: numpy.ndarray[numpy.float64],
-                   num_threads: int = ...) -> numpy.ndarray[bool]:
+                   lon: Array1DFloat64,
+                   lat: Array1DFloat64,
+                   num_threads: int = ...) -> Array1DBool:
         ...
 
     @overload
@@ -75,13 +78,13 @@ class Box:
     def __copy__(self) -> Box:
         ...
 
-    def __eq__(self, other: Box) -> bool:
+    def __eq__(self, other: Box) -> bool:  # type: ignore[override]
         ...
 
     def __getstate__(self) -> tuple:
         ...
 
-    def __ne__(self, other: Box) -> bool:
+    def __ne__(self, other: Box) -> bool:  # type: ignore[override]
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -94,24 +97,24 @@ class Coordinates:
         ...
 
     def ecef_to_lla(self,
-                    x: numpy.ndarray[numpy.float64],
-                    y: numpy.ndarray[numpy.float64],
-                    z: numpy.ndarray[numpy.float64],
+                    x: Array1DFloat64,
+                    y: Array1DFloat64,
+                    z: Array1DFloat64,
                     num_threads: int = ...) -> tuple:
         ...
 
     def lla_to_ecef(self,
-                    lon: numpy.ndarray[numpy.float64],
-                    lat: numpy.ndarray[numpy.float64],
-                    alt: numpy.ndarray[numpy.float64],
+                    lon: Array1DFloat64,
+                    lat: Array1DFloat64,
+                    alt: Array1DFloat64,
                     num_threads: int = ...) -> tuple:
         ...
 
     def transform(self,
                   target: Coordinates,
-                  lon: numpy.ndarray[numpy.float64],
-                  lat: numpy.ndarray[numpy.float64],
-                  alt: numpy.ndarray[numpy.float64],
+                  lon: Array1DFloat64,
+                  lat: Array1DFloat64,
+                  alt: Array1DFloat64,
                   num_threads: int = ...) -> tuple:
         ...
 
@@ -164,7 +167,7 @@ class Crossover:
 
 
 class LineString:
-    __hash__: ClassVar[None] = ...
+    __hash__: ClassVar[None] = ...  # type: ignore[assignment]
 
     @overload
     def __init__(self) -> None:
@@ -175,8 +178,7 @@ class LineString:
         ...
 
     @overload
-    def __init__(self, lon: numpy.ndarray[numpy.float64],
-                 lat: numpy.ndarray[numpy.float64]) -> None:
+    def __init__(self, lon: Array1DFloat64, lat: Array1DFloat64) -> None:
         ...
 
     def append(self, point: Point) -> None:
@@ -191,17 +193,16 @@ class LineString:
     @overload
     def closest_point(
         self,
-        lon: numpy.ndarray[numpy.float64],
-        lat: numpy.ndarray[numpy.float64],
+        lon: Array1DFloat64,
+        lat: Array1DFloat64,
         wgs: Optional[Spheroid] = None,
         num_threads: int = 0,
-    ) -> Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64]]:
+    ) -> Tuple[Array1DFloat64, Array1DFloat64]:
         ...
 
-    def curvilinear_distance(
-            self,
-            strategy: str = 'thomas',
-            wgs: Optional[Spheroid] = None) -> numpy.ndarray[numpy.float64]:
+    def curvilinear_distance(self,
+                             strategy: str = 'thomas',
+                             wgs: Optional[Spheroid] = None) -> Array1DFloat64:
         ...
 
     @staticmethod
@@ -238,7 +239,7 @@ class LineString:
     def __copy__(self) -> LineString:
         ...
 
-    def __eq__(self, other: LineString) -> bool:
+    def __eq__(self, other: LineString) -> bool:  # type: ignore[override]
         ...
 
     def __getitem__(self, index: int) -> Point:
@@ -253,7 +254,7 @@ class LineString:
     def __len__(self) -> int:
         ...
 
-    def __ne__(self, other: LineString) -> bool:
+    def __ne__(self, other: LineString) -> bool:  # type: ignore[override]
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -261,7 +262,7 @@ class LineString:
 
 
 class MultiPolygon:
-    __hash__: ClassVar[None] = ...
+    __hash__: ClassVar[None] = ...  # type: ignore[assignment]
 
     @overload
     def __init__(self) -> None:
@@ -283,9 +284,9 @@ class MultiPolygon:
 
     @overload
     def covered_by(self,
-                   lon: numpy.ndarray[numpy.float64],
-                   lat: numpy.ndarray[numpy.float64],
-                   num_threads: int = ...) -> numpy.ndarray[bool]:
+                   lon: Array1DFloat64,
+                   lat: Array1DFloat64,
+                   num_threads: int = ...) -> Array1DBool:
         ...
 
     @overload
@@ -361,7 +362,7 @@ class MultiPolygon:
     def __copy__(self) -> MultiPolygon:
         ...
 
-    def __eq__(self, other: MultiPolygon) -> bool:
+    def __eq__(self, other: MultiPolygon) -> bool:  # type: ignore[override]
         ...
 
     def __getitem__(self, index: int) -> Polygon:
@@ -379,7 +380,7 @@ class MultiPolygon:
     def __len__(self) -> int:
         ...
 
-    def __ne__(self, other: MultiPolygon) -> bool:
+    def __ne__(self, other: MultiPolygon) -> bool:  # type: ignore[override]
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -387,7 +388,7 @@ class MultiPolygon:
 
 
 class Point:
-    __hash__: ClassVar[None] = ...
+    __hash__: ClassVar[None] = ...  # type: ignore[assignment]
     lat: float
     lon: float
 
@@ -421,13 +422,13 @@ class Point:
     def __copy__(self) -> Point:
         ...
 
-    def __eq__(self, other: Point) -> bool:
+    def __eq__(self, other: Point) -> bool:  # type: ignore[override]
         ...
 
     def __getstate__(self) -> tuple:
         ...
 
-    def __ne__(self, other: Point) -> bool:
+    def __ne__(self, other: Point) -> bool:  # type: ignore[override]
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -435,7 +436,7 @@ class Point:
 
 
 class Polygon:
-    __hash__: ClassVar[None] = ...
+    __hash__: ClassVar[None] = ...  # type: ignore[assignment]
 
     def __init__(self, outer: list, inners: Optional[list] = ...) -> None:
         ...
@@ -449,9 +450,9 @@ class Polygon:
 
     @overload
     def covered_by(self,
-                   lon: numpy.ndarray[numpy.float64],
-                   lat: numpy.ndarray[numpy.float64],
-                   num_threads: int = ...) -> numpy.ndarray[bool]:
+                   lon: Array1DFloat64,
+                   lat: Array1DFloat64,
+                   num_threads: int = ...) -> Array1DBool:
         ...
 
     def difference(self, other: Polygon) -> MultiPolygon:
@@ -511,13 +512,13 @@ class Polygon:
     def __copy__(self) -> Polygon:
         ...
 
-    def __eq__(self, other: Polygon) -> bool:
+    def __eq__(self, other: Polygon) -> bool:  # type: ignore[override]
         ...
 
     def __getstate__(self) -> tuple:
         ...
 
-    def __ne__(self, other: Polygon) -> bool:
+    def __ne__(self, other: Polygon) -> bool:  # type: ignore[override]
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -540,14 +541,13 @@ class RTree:
     def clear(self) -> None:
         ...
 
-    def insert(self, lon: numpy.ndarray[numpy.float64],
-               lat: numpy.ndarray[numpy.float64],
-               values: numpy.ndarray[numpy.float64]) -> None:
+    def insert(self, lon: Array1DFloat64, lat: Array1DFloat64,
+               values: Array1DFloat64) -> None:
         ...
 
     def inverse_distance_weighting(self,
-                                   lon: numpy.ndarray[numpy.float64],
-                                   lat: numpy.ndarray[numpy.float64],
+                                   lon: Array1DFloat64,
+                                   lat: Array1DFloat64,
                                    radius: Optional[float] = ...,
                                    k: int = ...,
                                    p: int = ...,
@@ -555,22 +555,21 @@ class RTree:
                                    num_threads: int = ...) -> tuple:
         ...
 
-    def packing(self, lon: numpy.ndarray[numpy.float64],
-                lat: numpy.ndarray[numpy.float64],
-                values: numpy.ndarray[numpy.float64]) -> None:
+    def packing(self, lon: Array1DFloat64, lat: Array1DFloat64,
+                values: Array1DFloat64) -> None:
         ...
 
     def query(self,
-              lon: numpy.ndarray[numpy.float64, flags.writeable],
-              lat: numpy.ndarray[numpy.float64, flags.writeable],
+              lon: Array1DBool,
+              lat: Array1DBool,
               k: int = ...,
               within: bool = ...,
               num_threads: int = ...) -> tuple:
         ...
 
     def radial_basis_function(self,
-                              lon: numpy.ndarray[numpy.float64],
-                              lat: numpy.ndarray[numpy.float64],
+                              lon: Array1DFloat64,
+                              lat: Array1DFloat64,
                               radius: Optional[float] = ...,
                               k: int = ...,
                               rbf: core.RadialBasisFunction = ...,
@@ -581,8 +580,8 @@ class RTree:
         ...
 
     def window_function(self,
-                        lon: numpy.ndarray[numpy.float64],
-                        lat: numpy.ndarray[numpy.float64],
+                        lon: Array1DFloat64,
+                        lat: Array1DFloat64,
                         radius: float = ...,
                         k: int = ...,
                         wf: core.WindowFunction = ...,
@@ -608,7 +607,7 @@ class RTree:
 
 
 class Spheroid(_Spheroid):
-    __hash__: ClassVar[None] = ...
+    __hash__: ClassVar[None] = ...  # type: ignore[assignment]
 
     @overload
     def __init__(self) -> None:
@@ -654,13 +653,13 @@ class Spheroid(_Spheroid):
     def volumetric_radius(self) -> float:
         ...
 
-    def __eq__(self, other: _Spheroid) -> bool:
+    def __eq__(self, other: _Spheroid) -> bool:  # type: ignore[override]
         ...
 
     def __getstate__(self) -> tuple:
         ...
 
-    def __ne__(self, other: _Spheroid) -> bool:
+    def __ne__(self, other: _Spheroid) -> bool:  # type: ignore[override]
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -682,10 +681,10 @@ class _Spheroid:
 
 
 def calculate_crossover(
-        lon1: numpy.ndarray[numpy.float64],
-        lat1: numpy.ndarray[numpy.float64],
-        lon2: numpy.ndarray[numpy.float64],
-        lat2: numpy.ndarray[numpy.float64],
+        lon1: Array1DFloat64,
+        lat1: Array1DFloat64,
+        lon2: Array1DFloat64,
+        lat2: Array1DFloat64,
         predicate: Optional[float] = None,
         strategy: str = "thomas",
         wgs: Optional[Spheroid] = None,
@@ -695,10 +694,10 @@ def calculate_crossover(
 
 
 def calculate_crossover_list(
-        lon1: numpy.ndarray[numpy.float64],
-        lat1: numpy.ndarray[numpy.float64],
-        lon2: numpy.ndarray[numpy.float64],
-        lat2: numpy.ndarray[numpy.float64],
+        lon1: Array1DFloat64,
+        lat1: Array1DFloat64,
+        lon2: Array1DFloat64,
+        lat2: Array1DFloat64,
         predicate: Optional[float] = None,
         strategy: str = "thomas",
         wgs: Optional[Spheroid] = None,
@@ -707,34 +706,26 @@ def calculate_crossover_list(
 
 
 def calculate_swath(
-    lon_nadir: numpy.ndarray[numpy.float64],
-    lat_nadir: numpy.ndarray[numpy.float64],
+    lon_nadir: Array1DFloat64,
+    lat_nadir: Array1DFloat64,
     delta_ac: float,
     half_gap: float,
     half_swath: int,
     spheroid: Optional[Spheroid] = None,
-) -> Tuple[numpy.ndarray[numpy.float64], numpy.ndarray[numpy.float64]]:
+) -> Tuple[Array2DFloat64, Array2DFloat64]:
     ...
 
 
-def coordinate_distances(
-        lon1: numpy.ndarray[numpy.float64],
-        lat1: numpy.ndarray[numpy.float64],
-        lon2: numpy.ndarray[numpy.float64],
-        lat2: numpy.ndarray[numpy.float64],
-        strategy: str = ...,
-        wgs: Optional[Spheroid] = None,
-        num_threads: int = ...) -> numpy.ndarray[numpy.float64]:
+def coordinate_distances(lon1: Array1DFloat64,
+                         lat1: Array1DFloat64,
+                         lon2: Array1DFloat64,
+                         lat2: Array1DFloat64,
+                         strategy: str = ...,
+                         wgs: Optional[Spheroid] = None,
+                         num_threads: int = ...) -> Array1DFloat64:
     ...
 
 
-@overload
-def normalize_longitudes(lon: numpy.ndarray[numpy.float64],
-                         min_lon: float = ...) -> None:
-    ...
-
-
-@overload
-def normalize_longitudes(lon: numpy.ndarray[numpy.float64],
-                         min_lon: float = ...) -> numpy.ndarray[numpy.float64]:
+def normalize_longitudes(lon: Array1DFloat64,
+                         min_lon: float = ...) -> Array1DFloat64 | None:
     ...

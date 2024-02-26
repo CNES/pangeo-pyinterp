@@ -6,7 +6,7 @@
 Regular grids
 =============
 """
-from typing import Optional, Union
+from __future__ import annotations
 
 import numpy
 
@@ -60,7 +60,7 @@ class Grid2D:
     #: The number of grid dimensions handled by this object.
     _DIMENSIONS = 2
 
-    def __init__(self, *args, increasing_axes: Optional[str] = None):
+    def __init__(self, *args, increasing_axes: str | None = None):
         prefix = ''
         for idx, item in enumerate(args):
             if isinstance(item, core.TemporalAxis):
@@ -74,13 +74,15 @@ class Grid2D:
                                  f'{increasing_axes!r} is not defined')
             inplace = increasing_axes == 'inplace'
             # Tuple does not support item assignment
-            args = list(args)
+            args = list(args)  # type: ignore[assignment]
             for idx, item in enumerate(args):
                 if isinstance(item,
                               (core.Axis,
                                core.TemporalAxis)) and not item.is_ascending():
-                    args[idx] = item.flip(inplace=inplace)
-                    args[-1] = numpy.flip(args[-1], axis=idx)
+                    args[idx] = item.flip(  # type: ignore[index]
+                        inplace=inplace)
+                    args[-1] = numpy.flip(  # type: ignore[index]
+                        args[-1], axis=idx)
         self._instance = getattr(core, _class)(*args)
         self._prefix = prefix
 
@@ -167,11 +169,11 @@ class Grid3D(Grid2D):
     """
     _DIMENSIONS = 3
 
-    def __init__(self, *args, increasing_axes: Optional[str] = None):
+    def __init__(self, *args, increasing_axes: str | None = None):
         super().__init__(*args, increasing_axes=increasing_axes)
 
     @property
-    def z(self) -> Union[core.Axis, core.TemporalAxis]:
+    def z(self) -> core.Axis | core.TemporalAxis:
         """Gets the Z-Axis handled by this instance.
 
         Returns:
@@ -201,7 +203,7 @@ class Grid4D(Grid3D):
     """
     _DIMENSIONS = 4
 
-    def __init__(self, *args, increasing_axes: Optional[str] = None):
+    def __init__(self, *args, increasing_axes: str | None = None):
         super().__init__(*args, increasing_axes=increasing_axes)
 
     @property
