@@ -62,17 +62,27 @@ class GeoHash(BaseGeoHash):
         lon, _ = geohash.decode(grid[-1, :].ravel())
         _, lat = geohash.decode(grid[:, 0].ravel())
 
-        return xarray.Dataset(
-            dict(geohash=xarray.DataArray(
+        return xarray.Dataset({
+            'geohash':
+            xarray.DataArray(
                 grid,
                 dims=('lat', 'lon'),
-                coords=dict(
-                    lon=xarray.DataArray(
-                        lon, dims=('lon', ), attrs=dict(
-                            units='degrees_north')),
-                    lat=xarray.DataArray(
-                        lat, dims=('lat', ), attrs=dict(units='degrees_east')),
-                ))))
+                coords={
+                    'lon':
+                    xarray.DataArray(
+                        lon,
+                        dims=('lon', ),
+                        attrs={'units': 'degrees_north'},
+                    ),
+                    'lat':
+                    xarray.DataArray(
+                        lat,
+                        dims=('lat', ),
+                        attrs={'units': 'degrees_east'},
+                    ),
+                },
+            )
+        })
 
     @staticmethod
     def from_string(code: str, round: bool = False) -> 'GeoHash':
