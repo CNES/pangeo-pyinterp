@@ -144,7 +144,7 @@ def _core_window_function(wf: Optional[str],
 
     if wf in ['gaussian', 'lanczos', 'parzen']:
         if arg is None:
-            defaults = dict(gaussian=None, lanczos=1, parzen=0)
+            defaults = {'gaussian': None, 'lanczos': 1, 'parzen': 0}
             arg = defaults[wf]
 
         if wf == 'lanczos' and arg < 1:  # type: ignore
