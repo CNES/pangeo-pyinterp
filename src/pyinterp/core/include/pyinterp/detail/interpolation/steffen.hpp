@@ -44,10 +44,7 @@ class Steffen : public Interpolator1D<T> {
 
   /// Return the sign of x multiplied by the sign of y
   static constexpr auto copysign(const T &x, const T &y) -> T {
-    if ((x < T(0) && y > T(0)) || (x > T(0) && y < T(0))) {
-      return -x;
-    }
-    return x;
+    return (x < T(0) && y > T(0)) || (x > T(0) && y < T(0)) ? -x : x;
   }
   /// The slopes of the interpolation
   Vector<T> y_prime_;
