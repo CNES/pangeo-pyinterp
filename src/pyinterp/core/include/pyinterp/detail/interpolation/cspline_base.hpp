@@ -24,7 +24,9 @@ class CSplineCoefficients {
   /// @return The coefficients of the cubic spline interpolation
   constexpr auto operator()(const T &dx, const T &dy) const
       -> std::tuple<T, T, T> {
-    return {(dy / dx) - dx * (c1_ + 2 * c0_) / 3, c0_, (c1_ - c0_) / (3 * dx)};
+    constexpr auto third = T(1) / T(3);
+    return {(dy / dx) - dx * (c1_ + 2 * c0_) * third, c0_,
+            (c1_ - c0_) / (3 * dx)};
   }
 
  private:
