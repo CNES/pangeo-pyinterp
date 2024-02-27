@@ -107,22 +107,17 @@ constexpr auto Bicubic<T>::interpolate_(const Vector<T> &xa,
   const auto zxy01 = zxy_(i0, j1) * dxdy;
   const auto zxy10 = zxy_(i1, j0) * dxdy;
   const auto zxy11 = zxy_(i1, j1) * dxdy;
-  const auto t0 = 1;
-  const auto t1 = t;
   const auto t2 = t * t;
   const auto t3 = t * t2;
-  const auto u0 = 1;
-  const auto u1 = u;
   const auto u2 = u * u;
   const auto u3 = u * u2;
 
-  return t0 * (u0 * z00 + u1 * zy00 + u2 * (3 * (z01 - z00) - 2 * zy00 - zy01) +
-               u3 * (2 * (z00 - z01) + zy00 + zy01)) +
-         t1 * (u0 * zx00 + u1 * zxy00 +
-               u2 * (3 * (zx01 - zx00) - 2 * zxy00 - zxy01) +
-               u3 * (2 * (zx00 - zx01) + zxy00 + zxy01)) +
-         t2 * (u0 * (3 * (z10 - z00) - 2 * zx00 - zx10) +
-               u1 * (3 * (zy10 - zy00) - 2 * zxy00 - zxy10) +
+  return (z00 + u * zy00 + u2 * (3 * (z01 - z00) - 2 * zy00 - zy01) +
+          u3 * (2 * (z00 - z01) + zy00 + zy01)) +
+         t * (zx00 + u * zxy00 + u2 * (3 * (zx01 - zx00) - 2 * zxy00 - zxy01) +
+              u3 * (2 * (zx00 - zx01) + zxy00 + zxy01)) +
+         t2 * ((3 * (z10 - z00) - 2 * zx00 - zx10) +
+               u * (3 * (zy10 - zy00) - 2 * zxy00 - zxy10) +
                u2 * (9 * (z00 - z01 - z10 + z11) +
                      6 * (zx00 - zx01 + zy00 - zy10) +
                      3 * (zx10 - zx11 + zy01 - zy11) + 4 * zxy00 +
@@ -130,8 +125,8 @@ constexpr auto Bicubic<T>::interpolate_(const Vector<T> &xa,
                u3 * (6 * (z01 - z00 + z10 - z11) + 4 * (zx01 - zx00) +
                      3 * (zy10 - zy00 - zy01 + zy11) +
                      2 * (zx11 - zx10 - zxy00 - zxy01) - zxy10 - zxy11)) +
-         t3 * (u0 * (2 * (z00 - z10) + zx00 + zx10) +
-               u1 * (zxy00 + zxy10 + 2 * (zy00 - zy10)) +
+         t3 * ((2 * (z00 - z10) + zx00 + zx10) +
+               u * (zxy00 + zxy10 + 2 * (zy00 - zy10)) +
                u2 * (6 * (z01 - z00 + z10 - z11) + 4 * (-zy00 + zy10) +
                      3 * (zx01 - zx00 - zx10 + zx11) +
                      2 * (zy11 - zy01 - zxy00 - zxy10) - zxy01 - zxy11) +
