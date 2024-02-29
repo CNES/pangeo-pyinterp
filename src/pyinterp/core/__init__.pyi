@@ -28,9 +28,11 @@ from .array import (
     Array3DFloat32,
     Array3DFloat64,
     Array3DInt8,
+    Array3DUInt8,
     Array4DFloat32,
     Array4DFloat64,
     Array4DInt8,
+    Array4DUInt8,
     ArrayFloat32,
     ArrayFloat64,
     ArrayInt64,
@@ -694,9 +696,7 @@ class Grid2DFloat64:
 
 class Grid2DInt8:
 
-    def __init__(
-        self, x: Axis, y: Axis,
-        array: Array2DInt8) -> None:
+    def __init__(self, x: Axis, y: Axis, array: Array2DInt8) -> None:
         ...
 
     def __getstate__(self) -> tuple:
@@ -706,8 +706,7 @@ class Grid2DInt8:
         ...
 
     @property
-    def array(
-            self) -> Array2DInt8:
+    def array(self) -> Array2DInt8:
         ...
 
     @property
@@ -721,9 +720,7 @@ class Grid2DInt8:
 
 class Grid2DUInt8:
 
-    def __init__(
-        self, x: Axis, y: Axis,
-        array: Array2DUInt8) -> None:
+    def __init__(self, x: Axis, y: Axis, array: Array2DUInt8) -> None:
         ...
 
     def __getstate__(self) -> tuple:
@@ -733,9 +730,7 @@ class Grid2DUInt8:
         ...
 
     @property
-    def array(
-            self
-    ) -> Array2DUInt8:
+    def array(self) -> Array2DUInt8:
         ...
 
     @property
@@ -808,6 +803,34 @@ class Grid3DFloat64:
 class Grid3DInt8:
 
     def __init__(self, x: Axis, y: Axis, z: Axis, array: Array3DInt8) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, state: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> Array3DInt8:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> Axis:
+        ...
+
+
+class Grid3DUInt8:
+
+    def __init__(self, x: Axis, y: Axis, z: Axis, array: Array3DUInt8) -> None:
         ...
 
     def __getstate__(self) -> tuple:
@@ -913,6 +936,39 @@ class Grid4DInt8:
 
     @property
     def array(self) -> Array4DInt8:
+        ...
+
+    @property
+    def u(self) -> Axis:
+        ...
+
+    @property
+    def x(self) -> Axis:
+        ...
+
+    @property
+    def y(self) -> Axis:
+        ...
+
+    @property
+    def z(self) -> Axis:
+        ...
+
+
+class Grid4DUInt8:
+
+    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
+                 array: Array4DUInt8) -> None:
+        ...
+
+    def __getstate__(self) -> tuple:
+        ...
+
+    def __setstate__(self, state: tuple) -> None:
+        ...
+
+    @property
+    def array(self) -> Array4DUInt8:
         ...
 
     @property
@@ -1175,7 +1231,8 @@ Array1DPeriod = numpy.ndarray[
 
 class PeriodList:
 
-    def __init__(self, periods: Array1DPeriod) -> None:  # type: ignore[type-var]
+    def __init__(self,
+                 periods: Array1DPeriod) -> None:  # type: ignore[type-var]
         ...
 
     def are_periods_sorted_and_disjointed(self) -> bool:
