@@ -217,11 +217,7 @@ class Kriging {
       c[i] = function_(query, coordinates.col(i), sigma_, lambda_);
     }
     Vector<T> w = C.ldlt().solve(c);
-    auto result = T(0);
-    for (int i = 0; i < k; i++) {
-      result += w[i] * values[i];
-    }
-    return result;
+    return values.dot(w);
   }
 
  private:
