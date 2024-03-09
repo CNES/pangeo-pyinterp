@@ -123,7 +123,7 @@ wf, neighbors = mesh.window_function(
 wf = wf.reshape(mx.shape)
 
 # %%
-# Interpolation with aUniversal Kriging
+# Interpolation with a Universal Kriging
 kriging, neighbors = mesh.universal_kriging(
     numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
