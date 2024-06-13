@@ -18,7 +18,7 @@ class CSpline : public CSplineBase<T> {
   using CSplineBase<T>::derivative;
 
   /// Returns the minimum number of points required for the interpolation.
-  auto min_size() const -> Eigen::Index override { return 3; }
+  auto min_size() const -> Eigen::Index override { return 4; }
 
  private:
   /// @brief Compute the coefficients of the interpolation
