@@ -45,8 +45,14 @@ def test_interface():
     assert not p1.is_null()
 
     assert str(p1) == '[1970-01-02, 1970-01-11)'
-    assert repr(p1) == ("Period(begin=numpy.datetime64('1970-01-02'), "
-                        "end=numpy.datetime64('1970-01-10'), within=True)")
+    # With numpy 2.0.0rc1, the representation of a datetime64 is different
+    # from the one of numpy 1.21.2: "numpy" becomes "np".
+    if numpy.version.version >= '2.0.0':
+        assert repr(p1) == ("Period(begin=np.datetime64('1970-01-02'), "
+                            "end=np.datetime64('1970-01-10'), within=True)")
+    else:
+        assert repr(p1) == ("Period(begin=numpy.datetime64('1970-01-02'), "
+                            "end=numpy.datetime64('1970-01-10'), within=True)")
 
     assert pickle.loads(pickle.dumps(p1)) == p1
 
