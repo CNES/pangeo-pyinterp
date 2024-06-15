@@ -1,5 +1,5 @@
 {% set name = "pyinterp" %}
-{% set version = "2024.2.0.dev4" %}
+{% set version = "2024.6.0" %}
 
 package:
   name: {{ name|lower }}

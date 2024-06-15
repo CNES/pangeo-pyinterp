@@ -1,6 +1,11 @@
 Changelog
 #########
 
+2024.6.0
+--------
+* Fix compatibility with Numpy 2.0.0
+* Minor bug fixes.
+
 2024.3.0
 --------
 * Enhance the performance of the spline/bicubic interpolation:
