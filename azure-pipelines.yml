@@ -58,12 +58,10 @@ jobs:
     vmImage: 'ubuntu-20.04'
   strategy:
     matrix:
-      Python38:
-        python.version: '3.8'
-      Python39:
-        python.version: '3.9'
       Python310:
         python.version: '3.10'
+      Python312:
+        python.version: '3.12'
   steps:
   - checkout: self
     fetchDepth: 1
@@ -102,14 +100,12 @@ jobs:
     vmImage: 'macOS-12'
   strategy:
     matrix:
-      Python38:
-        python.version: '3.8'
-      Python39:
-        python.version: '3.9'
       Python310:
         python.version: '3.10'
       Python311:
         python.version: '3.11'
+      Python312:
+        python.version: '3.12'
   steps:
   - checkout: self
     fetchDepth: 1
@@ -143,14 +139,12 @@ jobs:
     vmImage: 'windows-2019'
   strategy:
     matrix:
-      Python38:
-        python.version: '3.8'
-      Python39:
-        python.version: '3.9'
       Python310:
         python.version: '3.10'
       Python311:
         python.version: '3.11'
+      Python311:
+        python.version: '3.12'
   steps:
   - checkout: self
     fetchDepth: 1
