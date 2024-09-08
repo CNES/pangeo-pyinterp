@@ -8,7 +8,8 @@ Descriptive statistics
 """
 from __future__ import annotations
 
-from typing import Any, Iterable
+from typing import Any
+from collections.abc import Iterable
 import copy
 
 import dask.array.core

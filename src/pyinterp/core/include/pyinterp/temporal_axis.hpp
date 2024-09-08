@@ -21,8 +21,8 @@ namespace detail {
 
 /// Check the properties of the numpy array and returns the type of dates
 /// encoded in this parameter.
-inline auto dtype(const std::string &name, const pybind11::array &array)
-    -> dateutils::DType {
+inline auto dtype(const std::string &name,
+                  const pybind11::array &array) -> dateutils::DType {
   detail::check_array_ndim(name, 1, array);
   if ((array.flags() & pybind11::array::c_style) == 0) {
     throw pybind11::type_error(name + " must be a C-style contiguous array");
@@ -129,8 +129,8 @@ class TemporalAxis : public Axis<int64_t> {
   }
 
   /// @copydoc Axis::find_index(const pybind11::array_t<int64_t>, bool) const
-  auto find_index(const pybind11::array &coordinates, bool bounded) const
-      -> pybind11::array_t<int64_t> {
+  auto find_index(const pybind11::array &coordinates,
+                  bool bounded) const -> pybind11::array_t<int64_t> {
     const auto values = safe_cast("coordinates", coordinates);
     const auto size = values.size();
     auto result = pybind11::array_t<int64_t>(size);
@@ -248,9 +248,8 @@ class TemporalAxis : public Axis<int64_t> {
 
   /// Returns the result of a method wrapped in a pybind11::array.
   template <typename Getter>
-  inline auto as_datetype(const Getter &getter,
-                          const dateutils::DType &dtype) const
-      -> pybind11::array {
+  inline auto as_datetype(const Getter &getter, const dateutils::DType &dtype)
+      const -> pybind11::array {
     auto value = getter();
     return {pybind11::dtype(static_cast<std::string>(dtype)), {}, {}, &value};
   }

@@ -1224,7 +1224,7 @@ class Period:
 
 
 Array1DPeriod = numpy.ndarray[
-    Literal['N'],
+    tuple[int],
     numpy.dtype[Period]  # type: ignore[type-var]
 ]
 

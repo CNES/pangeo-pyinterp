@@ -14,7 +14,7 @@ from ..typing import NDArray
 
 def load_test_ephemeris(
     filename: os.PathLike
-) -> Tuple[float, NDArray, NDArray, NDArray, np.timedelta64]:
+) -> tuple[float, NDArray, NDArray, NDArray, np.timedelta64]:
     """Loads the ephemeris from a text file.
 
     Args:
@@ -27,7 +27,7 @@ def load_test_ephemeris(
     with open(filename) as stream:
         lines = stream.readlines()
 
-    def to_dict(comments) -> Dict[str, float]:
+    def to_dict(comments) -> dict[str, float]:
         """Returns a dictionary describing the parameters of the orbit."""
         result = {}
         for item in comments:

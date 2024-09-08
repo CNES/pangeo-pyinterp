@@ -10,7 +10,7 @@ Build interpolation objects from xarray.DataArray instances
 """
 from __future__ import annotations
 
-from typing import Hashable
+from collections.abc import Hashable
 import pickle
 
 import numpy

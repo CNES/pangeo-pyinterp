@@ -22,8 +22,8 @@ class Bicubic {
       : interpolator_(interpolation::factory_2d<double>(kind)) {}
 
   /// Return the interpolated value of y for a given point x
-  auto interpolate(const double x, const double y, const Frame2D &xr)
-      -> double {
+  auto interpolate(const double x, const double y,
+                   const Frame2D &xr) -> double {
     return (*interpolator_)(*(xr.x()), *(xr.y()), *(xr.q()), x, y);
   }
 

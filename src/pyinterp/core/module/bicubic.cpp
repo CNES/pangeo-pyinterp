@@ -41,8 +41,8 @@ template <typename DataType, typename Interpolator>
 auto bicubic(const Grid2D<DataType> &grid, const py::array_t<double> &x,
              const py::array_t<double> &y, Eigen::Index nx, Eigen::Index ny,
              const std::string &fitting_model, const std::string &boundary,
-             const bool bounds_error, size_t num_threads)
-    -> py::array_t<double> {
+             const bool bounds_error,
+             size_t num_threads) -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y);
   detail::check_ndarray_shape("x", x, "y", y);
 
@@ -166,8 +166,8 @@ auto bicubic_4d(const Grid4D<DataType, AxisType> &grid,
                 const py::array_t<AxisType> &z, const py::array_t<double> &u,
                 Eigen::Index nx, Eigen::Index ny,
                 const std::string &fitting_model, const std::string &boundary,
-                const bool bounds_error, size_t num_threads)
-    -> py::array_t<double> {
+                const bool bounds_error,
+                size_t num_threads) -> py::array_t<double> {
   detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z, "u", 1, u);
   detail::check_ndarray_shape("x", x, "y", y, "z", z, "u", u);
   auto boundary_type = parse_axis_boundary(boundary);

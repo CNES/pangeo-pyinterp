@@ -13,7 +13,7 @@ from ... import core
 
 
 def make_date(samples=10000,
-              resolution='us') -> Tuple[List[datetime.datetime], np.ndarray]:
+              resolution='us') -> tuple[list[datetime.datetime], np.ndarray]:
     epoch = datetime.datetime(1970, 1, 1)
     delta = datetime.datetime.now() - datetime.datetime(1970, 1, 1)
 

@@ -2,10 +2,10 @@ from typing import Any, Literal
 
 import numpy
 
-_1D = Literal['N']
-_2D = Literal['N', 'M']
-_3D = Literal['N', 'M', 'O']
-_4D = Literal['N', 'M', 'O', 'P']
+_1D = tuple[int]
+_2D = tuple[int, int]
+_3D = tuple[int, int, int]
+_4D = tuple[int, int, int, int]
 
 Array1DBool = numpy.ndarray[_1D, numpy.dtype[numpy.bool_]]
 Array1DFloat32 = numpy.ndarray[_1D, numpy.dtype[numpy.float32]]

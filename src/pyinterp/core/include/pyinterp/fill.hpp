@@ -297,8 +297,8 @@ template <typename Type>
 auto gauss_seidel(pybind11::EigenDRef<Matrix<Type>> &grid,
                   const FirstGuess first_guess, const bool is_circle,
                   const size_t max_iterations, const Type epsilon,
-                  const Type relaxation, size_t num_threads)
-    -> std::tuple<size_t, Type> {
+                  const Type relaxation,
+                  size_t num_threads) -> std::tuple<size_t, Type> {
   /// If the grid doesn't have an undefined value, this routine has nothing more
   /// to do.
   if (!grid.hasNaN()) {
@@ -343,8 +343,8 @@ auto gauss_seidel(pybind11::EigenDRef<Matrix<Type>> &grid,
 
 // Get the indexes that frame a given index.
 inline auto frame_index(const int64_t index, const int64_t size,
-                        const bool is_angle, std::vector<int64_t> &frame)
-    -> void {
+                        const bool is_angle,
+                        std::vector<int64_t> &frame) -> void {
   // Index in the center of the window
   auto center = static_cast<int64_t>(frame.size() / 2);
 
@@ -371,8 +371,8 @@ inline auto frame_index(const int64_t index, const int64_t size,
 }
 
 /// Checking the size of the filter window.
-constexpr auto check_windows_size(const std::string &name1, const uint32_t size)
-    -> void {
+constexpr auto check_windows_size(const std::string &name1,
+                                  const uint32_t size) -> void {
   if (size < 1) {
     throw std::invalid_argument(name1 + " must be >= 1");
   }
@@ -409,8 +409,8 @@ enum ValueType {
 /// @return The grid will have all the NaN filled with extrapolated values.
 template <typename Type>
 auto loess(const Grid2D<Type> &grid, const uint32_t nx, const uint32_t ny,
-           const ValueType value_type, const size_t num_threads)
-    -> pybind11::array_t<Type> {
+           const ValueType value_type,
+           const size_t num_threads) -> pybind11::array_t<Type> {
   check_windows_size("nx", nx, "ny", ny);
   auto result = pybind11::array_t<Type>(
       pybind11::array::ShapeContainer{grid.x()->size(), grid.y()->size()});

@@ -85,8 +85,8 @@ auto RTree::insert(const Eigen::Ref<const Vector<double>> &lon,
 
 auto RTree::query(const Eigen::Ref<const Vector<double>> &lon,
                   const Eigen::Ref<const Vector<double>> &lat, const uint32_t k,
-                  const bool within, const size_t num_threads) const
-    -> pybind11::tuple {
+                  const bool within,
+                  const size_t num_threads) const -> pybind11::tuple {
   detail::check_container_size("lon", lon, "lat", lat);
   auto size = lon.size();
 
@@ -193,15 +193,13 @@ auto RTree::inverse_distance_weighting(
   return pybind11::make_tuple(data, neighbors);
 }
 
-auto RTree::radial_basis_function(const Eigen::Ref<const Vector<double>> &lon,
-                                  const Eigen::Ref<const Vector<double>> &lat,
-                                  const std::optional<double> &radius,
-                                  const uint32_t k,
-                                  const detail::math::RadialBasisFunction rbf,
-                                  const std::optional<double> &epsilon,
-                                  const double smooth, const bool within,
-                                  const size_t num_threads) const
-    -> pybind11::tuple {
+auto RTree::radial_basis_function(
+    const Eigen::Ref<const Vector<double>> &lon,
+    const Eigen::Ref<const Vector<double>> &lat,
+    const std::optional<double> &radius, const uint32_t k,
+    const detail::math::RadialBasisFunction rbf,
+    const std::optional<double> &epsilon, const double smooth,
+    const bool within, const size_t num_threads) const -> pybind11::tuple {
   detail::check_container_size("lon", lon, "lat", lat);
   auto _radius = radius.value_or(std::numeric_limits<double>::max());
   auto size = lon.size();

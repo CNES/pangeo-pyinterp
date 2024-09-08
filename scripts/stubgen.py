@@ -2,7 +2,6 @@
 Generates stubs for the core modules.
 =====================================
 """
-from typing import List
 import os
 import pathlib
 import re
@@ -62,7 +61,7 @@ def fix_core_geodetic(src: pathlib.Path):
         stream.writelines(lines)
 
 
-def fix_core_fill(src: pathlib.Path, grids: List[str]):
+def fix_core_fill(src: pathlib.Path, grids: list[str]):
     core = src / 'pyinterp' / 'core' / 'fill.pyi'
     with core.open('r') as stream:
         lines = stream.readlines()

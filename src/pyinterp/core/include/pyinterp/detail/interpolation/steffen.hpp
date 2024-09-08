@@ -39,8 +39,8 @@ class Steffen : public Interpolator1D<T> {
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  constexpr auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
-      -> void override;
+  constexpr auto compute_coefficients(const Vector<T> &xa,
+                                      const Vector<T> &ya) -> void override;
 
   /// Return the sign of x multiplied by the sign of y
   static constexpr auto copysign(const T &x, const T &y) -> T {
@@ -91,8 +91,8 @@ constexpr auto Steffen<T>::compute_coefficients(const Vector<T> &xa,
 
 template <typename T>
 constexpr auto Steffen<T>::interpolate_(const Vector<T> &xa,
-                                        const Vector<T> &ya, const T &x) const
-    -> T {
+                                        const Vector<T> &ya,
+                                        const T &x) const -> T {
   auto where = this->search(xa, x);
   if (!where) {
     return std::numeric_limits<T>::quiet_NaN();

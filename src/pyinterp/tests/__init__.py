@@ -162,7 +162,7 @@ def parallel_lines():
     return ROOT.joinpath('parallel_lines.json')
 
 
-def run(pattern: Optional[str] = None) -> None:
+def run(pattern: str | None = None) -> None:
     """Run tests.
 
     Args:

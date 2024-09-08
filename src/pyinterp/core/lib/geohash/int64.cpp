@@ -243,8 +243,8 @@ auto allocate_array(const size_t size) -> Vector<uint64_t> {
 }
 
 // ---------------------------------------------------------------------------
-auto encode(const geodetic::Point &point, const uint32_t precision)
-    -> uint64_t {
+auto encode(const geodetic::Point &point,
+            const uint32_t precision) -> uint64_t {
   auto result = encoder(point.lat(), point.lon());
   if (precision != 64) {
     result >>= (64 - precision);
@@ -253,8 +253,8 @@ auto encode(const geodetic::Point &point, const uint32_t precision)
 }
 
 // ---------------------------------------------------------------------------
-auto bounding_box(const uint64_t hash, const uint32_t precision)
-    -> geodetic::Box {
+auto bounding_box(const uint64_t hash,
+                  const uint32_t precision) -> geodetic::Box {
   auto full_hash = hash << (64U - precision);
   auto lat_lng_int = deinterleaver(full_hash);
   auto lat = codec::decode_range(std::get<0>(lat_lng_int), 90);
@@ -268,8 +268,8 @@ auto bounding_box(const uint64_t hash, const uint32_t precision)
 }
 
 // ---------------------------------------------------------------------------
-auto neighbors(const uint64_t hash, const uint32_t precision)
-    -> Eigen::Matrix<uint64_t, 8, 1> {
+auto neighbors(const uint64_t hash,
+               const uint32_t precision) -> Eigen::Matrix<uint64_t, 8, 1> {
   auto box = bounding_box(hash, precision);
   auto center = box.centroid();
   auto [lon_delta, lat_delta] = box.delta(false);
@@ -325,8 +325,8 @@ auto grid_properties(const geodetic::Box &box, const uint32_t precision)
 }
 
 // ---------------------------------------------------------------------------
-auto bounding_boxes(const geodetic::Box &box, const uint32_t precision)
-    -> Vector<uint64_t> {
+auto bounding_boxes(const geodetic::Box &box,
+                    const uint32_t precision) -> Vector<uint64_t> {
   // Grid resolution in degrees
   const auto [lng_err, lat_err] = error_with_precision(precision);
 

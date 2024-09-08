@@ -36,8 +36,8 @@ namespace pyinterp::geohash::int64 {
 }
 
 // Encode a point into geohash with the given precision
-[[nodiscard]] auto encode(const geodetic::Point &point, uint32_t precision)
-    -> uint64_t;
+[[nodiscard]] auto encode(const geodetic::Point &point,
+                          uint32_t precision) -> uint64_t;
 
 // Encode points into geohash with the given precision
 [[nodiscard]] inline auto encode(const Eigen::Ref<const Eigen::VectorXd> &lon,
@@ -57,8 +57,8 @@ namespace pyinterp::geohash::int64 {
 
 // Returns the region encoded by the integer geohash with the specified
 // precision.
-[[nodiscard]] auto bounding_box(uint64_t hash, uint32_t precision)
-    -> geodetic::Box;
+[[nodiscard]] auto bounding_box(uint64_t hash,
+                                uint32_t precision) -> geodetic::Box;
 
 // Decode a hash into a geographic point with the given precision.
 // If round is true, the coordinates of the points will be rounded to the
@@ -107,7 +107,7 @@ namespace pyinterp::geohash::int64 {
 }
 
 // Returns all the GeoHash codes within the box.
-[[nodiscard]] auto bounding_boxes(const geodetic::Box &box, uint32_t precision)
-    -> Vector<uint64_t>;
+[[nodiscard]] auto bounding_boxes(const geodetic::Box &box,
+                                  uint32_t precision) -> Vector<uint64_t>;
 
 }  // namespace pyinterp::geohash::int64

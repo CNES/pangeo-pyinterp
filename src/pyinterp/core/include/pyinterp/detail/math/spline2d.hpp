@@ -24,8 +24,8 @@ class Spline2D {
         y_interpolator_(interpolation::factory_1d<double>(kind)) {}
 
   /// Return the interpolated value of y for a given point x
-  auto interpolate(const double x, const double y, const Frame2D &xr)
-      -> double {
+  auto interpolate(const double x, const double y,
+                   const Frame2D &xr) -> double {
     // Spline interpolation as function of X-coordinate
     for (Eigen::Index ix = 0; ix < xr.y()->size(); ++ix) {
       column_(ix) = (*x_interpolator_)(*(xr.x()), xr.q()->col(ix), x);

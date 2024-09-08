@@ -54,9 +54,8 @@ template <typename Geometry>
 
 /// Calculate the perimeter
 template <typename Geometry>
-[[nodiscard]] inline auto perimeter(const Geometry &geometry,
-                                    const std::optional<Spheroid> &wgs)
-    -> double {
+[[nodiscard]] inline auto perimeter(
+    const Geometry &geometry, const std::optional<Spheroid> &wgs) -> double {
   auto spheroid =
       wgs.has_value()
           ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
@@ -70,8 +69,8 @@ template <typename Geometry>
 template <typename Geometry1, typename Geometry2>
 [[nodiscard]] inline auto covered_by(
     const Geometry2 &geometry2, const Eigen::Ref<const Eigen::VectorXd> &lon,
-    const Eigen::Ref<const Eigen::VectorXd> &lat, const size_t num_threads)
-    -> pybind11::array_t<bool> {
+    const Eigen::Ref<const Eigen::VectorXd> &lat,
+    const size_t num_threads) -> pybind11::array_t<bool> {
   detail::check_eigen_shape("lon", lon, "lat", lat);
   auto size = lon.size();
   auto result =
@@ -108,11 +107,10 @@ template <typename Geometry1, typename Geometry2>
 
 /// Calculate the distance between two geometries.
 template <typename Geometry1, typename Geometry2>
-[[nodiscard]] inline auto distance(const Geometry1 &geometry1,
-                                   const Geometry2 &geometry2,
-                                   const DistanceStrategy strategy,
-                                   const std::optional<Spheroid> &wgs)
-    -> double {
+[[nodiscard]] inline auto distance(
+    const Geometry1 &geometry1, const Geometry2 &geometry2,
+    const DistanceStrategy strategy,
+    const std::optional<Spheroid> &wgs) -> double {
   auto spheroid =
       wgs.has_value()
           ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)

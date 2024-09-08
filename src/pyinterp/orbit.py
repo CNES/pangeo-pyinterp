@@ -8,7 +8,7 @@ Orbit interpolation.
 """
 from __future__ import annotations
 
-from typing import Iterator
+from collections.abc import Iterator
 import dataclasses
 
 import numpy
@@ -284,7 +284,7 @@ class Orbit:
 
             # Update of the number of the next pass to be generated
             absolute_pass_number += 1
-        return StopIteration
+        return StopIteration  # type: ignore[return-value]
 
 
 @dataclasses.dataclass(frozen=True)

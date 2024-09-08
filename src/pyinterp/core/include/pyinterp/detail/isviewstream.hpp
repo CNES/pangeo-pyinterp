@@ -34,8 +34,8 @@ class sviewbuf : public std::streambuf {
     return gptr() - eback();
   }
 
-  auto seekpos(pos_type sp, std::ios_base::openmode which)
-      -> pos_type override {
+  auto seekpos(pos_type sp,
+               std::ios_base::openmode which) -> pos_type override {
     return seekoff(sp - pos_type(static_cast<off_type>(0)), std::ios_base::beg,
                    which);
   }

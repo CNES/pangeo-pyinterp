@@ -144,8 +144,8 @@ class Axis {
   /// @param start index of the first element to include in the slice
   /// @param count number of elements to include in the slice
   /// @return a slice of the axis
-  [[nodiscard]] constexpr auto slice(int64_t start, int64_t count) const
-      -> Vector<T> {
+  [[nodiscard]] constexpr auto slice(int64_t start,
+                                     int64_t count) const -> Vector<T> {
     if (start < 0 || start + count > size()) {
       throw std::out_of_range("axis index out of range");
     }
@@ -248,9 +248,8 @@ class Axis {
 
   /// Returns the normalized value of the coordinate with the respect to the
   /// axis definition.
-  [[nodiscard]] constexpr auto normalize_coordinate(const T coordinate,
-                                                    const T min) const noexcept
-      -> T {
+  [[nodiscard]] constexpr auto normalize_coordinate(
+      const T coordinate, const T min) const noexcept -> T {
     if (is_angle() && (coordinate >= min + circle_ || coordinate < min)) {
       return math::normalize_angle(coordinate, min, circle_);
     }
@@ -290,9 +289,8 @@ class Axis {
   /// is located before, or the value of the last element of this container if
   /// the requested value is located after.
   /// @return index of the grid point containing it or -1 if outside grid area
-  [[nodiscard]] constexpr auto find_nearest_index(T coordinate,
-                                                  const bool bounded) const
-      -> int64_t {
+  [[nodiscard]] constexpr auto find_nearest_index(
+      T coordinate, const bool bounded) const -> int64_t {
     coordinate = normalize_coordinate(coordinate);
     auto result = axis_->find_index(coordinate, bounded);
     if (result == -1 && is_circle_) {

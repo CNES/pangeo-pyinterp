@@ -30,8 +30,8 @@ class Interpolator1D : public Interpolator<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The points where the interpolation must be calculated.
   /// @return The interpolated values at the points x.
-  auto operator()(const Vector<T> &xa, const Vector<T> &ya, const Vector<T> &x)
-      -> Vector<T> {
+  auto operator()(const Vector<T> &xa, const Vector<T> &ya,
+                  const Vector<T> &x) -> Vector<T> {
     compute_coefficients(xa, ya);
     auto y = Vector<T>(x.size());
     for (Eigen::Index i = 0; i < x.size(); ++i) {
@@ -55,8 +55,8 @@ class Interpolator1D : public Interpolator<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The points where the derivative must be calculated.
   /// @return The derivatives of the interpolation function at the points x.
-  auto derivative(const Vector<T> &xa, const Vector<T> &ya, const Vector<T> &x)
-      -> Vector<T> {
+  auto derivative(const Vector<T> &xa, const Vector<T> &ya,
+                  const Vector<T> &x) -> Vector<T> {
     compute_coefficients(xa, ya);
     auto y = Vector<T>(x.size());
     for (Eigen::Index i = 0; i < x.size(); ++i) {
@@ -75,8 +75,8 @@ class Interpolator1D : public Interpolator<T> {
                            const T &x) const -> T = 0;
 
   /// Check if the arrays are valid.
-  virtual auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
-      -> void {
+  virtual auto compute_coefficients(const Vector<T> &xa,
+                                    const Vector<T> &ya) -> void {
     if (xa.size() != ya.size()) {
       throw std::invalid_argument("xa and ya must have the same size");
     }

@@ -702,7 +702,7 @@ def test_linestring():
     assert a == b
 
 
-def get_coordinates() -> Tuple[np.ndarray, np.ndarray]:
+def get_coordinates() -> tuple[np.ndarray, np.ndarray]:
     """Get coordinates for a line string."""
     lon = np.array([
         -9.72270435, -9.58849868, -9.45429341, -9.32009001, -9.18588996,

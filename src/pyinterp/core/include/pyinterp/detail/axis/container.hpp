@@ -70,8 +70,8 @@ class Abstract {
   /// @param start index of the first element to include in the slice
   /// @param count number of elements to include in the slice
   /// @return a slice of the axis
-  [[nodiscard]] virtual auto slice(int64_t start, int64_t count) const
-      -> Vector<T> = 0;
+  [[nodiscard]] virtual auto slice(int64_t start,
+                                   int64_t count) const -> Vector<T> = 0;
 
   /// Get the minimum coordinate value.
   ///
@@ -107,8 +107,8 @@ class Abstract {
   /// the requested value is located after.
   /// @return index of the requested value it or -1 if outside this coordinate
   /// system area.
-  [[nodiscard]] virtual auto find_index(T coordinate, bool bounded) const
-      -> int64_t = 0;
+  [[nodiscard]] virtual auto find_index(T coordinate,
+                                        bool bounded) const -> int64_t = 0;
 
   /// compare two variables instances
   ///
@@ -281,9 +281,8 @@ class Irregular : public Abstract<T> {
   }
 
   /// @copydoc Abstract::slice(const int64_t, const int64_t) const
-  [[nodiscard]] constexpr auto slice(const int64_t start,
-                                     const int64_t count) const noexcept
-      -> Vector<T> override {
+  [[nodiscard]] constexpr auto slice(const int64_t start, const int64_t count)
+      const noexcept -> Vector<T> override {
     return points_.segment(start, count);
   }
 
@@ -313,9 +312,8 @@ class Irregular : public Abstract<T> {
   }
 
   /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] constexpr auto find_index(const T coordinate,
-                                          const bool bounded) const
-      -> int64_t override {
+  [[nodiscard]] constexpr auto find_index(
+      const T coordinate, const bool bounded) const -> int64_t override {
     if (this->is_ascending_) {
       return this->find_index(coordinate, bounded, size(), std::less<T>());
     }
@@ -435,9 +433,8 @@ class AbstractRegular : public Abstract<T> {
   }
 
   /// @copydoc Abstract::slice(const int64_t, const int64_t) const
-  [[nodiscard]] constexpr auto slice(const int64_t start,
-                                     const int64_t count) const noexcept
-      -> Vector<T> override {
+  [[nodiscard]] constexpr auto slice(const int64_t start, const int64_t count)
+      const noexcept -> Vector<T> override {
     auto result = Vector<T>(count);
     for (int64_t ix = 0; ix < count; ++ix) {
       result[ix] = coordinate_value(start + ix);
@@ -551,9 +548,8 @@ class Regular<T, typename std::enable_if<std::is_integral_v<T>>::type>
       : AbstractRegular<T>(start, stop, num), step_2_(this->step_ >> 1) {}
 
   /// @copydoc Abstract::find_index(double,bool) const
-  [[nodiscard]] constexpr auto find_index(T coordinate,
-                                          bool bounded) const noexcept
-      -> int64_t override {
+  [[nodiscard]] constexpr auto find_index(
+      T coordinate, bool bounded) const noexcept -> int64_t override {
     auto index =
         static_cast<int64_t>(round((coordinate - this->start_), this->step_));
 

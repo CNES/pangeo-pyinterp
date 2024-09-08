@@ -66,17 +66,15 @@ class Point : public detail::geometry::GeographicPoint2D<double> {
   inline auto lat(double const v) -> void { this->set<1>(v); }
 
   /// Calculate the distance between the two points
-  [[nodiscard]] auto distance(const Point &other,
-                              const DistanceStrategy strategy,
-                              const std::optional<Spheroid> &wgs) const
-      -> double {
+  [[nodiscard]] auto distance(
+      const Point &other, const DistanceStrategy strategy,
+      const std::optional<Spheroid> &wgs) const -> double {
     return geodetic::distance(*this, other, strategy, wgs);
   }
 
   /// Returns the azimuth between the two points
-  [[nodiscard]] auto azimuth(const Point &other,
-                             const std::optional<Spheroid> &wgs) const
-      -> double;
+  [[nodiscard]] auto azimuth(
+      const Point &other, const std::optional<Spheroid> &wgs) const -> double;
 
   /// Get a tuple that fully encodes the state of this instance
   [[nodiscard]] auto getstate() const -> pybind11::tuple {

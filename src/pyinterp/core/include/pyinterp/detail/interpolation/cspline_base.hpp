@@ -16,14 +16,14 @@ class CSplineCoefficients {
   /// Constructor
   /// @param c0 The first derivative at the first point
   /// @param c1 The first derivative at the last point
-  constexpr CSplineCoefficients(const T &c0, const T &c1) : c0_(c0), c1_(c1){};
+  constexpr CSplineCoefficients(const T &c0, const T &c1) : c0_(c0), c1_(c1) {};
 
   /// Compute the coefficients of the cubic spline interpolation
   /// @param dx The distance between the two points
   /// @param dy The difference between the two points
   /// @return The coefficients of the cubic spline interpolation
-  constexpr auto operator()(const T &dx, const T &dy) const
-      -> std::tuple<T, T, T> {
+  constexpr auto operator()(const T &dx,
+                            const T &dy) const -> std::tuple<T, T, T> {
     constexpr auto third = T(1) / T(3);
     return {(dy / dx) - dx * (c1_ + 2 * c0_) * third, c0_,
             (c1_ - c0_) / (3 * dx)};

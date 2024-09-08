@@ -8,7 +8,8 @@ Calculate statistics of a stream of values
 """
 from __future__ import annotations
 
-from typing import Any, Iterable
+from typing import Any
+from collections.abc import Iterable
 
 import dask.array.core
 import numpy

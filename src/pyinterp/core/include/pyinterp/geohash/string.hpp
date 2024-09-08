@@ -51,8 +51,8 @@ class Array {
                            capsule_);
   }
 
-  static auto get_info(const pybind11::array &hash, pybind11::ssize_t ndim)
-      -> pybind11::buffer_info;
+  static auto get_info(const pybind11::array &hash,
+                       pybind11::ssize_t ndim) -> pybind11::buffer_info;
 
  private:
   std::vector<char> *array_;
@@ -65,8 +65,8 @@ class Array {
 auto allocate_array(size_t size, uint32_t precision) -> Array;
 
 /// Encode a point into geohash with the given bit depth
-auto encode(const geodetic::Point &point, char *buffer, uint32_t precision)
-    -> void;
+auto encode(const geodetic::Point &point, char *buffer,
+            uint32_t precision) -> void;
 
 /// Encode points into geohash with the given bit depth
 [[nodiscard]] auto encode(const Eigen::Ref<const Eigen::VectorXd> &lon,
@@ -74,14 +74,14 @@ auto encode(const geodetic::Point &point, char *buffer, uint32_t precision)
                           uint32_t precision) -> pybind11::array;
 
 /// Returns the region encoded
-[[nodiscard]] auto bounding_box(const char *hash, size_t count)
-    -> geodetic::Box;
+[[nodiscard]] auto bounding_box(const char *hash,
+                                size_t count) -> geodetic::Box;
 
 /// Decode a hash into a spherical equatorial point. If round is true, the
 /// coordinates of the points will be rounded to the accuracy defined by the
 /// GeoHash.
-[[nodiscard]] auto decode(const char *hash, size_t count, bool round)
-    -> geodetic::Point;
+[[nodiscard]] auto decode(const char *hash, size_t count,
+                          bool round) -> geodetic::Point;
 
 /// Decode hashes into a spherical equatorial points. If round is true, the
 /// coordinates of the points will be rounded to the accuracy defined by the
@@ -113,22 +113,23 @@ auto encode(const geodetic::Point &point, char *buffer, uint32_t precision)
                                   uint32_t precision) -> pybind11::array;
 
 [[nodiscard]] auto bounding_boxes(const geodetic::Polygon &polygon,
-                                  uint32_t precision, size_t num_threads)
-    -> pybind11::array;
+                                  uint32_t precision,
+                                  size_t num_threads) -> pybind11::array;
 
 [[nodiscard]] auto bounding_boxes(const geodetic::MultiPolygon &polygons,
-                                  uint32_t precision, size_t num_threads)
-    -> pybind11::array;
+                                  uint32_t precision,
+                                  size_t num_threads) -> pybind11::array;
 
 /// Returns the start and end indexes of the different GeoHash boxes.
-[[nodiscard]] auto where(const pybind11::array &hash) -> std::unordered_map<
-    std::string,
-    std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>;
+[[nodiscard]] auto where(const pybind11::array &hash)
+    -> std::unordered_map<
+        std::string,
+        std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>;
 
 /// Transforms the given codes from one precision to another. If the given
 /// precision is higher than the precision of the given codes, the result
 /// contains a zoom in, otherwise it contains a zoom out.
-[[nodiscard]] auto transform(const pybind11::array &hash, uint32_t precision)
-    -> pybind11::array;
+[[nodiscard]] auto transform(const pybind11::array &hash,
+                             uint32_t precision) -> pybind11::array;
 
 }  // namespace pyinterp::geohash::string
