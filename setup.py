@@ -253,12 +253,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     def boost(self) -> list[str] | None:
         """Get the default boost path in Anaconda's environment."""
-        # Do not search system for Boost & disable the search for boost-cmake
-        boost_option = '-DBoost_NO_SYSTEM_PATHS=TRUE ' \
-            '-DBoost_NO_BOOST_CMAKE=TRUE'
         boost_root = pathlib.Path(sys.prefix)
         if (boost_root / 'include' / 'boost').exists():
-            return f'{boost_option} -DBoost_ROOT={boost_root}'.split()
+            return f'-DBoost_ROOT={boost_root}'.split()
         boost_root = pathlib.Path(sys.prefix, 'Library', 'include')
         if not boost_root.exists():
             if self.conda_forge:
@@ -266,7 +263,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                     'Unable to find the Boost library in the conda '
                     'distribution used.')
             return None
-        return f'{boost_option} -DBoost_INCLUDE_DIR={boost_root}'.split()
+        return f'-DBoost_INCLUDE_DIR={boost_root}'.split()
 
     def eigen(self) -> str | None:
         """Get the default Eigen3 path in Anaconda's environment."""
