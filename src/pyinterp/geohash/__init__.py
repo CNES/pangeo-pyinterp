@@ -6,7 +6,6 @@
 GeoHash bytes
 -------------
 """
-#
 from . import int64
 from .. import geodetic
 from ..core.geohash import (

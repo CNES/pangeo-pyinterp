@@ -16,7 +16,7 @@ except ImportError:
     HAVE_PLT = False
 
 from .. import geodetic
-from ..tests import load_grid2d, make_or_compare_reference
+from ..tests import load_grid2d
 
 
 def plot(x, y, z, filename):

@@ -117,14 +117,14 @@ class Period(core.Period):
         """True if period is ill formed (length is zero or less)"""
         return super().is_null()
 
-    def __eq__(self, lhs: Any) -> bool:
+    def __eq__(self, lhs: object) -> bool:
         if not isinstance(lhs, Period):
             return NotImplemented
         if self.resolution != lhs.resolution:
             return False
         return super().__eq__(lhs)
 
-    def __ne__(self, __value: Any) -> bool:
+    def __ne__(self, __value: object) -> bool:
         return not self.__eq__(__value)
 
     def __lt__(self, lhs: Any) -> bool:

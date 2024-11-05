@@ -37,11 +37,12 @@ class RTree:
                  dtype: numpy.dtype | None = None,
                  ecef: bool = False):
         """Initialize a new R*Tree."""
+        self._instance: core.RTree3DFloat32 | core.RTree3DFloat64
         dtype = dtype or numpy.dtype('float64')
         if dtype == numpy.dtype('float64'):
-            self._instance = getattr(core, 'RTree3DFloat64')(system, ecef)
+            self._instance = core.RTree3DFloat64(system, ecef)
         elif dtype == numpy.dtype('float32'):
-            self._instance = getattr(core, 'RTree3DFloat32')(system, ecef)
+            self._instance = core.RTree3DFloat32(system, ecef)
         else:
             raise ValueError(f'dtype {dtype} not handled by the object')
         self.dtype = dtype

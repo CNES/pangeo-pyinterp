@@ -2,7 +2,6 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-from typing import Tuple
 import json
 import math
 import pickle
@@ -451,8 +450,10 @@ def test_calculate_crossover_list():
     """Calculate the location of all crossovers."""
     with parallel_lines().open() as stream:
         data = json.load(stream)
-    lon1, lat1 = zip(*data['features'][0]['geometry']['coordinates'])
-    lon2, lat2 = zip(*data['features'][1]['geometry']['coordinates'])
+    lon1, lat1 = zip(*data['features'][0]['geometry']['coordinates'],
+                     strict=False)
+    lon2, lat2 = zip(*data['features'][1]['geometry']['coordinates'],
+                     strict=False)
     lon1 = np.array(lon1, dtype=np.float64)
     lat1 = np.array(lat1, dtype=np.float64)
     lon2 = np.array(lon2, dtype=np.float64)

@@ -158,10 +158,9 @@ def _core_window_function(wf: str | None,
         if wf == 'gaussian' and arg is None:
             raise ValueError(f'The argument of the function {wf!r} must be '
                              'specified')
-    else:
-        if arg is not None:
-            raise ValueError(f'The function {wf!r} does not support the '
-                             'optional argument')
+    elif arg is not None:
+        raise ValueError(f'The function {wf!r} does not support the '
+                         'optional argument')
 
     wf = ''.join(item.capitalize() for item in wf.split('_'))
     wf = wf.replace('Swot', 'SWOT')

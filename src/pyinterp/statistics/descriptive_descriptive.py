@@ -108,7 +108,7 @@ class DescriptiveStatistics:
             Returns a copy of the current descriptive statistics container.
         """
         cls = type(self)
-        result = getattr(cls, '__new__')(cls)
+        result = cls.__new__(cls)
         result._instance = self._instance.__copy__()
         return result
 

@@ -114,7 +114,7 @@ def gauss_seidel(mesh: grid.Grid2D | grid.Grid3D,
         max_iteration = nx * ny
 
     first_guess = getattr(
-        getattr(core.fill, 'FirstGuess'),
+        core.fill.FirstGuess,
         ''.join(item.capitalize() for item in first_guess.split('_')))
 
     instance = mesh._instance
