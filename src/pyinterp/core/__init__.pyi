@@ -1281,7 +1281,9 @@ class PeriodList:
 
 class RTree3DFloat32:
 
-    def __init__(self, spheroid: Optional[geodetic.Spheroid] = ...) -> None:
+    def __init__(self,
+                 spheroid: Optional[geodetic.Spheroid] = ...,
+                 ecef: bool = ...) -> None:
         ...
 
     def bounds(self) -> tuple:
@@ -1370,7 +1372,9 @@ class RTree3DFloat32:
 
 class RTree3DFloat64:
 
-    def __init__(self, spheroid: Optional[geodetic.Spheroid] = ...) -> None:
+    def __init__(self,
+                 spheroid: Optional[geodetic.Spheroid] = ...,
+                 ecef: bool = ...) -> None:
         ...
 
     def bounds(self) -> tuple:

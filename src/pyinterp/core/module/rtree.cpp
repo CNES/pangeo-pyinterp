@@ -16,23 +16,18 @@ namespace py = pybind11;
 template <size_t N>
 static auto coordinates_help() -> std::string {
   auto ss = std::stringstream();
-  if (N == 3) {
-    ss << "coordinates: a matrix ``(n, 3)`` where ``n`` is the number of\n"
-          "        observations and 3 is the number of coordinates in order:\n"
-          "        longitude and latitude in degrees and altitude in meters.\n"
-          "        If the shape of the matrix is ``(n, 2)`` then the method\n"
-          "        considers the altitude constant and equal to zero.";
-  } else {
-    ss << "coordinates: a matrix ``(n, " << N
-       << ")`` where ``n`` is\n"
-          "        the number of observations and 3 is the number of\n"
-          "        coordinates in order: longitude and latitude in degrees,\n"
-          "        altitude in meters and then the other coordinates defined\n"
-          "        in Euclidean space. If the shape of the matrix is ``(n, "
-       << N - 1
-       << ")`` then the method considers the\n"
-          "        altitude constant and equal to zero.";
-  }
+  static_assert(N == 3, "The dimension must be 3.");
+  ss << "coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the\n"
+        "        number of observations and 3 represents the coordinates in\n"
+        "        the order: x, y, and z.\n"
+        "        If the matrix shape is ``(n, 2)``, the z-coordinate is\n"
+        "        assumed to be zero.\n"
+        "        The coordinates (x, y, z) are in the Cartesian coordinate\n"
+        "        system (ECEF) if the instance is configured to use this\n"
+        "        system (ecef keyword set to True during construction).\n"
+        "        Otherwise, the coordinates are in the geodetic system\n"
+        "        (longitude, latitude, and altitude) in degrees, degrees,\n"
+        "        and meters, respectively.";
   return ss.str();
 }
 
@@ -58,10 +53,18 @@ Args:
     spheroid: WGS of the coordinate system used to transform equatorial spherical
         positions (longitudes, latitudes, altitude) into ECEF coordinates. If
         not set the geodetic system used is WGS-84.
+    ecef: If true, the coordinates managed by this instance are always in the
+        Cartesian coordinate system (ECEF). If true, no conversion to the LLA
+        system is performed. Defaults to ``False``.
+
+Raises:
+    ValueError: If a Cartesian coordinate system (ECEF) is desired, there is no
+        need to use a geodetic system for LLA to ECEF conversion. Please set
+        either the spheroid or ecef parameter, but not both.
 )__doc__")
           .c_str())
-      .def(py::init<std::optional<pyinterp::geodetic::Spheroid>>(),
-           py::arg("spheroid") = std::nullopt)
+      .def(py::init<std::optional<pyinterp::geodetic::Spheroid>, bool>(),
+           py::arg("spheroid") = std::nullopt, py::arg("ecef") = false)
       .def("bounds", &RTree::equatorial_bounds,
            R"__doc__(
 Returns the box able to contain all values stored in the container.
@@ -131,8 +134,9 @@ Args:
         which is useful for debugging. Defaults to ``0``.
 Returns:
     A tuple containing a matrix describing for each provided position, the
-    distance, in meters, between the provided position and the found neighbors
-    and a matrix containing the value of the different neighbors found for all
+    distance between the provided position and the found neighbors (in meters if
+    the RTree handles LLA coordinates, otherwise in Cartesian units) and a
+    matrix containing the value of the different neighbors found for all
     provided positions.
 )__doc__")
               .c_str())
@@ -284,8 +288,7 @@ Returns:
 .. note::
     The matrix containing the coordinates of the neighbors is a matrix of
     dimension ``(k, n)`` where ``n`` is equal to 2 if the provided coordinates
-    matrix defines only longitude and latitude, and 3 if the defines longitude,
-    latitude and altitude.
+    matrix defines only x and y, and 3 if the defines x, y, and z.
 )__doc__")
                .c_str())
       .def(py::pickle([](const RTree &self) { return self.getstate(); },

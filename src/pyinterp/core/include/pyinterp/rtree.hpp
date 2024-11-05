@@ -80,8 +80,18 @@ class RTree : public detail::geometry::RTree<Point, Type> {
       const Point &, const uint32_t) const;
 
   /// Default constructor
-  explicit RTree(const std::optional<detail::geodetic::Spheroid> &wgs)
-      : base_t(), coordinates_(wgs.value_or(detail::geodetic::Spheroid())) {}
+  explicit RTree(const std::optional<detail::geodetic::Spheroid> &wgs,
+                 const bool ecef)
+      : base_t(),
+        coordinates_(wgs.value_or(detail::geodetic::Spheroid())),
+        ecef_(ecef) {
+    if (wgs.has_value() && ecef) {
+      throw std::invalid_argument(
+          "If a Cartesian coordinate system (ECEF) is desired, there is no "
+          "need to use a geodetic system for LLA to ECEF conversion. Please "
+          "set either the spheroid or ecef parameter, but not both.");
+    }
+  }
 
   /// Returns the box able to contain all values stored in the container.
   ///
@@ -130,12 +140,16 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     }
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
-        _packing<dimension_t::value - 1>(&RTree<Point, Type>::from_lon_lat,
-                                         coordinates, values);
+        _packing<dimension_t::value - 1>(
+            ecef_ ? &RTree<Point, Type>::from_xy
+                  : &RTree<Point, Type>::from_lon_lat,
+            coordinates, values);
         break;
       case dimension_t::value:
-        _packing<dimension_t::value>(&RTree<Point, Type>::from_lon_lat_alt,
-                                     coordinates, values);
+        _packing<dimension_t::value>(
+            ecef_ ? &RTree<Point, Type>::from_xyz
+                  : &RTree<Point, Type>::from_lon_lat_alt,
+            coordinates, values);
         break;
       default:
         throw std::invalid_argument(RTree<Point, Type>::invalid_shape());
@@ -157,11 +171,15 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     }
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
-        _insert<dimension_t::value - 1>(&RTree<Point, Type>::from_lon_lat,
+        _insert<dimension_t::value - 1>(ecef_
+                                            ? &RTree<Point, Type>::from_xy
+                                            : &RTree<Point, Type>::from_lon_lat,
                                         coordinates, values);
         break;
       case dimension_t::value:
-        _insert<dimension_t::value>(&RTree<Point, Type>::from_lon_lat_alt,
+        _insert<dimension_t::value>(ecef_
+                                        ? &RTree<Point, Type>::from_xyz
+                                        : &RTree<Point, Type>::from_lon_lat_alt,
                                     coordinates, values);
         break;
       default:
@@ -175,12 +193,15 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
-        return _query<dimension_t::value - 1>(&RTree<Point, Type>::from_lon_lat,
-                                              coordinates, k, within,
-                                              num_threads);
+        return _query<dimension_t::value - 1>(
+            ecef_ ? &RTree<Point, Type>::from_xy
+                  : &RTree<Point, Type>::from_lon_lat,
+            coordinates, k, within, num_threads);
       case dimension_t::value:
-        return _query<dimension_t::value>(&RTree<Point, Type>::from_lon_lat,
-                                          coordinates, k, within, num_threads);
+        return _query<dimension_t::value>(
+            ecef_ ? &RTree<Point, Type>::from_xyz
+                  : &RTree<Point, Type>::from_lon_lat_alt,
+            coordinates, k, within, num_threads);
       default:
         throw std::invalid_argument(RTree<Point, Type>::invalid_shape());
     }
@@ -194,13 +215,15 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
-        return _value<dimension_t::value - 1>(&RTree<Point, Type>::from_lon_lat,
-                                              coordinates, radius, k, within,
-                                              num_threads);
+        return _value<dimension_t::value - 1>(
+            ecef_ ? &RTree<Point, Type>::from_xy
+                  : &RTree<Point, Type>::from_lon_lat,
+            coordinates, radius, k, within, num_threads);
       case dimension_t::value:
-        return _value<dimension_t::value>(&RTree<Point, Type>::from_lon_lat,
-                                          coordinates, radius, k, within,
-                                          num_threads);
+        return _value<dimension_t::value>(
+            ecef_ ? &RTree<Point, Type>::from_xyz
+                  : &RTree<Point, Type>::from_lon_lat_alt,
+            coordinates, radius, k, within, num_threads);
       default:
         throw std::invalid_argument(RTree<Point, Type>::invalid_shape());
     }
@@ -216,12 +239,16 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
         return _inverse_distance_weighting<dimension_t::value - 1>(
-            &RTree<Point, Type>::from_lon_lat, coordinates,
+            ecef_ ? &RTree<Point, Type>::from_xy
+                  : &RTree<Point, Type>::from_lon_lat,
+            coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, p,
             within, num_threads);
       case dimension_t::value:
         return _inverse_distance_weighting<dimension_t::value>(
-            &RTree<Point, Type>::from_lon_lat, coordinates,
+            ecef_ ? &RTree<Point, Type>::from_xyz
+                  : &RTree<Point, Type>::from_lon_lat_alt,
+            coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, p,
             within, num_threads);
       default:
@@ -239,13 +266,17 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
         return _rbf<dimension_t::value - 1>(
-            &RTree<Point, Type>::from_lon_lat, coordinates,
+            ecef_ ? &RTree<Point, Type>::from_xy
+                  : &RTree<Point, Type>::from_lon_lat,
+            coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, rbf,
             epsilon.value_or(std::numeric_limits<promotion_t>::quiet_NaN()),
             smooth, within, num_threads);
       case dimension_t::value:
         return _rbf<dimension_t::value>(
-            &RTree<Point, Type>::from_lon_lat_alt, coordinates,
+            ecef_ ? &RTree<Point, Type>::from_xyz
+                  : &RTree<Point, Type>::from_lon_lat_alt,
+            coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, rbf,
             epsilon.value_or(std::numeric_limits<promotion_t>::quiet_NaN()),
             smooth, within, num_threads);
@@ -265,12 +296,16 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
         return _window_function<dimension_t::value - 1>(
-            &RTree<Point, Type>::from_lon_lat, coordinates,
+            ecef_ ? &RTree<Point, Type>::from_xy
+                  : &RTree<Point, Type>::from_lon_lat,
+            coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, wf,
             arg.value_or(0), within, num_threads);
       case dimension_t::value:
         return _window_function<dimension_t::value>(
-            &RTree<Point, Type>::from_lon_lat_alt, coordinates,
+            ecef_ ? &RTree<Point, Type>::from_xyz
+                  : &RTree<Point, Type>::from_lon_lat_alt,
+            coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, wf,
             arg.value_or(0), within, num_threads);
       default:
@@ -289,12 +324,16 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
         return _universal_kriging<dimension_t::value - 1>(
-            &RTree<Point, Type>::from_lon_lat, coordinates,
+            ecef_ ? &RTree<Point, Type>::from_xy
+                  : &RTree<Point, Type>::from_lon_lat,
+            coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, cov,
             sigma, lambda, within, num_threads);
       case dimension_t::value:
         return _universal_kriging<dimension_t::value>(
-            &RTree<Point, Type>::from_lon_lat, coordinates,
+            ecef_ ? &RTree<Point, Type>::from_xyz
+                  : &RTree<Point, Type>::from_lon_lat,
+            coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, cov,
             sigma, lambda, within, num_threads);
       default:
@@ -321,19 +360,20 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                     ++ix;
                   });
     auto spheroid = geodetic::Spheroid(this->coordinates_.spheroid());
-    return pybind11::make_tuple(spheroid.getstate(), x, u);
+    return pybind11::make_tuple(spheroid.getstate(), ecef_, x, u);
   }
 
   /// Create a new instance from a registered state of an instance of this
   /// object.
   static auto setstate(const pybind11::tuple &state) -> RTree<Point, Type> {
-    if (state.size() != 3) {
+    if (state.size() != 4) {
       throw std::runtime_error("invalid state");
     }
     auto spheroid =
         geodetic::Spheroid::setstate(state[0].cast<pybind11::tuple>());
-    auto x = state[1].cast<pybind11::array_t<coordinate_t>>();
-    auto u = state[2].cast<pybind11::array_t<Type>>();
+    auto ecef = state[1].cast<bool>();
+    auto x = state[2].cast<pybind11::array_t<coordinate_t>>();
+    auto u = state[3].cast<pybind11::array_t<Type>>();
 
     if (x.shape(1) != dimension_t::value || x.shape(0) != u.size()) {
       throw std::runtime_error("invalid state");
@@ -353,7 +393,7 @@ class RTree : public detail::geometry::RTree<Point, Type> {
       }
       vector.emplace_back(std::make_pair(point, _u(ix)));
     }
-    auto result = RTree<Point, Type>(spheroid);
+    auto result = RTree<Point, Type>(spheroid, ecef);
     static_cast<base_t>(result).packing(vector);
     return result;
   }
@@ -361,6 +401,21 @@ class RTree : public detail::geometry::RTree<Point, Type> {
  private:
   /// System for converting Geodetic coordinates into Cartesian coordinates.
   detail::geodetic::Coordinates coordinates_;
+
+  /// Indicates if the coordinates managed by this instance are always in the
+  /// Cartesian coordinate system (ECEF). If true, no conversion to the LLA
+  /// system is performed.
+  bool ecef_;
+
+  auto from_xy(const Eigen::Map<const Vector<coordinate_t>> &coordinates) const
+      -> Point {
+    return Point(coordinates(0), coordinates(1), 0);
+  }
+
+  auto from_xyz(const Eigen::Map<const Vector<coordinate_t>> &coordinates) const
+      -> Point {
+    return Point(coordinates(0), coordinates(1), coordinates(2));
+  }
 
   /// Create the cartesian point for the given coordinates: longitude and
   /// latitude in degrees, altitude in meters, then the other coordinates
@@ -370,16 +425,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     auto ecef = coordinates_.lla_to_ecef(
         detail::geometry::EquatorialPoint3D<coordinate_t>{
             coordinates(0), coordinates(1), coordinates(2)});
-    auto result = Point();
-
-    boost::geometry::set<0>(result, boost::geometry::get<0>(ecef));
-    boost::geometry::set<1>(result, boost::geometry::get<1>(ecef));
-    boost::geometry::set<2>(result, boost::geometry::get<2>(ecef));
-
-    for (auto ix = 3UL; ix < dimension_t::value; ++ix) {
-      detail::geometry::point::set(result, coordinates(ix), ix);
-    }
-    return result;
+    return Point(boost::geometry::get<0>(ecef), boost::geometry::get<1>(ecef),
+                 boost::geometry::get<2>(ecef));
   }
 
   /// Create the cartesian point for the given coordinates: longitude and
@@ -390,16 +437,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     auto ecef = coordinates_.lla_to_ecef(
         detail::geometry::EquatorialPoint3D<coordinate_t>{coordinates(0),
                                                           coordinates(1), 0});
-    auto result = Point();
-
-    boost::geometry::set<0>(result, boost::geometry::get<0>(ecef));
-    boost::geometry::set<1>(result, boost::geometry::get<1>(ecef));
-    boost::geometry::set<2>(result, boost::geometry::get<2>(ecef));
-
-    for (auto ix = 2UL; ix < dimension_t::value - 1; ++ix) {
-      detail::geometry::point::set(result, coordinates(ix), ix + 1);
-    }
-    return result;
+    return Point(boost::geometry::get<0>(ecef), boost::geometry::get<1>(ecef),
+                 boost::geometry::get<2>(ecef));
   }
 
   /// Create the geographic point (latitude, longitude, and altitude) from the
@@ -586,11 +625,20 @@ class RTree : public detail::geometry::RTree<Point, Type> {
 
                 // Fill in the calculation result for all neighbors found
                 for (; jx < nearest.size(); ++jx) {
-                  auto lla = this->to_lla(nearest[jx].first);
-                  _points(ix, jx, 0) = boost::geometry::get<0>(lla);
-                  _points(ix, jx, 1) = boost::geometry::get<1>(lla);
-                  if (M == 3) {
-                    _points(ix, jx, 2) = boost::geometry::get<2>(lla);
+                  if (ecef_) {
+                    const auto &ecef = nearest[jx].first;
+                    _points(ix, jx, 0) = boost::geometry::get<0>(ecef);
+                    _points(ix, jx, 1) = boost::geometry::get<1>(ecef);
+                    if (M == 3) {
+                      _points(ix, jx, 2) = boost::geometry::get<2>(ecef);
+                    }
+                  } else {
+                    auto lla = this->to_lla(nearest[jx].first);
+                    _points(ix, jx, 0) = boost::geometry::get<0>(lla);
+                    _points(ix, jx, 1) = boost::geometry::get<1>(lla);
+                    if (M == 3) {
+                      _points(ix, jx, 2) = boost::geometry::get<2>(lla);
+                    }
                   }
                   _value(ix, jx) = nearest[jx].second;
                 }

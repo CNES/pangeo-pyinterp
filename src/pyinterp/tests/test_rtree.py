@@ -51,9 +51,6 @@ def test_init():
         mesh = pyinterp.RTree()
         mesh.__setstate__((1, ))
 
-    with pytest.raises(ValueError):
-        pyinterp.RTree(ndims=1)
-
 
 def load_data():
     ds = load_grid2d()

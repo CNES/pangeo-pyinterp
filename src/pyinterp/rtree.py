@@ -22,23 +22,26 @@ class RTree:
             coordinates. If not set the geodetic system used is WGS-84.
             Default to ``None``.
         dtype: Data type of the instance to create.
-        ndims: The number of dimensions of the tree. This dimension must be
-            at least equal to 3 to store the ECEF coordinates of the points.
-            Default to ``3``.
+        ecef: If true, the coordinates are provided in the ECEF system,
+            otherwise the coordinates are provided in the geodetic system.
+            Default to ``False``.
+
+    Raises:
+        ValueError: if the data type is not handled by the object, or if the
+            a geodetic system is provided and the coordinates system is ECEF
+            (ecef keyword is set to True).
     """
 
     def __init__(self,
                  system: geodetic.Spheroid | None = None,
                  dtype: numpy.dtype | None = None,
-                 ndims: int = 3):
+                 ecef: bool = False):
         """Initialize a new R*Tree."""
         dtype = dtype or numpy.dtype('float64')
-        if ndims < 3:
-            raise ValueError('ndims must be >= 3')
         if dtype == numpy.dtype('float64'):
-            self._instance = getattr(core, f'RTree{ndims}DFloat64')(system)
+            self._instance = getattr(core, 'RTree3DFloat64')(system, ecef)
         elif dtype == numpy.dtype('float32'):
-            self._instance = getattr(core, f'RTree{ndims}DFloat32')(system)
+            self._instance = getattr(core, 'RTree3DFloat32')(system, ecef)
         else:
             raise ValueError(f'dtype {dtype} not handled by the object')
         self.dtype = dtype
@@ -73,12 +76,16 @@ class RTree:
         before construction.)
 
         Args:
-            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
-                observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters and
-                then the other coordinates defined in Euclidean space if
-                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
-                the method considers the altitude constant and equal to zero.
+            coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
+                of observations and 3 represents the coordinates in theorder:
+                x, y, and z.
+                If the matrix shape is ``(n, 2)``, the z-coordinate is assumed
+                to be zero.
+                The coordinates (x, y, z) are in the Cartesian coordinate system
+                (ECEF) if the instance is configured to use this system (ecef
+                keyword set to True during construction). Otherwise, the
+                coordinates are in the geodetic system (longitude, latitude, and
+                altitude) in degrees, degrees, and meters, respectively.
             values: An array of size ``(n)`` containing the values associated
                 with the coordinates provided.
         """
@@ -89,12 +96,16 @@ class RTree:
         """Insert new data into the search tree.
 
         Args:
-            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
-                observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters and
-                then the other coordinates defined in Euclidean space if
-                ``dims`` > 3. If the shape of the matrix is ``(n, ndims)`` then
-                the method considers the altitude constant and equal to zero.
+            coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
+                of observations and 3 represents the coordinates in theorder:
+                x, y, and z.
+                If the matrix shape is ``(n, 2)``, the z-coordinate is assumed
+                to be zero.
+                The coordinates (x, y, z) are in the Cartesian coordinate system
+                (ECEF) if the instance is configured to use this system (ecef
+                keyword set to True during construction). Otherwise, the
+                coordinates are in the geodetic system (longitude, latitude, and
+                altitude) in degrees, degrees, and meters, respectively.
             values: An array of size ``(n)`` containing the values associated
                 with the coordinates provided.
         """
@@ -110,11 +121,16 @@ class RTree:
         given point.
 
         Args:
-            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
-                observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters.
-                If ndims is equal to 2 then the altitude is considered to be
-                constant and equal to zero.
+            coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
+                of observations and 3 represents the coordinates in theorder:
+                x, y, and z.
+                If the matrix shape is ``(n, 2)``, the z-coordinate is assumed
+                to be zero.
+                The coordinates (x, y, z) are in the Cartesian coordinate system
+                (ECEF) if the instance is configured to use this system (ecef
+                keyword set to True during construction). Otherwise, the
+                coordinates are in the geodetic system (longitude, latitude, and
+                altitude) in degrees, degrees, and meters, respectively.
             radius (optional): The maximum distance in meters to search for
                 neighbors. If not set, the search is performed on all the
                 neighbors.
@@ -132,8 +148,8 @@ class RTree:
         .. note::
             The matrix containing the coordinates of the neighbors is a matrix
             of dimension ``(k, n)`` where ``n`` is equal to 2 if the provided
-            coordinates matrix defines only longitude and latitude, and 3 if the
-            defines longitude, latitude and altitude.
+            coordinates matrix defines only x and y, and 3 if the defines x, y,
+            and z.
         """
         return self._instance.value(coordinates, radius, k, within,
                                     num_threads)
@@ -146,11 +162,16 @@ class RTree:
         """Search for the nearest K nearest neighbors of a given point.
 
         Args:
-            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
-                observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters.
-                If ndims is equal to 2 then the altitude is considered to be
-                constant and equal to zero.
+            coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
+                of observations and 3 represents the coordinates in theorder:
+                x, y, and z.
+                If the matrix shape is ``(n, 2)``, the z-coordinate is assumed
+                to be zero.
+                The coordinates (x, y, z) are in the Cartesian coordinate system
+                (ECEF) if the instance is configured to use this system (ecef
+                keyword set to True during construction). Otherwise, the
+                coordinates are in the geodetic system (longitude, latitude, and
+                altitude) in degrees, degrees, and meters, respectively.
             k: The number of nearest neighbors to be searched. Defaults to
                 ``4``.
             within: If true, the method ensures that the neighbors found are
@@ -160,8 +181,9 @@ class RTree:
                 used at all, which is useful for debugging. Defaults to ``0``.
         Returns:
             A tuple containing a matrix describing for each provided position,
-            the distance, in meters, between the provided position and the found
-            neighbors and a matrix containing the value of the different
+            the distance between the provided position and the found neighbors
+            (in meters if the RTree handles LLA coordinates, otherwise in
+            Cartesian units) and a matrix containing the value of the different
             neighbors found for all provided positions.
             If no neighbors are found, the distance and the value are set to
             ``-1``.
@@ -180,11 +202,16 @@ class RTree:
         distance weighting method.
 
         Args:
-            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
-                observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters.
-                If ndims is equal to 2 then the altitude is considered to be
-                constant and equal to zero.
+            coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
+                of observations and 3 represents the coordinates in theorder:
+                x, y, and z.
+                If the matrix shape is ``(n, 2)``, the z-coordinate is assumed
+                to be zero.
+                The coordinates (x, y, z) are in the Cartesian coordinate system
+                (ECEF) if the instance is configured to use this system (ecef
+                keyword set to True during construction). Otherwise, the
+                coordinates are in the geodetic system (longitude, latitude, and
+                altitude) in degrees, degrees, and meters, respectively.
             radius: The maximum radius of the search (m). Defaults The maximum
                 distance between two points.
             k: The number of nearest neighbors to be used for calculating the
@@ -218,11 +245,16 @@ class RTree:
         function interpolation.
 
         Args:
-            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
-                observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters.
-                If ndims is equal to 2 then the altitude is considered to be
-                constant and equal to zero.
+            coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
+                of observations and 3 represents the coordinates in theorder:
+                x, y, and z.
+                If the matrix shape is ``(n, 2)``, the z-coordinate is assumed
+                to be zero.
+                The coordinates (x, y, z) are in the Cartesian coordinate system
+                (ECEF) if the instance is configured to use this system (ecef
+                keyword set to True during construction). Otherwise, the
+                coordinates are in the geodetic system (longitude, latitude, and
+                altitude) in degrees, degrees, and meters, respectively.
             radius: The maximum radius of the search (m). Defaults The maximum
                 distance between two points.
             k: The number of nearest neighbors to be used for calculating the
@@ -288,11 +320,16 @@ class RTree:
         describe above.
 
         Args:
-            coordinates: a matrix ``(n, ndims)`` where ``n`` is the number of
-                observations and ``ndims`` is the number of coordinates in
-                order: longitude and latitude in degrees, altitude in meters.
-                If ndims is equal to 2 then the altitude is considered to be
-                constant and equal to zero.
+            coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
+                of observations and 3 represents the coordinates in theorder:
+                x, y, and z.
+                If the matrix shape is ``(n, 2)``, the z-coordinate is assumed
+                to be zero.
+                The coordinates (x, y, z) are in the Cartesian coordinate system
+                (ECEF) if the instance is configured to use this system (ecef
+                keyword set to True during construction). Otherwise, the
+                coordinates are in the geodetic system (longitude, latitude, and
+                altitude) in degrees, degrees, and meters, respectively.
             radius: The maximum radius of the search (m).
             k: The number of nearest neighbors to be used for calculating the
                 interpolated value. Defaults to ``9``.
@@ -369,7 +406,16 @@ class RTree:
         """Interpolate the values of a point using universal kriging.
 
         Args:
-            coordinates: The coordinates of the point to be interpolated.
+            coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
+                of observations and 3 represents the coordinates in theorder:
+                x, y, and z.
+                If the matrix shape is ``(n, 2)``, the z-coordinate is assumed
+                to be zero.
+                The coordinates (x, y, z) are in the Cartesian coordinate system
+                (ECEF) if the instance is configured to use this system (ecef
+                keyword set to True during construction). Otherwise, the
+                coordinates are in the geodetic system (longitude, latitude, and
+                altitude) in degrees, degrees, and meters, respectively.
             radius: The maximum radius of the search (m).
             k: The number of nearest neighbors to be used for calculating the
                 interpolated value. Defaults to ``9``.
