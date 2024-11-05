@@ -111,12 +111,12 @@ jobs:
     fetchDepth: 1
   - bash: git submodule update --init --recursive
     displayName: Initialize the submodules
+  - bash: echo "##vso[task.prependpath]/usr/local/bin"
+    displayName: Add Homebrew to PATH
+  - bash: brew install --cask miniconda
+    displayName: Install Miniconda with Homebrew
   - bash: echo "##vso[task.prependpath]$CONDA/bin"
     displayName: Add conda to PATH
-  - bash: ls -l / && ls -l /usr/ && ls -l /opt && ls -lR /usr/local
-    displayName: List directories
-  - bash: sudo chown -R 501:20 /usr/local/miniconda/pkgs
-    displayName: Fix permissions
   - bash: conda create --yes --quiet --name Build
     displayName: Create Anaconda environment
   - bash: |
