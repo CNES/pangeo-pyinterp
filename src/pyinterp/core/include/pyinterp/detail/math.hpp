@@ -269,16 +269,16 @@ constexpr auto sinc(const T &x) noexcept -> T {
 /// True if a and b are two values identical to an epsilon.
 template <typename T, typename std::enable_if<std::is_integral<T>::value,
                                               T>::type * = nullptr>
-constexpr auto is_same(const T &a, const T &b,
-                       const T &epsilon) noexcept -> bool {
+constexpr auto is_same(const T &a, const T &b, const T &epsilon) noexcept
+    -> bool {
   return std::abs(a - b) <= epsilon;
 }
 
 /// True if a and b are two values identical to an epsilon.
 template <typename T, typename std::enable_if<std::is_floating_point<T>::value,
                                               T>::type * = nullptr>
-constexpr auto is_same(const T &a, const T &b,
-                       const T &epsilon) noexcept -> bool {
+constexpr auto is_same(const T &a, const T &b, const T &epsilon) noexcept
+    -> bool {
   auto diff = std::fabs(a - b);
   if (diff <= epsilon) {
     return true;

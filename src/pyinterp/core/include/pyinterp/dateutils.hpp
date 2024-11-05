@@ -310,8 +310,9 @@ class FractionalSeconds {
     return static_cast<int>(std::log10(order_of_magnitude_));
   }
 
-  [[nodiscard]] constexpr auto cast(
-      const int64_t frac, const int64_t scale) const noexcept -> int64_t {
+  [[nodiscard]] constexpr auto cast(const int64_t frac,
+                                    const int64_t scale) const noexcept
+      -> int64_t {
     return order_of_magnitude_ <= scale ? (scale / order_of_magnitude_) * frac
                                         : frac / (order_of_magnitude_ / scale);
   }
@@ -472,8 +473,8 @@ constexpr auto datetime_from_minutes(const int64_t minutes)
 }
 
 /// Convert a datetime64 to a string
-inline auto datetime64_to_string(const int64_t value,
-                                 const DType &dtype) -> std::string {
+inline auto datetime64_to_string(const int64_t value, const DType &dtype)
+    -> std::string {
   auto date = Date{};
   auto time = Time{};
   auto ss = std::stringstream{};

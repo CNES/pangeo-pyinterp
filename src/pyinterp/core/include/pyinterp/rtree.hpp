@@ -210,8 +210,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   /// Search for the nearest K nearest neighbors of a given coordinates.
   auto value(const array_t &coordinates,
              const std::optional<coordinate_t> &radius, const uint32_t k,
-             const bool within,
-             const size_t num_threads) const -> pybind11::tuple {
+             const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
@@ -230,10 +230,12 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   }
 
   /// TODO
-  auto inverse_distance_weighting(
-      const array_t &coordinates, const std::optional<coordinate_t> &radius,
-      const uint32_t k, const uint32_t p, const bool within,
-      const size_t num_threads) const -> pybind11::tuple {
+  auto inverse_distance_weighting(const array_t &coordinates,
+                                  const std::optional<coordinate_t> &radius,
+                                  const uint32_t k, const uint32_t p,
+                                  const bool within,
+                                  const size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
 
     switch (coordinates.shape(1)) {
@@ -257,11 +259,13 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   }
 
   /// TODO
-  auto radial_basis_function(
-      const array_t &coordinates, const std::optional<coordinate_t> &radius,
-      const uint32_t k, const RadialBasisFunction rbf,
-      const std::optional<promotion_t> &epsilon, const promotion_t smooth,
-      const bool within, const size_t num_threads) const -> pybind11::tuple {
+  auto radial_basis_function(const array_t &coordinates,
+                             const std::optional<coordinate_t> &radius,
+                             const uint32_t k, const RadialBasisFunction rbf,
+                             const std::optional<promotion_t> &epsilon,
+                             const promotion_t smooth, const bool within,
+                             const size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
@@ -290,8 +294,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                        const std::optional<coordinate_t> &radius,
                        const uint32_t k, const WindowFunction wf,
                        const std::optional<coordinate_t> &arg,
-                       const bool within,
-                       const size_t num_threads) const -> pybind11::tuple {
+                       const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
@@ -317,8 +321,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                          const std::optional<coordinate_t> &radius,
                          const uint32_t k, const CovarianceFunction cov,
                          const coordinate_t sigma, const coordinate_t lambda,
-                         const bool within,
-                         const size_t num_threads) const -> pybind11::tuple {
+                         const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
 
     switch (coordinates.shape(1)) {
@@ -420,8 +424,9 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   /// Create the cartesian point for the given coordinates: longitude and
   /// latitude in degrees, altitude in meters, then the other coordinates
   /// defined in a Euclidean space.
-  auto from_lon_lat_alt(const Eigen::Map<const Vector<coordinate_t>>
-                            &coordinates) const -> Point {
+  auto from_lon_lat_alt(
+      const Eigen::Map<const Vector<coordinate_t>> &coordinates) const
+      -> Point {
     auto ecef = coordinates_.lla_to_ecef(
         detail::geometry::EquatorialPoint3D<coordinate_t>{
             coordinates(0), coordinates(1), coordinates(2)});
@@ -587,8 +592,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
   auto _value(Converter converter,
               const pybind11::array_t<coordinate_t> &coordinates,
               const std::optional<coordinate_t> &radius, const uint32_t k,
-              const bool within,
-              const size_t num_threads) const -> pybind11::tuple {
+              const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     auto _coordinates = coordinates.template unchecked<2>();
     auto size = coordinates.shape(0);
 
@@ -728,8 +733,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                           const coordinate_t radius, const uint32_t k,
                           const CovarianceFunction &cov,
                           const coordinate_t sigma, const coordinate_t lambda,
-                          const bool within,
-                          const size_t num_threads) const -> pybind11::tuple {
+                          const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     auto _coordinates = coordinates.template unchecked<2>();
     auto size = coordinates.shape(0);
 
@@ -845,8 +850,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                         const pybind11::array_t<coordinate_t> &coordinates,
                         const coordinate_t radius, const uint32_t k,
                         const WindowFunction wf, const coordinate_t arg,
-                        const bool within,
-                        const size_t num_threads) const -> pybind11::tuple {
+                        const bool within, const size_t num_threads) const
+      -> pybind11::tuple {
     auto _coordinates = coordinates.template unchecked<2>();
     auto size = coordinates.shape(0);
 

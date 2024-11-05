@@ -112,8 +112,8 @@ template <template <class> class Point, typename Coordinate, typename Type>
 auto bivariate(const Grid2D<Type> &grid, const pybind11::array_t<Coordinate> &x,
                const pybind11::array_t<Coordinate> &y,
                const BivariateInterpolator<Point, Coordinate> *interpolator,
-               const bool bounds_error,
-               const size_t num_threads) -> pybind11::array_t<Coordinate> {
+               const bool bounds_error, const size_t num_threads)
+    -> pybind11::array_t<Coordinate> {
   pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y);
   pyinterp::detail::check_ndarray_shape("x", x, "y", y);
 
@@ -167,8 +167,8 @@ void implement_bivariate_interpolator(pybind11::module &m,
     using CoordinateSystem::CoordinateSystem;
 
     auto evaluate(const Point<T> &p, const Point<T> &p0, const Point<T> &p1,
-                  const T &q00, const T &q01, const T &q10,
-                  const T &q11) const -> T override {
+                  const T &q00, const T &q01, const T &q10, const T &q11) const
+        -> T override {
       PYBIND11_OVERLOAD_PURE(T, CoordinateSystem, "evaluate", p, p0,  // NOLINT
                              p1,                                      // NOLINT
                              q00, q01, q10, q11);                     // NOLINT

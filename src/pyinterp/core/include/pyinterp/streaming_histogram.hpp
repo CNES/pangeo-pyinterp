@@ -209,8 +209,8 @@ class StreamingHistogram {
 
   /// Allocates the accumulators needed for the result statistics.
   [[nodiscard]] static auto allocate_accumulators(
-      const size_t bin_count,
-      const std::vector<pybind11::ssize_t> &shape) -> Vector<Accumulators> {
+      const size_t bin_count, const std::vector<pybind11::ssize_t> &shape)
+      -> Vector<Accumulators> {
     auto result = Vector<Accumulators>(StreamingHistogram::shape_size(shape));
     std::for_each(result.data(), result.data() + result.size(),
                   [bin_count](auto &acc) { acc.resize(bin_count); });

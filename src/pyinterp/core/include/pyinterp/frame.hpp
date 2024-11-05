@@ -67,8 +67,8 @@ auto load_frame(const Grid2D<DataType> &grid, const double x, const double y,
 template <typename DataType, typename AxisType>
 auto load_frame(const Grid3D<DataType, AxisType> &grid, const double x,
                 const double y, const AxisType z, const axis::Boundary boundary,
-                const bool bounds_error,
-                detail::math::Frame3D<AxisType> &frame) -> bool {
+                const bool bounds_error, detail::math::Frame3D<AxisType> &frame)
+    -> bool {
   const auto &x_axis = *grid.x();
   const auto &y_axis = *grid.y();
   const auto &z_axis = *grid.z();

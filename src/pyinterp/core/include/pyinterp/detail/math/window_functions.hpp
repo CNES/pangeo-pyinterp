@@ -74,8 +74,8 @@ constexpr auto nuttall(const T &d, const T &r, const T & /*unused*/) -> T {
 
 /// kBlackman-Harris window function.
 template <typename T>
-constexpr auto blackman_harris(const T &d, const T &r,
-                               const T & /*unused*/) -> T {
+constexpr auto blackman_harris(const T &d, const T &r, const T & /*unused*/)
+    -> T {
   if (d <= r) {
     auto ratio = (d + r) / r;
     return static_cast<T>(0.35875 - 0.48829 * std::cos(pi<T>() * ratio) +

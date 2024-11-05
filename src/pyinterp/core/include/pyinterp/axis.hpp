@@ -123,8 +123,8 @@ class Axis : public detail::Axis<T>,
   ///   points on the axis or the value -1 if the *bounded* parameter is set
   ///   to false and the index looked for is located outside the limits of the
   ///   axis.
-  auto find_index(const pybind11::array_t<T> &coordinates,
-                  bool bounded) const -> pybind11::array_t<int64_t> {
+  auto find_index(const pybind11::array_t<T> &coordinates, bool bounded) const
+      -> pybind11::array_t<int64_t> {
     detail::check_array_ndim("coordinates", 1, coordinates);
 
     auto size = coordinates.size();

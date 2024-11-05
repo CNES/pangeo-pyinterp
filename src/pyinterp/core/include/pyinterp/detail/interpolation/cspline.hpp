@@ -24,8 +24,8 @@ class CSpline : public CSplineBase<T> {
   /// @brief Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  inline auto compute_coefficients(const Vector<T> &xa,
-                                   const Vector<T> &ya) -> void override;
+  inline auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
+      -> void override;
 
   /// @brief Solve a symmetric tridiagonal system
   /// @param x The solution of the system
@@ -63,8 +63,8 @@ constexpr auto CSpline<T>::solve_symmetric_tridiagonal(T *x) -> void {
 }
 
 template <typename T>
-auto CSpline<T>::compute_coefficients(const Vector<T> &xa,
-                                      const Vector<T> &ya) -> void {
+auto CSpline<T>::compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
+    -> void {
   Interpolator1D<T>::compute_coefficients(xa, ya);
   const auto size = xa.size();
   const auto size_m2 = size - 2;

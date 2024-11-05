@@ -17,8 +17,8 @@ namespace pyinterp::geohash::string {
 static const auto base32 = Base32();
 
 // ---------------------------------------------------------------------------
-auto Array::get_info(const pybind11::array &hash,
-                     const pybind11::ssize_t ndim) -> pybind11::buffer_info {
+auto Array::get_info(const pybind11::array &hash, const pybind11::ssize_t ndim)
+    -> pybind11::buffer_info {
   auto info = hash.request();
   auto dtype = hash.dtype();
   if ((hash.flags() & pybind11::array::c_style) == 0) {
@@ -114,15 +114,15 @@ auto bounding_box(const char *const hash, const size_t count) -> geodetic::Box {
 }
 
 // ---------------------------------------------------------------------------
-auto decode(const char *const hash, const size_t count,
-            const bool round) -> geodetic::Point {
+auto decode(const char *const hash, const size_t count, const bool round)
+    -> geodetic::Point {
   auto bbox = bounding_box(hash, count);
   return round ? bbox.round() : bbox.centroid();
 }
 
 // ---------------------------------------------------------------------------
-auto decode(const pybind11::array &hash,
-            const bool round) -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
+auto decode(const pybind11::array &hash, const bool round)
+    -> std::tuple<Eigen::VectorXd, Eigen::VectorXd> {
   auto info = Array::get_info(hash, 1);
   auto count = info.strides[0];
   auto lon = Eigen::VectorXd(info.shape[0]);
@@ -264,8 +264,8 @@ auto mask_cell(const geodetic::Box &box, const Geometry &geometry,
 static auto select_cell(const double lng_err, const double lat_err,
                         const geodetic::Point &point_sw, const size_t lon_step,
                         const size_t lat_step, const uint32_t bits,
-                        const uint32_t precision,
-                        const Matrix<bool> &mask) -> pybind11::array {
+                        const uint32_t precision, const Matrix<bool> &mask)
+    -> pybind11::array {
   // Count the number of cells that are enclosed by the polygon
   auto size = std::count(mask.data(), mask.data() + mask.size(), true);
 
@@ -330,17 +330,16 @@ auto bounding_boxes(const geodetic::Polygon &polygon, const uint32_t precision,
 
 // ---------------------------------------------------------------------------
 auto bounding_boxes(const geodetic::MultiPolygon &polygons,
-                    const uint32_t precision,
-                    const size_t num_threads) -> pybind11::array {
+                    const uint32_t precision, const size_t num_threads)
+    -> pybind11::array {
   return bounding_boxes<geodetic::MultiPolygon>(polygons, precision,
                                                 num_threads);
 }
 
 // ---------------------------------------------------------------------------
-auto where(const pybind11::array &hash)
-    -> std::unordered_map<std::string,
-                          std::tuple<std::tuple<int64_t, int64_t>,
-                                     std::tuple<int64_t, int64_t>>> {
+auto where(const pybind11::array &hash) -> std::unordered_map<
+    std::string,
+    std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>> {
   // Index shifts of neighboring pixels
   static const auto shift_row =
       std::array<int64_t, 8>{-1, -1, -1, 0, 1, 0, 1, 1};
@@ -457,8 +456,8 @@ static auto zoom_out(char *ptr, pybind11::ssize_t size, uint32_t from_precision,
 }
 
 // ---------------------------------------------------------------------------
-auto transform(const pybind11::array &hash,
-               uint32_t precision) -> pybind11::array {
+auto transform(const pybind11::array &hash, uint32_t precision)
+    -> pybind11::array {
   // Decode the information in the provided table.
   auto info = Array::get_info(hash, 1);
   auto size = info.shape[0];

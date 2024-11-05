@@ -85,8 +85,8 @@ auto trivariate(const Grid3D<Type, AxisType> &grid,
                 const pybind11::array_t<AxisType> &z,
                 const Bivariate3D<Point, Coordinate> *interpolator,
                 const std::optional<std::string> &z_method,
-                const bool bounds_error,
-                const size_t num_threads) -> pybind11::array_t<Coordinate> {
+                const bool bounds_error, const size_t num_threads)
+    -> pybind11::array_t<Coordinate> {
   pyinterp::detail::check_array_ndim("x", 1, x, "y", 1, y, "z", 1, z);
   pyinterp::detail::check_ndarray_shape("x", x, "y", y, "z", z);
   auto z_interpolation_method =

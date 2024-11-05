@@ -33,8 +33,8 @@ class Akima : public Interpolator1D<T> {
   /// @brief Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  auto compute_coefficients(const Vector<T>& xa,
-                            const Vector<T>& ya) -> void override;
+  auto compute_coefficients(const Vector<T>& xa, const Vector<T>& ya)
+      -> void override;
 
   /// Interpolation
   /// @param xa X-coordinates of the data points.
@@ -55,8 +55,8 @@ class Akima : public Interpolator1D<T> {
 };
 
 template <typename T>
-auto Akima<T>::compute_coefficients(const Vector<T>& xa,
-                                    const Vector<T>& ya) -> void {
+auto Akima<T>::compute_coefficients(const Vector<T>& xa, const Vector<T>& ya)
+    -> void {
   Interpolator1D<T>::compute_coefficients(xa, ya);
   auto size = xa.size();
   if (m_.size() < size + 4) {

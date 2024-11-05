@@ -26,8 +26,8 @@ class Bilinear : public Interpolator2D<T> {
   /// @param x The point where the interpolation must be calculated.
   /// @param y The point where the interpolation must be calculated.
   constexpr auto interpolate_(const Vector<T> &xa, const Vector<T> &ya,
-                              const Matrix<T> &za, const T &x,
-                              const T &y) const -> T override;
+                              const Matrix<T> &za, const T &x, const T &y) const
+      -> T override;
 };
 
 template <typename T>

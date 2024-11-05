@@ -49,8 +49,8 @@ class Interpolator2D : public Interpolator<T> {
  protected:
   /// Interpolate the value of y at x using the index of the last search.
   virtual auto interpolate_(const Vector<T> &xa, const Vector<T> &ya,
-                            const Matrix<T> &za, const T &x,
-                            const T &y) const -> T = 0;
+                            const Matrix<T> &za, const T &x, const T &y) const
+      -> T = 0;
 
   /// Check if the arrays are valid.
   virtual auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya,

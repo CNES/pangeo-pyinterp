@@ -36,8 +36,8 @@ constexpr auto is_retrograde(const T& x1, const T& x2, const T& x3) -> bool {
 /// @param point the point to search.
 /// @return the index of the nearest point.
 template <typename T>
-auto nearest_point(const LineString<T>& line,
-                   const Point2D<T>& point) -> size_t {
+auto nearest_point(const LineString<T>& line, const Point2D<T>& point)
+    -> size_t {
   auto min_distance = std::numeric_limits<T>::max();
   auto index = size_t(0);
   for (auto it = line.begin(); it != line.end(); ++it) {

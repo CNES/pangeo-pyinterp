@@ -154,9 +154,10 @@ auto LineString::curvilinear_distance(DistanceStrategy strategy,
   return result;
 }
 
-auto LineString::simplify(
-    const double tolerance, const DistanceStrategy strategy,
-    const std::optional<Spheroid>& wgs) const -> LineString {
+auto LineString::simplify(const double tolerance,
+                          const DistanceStrategy strategy,
+                          const std::optional<Spheroid>& wgs) const
+    -> LineString {
   auto spheroid =
       wgs.has_value()
           ? static_cast<boost::geometry::srs::spheroid<double>>(*wgs)
@@ -209,8 +210,9 @@ inline auto closest_point(const LineString& ls, const Point& point,
 
 }  // namespace impl
 
-auto LineString::closest_point(
-    const Point& point, const std::optional<Spheroid>& wgs) const -> Point {
+auto LineString::closest_point(const Point& point,
+                               const std::optional<Spheroid>& wgs) const
+    -> Point {
   return wgs.has_value() ? impl::closest_point(*this, point, *wgs)
                          : impl::closest_point(*this, point);
 }

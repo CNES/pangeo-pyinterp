@@ -22,8 +22,8 @@ class CSplinePeriodic : public CSplineBase<T> {
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  auto compute_coefficients(const Vector<T> &xa,
-                            const Vector<T> &ya) -> void override;
+  auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
+      -> void override;
 
   /// Solve a symmetric cyclic tridiagonal system
   /// @param x The solution of the system

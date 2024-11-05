@@ -143,20 +143,20 @@ class RBF {
   }
 
   /// Gauss
-  static auto gaussian(const Eigen::Ref<const Matrix<T>> &r,
-                       const T epsilon) -> Matrix<T> {
+  static auto gaussian(const Eigen::Ref<const Matrix<T>> &r, const T epsilon)
+      -> Matrix<T> {
     return (-(epsilon * r).array().pow(2)).exp();
   }
 
   /// Linear spline
-  static auto linear(const Eigen::Ref<const Matrix<T>> &r,
-                     const T /*epsilon*/) -> Matrix<T> {
+  static auto linear(const Eigen::Ref<const Matrix<T>> &r, const T /*epsilon*/)
+      -> Matrix<T> {
     return r;
   }
 
   /// Cubic spline
-  static auto cubic(const Eigen::Ref<const Matrix<T>> &r,
-                    const T /*epsilon*/) -> Matrix<T> {
+  static auto cubic(const Eigen::Ref<const Matrix<T>> &r, const T /*epsilon*/)
+      -> Matrix<T> {
     return r.array().pow(3);
   }
 
@@ -183,8 +183,8 @@ class RBF {
   }
 
   /// Resolution of the linear system
-  static auto solve_linear_system(const Matrix<T> &A,
-                                  const Vector<T> &di) -> Vector<T> {
+  static auto solve_linear_system(const Matrix<T> &A, const Vector<T> &di)
+      -> Vector<T> {
     Eigen::FullPivLU<Matrix<T>> lu(A);
     return lu.solve(di);
   }

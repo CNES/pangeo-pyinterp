@@ -57,8 +57,9 @@ class LineString : public boost::geometry::model::linestring<Point> {
   ///
   /// @param rhs the linestring to test.
   /// @return true if the linestrings intersect.
-  [[nodiscard]] auto intersects(
-      const LineString& rhs, const std::optional<Spheroid>& wgs) const -> bool;
+  [[nodiscard]] auto intersects(const LineString& rhs,
+                                const std::optional<Spheroid>& wgs) const
+      -> bool;
 
   /// Compute the intersection of this linestring with another linestring.
   ///
@@ -133,8 +134,8 @@ class LineString : public boost::geometry::model::linestring<Point> {
 
   /// Returns the curvilinear distance along the linestring.
   [[nodiscard]] auto curvilinear_distance(
-      DistanceStrategy strategy,
-      const std::optional<Spheroid>& wgs) const -> Vector<double>;
+      DistanceStrategy strategy, const std::optional<Spheroid>& wgs) const
+      -> Vector<double>;
 
   /// Simplify the linestring using the Douglas-Peucker algorithm.
   ///
@@ -151,8 +152,9 @@ class LineString : public boost::geometry::model::linestring<Point> {
   /// @param point the point to project.
   /// @param wgs the spheroid to use.
   /// @return the closest point on this linestring to the given point.
-  [[nodiscard]] auto closest_point(
-      const Point& point, const std::optional<Spheroid>& wgs) const -> Point;
+  [[nodiscard]] auto closest_point(const Point& point,
+                                   const std::optional<Spheroid>& wgs) const
+      -> Point;
 
   /// Compute the closest point on this linestring to a given points.
   ///

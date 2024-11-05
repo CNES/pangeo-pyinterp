@@ -131,8 +131,8 @@ class RTree {
   /// @overload query(const Point &, const Strategy &, const uint32_t) const
   ///
   /// Overload of the query method with the default strategy.
-  auto query(const Point &point,
-             const uint32_t k) const -> std::vector<result_t> {
+  auto query(const Point &point, const uint32_t k) const
+      -> std::vector<result_t> {
     return query(point, boost::geometry::default_strategy(), k);
   }
 
@@ -162,8 +162,8 @@ class RTree {
   /// @overload query_ball(const Point &, const Strategy &, const coordinate_t)
   ///
   /// Overload of the query_ball method with the default strategy.
-  auto query_ball(const Point &point,
-                  const coordinate_t radius) const -> std::vector<result_t> {
+  auto query_ball(const Point &point, const coordinate_t radius) const
+      -> std::vector<result_t> {
     return query_ball(point, boost::geometry::default_strategy(), radius);
   }
 
@@ -203,8 +203,8 @@ class RTree {
   /// @overload query_within(const Point &, const Strategy &, const uint32_t)
   ///
   /// Overload of the query_within method with the default strategy.
-  auto query_within(const Point &point,
-                    const uint32_t k) const -> std::vector<result_t> {
+  auto query_within(const Point &point, const uint32_t k) const
+      -> std::vector<result_t> {
     return query_within(point, boost::geometry::default_strategy(), k);
   }
 
@@ -259,8 +259,8 @@ class RTree {
   ///
   /// Overload of the value method with the default strategy.
   auto value(const Point &point, const std::optional<coordinate_t> &radius,
-             const uint32_t k,
-             const bool within) const -> std::vector<value_t> {
+             const uint32_t k, const bool within) const
+      -> std::vector<value_t> {
     return value(point, boost::geometry::default_strategy(), radius, k, within);
   }
 
@@ -516,10 +516,11 @@ class RTree {
   /// math::RBF<promotion_t> &, const coordinate_t, const uint32_t, const bool)
   ///
   /// Overload of the radial_basis_function method with the default strategy.
-  auto radial_basis_function(
-      const Point &point, const math::RBF<promotion_t> &rbf,
-      const coordinate_t radius, const uint32_t k,
-      const bool within) const -> std::pair<promotion_t, uint32_t> {
+  auto radial_basis_function(const Point &point,
+                             const math::RBF<promotion_t> &rbf,
+                             const coordinate_t radius, const uint32_t k,
+                             const bool within) const
+      -> std::pair<promotion_t, uint32_t> {
     return radial_basis_function(point, boost::geometry::default_strategy(),
                                  rbf, radius, k, within);
   }
@@ -581,10 +582,11 @@ class RTree {
   /// coordinate_t, const uint32_t, const bool)
   ///
   /// Overload of the window_function method with the default strategy.
-  auto window_function(
-      const Point &point, const math::WindowFunction<coordinate_t> &wf,
-      const coordinate_t arg, const coordinate_t radius, const uint32_t k,
-      const bool within) const -> std::pair<coordinate_t, uint32_t> {
+  auto window_function(const Point &point,
+                       const math::WindowFunction<coordinate_t> &wf,
+                       const coordinate_t arg, const coordinate_t radius,
+                       const uint32_t k, const bool within) const
+      -> std::pair<coordinate_t, uint32_t> {
     return window_function(point, boost::geometry::default_strategy(), wf, arg,
                            radius, k, within);
   }

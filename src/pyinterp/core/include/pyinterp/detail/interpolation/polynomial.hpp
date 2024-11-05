@@ -25,8 +25,8 @@ class Polynomial : public Interpolator1D<T> {
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  constexpr auto compute_coefficients(const Vector<T> &xa,
-                                      const Vector<T> &ya) -> void override;
+  constexpr auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
+      -> void override;
 
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
@@ -47,13 +47,14 @@ class Polynomial : public Interpolator1D<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
-  auto derivative_(const Vector<T> &xa, const Vector<T> &ya,
-                   const T &x) const -> T override;
+  auto derivative_(const Vector<T> &xa, const Vector<T> &ya, const T &x) const
+      -> T override;
 };
 
 template <typename T>
-constexpr auto Polynomial<T>::compute_coefficients(
-    const Vector<T> &xa, const Vector<T> &ya) -> void {
+constexpr auto Polynomial<T>::compute_coefficients(const Vector<T> &xa,
+                                                   const Vector<T> &ya)
+    -> void {
   Interpolator1D<T>::compute_coefficients(xa, ya);
   auto size = xa.size();
   if (work_.size() < size) {

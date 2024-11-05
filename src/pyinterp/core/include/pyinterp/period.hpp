@@ -154,8 +154,8 @@ struct Period {
   /// @param tolerance The maximum distance from the period to consider the date
   /// close.
   /// @returns true if the date is close to the period.
-  constexpr auto is_close(const int64_t date,
-                          const int64_t tolerance) const -> bool {
+  constexpr auto is_close(const int64_t date, const int64_t tolerance) const
+      -> bool {
     return (date >= begin - tolerance) && (date <= last + tolerance);
   }
 
@@ -245,8 +245,9 @@ class PeriodList {
   /// True if the date belongs to the period.
   ///
   /// The vectors provided should be sorted in chronological order.
-  auto cross_a_period(const Eigen::Ref<const Eigen::Matrix<int64_t, -1, 1>>
-                          &dates) const -> Eigen::Matrix<bool, -1, 1> {
+  auto cross_a_period(
+      const Eigen::Ref<const Eigen::Matrix<int64_t, -1, 1>> &dates) const
+      -> Eigen::Matrix<bool, -1, 1> {
     // The index of the closest period of the current date processed.
     auto first_index = int64_t(0);
 
@@ -308,8 +309,9 @@ class PeriodList {
   /// if the date belongs to the period.
   ///
   /// The vectors provided should be sorted in chronological order.
-  auto belong_to_a_period(const Eigen::Ref<const Eigen::Matrix<int64_t, -1, 1>>
-                              &dates) const -> Eigen::Matrix<bool, -1, 1> {
+  auto belong_to_a_period(
+      const Eigen::Ref<const Eigen::Matrix<int64_t, -1, 1>> &dates) const
+      -> Eigen::Matrix<bool, -1, 1> {
     // Flag equal to 1 if the date belongs to a period, 0 otherwise.
     auto flags = Eigen::Matrix<bool, -1, 1>(dates.size());
 
