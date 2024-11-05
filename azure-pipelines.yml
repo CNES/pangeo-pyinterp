@@ -113,8 +113,8 @@ jobs:
     displayName: Initialize the submodules
   - bash: echo "##vso[task.prependpath]$CONDA/bin"
     displayName: Add conda to PATH
-  - bash: echo "##vso[task.prependpath]$CONDA/bin"
-    displayName: Add conda to PATH
+  - bash: ls -l / && ls -l /usr/ && echo $CONDA && ls -l $CONDA && ls -l $CONDA/pkgs
+    displayName: List directories
   - bash: sudo chown -R 501:20 /usr/local/miniconda/pkgs
     displayName: Fix permissions
   - bash: conda create --yes --quiet --name Build
