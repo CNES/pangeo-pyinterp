@@ -414,8 +414,6 @@ def test_period_list_belong_to_a_period():
              (dates <= numpy.datetime64('2019-12-01T08:31:33.263', 'ms')))
     mask |= ((dates >= numpy.datetime64('2019-12-02T00:42:24.278', 'ms')) &
              (dates <= numpy.datetime64('2019-12-02T01:33:25.793', 'ms')))
-    for ix in range(mask.size):
-        print(f'{dates[ix]} {mask[ix]} {flags[ix]}')
     assert numpy.all(flags == mask)
 
 
