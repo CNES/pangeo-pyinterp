@@ -115,23 +115,27 @@ jobs:
     displayName: Add Homebrew to PATH
   - bash: brew install --cask miniconda
     displayName: Install Miniconda with Homebrew
-  - bash: echo "##vso[task.prependpath]$CONDA/bin"
-    displayName: Add conda to PATH
-  - bash: conda create --yes --quiet --name Build
+  - bash: |
+      source /usr/local/Caskroom/miniconda/base/bin/activate
+      conda create --yes --quiet --name Build
     displayName: Create Anaconda environment
   - bash: |
+      source /usr/local/Caskroom/miniconda/base/bin/activate
       source activate Build
       conda install --yes --quiet -c conda-forge mamba python=$PYTHON_VERSION
     displayName: Install mamba
   - bash: |
+      source /usr/local/Caskroom/miniconda/base/bin/activate
       source activate Build
       mamba install --yes --quiet -c conda-forge dask cmake coverage eigen boost-cpp numpy pytest-cov setuptools xarray
     displayName: Install build requirements
   - bash: |
+      source /usr/local/Caskroom/miniconda/base/bin/activate
       source activate Build
       python setup.py build
     displayName: Build package
   - bash: |
+      source /usr/local/Caskroom/miniconda/base/bin/activate
       source activate Build
       python setup.py test
     displayName: Test cases
