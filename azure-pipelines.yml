@@ -3,9 +3,9 @@ trigger:
  - develop
 jobs:
 - job:
-  displayName: Ubuntu-20.04
+  displayName: Ubuntu-22.04
   pool:
-    vmImage: 'ubuntu-20.04'
+    vmImage: 'ubuntu-22.04'
   strategy:
     matrix:
       Python311:
@@ -95,9 +95,9 @@ jobs:
       python setup.py test
     displayName: Test cases
 - job:
-  displayName: macOS-12
+  displayName: macOS-14
   pool:
-    vmImage: 'macOS-12'
+    vmImage: 'macOS-14'
   strategy:
     matrix:
       Python310:
@@ -134,9 +134,9 @@ jobs:
       python setup.py test
     displayName: Test cases
 - job:
-  displayName: windows-2019
+  displayName: windows-2022
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'windows-2022'
   strategy:
     matrix:
       Python310:
