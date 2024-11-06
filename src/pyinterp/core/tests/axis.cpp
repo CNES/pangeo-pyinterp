@@ -25,7 +25,7 @@ class AxisTest : public testing::Test {
                                                        epsilon, is_circle));
   }
 
-  void reset_axis(Eigen::Ref<pyinterp::Vector<T>> values, T epsilon,
+  void reset_axis(const pyinterp::Vector<T> &values, T epsilon,
                   bool is_circle) {
     axis = std::move(
         std::make_unique<detail::Axis<T>>(values, epsilon, is_circle));
@@ -34,195 +34,215 @@ class AxisTest : public testing::Test {
   std::unique_ptr<detail::Axis<T>> axis{};
 };
 
-TYPED_TEST_SUITE(AxisTest, Implementations);
+class AxisTestSuite {
+ public:
+  template <typename T>
+  static std::string GetName(int) {
+    if (std::is_same_v<T, int32_t>) {
+      return "int32";
+    }
+    if (std::is_same_v<T, int64_t>) {
+      return "int64";
+    }
+    if (std::is_same_v<T, float>) {
+      return "float";
+    }
+    if (std::is_same_v<T, double>) {
+      return "double";
+    }
+    throw std::runtime_error("unsupported type");
+  }
+};
+
+TYPED_TEST_SUITE(AxisTest, Implementations, AxisTestSuite);
 
 TYPED_TEST(AxisTest, default_constructor) {
   // undefined axis
-  auto &axis = *(this->axis);
-  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.front()));
-  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.back()));
-  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.min_value()));
-  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.max_value()));
-  EXPECT_THROW((void)axis.increment(), std::logic_error);
-  EXPECT_FALSE(axis.is_circle());
-  EXPECT_TRUE(axis.is_ascending());
-  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.front()));
-  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis.back()));
-  EXPECT_THROW((void)axis.increment(), std::logic_error);
-  EXPECT_EQ(axis.is_regular(), false);
-  EXPECT_EQ(axis.size(), 0);
-  EXPECT_THROW((void)axis.coordinate_value(0), std::out_of_range);
-  EXPECT_THROW((void)axis.slice(0, 1), std::out_of_range);
-  EXPECT_EQ(axis.find_index(360, true), -1);
-  EXPECT_EQ(axis.find_index(360, false), -1);
-  auto indexes = axis.find_indexes(360);
+  auto *axis = this->axis.get();
+  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis->front()));
+  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis->back()));
+  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis->min_value()));
+  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis->max_value()));
+  EXPECT_THROW((void)axis->increment(), std::logic_error);
+  EXPECT_FALSE(axis->is_circle());
+  EXPECT_TRUE(axis->is_ascending());
+  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis->front()));
+  EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis->back()));
+  EXPECT_THROW((void)axis->increment(), std::logic_error);
+  EXPECT_EQ(axis->is_regular(), false);
+  EXPECT_EQ(axis->size(), 0);
+  EXPECT_THROW((void)axis->coordinate_value(0), std::out_of_range);
+  EXPECT_THROW((void)axis->slice(0, 1), std::out_of_range);
+  EXPECT_EQ(axis->find_index(360, true), -1);
+  EXPECT_EQ(axis->find_index(360, false), -1);
+  auto indexes = axis->find_indexes(360);
   EXPECT_FALSE(indexes.has_value());
 }
 
 TYPED_TEST(AxisTest, singleton) {
   // axis with one value
   this->reset_axis(0, 1, 1, static_cast<TypeParam>(1e-6), false);
-  auto &axis = *(this->axis);
-  EXPECT_EQ(axis.find_index(0, false), 0);
-  EXPECT_EQ(axis.find_index(1, false), -1);
-  EXPECT_EQ(axis.find_index(1, true), 0);
-  auto indexes = axis.find_indexes(0);
+  auto *axis = this->axis.get();
+  EXPECT_EQ(axis->find_index(0, false), 0);
+  EXPECT_EQ(axis->find_index(1, false), -1);
+  EXPECT_EQ(axis->find_index(1, true), 0);
+  auto indexes = axis->find_indexes(0);
   EXPECT_FALSE(indexes.has_value());
-  EXPECT_TRUE(axis.is_ascending());
-  EXPECT_EQ(axis.front(), 0);
-  EXPECT_EQ(axis.back(), 0);
-  EXPECT_EQ(axis.min_value(), 0);
-  EXPECT_EQ(axis.max_value(), 0);
-  EXPECT_EQ(axis.increment(), 1);
-  EXPECT_FALSE(axis.is_circle());
-  EXPECT_EQ(axis.is_regular(), true);
-  EXPECT_EQ(axis.size(), 1);
-  EXPECT_EQ(axis.coordinate_value(0), 0);
-  auto slice = axis.slice(0, 1);
+  EXPECT_TRUE(axis->is_ascending());
+  EXPECT_EQ(axis->front(), 0);
+  EXPECT_EQ(axis->back(), 0);
+  EXPECT_EQ(axis->min_value(), 0);
+  EXPECT_EQ(axis->max_value(), 0);
+  EXPECT_EQ(axis->increment(), 1);
+  EXPECT_FALSE(axis->is_circle());
+  EXPECT_EQ(axis->is_regular(), true);
+  EXPECT_EQ(axis->size(), 1);
+  EXPECT_EQ(axis->coordinate_value(0), 0);
+  auto slice = axis->slice(0, 1);
   EXPECT_EQ(slice.size(), 1);
   EXPECT_EQ(slice[0], 0);
-  EXPECT_THROW((void)axis.coordinate_value(1), std::exception);
-  EXPECT_THROW((void)axis.slice(0, 2), std::exception);
+  EXPECT_THROW((void)axis->coordinate_value(1), std::exception);
+  EXPECT_THROW((void)axis->slice(0, 2), std::exception);
 }
 
 TYPED_TEST(AxisTest, binary) {
   // axis with two values
   this->reset_axis(0, 1, 2, static_cast<TypeParam>(1e-6), false);
-  auto &axis = *(this->axis);
-  auto indexes = axis.find_indexes(0);
+  auto *axis = this->axis.get();
+  auto indexes = axis->find_indexes(0);
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 0);
   EXPECT_EQ(std::get<1>(*indexes), 1);
-  indexes = axis.find_indexes(1);
+  indexes = axis->find_indexes(1);
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 0);
   EXPECT_EQ(std::get<1>(*indexes), 1);
   if (std::is_floating_point_v<TypeParam>) {
-    EXPECT_FALSE(axis.find_indexes(static_cast<TypeParam>(-0.1)));
-    EXPECT_FALSE(axis.find_indexes(static_cast<TypeParam>(+1.1)));
-    indexes = axis.find_indexes(static_cast<TypeParam>(0.4));
+    EXPECT_FALSE(axis->find_indexes(static_cast<TypeParam>(-0.1)));
+    EXPECT_FALSE(axis->find_indexes(static_cast<TypeParam>(+1.1)));
+    indexes = axis->find_indexes(static_cast<TypeParam>(0.4));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 0);
     EXPECT_EQ(std::get<1>(*indexes), 1);
-    indexes = axis.find_indexes(static_cast<TypeParam>(0.6));
+    indexes = axis->find_indexes(static_cast<TypeParam>(0.6));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 0);
     EXPECT_EQ(std::get<1>(*indexes), 1);
   } else {
-    EXPECT_FALSE(axis.find_indexes(-1));
-    EXPECT_FALSE(axis.find_indexes(+2));
-    indexes = axis.find_indexes(0);
+    EXPECT_FALSE(axis->find_indexes(-1));
+    EXPECT_FALSE(axis->find_indexes(+2));
+    indexes = axis->find_indexes(0);
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 0);
     EXPECT_EQ(std::get<1>(*indexes), 1);
   }
-  EXPECT_EQ(axis.front(), 0);
-  EXPECT_EQ(axis.back(), 1);
-  EXPECT_EQ(axis.min_value(), 0);
-  EXPECT_EQ(axis.max_value(), 1);
-  EXPECT_EQ(axis.increment(), 1);
-  EXPECT_FALSE(axis.is_circle());
-  EXPECT_TRUE(axis.is_ascending());
-  EXPECT_EQ(axis.is_regular(), true);
-  EXPECT_EQ(axis.size(), 2);
-  auto value = axis.coordinate_value(0);
+  EXPECT_EQ(axis->front(), 0);
+  EXPECT_EQ(axis->back(), 1);
+  EXPECT_EQ(axis->min_value(), 0);
+  EXPECT_EQ(axis->max_value(), 1);
+  EXPECT_EQ(axis->increment(), 1);
+  EXPECT_FALSE(axis->is_circle());
+  EXPECT_TRUE(axis->is_ascending());
+  EXPECT_EQ(axis->is_regular(), true);
+  EXPECT_EQ(axis->size(), 2);
+  auto value = axis->coordinate_value(0);
   EXPECT_EQ(value, 0);
-  value = axis.coordinate_value(1);
+  value = axis->coordinate_value(1);
   EXPECT_EQ(value, 1);
-  EXPECT_THROW(value = axis.coordinate_value(2), std::exception);
-  auto slice = axis.slice(0, 2);
+  EXPECT_THROW(value = axis->coordinate_value(2), std::exception);
+  auto slice = axis->slice(0, 2);
   EXPECT_EQ(slice.size(), 2);
   EXPECT_EQ(slice[0], 0);
   EXPECT_EQ(slice[1], 1);
-  EXPECT_THROW((void)axis.slice(0, 3), std::exception);
+  EXPECT_THROW((void)axis->slice(0, 3), std::exception);
 }
 
 TYPED_TEST(AxisTest, wrap_longitude) {
   // axis representing a circle
   this->reset_axis(0, 359, 360, static_cast<TypeParam>(1e-6), true);
-  auto &a1 = *(this->axis);
+  auto *a1 = this->axis.get();
   int64_t i1;
 
-  EXPECT_EQ(a1.front(), 0);
-  EXPECT_EQ(a1.increment(), 1);
-  EXPECT_TRUE(a1.is_circle());
-  EXPECT_TRUE(a1.is_regular());
-  EXPECT_TRUE(a1.is_ascending());
-  EXPECT_EQ(a1.front(), 0);
-  EXPECT_EQ(a1.back(), 359);
-  EXPECT_EQ(a1.min_value(), 0);
-  EXPECT_EQ(a1.max_value(), 359);
-  EXPECT_EQ(a1.size(), 360);
-  EXPECT_EQ(a1.coordinate_value(0), 0);
-  EXPECT_EQ(a1.coordinate_value(180), 180);
-  EXPECT_THROW((void)a1.coordinate_value(520), std::exception);
-  i1 = a1.find_index(0, false);
+  EXPECT_EQ(a1->front(), 0);
+  EXPECT_EQ(a1->increment(), 1);
+  EXPECT_TRUE(a1->is_circle());
+  EXPECT_TRUE(a1->is_regular());
+  EXPECT_TRUE(a1->is_ascending());
+  EXPECT_EQ(a1->front(), 0);
+  EXPECT_EQ(a1->back(), 359);
+  EXPECT_EQ(a1->min_value(), 0);
+  EXPECT_EQ(a1->max_value(), 359);
+  EXPECT_EQ(a1->size(), 360);
+  EXPECT_EQ(a1->coordinate_value(0), 0);
+  EXPECT_EQ(a1->coordinate_value(180), 180);
+  EXPECT_THROW((void)a1->coordinate_value(520), std::exception);
+  i1 = a1->find_index(0, false);
   EXPECT_EQ(i1, 0);
-  i1 = a1.find_index(360, true);
+  i1 = a1->find_index(360, true);
   EXPECT_EQ(i1, 0);
-  i1 = a1.find_index(360, false);
+  i1 = a1->find_index(360, false);
   EXPECT_EQ(i1, 0);
-  auto indexes = a1.find_indexes(360);
+  auto indexes = a1->find_indexes(360);
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 0);
   EXPECT_EQ(std::get<1>(*indexes), 1);
-  indexes = a1.find_indexes(370);
+  indexes = a1->find_indexes(370);
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 10);
   EXPECT_EQ(std::get<1>(*indexes), 11);
   if (std::is_floating_point_v<TypeParam>) {
-    indexes = a1.find_indexes(static_cast<TypeParam>(-9.5));
+    indexes = a1->find_indexes(static_cast<TypeParam>(-9.5));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 350);
     EXPECT_EQ(std::get<1>(*indexes), 351);
   } else {
-    indexes = a1.find_indexes(-10);
+    indexes = a1->find_indexes(-10);
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 350);
     EXPECT_EQ(std::get<1>(*indexes), 351);
   }
-  a1.flip();
-  EXPECT_EQ(a1.front(), 359);
-  EXPECT_EQ(a1.increment(), -1);
-  EXPECT_TRUE(a1.is_circle());
-  EXPECT_TRUE(a1.is_regular());
-  EXPECT_FALSE(a1.is_ascending());
-  EXPECT_EQ(a1.front(), 359);
-  EXPECT_EQ(a1.back(), 0);
-  EXPECT_EQ(a1.min_value(), 0);
-  EXPECT_EQ(a1.max_value(), 359);
-  EXPECT_EQ(a1.size(), 360);
-  EXPECT_EQ(a1.coordinate_value(0), 359);
-  EXPECT_EQ(a1.coordinate_value(180), 179);
-  EXPECT_THROW((void)a1.coordinate_value(520), std::exception);
-  auto slice = a1.slice(0, 2);
+  a1->flip();
+  EXPECT_EQ(a1->front(), 359);
+  EXPECT_EQ(a1->increment(), -1);
+  EXPECT_TRUE(a1->is_circle());
+  EXPECT_TRUE(a1->is_regular());
+  EXPECT_FALSE(a1->is_ascending());
+  EXPECT_EQ(a1->front(), 359);
+  EXPECT_EQ(a1->back(), 0);
+  EXPECT_EQ(a1->min_value(), 0);
+  EXPECT_EQ(a1->max_value(), 359);
+  EXPECT_EQ(a1->size(), 360);
+  EXPECT_EQ(a1->coordinate_value(0), 359);
+  EXPECT_EQ(a1->coordinate_value(180), 179);
+  EXPECT_THROW((void)a1->coordinate_value(520), std::exception);
+  auto slice = a1->slice(0, 2);
   EXPECT_EQ(slice.size(), 2);
   EXPECT_EQ(slice[0], 359);
   EXPECT_EQ(slice[1], 358);
-  EXPECT_THROW((void)a1.slice(0, 520), std::exception);
-  i1 = a1.find_index(0, false);
+  EXPECT_THROW((void)a1->slice(0, 520), std::exception);
+  i1 = a1->find_index(0, false);
   EXPECT_EQ(i1, 359);
-  i1 = a1.find_index(359, true);
+  i1 = a1->find_index(359, true);
   EXPECT_EQ(i1, 0);
-  i1 = a1.find_index(359, false);
+  i1 = a1->find_index(359, false);
   EXPECT_EQ(i1, 0);
   if (std::is_floating_point_v<TypeParam>) {
-    indexes = a1.find_indexes(static_cast<TypeParam>(359.5));
+    indexes = a1->find_indexes(static_cast<TypeParam>(359.5));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
   }
-  indexes = a1.find_indexes(370);
+  indexes = a1->find_indexes(370);
   ASSERT_TRUE(indexes);
   EXPECT_EQ(std::get<0>(*indexes), 349);
   EXPECT_EQ(std::get<1>(*indexes), 350);
   if (std::is_floating_point_v<TypeParam>) {
-    indexes = a1.find_indexes(static_cast<TypeParam>(-9.5));
+    indexes = a1->find_indexes(static_cast<TypeParam>(-9.5));
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 9);
     EXPECT_EQ(std::get<1>(*indexes), 8);
   } else {
-    indexes = a1.find_indexes(-9);
+    indexes = a1->find_indexes(-9);
     ASSERT_TRUE(indexes);
     EXPECT_EQ(std::get<0>(*indexes), 8);
     EXPECT_EQ(std::get<1>(*indexes), 9);
@@ -249,7 +269,7 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_EQ(slice.size(), 2);
   EXPECT_EQ(slice[0], -180);
   EXPECT_EQ(slice[1], -179);
-  EXPECT_NE(a1, a2);
+  EXPECT_NE(*a1, a2);
 
   a2 = detail::Axis<TypeParam>(180, -179, 360, static_cast<TypeParam>(1e-6),
                                true);
@@ -273,7 +293,7 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_EQ(a2.back(), -179);
   EXPECT_EQ(a2.coordinate_value(0), 180);
   EXPECT_EQ(a2.coordinate_value(180), 0);
-  EXPECT_NE(a1, a2);
+  EXPECT_NE(*a1, a2);
 
   a2.flip();
   EXPECT_EQ(a2.front(), -179);
@@ -507,77 +527,78 @@ TEST(axis, irregular) {
 TYPED_TEST(AxisTest, search_indexes) {
   // search for indexes around a value on an axis
   this->reset_axis(0, 359, 360, static_cast<TypeParam>(1e-6), true);
-  auto &axis = *(this->axis);
+  auto *axis = this->axis.get();
 
   if (std::is_floating_point_v<TypeParam>) {
-    auto indexes = axis.find_indexes(static_cast<TypeParam>(359.4));
+    auto indexes = axis->find_indexes(static_cast<TypeParam>(359.4));
 
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
 
-    indexes = axis.find_indexes(static_cast<TypeParam>(359.6));
+    indexes = axis->find_indexes(static_cast<TypeParam>(359.6));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
 
-    indexes = axis.find_indexes(static_cast<TypeParam>(-0.1));
+    indexes = axis->find_indexes(static_cast<TypeParam>(-0.1));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
 
-    indexes = axis.find_indexes(static_cast<TypeParam>(359.9));
+    indexes = axis->find_indexes(static_cast<TypeParam>(359.9));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 359);
     EXPECT_EQ(std::get<1>(*indexes), 0);
 
-    indexes = axis.find_indexes(static_cast<TypeParam>(0.01));
+    indexes = axis->find_indexes(static_cast<TypeParam>(0.01));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 0);
     EXPECT_EQ(std::get<1>(*indexes), 1);
 
-    indexes = axis.find_indexes(static_cast<TypeParam>(358.9));
+    indexes = axis->find_indexes(static_cast<TypeParam>(358.9));
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 358);
     EXPECT_EQ(std::get<1>(*indexes), 359);
   } else {
-    auto indexes = axis.find_indexes(359);
+    auto indexes = axis->find_indexes(359);
 
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 358);
     EXPECT_EQ(std::get<1>(*indexes), 359);
 
-    indexes = axis.find_indexes(-1);
+    indexes = axis->find_indexes(-1);
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 358);
     EXPECT_EQ(std::get<1>(*indexes), 359);
 
-    indexes = axis.find_indexes(360);
+    indexes = axis->find_indexes(360);
     ASSERT_TRUE(indexes.has_value());
     EXPECT_EQ(std::get<0>(*indexes), 0);
     EXPECT_EQ(std::get<1>(*indexes), 1);
   }
 
-  axis = detail::Axis<TypeParam>(10, 20, 1, static_cast<TypeParam>(1e-6), true);
-  EXPECT_FALSE(axis.find_indexes(static_cast<TypeParam>(20.01)).has_value());
-  EXPECT_FALSE(axis.find_indexes(static_cast<TypeParam>(9.9)).has_value());
+  this->reset_axis(10, 20, 1, static_cast<TypeParam>(1e-6), true);
+  axis = this->axis.get();
+  EXPECT_FALSE(axis->find_indexes(static_cast<TypeParam>(20.01)).has_value());
+  EXPECT_FALSE(axis->find_indexes(static_cast<TypeParam>(9.9)).has_value());
 }
 
 TYPED_TEST(AxisTest, search_window) {
   // search for indexes that frame a value around a window
   std::vector<int64_t> indexes;
   this->reset_axis(-180, 179, 360, static_cast<TypeParam>(1e-6), true);
-  auto &axis = *(this->axis);
+  auto *axis = this->axis.get();
 
-  indexes = axis.find_indexes(0, 1, pyinterp::axis::kUndef);
+  indexes = axis->find_indexes(0, 1, pyinterp::axis::kUndef);
   ASSERT_EQ(indexes.size(), 2);
   EXPECT_EQ(indexes[0], 180);
   EXPECT_EQ(indexes[1], 181);
 
-  EXPECT_THROW(indexes = axis.find_indexes(0, 0, pyinterp::axis::kUndef),
+  EXPECT_THROW(indexes = axis->find_indexes(0, 0, pyinterp::axis::kUndef),
                std::invalid_argument);
 
-  indexes = axis.find_indexes(0, 5, pyinterp::axis::kUndef);
+  indexes = axis->find_indexes(0, 5, pyinterp::axis::kUndef);
   ASSERT_EQ(indexes.size(), 10);
   EXPECT_EQ(indexes[0], 176);
   EXPECT_EQ(indexes[1], 177);
@@ -590,7 +611,7 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[8], 184);
   EXPECT_EQ(indexes[9], 185);
 
-  indexes = axis.find_indexes(-180, 5, pyinterp::axis::kUndef);
+  indexes = axis->find_indexes(-180, 5, pyinterp::axis::kUndef);
   ASSERT_EQ(indexes.size(), 10);
   EXPECT_EQ(indexes[0], 356);
   EXPECT_EQ(indexes[1], 357);
@@ -603,7 +624,7 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[8], 4);
   EXPECT_EQ(indexes[9], 5);
 
-  indexes = axis.find_indexes(179, 5, pyinterp::axis::kUndef);
+  indexes = axis->find_indexes(179, 5, pyinterp::axis::kUndef);
   ASSERT_EQ(indexes.size(), 10);
   EXPECT_EQ(indexes[0], 354);
   EXPECT_EQ(indexes[1], 355);
@@ -617,8 +638,8 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[9], 3);
 
   if (std::is_floating_point_v<TypeParam>) {
-    indexes = axis.find_indexes(static_cast<TypeParam>(179.4), 5,
-                                pyinterp::axis::kUndef);
+    indexes = axis->find_indexes(static_cast<TypeParam>(179.4), 5,
+                                 pyinterp::axis::kUndef);
     ASSERT_EQ(indexes.size(), 10);
     EXPECT_EQ(indexes[0], 355);
     EXPECT_EQ(indexes[1], 356);
@@ -631,8 +652,8 @@ TYPED_TEST(AxisTest, search_window) {
     EXPECT_EQ(indexes[8], 3);
     EXPECT_EQ(indexes[9], 4);
 
-    indexes = axis.find_indexes(static_cast<TypeParam>(179.6), 5,
-                                pyinterp::axis::kUndef);
+    indexes = axis->find_indexes(static_cast<TypeParam>(179.6), 5,
+                                 pyinterp::axis::kUndef);
     ASSERT_EQ(indexes.size(), 10);
     EXPECT_EQ(indexes[0], 355);
     EXPECT_EQ(indexes[1], 356);
@@ -647,8 +668,8 @@ TYPED_TEST(AxisTest, search_window) {
   }
 
   this->reset_axis(0, 9, 10, static_cast<TypeParam>(1e-6), false);
-  axis = *(this->axis);
-  indexes = axis.find_indexes(5, 4, pyinterp::axis::kUndef);
+  axis = this->axis.get();
+  indexes = axis->find_indexes(5, 4, pyinterp::axis::kUndef);
   ASSERT_EQ(indexes.size(), 8);
   EXPECT_EQ(indexes[0], 2);
   EXPECT_EQ(indexes[1], 3);
@@ -659,12 +680,12 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[6], 8);
   EXPECT_EQ(indexes[7], 9);
 
-  indexes = axis.find_indexes(-1, 4, pyinterp::axis::kUndef);
+  indexes = axis->find_indexes(-1, 4, pyinterp::axis::kUndef);
   EXPECT_EQ(indexes.empty(), true);
-  indexes = axis.find_indexes(10, 4, pyinterp::axis::kUndef);
+  indexes = axis->find_indexes(10, 4, pyinterp::axis::kUndef);
   EXPECT_EQ(indexes.empty(), true);
 
-  indexes = axis.find_indexes(1, 4, pyinterp::axis::kSym);
+  indexes = axis->find_indexes(1, 4, pyinterp::axis::kSym);
   ASSERT_EQ(indexes.size(), 8);
   EXPECT_EQ(indexes[0], 2);
   EXPECT_EQ(indexes[1], 1);
@@ -675,7 +696,7 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[6], 4);
   EXPECT_EQ(indexes[7], 5);
 
-  indexes = axis.find_indexes(9, 4, pyinterp::axis::kSym);
+  indexes = axis->find_indexes(9, 4, pyinterp::axis::kSym);
   ASSERT_EQ(indexes.size(), 8);
   EXPECT_EQ(indexes[0], 5);
   EXPECT_EQ(indexes[1], 6);
@@ -686,7 +707,7 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[6], 7);
   EXPECT_EQ(indexes[7], 6);
 
-  indexes = axis.find_indexes(1, 4, pyinterp::axis::kWrap);
+  indexes = axis->find_indexes(1, 4, pyinterp::axis::kWrap);
   ASSERT_EQ(indexes.size(), 8);
   EXPECT_EQ(indexes[0], 8);
   EXPECT_EQ(indexes[1], 9);
@@ -697,7 +718,7 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[6], 4);
   EXPECT_EQ(indexes[7], 5);
 
-  indexes = axis.find_indexes(9, 4, pyinterp::axis::kWrap);
+  indexes = axis->find_indexes(9, 4, pyinterp::axis::kWrap);
   ASSERT_EQ(indexes.size(), 8);
   EXPECT_EQ(indexes[0], 5);
   EXPECT_EQ(indexes[1], 6);
@@ -708,7 +729,7 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[6], 1);
   EXPECT_EQ(indexes[7], 2);
 
-  indexes = axis.find_indexes(1, 4, pyinterp::axis::kExpand);
+  indexes = axis->find_indexes(1, 4, pyinterp::axis::kExpand);
   ASSERT_EQ(indexes.size(), 8);
   EXPECT_EQ(indexes[0], 0);
   EXPECT_EQ(indexes[1], 0);
@@ -719,7 +740,7 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[6], 4);
   EXPECT_EQ(indexes[7], 5);
 
-  indexes = axis.find_indexes(9, 4, pyinterp::axis::kExpand);
+  indexes = axis->find_indexes(9, 4, pyinterp::axis::kExpand);
   ASSERT_EQ(indexes.size(), 8);
   EXPECT_EQ(indexes[0], 5);
   EXPECT_EQ(indexes[1], 6);
@@ -730,9 +751,9 @@ TYPED_TEST(AxisTest, search_window) {
   EXPECT_EQ(indexes[6], 9);
   EXPECT_EQ(indexes[7], 9);
 
-  indexes = axis.find_indexes(1, 4, pyinterp::axis::kUndef);
+  indexes = axis->find_indexes(1, 4, pyinterp::axis::kUndef);
   ASSERT_TRUE(indexes.empty());
-  indexes = axis.find_indexes(9, 4, pyinterp::axis::kUndef);
+  indexes = axis->find_indexes(9, 4, pyinterp::axis::kUndef);
   ASSERT_TRUE(indexes.empty());
 }
 
@@ -747,18 +768,18 @@ TEST(axis, timestamp) {
 
 TYPED_TEST(AxisTest, find_nearest_index) {
   this->reset_axis(0, 355, 72, static_cast<TypeParam>(1e-6), true);
-  auto &axis = *(this->axis);
+  auto *axis = this->axis.get();
 
-  EXPECT_EQ(axis.find_nearest_index(356, false), 71);
-  EXPECT_EQ(axis.find_nearest_index(358, false), 0);
-  EXPECT_EQ(axis.find_nearest_index(-2, false), 0);
-  EXPECT_EQ(axis.find_nearest_index(-4, false), 71);
+  EXPECT_EQ(axis->find_nearest_index(356, false), 71);
+  EXPECT_EQ(axis->find_nearest_index(358, false), 0);
+  EXPECT_EQ(axis->find_nearest_index(-2, false), 0);
+  EXPECT_EQ(axis->find_nearest_index(-4, false), 71);
 
   this->reset_axis(-180, 175, 72, static_cast<TypeParam>(1e-6), true);
-  axis = *(this->axis);
+  axis = this->axis.get();
 
-  EXPECT_EQ(axis.find_nearest_index(176, false), 71);
-  EXPECT_EQ(axis.find_nearest_index(178, false), 0);
-  EXPECT_EQ(axis.find_nearest_index(-182, false), 0);
-  EXPECT_EQ(axis.find_nearest_index(-184, false), 71);
+  EXPECT_EQ(axis->find_nearest_index(176, false), 71);
+  EXPECT_EQ(axis->find_nearest_index(178, false), 0);
+  EXPECT_EQ(axis->find_nearest_index(-182, false), 0);
+  EXPECT_EQ(axis->find_nearest_index(-184, false), 71);
 }
