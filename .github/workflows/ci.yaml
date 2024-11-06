@@ -72,7 +72,6 @@ jobs:
         echo "Total coverage: $percent"
 
     - name: Upload HTML report as artifact
-      shell: bash -l {0}
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
