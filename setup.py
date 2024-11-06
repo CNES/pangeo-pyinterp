@@ -335,7 +335,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         build_temp.mkdir(parents=True, exist_ok=True)
         extdir = str(
             pathlib.Path(self.get_ext_fullpath(ext.name)).parent.resolve())
-
+        
         cfg: str
         if self.debug:
             cfg = 'Debug'
@@ -348,6 +348,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             '-DCMAKE_BUILD_TYPE=' + cfg, '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' +
             str(extdir), '-DPython3_EXECUTABLE=' + sys.executable
         ] + self.set_cmake_user_options()
+
+        if 'CONDA_PREFIX' in os.environ:
+            cmake_args.append('-DCMAKE_PREFIX_PATH=' + os.environ['CONDA_PREFIX'])
 
         if platform.python_implementation() == 'PyPy':
             cmake_args.append('-DPython3_FIND_IMPLEMENTATIONS=PyPy')
