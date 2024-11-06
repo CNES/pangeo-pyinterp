@@ -19,7 +19,14 @@ void init_period(py::module &m) {
           "last",
           [](const pyinterp::Period &self) -> int64_t { return self.last; })
       .def("end", &pyinterp::Period::end)
-      .def("__len__", &pyinterp::Period::length)
+      .def("__len__",
+           [](const pyinterp::Period &self) -> int64_t {
+             auto result = self.length();
+             if (result < 0) {
+               throw std::invalid_argument("invalid period");
+             }
+             return result;
+           })
       .def("__str__",
            [](const pyinterp::Period &self) -> std::string {
              std::stringstream ss;
