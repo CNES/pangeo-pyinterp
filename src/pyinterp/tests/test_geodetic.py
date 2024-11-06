@@ -143,9 +143,11 @@ def test_multipolygon():
 
 
 def test_rtree(pytestconfig):
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1
     mesh = load_data()
-    lon = numpy.arange(-180, 180, 1) + 1 / 3.0
-    lat = numpy.arange(-90, 90, 1) + 1 / 3.0
+    lon = numpy.arange(-180, 180, step) + 1 / 3.0
+    lat = numpy.arange(-90, 90, step) + 1 / 3.0
     x, y = numpy.meshgrid(lon, lat, indexing='ij')
     data, _ = mesh.query(x.ravel(), y.ravel())
     data, _ = mesh.inverse_distance_weighting(x.ravel(), y.ravel())

@@ -52,9 +52,11 @@ def load_data(packing=True):
 
 def test_geodetic_rtree_idw(pytestconfig):
     """Interpolation test."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, 1)
-    lat = np.arange(-90, 90, 1)
+    lon = np.arange(-180, 180, step)
+    lat = np.arange(-90, 90, step)
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z, _ = mesh.inverse_distance_weighting(x.ravel(),
                                            y.ravel(),
@@ -71,9 +73,11 @@ def test_geodetic_rtree_idw(pytestconfig):
 
 def test_geodetic_rtree_rbf(pytestconfig):
     """Interpolation test."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, 1)
-    lat = np.arange(-90, 90, 1)
+    lon = np.arange(-180, 180, step)
+    lat = np.arange(-90, 90, step)
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z, _ = mesh.radial_basis_function(x.ravel(),
                                       y.ravel(),
@@ -93,9 +97,11 @@ def test_geodetic_rtree_rbf(pytestconfig):
 
 def test_geodetic_rtree_window_function(pytestconfig):
     """Interpolation test."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, 1)
-    lat = np.arange(-90, 90, 1)
+    lon = np.arange(-180, 180, step)
+    lat = np.arange(-90, 90, step)
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z0, _ = mesh.window_function(x.ravel(),
                                  y.ravel(),

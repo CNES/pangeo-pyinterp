@@ -96,3 +96,21 @@ def test_class():
         point = instance.center()
         assert lat == pytest.approx(point.lat, abs=1e-6)
         assert lon == pytest.approx(point.lon, abs=1e-6)
+        assert instance.area() != 0
+
+    with pytest.raises(ValueError):
+        GeoHash(0, 0, 32)
+
+    with pytest.raises(ValueError):
+        GeoHash.from_string('0123456789012345678901234567890123456789')
+
+    with pytest.raises(ValueError):
+        GeoHash.from_string('%%%%%')
+
+
+def test_error_with_precision():
+    error = GeoHash.error_with_precision(1)
+    assert error == (45.0, 45.0)
+
+    with pytest.raises(ValueError):
+        GeoHash.error_with_precision(32)

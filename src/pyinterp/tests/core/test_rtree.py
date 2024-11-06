@@ -5,6 +5,8 @@
 import os
 import pickle
 
+import pytest
+
 try:
     import matplotlib.colors
     import matplotlib.pyplot
@@ -57,9 +59,11 @@ def load_data(packing=True):
 
 def test_rtree_idw(pytestconfig):
     """Interpolation test."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 20 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, 1 / 3.0, dtype='float32') + 1 / 3.0
-    lat = np.arange(-90, 90, 1 / 3.0, dtype='float32') + 1 / 3.0
+    lon = np.arange(-180, 180, step, dtype='float32') + 1 / 3
+    lat = np.arange(-90, 90, step, dtype='float32') + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z0, _ = mesh.inverse_distance_weighting(np.vstack(
         (x.ravel(), y.ravel())).T,
@@ -83,9 +87,11 @@ def test_rtree_idw(pytestconfig):
 
 def test_rtree_rbf(pytestconfig):
     """Interpolation test."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 20 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, 1 / 3.0, dtype='float32') + 1 / 3.0
-    lat = np.arange(-90, 90, 1 / 3.0, dtype='float32') + 1 / 3.0
+    lon = np.arange(-180, 180, step, dtype='float32') + 1 / 3
+    lat = np.arange(-90, 90, step, dtype='float32') + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z0, _ = mesh.radial_basis_function(
         np.vstack((x.ravel(), y.ravel())).T,
@@ -115,9 +121,11 @@ def test_rtree_rbf(pytestconfig):
 
 def test_rtree_window_function(pytestconfig):
     """Interpolation test."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 20 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, 1 / 3.0, dtype='float32') + 1 / 3.0
-    lat = np.arange(-90, 90, 1 / 3.0, dtype='float32') + 1 / 3.0
+    lon = np.arange(-180, 180, step, dtype='float32') + 1 / 3
+    lat = np.arange(-90, 90, step, dtype='float32') + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z0, _ = mesh.window_function(np.vstack((x.ravel(), y.ravel())).T,
                                  within=False,
@@ -141,9 +149,11 @@ def test_rtree_window_function(pytestconfig):
 
 def test_rtree_kriging(pytestconfig):
     """Interpolation test."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 20 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, 1 / 3.0, dtype='float32') + 1 / 3.0
-    lat = np.arange(-90, 90, 1 / 3.0, dtype='float32') + 1 / 3.0
+    lon = np.arange(-180, 180, step, dtype='float32') + 1 / 3
+    lat = np.arange(-90, 90, step, dtype='float32') + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z0, _ = mesh.universal_kriging(
         np.vstack((x.ravel(), y.ravel())).T,
@@ -206,3 +216,34 @@ def test_rtree_pickle():
     interpolator = load_data()
     other = pickle.loads(pickle.dumps(interpolator))
     assert isinstance(other, core.RTree3DFloat32)
+
+
+def test_rtree_ecef():
+    x = np.array([70, 55, 35, 55, 65, 85], dtype=np.float32)
+    y = np.array([33, 30, 35, 45, 63, 50], dtype=np.float32)
+    z = np.array([0, 1, 2, 3, 4, 5], dtype=np.float32)
+
+    with pytest.raises(ValueError):
+        core.RTree3DFloat32(core.geodetic.Spheroid(), ecef=True)
+
+    instance = core.RTree3DFloat32(ecef=True)
+    instance.packing(np.vstack((x, y, z * 0)).T, z)
+    distances, values = instance.query(
+        np.vstack((np.array([70]), np.array([33]), np.array([0]))).T)
+    assert distances[0, 0] == 0
+    assert distances[0, 1] == np.sqrt((70 - 55)**2 + (33 - 30)**2)
+    assert distances[0, 2] == np.sqrt((70 - 55)**2 + (33 - 45)**2)
+    assert distances[0, 3] == np.sqrt((70 - 85)**2 + (33 - 50)**2)
+    assert values[0, 0] == 0
+    assert values[0, 1] == 1
+    assert values[0, 2] == 3
+    assert values[0, 3] == 5
+    points, values = instance.value(
+        np.vstack((np.array([70]), np.array([33]), np.array([0]))).T)
+    assert np.all(points == np.array([[
+        [70, 33, 0],
+        [55, 30, 0],
+        [55, 45, 0],
+        [85, 50, 0],
+    ]]))
+    assert np.all(values == np.array([[0, 1, 3, 5]]))
