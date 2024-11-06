@@ -83,17 +83,14 @@ jobs:
         sphinx-build -b html docs/source docs/build
 
     - name: Setup Pages
-      shell: bash -l {0}
       uses: actions/configure-pages@v5
 
     - name: Upload artifact
-      shell: bash -l {0}
       uses: actions/upload-pages-artifact@v3
       with:
         path: docs/build
 
     - name: Deploy to GitHub Pages
-      shell: bash -l {0}
       id: deployment
       uses: actions/deploy-pages@v4
 
