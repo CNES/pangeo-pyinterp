@@ -56,7 +56,7 @@ jobs:
       shell: bash -l {0}
       run: |
         pytest -v -ra --cov=pyinterp --cov-report=lcov --measure-coverage
-        python setup.py test
+        python setup.py gtest
 
     - name: Filter and merge coverage
       shell: bash -l {0}
