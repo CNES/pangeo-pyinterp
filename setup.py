@@ -12,7 +12,6 @@ import os
 import pathlib
 import platform
 import re
-import shlex
 import subprocess
 import sys
 import sysconfig
@@ -335,7 +334,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         build_temp.mkdir(parents=True, exist_ok=True)
         extdir = str(
             pathlib.Path(self.get_ext_fullpath(ext.name)).parent.resolve())
-        
+
         cfg: str
         if self.debug:
             cfg = 'Debug'
@@ -350,7 +349,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         ] + self.set_cmake_user_options()
 
         if 'CONDA_PREFIX' in os.environ:
-            cmake_args.append('-DCMAKE_PREFIX_PATH=' + os.environ['CONDA_PREFIX'])
+            cmake_args.append('-DCMAKE_PREFIX_PATH=' +
+                              os.environ['CONDA_PREFIX'])
 
         if platform.python_implementation() == 'PyPy':
             cmake_args.append('-DPython3_FIND_IMPLEMENTATIONS=PyPy')
@@ -411,7 +411,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 class CxxTestRunner(setuptools.Command):
     """Compile and launch the C++ tests."""
     description = 'run the C++ tests'
-    user_options = []
+    user_options: list[tuple[str, str | None, str]] = []
 
     def initialize_options(self):
         """Set default values for all the options that this command
@@ -436,9 +436,6 @@ class CxxTestRunner(setuptools.Command):
         self.spawn(['make', '-j', str(os.cpu_count())])
         os.chdir(str(tempdir / 'src' / 'pyinterp' / 'core' / 'tests'))
         self.spawn(['ctest', '-VV', '--output-on-failure'])
-
-        # Directory for writing the HTML coverage report.
-        htmllcov = str(pathlib.Path(tempdir.parent.parent, 'htmllcov'))
 
         # File containing the coverage report.
         coverage_lcov = str(

@@ -457,7 +457,7 @@ def test_eclipse():
                                numpy.timedelta64(1, 's'))
     assert handler.is_it_close(numpy.datetime64('2019-12-10T11:02:50'),
                                numpy.timedelta64(4, 's'))
-    
+
     assert handler.are_periods_sorted_and_disjointed()
     periods[2, :], periods[3, :] = periods[3, :], periods[2, :].copy()
     handler = PeriodList(periods.T)
@@ -466,10 +466,9 @@ def test_eclipse():
 
     period = Period(numpy.datetime64('2019-12-13T01:21:28.255', 'ms'),
                     numpy.datetime64('2019-12-15T00:48:21.092', 'ms'))
-    
+
     merged = handler.intersection(period)
     assert len(merged) == 4
     within = merged.within(period)
     assert len(within) == 4
     assert numpy.all(merged.periods == within.periods)
-
