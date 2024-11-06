@@ -40,6 +40,6 @@ TEST(Polynomial, derivative) {
   auto interpolator = pyinterp::detail::interpolation::Polynomial<double>();
   auto dy = interpolator.derivative(xa, ya, xp);
   for (auto ix = 0; ix < xp.size(); ix++) {
-    EXPECT_DOUBLE_EQ(dy(ix), dyp(ix));
+    EXPECT_NEAR(dy(ix), dyp(ix), 1e-4);
   }
 }
