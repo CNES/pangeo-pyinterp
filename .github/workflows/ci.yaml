@@ -44,29 +44,35 @@ jobs:
           python=${{ matrix.python-version }}
         environment-name: pyinterp
         environment-file: conda/environment.yml
+        init-shell: bash
 
     - name: Build extension with code coverage
+      shell: bash -l {0}
       run: |
         python setup.py build_ext --code-coverage
         python setup.py build
 
     - name: Run tests and measure coverage
+      shell: bash -l {0}
       run: |
         pytest -v -ra --cov=pyinterp --cov-report=lcov --measure-coverage
         python setup.py test
 
     - name: Filter and merge coverage
+      shell: bash -l {0}
       run: |
         lcov -r merged_coverage.lcov "${CONDA_PREFIX}/*" --output-file filtered_merged_coverage.lcov
         rm -rf htmllcov
         genhtml filtered_merged_coverage.lcov --output-directory htmllcov
 
     - name: Print total coverage
+      shell: bash -l {0}
       run: |
         percent=$(lcov -l filtered_merged_coverage.lcov|tail -1|grep -o '[0-9]\+\.[0-9]\+%' | head -n 1)
         echo "Total coverage: $percent"
 
     - name: Upload HTML report as artifact
+      shell: bash -l {0}
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
@@ -78,14 +84,17 @@ jobs:
         sphinx-build -b html docs/source docs/build
 
     - name: Setup Pages
+      shell: bash -l {0}
       uses: actions/configure-pages@v5
 
     - name: Upload artifact
+      shell: bash -l {0}
       uses: actions/upload-pages-artifact@v3
       with:
         path: docs/build
 
     - name: Deploy to GitHub Pages
+      shell: bash -l {0}
       id: deployment
       uses: actions/deploy-pages@v4
 
