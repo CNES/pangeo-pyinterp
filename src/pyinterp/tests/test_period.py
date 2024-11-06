@@ -1,6 +1,7 @@
 import pickle
 
 import numpy
+import pytest
 
 from ..period import Period, PeriodList
 
@@ -146,7 +147,8 @@ def test_zero_length_period():
 def test_invalid_period():
     """Tests the behavior of a null period."""
     null_per = make_period(5, 1)
-    assert len(null_per) == 0
+    with pytest.raises(ValueError):
+        assert len(null_per) == 0
 
     assert not null_per.is_before(datetime64(7))
     assert not null_per.is_after(datetime64(7))
@@ -455,3 +457,19 @@ def test_eclipse():
                                numpy.timedelta64(1, 's'))
     assert handler.is_it_close(numpy.datetime64('2019-12-10T11:02:50'),
                                numpy.timedelta64(4, 's'))
+    
+    assert handler.are_periods_sorted_and_disjointed()
+    periods[2, :], periods[3, :] = periods[3, :], periods[2, :].copy()
+    handler = PeriodList(periods.T)
+    assert not handler.are_periods_sorted_and_disjointed()
+    assert handler.sort().are_periods_sorted_and_disjointed()
+
+    period = Period(numpy.datetime64('2019-12-13T01:21:28.255', 'ms'),
+                    numpy.datetime64('2019-12-15T00:48:21.092', 'ms'))
+    
+    merged = handler.intersection(period)
+    assert len(merged) == 4
+    within = merged.within(period)
+    assert len(within) == 4
+    assert numpy.all(merged.periods == within.periods)
+
