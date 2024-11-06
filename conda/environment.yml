@@ -1,16 +1,24 @@
-name: RTD
+name: pyinterp
 dependencies:
+  - boost-cpp
   - cartopy>=0.20.0
+  - cmake
+  - coverage
+  - dask
+  - eigen
   - furo
+  - gtest
   - numcodecs
+  - numpy
   - pandas
   - pip
-  - pyinterp>=2024.3.0
   - pypandoc
   - pytest
-  - python=3.9
+  - lcov
+  - pytest-cov
+  - setuptools
   - sphinx-gallery
   - sphinx-inline-tabs
+  - xarray
 channels:
-  - main
   - conda-forge
