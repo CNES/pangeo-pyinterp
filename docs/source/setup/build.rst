@@ -172,3 +172,12 @@ Install
 =======
 
 To install this library, type the command ``python3 -m pip install .``.
+
+If you want to pass some options to the ``build_ext`` command, you can use the
+``--config-settings``or ``-C`` option. For example, to compile the library using
+MKL as BLAS library and the Visual Studio 17 2022 generator, type the following
+command:
+
+.. code-block:: bash
+
+    python3 -m pip install . -Cmkl=yes -Cgenerator="Visual Studio 17 2022"
