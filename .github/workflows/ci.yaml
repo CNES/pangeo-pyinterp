@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   coverage:
-    name: ${{ matrix.python-version }}-posix
+    name: coverage
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
