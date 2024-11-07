@@ -45,16 +45,13 @@ Once you have satisfied the requirements detailed above, to build the library,
 type the command ``python3 setup.py build_ext`` at the root of the project.
 
 You can specify, among other things, the following options:
-    * ``--boost-root`` to specify the Preferred Boost installation prefix.
     * ``--build-unittests`` to build the unit tests of the C++ extension.
-    * ``--conda-forge`` to use the generation parameters of the conda-forge
-      package.
-    * ``--code-coverage`` to enable coverage reporting on the C++ extension.
     * ``--c-compiler`` to select the C compiler to use.
+    * ``--cmake-args`` to pass additional arguments to CMake.
+    * ``--code-coverage`` to enable coverage reporting on the C++ extension.
     * ``--cxx-compiler`` to select the C++ compiler to use.
     * ``--debug`` to compile the C++ library in Debug mode.
-    * ``--eigen-root`` to specify the Eigen3 include directory.
-    * ``--mkl-root`` to specify the MKL directory.
+    * ``--generator`` to specify the generator to use with CMake.
     * ``--mkl`` to use MKL as BLAS library
     * ``--reconfigure`` to force CMake to reconfigure the project.
 
@@ -82,7 +79,7 @@ use the following at the root of the project:
 
 .. code-block:: bash
 
-    python setup.py test
+    pytest -v -ra
 
 Generating the test coverage report
 -----------------------------------
@@ -96,14 +93,14 @@ following steps:
 .. code-block:: bash
 
     python setup.py build_ext --code-coverage --build-unittests
-    python setup.py test --ext-coverage
+    python setup.py gtest
+    genhtml coverage_cpp.lcov --output-directory htmllcov
 
 The first command compiles the extension to generate a coverage mapping to allow
-code coverage analysis. The second command performs the Python and C++ unit
-tests, analyze the coverage of the C++ code, and generates the associated HTML
-report with `lcov <http://ltp.sourceforge.net/coverage/lcov.php>`_. The
-generated report is available in the ``htmllcov`` directory located at the root
-of the project.
+code coverage analysis. The second command runs the C++ unit tests and generates
+the coverage report. The third command generates the associated HTML report with
+`lcov <http://ltp.sourceforge.net/coverage/lcov.php>`_. The generated report is
+available in the ``htmllcov`` directory located at the root of the project.
 
 .. note::
 
@@ -117,10 +114,43 @@ following step:
 
 .. code-block:: bash
 
-      python setup.py test --pytest-args="--cov=pyinterp --cov-report=html"
+      pytest -v -ra --cov=pyinterp --cov-report=html
 
 The HTML report is available in the ``htmlcov`` directory located at the root of
 the project.
+
+Global coverage report
+^^^^^^^^^^^^^^^^^^^^^^
+
+Is it possible to generate a global coverage report by combining the two previous
+reports? To do this, type the following command:
+
+.. code-block:: bash
+
+    python setup.py build_ext --code-coverage --build-unittests
+    python setup.py build
+    python setup.py gtest
+    pytest -v -ra --cov=pyinterp --cov-report=lcov --measure-coverage
+    lcov --add-tracefile coverage_cpp.lcov --add-tracefile coverage.lcov --output-file merged_coverage.lcov
+    lcov -r merged_coverage.lcov "${CONDA_PREFIX}/*" "/usr/*" "*/third_party/*" --output-file filtered_merged_coverage.lcov
+    genhtml filtered_merged_coverage.lcov --output-directory htmllcov
+
+The steps to generate a global coverage report are as follows:
+
+1. Compile the extension to generate a coverage mapping for code coverage
+   analysis.
+2. Compile the Python extension.
+3. Run the C++ unit tests and generate the coverage report.
+4. Run the Python unit tests and generate the coverage report. The option
+   ``--measure-coverage`` is used to reduce the number of data processed during
+   the Python test, speeding up the process as the C++ extension is compiled
+   without optimization.
+5. Merge the two coverage reports.
+6. Filter the coverage report to remove the system and third-party libraries.
+7. Generate the associated HTML report with `lcov
+   <http://ltp.sourceforge.net/coverage/lcov.php>`_. 
+
+The generated report is available in the ``htmllcov`` directory located at the root of the project.
 
 Automatic Documentation
 =======================
@@ -130,7 +160,7 @@ documentation. It is possible to generate it to produce a local mini WEB site to
 read and navigate it.
 To do this, type the following command: ::
 
-    python setup.py build_sphinx
+    sphinx-build -b html docs/source docs/build
 
 .. note::
 
