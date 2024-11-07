@@ -10,6 +10,14 @@ The interpolation of this object is based on a :py:class:`R*Tree
 object. By default, this object considers the WGS-84 geodetic coordinate system.
 But you can define another one using the class :py:class:`Spheroid
 <pyinterp.geodetic.Spheroid>`.
+
+.. note::
+
+  By default, the class converts coordinates from the WGS-84 geodetic system
+  to a Cartesian coordinate system. However, if you set the parameter ``ecef``
+  to ``True``, this transformation is disabled. In this case, both input and
+  output coordinates are expected to be in the Cartesian coordinate system,
+  and the RTree will handle only Cartesian coordinates without any conversion.
 """
 
 # %%
