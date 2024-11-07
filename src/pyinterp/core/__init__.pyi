@@ -13,7 +13,7 @@ from typing import (
 import numpy
 import numpy.typing
 
-from . import geodetic, fill
+from . import fill, geodetic
 
 __all__ = [
     "Axis",
