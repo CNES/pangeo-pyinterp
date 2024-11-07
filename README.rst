@@ -133,8 +133,8 @@ The geohash is a compact way of representing a location, and is useful for
 storing a location in a database, or for indexing a location in a database.
 
 
-.. |Build Status| image:: https://github.com/fbriol/pangeo-pyinterp/actions/workflows/ci.yaml/badge.svg
-    :target: https://github.com/fbriol/pangeo-pyinterp/actions
+.. |Build Status| image:: https://github.com/CNES/pangeo-pyinterp/actions/workflows/ci.yaml/badge.svg
+    :target: https://github.com/CNES/pangeo-pyinterp/actions
 .. |Downloads| image:: https://anaconda.org/conda-forge/pyinterp/badges/downloads.svg?service=github
     :target: image:: https://www.anaconda.com/distribution/
 .. |Platforms| image:: https://anaconda.org/conda-forge/pyinterp/badges/platforms.svg?service=github
