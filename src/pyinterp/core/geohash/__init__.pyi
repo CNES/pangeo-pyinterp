@@ -1,10 +1,7 @@
-from __future__ import annotations
-
 from typing import Optional, Tuple, overload
 
 import numpy
 
-from . import int64
 from .. import geodetic
 from ..array import Array1DFloat64, Array1DStr
 

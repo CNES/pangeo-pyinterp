@@ -28,7 +28,7 @@ def make_date(samples=10000):
 
 # %%
 dates = make_date()
-dates
+print(dates)
 
 # %%
 # Get the date part as a structured numpy array of three fields: ``year``,

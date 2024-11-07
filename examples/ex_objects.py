@@ -41,7 +41,7 @@ lon, lat, time, tcw = (
 # used by the interpolator to search for the data to be used. Let's start with
 # the y-axis representing the latitude axis.
 y_axis = pyinterp.Axis(lat)
-y_axis
+print(y_axis)
 
 # %%
 # For example, you can search for the closest point to 0.12 degrees north
@@ -52,16 +52,16 @@ y_axis.find_index([0.12])
 # Then, the x-axis representing the longitudinal axis. In this case, the axis is
 # an axis representing a 360 degree circle.
 x_axis = pyinterp.Axis(lon, is_circle=True)
-x_axis
+print(x_axis)
 
 # %%
 # The values -180 and 180 degrees represent the same point on the axis.
-x_axis.find_index([-180]) == x_axis.find_index([180])
+print(x_axis.find_index([-180]) == x_axis.find_index([180]))
 
 # %%
 # Finally, we create the time axis
 t_axis = pyinterp.TemporalAxis(time)
-t_axis
+print(t_axis)
 
 # %%
 # As these objects must communicate in C++ memory space, we use objects specific
@@ -70,19 +70,31 @@ t_axis
 # indexes:
 values = lon[10:20] + 1 / 3
 index = pandas.Index(lon)
-print('pandas.Index: %f' % timeit.timeit(
-    'index.searchsorted(values)', globals=dict(index=index, values=values)))
-print('pyinterp.Axis %f' % timeit.timeit(
-    'x_axis.find_index(values)', globals=dict(x_axis=x_axis, values=values)))
+print('pandas.Index: %f' % timeit.timeit('index.searchsorted(values)',
+                                         globals={
+                                             'index': index,
+                                             'values': values
+                                         }))
+print('pyinterp.Axis %f' % timeit.timeit('x_axis.find_index(values)',
+                                         globals={
+                                             'x_axis': x_axis,
+                                             'values': values
+                                         }))
 
 # %%
 # This time axis is also very efficient compared to the pandas index.
 index = pandas.Index(time)
 values = time + numpy.timedelta64(1, 'ns')
-print('pandas.Index: %f' % timeit.timeit(
-    'index.searchsorted(values)', globals=dict(index=index, values=values)))
-print('pyinterp.Axis %f' % timeit.timeit(
-    't_axis.find_index(values)', globals=dict(t_axis=t_axis, values=values)))
+print('pandas.Index: %f' % timeit.timeit('index.searchsorted(values)',
+                                         globals={
+                                             'index': index,
+                                             'values': values
+                                         }))
+print('pyinterp.Axis %f' % timeit.timeit('t_axis.find_index(values)',
+                                         globals={
+                                             't_axis': t_axis,
+                                             'values': values
+                                         }))
 
 # %%
 # Before constructing the tensor for pyinterp, we must begin to organize the
@@ -106,7 +118,7 @@ tcw = tcw.T
 #   handled array. Axis data are copied for non-uniform axes, and only examined
 #   for regular axes.
 grid_3d = pyinterp.Grid3D(x_axis, y_axis, t_axis, tcw)
-grid_3d
+print(grid_3d)
 
 # %%
 # xarray backend
@@ -118,4 +130,4 @@ grid_3d
 # <https://cfconventions.org/>`_ convention usually found in NetCDF files.
 interpolator = pyinterp.backends.xarray.RegularGridInterpolator(
     pyinterp.tests.load_grid3d().tcw)
-interpolator.grid
+print(interpolator.grid)

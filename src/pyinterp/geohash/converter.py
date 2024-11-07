@@ -42,9 +42,13 @@ def to_xarray(hashes: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
     return xarray.DataArray(
         grid,
         dims=('lat', 'lon'),
-        coords=dict(lon=xarray.DataArray(x_axis,
-                                         dims=('lon', ),
-                                         attrs=dict(units='degrees_north')),
-                    lat=xarray.DataArray(y_axis,
-                                         dims=('lat', ),
-                                         attrs=dict(units='degrees_east'))))
+        coords={
+            'lon':
+            xarray.DataArray(x_axis,
+                             dims=('lon', ),
+                             attrs={'units': 'degrees_north'}),
+            'lat':
+            xarray.DataArray(y_axis,
+                             dims=('lat', ),
+                             attrs={'units': 'degrees_east'})
+        })

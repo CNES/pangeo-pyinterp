@@ -25,12 +25,12 @@ import numpy
 import pyinterp.geodetic
 
 wgs84 = pyinterp.geodetic.Spheroid()
-wgs84
+print(wgs84)
 
 # %%
 # You can instantiate other systems.
 grs80 = pyinterp.geodetic.Spheroid((6378137, 1 / 298.257222101))
-grs80
+print(grs80)
 
 # %%
 # World Geodetic Coordinates System
@@ -40,16 +40,23 @@ grs80
 # longitude, and altitude (LLA) coordinates to Earth-centered Earth-fixed (ECEF)
 # coordinates. You can instantiate it from the Python, to do conversions or
 # transformations.
-lon = numpy.random.uniform(-180.0, 180.0, 1000000)
-lat = numpy.random.uniform(-90.0, 90.0, 1000000)
-alt = numpy.random.uniform(-10000, 100000, 1000000)
+generator = numpy.random.Generator(numpy.random.PCG64(0))
+lon = generator.uniform(-180.0, 180.0, 1000000)
+lat = generator.uniform(-90.0, 90.0, 1000000)
+alt = generator.uniform(-10000, 100000, 1000000)
 
 a = pyinterp.geodetic.Coordinates(wgs84)
 b = pyinterp.geodetic.Coordinates(grs80)
 
 elapsed = timeit.timeit('a.transform(b, lon, lat, alt, num_threads=0)',
                         number=100,
-                        globals=dict(a=a, b=b, lon=lon, lat=lat, alt=alt))
+                        globals={
+                            'a': a,
+                            'b': b,
+                            'lon': lon,
+                            'lat': lat,
+                            'alt': alt
+                        })
 print('transform: %f seconds' % (float(elapsed) / 100))
 
 # %%

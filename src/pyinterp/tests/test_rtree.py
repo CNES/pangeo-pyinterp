@@ -63,9 +63,11 @@ def load_data():
 
 def test_interpolate(pytestconfig):
     dump = pytestconfig.getoption('dump')
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1 / 3
     mesh = load_data()
-    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
-    lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-90, 90, step) + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
     coordinates = np.vstack((x.ravel(), y.ravel())).T
     points, values = mesh.value(coordinates)

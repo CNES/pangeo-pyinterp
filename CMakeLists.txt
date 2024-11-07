@@ -243,6 +243,7 @@ else()
   else()
     message(
       WARNING "No BLAS library found. Eigen uses its own BLAS implementation.")
+    set(BLAS_LIBRARIES "")
   endif()
 endif()
 

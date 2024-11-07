@@ -7,8 +7,30 @@
 
 # -- Path setup --------------------------------------------------------------
 import pathlib
+import sysconfig
+import sys
 
 HERE = pathlib.Path(__file__).absolute().parent
+ROOT_DIRECTORY = HERE.parent.parent
+MAJOR = sys.version_info[0]
+MINOR = sys.version_info[1]
+
+
+def get_build_dirname():
+    """Returns the name of the build directory."""
+    path = pathlib.Path(
+        ROOT_DIRECTORY, 'build',
+        'lib.%s-%d.%d' % (sysconfig.get_platform(), MAJOR, MINOR))
+    if path.exists():
+        return path
+    return pathlib.Path(
+        ROOT_DIRECTORY, 'build',
+        f'lib.{sysconfig.get_platform()}-{sys.implementation.cache_tag}')
+
+
+build_dirname = get_build_dirname()
+if build_dirname.exists():
+    sys.path.insert(0, str(build_dirname))
 
 # -- Project information -----------------------------------------------------
 
@@ -17,9 +39,9 @@ copyright = '(2024, CNES/CLS)'
 author = 'CNES/CLS'
 
 # The short X.Y version
-version = '2024.6.0'
+version = '2024.11.0'
 # The full version, including alpha/beta/rc tags
-release = '2024.6.0'
+release = '2024.11.0'
 
 # -- General configuration ---------------------------------------------------
 

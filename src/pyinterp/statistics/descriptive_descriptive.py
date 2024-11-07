@@ -8,12 +8,21 @@ Descriptive statistics
 """
 from __future__ import annotations
 
-from typing import Any
-from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any
+import sys
+
+# Self is unavailable in Python 3.10
+if sys.version_info[:2] > (3, 10):
+    from typing import Self
+else:
+    Self = 'DescriptiveStatistics'
 import copy
 
 import dask.array.core
 import numpy
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 from .. import core
 
@@ -34,14 +43,13 @@ def _delayed(
 
     drop_axis = list(range(values.ndim))[1:]
 
-    return dask.array.core.map_blocks(
-        _process_block,
-        attr,
-        values,
-        weights,
-        axis,
-        drop_axis=drop_axis,
-        dtype='object').sum().compute()  # type: ignore
+    return dask.array.core.map_blocks(_process_block,
+                                      attr,
+                                      values,
+                                      weights,
+                                      axis,
+                                      drop_axis=drop_axis,
+                                      dtype='object').sum().compute()
 
 
 class DescriptiveStatistics:
@@ -71,7 +79,7 @@ class DescriptiveStatistics:
         Numerically stable, scalable formulas for parallel and online
         computation of higher-order multivariate central moments
         with arbitrary weights.
-        Comput Stat 31, 1305–1325,
+        Comput Stat 31, 1305-1325,
         2016,
         https://doi.org/10.1007/s00180-015-0637-z
     """
@@ -112,7 +120,7 @@ class DescriptiveStatistics:
         result._instance = self._instance.__copy__()
         return result
 
-    def __iadd__(self, other: Any) -> DescriptiveStatistics:
+    def __iadd__(self, other: Any) -> Self:
         """Adds a new descriptive statistics container to the current one.
 
         Returns:
@@ -122,7 +130,7 @@ class DescriptiveStatistics:
             if type(self._instance) != type(other._instance):  # noqa: E721
                 raise TypeError(
                     'Descriptive statistics must have the same type')
-            self._instance += other._instance  # type: ignore
+            self._instance += other._instance  # type: ignore[operator]
             return self
         raise TypeError('unsupported operand type(s) for +='
                         f": '{type(self)}' and '{type(other)}'")

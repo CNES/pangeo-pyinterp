@@ -1,0 +1,204 @@
+name: CI
+
+on:
+  push:
+    branches: "*"
+  pull_request:
+    branches: main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+        fetch-tags: true
+
+    - name: Setup Miniconda
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        cache-downloads: true
+        condarc: |
+          channels:
+            - conda-forge
+        create-args: |
+          python=3.12
+        environment-name: pyinterp
+        environment-file: conda/environment.yml
+        init-shell: bash
+
+    - name: Build extension with code coverage and the C++ tests
+      shell: bash -l {0}
+      run: |
+        python setup.py build_ext --code-coverage --build-unittests
+        python setup.py build
+
+    - name: Run tests and measure coverage
+      shell: bash -l {0}
+      run: |
+        pytest -v -ra --cov=pyinterp --cov-report=lcov --measure-coverage
+        python setup.py gtest
+
+    - name: Filter and merge coverage
+      shell: bash -l {0}
+      run: |
+        lcov --add-tracefile coverage_cpp.lcov --add-tracefile coverage.lcov --output-file merged_coverage.lcov
+        lcov -r merged_coverage.lcov "${CONDA_PREFIX}/*" "/usr/*" "*/third_party/*" --output-file filtered_merged_coverage.lcov
+        genhtml filtered_merged_coverage.lcov --output-directory htmllcov
+
+    - name: Print total coverage
+      shell: bash -l {0}
+      run: |
+        percent=$(lcov -l filtered_merged_coverage.lcov|tail -1|grep -o '[0-9]\+\.[0-9]\+%' | head -n 1)
+        echo "Total coverage: $percent"
+
+    - name: Upload HTML report as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: htmllcov
+
+  linux:
+    name: ${{ matrix.python-version }}-posix
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        # Python 3.12 is used in all other jobs
+        python-version: ['3.10', '3.11', '3.13']
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+        fetch-tags: true
+
+    - name: Setup Miniconda
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        cache-downloads: true
+        condarc: |
+          channels:
+            - conda-forge
+        create-args: |
+          python=${{ matrix.python-version }}
+        environment-name: pyinterp
+        environment-file: conda/environment.yml
+        init-shell: bash
+
+    - name: Build extension
+      shell: bash -l {0}
+      run: |
+        python setup.py build_ext
+        python setup.py build
+
+    - name: Run tests
+      shell: bash -l {0}
+      run: |
+        pytest -v -ra
+
+
+  macos:
+    name: macos
+    runs-on: macos-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+        fetch-tags: true
+
+    - name: Setup Miniconda
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        cache-downloads: true
+        condarc: |
+          channels:
+            - conda-forge
+        create-args: |
+          python=3.12
+        environment-name: pyinterp
+        environment-file: conda/environment.yml
+        init-shell: bash
+
+    - name: Build extension
+      shell: bash -l {0}
+      run: |
+        python setup.py build_ext
+        python setup.py build
+
+    - name: Run tests
+      shell: bash -l {0}
+      run: |
+        pytest -v -ra
+
+    - name: Generate Documentation
+      shell: bash -l {0}
+      run: |
+        sphinx-build -b html docs/source docs/build
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: docs/build
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+  win:
+    name: win
+    runs-on: windows-2019
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup Miniconda
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        cache-downloads: true
+        condarc: |
+          channels:
+            - conda-forge
+        create-args: |
+          python=3.12
+        environment-name: pyinterp
+        environment-file: conda/environment.yml
+
+    - name: Building Testing Python Package
+      shell: bash -l {0}
+      run: |
+        python setup.py build_ext --generator="Visual Studio 16 2019"
+        python setup.py build
+        pytest -v -ra

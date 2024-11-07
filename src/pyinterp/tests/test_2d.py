@@ -128,10 +128,12 @@ def test_biavariate(pytestconfig):
 
 def test_bicubic(pytestconfig):
     dump = pytestconfig.getoption('dump')
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1
     grid = xr_backend.Grid2D(load_grid2d().mss)
 
-    lon = np.arange(-180, 180, 1) + 1 / 3.0
-    lat = np.arange(-90, 90, 1) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-90, 90, step) + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
 
     z = grid.bicubic(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()))
@@ -191,6 +193,8 @@ def test_bicubic(pytestconfig):
 
 def test_grid_2d_int8(pytestconfig):
     dump = pytestconfig.getoption('dump')
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1
 
     grid = load_grid2d().mss
     grid.values[~np.isnan(grid.values)] = 0
@@ -200,8 +204,8 @@ def test_grid_2d_int8(pytestconfig):
     interpolator = xr_backend.RegularGridInterpolator(grid)
     assert isinstance(interpolator.grid._instance, core.Grid2DInt8)
 
-    lon = np.arange(-180, 180, 1) + 1 / 3.0
-    lat = np.arange(-90, 90, 1) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-90, 90, step) + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
 
     z = interpolator(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),

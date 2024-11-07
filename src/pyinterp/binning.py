@@ -52,7 +52,8 @@ class Binning2D:
                  x: core.Axis,
                  y: core.Axis,
                  wgs: geodetic.Spheroid | None = None,
-                 dtype: numpy.dtype = numpy.dtype('float64')):
+                 dtype: numpy.dtype | None = None):
+        dtype = dtype or numpy.dtype('float64')
         if dtype == numpy.dtype('float64'):
             self._instance: Binning2DTyped = core.Binning2DFloat64(x, y, wgs)
         elif dtype == numpy.dtype('float32'):
@@ -94,7 +95,7 @@ class Binning2D:
         result = copy.copy(self)
         if type(result._instance) != type(other._instance):  # noqa: E721
             raise TypeError('Binning2D instance must be of the same type')
-        result._instance += other._instance  # type: ignore
+        result._instance += other._instance  # type: ignore[operator]
         return result
 
     def push(self,
@@ -245,7 +246,8 @@ class Binning1D:
     def __init__(self,
                  x: core.Axis,
                  range: tuple[float, float] | None = None,
-                 dtype: numpy.dtype = numpy.dtype('float64')):
+                 dtype: numpy.dtype | None = None):
+        dtype = dtype or numpy.dtype('float64')
         if dtype == numpy.dtype('float64'):
             self._instance: (core.Binning1DFloat64
                              | core.Binning1DFloat32) = core.Binning1DFloat64(
@@ -284,7 +286,7 @@ class Binning1D:
         result = copy.copy(self)
         if type(result._instance) != type(other._instance):  # noqa: E721
             raise TypeError('Binning1D instance must be of the same type')
-        result._instance += other._instance  # type: ignore
+        result._instance += other._instance  # type: ignore[operator]
         return result
 
     def push(

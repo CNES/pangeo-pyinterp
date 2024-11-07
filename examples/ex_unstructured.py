@@ -10,6 +10,14 @@ The interpolation of this object is based on a :py:class:`R*Tree
 object. By default, this object considers the WGS-84 geodetic coordinate system.
 But you can define another one using the class :py:class:`Spheroid
 <pyinterp.geodetic.Spheroid>`.
+
+.. note::
+
+  By default, the class converts coordinates from the WGS-84 geodetic system
+  to a Cartesian coordinate system. However, if you set the parameter ``ecef``
+  to ``True``, this transformation is disabled. In this case, both input and
+  output coordinates are expected to be in the Cartesian coordinate system,
+  and the RTree will handle only Cartesian coordinates without any conversion.
 """
 
 # %%
@@ -31,9 +39,10 @@ mesh = pyinterp.RTree()
 SIZE = 2000
 X0, X1 = 80, 170
 Y0, Y1 = -45, 30
-lons = numpy.random.uniform(low=X0, high=X1, size=(SIZE, ))
-lats = numpy.random.uniform(low=Y0, high=Y1, size=(SIZE, ))
-data = numpy.random.uniform(low=-1.0, high=1.0, size=(SIZE, ))
+generator = numpy.random.Generator(numpy.random.PCG64(0))
+lons = generator.uniform(low=X0, high=X1, size=(SIZE, ))
+lats = generator.uniform(low=Y0, high=Y1, size=(SIZE, ))
+data = generator.uniform(low=-1.0, high=1.0, size=(SIZE, ))
 
 # %%
 # Populates the search tree

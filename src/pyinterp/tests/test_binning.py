@@ -16,23 +16,29 @@ from . import load_grid2d
 from .. import Axis, Binning1D, Binning2D, geodetic
 
 
-def build_binning2d_instance(dtype):
+def build_binning2d_instance(step, dtype):
     ds = load_grid2d()
 
-    x_axis = Axis(np.arange(-180, 180, 5), is_circle=True)
-    y_axis = Axis(np.arange(-90, 95, 5))
+    x_axis = Axis(np.arange(-180, 180, step), is_circle=True)
+    y_axis = Axis(np.arange(-90, 95, step))
     binning = Binning2D(x_axis, y_axis, geodetic.Spheroid(), dtype=dtype)
     assert x_axis == binning.x
     assert y_axis == binning.y
     assert isinstance(str(binning), str)
 
     lon, lat = np.meshgrid(ds.lon, ds.lat)
-    binning.push(lon, lat, ds.mss, simple=True)
+    mss = ds.mss
+    if step != 1:
+        # Reduce the dataset size to measure test coverage.
+        lon = lon[::10, ::10]
+        lat = lat[::10, ::10]
+        mss = mss[::10, ::10]
+    binning.push(lon, lat, mss, simple=True)
     simple_mean = binning.variable('mean')
     assert isinstance(simple_mean, np.ndarray)
 
     binning.clear()
-    binning.push(lon, lat, ds.mss, simple=False)
+    binning.push(lon, lat, mss, simple=False)
     linear_mean = binning.variable('mean')
     assert isinstance(simple_mean, np.ndarray)
     assert np.any(linear_mean != simple_mean)
@@ -43,15 +49,17 @@ def build_binning2d_instance(dtype):
         binning.variable('_')
 
 
-def test_binning2d():
-    build_binning2d_instance(np.float64)
-    build_binning2d_instance(np.float32), Binning2D
+def test_binning2d(pytestconfig):
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1
+    build_binning2d_instance(step, np.float64)
+    build_binning2d_instance(step, np.float32)
 
     with pytest.raises(ValueError):
-        build_binning2d_instance(np.int8)
+        build_binning2d_instance(step, np.int8)
 
 
-def test_binning2d_dask():
+def test_binning2d_dask(pytestconfig):
     x_axis = Axis(np.linspace(-180, 180, 1), is_circle=True)
     y_axis = Axis(np.linspace(-80, 80, 1))
     binning = Binning2D(x_axis, y_axis)
@@ -100,7 +108,7 @@ def build_binning1d_instance(dtype):
 
 def test_binning1d():
     build_binning1d_instance(np.float64)
-    build_binning1d_instance(np.float32), Binning2D
+    build_binning1d_instance(np.float32)
 
     with pytest.raises(ValueError):
         build_binning1d_instance(np.int8)

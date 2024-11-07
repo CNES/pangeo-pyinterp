@@ -58,11 +58,11 @@ def test_grid2d_pickle():
         np.ma.fix_invalid(grid.array) == np.ma.fix_invalid(other.array))
 
 
-def run_bivariate(interpolator, filename, visualize, dump):
+def run_bivariate(step, interpolator, filename, visualize, dump):
     """Testing an interpolation method."""
     grid = load_data()
-    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
-    lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-90, 90, step) + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
 
     z0 = core.bivariate_float64(grid,
@@ -103,12 +103,14 @@ def test_bivariate_interpolator(pytestconfig):
     """Testing of different interpolation methods."""
     visualize = pytestconfig.getoption('visualize')
     dump = pytestconfig.getoption('dump')
-    a = run_bivariate(core.Nearest2D(), 'mss_bivariate_nearest', visualize,
-                      dump)
-    b = run_bivariate(core.Bilinear2D(), 'mss_bivariate_bilinear', visualize,
-                      dump)
-    c = run_bivariate(core.InverseDistanceWeighting2D(), 'mss_bivariate_idw',
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1 / 3
+    a = run_bivariate(step, core.Nearest2D(), 'mss_bivariate_nearest',
                       visualize, dump)
+    b = run_bivariate(step, core.Bilinear2D(), 'mss_bivariate_bilinear',
+                      visualize, dump)
+    c = run_bivariate(step, core.InverseDistanceWeighting2D(),
+                      'mss_bivariate_idw', visualize, dump)
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0
@@ -129,9 +131,11 @@ def test_spline_interpolator(pytestconfig):
     """Testing of different spline interpolation methods."""
     visualize = pytestconfig.getoption('visualize')
     dump = pytestconfig.getoption('dump')
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1 / 3
     grid = load_data()
-    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
-    lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-90, 90, step) + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z0 = core.spline_float64(grid,
                              x.ravel(),
@@ -166,11 +170,13 @@ def test_spline_interpolator(pytestconfig):
                             num_threads=0)
 
 
-def test_spline_degraded():
+def test_spline_degraded(pytestconfig):
     """Testing of different spline interpolation methods."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1 / 3
     grid = load_data(is_circle=False)
-    lon = np.arange(-190, -170, 1 / 3.0)
-    lat = np.arange(-40, 40, 1 / 3.0) + 1 / 3.0
+    lon = np.arange(-190, -170, step)
+    lat = np.arange(-40, 40, step) + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
 
     with pytest.raises(ValueError):

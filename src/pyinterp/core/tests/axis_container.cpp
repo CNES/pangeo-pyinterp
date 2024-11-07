@@ -16,7 +16,28 @@ class UndefinedTest : public testing::Test {
  public:
   using Axis = container::Undefined<T>;
 };
-TYPED_TEST_SUITE(UndefinedTest, Implementations);
+
+class TestSuite {
+ public:
+  template <typename T>
+  static std::string GetName(int) {
+    if (std::is_same_v<T, int32_t>) {
+      return "int32";
+    }
+    if (std::is_same_v<T, int64_t>) {
+      return "int64";
+    }
+    if (std::is_same_v<T, float>) {
+      return "float";
+    }
+    if (std::is_same_v<T, double>) {
+      return "double";
+    }
+    throw std::runtime_error("unsupported type");
+  }
+};
+
+TYPED_TEST_SUITE(UndefinedTest, Implementations, TestSuite);
 
 TYPED_TEST(UndefinedTest, undefined) {
   // undefined axis
@@ -42,7 +63,7 @@ class IrregularTest : public testing::Test {
  public:
   using Axis = container::Irregular<T>;
 };
-TYPED_TEST_SUITE(IrregularTest, Implementations);
+TYPED_TEST_SUITE(IrregularTest, Implementations, TestSuite);
 
 TYPED_TEST(IrregularTest, irregular) {
   // irregular axis
@@ -98,7 +119,7 @@ class RegularTest : public testing::Test {
  public:
   using Axis = container::Regular<T>;
 };
-TYPED_TEST_SUITE(RegularTest, Implementations);
+TYPED_TEST_SUITE(RegularTest, Implementations, TestSuite);
 
 TYPED_TEST(RegularTest, irregular) {
   // regular axis

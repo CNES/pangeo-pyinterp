@@ -6,13 +6,12 @@
 this module using distutils/setuptools."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 import datetime
 import os
 import pathlib
 import platform
 import re
-import shlex
 import subprocess
 import sys
 import sysconfig
@@ -42,7 +41,7 @@ def compare_setuptools_version(required: tuple[int, ...]) -> bool:
 
 def distutils_dirname(prefix=None, extname=None) -> pathlib.Path:
     """Returns the name of the build directory."""
-    prefix = 'lib' or prefix
+    prefix = prefix or 'lib'
     extname = '' if extname is None else os.sep.join(extname.split('.')[:-1])
     if compare_setuptools_version((62, 1)):
         return pathlib.Path(
@@ -108,7 +107,7 @@ def revision() -> str:
                 match = pattern.search(line)
                 if match:
                     return match.group(1)
-        raise AssertionError()
+        raise AssertionError
 
     stdout: Any = execute(
         'git describe --tags --dirty --long --always').strip()
@@ -130,7 +129,7 @@ def revision() -> str:
 
     stdout = execute(f"git log  {sha1} -1 --format=\"%H %at\"")
     stdout = stdout.strip().split()
-    date = datetime.datetime.utcfromtimestamp(int(stdout[1]))
+    date = datetime.datetime.fromtimestamp(int(stdout[1]))
 
     # Conda configuration files are not present in the distribution, but only
     # in the GIT repository of the source code.
@@ -202,36 +201,30 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     """Build everything needed to install."""
     user_options = setuptools.command.build_ext.build_ext.user_options
     user_options += [
-        ('boost-root=', None, 'Preferred Boost installation prefix'),
         ('build-unittests', None, 'Build the unit tests of the C++ extension'),
-        ('conda-forge', None, 'Generation of the conda-forge package'),
-        ('code-coverage', None, 'Enable coverage reporting'),
         ('c-compiler=', None, 'Preferred C compiler'),
+        ('cmake-args=', None, 'Additional arguments for CMake'),
+        ('code-coverage', None, 'Enable coverage reporting'),
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
-        ('eigen-root=', None, 'Preferred Eigen3 include directory'),
         ('generator=', None, 'Selected CMake generator'),
-        ('mkl-root=', None, 'Preferred MKL installation prefix'),
         ('mkl=', None, 'Using MKL as BLAS library'),
         ('reconfigure', None, 'Forces CMake to reconfigure this project')
     ]
 
     boolean_options = setuptools.command.build_ext.build_ext.boolean_options
-    boolean_options += ['mkl', 'conda-forge']
+    boolean_options += ['mkl']
 
     def initialize_options(self) -> None:
         """Set default values for all the options that this command
         supports."""
         super().initialize_options()
-        self.boost_root = None
         self.build_unittests = None
-        self.conda_forge = None
         self.code_coverage = None
         self.c_compiler = None
+        self.cmake_args = None
         self.cxx_compiler = None
-        self.eigen_root = None
         self.generator = None
         self.mkl = None
-        self.mkl_root = None
         self.reconfigure = None
 
     def finalize_options(self) -> None:
@@ -239,48 +232,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         super().finalize_options()
         if self.code_coverage is not None and platform.system() == 'Windows':
             raise RuntimeError('Code coverage is not supported on Windows')
-        if self.mkl_root is not None:
-            self.mkl = True
-        if not self.mkl and self.mkl_root:
-            raise RuntimeError(
-                'argument --mkl_root not allowed with argument --mkl=no')
 
     def run(self) -> None:
         """Carry out the action."""
         for ext in self.extensions:
             self.build_cmake(ext)
         super().run()
-
-    def boost(self) -> list[str] | None:
-        """Get the default boost path in Anaconda's environment."""
-        boost_root = pathlib.Path(sys.prefix)
-        if (boost_root / 'include' / 'boost').exists():
-            return f'-DBoost_ROOT={boost_root}'.split()
-        boost_root = pathlib.Path(sys.prefix, 'Library', 'include')
-        if not boost_root.exists():
-            if self.conda_forge:
-                raise RuntimeError(
-                    'Unable to find the Boost library in the conda '
-                    'distribution used.')
-            return None
-        return f'-DBoost_INCLUDE_DIR={boost_root}'.split()
-
-    def eigen(self) -> str | None:
-        """Get the default Eigen3 path in Anaconda's environment."""
-        eigen_include_dir = pathlib.Path(sys.prefix, 'include', 'eigen3')
-        if eigen_include_dir.exists():
-            return f'-DEIGEN3_INCLUDE_DIR={eigen_include_dir}'
-        eigen_include_dir = pathlib.Path(sys.prefix, 'Library', 'include',
-                                         'eigen3')
-        if not eigen_include_dir.exists():
-            eigen_include_dir = eigen_include_dir.parent
-        if not eigen_include_dir.exists():
-            if self.conda_forge:
-                raise RuntimeError(
-                    'Unable to find the Eigen3 library in the conda '
-                    'distribution used.')
-            return None
-        return f'-DEIGEN3_INCLUDE_DIR={eigen_include_dir}'
 
     @staticmethod
     def set_conda_mklroot() -> None:
@@ -294,26 +251,17 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             os.environ['MKLROOT'] = sys.prefix
 
     @staticmethod
-    def is_conda() -> bool:
-        """Detect if the Python interpreter is part of a conda distribution."""
-        result = pathlib.Path(sys.prefix, 'conda-meta').exists()
-        if not result:
-            try:
-                # pylint: disable=unused-import,import-outside-toplevel
-                import conda  # noqa: F401
-
-                # pylint: enable=unused-import,import-outside-toplevel
-            except ImportError:
-                result = False
-            else:
-                result = True
-        return result
+    def conda_prefix() -> str | None:
+        """Returns the conda prefix."""
+        if 'CONDA_PREFIX' in os.environ:
+            return os.environ['CONDA_PREFIX']
+        return None
 
     def set_cmake_user_options(self) -> list[str]:
         """Sets the options defined by the user."""
-        cmake_variable: Any
-        is_conda = self.is_conda()
         result = []
+
+        conda_prefix = self.conda_prefix()
 
         if self.c_compiler is not None:
             result.append('-DCMAKE_C_COMPILER=' + self.c_compiler)
@@ -321,29 +269,40 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if self.cxx_compiler is not None:
             result.append('-DCMAKE_CXX_COMPILER=' + self.cxx_compiler)
 
-        if self.conda_forge:
-            result.append('-DCONDA_FORGE=ON')
+        if conda_prefix is not None:
+            result.append('-DCMAKE_PREFIX_PATH=' + conda_prefix)
 
-        if self.boost_root is not None:
-            result.append('-DBOOSTROOT=' + self.boost_root)
-        elif is_conda:
-            cmake_variable = self.boost()
-            if cmake_variable:
-                result += cmake_variable
-
-        if self.eigen_root is not None:
-            result.append('-DEIGEN3_INCLUDE_DIR=' + self.eigen_root)
-        elif is_conda:
-            cmake_variable = self.eigen()
-            if cmake_variable:
-                result.append(cmake_variable)
-
-        if self.mkl_root is not None:
-            os.environ['MKLROOT'] = self.mkl_root
-        elif is_conda and self.mkl:
+        elif conda_prefix and self.mkl:
             self.set_conda_mklroot()
 
         return result
+
+    def get_config(self) -> str:
+        """Returns the configuration to use."""
+        cfg: str
+        if self.debug:
+            cfg = 'Debug'
+        elif self.code_coverage:
+            cfg = 'RelWithDebInfo'
+        else:
+            cfg = 'Release'
+        return cfg
+
+    def cmake_arguments(self, cfg: str, extdir: str) -> list[str]:
+        """Returns the cmake arguments."""
+        cmake_args: list[str] = [
+            '-DCMAKE_BUILD_TYPE=' + cfg,
+            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+            '-DPython3_EXECUTABLE=' + sys.executable,
+            *self.set_cmake_user_options()
+        ]
+
+        if platform.python_implementation() == 'PyPy':
+            cmake_args.append('-DPython3_FIND_IMPLEMENTATIONS=PyPy')
+        elif 'Pyston' in sys.version:
+            cmake_args.append('-DPython3_INCLUDE_DIR=' +
+                              sysconfig.get_path('include'))
+        return cmake_args
 
     def build_cmake(self, ext) -> None:
         """Execute cmake to build the Python extension."""
@@ -353,20 +312,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         build_temp.mkdir(parents=True, exist_ok=True)
         extdir = str(
             pathlib.Path(self.get_ext_fullpath(ext.name)).parent.resolve())
-
-        cfg = 'Debug' if self.debug or self.code_coverage else 'Release'
-
-        cmake_args = [
-            '-DCMAKE_BUILD_TYPE=' + cfg, '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' +
-            str(extdir), '-DPython3_EXECUTABLE=' + sys.executable
-        ] + self.set_cmake_user_options()
-
-        if platform.python_implementation() == 'PyPy':
-            cmake_args.append('-DPython3_FIND_IMPLEMENTATIONS=PyPy')
-        elif 'Pyston' in sys.version:
-            cmake_args.append('-DPython3_INCLUDE_DIR=' +
-                              sysconfig.get_path('include'))
-
+        cfg = self.get_config()
+        cmake_args = self.cmake_arguments(cfg, extdir)
         build_args = ['--config', cfg]
 
         is_windows = platform.system() == 'Windows'
@@ -376,9 +323,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         elif is_windows:
             cmake_args.append(
                 '-G' + os.environ.get('CMAKE_GEN', 'Visual Studio 16 2019'))
-
-        if self.verbose:  # type: ignore
-            build_args += ['--verbose']
 
         if not is_windows:
             build_args += ['--', f'-j{os.cpu_count()}']
@@ -395,6 +339,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             ]
             build_args += ['--', '/m']
 
+        if self.cmake_args:
+            cmake_args.extend(self.cmake_args.split())
+
         os.chdir(str(build_temp))
 
         # Has CMake ever been executed?
@@ -406,8 +353,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             configure = True
 
         if configure:
-            self.spawn(['cmake', str(WORKING_DIRECTORY)] + cmake_args)
-        if not self.dry_run:  # type: ignore
+            self.spawn(['cmake', str(WORKING_DIRECTORY), *cmake_args])
+        if not self.dry_run:
             cmake_cmd = ['cmake', '--build', '.']
             if self.build_unittests is None:
                 cmake_cmd += ['--target', 'core']
@@ -417,76 +364,38 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     # pylint: enable=too-many-instance-attributes
 
 
-class Test(setuptools.Command):
-    """Test runner."""
-    description = 'run pytest'
-    user_options = [('ext-coverage', None,
-                     'Generate C++ extension coverage reports'),
-                    ('pytest-args=', None, 'Arguments to pass to pytest')]
+class CxxTestRunner(setuptools.Command):
+    """Compile and launch the C++ tests."""
+    description: ClassVar[str] = 'run the C++ tests'
+    user_options: ClassVar[list[tuple[str, str | None, str]]] = []
 
     def initialize_options(self):
         """Set default values for all the options that this command
         supports."""
-        self.ext_coverage = None
-        self.pytest_args = None
+        if platform.system() == 'Windows':
+            raise RuntimeError('Code coverage is not supported on Windows')
 
     def finalize_options(self):
         """Set final values for all the options that this command supports."""
-        if self.pytest_args is None:
-            self.pytest_args = ''
-        self.pytest_args = ' --pyargs pyinterp ' + self.pytest_args
 
     def run(self):
         """Run tests."""
-        # pylint: disable=import-outside-toplevel
-        import pytest
-
-        # pylint: enable=import-outside-toplevel
-        sys.path.insert(0, str(distutils_dirname()))
-
-        errno = pytest.main(
-            shlex.split(
-                self.pytest_args,  # type: ignore
-                posix=platform.system() != 'Windows'))
-        if errno:
-            sys.exit(errno)
-
         # Directory used during the generating the C++ extension.
         tempdir = distutils_dirname('temp')
 
-        # We work in the extension generation directory (CMake directory)
-        os.chdir(str(tempdir))
-
-        # If the C++ unit tests have been generated, they are executed.
-        if pathlib.Path(tempdir, 'src', 'pyinterp', 'core', 'tests',
-                        'test_axis').exists():
-            self.spawn(['ctest', '--output-on-failure'])
-
-        # Generation of the code coverage of the C++ extension?
-        if not self.ext_coverage:
-            return
-
-        # Directory for writing the HTML coverage report.
-        htmllcov = str(pathlib.Path(tempdir.parent.parent, 'htmllcov'))
+        # Navigate to the directory containing the C++ tests and run them.
+        os.chdir(str(tempdir / 'src' / 'pyinterp' / 'core' / 'tests'))
+        self.spawn(['ctest', '--output-on-failure'])
 
         # File containing the coverage report.
-        coverage_info = str(pathlib.Path(tempdir, 'coverage.info'))
+        coverage_lcov = str(
+            pathlib.Path(tempdir.parent.parent, 'coverage_cpp.lcov'))
 
         # Collect coverage data from python/C++ unit tests
         self.spawn([
             'lcov', '--capture', '--directory',
-            str(tempdir), '--output-file', coverage_info
+            str(tempdir), '--output-file', coverage_lcov
         ])
-
-        # The coverage of third-party libraries is removed.
-        self.spawn([
-            'lcov', '-r', coverage_info, '*/Xcode.app/*', '*/third_party/*',
-            '*/boost/*', '*/eigen3/*', '*/tests/*', '*/usr/*', '--output-file',
-            coverage_info
-        ])
-
-        # Finally, we generate the HTML coverage report.
-        self.spawn(['genhtml', coverage_info, '--output-directory', htmllcov])
 
 
 class SDist(setuptools.command.sdist.sdist):
@@ -526,7 +435,6 @@ def typehints():
 def main():
     """Main function."""
     install_requires = ['dask', 'numpy', 'xarray >= 0.13']
-    tests_require = install_requires + ['pytest']
     setuptools.setup(
         author='CNES/CLS',
         author_email='fbriol@gmail.com',
@@ -546,8 +454,8 @@ def main():
         cmdclass={
             'build_ext': BuildExt,
             'sdist': SDist,
-            'test': Test
-        },  # type: ignore
+            'gtest': CxxTestRunner,
+        },
         data_files=typehints(),
         description='Interpolation of geo-referenced data for Python.',
         ext_modules=[CMakeExtension(name='pyinterp.core')],
@@ -567,8 +475,7 @@ def main():
             exclude=['pyinterp.core*'],
         ),
         platforms=['POSIX', 'MacOS', 'Windows'],
-        python_requires='>=3.8',
-        tests_require=tests_require,
+        python_requires='>=3.10',
         url='https://github.com/CNES/pangeo-pyinterp',
         version=revision(),
         zip_safe=False,

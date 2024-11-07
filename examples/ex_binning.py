@@ -40,7 +40,7 @@ norm = (ds.ud**2 + ds.vd**2)**0.5
 binning = pyinterp.Binning2D(
     pyinterp.Axis(numpy.arange(27, 42, 0.3), is_circle=True),
     pyinterp.Axis(numpy.arange(40, 47, 0.3)))
-binning
+print(binning)
 
 # %%
 # We push the loaded data into the different defined bins using :ref:`simple
@@ -122,7 +122,7 @@ fig.show()
 hist2d = pyinterp.Histogram2D(
     pyinterp.Axis(numpy.arange(27, 42, 0.3), is_circle=True),
     pyinterp.Axis(numpy.arange(40, 47, 0.3)))
-hist2d
+print(hist2d)
 
 # %%
 # We push the loaded data into the different defined bins using the method

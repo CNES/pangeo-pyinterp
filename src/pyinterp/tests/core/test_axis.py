@@ -93,6 +93,8 @@ def test_axis_accessor():
     a = core.Axis(MERCATOR_LATITUDES, is_circle=True)
     assert not a.is_circle
 
+    assert isinstance(str(a), str)
+
     with pytest.raises(RuntimeError):
         a.increment()
 

@@ -69,11 +69,11 @@ def test_grid3d_pickle():
         np.ma.fix_invalid(grid.array) == np.ma.fix_invalid(other.array))
 
 
-def run_interpolator(interpolator, filename, visualize, dump):
+def run_interpolator(step, interpolator, filename, visualize, dump):
     """Testing an interpolation method."""
     grid = load_data()
-    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
-    lat = np.arange(-90, 90, 1 / 3.0) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-90, 90, step) + 1 / 3
     time = 898500 + 3
     x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z0 = core.trivariate_float64(grid,
@@ -100,9 +100,11 @@ def run_interpolator(interpolator, filename, visualize, dump):
 
 def test_trivariate_spline(pytestconfig):
     """Testing of the spline interpolation."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1 / 3
     grid = load_data()
-    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
-    lat = np.arange(-80, 80, 1 / 3.0) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-80, 80, step) + 1 / 3
     time = 898524 + 3
     x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z0 = core.spline_float64(grid,
@@ -130,12 +132,14 @@ def test_trivariate_spline(pytestconfig):
              'tcw_spline.png')
 
 
-def test_grid3d_bounds_error():
+def test_grid3d_bounds_error(pytestconfig):
     """Test of the detection on interpolation outside bounds."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1 / 3
     grid = load_data()
     interpolator = core.Bilinear3D()
-    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
-    lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-90, 90 + 1, step) + 1 / 3
     time = 898500 + 3
     x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     core.trivariate_float64(
@@ -159,10 +163,12 @@ def test_grid3d_bounds_error():
 def test_grid3d_z_method(pytestconfig):
     """Test of the interpolation method used on Z-axis."""
     dump = pytestconfig.getoption('dump')
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1 / 3
     grid = load_data(temporal_axis=True)
     interpolator = core.TemporalBilinear3D()
-    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
-    lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-90, 90 + 1, step) + 1 / 3
     time = np.array(['2002-07-02T15'], dtype='datetime64[h]').astype('int64')
     x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z0 = core.trivariate_float64(
@@ -210,23 +216,27 @@ def test_grid3d_interpolator(pytestconfig):
     """Testing of different interpolation methods."""
     visualize = pytestconfig.getoption('visualize')
     dump = pytestconfig.getoption('dump')
-    a = run_interpolator(core.Nearest3D(), 'tcw_trivariate_nearest', visualize,
-                         dump)
-    b = run_interpolator(core.Bilinear3D(), 'tcw_trivariate_bilinear',
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1 / 3
+    a = run_interpolator(step, core.Nearest3D(), 'tcw_trivariate_nearest',
                          visualize, dump)
-    c = run_interpolator(core.InverseDistanceWeighting3D(),
+    b = run_interpolator(step, core.Bilinear3D(), 'tcw_trivariate_bilinear',
+                         visualize, dump)
+    c = run_interpolator(step, core.InverseDistanceWeighting3D(),
                          'tcw_trivariate_idw', visualize, dump)
     assert (a - b).std() != 0
     assert (a - c).std() != 0
     assert (b - c).std() != 0
 
 
-def test_invalid_data():
+def test_invalid_data(pytestconfig):
     """Testing of the interpolation with invalid data."""
+    measure_coverage = pytestconfig.getoption('measure_coverage')
+    step = 10 if measure_coverage else 1 / 3
     grid = load_data(temporal_axis=True)
     interpolator = core.TemporalBilinear3D()
-    lon = np.arange(-180, 180, 1 / 3.0) + 1 / 3.0
-    lat = np.arange(-90, 90 + 1, 1 / 3.0) + 1 / 3.0
+    lon = np.arange(-180, 180, step) + 1 / 3
+    lat = np.arange(-90, 90 + 1, step) + 1 / 3
     time = np.array(['2002-07-02T15'], dtype='datetime64[h]').astype('int64')
     x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
     z0 = core.trivariate_float64(

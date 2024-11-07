@@ -1,6 +1,7 @@
 import pickle
 
 import numpy
+import pytest
 
 from ..period import Period, PeriodList
 
@@ -43,6 +44,7 @@ def test_interface():
     assert p1.end() == datetime64(10)
     assert p1.duration() == timedelta64(9)
     assert not p1.is_null()
+    assert len(p1) == 9
 
     assert str(p1) == '[1970-01-02, 1970-01-11)'
     # With numpy 2.0.0rc1, the representation of a datetime64 is different
@@ -62,6 +64,7 @@ def test_interface():
     assert p1.end() == datetime64(11)
     assert p1.duration() == timedelta64(10)
     assert not p1.is_null()
+    assert len(p1) == 10
 
     p2 = period2()
     assert p2.begin == datetime64(5)
@@ -69,6 +72,7 @@ def test_interface():
     assert p2.end() == datetime64(30)
     assert p2.duration() == timedelta64(25)
     assert not p2.is_null()
+    assert len(p2) == 25
 
 
 def test_cmp():
@@ -115,6 +119,7 @@ def test_relation():
 def test_zero_length_period():
     """Tests the behavior of a zero-length period."""
     zero_len = make_period(3, 3)
+    assert len(zero_len) == 0
     assert make_period(1, 1) == make_period(1, 1)
     assert make_period(3, 3) == zero_len
 
@@ -142,6 +147,8 @@ def test_zero_length_period():
 def test_invalid_period():
     """Tests the behavior of a null period."""
     null_per = make_period(5, 1)
+    with pytest.raises(ValueError):
+        assert len(null_per) == 0
 
     assert not null_per.is_before(datetime64(7))
     assert not null_per.is_after(datetime64(7))
@@ -450,3 +457,18 @@ def test_eclipse():
                                numpy.timedelta64(1, 's'))
     assert handler.is_it_close(numpy.datetime64('2019-12-10T11:02:50'),
                                numpy.timedelta64(4, 's'))
+
+    assert handler.are_periods_sorted_and_disjointed()
+    periods[2, :], periods[3, :] = periods[3, :], periods[2, :].copy()
+    handler = PeriodList(periods.T)
+    assert not handler.are_periods_sorted_and_disjointed()
+    assert handler.sort().are_periods_sorted_and_disjointed()
+
+    period = Period(numpy.datetime64('2019-12-13T01:21:28.255', 'ms'),
+                    numpy.datetime64('2019-12-15T00:48:21.092', 'ms'))
+
+    merged = handler.intersection(period)
+    assert len(merged) == 4
+    within = merged.within(period)
+    assert len(within) == 4
+    assert numpy.all(merged.periods == within.periods)
