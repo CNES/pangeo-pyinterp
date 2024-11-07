@@ -6,7 +6,7 @@
 this module using distutils/setuptools."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 import datetime
 import os
 import pathlib
@@ -107,7 +107,7 @@ def revision() -> str:
                 match = pattern.search(line)
                 if match:
                     return match.group(1)
-        raise AssertionError()
+        raise AssertionError
 
     stdout: Any = execute(
         'git describe --tags --dirty --long --always').strip()
@@ -277,6 +277,33 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         return result
 
+    def get_config(self) -> str:
+        """Returns the configuration to use."""
+        cfg: str
+        if self.debug:
+            cfg = 'Debug'
+        elif self.code_coverage:
+            cfg = 'RelWithDebInfo'
+        else:
+            cfg = 'Release'
+        return cfg
+
+    def cmake_arguments(self, cfg: str, extdir: str) -> list[str]:
+        """Returns the cmake arguments."""
+        cmake_args: list[str] = [
+            '-DCMAKE_BUILD_TYPE=' + cfg,
+            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+            '-DPython3_EXECUTABLE=' + sys.executable,
+            *self.set_cmake_user_options()
+        ]
+
+        if platform.python_implementation() == 'PyPy':
+            cmake_args.append('-DPython3_FIND_IMPLEMENTATIONS=PyPy')
+        elif 'Pyston' in sys.version:
+            cmake_args.append('-DPython3_INCLUDE_DIR=' +
+                              sysconfig.get_path('include'))
+        return cmake_args
+
     def build_cmake(self, ext) -> None:
         """Execute cmake to build the Python extension."""
         # These dirs will be created in build_py, so if you don't have
@@ -285,26 +312,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         build_temp.mkdir(parents=True, exist_ok=True)
         extdir = str(
             pathlib.Path(self.get_ext_fullpath(ext.name)).parent.resolve())
-
-        cfg: str
-        if self.debug:
-            cfg = 'Debug'
-        elif self.code_coverage:
-            cfg = 'RelWithDebInfo'
-        else:
-            cfg = 'Release'
-
-        cmake_args = [
-            '-DCMAKE_BUILD_TYPE=' + cfg, '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' +
-            str(extdir), '-DPython3_EXECUTABLE=' + sys.executable
-        ] + self.set_cmake_user_options()
-
-        if platform.python_implementation() == 'PyPy':
-            cmake_args.append('-DPython3_FIND_IMPLEMENTATIONS=PyPy')
-        elif 'Pyston' in sys.version:
-            cmake_args.append('-DPython3_INCLUDE_DIR=' +
-                              sysconfig.get_path('include'))
-
+        cfg = self.get_config()
+        cmake_args = self.cmake_arguments(cfg, extdir)
         build_args = ['--config', cfg]
 
         is_windows = platform.system() == 'Windows'
@@ -344,8 +353,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             configure = True
 
         if configure:
-            self.spawn(['cmake', str(WORKING_DIRECTORY)] + cmake_args)
-        if not self.dry_run:  # type: ignore
+            self.spawn(['cmake', str(WORKING_DIRECTORY), *cmake_args])
+        if not self.dry_run:
             cmake_cmd = ['cmake', '--build', '.']
             if self.build_unittests is None:
                 cmake_cmd += ['--target', 'core']
@@ -357,8 +366,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
 class CxxTestRunner(setuptools.Command):
     """Compile and launch the C++ tests."""
-    description = 'run the C++ tests'
-    user_options: list[tuple[str, str | None, str]] = []
+    description: ClassVar[str] = 'run the C++ tests'
+    user_options: ClassVar[list[tuple[str, str | None, str]]] = []
 
     def initialize_options(self):
         """Set default values for all the options that this command
@@ -368,7 +377,6 @@ class CxxTestRunner(setuptools.Command):
 
     def finalize_options(self):
         """Set final values for all the options that this command supports."""
-        pass
 
     def run(self):
         """Run tests."""
@@ -447,7 +455,7 @@ def main():
             'build_ext': BuildExt,
             'sdist': SDist,
             'gtest': CxxTestRunner,
-        },  # type: ignore
+        },
         data_files=typehints(),
         description='Interpolation of geo-referenced data for Python.',
         ext_modules=[CMakeExtension(name='pyinterp.core')],
