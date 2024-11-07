@@ -1,6 +1,24 @@
 Changelog
 #########
 
+2024.11.0
+---------
+
+* `#27 <https://github.com/CNES/pangeo-pyinterp/issues/27>`_: Introduced a new
+  feature to the RTree object to handle Cartesian coordinates, bypassing the
+  LLA/ECEF conversion .
+* Introduced GitHub Actions CI workflow for coverage and testing across Linux,
+  macOS, and Windows.
+* Added new dependencies to ``conda/environment.yml``: boost-cpp, cmake,
+  coverage, dask, eigen, gtest, lcov, pytest-cov, setuptools, and xarray.
+* Added CMake policy CMP0167 in ``CMakeLists.txt``.
+* Updated pre-commit hooks to newer versions in ``.pre-commit-config.yaml``.
+* Modified ``CMakeLists.txt`` to adjust BLAS libraries configuration.
+* Updated ``README.rst`` badges to use GitHub Actions instead of Azure DevOps.
+* Renamed conda environment from RTD to pyinterp in ``conda/environment.yml``.
+* Deleted Azure Pipelines configuration (``azure-pipelines.yml``).
+* Removed docformatter pre-commit hook from ``.pre-commit-config.yaml``.
+
 2024.6.0
 --------
 * Fix compatibility with Numpy 2.0.0
