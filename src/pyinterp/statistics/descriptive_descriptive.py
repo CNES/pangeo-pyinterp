@@ -8,7 +8,14 @@ Descriptive statistics
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any
+import sys
+
+# Self is unavailable in Python 3.10
+if sys.version_info[:2] > (3, 10):
+    from typing import Self
+else:
+    Self = 'DescriptiveStatistics'
 import copy
 
 import dask.array.core

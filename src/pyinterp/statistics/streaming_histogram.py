@@ -8,7 +8,13 @@ Calculate statistics of a stream of values
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any
+import sys
+
+if sys.version_info[:2] > (3, 10):
+    from typing import Self
+else:
+    Self = 'DescriptiveStatistics'
 
 import dask.array.core
 import numpy
@@ -39,15 +45,14 @@ def _delayed(
 
     drop_axis = list(range(values.ndim))[1:]
 
-    return dask.array.core.map_blocks(
-        _process_block,
-        attr,
-        values,
-        weights,
-        axis,
-        bin_count,
-        drop_axis=drop_axis,
-        dtype='object').sum().compute()
+    return dask.array.core.map_blocks(_process_block,
+                                      attr,
+                                      values,
+                                      weights,
+                                      axis,
+                                      bin_count,
+                                      drop_axis=drop_axis,
+                                      dtype='object').sum().compute()
 
 
 class StreamingHistogram:
