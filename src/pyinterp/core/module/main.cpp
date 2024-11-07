@@ -39,7 +39,7 @@ GeoHash encoded as integer 64 bits
   init_geohash_string(m);
 }
 
-PYBIND11_MODULE(core, m) {  // NOLINT
+PYBIND11_MODULE(core, m, py::mod_gil_not_used()) {  // NOLINT
   m.doc() = R"__doc__(
 Core module
 -----------
