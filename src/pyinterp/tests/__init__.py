@@ -68,7 +68,8 @@ def load_aoml():
     for item in ('ud', 'vd'):
         data['data_vars'][item]['data'] = [
             x if x is not None else float('nan')
-            for x in data['data_vars'][item]['data']]
+            for x in data['data_vars'][item]['data']
+        ]
     ds = xarray.Dataset.from_dict(data)
     ds['time'] = xarray.DataArray(_decode_datetime64(ds['time'].values),
                                   dims=['time'],
