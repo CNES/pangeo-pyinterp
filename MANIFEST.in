@@ -1,7 +1,8 @@
+recursive-include _custom_build *
 recursive-include docs *
 recursive-include src *
-recursive-include third_party *
 recursive-include src *.pyi
+recursive-include third_party *
 recursive-exclude scripts *
 include CMakeLists.txt
 include CODE_OF_CONDUCT.md
