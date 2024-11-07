@@ -101,15 +101,19 @@ def cnes_jd_to_datetime(seconds):
 
 def load_positions():
     """Loading and formatting the dataset."""
-    df = pandas.read_csv(pyinterp.tests.positions_path(),
-                         header=None,
-                         sep=r';',
-                         usecols=[0, 1, 2, 3],
-                         names=['id', 'time', 'lon', 'lat'],
-                         dtype=dict(id=numpy.uint32,
-                                    time=numpy.float64,
-                                    lon=numpy.float64,
-                                    lat=numpy.float64))
+    df = pandas.read_csv(
+        pyinterp.tests.positions_path(),
+        header=None,
+        sep=r';',
+        usecols=[0, 1, 2, 3],
+        names=['id', 'time', 'lon', 'lat'],
+        dtype={
+            'id': numpy.uint32,
+            'time': numpy.float64,
+            'lon': numpy.float64,
+            'lat': numpy.float64,
+        },
+    )
     df.mask(df == 1.8446744073709552e+19, numpy.nan, inplace=True)
     df['time'] = df['time'].apply(cnes_jd_to_datetime)
     df.set_index('time', inplace=True)
@@ -128,13 +132,12 @@ def periods(df, time_series, frequency='W'):
     period_start = df.groupby(
         df.index.to_period(frequency))['sla'].count().index
 
-    for start, end in zip(period_start, period_start[1:]):
-        start = start.to_timestamp()
-        if start < time_series.series[0]:
-            start = time_series.series[0]
-        end = end.to_timestamp()
-        yield start, end
-    yield end, df.index[-1] + time_series.dt
+    for start, end in zip(period_start, period_start[1:], strict=False):
+        start_timestamp = start.to_timestamp()
+        start_timestamp = max(start_timestamp, time_series.series[0])
+        end_timestamp = end.to_timestamp()
+        yield start_timestamp, end_timestamp
+    yield end_timestamp, df.index[-1] + time_series.dt
 
 
 # %%
@@ -145,9 +148,11 @@ def interpolate(df, time_series, start, end):
     mask = (df.index >= start) & (df.index < end)
     selected = df.loc[mask, ['lon', 'lat']]
     df.loc[mask, ['sla']] = interpolator.trivariate(
-        dict(longitude=selected['lon'].values,
-             latitude=selected['lat'].values,
-             time=selected.index.values),
+        {
+            'longitude': selected['lon'].values,
+            'latitude': selected['lat'].values,
+            'time': selected.index.values
+        },
         interpolator='inverse_distance_weighting',
         num_threads=0)
 

@@ -20,7 +20,6 @@ import matplotlib.pyplot
 import numpy
 import pandas
 
-#
 import pyinterp
 
 
@@ -146,14 +145,15 @@ print(f'lon/lat = {code.center()}')
 #
 # Generation of dummy data
 SIZE = 1000000
-lon = numpy.random.uniform(-180, 180, SIZE)
-lat = numpy.random.uniform(-80, 80, SIZE)
-measures = numpy.random.random_sample(SIZE)
+generator = numpy.random.Generator(numpy.random.PCG64(0))
+lon = generator.uniform(-180, 180, SIZE)
+lat = generator.uniform(-80, 80, SIZE)
+measures = generator.random(SIZE)
 
 # %%
 # Encoding the data
 codes = pyinterp.geohash.encode(lon, lat, precision=4)
-codes
+print(codes)
 
 # As you can see, the resulting codes are encoding as numpy byte arrays.
 
@@ -162,7 +162,11 @@ codes
 # quickly.
 timeit.timeit('pyinterp.geohash.encode(lon, lat)',
               number=50,
-              globals=dict(pyinterp=pyinterp, lon=lon, lat=lat)) / 50
+              globals={
+                  'pyinterp': pyinterp,
+                  'lon': lon,
+                  'lat': lat
+              }) / 50
 
 # %%
 # The inverse operation is also possible.
@@ -172,11 +176,11 @@ lon, lat = pyinterp.geohash.decode(codes)
 # You can also use the :py:func:`pyinterp.geohash.transform` to transform
 # coordinates from one précision to another.
 codes = pyinterp.geohash.transform(codes, precision=1)
-codes
+print(codes)
 
 # %%
 codes = pyinterp.geohash.transform(codes, precision=3)
-codes
+print(codes)
 
 # %%
 # The :py:func:`pyinterp.geohash.bounding_boxes` function allows calculating the
@@ -261,11 +265,12 @@ plot_geohash_grid(precision, polygon=polygon, caption=False)
 # %%
 # Density calculation
 # ===================
-df = pandas.DataFrame(
-    dict(lon=lon,
-         lat=lat,
-         measures=measures,
-         geohash=pyinterp.geohash.encode(lon, lat, precision=3)))
+df = pandas.DataFrame({
+    'lon': lon,
+    'lat': lat,
+    'measures': measures,
+    'geohash': pyinterp.geohash.encode(lon, lat, precision=3)
+})
 df.set_index('geohash', inplace=True)
 df = df.groupby('geohash').count()['measures'].rename('count').to_frame()
 df['density'] = df['count'] / (

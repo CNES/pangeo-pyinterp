@@ -16,7 +16,7 @@ numerically stable.
     Numerically stable, scalable formulas for parallel and online
     computation of higher-order multivariate central moments
     with arbitrary weights.
-    Comput Stat 31, 1305–1325,
+    Comput Stat 31, 1305-1325,
     2016,
     https://doi.org/10.1007/s00180-015-0637-z
 """
@@ -28,7 +28,8 @@ import pyinterp
 
 # %%
 # Create a random array
-values = numpy.random.random_sample((2, 4, 6, 8))
+generator = numpy.random.Generator(numpy.random.PCG64(0))
+values = generator.random((2, 4, 6, 8))
 
 # %%
 # Create a DescriptiveStatistics object.
@@ -74,6 +75,6 @@ ds.mean()
 
 # %%
 # Finally, it's possible to calculate weighted statistics.
-weights = numpy.random.random_sample((2, 4, 6, 8))
+weights = generator.random((2, 4, 6, 8))
 ds = pyinterp.DescriptiveStatistics(values, weights=weights, axis=(1, 2))
 ds.mean()

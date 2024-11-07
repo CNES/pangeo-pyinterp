@@ -27,7 +27,7 @@ import numpy
 import pyinterp
 
 axis = pyinterp.Axis(numpy.arange(-90, 90, 0.25))
-axis
+print(axis)
 
 # %%
 # This object can be queried to obtain its properties.
@@ -79,7 +79,7 @@ MERCATOR_LATITUDES = numpy.array([
 ])
 
 axis = pyinterp.Axis(MERCATOR_LATITUDES)
-axis
+print(axis)
 
 # %%
 # Let's display its properties.
@@ -98,7 +98,7 @@ axis.find_index([1e-3])
 # It is also possible to represent longitudes going around the earth, i.e.
 # making a circle.
 axis = pyinterp.Axis(numpy.arange(0, 360, 1), is_circle=True)
-axis
+print(axis)
 
 # %%
 # In this case, you don't have to worry about the bounds of the axis.
@@ -125,7 +125,7 @@ axis.find_index([-180]), axis.find_index([180])
 dates = numpy.datetime64('2020-01-01') + numpy.arange(
     10**6, step=500).astype('timedelta64[ms]')
 axis = pyinterp.TemporalAxis(dates)
-axis
+print(axis)
 
 # %%
 # It is possible to search for a date in this axis.
@@ -138,4 +138,4 @@ axis.find_index(numpy.array([numpy.datetime64('2020-01-01')]))
 # %%
 # This object also makes it possible to manipulate timedeltas.
 axis = pyinterp.TemporalAxis(dates - numpy.datetime64('2020-01-01'))
-axis
+print(axis)

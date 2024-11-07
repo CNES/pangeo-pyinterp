@@ -30,8 +30,8 @@ mesh = pyinterp.RTree()
 # in-memory structure, both in terms of construction time and queries. When this
 # is not possible, you can insert new information into the tree as you go along
 # using the :py:meth:`insert <pyinterp.RTree.insert>` method.
-cat_url = 'https://raw.githubusercontent.com/pangeo-data/pangeo-datastore' \
-    '/master/intake-catalogs/ocean/llc4320.yaml'
+cat_url = ('https://raw.githubusercontent.com/pangeo-data/pangeo-datastore'
+           '/master/intake-catalogs/ocean/llc4320.yaml')
 cat = intake.open_catalog(cat_url)
 
 # %%
