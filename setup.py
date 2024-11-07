@@ -272,7 +272,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if conda_prefix is not None:
             result.append('-DCMAKE_PREFIX_PATH=' + conda_prefix)
 
-        elif conda_prefix and self.mkl:
+        if self.mkl:
             self.set_conda_mklroot()
 
         return result
