@@ -148,7 +148,7 @@ The steps to generate a global coverage report are as follows:
 5. Merge the two coverage reports.
 6. Filter the coverage report to remove the system and third-party libraries.
 7. Generate the associated HTML report with `lcov
-   <http://ltp.sourceforge.net/coverage/lcov.php>`_. 
+   <http://ltp.sourceforge.net/coverage/lcov.php>`_.
 
 The generated report is available in the ``htmllcov`` directory located at the root of the project.
 
