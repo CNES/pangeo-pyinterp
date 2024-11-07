@@ -4,13 +4,15 @@ Time period
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, ClassVar
 import re
 
 import numpy
 
+if TYPE_CHECKING:
+    from .typing import NDArray, NDArrayDateTime, NDArrayTimeDelta
+
 from . import core
-from .typing import NDArray, NDArrayDateTime, NDArrayTimeDelta
 
 # Parse the unit of numpy.timedelta64.
 PATTERN = re.compile(r'(?:datetime|timedelta)64\[(\w+)\]').search
@@ -290,7 +292,8 @@ class PeriodList:
     Args:
         periods: A list of periods.
     """
-    DTYPE = [('begin', numpy.int64), ('last', numpy.int64)]
+    DTYPE: ClassVar[list[tuple[str, type]]] = [('begin', numpy.int64),
+                                               ('last', numpy.int64)]
 
     def __init__(self,
                  periods: NDArrayDateTime | core.PeriodList,

@@ -62,7 +62,7 @@ class Grid2D:
 
     def __init__(self, *args, increasing_axes: str | None = None):
         prefix = ''
-        for idx, item in enumerate(args):
+        for item in args:
             if isinstance(item, core.TemporalAxis):
                 prefix = 'Temporal'
                 break

@@ -4,7 +4,10 @@ Geographic coordinate system
 """
 from __future__ import annotations
 
-import numpy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import numpy
 
 from .. import interface
 from ..core import geodetic
@@ -119,7 +122,7 @@ class Polygon(geodetic.Polygon):
     def __init__(self,
                  outer: list[Point],
                  inners: list[list[Point]] | None = None) -> None:
-        super().__init__(outer, inners)  # type: ignore
+        super().__init__(outer, inners)
 
 
 class MultiPolygon(geodetic.MultiPolygon):
@@ -153,7 +156,8 @@ def normalize_longitudes(lon: numpy.ndarray,
     if lon.flags.writeable:
         geodetic.normalize_longitudes(lon, min_lon)
         return lon
-    return geodetic.normalize_longitudes(lon, min_lon)  # type: ignore
+    return geodetic.normalize_longitudes(  # type: ignore[return-value]
+        lon, min_lon)
 
 
 class RTree(geodetic.RTree):

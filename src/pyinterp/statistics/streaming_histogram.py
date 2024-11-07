@@ -8,11 +8,13 @@ Calculate statistics of a stream of values
 """
 from __future__ import annotations
 
-from typing import Any
-from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, Self
 
 import dask.array.core
 import numpy
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 from .. import core
 
@@ -45,7 +47,7 @@ def _delayed(
         axis,
         bin_count,
         drop_axis=drop_axis,
-        dtype='object').sum().compute()  # type: ignore
+        dtype='object').sum().compute()
 
 
 class StreamingHistogram:
@@ -123,7 +125,7 @@ class StreamingHistogram:
                                                  axis=axis,
                                                  bin_count=bin_count)
 
-    def __iadd__(self, other: Any) -> StreamingHistogram:
+    def __iadd__(self, other: Any) -> Self:
         """Adds a new histogram to the current one.
 
         Args:
@@ -135,7 +137,7 @@ class StreamingHistogram:
         if isinstance(other, StreamingHistogram):
             if type(self._instance) != type(other._instance):  # noqa: E721
                 raise TypeError('StreamingHistogram types must match')
-            self._instance += other._instance  # type: ignore
+            self._instance += other._instance  # type: ignore[operator]
         else:
             raise TypeError('unsupported operand type(s) for +='
                             f": '{type(self)}' and '{type(other)}'")

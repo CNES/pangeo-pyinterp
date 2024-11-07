@@ -36,27 +36,30 @@ def _core_class_suffix(x: numpy.ndarray, handle_integer: bool = False) -> str:
         str: the class suffix
     """
     dtype = x.dtype.type
+    result: str
     if dtype == numpy.float64:
-        return 'Float64'
-    if dtype == numpy.float32:
-        return 'Float32'
-    if dtype == numpy.int64:
-        return 'Float64'
-    if dtype == numpy.uint64:
-        return 'Float64'
-    if dtype == numpy.int32:
-        return 'Float32'
-    if dtype == numpy.uint32:
-        return 'Float32'
-    if dtype == numpy.int16:
-        return 'Float32'
-    if dtype == numpy.uint16:
-        return 'Float32'
-    if dtype == numpy.int8:
-        return 'Float32' if not handle_integer else 'Int8'
-    if dtype == numpy.uint8:
-        return 'Float32' if not handle_integer else 'UInt8'
-    raise ValueError('Unhandled dtype: ' + str(dtype))
+        result = 'Float64'
+    elif dtype == numpy.float32:
+        result = 'Float32'
+    elif dtype == numpy.int64:
+        result = 'Float64'
+    elif dtype == numpy.uint64:
+        result = 'Float64'
+    elif dtype == numpy.int32:
+        result = 'Float32'
+    elif dtype == numpy.uint32:
+        result = 'Float32'
+    elif dtype == numpy.int16:
+        result = 'Float32'
+    elif dtype == numpy.uint16:
+        result = 'Float32'
+    elif dtype == numpy.int8:
+        result = 'Float32' if not handle_integer else 'Int8'
+    elif dtype == numpy.uint8:
+        result = 'Float32' if not handle_integer else 'UInt8'
+    else:
+        raise ValueError('Unhandled dtype: ' + str(dtype))
+    return result
 
 
 def _core_function(function: str, instance: object) -> str:
@@ -147,11 +150,11 @@ def _core_window_function(wf: str | None,
             defaults = {'gaussian': None, 'lanczos': 1, 'parzen': 0}
             arg = defaults[wf]
 
-        if wf == 'lanczos' and arg < 1:  # type: ignore
+        if wf == 'lanczos' and arg < 1:  # type: ignore[operator]
             raise ValueError(f'The argument of the function {wf!r} must be '
                              'greater than 1')
 
-        if wf == 'parzen' and arg < 0:  # type: ignore
+        if wf == 'parzen' and arg < 0:  # type: ignore[operator]
             raise ValueError(f'The argument of the function {wf!r} must be '
                              'greater than 0')
 

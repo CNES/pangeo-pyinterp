@@ -67,7 +67,8 @@ class Histogram2D:
                  x: core.Axis,
                  y: core.Axis,
                  bin_counts: int | None = None,
-                 dtype: numpy.dtype | None = numpy.dtype('float64')):
+                 dtype: numpy.dtype | None = None):
+        dtype = dtype or numpy.dtype('float64')
         if dtype == numpy.dtype('float64'):
             self._instance: Histogram2DTyped = core.Histogram2DFloat64(
                 x, y, bin_counts)
@@ -105,7 +106,7 @@ class Histogram2D:
         if self.dtype != other.dtype:
             raise ValueError('dtype mismatch')
         result = copy.copy(self)
-        result._instance += other._instance  # type: ignore
+        result._instance += other._instance  # type: ignore[operator]
         return result
 
     def push(self, x: numpy.ndarray, y: numpy.ndarray,

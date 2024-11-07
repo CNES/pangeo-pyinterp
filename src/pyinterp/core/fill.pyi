@@ -1,8 +1,4 @@
-from __future__ import annotations
-
 from typing import ClassVar, Tuple, overload
-
-import numpy
 
 from . import (
     Grid2DFloat32,

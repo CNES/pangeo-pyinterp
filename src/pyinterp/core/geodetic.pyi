@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import (
     Any,
     ClassVar,
@@ -7,11 +5,10 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Self,
     Tuple,
     overload,
 )
-
-import numpy
 
 from .. import core
 from .array import Array1DBool, Array1DFloat64, Array2DFloat64
@@ -371,7 +368,7 @@ class MultiPolygon:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(self, other: MultiPolygon) -> MultiPolygon:
+    def __iadd__(self, other: MultiPolygon) -> Self:
         ...
 
     def __iter__(self) -> Iterator:

@@ -1,20 +1,19 @@
-from __future__ import annotations
-
 from typing import (
     Any,
     ClassVar,
     Iterator,
     List,
-    Literal,
     Optional,
+    Self,
     Tuple,
+    TypeAlias,
     overload,
 )
 
 import numpy
 import numpy.typing
 
-from . import dateutils, fill, geodetic, geohash
+from . import geodetic
 from .array import (
     Array1DBool,
     Array1DFloat32,
@@ -82,7 +81,7 @@ class Axis:
     def __copy__(self) -> Axis:
         ...
 
-    def __eq__(self, other: Axis) -> bool:  # type: ignore
+    def __eq__(self, other: Axis) -> bool:  # type: ignore[override]
         ...
 
     @overload
@@ -346,7 +345,10 @@ class Binning2DFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(self, other: Binning2DFloat32) -> Binning2DFloat32:
+    def __iadd__(
+        self,
+        other: Binning2DFloat32,
+    ) -> Self:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -416,7 +418,7 @@ class Binning2DFloat64:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(self, other: Binning2DFloat64) -> Binning2DFloat64:
+    def __iadd__(self, other: Binning2DFloat64) -> Self:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -539,9 +541,7 @@ class DescriptiveStatisticsFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(
-            self, other: DescriptiveStatisticsFloat32
-    ) -> DescriptiveStatisticsFloat32:
+    def __iadd__(self, other: DescriptiveStatisticsFloat32) -> Self:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -594,9 +594,7 @@ class DescriptiveStatisticsFloat64:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(
-            self, other: DescriptiveStatisticsFloat64
-    ) -> DescriptiveStatisticsFloat64:
+    def __iadd__(self, other: DescriptiveStatisticsFloat64) -> Self:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -1036,7 +1034,7 @@ class Histogram2DFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(self, other: Histogram2DFloat32) -> Histogram2DFloat32:
+    def __iadd__(self, other: Histogram2DFloat32) -> Self:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -1099,7 +1097,7 @@ class Histogram2DFloat64:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(self, other: Histogram2DFloat64) -> Histogram2DFloat64:
+    def __iadd__(self, other: Histogram2DFloat64) -> Self:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -1223,7 +1221,7 @@ class Period:
         ...
 
 
-Array1DPeriod = numpy.ndarray[
+Array1DPeriod: TypeAlias = numpy.ndarray[
     tuple[int],
     numpy.dtype[Period]  # type: ignore[type-var]
 ]
@@ -1559,9 +1557,7 @@ class StreamingHistogramFloat32:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(
-            self,
-            other: StreamingHistogramFloat32) -> StreamingHistogramFloat32:
+    def __iadd__(self, other: StreamingHistogramFloat32) -> Self:
         ...
 
     def __setstate__(self, state: tuple) -> None:
@@ -1623,9 +1619,7 @@ class StreamingHistogramFloat64:
     def __getstate__(self) -> tuple:
         ...
 
-    def __iadd__(
-            self,
-            other: StreamingHistogramFloat64) -> StreamingHistogramFloat64:
+    def __iadd__(self, other: StreamingHistogramFloat64) -> Self:
         ...
 
     def __setstate__(self, state: tuple) -> None:
