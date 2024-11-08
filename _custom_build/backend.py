@@ -47,8 +47,6 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
             setuptools_args.append(f"--generator={args.generator}")
         if args.cmake_args:
             setuptools_args.append(f"--cmake-args={args.cmake_args}")
-        if args.parallel:
-            setuptools_args.append(f"--parallel={args.parallel}")
         if decode_bool(args.mkl):
             setuptools_args.append('--mkl=yes')
 
