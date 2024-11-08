@@ -30,7 +30,7 @@ MINOR = sys.version_info[1]
 WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 # OSX deployment target
-OSX_DEPLOYMENT_TARGET = '10.14'
+OSX_DEPLOYMENT_TARGET = '11.0'
 
 
 def compare_setuptools_version(required: tuple[int, ...]) -> bool:
