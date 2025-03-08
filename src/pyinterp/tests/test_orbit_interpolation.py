@@ -69,4 +69,4 @@ def test_calculate_pass():
     orbit = calculate_orbit(*load_test_ephemeris(swot_calval_ephemeris_path()))
     pass_ = calculate_pass(2, orbit)
     assert pass_ is not None
-    swath = calculate_swath(pass_)
+    calculate_swath(pass_)

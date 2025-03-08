@@ -10,7 +10,12 @@ import re
 import numpy
 
 if TYPE_CHECKING:
-    from .typing import NDArray, NDArrayDateTime, NDArrayTimeDelta
+    from .typing import (
+        NDArray,
+        NDArrayDateTime,
+        NDArrayTimeDelta,
+        NDArrayStructured,
+    )
 
 from . import core
 
@@ -18,7 +23,7 @@ from . import core
 PATTERN = re.compile(r'(?:datetime|timedelta)64\[(\w+)\]').search
 
 #: Numpy time units
-RESOLUTION = [
+RESOLUTION: list[str] = [
     'as', 'fs', 'ps', 'ns', 'us', 'ms', 's', 'm', 'h', 'D', 'W', 'M', 'Y'
 ]
 
@@ -59,10 +64,19 @@ class Period(core.Period):
                  end: numpy.datetime64,
                  within: bool = True) -> None:
         self.resolution = _min_time64_unit(begin.dtype, end.dtype)
-        begin = numpy.datetime64(begin, self.resolution)
-        end = numpy.datetime64(end, self.resolution)
+        begin = numpy.datetime64(  # type: ignore[call-overload]
+            begin,
+            self.resolution,
+        )
+        end = numpy.datetime64(  # type: ignore[call-overload]
+            end,
+            self.resolution,
+        )
         if not within:
-            end -= numpy.timedelta64(1, self.resolution)
+            end -= numpy.timedelta64(  # type: ignore[call-overload]
+                1,
+                self.resolution,
+            )
         super().__init__(begin.astype(int), end.astype(int), True)
 
     def __reduce__(self) -> str | tuple[Any, ...]:
@@ -79,16 +93,25 @@ class Period(core.Period):
     @property
     def begin(self) -> numpy.datetime64:  # type: ignore[override]
         """Gets the beginning of the period."""
-        return numpy.datetime64(super().begin, self.resolution)
+        return numpy.datetime64(  # type: ignore[call-overload]
+            super().begin,
+            self.resolution,
+        )
 
     @property
     def last(self) -> numpy.datetime64:  # type: ignore[override]
         """Gets the beginning of the period."""
-        return numpy.datetime64(super().last, self.resolution)
+        return numpy.datetime64(  # type: ignore[call-overload]
+            super().last,
+            self.resolution,
+        )
 
     def end(self) -> numpy.datetime64:  # type: ignore[override]
         """Gets the end of the period."""
-        return numpy.datetime64(super().end(), self.resolution)
+        return numpy.datetime64(  # type: ignore[call-overload]
+            super().end(),
+            self.resolution,
+        )
 
     def as_resolution(self, resolution: str) -> Period:
         """Converts the period to a period with a different resolution.
@@ -100,8 +123,14 @@ class Period(core.Period):
             A new period with the given resolution.
         """
         return Period(
-            numpy.datetime64(self.begin, resolution),
-            numpy.datetime64(self.last, resolution),
+            numpy.datetime64(  # type: ignore[call-overload]
+                self.begin,
+                resolution,
+            ),
+            numpy.datetime64(  # type: ignore[call-overload]
+                self.last,
+                resolution,
+            ),
             True,
         )
 
@@ -113,7 +142,10 @@ class Period(core.Period):
 
     def duration(self) -> numpy.timedelta64:  # type: ignore[override]
         """Gets the duration of the period."""
-        return numpy.timedelta64(super().duration(), self.resolution)
+        return numpy.timedelta64(  # type: ignore[call-overload]
+            super().duration(),
+            self.resolution,
+        )
 
     def is_null(self) -> bool:
         """True if period is ill formed (length is zero or less)"""
@@ -126,8 +158,8 @@ class Period(core.Period):
             return False
         return super().__eq__(lhs)
 
-    def __ne__(self, __value: object) -> bool:
-        return not self.__eq__(__value)
+    def __ne__(self, rhs: object) -> bool:
+        return not self.__eq__(rhs)
 
     def __lt__(self, lhs: Any) -> bool:
         if not isinstance(lhs, Period):
@@ -153,9 +185,12 @@ class Period(core.Period):
         """
         if isinstance(other, Period):
             if self.resolution != other.resolution:
-                other = other.as_resolution(self.resolution)
+                other = other.as_resolution(self.resolution, )
             return super().contains(other)
-        return super().contains(_datetime64_to_int64(other, self.resolution))
+        return super().contains(_datetime64_to_int64(
+            other,
+            self.resolution,
+        ))
 
     def is_adjacent(self, other: Period) -> bool:  # type: ignore[override]
         """True if periods are next to each other without a gap.
@@ -177,7 +212,7 @@ class Period(core.Period):
             * True if other is a period and is adjacent to this period
         """
         if self.resolution != other.resolution:
-            other = other.as_resolution(self.resolution)
+            other = other.as_resolution(self.resolution, )
         return super().is_adjacent(other)
 
     def is_before(self,
@@ -199,7 +234,10 @@ class Period(core.Period):
         Returns:
             True if point is before the period
         """
-        return super().is_before(_datetime64_to_int64(point, self.resolution))
+        return super().is_before(_datetime64_to_int64(
+            point,
+            self.resolution,
+        ))
 
     def is_after(self,
                  point: numpy.datetime64) -> bool:  # type: ignore[override]
@@ -219,7 +257,10 @@ class Period(core.Period):
         Returns:
             True if point is after the period
         """
-        return super().is_after(_datetime64_to_int64(point, self.resolution))
+        return super().is_after(_datetime64_to_int64(
+            point,
+            self.resolution,
+        ))
 
     def intersects(self, other: Period) -> bool:  # type: ignore[override]
         """True if the periods overlap in any way.
@@ -242,7 +283,7 @@ class Period(core.Period):
             True if the periods intersect
         """
         if self.resolution != other.resolution:
-            other = other.as_resolution(self.resolution)
+            other = other.as_resolution(self.resolution, )
         return super().intersects(other)
 
     def intersection(self, other: Period) -> Period:  # type: ignore[override]
@@ -256,11 +297,17 @@ class Period(core.Period):
             The intersection period or null period if no intersection.
         """
         if self.resolution != other.resolution:
-            other = other.as_resolution(self.resolution)
+            other = other.as_resolution(self.resolution, )
         result = super().intersection(other)
         return Period(
-            numpy.datetime64(result.begin, self.resolution),
-            numpy.datetime64(result.last, self.resolution),
+            numpy.datetime64(  # type: ignore[call-overload]
+                result.begin,
+                self.resolution,
+            ),
+            numpy.datetime64(  # type: ignore[call-overload]
+                result.last,
+                self.resolution,
+            ),
             True,
         )
 
@@ -274,11 +321,17 @@ class Period(core.Period):
             The union period of intersection or null if no intersection.
         """
         if self.resolution != other.resolution:
-            other = other.as_resolution(self.resolution)
+            other = other.as_resolution(self.resolution, )
         result = super().merge(other)
         return Period(
-            numpy.datetime64(result.begin, self.resolution),
-            numpy.datetime64(result.last, self.resolution),
+            numpy.datetime64(  # type: ignore[call-overload]
+                result.begin,
+                self.resolution,
+            ),
+            numpy.datetime64(  # type: ignore[call-overload]
+                result.last,
+                self.resolution,
+            ),
             True,
         )
 
@@ -336,7 +389,7 @@ class PeriodList:
          self._instance) = state
 
     @property
-    def periods(self) -> NDArrayDateTime:
+    def periods(self) -> NDArrayStructured:
         """The periods in the list."""
         return self._instance.periods.astype(self._dtype)
 

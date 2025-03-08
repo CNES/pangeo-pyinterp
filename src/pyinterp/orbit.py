@@ -15,7 +15,7 @@ import numpy
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from .typing import NDArray, NDArrayDateTime, NDArrayTimeDelta
+    from .typing import NDArray, NDArrayTimeDelta
 
 from . import core, geodetic
 
@@ -47,9 +47,9 @@ def interpolate(
     wgs = wgs or geodetic.Coordinates()
     mz = wgs.spheroid.semi_major_axis / wgs.spheroid.semi_minor_axis()
     x, y, z = wgs.lla_to_ecef(
-        lon,
-        lat,
-        numpy.full_like(lon, height),
+        lon,  # type: ignore[arg-type]
+        lat,  # type: ignore[arg-type]
+        numpy.full_like(lon, height),  # type: ignore[arg-type]
     )
 
     r = numpy.sqrt(x * x + y * y + z * z * mz * mz)
@@ -60,25 +60,25 @@ def interpolate(
     x = core.interpolate1d(
         x_axis,
         x,
-        xi,
+        xi,  # type: ignore[arg-type]
         half_window_size=half_window_size,
     )
     y = core.interpolate1d(
         x_axis,
         y,
-        xi,
+        xi,  # type: ignore[arg-type]
         half_window_size=half_window_size,
     )
     z = core.interpolate1d(
         x_axis,
         z,
-        xi,
+        xi,  # type: ignore[arg-type]
         half_window_size=half_window_size,
     )
     r = core.interpolate1d(
         x_axis,
         r,
-        xi,
+        xi,  # type: ignore[arg-type]
         half_window_size=half_window_size,
     )
 
@@ -198,8 +198,8 @@ class Orbit:
     def curvilinear_distance(self) -> numpy.ndarray:
         """Get the curvilinear distance."""
         return geodetic.LineString(
-            self.longitude,
-            self.latitude,
+            self.longitude,  # type: ignore[arg-type]
+            self.latitude,  # type: ignore[arg-type]
         ).curvilinear_distance(strategy='thomas', wgs=self.wgs)
 
     def pass_duration(self, number: int) -> numpy.timedelta64:
@@ -312,7 +312,7 @@ class Pass:
     #: Nadir latitude of the pass (degrees)
     lat_nadir: NDArray
     #: Time of the pass
-    time: NDArrayDateTime
+    time: NDArrayTimeDelta
     #: Along track distance of the pass (in meters)
     x_al: NDArray
     #: Coordinates of the satellite at the equator
@@ -391,11 +391,16 @@ def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
 
     # Calculate the position of the satellite at the equator
     intersection = geodetic.LineString(
-        lon1,
-        lat1,
+        lon1,  # type: ignore[arg-type]
+        lat1,  # type: ignore[arg-type]
     ).intersection(
-        geodetic.LineString(numpy.array([lon1[0] - 0.5, lon1[1] + 0.5]),
-                            numpy.array([0, 0], dtype='float64')))
+        geodetic.LineString(
+            numpy.array([lon1[0] - 0.5, lon1[1] + 0.5]),
+            numpy.array(  # type: ignore[arg-type]
+                [0, 0],
+                dtype='float64',
+            ),
+        ))
     if len(intersection) == 0:
         return EquatorCoordinates.undefined()
 
@@ -405,13 +410,16 @@ def _equator_properties(lon_nadir: NDArray, lat_nadir: NDArray,
     lon1 = numpy.insert(lon1, 1, point.lon)
     lat1 = numpy.insert(lat1, 1, 0)
     x_al = geodetic.LineString(
-        lon1,
-        lat1,
+        lon1,  # type: ignore[arg-type]
+        lat1,  # type: ignore[arg-type]
     ).curvilinear_distance(strategy='thomas')
 
     # Pop the along track distance at the equator
     x_eq = x_al[1]
-    x_al = numpy.delete(x_al, 1)
+    x_al = numpy.delete(  # type: ignore[assignment]
+        x_al,
+        1,
+    )
 
     return EquatorCoordinates(
         point.lon,
@@ -491,8 +499,8 @@ def calculate_orbit(
 
     # Calculates the along track distance (km)
     distance = geodetic.LineString(
-        lon_nadir,
-        lat_nadir,
+        lon_nadir,  # type: ignore[arg-type]
+        lat_nadir,  # type: ignore[arg-type]
     ).curvilinear_distance(strategy='thomas', wgs=spheroid) * 1e-3
 
     # Interpolate the final orbit according the given along track resolution
@@ -556,7 +564,10 @@ def calculate_pass(
 
     # Selects the orbit in the defined box
     if bbox is not None:
-        mask = bbox.covered_by(lon_nadir, lat_nadir)
+        mask = bbox.covered_by(
+            lon_nadir,  # type: ignore[arg-type]
+            lat_nadir,  # type: ignore[arg-type]
+        )
         if numpy.all(~mask):
             return None
         if numpy.any(mask):
@@ -567,7 +578,13 @@ def calculate_pass(
 
     equator_coordinates = _equator_properties(lon_nadir, lat_nadir, time)
 
-    return Pass(lon_nadir, lat_nadir, time, x_al, equator_coordinates)
+    return Pass(
+        lon_nadir,
+        lat_nadir,
+        time,
+        x_al,
+        equator_coordinates,
+    )
 
 
 def calculate_swath(
@@ -612,8 +629,8 @@ def calculate_swath(
     x_ac = numpy.full((len(half_orbit), x_ac.size), x_ac)
 
     lon, lat = core.geodetic.calculate_swath(
-        half_orbit.lon_nadir,
-        half_orbit.lat_nadir,
+        half_orbit.lon_nadir,  # type: ignore[arg-type]
+        half_orbit.lat_nadir,  # type: ignore[arg-type]
         across_track_resolution * 1e3,
         half_gap * 1e3,
         half_swath,

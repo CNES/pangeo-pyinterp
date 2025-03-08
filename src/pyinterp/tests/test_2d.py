@@ -28,9 +28,9 @@ def test_dims_from_data_array():
     with pytest.raises(ValueError):
         xr_backend._dims_from_data_array(array, True, 2)
     array = xr.DataArray(data=np.zeros((2, 2), dtype='float64'),
-                         coords=[('lon', np.arange(2),
-                                  dict(units='degrees_east')),
-                                 ('lat', np.arange(2))],
+                         coords=[('lon', np.arange(2), {
+                             'units': 'degrees_east'
+                         }), ('lat', np.arange(2))],
                          dims=['lon', 'lat'])
     with pytest.raises(ValueError):
         xr_backend._dims_from_data_array(array, True, 2)
@@ -187,7 +187,10 @@ def test_bicubic(pytestconfig):
     assert isinstance(grid.grid, xr_backend.Grid2D)
     z = grid(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
              method='bicubic',
-             bicubic_kwargs=dict(nx=3, ny=3))
+             bicubic_kwargs={
+                 'nx': 3,
+                 'ny': 3
+             })
     assert isinstance(z, np.ndarray)
 
 

@@ -25,7 +25,7 @@ __all__ = [
     'encode',
     'geodetic',
     'int64',
-    'transform',
     'to_xarray',
+    'transform',
     'where',
 ]

@@ -4,11 +4,16 @@ Geohash encoding and decoding
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy
 import xarray
 
 from . import geodetic
 from .core import GeoHash as BaseGeoHash, geohash
+
+if TYPE_CHECKING:
+    from .typing import NDArray
 
 
 class GeoHash(BaseGeoHash):
@@ -55,8 +60,11 @@ class GeoHash(BaseGeoHash):
         """
         bbox = box or geodetic.Box.whole_earth()
         _, nlon, nlat = cls.grid_properties(bbox, precision)
-        grid = geohash.bounding_boxes(bbox, precision=precision)
-        grid = numpy.flip(grid.reshape((nlat, nlon)), axis=0)
+        grid: NDArray = geohash.bounding_boxes(bbox, precision=precision)
+        grid = numpy.flip(
+            grid.reshape((nlat, nlon)),
+            axis=0,
+        )
         lon, _ = geohash.decode(grid[-1, :].ravel())
         _, lat = geohash.decode(grid[:, 0].ravel())
 

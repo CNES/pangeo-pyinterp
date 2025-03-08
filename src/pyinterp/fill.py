@@ -163,8 +163,14 @@ def matrix(x: NDArray,
     if not in_place:
         x = numpy.copy(x)
     if dtype == numpy.float32:
-        core.fill.matrix_float32(x, fill_value)
-    core.fill.matrix_float64(x, fill_value)
+        core.fill.matrix_float32(
+            x,  # type: ignore[arg-type]
+            fill_value,
+        )
+    core.fill.matrix_float64(
+        x,  # type: ignore[arg-type]
+        fill_value,
+    )
     return x
 
 
@@ -189,15 +195,26 @@ def vector(x: NDArray,
     if not in_place:
         x = numpy.copy(x)
     if dtype == numpy.float32:
-        core.fill.vector_float32(x, fill_value)
+        core.fill.vector_float32(
+            x,  # type: ignore[arg-type]
+            fill_value,
+        )
     elif dtype == numpy.float64:
-        core.fill.vector_float64(x, fill_value)
+        core.fill.vector_float64(
+            x,  # type: ignore[arg-type]
+            fill_value,
+        )
     elif dtype == numpy.int64:
-        core.fill.vector_int64(x, fill_value)
+        core.fill.vector_int64(
+            x,  # type: ignore[arg-type]
+            fill_value,
+        )
     elif numpy.issubdtype(dtype, numpy.datetime64) or numpy.issubdtype(
             dtype, numpy.timedelta64):
-        core.fill.vector_int64(x.view(numpy.int64),
-                               fill_value.view(numpy.int64))
+        core.fill.vector_int64(
+            x.view(numpy.int64),  # type: ignore[arg-type]
+            fill_value.view(numpy.int64),
+        )
     else:
         raise ValueError(f'unsupported data type {dtype}')
     return x

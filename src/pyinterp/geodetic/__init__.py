@@ -21,18 +21,18 @@ from ..core.geodetic import (
 
 __all__ = [
     'Box',
-    'calculate_crossover',
-    'calculate_crossover_list',
-    'coordinate_distances',
     'Coordinates',
     'Crossover',
     'LineString',
     'MultiPolygon',
-    'normalize_longitudes',
     'Point',
     'Polygon',
     'RTree',
     'Spheroid',
+    'calculate_crossover',
+    'calculate_crossover_list',
+    'coordinate_distances',
+    'normalize_longitudes',
 ]
 
 

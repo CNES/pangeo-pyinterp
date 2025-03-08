@@ -6,6 +6,7 @@
 pyinterp
 --------
 """
+
 from . import geodetic, geohash, version
 from ._geohash import GeoHash
 from .binning import Binning1D, Binning2D
@@ -41,36 +42,36 @@ __date__ = version.date()
 del version
 
 __all__ = [
-    '__date__',
-    '__version__',
     'Axis',
     'AxisInt64',
-    'bicubic',
     'Binning1D',
     'Binning2D',
-    'bivariate',
-    'calculate_orbit',
-    'calculate_pass',
-    'calculate_swath',
-    'dateutils',
     'DescriptiveStatistics',
     'EquatorCoordinates',
-    'geodetic',
-    'geohash',
     'GeoHash',
     'Grid2D',
     'Grid3D',
     'Grid4D',
     'Histogram2D',
-    'interpolate1d',
     'Orbit',
     'Pass',
-    'quadrivariate',
-    'RadialBasisFunction',
     'RTree',
+    'RadialBasisFunction',
     'StreamingHistogram',
     'Swath',
     'TemporalAxis',
-    'trivariate',
     'WindowFunction',
+    '__date__',
+    '__version__',
+    'bicubic',
+    'bivariate',
+    'calculate_orbit',
+    'calculate_pass',
+    'calculate_swath',
+    'dateutils',
+    'geodetic',
+    'geohash',
+    'interpolate1d',
+    'quadrivariate',
+    'trivariate',
 ]

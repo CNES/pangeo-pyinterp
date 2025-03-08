@@ -27,8 +27,11 @@ def to_xarray(hashes: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
         raise TypeError('hashes must be a string array')
     lon, lat = geohash.decode(
         geohash.bounding_boxes(precision=hashes.dtype.itemsize))
-    x_axis = core.Axis(numpy.unique(lon), is_circle=True)
-    y_axis = core.Axis(numpy.unique(lat))
+    x_axis = core.Axis(
+        numpy.unique(lon),  # type: ignore[arg-type]
+        is_circle=True,
+    )
+    y_axis = core.Axis(numpy.unique(lat))  # type: ignore[arg-type]
 
     dtype = data.dtype
     if numpy.issubdtype(dtype, numpy.dtype('object')):

@@ -68,7 +68,11 @@ def test_3d():
     assert grid.ndim == 3
     assert isinstance(grid.grid, xr_backend.Grid3D)
     x, y, t = np.meshgrid(lon, lat, time, indexing='ij')
-    z = grid(dict(longitude=x.ravel(), latitude=y.ravel(), time=t.ravel()))
+    z = grid({
+        'longitude': x.ravel(),
+        'latitude': y.ravel(),
+        'time': t.ravel()
+    })
     assert isinstance(z, np.ndarray)
 
 

@@ -30,8 +30,8 @@ def check_stats(ds, values, dtype, error):
     assert ds.skewness() == pytest.approx(skewness, rel=error, abs=error)
 
 
-@pytest.mark.parametrize('dtype,error', [(np.float32, 1e-4),
-                                         (np.float64, 1e-6)])
+@pytest.mark.parametrize(('dtype', 'error'), [(np.float32, 1e-4),
+                                              (np.float64, 1e-6)])
 def test_descriptive_statistics_1d(dtype, error):
     """Test the computation of descriptive statistics for a 1D array."""
     values = np.random.random_sample((10000, )).astype(dtype)
@@ -51,8 +51,8 @@ def test_descriptive_statistics_1d(dtype, error):
     assert isinstance(str(ds), str)
 
 
-@pytest.mark.parametrize('dtype,error', [(np.float32, 1e-4),
-                                         (np.float64, 1e-6)])
+@pytest.mark.parametrize(('dtype', 'error'), [(np.float32, 1e-4),
+                                              (np.float64, 1e-6)])
 def test_descriptive_statistics_iadd(dtype, error):
     v0 = np.random.random_sample((5000, )).astype(dtype)
     ds = DescriptiveStatistics(v0, dtype=dtype)
@@ -70,8 +70,8 @@ def test_descriptive_statistics_iadd(dtype, error):
         ds += ds2
 
 
-@pytest.mark.parametrize('dtype,error', [(np.float32, 1e-4),
-                                         (np.float64, 1e-6)])
+@pytest.mark.parametrize(('dtype', 'error'), [(np.float32, 1e-4),
+                                              (np.float64, 1e-6)])
 def test_descriptive_statistics_add(dtype, error):
     v0 = np.random.random_sample((5000, )).astype(dtype)
     ds = DescriptiveStatistics(v0, dtype=dtype)

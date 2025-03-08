@@ -41,8 +41,8 @@ def check_stats(histogram, values, dtype, error):
                                                  abs=error)
 
 
-@pytest.mark.parametrize('dtype,error', [(np.float32, 1e-4),
-                                         (np.float64, 1e-6)])
+@pytest.mark.parametrize(('dtype', 'error'), [(np.float32, 1e-4),
+                                              (np.float64, 1e-6)])
 def test_streaming_histogram_1d(dtype, error):
     """Test the computation of streaming histogram for a 1D array."""
     values = np.random.random_sample((10000, )).astype(dtype)

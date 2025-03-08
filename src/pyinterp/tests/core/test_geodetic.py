@@ -416,8 +416,11 @@ def test_merged_point():
                                               lon1,
                                               lat1,
                                               cartesian_plane=flag)
-        crossover_properties = core.geodetic.calculate_crossover(
-            lon1, lat1, lon1 + 10, lat1 + 10, cartesian_plane=flag)
+        core.geodetic.calculate_crossover(lon1,
+                                          lat1,
+                                          lon1 + 10,
+                                          lat1 + 10,
+                                          cartesian_plane=flag)
 
 
 def test_line_string_closest():

@@ -13,8 +13,7 @@ Typing
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar
-import sys
+from typing import TYPE_CHECKING, Any, TypeAlias, TypeVar
 
 import numpy
 import numpy.typing
@@ -32,10 +31,7 @@ except ImportError:  # pragma: no cover
     # isort: on
     # pylint: enable=ungrouped-imports
 
-NDArray = numpy.typing.NDArray
-NDArrayDateTime: Any
-NDArrayStructured: Any
-NDArrayTimeDelta: Any
+NDArray: TypeAlias = numpy.typing.NDArray[Any]
 
 
 def numpy_version() -> tuple[int, ...]:
@@ -47,8 +43,7 @@ def numpy_version() -> tuple[int, ...]:
     return tuple(map(int, numpy.__version__.split('.')[:2]))
 
 
-if TYPE_CHECKING and numpy_version() >= (1, 20) and sys.version_info > (
-        3, 8):  # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     NDArrayDateTime = numpy.ndarray[Any, numpy.dtype[numpy.datetime64]]
     NDArrayStructured = numpy.ndarray[Any, numpy.dtype[numpy.void]]
     NDArrayTimeDelta = numpy.ndarray[Any, numpy.dtype[numpy.timedelta64]]

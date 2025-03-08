@@ -28,8 +28,6 @@ __all__ = [
     "CovarianceFunction",
     "DescriptiveStatisticsFloat32",
     "DescriptiveStatisticsFloat64",
-    "fill",
-    "geodetic",
     "GeoHash",
     "Grid2DFloat32",
     "Grid2DFloat64",
@@ -45,6 +43,8 @@ __all__ = [
     "Grid4DUInt8",
     "Histogram2DFloat32",
     "Histogram2DFloat64",
+    "fill",
+    "geodetic",
 ]
 
 from .array import (
