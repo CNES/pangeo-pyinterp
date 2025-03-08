@@ -72,20 +72,20 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-# The library must be built using C++17 compiler.
-set(CMAKE_CXX_STANDARD 17)
+# The library must be built using C++20 compiler.
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MACOSX_RPATH 1)
 
 include(CheckCXXCompilerFlag)
 if(NOT WIN32)
-  check_cxx_compiler_flag("-std=c++17" HAS_CPP17_FLAG)
+  check_cxx_compiler_flag("-std=c++20" HAS_CPP20_FLAG)
 else()
-  check_cxx_compiler_flag("/std:c++17" HAS_CPP17_FLAG)
+  check_cxx_compiler_flag("/std:c++20" HAS_CPP20_FLAG)
 endif()
-if(NOT HAS_CPP17_FLAG)
-  message(FATAL_ERROR "Unsupported compiler -- requires C++17 support!")
+if(NOT HAS_CPP20_FLAG)
+  message(FATAL_ERROR "Unsupported compiler -- requires C++20 support!")
 endif()
 
 # Check if the C++ compiler and linker flags are set correctly.
@@ -276,10 +276,6 @@ if(ENABLE_CLANG_TIDY)
   unset(CLANG_TIDY_EXE CACHE)
   unset(CLANG_TIDY_CMD CACHE)
   message(STATUS "clang-tidy enabled.")
-endif()
-
-if(GTEST_FOUND AND ENABLE_CLANG_TIDY)
-  include(Dart)
 endif()
 
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
