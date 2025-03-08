@@ -1,3 +1,0 @@
-# Loess
-
-- [ ] Factorize filter
