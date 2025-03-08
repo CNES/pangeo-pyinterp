@@ -140,8 +140,10 @@ def _coords(
     # Is it necessary to manage a time axis?
     if datetime64 is not None:
         temporal_dim, temporal_axis = datetime64
-        return tuple(coords[dim] if dim != temporal_dim else temporal_axis.
-                     safe_cast(coords[temporal_dim]) for dim in dims)
+        return tuple(
+            coords[dim] if dim !=
+            temporal_dim else temporal_axis.safe_cast(coords[temporal_dim])
+            for dim in dims)
     return tuple(coords[dim] for dim in dims)
 
 
