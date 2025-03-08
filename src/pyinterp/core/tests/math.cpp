@@ -15,27 +15,27 @@ namespace math = pyinterp::detail::math;
 #define M_PI 3.14159265358979323846
 #endif
 
-TEST(math, pi) {
+TEST(Math, Pi) {
   // pi<double> == π
   EXPECT_DOUBLE_EQ(math::pi<double>(), M_PI);
 }
 
-TEST(math, pi_2) {
+TEST(Math, Pi2) {
   // pi_2<double> == π / 2
   EXPECT_DOUBLE_EQ(math::pi_2<double>(), M_PI * 0.5);
 }
 
-TEST(math, two_pi) {
+TEST(Math, Twopi) {
   // two_pi<double> == 2π
   EXPECT_DOUBLE_EQ(math::two_pi<double>(), 2 * M_PI);
 }
 
-TEST(math, sqr) {
+TEST(Math, Sqr) {
   // sqr(a) == (a * a)
   EXPECT_DOUBLE_EQ(math::sqr(math::pi<double>()), M_PI * M_PI);
 }
 
-TEST(math, normalize_angle) {
+TEST(Math, Normalizeangle) {
   // normalize_angle(x + kπ) == x
   EXPECT_NEAR(math::normalize_angle(720.001, -180.0, 360.0), 0.001, 1e-12);
   EXPECT_DOUBLE_EQ(math::normalize_angle(180.0, -180.0, 360.0), -180.0);
@@ -43,45 +43,53 @@ TEST(math, normalize_angle) {
                    M_PI * 0.5);
 }
 
-TEST(math, remainder) {
+TEST(Math, Remainder) {
   // x % y like Python
   EXPECT_EQ(math::remainder(360, 181), 179);
   EXPECT_EQ(math::remainder(360, -181), -2);
 }
 
-TEST(math, sind) {
+TEST(Math, Sind) {
   // sind(x) == sin(x * π / 180)
-  for (double x = -720; x <= 720; x += 0.1) {
+  auto x = -720.0;
+  while (x <= 720.0) {
     EXPECT_NEAR(math::sind(x), std::sin(math::radians(x)), 1e-12);
+    x += 0.1;
   }
 }
 
-TEST(math, cosd) {
+TEST(Math, Cosd) {
   // cosd(x) == cos(x * π / 180)
-  for (double x = -720; x <= 720; x += 0.1) {
+  auto x = -720.0;
+  while (x <= 720) {
     EXPECT_NEAR(math::cosd(x), std::cos(math::radians(x)), 1e-12);
+    x += 0.1;
   }
 }
 
-TEST(math, sincosd) {
+TEST(Math, Sincosd) {
   // sincosd(x) == sin(x * π / 180), cos(x * π / 180)
-  for (double x = -720; x <= 720; x += 0.1) {
+  auto x = -720.0;
+  while (x <= 720) {
     auto [sinx, cosx] = math::sincosd(x);
     EXPECT_NEAR(sinx, std::sin(math::radians(x)), 1e-12);
     EXPECT_NEAR(cosx, std::cos(math::radians(x)), 1e-12);
+    x += 0.1;
   }
 }
 
-TEST(math, tand) {
+TEST(Math, Tand) {
   // tand(x) == tan(x * π / 180)
-  for (double x = -720; x <= 720; x += 0.1) {
+  auto x = -720.0;
+  while (x <= 720) {
     if (std::remainder(x, 90) > 1e-9) {
       EXPECT_NEAR(math::tand(x), std::tan(math::radians(x)), 1e-9);
     }
+    x += 0.1;
   }
 }
 
-TEST(math, atan2d) {
+TEST(Math, Atan2d) {
   // atan2d(x, y) == atan2(x, y) * 180 / π
   std::uniform_real_distribution<double> dist(-1000, 1000);
   std::default_random_engine re;
@@ -91,7 +99,7 @@ TEST(math, atan2d) {
   }
 }
 
-TEST(math, atand) {
+TEST(Math, Atand) {
   // math::atand(x) == atan(x) * 180 / π
   std::uniform_real_distribution<double> dist(-1000, 1000);
   std::default_random_engine re;
@@ -101,7 +109,7 @@ TEST(math, atand) {
   }
 }
 
-TEST(math, is_same) {
+TEST(Math, Issame) {
   EXPECT_TRUE(math::is_same<double>(M_PI, math::pi<float>(), 1e-6));
   EXPECT_FALSE(math::is_same<double>(M_PI, math::pi<float>(), 1e-12));
 
@@ -109,7 +117,7 @@ TEST(math, is_same) {
   EXPECT_FALSE(math::is_same<int64_t>(1, 2, 0));
 }
 
-TEST(math, fill_value) {
+TEST(Math, Fillvalue) {
   auto float_ = math::Fill<float>();
   EXPECT_TRUE(std::isnan(float_.value()));
   EXPECT_TRUE(float_.is(float_.value()));
@@ -129,7 +137,7 @@ TEST(math, fill_value) {
   EXPECT_TRUE(int_.is_not(1));
 }
 
-TEST(math, is_within) {
+TEST(Math, Iswithin) {
   double step = 0.1;
   double value = 26.0 + 58 * step;
   EXPECT_TRUE(math::is_within(value, 31.8, 1));
@@ -142,7 +150,7 @@ TEST(math, is_within) {
   EXPECT_TRUE(math::is_within(from, to, 3));
 }
 
-TEST(math, is_almost_zero) {
+TEST(Math, Isalmostzero) {
   EXPECT_TRUE(
       math::is_almost_zero(0.0, std::numeric_limits<double>::epsilon()));
   EXPECT_FALSE(
@@ -150,13 +158,13 @@ TEST(math, is_almost_zero) {
                            std::numeric_limits<double>::epsilon()));
 }
 
-TEST(math, sinc) {
+TEST(Math, Sinc) {
   EXPECT_FLOAT_EQ(math::sinc(0.0), 1.0);
   EXPECT_NEAR(math::sinc(0.1), 0.983631643083466, 1e-6);
   EXPECT_NEAR(math::sinc(0.5), 0.6366197723675814, 1e-6);
 }
 
-TEST(math, power2) {
+TEST(Math, Power2) {
   EXPECT_DOUBLE_EQ(math::power2(0.0), 1.0);
   EXPECT_DOUBLE_EQ(math::power2(1.0), 2.0);
   EXPECT_DOUBLE_EQ(math::power2(16.0), 65536.0);
@@ -164,7 +172,7 @@ TEST(math, power2) {
   EXPECT_DOUBLE_EQ(math::power2(-16.0), 1.52587890625e-05);
 }
 
-TEST(math, power10) {
+TEST(Math, Power10) {
   EXPECT_DOUBLE_EQ(math::power10(0), 1.0);
   EXPECT_DOUBLE_EQ(math::power10(1), 10.0);
   EXPECT_DOUBLE_EQ(math::power10(10), 1e10);

@@ -51,7 +51,7 @@ static void test_3d(math::RadialBasisFunction function) {
   }
 }
 
-TEST(math_rbf, 1d) {
+TEST(MathRbf, 1d) {
   test_1d(math::RadialBasisFunction::Cubic);
   test_1d(math::RadialBasisFunction::Gaussian);
   test_1d(math::RadialBasisFunction::InverseMultiquadric);
@@ -60,7 +60,7 @@ TEST(math_rbf, 1d) {
   test_1d(math::RadialBasisFunction::ThinPlate);
 }
 
-TEST(math_rbf, 2d) {
+TEST(MathRbf, 2d) {
   test_2d(math::RadialBasisFunction::Cubic);
   test_2d(math::RadialBasisFunction::Gaussian);
   test_2d(math::RadialBasisFunction::InverseMultiquadric);
@@ -69,7 +69,7 @@ TEST(math_rbf, 2d) {
   test_2d(math::RadialBasisFunction::ThinPlate);
 }
 
-TEST(math_rbf, 3d) {
+TEST(MathRbf, 3d) {
   test_3d(math::RadialBasisFunction::Cubic);
   test_3d(math::RadialBasisFunction::Gaussian);
   test_3d(math::RadialBasisFunction::InverseMultiquadric);
@@ -78,7 +78,7 @@ TEST(math_rbf, 3d) {
   test_3d(math::RadialBasisFunction::ThinPlate);
 }
 
-TEST(math_rbf, point) {
+TEST(MathRbf, Point) {
   Eigen::Matrix<double, 3, 50> x = Eigen::Matrix<double, 3, 50>::Random();
   Eigen::Matrix<double, 50, 1> y =
       (x.row(0).array().pow(2) - x.row(1).array().pow(2)).array().exp();

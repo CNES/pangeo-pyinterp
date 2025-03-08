@@ -8,7 +8,7 @@
 
 namespace math = pyinterp::detail::math;
 
-TEST(math_loess, loess) {
+TEST(MathLoess, Loess) {
   Eigen::MatrixXd coordinates(3, 4);
   Eigen::VectorXd values(4);
   Eigen::VectorXd query(3);

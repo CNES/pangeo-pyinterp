@@ -8,7 +8,7 @@
 
 namespace math = pyinterp::detail::math;
 
-TEST(math_spline2d, frame_2d) {
+TEST(MathSpline2d, Frame2d) {
   auto xr = math::Frame2D(3, 4);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
@@ -44,7 +44,7 @@ TEST(math_spline2d, frame_2d) {
   EXPECT_EQ(xr.normalize_angle(-180), 180);
 }
 
-TEST(math_spline2d, xarray_3d) {
+TEST(MathSpline2d, Xarray3d) {
   auto xr = math::Frame3D<int64_t>(3, 4, 1);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
@@ -100,7 +100,7 @@ TEST(math_spline2d, xarray_3d) {
   }
 }
 
-TEST(math_spline2d, xarray_4d) {
+TEST(MathSpline2d, Xarray4d) {
   auto xr = math::Frame4D<int64_t>(3, 4, 1, 1);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 4);
@@ -161,7 +161,7 @@ TEST(math_spline2d, xarray_4d) {
   }
 }
 
-TEST(math_spline2d, spline2d) {
+TEST(MathSpline2d, Spline2d) {
   auto xr = math::Frame2D(3, 3);
   ASSERT_EQ(xr.nx(), 3);
   ASSERT_EQ(xr.ny(), 3);

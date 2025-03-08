@@ -17,16 +17,16 @@
 
 namespace math = pyinterp::detail::math;
 
-static double x[20] = {0.00402322, 0.19509434, 0.6425439,  0.66463742,
-                       0.76523411, 0.91985221, 0.82729929, 0.21502902,
-                       0.48254104, 0.97854649, 0.61394511, 0.00583773,
-                       0.06630172, 0.57173946, 0.5881294,  0.30185368,
-                       0.18126563, 0.84524097, 0.13754961, 0.17343529};
-static double w[20] = {0.45463566, 0.46341234, 0.2072285,  0.02272363,
-                       0.76796619, 0.01987153, 0.43634701, 0.1369698,
-                       0.65012667, 0.18825124, 0.96310554, 0.31995482,
-                       0.28808939, 0.69961506, 0.97369255, 0.98436659,
-                       0.05230501, 0.8073624,  0.40509977, 0.6325752};
+static std::array<double, 20> x = {
+    0.00402322, 0.19509434, 0.6425439,  0.66463742, 0.76523411,
+    0.91985221, 0.82729929, 0.21502902, 0.48254104, 0.97854649,
+    0.61394511, 0.00583773, 0.06630172, 0.57173946, 0.5881294,
+    0.30185368, 0.18126563, 0.84524097, 0.13754961, 0.17343529};
+static std::array<double, 20> w = {
+    0.45463566, 0.46341234, 0.2072285,  0.02272363, 0.76796619,
+    0.01987153, 0.43634701, 0.1369698,  0.65012667, 0.18825124,
+    0.96310554, 0.31995482, 0.28808939, 0.69961506, 0.97369255,
+    0.98436659, 0.05230501, 0.8073624,  0.40509977, 0.6325752};
 
 using Accumulators = boost::accumulators::accumulator_set<
     double,
@@ -42,13 +42,13 @@ using Accumulators = boost::accumulators::accumulator_set<
         boost::accumulators::tag::weighted_variance(boost::accumulators::lazy)>,
     double>;
 
-TEST(math_descriptive_statistics, univariate) {
+TEST(MathDescriptiveStatistics, Univariate) {
   auto boost_acc = Accumulators();
   auto acc = math::DescriptiveStatistics<double>();
 
-  for (auto ix = 0; ix < 20; ++ix) {
-    boost_acc(x[ix], boost::accumulators::weight = 1);
-    acc(x[ix]);
+  for (double ix : x) {
+    boost_acc(ix, boost::accumulators::weight = 1);
+    acc(ix);
   }
 
   EXPECT_EQ(boost::accumulators::count(boost_acc), acc.count());
@@ -82,7 +82,7 @@ TEST(math_descriptive_statistics, univariate) {
                    copy.sum_of_weights());
 }
 
-TEST(math_descriptive_statistics, weighted) {
+TEST(MathDescriptiveStatistics, Weighted) {
   auto boost_acc = Accumulators();
   auto acc = math::DescriptiveStatistics<double>();
   auto min = std::numeric_limits<double>::max();

@@ -8,7 +8,7 @@
 
 namespace math = pyinterp::detail::math;
 
-TEST(math_bicubic, bicubic) {
+TEST(MathBicubic, Bicubic) {
   auto xr = math::Frame2D(2, 2);
 
   auto xarr = std::vector<double>{0.0, 1.0, 2.0, 3.0};

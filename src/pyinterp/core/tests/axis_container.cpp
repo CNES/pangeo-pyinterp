@@ -9,37 +9,16 @@
 namespace container = pyinterp::detail::axis::container;
 namespace math = pyinterp::detail::math;
 
-using Implementations = testing::Types<int32_t, int64_t, float, double>;
-
 template <typename T>
 class UndefinedTest : public testing::Test {
  public:
   using Axis = container::Undefined<T>;
 };
 
-class TestSuite {
- public:
-  template <typename T>
-  static std::string GetName(int) {
-    if (std::is_same_v<T, int32_t>) {
-      return "int32";
-    }
-    if (std::is_same_v<T, int64_t>) {
-      return "int64";
-    }
-    if (std::is_same_v<T, float>) {
-      return "float";
-    }
-    if (std::is_same_v<T, double>) {
-      return "double";
-    }
-    throw std::runtime_error("unsupported type");
-  }
-};
+using Types = testing::Types<int32_t, int64_t, float, double>;
+TYPED_TEST_SUITE(UndefinedTest, Types);
 
-TYPED_TEST_SUITE(UndefinedTest, Implementations, TestSuite);
-
-TYPED_TEST(UndefinedTest, undefined) {
+TYPED_TEST(UndefinedTest, Undefined) {
   // undefined axis
   auto a1 = typename TestFixture::Axis();
   a1.flip();
@@ -63,9 +42,9 @@ class IrregularTest : public testing::Test {
  public:
   using Axis = container::Irregular<T>;
 };
-TYPED_TEST_SUITE(IrregularTest, Implementations, TestSuite);
+TYPED_TEST_SUITE(IrregularTest, Types);
 
-TYPED_TEST(IrregularTest, irregular) {
+TYPED_TEST(IrregularTest, Irregular) {
   // irregular axis
   auto values = std::vector<TypeParam>{0, 1, 4, 8, 20};
   auto a1 =
@@ -110,8 +89,8 @@ TYPED_TEST(IrregularTest, irregular) {
   auto a2 =
       typename TestFixture::Axis(Eigen::Map<Eigen::Matrix<TypeParam, -1, 1>>(
           values.data(), values.size()));
-  EXPECT_FALSE(a1 == a2);
-  EXPECT_FALSE(a1 == container::Undefined<TypeParam>());
+  EXPECT_FALSE(a1.operator==(a2));
+  EXPECT_FALSE(a1.operator==(container::Undefined<TypeParam>()));
 }
 
 template <typename T>
@@ -119,9 +98,9 @@ class RegularTest : public testing::Test {
  public:
   using Axis = container::Regular<T>;
 };
-TYPED_TEST_SUITE(RegularTest, Implementations, TestSuite);
+TYPED_TEST_SUITE(RegularTest, Types);
 
-TYPED_TEST(RegularTest, irregular) {
+TYPED_TEST(RegularTest, Irregular) {
   // regular axis
   EXPECT_THROW(typename TestFixture::Axis(0, 359, 0), std::invalid_argument);
   auto a1 = typename TestFixture::Axis(0, 359, 360);
@@ -157,6 +136,6 @@ TYPED_TEST(RegularTest, irregular) {
   EXPECT_EQ(a1.size(), 360);
   EXPECT_EQ(a1, a1);
   auto a2 = typename TestFixture::Axis(-180, 179, 360);
-  EXPECT_FALSE(a1 == a2);
-  EXPECT_FALSE(a1 == container::Undefined<TypeParam>());
+  EXPECT_FALSE(a1.operator==(a2));
+  EXPECT_FALSE(a1.operator==(container::Undefined<TypeParam>()));
 }

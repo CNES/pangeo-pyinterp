@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 
-TEST(thread, dispatch) {
+TEST(Thread, Dispatch) {
   std::vector<double> src(4096);
   std::vector<double> dst(4096);
   for (auto ix = 0; ix < 4096; ++ix) {

@@ -10,14 +10,12 @@
 
 namespace detail = pyinterp::detail;
 
-using Implementations = testing::Types<int32_t, int64_t, float, double>;
-
 template <typename T>
 class AxisTest : public testing::Test {
  protected:
   AxisTest() : axis(std::make_unique<detail::Axis<T>>()) {}
 
-  virtual ~AxisTest() = default;
+  ~AxisTest() override = default;
 
   void reset_axis(const T start, const T stop, const T num, const T epsilon,
                   const bool is_circle) {
@@ -34,29 +32,10 @@ class AxisTest : public testing::Test {
   std::unique_ptr<detail::Axis<T>> axis{};
 };
 
-class AxisTestSuite {
- public:
-  template <typename T>
-  static std::string GetName(int) {
-    if (std::is_same_v<T, int32_t>) {
-      return "int32";
-    }
-    if (std::is_same_v<T, int64_t>) {
-      return "int64";
-    }
-    if (std::is_same_v<T, float>) {
-      return "float";
-    }
-    if (std::is_same_v<T, double>) {
-      return "double";
-    }
-    throw std::runtime_error("unsupported type");
-  }
-};
+using Types = testing::Types<int32_t, int64_t, float, double>;
+TYPED_TEST_SUITE(AxisTest, Types);
 
-TYPED_TEST_SUITE(AxisTest, Implementations, AxisTestSuite);
-
-TYPED_TEST(AxisTest, default_constructor) {
+TYPED_TEST(AxisTest, Defaultconstructor) {
   // undefined axis
   auto *axis = this->axis.get();
   EXPECT_TRUE(detail::math::Fill<TypeParam>::is(axis->front()));
@@ -79,7 +58,7 @@ TYPED_TEST(AxisTest, default_constructor) {
   EXPECT_FALSE(indexes.has_value());
 }
 
-TYPED_TEST(AxisTest, singleton) {
+TYPED_TEST(AxisTest, Singleton) {
   // axis with one value
   this->reset_axis(0, 1, 1, static_cast<TypeParam>(1e-6), false);
   auto *axis = this->axis.get();
@@ -105,7 +84,7 @@ TYPED_TEST(AxisTest, singleton) {
   EXPECT_THROW((void)axis->slice(0, 2), std::exception);
 }
 
-TYPED_TEST(AxisTest, binary) {
+TYPED_TEST(AxisTest, Binary) {
   // axis with two values
   this->reset_axis(0, 1, 2, static_cast<TypeParam>(1e-6), false);
   auto *axis = this->axis.get();
@@ -157,7 +136,7 @@ TYPED_TEST(AxisTest, binary) {
   EXPECT_THROW((void)axis->slice(0, 3), std::exception);
 }
 
-TYPED_TEST(AxisTest, wrap_longitude) {
+TYPED_TEST(AxisTest, Wraplongitude) {
   // axis representing a circle
   this->reset_axis(0, 359, 360, static_cast<TypeParam>(1e-6), true);
   auto *a1 = this->axis.get();
@@ -318,7 +297,7 @@ TYPED_TEST(AxisTest, wrap_longitude) {
   EXPECT_EQ(a2.coordinate_value(180), 1);
 }
 
-TYPED_TEST(AxisTest, constant_values) {
+TYPED_TEST(AxisTest, Constantvalues) {
   auto values = pyinterp::Vector<TypeParam>(5);
   values[0] = 0;
   values[1] = 1;
@@ -332,7 +311,7 @@ TYPED_TEST(AxisTest, constant_values) {
   EXPECT_THROW(this->reset_axis(values, 0, false), std::invalid_argument);
 }
 
-TEST(axis, irregular) {
+TEST(Axis, Irregular) {
   // axis with irregular pitch between values
   int64_t i1;
   std::vector<double> values;
@@ -524,7 +503,7 @@ TEST(axis, irregular) {
               60 <= axis(std::get<1>(*indexes)));
 }
 
-TYPED_TEST(AxisTest, search_indexes) {
+TYPED_TEST(AxisTest, Searchindexes) {
   // search for indexes around a value on an axis
   this->reset_axis(0, 359, 360, static_cast<TypeParam>(1e-6), true);
   auto *axis = this->axis.get();
@@ -584,7 +563,7 @@ TYPED_TEST(AxisTest, search_indexes) {
   EXPECT_FALSE(axis->find_indexes(static_cast<TypeParam>(9.9)).has_value());
 }
 
-TYPED_TEST(AxisTest, search_window) {
+TYPED_TEST(AxisTest, Searchwindow) {
   // search for indexes that frame a value around a window
   std::vector<int64_t> indexes;
   this->reset_axis(-180, 179, 360, static_cast<TypeParam>(1e-6), true);
@@ -757,7 +736,7 @@ TYPED_TEST(AxisTest, search_window) {
   ASSERT_TRUE(indexes.empty());
 }
 
-TEST(axis, timestamp) {
+TEST(Axis, Timestamp) {
   auto axis = detail::Axis<int64_t>(946684800, 946771140, 1440, 0, false);
   EXPECT_EQ(axis.find_index(946684880, true), 1);
   EXPECT_EQ(axis.find_index(946684900, true), 2);
@@ -766,7 +745,7 @@ TEST(axis, timestamp) {
   EXPECT_EQ(axis.find_index(946684900, true), 1439 - 2);
 }
 
-TYPED_TEST(AxisTest, find_nearest_index) {
+TYPED_TEST(AxisTest, Findnearestindex) {
   this->reset_axis(0, 355, 72, static_cast<TypeParam>(1e-6), true);
   auto *axis = this->axis.get();
 

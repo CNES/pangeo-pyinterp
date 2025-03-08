@@ -6,7 +6,7 @@
 
 #include "pyinterp/detail/interpolation/bilinear.hpp"
 
-TEST(Bilinear, symmetric) {
+TEST(Bilinear, Symmetric) {
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> za(4, 4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(4);
@@ -29,7 +29,7 @@ TEST(Bilinear, symmetric) {
   }
 }
 
-TEST(Bilinear, asymmetric) {
+TEST(Bilinear, Asymmetric) {
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> za(4, 4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(4);

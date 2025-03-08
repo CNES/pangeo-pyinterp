@@ -12,7 +12,7 @@
 namespace math = pyinterp::detail::math;
 namespace geometry = pyinterp::detail::geometry;
 
-TEST(math_bivariate, bilinear) {
+TEST(MathBivariate, Bilinear) {
   /// https://en.wikipedia.org/wiki/Bilinear_interpolation
   auto interpolator = math::Bilinear<geometry::Point2D, double>();
 
@@ -33,7 +33,7 @@ TEST(math_bivariate, bilinear) {
                    128.5);
 }
 
-TEST(math_bivariate, nearest) {
+TEST(MathBivariate, Nearest) {
   auto interpolator = math::Nearest<geometry::Point2D, double>();
 
   EXPECT_DOUBLE_EQ(interpolator.evaluate(geometry::Point2D<double>{14.4, 20.2},
@@ -63,7 +63,7 @@ TEST(math_bivariate, nearest) {
                    95);
 }
 
-TEST(math_bivariate, idw) {
+TEST(MathBivariate, Idw) {
   auto interpolator =
       math::InverseDistanceWeighting<geometry::Point2D, double>();
 

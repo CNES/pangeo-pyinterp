@@ -7,7 +7,7 @@
 #include "pyinterp/detail/interpolation/akima.hpp"
 #include "pyinterp/detail/interpolation/akima_periodic.hpp"
 
-TEST(Akima, interpolate) {
+TEST(Akima, Interpolate) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(5);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(5);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(4);
@@ -26,7 +26,7 @@ TEST(Akima, interpolate) {
   }
 }
 
-TEST(Akima, derivative) {
+TEST(Akima, Derivative) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(5);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(5);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(4);
@@ -45,7 +45,7 @@ TEST(Akima, derivative) {
   }
 }
 
-TEST(AkimaPeriodic, interpolate) {
+TEST(Akimaperiodic, Interpolate) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(5);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(5);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(4);

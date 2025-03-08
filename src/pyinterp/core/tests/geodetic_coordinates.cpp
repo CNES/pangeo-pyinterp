@@ -11,7 +11,7 @@
 namespace geodetic = pyinterp::detail::geodetic;
 namespace geometry = pyinterp::detail::geometry;
 
-TEST(geometry_geodetic_coordinates, lla_to_ecef) {
+TEST(GeometryGeodeticCoordinates, Llatoecef) {
   // conversion from ECEF to LLA
   auto tls_lla =
       geometry::EquatorialPoint3D<double>(1.367331864, 43.634330796, 146);
@@ -27,7 +27,7 @@ TEST(geometry_geodetic_coordinates, lla_to_ecef) {
               1e-12);
 }
 
-TEST(geometry_geodetic_coordinates, ecef_to_lla) {
+TEST(GeometryGeodeticCoordinates, Eceftolla) {
   // conversion from ECEF to LLA
   auto tls_ecef = geometry::Point3D<double>(
       4622395.2942195125, 110331.83487903349, 4378876.426388506);
@@ -43,7 +43,7 @@ TEST(geometry_geodetic_coordinates, ecef_to_lla) {
               1e-9);
 }
 
-TEST(geometry_geodetic_coordinates, lla_to_ecef_to_lla) {
+TEST(GeometryGeodeticCoordinates, Llatoeceftolla) {
   // statistical validation of the accuracy of the method used
   // (10-8 m) when converting from ECEF to LLA coordinates
 

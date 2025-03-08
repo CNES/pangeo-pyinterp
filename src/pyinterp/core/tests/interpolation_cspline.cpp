@@ -7,7 +7,7 @@
 #include "pyinterp/detail/interpolation/cspline.hpp"
 #include "pyinterp/detail/interpolation/cspline_periodic.hpp"
 
-TEST(CSpline, case_one) {
+TEST(Cspline, Caseone) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(6);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(6);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(50);
@@ -70,7 +70,7 @@ TEST(CSpline, case_one) {
   }
 }
 
-TEST(CSpline, case_two) {
+TEST(Cspline, Casetwo) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(7);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(7);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(19);
@@ -117,7 +117,7 @@ TEST(CSpline, case_two) {
   }
 }
 
-TEST(CSplinePeriodic, case_one) {
+TEST(Csplineperiodic, Caseone) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(11);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(11);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(31);

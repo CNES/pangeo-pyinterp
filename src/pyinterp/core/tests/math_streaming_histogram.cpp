@@ -25,7 +25,7 @@ auto quantile(const std::vector<double> &x, double q) {
   return (x[lo] + x[hi]) * 0.5;
 }
 
-TEST(math_streaming_histogram, push) {
+TEST(MathStreamingHistogram, Push) {
   auto instance = math::StreamingHistogram<double>(3, false);
 
   instance(10);
@@ -87,7 +87,7 @@ TEST(math_streaming_histogram, push) {
   EXPECT_EQ(bins[2].weight, 2);
 }
 
-TEST(math_streaming_histogram, sum_of_weights) {
+TEST(MathStreamingHistogram, Sumofweights) {
   auto instance = math::StreamingHistogram<double>(3, false);
   EXPECT_EQ(instance.count(), 0);
   EXPECT_EQ(instance.size(), 0);
@@ -109,7 +109,7 @@ TEST(math_streaming_histogram, sum_of_weights) {
   EXPECT_EQ(instance.sum_of_weights(), 12);
 }
 
-TEST(math_streaming_histogram, bounds) {
+TEST(MathStreamingHistogram, Bounds) {
   auto rd = std::random_device();
   auto gen = std::mt19937(rd());
   auto normal = std::normal_distribution<>();
@@ -127,7 +127,7 @@ TEST(math_streaming_histogram, bounds) {
   EXPECT_NEAR(max, instance.max(), 1e-6);
 }
 
-TEST(math_streaming_histogram, quantile) {
+TEST(MathStreamingHistogram, Quantile) {
   auto instance = math::StreamingHistogram<double>(3, false);
   instance(1, 4);
   instance(5, 3);
@@ -137,7 +137,7 @@ TEST(math_streaming_histogram, quantile) {
   EXPECT_NEAR(expected, 5.625, 1e-9);
 }
 
-TEST(math_streaming_histogram, quantile_not_enough_elements) {
+TEST(MathStreamingHistogram, Quantilenotenoughelements) {
   auto instance = math::StreamingHistogram<double>(10, false);
   for (const auto &item : std::vector<double>({31, 56, 40, 39, 82, 17})) {
     instance(item);
@@ -147,7 +147,7 @@ TEST(math_streaming_histogram, quantile_not_enough_elements) {
   EXPECT_NEAR(expected, 39.5, 1e-9);
 }
 
-TEST(math_streaming_histogram, quantile_on_left) {
+TEST(MathStreamingHistogram, Quantileonleft) {
   auto instance = math::StreamingHistogram<double>(6, false);
   for (const auto &item : std::vector<double>(
            {3.075, 1.3, 1.35, 1.225, 1.375, 1.4, 2.05, 7.6325, 5.875, 3.495})) {
@@ -167,7 +167,7 @@ TEST(math_streaming_histogram, quantile_on_left) {
   EXPECT_NEAR(expected, exact, exact * 0.05);
 }
 
-TEST(math_streaming_histogram, quantile_on_right) {
+TEST(MathStreamingHistogram, Quantileonright) {
   auto instance = math::StreamingHistogram<double>(6, false);
   for (const auto &item :
        std::vector<double>({3.075, 2.05, 25.1325, 5.875, 3.495, 50., 50.05,
@@ -184,7 +184,7 @@ TEST(math_streaming_histogram, quantile_on_right) {
   EXPECT_NEAR(expected, exact, exact * 0.01);
 }
 
-TEST(math_streaming_histogram, stats) {
+TEST(MathStreamingHistogram, Stats) {
   auto rd = std::random_device();
   auto gen = std::mt19937(rd());
   auto normal = std::normal_distribution<>();
@@ -223,7 +223,7 @@ TEST(math_streaming_histogram, stats) {
   EXPECT_NEAR(acc.kurtosis(), instance.kurtosis(), 1e-6);
 }
 
-TEST(math_streaming_histogram, merge) {
+TEST(MathStreamingHistogram, Merge) {
   auto rd = std::random_device();
   auto gen = std::mt19937(rd());
   auto normal = std::normal_distribution<>();
@@ -269,7 +269,7 @@ TEST(math_streaming_histogram, merge) {
   EXPECT_NEAR(acc.variance(), instance1.variance(), 1e-6);
 }
 
-TEST(math_streaming_histogram, quantile_out_of_bounds) {
+TEST(MathStreamingHistogram, Quantileoutofbounds) {
   auto instance = math::StreamingHistogram<double>(6, false);
   EXPECT_TRUE(std::isnan(instance.quantile(-0.2)));
 
@@ -282,7 +282,7 @@ TEST(math_streaming_histogram, quantile_out_of_bounds) {
   EXPECT_THROW(static_cast<void>(instance.quantile(10)), std::invalid_argument);
 }
 
-TEST(math_streaming_histogram, serialization) {
+TEST(MathStreamingHistogram, Serialization) {
   auto instance = math::StreamingHistogram<double>(6, false);
 
   auto dump = static_cast<std::string>(instance);
@@ -309,17 +309,17 @@ TEST(math_streaming_histogram, serialization) {
                std::invalid_argument);
 }
 
-TEST(math_streaming_histogram, weighted) {
-  static double x[20] = {0.00402322, 0.19509434, 0.6425439,  0.66463742,
-                         0.76523411, 0.91985221, 0.82729929, 0.21502902,
-                         0.48254104, 0.97854649, 0.61394511, 0.00583773,
-                         0.06630172, 0.57173946, 0.5881294,  0.30185368,
-                         0.18126563, 0.84524097, 0.13754961, 0.17343529};
-  static double w[20] = {0.45463566, 0.46341234, 0.2072285,  0.02272363,
-                         0.76796619, 0.01987153, 0.43634701, 0.1369698,
-                         0.65012667, 0.18825124, 0.96310554, 0.31995482,
-                         0.28808939, 0.69961506, 0.97369255, 0.98436659,
-                         0.05230501, 0.8073624,  0.40509977, 0.6325752};
+TEST(MathStreamingHistogram, Weighted) {
+  static std::array<double, 20> x = {
+      0.00402322, 0.19509434, 0.6425439,  0.66463742, 0.76523411,
+      0.91985221, 0.82729929, 0.21502902, 0.48254104, 0.97854649,
+      0.61394511, 0.00583773, 0.06630172, 0.57173946, 0.5881294,
+      0.30185368, 0.18126563, 0.84524097, 0.13754961, 0.17343529};
+  static std::array<double, 20> w = {
+      0.45463566, 0.46341234, 0.2072285,  0.02272363, 0.76796619,
+      0.01987153, 0.43634701, 0.1369698,  0.65012667, 0.18825124,
+      0.96310554, 0.31995482, 0.28808939, 0.69961506, 0.97369255,
+      0.98436659, 0.05230501, 0.8073624,  0.40509977, 0.6325752};
   auto acc = math::DescriptiveStatistics<double>();
   auto instance = math::StreamingHistogram<double>(20, false);
 

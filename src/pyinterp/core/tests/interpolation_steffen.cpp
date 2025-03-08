@@ -6,7 +6,7 @@
 
 #include "pyinterp/detail/interpolation/steffen.hpp"
 
-TEST(Steffen, case_one) {
+TEST(Steffen, Caseone) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(5);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(5);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(6);
@@ -31,7 +31,7 @@ TEST(Steffen, case_one) {
   }
 }
 
-TEST(Steffen, case_two) {
+TEST(Steffen, Casetwo) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(30);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(30);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(129);

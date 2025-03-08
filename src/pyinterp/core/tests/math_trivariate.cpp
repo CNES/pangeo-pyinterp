@@ -12,7 +12,7 @@
 namespace math = pyinterp::detail::math;
 namespace geometry = pyinterp::detail::geometry;
 
-TEST(math_trivariate, trivariate) {
+TEST(MathTrivariate, Trivariate) {
   auto bilinear = math::Bilinear<geometry::Point3D, double>();
 
   EXPECT_DOUBLE_EQ(bilinear.evaluate(geometry::Point3D<double>{14.5, 20.2},

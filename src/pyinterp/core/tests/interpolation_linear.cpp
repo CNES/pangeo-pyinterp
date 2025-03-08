@@ -6,7 +6,7 @@
 
 #include "pyinterp/detail/interpolation/linear.hpp"
 
-TEST(Linear, interpolate) {
+TEST(Linear, Interpolate) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(6);
@@ -25,7 +25,7 @@ TEST(Linear, interpolate) {
   }
 }
 
-TEST(Linear, derivative) {
+TEST(Linear, Derivative) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(6);

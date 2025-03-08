@@ -12,7 +12,7 @@
 namespace math = pyinterp::detail::math;
 namespace geometry = pyinterp::detail::geometry;
 
-TEST(math_binning, binning_cartesian) {
+TEST(MathBinning, Binningcartesian) {
   auto strategy = boost::geometry::strategy::area::cartesian<>();
   auto p = geometry::Point2D<double>{2, 2};
   auto p0 = geometry::Point2D<double>{1, 1};
@@ -133,7 +133,7 @@ TEST(math_binning, binning_cartesian) {
   EXPECT_EQ(std::get<3>(weights), 0);
 }
 
-TEST(math_binning, binning_spheroid) {
+TEST(MathBinning, Binningspheroid) {
   auto wgs84 = boost::geometry::srs::spheroid(6378137.0, 6356752.3142451793);
   auto strategy = boost::geometry::strategy::area::geographic<>(wgs84);
   auto p = geometry::GeographicPoint2D<double>{2, 2};

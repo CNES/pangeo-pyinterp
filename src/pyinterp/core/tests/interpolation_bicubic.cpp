@@ -6,7 +6,7 @@
 
 #include "pyinterp/detail/interpolation/bicubic.hpp"
 
-TEST(Bicubic, case_one) {
+TEST(Bicubic, Caseone) {
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> za(4, 4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(4);
@@ -28,7 +28,7 @@ TEST(Bicubic, case_one) {
   }
 }
 
-TEST(Bicubic, non_linear) {
+TEST(Bicubic, Nonlinear) {
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> za(8, 8);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(8);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(8);
@@ -53,7 +53,7 @@ TEST(Bicubic, non_linear) {
   }
 }
 
-TEST(Bicubic, non_square) {
+TEST(Bicubic, Nonsquare) {
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> za(10, 8);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(10);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(8);

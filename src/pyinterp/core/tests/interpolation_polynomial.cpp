@@ -6,7 +6,7 @@
 
 #include "pyinterp/detail/interpolation/polynomial.hpp"
 
-TEST(Polynomial, interpolate) {
+TEST(Polynomial, Interpolate) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(6);
@@ -25,7 +25,7 @@ TEST(Polynomial, interpolate) {
   }
 }
 
-TEST(Polynomial, derivative) {
+TEST(Polynomial, Derivative) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(4);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(6);

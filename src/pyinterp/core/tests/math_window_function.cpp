@@ -10,7 +10,7 @@
 
 namespace math = pyinterp::detail::math;
 
-TEST(math_window_function, hamming) {
+TEST(MathWindowFunction, Hamming) {
   auto wi = math::window::hamming(0.0, 5.0, 0.0);
   EXPECT_NEAR(wi, 1.0, 1e-6);
   wi = math::window::hamming(1.0, 5.0, 0.0);
@@ -25,7 +25,7 @@ TEST(math_window_function, hamming) {
   EXPECT_NEAR(wi, 0.07671999999999995, 1e-6);
 }
 
-TEST(math_window_function, blackman) {
+TEST(MathWindowFunction, Blackman) {
   auto wi = math::window::blackman(0.0, 5.0, 0.0);
   EXPECT_NEAR(wi, 1.0, 1e-6);
   wi = math::window::blackman(1.0, 5.0, 0.0);
@@ -40,7 +40,7 @@ TEST(math_window_function, blackman) {
   EXPECT_NEAR(wi, 0.006878761822871851, 1e-6);
 }
 
-TEST(math_window_function, flat_top) {
+TEST(MathWindowFunction, Flattop) {
   auto wi = math::window::flat_top(0.0, 5.0, 0.0);
   EXPECT_NEAR(wi, 1.000000003, 1e-6);
   wi = math::window::flat_top(1.0, 5.0, 0.0);
@@ -55,7 +55,7 @@ TEST(math_window_function, flat_top) {
   EXPECT_NEAR(wi, -0.0004210510000000013, 1e-6);
 }
 
-TEST(math_window_function, nuttall) {
+TEST(MathWindowFunction, Nuttall) {
   auto wi = math::window::nuttall(0.0, 5.0, 0.0);
   EXPECT_NEAR(wi, 0.9893589, 1e-6);
   wi = math::window::nuttall(1.0, 5.0, 0.0);
@@ -70,7 +70,7 @@ TEST(math_window_function, nuttall) {
   EXPECT_NEAR(wi, 0.011003900000000039, 1e-6);
 }
 
-TEST(math_window_function, blackman_harris) {
+TEST(MathWindowFunction, Blackmanharris) {
   auto wi = math::window::blackman_harris(0.0, 5.0, 0.0);
   EXPECT_NEAR(wi, 1.0, 1e-6);
   wi = math::window::blackman_harris(1.0, 5.0, 0.0);
@@ -85,7 +85,7 @@ TEST(math_window_function, blackman_harris) {
   EXPECT_NEAR(wi, 6.0000000000001025e-05, 1e-6);
 }
 
-TEST(math_window_function, parzen) {
+TEST(MathWindowFunction, Parzen) {
   auto wi = math::window::parzen(0.0, 5.0, 0.0);
   EXPECT_NEAR(wi, 1.0, 1e-6);
   wi = math::window::parzen(1.0, 5.0, 0.0);
@@ -100,7 +100,7 @@ TEST(math_window_function, parzen) {
   EXPECT_NEAR(wi, 0.0, 1e-6);
 }
 
-TEST(math_window_function, parzen_swot) {
+TEST(MathWindowFunction, Parzenswot) {
   auto wi = math::window::parzen_swot(0.0, 5.0, 0.0);
   EXPECT_NEAR(wi, 1.0, 1e-6);
   wi = math::window::parzen_swot(1.0, 5.0, 0.0);
@@ -115,7 +115,7 @@ TEST(math_window_function, parzen_swot) {
   EXPECT_NEAR(wi, 0.0, 1e-6);
 }
 
-TEST(math_window_function, lanczos) {
+TEST(MathWindowFunction, Lanczos) {
   auto wi = math::window::lanczos(0.0, 5.0, 2.0);
   EXPECT_NEAR(wi, 1.0, 1e-6);
   wi = math::window::lanczos(1.0, 5.0, 2.0);

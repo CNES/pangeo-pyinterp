@@ -11,7 +11,7 @@ namespace math = pyinterp::detail::math;
 
 using RTree = geometry::RTree<geometry::Point2D<double>, int64_t>;
 
-TEST(geometry_rtree, constructor) {
+TEST(GeometryRtree, Constructor) {
   auto rtree = RTree();
   EXPECT_TRUE(rtree.empty());
   rtree.insert(std::make_pair(geometry::Point2D<double>(2, 3), 0));
@@ -44,7 +44,7 @@ static auto get_coordinates() -> std::vector<RTree::value_t> {
           {geometry::Point2D<double>(7, 2), 5}};
 }
 
-TEST(geometry_rtree, query) {
+TEST(GeometryRtree, Query) {
   auto rtree = RTree();
   rtree.packing(get_coordinates());
   auto nearest = rtree.query({3, 4}, 1);
@@ -76,7 +76,7 @@ TEST(geometry_rtree, query) {
   EXPECT_EQ(nearest.size(), 3);
 }
 
-TEST(geometry_rtree, inverse_distance_weighting) {
+TEST(GeometryRtree, Inversedistanceweighting) {
   auto rtree = RTree();
   rtree.packing(get_coordinates());
 
@@ -95,7 +95,7 @@ TEST(geometry_rtree, inverse_distance_weighting) {
   EXPECT_EQ(idw.second, 0);
 }
 
-TEST(geometry_rtree, nearest) {
+TEST(GeometryRtree, Nearest) {
   auto rtree = RTree();
   rtree.packing(get_coordinates());
 
@@ -142,7 +142,7 @@ TEST(geometry_rtree, nearest) {
   EXPECT_EQ(values(2), 1);
 }
 
-TEST(geometry_rtree, nearest_within) {
+TEST(GeometryRtree, Nearestwithin) {
   auto rtree = RTree();
   rtree.packing(get_coordinates());
 
@@ -180,7 +180,7 @@ TEST(geometry_rtree, nearest_within) {
   ASSERT_EQ(values.size(), 0);
 }
 
-TEST(geometry_rtree, radial_basis_function) {
+TEST(GeometryRtree, Radialbasisfunction) {
   auto rtree = RTree();
   rtree.packing(get_coordinates());
   using PromotionType = RTree::promotion_t;

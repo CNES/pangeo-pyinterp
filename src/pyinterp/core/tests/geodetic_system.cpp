@@ -10,7 +10,7 @@
 
 namespace geodetic = pyinterp::detail::geodetic;
 
-TEST(geometry_geodetic_system, wgs84) {
+TEST(GeometryGeodeticSystem, Wgs84) {
   // WGS-84.
   auto wgs84 = geodetic::Spheroid();
   // https://fr.wikipedia.org/wiki/WGS_84
@@ -36,7 +36,7 @@ TEST(geometry_geodetic_system, wgs84) {
             "Spheroid(a=6378137, b=6356752.31, f=0.00335281066)");
 }
 
-TEST(geometry_geodetic_system, operator) {
+TEST(GeometryGeodeticSystem, Operator) {
   auto wgs84 = geodetic::Spheroid();
   // https://en.wikipedia.org/wiki/Geodetic_Reference_System_1980
   auto grs80 = geodetic::Spheroid(6'378'137, 1 / 298.257'222'101);
