@@ -155,28 +155,34 @@ auto bivariate(const Grid2D<Type> &grid, const pybind11::array_t<Coordinate> &x,
   return result;
 }
 
+/// Redirects virtual calls to Python
+template <template <class> class Point, typename T>
+class PyInterpolator : public BivariateInterpolator<Point, T> {
+ public:
+  // Forwarding constructor
+  template <typename... Args>
+  PyInterpolator(Args &&...args)
+      : BivariateInterpolator<Point, T>(std::forward<Args>(args)...) {}
+
+  inline auto evaluate(const Point<T> &p, const Point<T> &p0,
+                       const Point<T> &p1, const T &q00, const T &q01,
+                       const T &q10, const T &q11) const -> T override {
+    using CoordinateSystem = BivariateInterpolator<Point, T>;
+
+    PYBIND11_OVERLOAD_PURE(T, CoordinateSystem, "evaluate", p,
+                           p0,                   // NOLINT
+                           p1,                   // NOLINT
+                           q00, q01, q10, q11);  // NOLINT
+  }
+};
+
 template <template <class> class Point, typename T>
 void implement_bivariate_interpolator(pybind11::module &m,
                                       const std::string &prefix,
                                       const std::string &suffix) {
-  using CoordinateSystem = BivariateInterpolator<Point, T>;
-
-  /// Redirects virtual calls to Python
-  class PyInterpolator : public CoordinateSystem {
-   public:
-    using CoordinateSystem::CoordinateSystem;
-
-    auto evaluate(const Point<T> &p, const Point<T> &p0, const Point<T> &p1,
-                  const T &q00, const T &q01, const T &q10, const T &q11) const
-        -> T override {
-      PYBIND11_OVERLOAD_PURE(T, CoordinateSystem, "evaluate", p, p0,  // NOLINT
-                             p1,                                      // NOLINT
-                             q00, q01, q10, q11);                     // NOLINT
-    }
-  };
-
   /// BivariateInterpolator implemented here
-  auto interpolator = pybind11::class_<CoordinateSystem, PyInterpolator>(
+  auto interpolator = pybind11::class_<BivariateInterpolator<Point, T>,
+                                       PyInterpolator<Point, T>>(
       m, (prefix + "BivariateInterpolator" + suffix).c_str(),
       ("Bilinear interpolation in a " + suffix + " space.").c_str());
 
