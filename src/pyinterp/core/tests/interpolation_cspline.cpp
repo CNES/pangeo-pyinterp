@@ -5,9 +5,10 @@
 #include <gtest/gtest.h>
 
 #include "pyinterp/detail/interpolation/cspline.hpp"
+#include "pyinterp/detail/interpolation/cspline_not_a_knot.hpp"
 #include "pyinterp/detail/interpolation/cspline_periodic.hpp"
 
-TEST(Cspline, Caseone) {
+TEST(CSpline, CaseOne) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(6);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(6);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(50);
@@ -70,7 +71,7 @@ TEST(Cspline, Caseone) {
   }
 }
 
-TEST(Cspline, Casetwo) {
+TEST(CSpline, CaseTwo) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(7);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(7);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(19);
@@ -117,7 +118,7 @@ TEST(Cspline, Casetwo) {
   }
 }
 
-TEST(Csplineperiodic, Caseone) {
+TEST(CSplinePeriodic, CaseOne) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> xa(11);
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(11);
   Eigen::Matrix<double, Eigen::Dynamic, 1> xp(31);
@@ -163,4 +164,48 @@ TEST(Csplineperiodic, Caseone) {
   for (auto ix = 0; ix < xp.size(); ix++) {
     EXPECT_NEAR(y(ix), yp(ix), 1e-6);
   }
+}
+
+TEST(CSplineNotAKnot, CaseOne) {
+  Eigen::Matrix<double, Eigen::Dynamic, 1> xa(6);
+  Eigen::Matrix<double, Eigen::Dynamic, 1> ya(6);
+  Eigen::Matrix<double, Eigen::Dynamic, 1> yp(1);
+
+  xa << 59.3666666667, 59.3833333333, 59.4, 59.4166666667, 59.4333333333, 59.45;
+  ya << 12.4119, 12.3969, 12.3799, 12.3629, 12.3459, 12.3289;
+  yp << 59.414763;
+
+  auto interpolator =
+      pyinterp::detail::interpolation::CSplineNotAKnot<double>();
+  auto y = interpolator(xa, ya, 59.414763);
+  EXPECT_NEAR(y, 12.3648359594, 1e-6);
+
+  xa << 59.3666666667, 59.3833333333, 59.4, 59.4166666667, 59.4333333333, 59.45;
+  ya << 12.4129, 12.3979, 12.3809, 12.3639, 12.3469, 12.3309;
+  y = interpolator(xa, ya, 59.414763);
+  EXPECT_NEAR(y, 12.3658431864, 1e-6);
+
+  xa << 140.933333333, 140.95, 140.966666667, 140.983333333, 141.0,
+      141.016666667;
+  ya << 12.4984062052, 12.4984312843, 12.4964499299, 12.4994133289,
+      12.4993899423, 12.498393698;
+  y = interpolator(xa, ya, 140.976105);
+  EXPECT_NEAR(y, 12.4979912371, 1e-6);
+}
+
+TEST(CSplineNotAKnot, MinSize) {
+  auto interpolator =
+      pyinterp::detail::interpolation::CSplineNotAKnot<double>();
+  EXPECT_EQ(interpolator.min_size(), 4);
+
+  // Test with a smaller number of points, the result must be NaN
+  Eigen::Matrix<double, Eigen::Dynamic, 1> xa(4);
+  Eigen::Matrix<double, Eigen::Dynamic, 1> ya(4);
+  xa << 0.0, 1.0, 2.0, 3.0;
+  ya << 0.0, 1.0, 2.0, 3.0;
+  EXPECT_EQ(interpolator(xa, ya, 2.0), 2.0);
+
+  xa.conservativeResize(3);
+  ya.conservativeResize(3);
+  EXPECT_THROW(interpolator(xa, ya, 2.0), std::invalid_argument);
 }

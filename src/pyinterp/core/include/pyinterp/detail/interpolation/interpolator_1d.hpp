@@ -75,8 +75,8 @@ class Interpolator1D : public Interpolator<T> {
                            const T &x) const -> T = 0;
 
   /// Check if the arrays are valid.
-  virtual auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
-      -> void {
+  virtual constexpr auto compute_coefficients(const Vector<T> &xa,
+                                              const Vector<T> &ya) -> void {
     if (xa.size() != ya.size()) {
       throw std::invalid_argument("xa and ya must have the same size");
     }

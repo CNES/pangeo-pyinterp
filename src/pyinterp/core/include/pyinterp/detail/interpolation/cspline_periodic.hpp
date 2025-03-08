@@ -22,7 +22,7 @@ class CSplinePeriodic : public CSplineBase<T> {
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
-  auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
+  constexpr auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
       -> void override;
 
   /// Solve a symmetric cyclic tridiagonal system
@@ -92,8 +92,9 @@ constexpr auto CSplinePeriodic<T>::solve_symmetric_cyclic_tridiagonal(T *x)
 }
 
 template <typename T>
-auto CSplinePeriodic<T>::compute_coefficients(const Vector<T> &xa,
-                                              const Vector<T> &ya) -> void {
+constexpr auto CSplinePeriodic<T>::compute_coefficients(const Vector<T> &xa,
+                                                        const Vector<T> &ya)
+    -> void {
   Interpolator1D<T>::compute_coefficients(xa, ya);
   auto size = xa.size();
   if (this->x_.size() < size) {
