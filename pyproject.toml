@@ -2,3 +2,49 @@
 requires = ["setuptools", "cmake"]
 build-backend = "backend"
 backend-path = ["_custom_build"]
+
+[tools.ruff]
+target-version = "py312"
+line-length = 80
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 80
+
+[tool.ruff.lint]
+ignore = ["C901", "E501", "E741", "F402", "F823" ]
+select = [
+  "F",      # pyflakes
+  "E",      # pycodestyle errors
+  "W",      # pycodestyle warnings
+  "YTT",    # flake8-2020
+  "B",      # flake8-bugbear
+  "T10",    # flake8-debugger
+  "INT",    # flake8-gettext
+  "PL",     # pylint
+  "PT",     # flake8-pytest-style
+  "PIE",    # misc lints
+  "PYI",    # flake8-pyi
+  "TCH",    # type-checking imports
+  "C4",     # comprehensions
+  "PGH",    # pygrep-hooks
+  "RUF",    # Ruff-specific rules
+  "S102",   # flake8-bandit: exec-builtin
+  "NPY002", # numpy-legacy-random
+  "PERF",   # Perflint
+  "FLY",    # flynt
+  "G",      # flake8-logging-format
+  "FA",     # flake8-future-annotations
+  "SLOT",   # flake8-slots
+  "RSE"     # flake8-raise
+]
+[tool.ruff.lint.per-file-ignores]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+known-first-party = ["bang_core"]
+split-on-trailing-comma = false
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+docstring-code-format = true

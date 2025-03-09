@@ -35,7 +35,7 @@ if build_dirname.exists():
 # -- Project information -----------------------------------------------------
 
 project = 'pyinterp'
-copyright = '(2024, CNES/CLS)'
+copyright = '(2025, CNES/CLS)'
 author = 'CNES/CLS'
 
 # The short X.Y version

@@ -125,7 +125,8 @@
         "geometry": "cpp",
         "cholesky": "cpp",
         "__verbose_abort": "cpp",
-        "specialfunctions": "cpp"
+        "specialfunctions": "cpp",
+        "span": "cpp"
     },
     "python.testing.pytestArgs": [
         "."
