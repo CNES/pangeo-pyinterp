@@ -68,8 +68,8 @@ inline auto whittle_matern_covariance(
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T& sigma,
     const T& lambda) -> T {
   auto r = (p1 - p2).norm();
-  return math::sqr(sigma) * (1 + std::sqrt<T>(3) * r / lambda) *
-         std::exp<T>(-std::sqrt<T>(3) * r / lambda);
+  return math::sqr(sigma) * (T(1) + std::sqrt(T(3)) * r / lambda) *
+         std::exp(-std::sqrt(T(3)) * r / lambda);
 }
 
 /// Cauchy covariance function
