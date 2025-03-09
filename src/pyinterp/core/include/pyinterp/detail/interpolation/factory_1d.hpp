@@ -2,11 +2,11 @@
 #include <memory>
 #include <stdexcept>
 
-#include "pyinterp/detail/interpolation/akima_periodic.hpp"
 #include "pyinterp/detail/interpolation/akima.hpp"
+#include "pyinterp/detail/interpolation/akima_periodic.hpp"
+#include "pyinterp/detail/interpolation/cspline.hpp"
 #include "pyinterp/detail/interpolation/cspline_not_a_knot.hpp"
 #include "pyinterp/detail/interpolation/cspline_periodic.hpp"
-#include "pyinterp/detail/interpolation/cspline.hpp"
 #include "pyinterp/detail/interpolation/linear.hpp"
 #include "pyinterp/detail/interpolation/polynomial.hpp"
 #include "pyinterp/detail/interpolation/steffen.hpp"
