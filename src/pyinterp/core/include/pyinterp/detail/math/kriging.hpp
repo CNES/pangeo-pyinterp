@@ -88,7 +88,7 @@ inline auto exponential_covariance(
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T& sigma,
     const T& lambda) -> T {
   auto r = (p1 - p2).norm();
-  return math::sqr(sigma) * std::exp<T>(-r / lambda);
+  return math::sqr(sigma) * std::exp(-r / lambda);
 }
 
 /// Spherical covariance function
