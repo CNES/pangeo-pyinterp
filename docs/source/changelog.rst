@@ -1,6 +1,15 @@
 Changelog
 #########
 
+2015.3.0
+--------
+
+* Introduced a new fitting model, "c_spline_not_a_knot", for spline interpolation.
+* Upgraded the C++ standard to C++20.
+* Updated the pre-commit hooks in ``.pre-commit-config.yaml`` to their latest versions.
+* Increased the minimum required CMake version to 3.10.
+* Addressed tidy warnings.
+
 2024.11.0
 ---------
 
