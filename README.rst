@@ -135,9 +135,9 @@ storing a location in a database, or for indexing a location in a database.
 
 .. |Build Status| image:: https://github.com/CNES/pangeo-pyinterp/actions/workflows/ci.yaml/badge.svg
     :target: https://github.com/CNES/pangeo-pyinterp/actions
-.. |Downloads| image:: https://anaconda.org/conda-forge/pyinterp/badges/downloads.svg?service=github
-    :target: image:: https://www.anaconda.com/distribution/
-.. |Platforms| image:: https://anaconda.org/conda-forge/pyinterp/badges/platforms.svg?service=github
+.. |Downloads| image:: https://img.shields.io/conda/dn/conda-forge/pyinterp.svg?service=github
+    :target: image:: https://anaconda.org/conda-forge/pyinterp
+.. |Platforms| image:: https://img.shields.io/conda/pn/conda-forge/pyinterp.svg?service=github
     :target: https://anaconda.org/conda-forge/pyinterp
 .. |Latest Release Date| image:: https://anaconda.org/conda-forge/pyinterp/badges/latest_release_date.svg?service=github
     :target: https://github.com/CNES/pangeo-pyinterp/commits/master
