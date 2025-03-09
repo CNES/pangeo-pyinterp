@@ -140,8 +140,9 @@ def test_bicubic(pytestconfig):
     assert isinstance(z, np.ndarray)
 
     for fitting_model in [
-            'linear', 'bicubic', 'polynomial', 'c_spline', 'c_spline_periodic',
-            'akima', 'akima_periodic', 'steffen'
+            'linear', 'bicubic', 'polynomial', 'c_spline',
+            'c_spline_not_a_knot', 'c_spline_periodic', 'akima',
+            'akima_periodic', 'steffen'
     ]:
         other = grid.bicubic(collections.OrderedDict(lon=x.ravel(),
                                                      lat=y.ravel()),

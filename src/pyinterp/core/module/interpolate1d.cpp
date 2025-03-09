@@ -23,8 +23,8 @@ Args:
     bounds_error: If true, an exception is raised if the value to be
         interpolated is out of the range of the axis.
     kind: Type of spline to be used. Default is cubic spline. Possible values
-        are: ``linear``, ``c_spline``, ``c_spline_periodic``, ``akima``,
-        ``akima_periodic``, ``steffen``.
+        are: ``linear``, ``c_spline``, ``c_spline_not_a_knot``,
+        ``c_spline_periodic``, ``akima``, ``akima_periodic``, ``steffen``.
 Returns:
     The interpolated value
 )__doc__",

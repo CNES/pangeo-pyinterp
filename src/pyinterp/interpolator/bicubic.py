@@ -45,8 +45,8 @@ def bicubic(mesh: grid.Grid2D | grid.Grid3D | grid.Grid4D,
             interpolation. Defaults to ``3``.
         fitting_model: Type of interpolation to be performed.
             Supported are ``linear``, ``bicubic``, ``polynomial``, ``c_spline``,
-            ``c_spline_periodic``, ``akima``, ``akima_periodic`` and
-            ``steffen``. Default to ``bicubic``.
+            ``c_spline_not_a_knot``, ``c_spline_periodic``, ``akima``,
+            ``akima_periodic`` and ``steffen``. Default to ``bicubic``.
         boundary: A flag indicating how to handle boundaries of the frame.
 
             * ``expand``: Expand the boundary as a constant.
@@ -71,7 +71,8 @@ def bicubic(mesh: grid.Grid2D | grid.Grid3D | grid.Grid4D,
         raise ValueError('Y-axis is not increasing')
     if fitting_model not in [
             'akima_periodic', 'akima', 'bicubic', 'c_spline_periodic',
-            'c_spline', 'linear', 'polynomial', 'steffen'
+            'c_spline_not_a_knot', 'c_spline', 'linear', 'polynomial',
+            'steffen'
     ]:
         raise ValueError(f'fitting model {fitting_model!r} is not defined')
 
