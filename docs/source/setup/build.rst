@@ -15,7 +15,7 @@ C++, you must have Python 3, at least Python version 3.6, a C++ compiler and
 
 .. note::
 
-   The C++ compiler must support the ISO C++ 2017 standard
+   The C++ compiler must support the ISO C++ 2020 standard
 
 The compiling C++ requires the following development library:
     * `Boost C++ Libraries <https://www.boost.org/>`_
