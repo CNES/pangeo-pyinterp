@@ -30,13 +30,15 @@ You can install these packages on Ubuntu by typing the following command:
 You need, also, to install Python libraries before configuring and installing
 this software:
 
+* `dask <https://dask.org/>`_
 * `numpy <https://www.numpy.org/>`_
+* `xarray <http://xarray.pydata.org/en/stable/>`_
 
 You can install these packages on Ubuntu by typing the following command:
 
 .. code-block:: bash
 
-    sudo apt-get install python3-numpy
+    sudo apt-get install python3-numpy python3-xarray python3-dask
 
 Compilation
 ===========
