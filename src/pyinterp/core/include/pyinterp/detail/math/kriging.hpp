@@ -98,10 +98,10 @@ inline auto spherical_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
                                  const T& sigma, const T& lambda) -> T {
   auto r = (p1 - p2).norm();
   if (r > lambda) {
-    return 0;
+    return T(0);
   }
   return math::sqr(sigma) *
-         (1 - T(1.5) * r / lambda + T(0.5) * std::pow<T>(r / lambda, 3));
+         (T(1) - T(1.5) * r / lambda + T(0.5) * std::pow(r / lambda, T(3)));
 }
 
 /// Gaussian covariance function
