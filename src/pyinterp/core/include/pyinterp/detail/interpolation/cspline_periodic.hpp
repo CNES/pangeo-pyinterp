@@ -52,7 +52,7 @@ constexpr auto CSplinePeriodic<T>::solve_symmetric_cyclic_tridiagonal(T *x)
   gamma_(0) = this->A_(0, 1) / alpha_(0);
   delta_(0) = this->A_(size_m1, 0) / alpha_(0);
 
-  for (int i = 1; i < size_m2; i++) {
+  for (Eigen::Index i = 1; i < size_m2; i++) {
     alpha_(i) = this->A_(i, i) - this->A_(i, i - 1) * gamma_(i - 1);
     gamma_(i) = this->A_(i, i + 1) / alpha_(i);
     delta_(i) = -delta_(i - 1) * this->A_(i, i - 1) / alpha_(i);
@@ -72,7 +72,7 @@ constexpr auto CSplinePeriodic<T>::solve_symmetric_cyclic_tridiagonal(T *x)
                     alpha_(size_m2) * gamma_(size_m2) * gamma_(size_m2);
 
   z_(0) = this->b_(0);
-  for (int i = 1; i < size_m1; i++) {
+  for (Eigen::Index i = 1; i < size_m1; i++) {
     z_(i) = this->b_(i) - z_(i - 1) * gamma_(i - 1);
   }
 
@@ -85,7 +85,7 @@ constexpr auto CSplinePeriodic<T>::solve_symmetric_cyclic_tridiagonal(T *x)
   x[size_m1] = c_(size_m1);
   x[size_m2] = c_(size_m2) - gamma_(size_m2) * x[size_m1];
   if (size >= 3) {
-    for (int i = size_m3, j = 0; j <= size_m3; j++, i--) {
+    for (Eigen::Index i = size_m3, j = 0; j <= size_m3; j++, i--) {
       x[i] = c_(i) - gamma_(i) * x[i + 1] - delta_(i) * x[size_m1];
     }
   }
@@ -110,7 +110,7 @@ constexpr auto CSplinePeriodic<T>::compute_coefficients(const Vector<T> &xa,
     z_.resize(size);
   }
 
-  for (auto i = 0; i < size - 2; i++) {
+  for (Eigen::Index i = 0; i < size - 2; i++) {
     const auto h_i0 = xa[i + 1] - xa[i];
     const auto h_i1 = xa[i + 2] - xa[i + 1];
     const auto y_i0 = ya[i + 1] - ya[i];

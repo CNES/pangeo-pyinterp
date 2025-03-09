@@ -554,7 +554,9 @@ class RTree {
     // Get the distance of the furthest neighbor if radius is not specified.
     const auto furthest_neighbor =
         radius == std::numeric_limits<coordinate_t>::max()
-            ? (nearest.size() > 0 ? nearest.rbegin()->first : 0)
+            ? (nearest.size() > 0
+                   ? static_cast<coordinate_t>(nearest.rbegin()->first)
+                   : static_cast<coordinate_t>(0))
             : radius;
 
     for (const auto &item : nearest) {
