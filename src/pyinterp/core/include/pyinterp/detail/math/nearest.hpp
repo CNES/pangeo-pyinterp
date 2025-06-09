@@ -17,12 +17,20 @@ namespace pyinterp::detail::math {
 template <typename T, typename U = T>
 constexpr auto nearest(const T &x, const T &x0, const T &x1, const U &y0,
                        const U &y1) noexcept -> U {
-  // we use a comparable distance, there's no need to calculate the square root
-  // here
-  auto dx0 = sqr(x0 - x);
-  auto dx1 = sqr(x1 - x);
+  // Compare absolute differences to avoid overflow from squaring
+  // and to correctly compare distances.
+  auto dx0 = x0 - x;
+  auto dx1 = x1 - x;
 
-  return dx0 < dx1 ? y0 : y1;
+  if (std::abs(dx0) < std::abs(dx1)) {
+    return y0;
+  } else if (std::abs(dx0) > std::abs(dx1)) {
+    return y1;
+  } else {
+    // If both distances are equal, return the last value
+    // to maintain consistency with the original logic.
+    return y1;
+  }
 }
 
 }  // namespace pyinterp::detail::math
