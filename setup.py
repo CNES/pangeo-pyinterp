@@ -441,7 +441,6 @@ def main():
         classifiers=[
             'Development Status :: 5 - Production/Stable',
             'Topic :: Scientific/Engineering :: Physics',
-            'License :: OSI Approved :: BSD License',
             'Natural Language :: English',
             'Operating System :: POSIX',
             'Operating System :: MacOS',
@@ -461,7 +460,8 @@ def main():
         ext_modules=[CMakeExtension(name='pyinterp.core')],
         install_requires=install_requires,
         keywords='interpolation, geospatial, geohash, geodetic',
-        license='BSD License',
+        license='BSD-3-Clause',
+        license_files=('LICENSE',),
         long_description=long_description(),
         long_description_content_type='text/x-rst',
         name='pyinterp',
