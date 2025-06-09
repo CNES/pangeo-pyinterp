@@ -461,7 +461,7 @@ def main():
         install_requires=install_requires,
         keywords='interpolation, geospatial, geohash, geodetic',
         license='BSD-3-Clause',
-        license_files=('LICENSE',),
+        license_files=('LICENSE', ),
         long_description=long_description(),
         long_description_content_type='text/x-rst',
         name='pyinterp',
