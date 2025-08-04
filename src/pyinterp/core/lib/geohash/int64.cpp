@@ -4,16 +4,20 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/geohash/int64.hpp"
 
+#if defined(__x86_64__) || defined(_M_X64)
 #include <immintrin.h>
-
-#include <array>
-#include <bit>
-#include <iostream>
 #ifdef _WIN32
 #include <intrin.h>
 #else
 #include <cpuid.h>
 #endif
+#endif
+
+#include <array>
+#include <bit>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
 // Ref: https://mmcloughlin.com/posts/geohash-assembly
 namespace pyinterp::geohash::int64 {
@@ -99,6 +103,7 @@ constexpr auto encode(const double lat, const double lon) -> uint64_t {
   return interleave(encode_range(lat, 90), encode_range(lon, 180));
 }
 
+#if defined(__x86_64__) || defined(_M_X64)
 #if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("bmi2")))
 #endif
@@ -118,9 +123,16 @@ encode_bmi2(const double lat, const double lon) -> uint64_t {
 
   return (x << 1U) | y;
 }
+#else
+inline auto encode_bmi2(const double lat, const double lon) -> uint64_t {
+  throw std::runtime_error(
+      "BMI2 instructions are not supported on this platform.");
+}
+#endif
 
 // Deinterleave the bits of x into 32-bit words containing the even and odd
 // bitlevels of x, respectively.
+#if defined(__x86_64__) || defined(_M_X64)
 #if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("bmi2")))
 #endif
@@ -133,6 +145,13 @@ deinterleave_bmi2(const uint64_t x) -> std::tuple<uint32_t, uint32_t> {
   return std::make_tuple(static_cast<uint32_t>(lat),
                          static_cast<uint32_t>(lon));
 }
+#else
+inline auto deinterleave_bmi2(const uint64_t x)
+    -> std::tuple<uint32_t, uint32_t> {
+  throw std::runtime_error(
+      "BMI2 instructions are not supported on this platform.");
+}
+#endif
 
 }  // namespace codec
 
@@ -142,13 +161,13 @@ using encoder_t = uint64_t (*)(double, double);
 // Pointer to the bits extracting function.
 using deinterleaver_t = std::tuple<uint32_t, uint32_t> (*)(uint64_t);
 
-// Can the CPU use the BIM2 instruction set?
-static const bool have_bim2 = codec::has_bmi2();
+// Can the CPU use the BMI2 instruction set?
+static const bool have_bmi2 = codec::has_bmi2();
 
 // Sets the encoding/decoding functions according to the CPU capacity
-static encoder_t const encoder = have_bim2 ? codec::encode_bmi2 : codec::encode;
+static encoder_t const encoder = have_bmi2 ? codec::encode_bmi2 : codec::encode;
 static deinterleaver_t const deinterleaver =
-    have_bim2 ? codec::deinterleave_bmi2 : codec::deinterleave;
+    have_bmi2 ? codec::deinterleave_bmi2 : codec::deinterleave;
 
 // ---------------------------------------------------------------------------
 auto format_bytes(size_t bytes) -> std::string {
