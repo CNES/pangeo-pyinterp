@@ -4,8 +4,16 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/geohash/int64.hpp"
 
+#include <immintrin.h>
+
 #include <array>
+#include <bit>
 #include <iostream>
+#ifdef _WIN32
+#include <intrin.h>
+#else
+#include <cpuid.h>
+#endif
 
 // Ref: https://mmcloughlin.com/posts/geohash-assembly
 namespace pyinterp::geohash::int64 {
@@ -16,21 +24,18 @@ static constexpr auto inv_exp232 = 1.0 / exp232;  // 1 / 2^32;
 
 // Returns true if the CPU supports Bit Manipulation Instruction Set 2 (BMI2)
 inline auto has_bmi2() noexcept -> bool {
+#if defined(__x86_64__) || defined(_M_X64)
+  std::array<unsigned int, 4> registers{};
 #ifdef _WIN32
-  auto registers = std::array<int, 4>();
-  __cpuidex(registers.data(), 7, 0);
-  return (registers[1] & (1U << 8U)) != 0;
-#elif defined(__x86_64__)
-  uint32_t ebx;
-  asm("movl $7, %%eax;"
-      "movl $0, %%ecx;"
-      "cpuid;"
-      "movl %%ebx, %0;"
-      : "=r"(ebx)
-      :
-      : "eax", "ecx", "ebx");
-  return (ebx & (1U << 8U)) != 0;
+  __cpuidex(reinterpret_cast<int *>(registers.data()), 7, 0);
 #else
+  // Use the __cpuid_count intrinsic for GCC/Clang
+  __cpuid_count(7, 0, registers[0], registers[1], registers[2], registers[3]);
+#endif
+  // BMI2 is feature bit 8 in EBX for leaf 7.
+  return (registers[1] & (1U << 8U)) != 0;
+#else
+  // Not an x86-64 architecture, so no BMI2.
   return false;
 #endif
 }
@@ -94,85 +99,36 @@ constexpr auto encode(const double lat, const double lon) -> uint64_t {
   return interleave(encode_range(lat, 90), encode_range(lon, 180));
 }
 
-// Get the representation of x as a 64-bit integer.
-inline auto shrq(const double x) -> uint64_t {
-  uint64_t result;
-#ifdef _WIN32
-  result = _mm_cvtsi128_si64(_mm_castpd_si128(_mm_loaddup_pd(&x))) >> 20U;
-#elif defined(__x86_64__)
-  asm("movd %1, %%xmm0;"
-      "movq %%xmm0, %%r8;"
-      "shrq $20, %%r8;"
-      "movq %%r8, %0;"
-      : "=r"(result)
-      : "r"(x)
-      : "r8", "xmm0");
-#else
-  throw std::runtime_error("shrq not implemented");
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((target("bmi2")))
 #endif
-  return result;
-}
+inline auto
+encode_bmi2(const double lat, const double lon) -> uint64_t {
+  auto shrq = [](const double val) {
+    return std::bit_cast<uint64_t>(val) >> 20U;
+  };
 
-// Deposit contiguous low bits from unsigned 64-bit integer x to the function
-// result at the corresponding bit locations specified by mask; all other bits
-// in the function result are set to zero.
-inline auto pdepq(const uint64_t x, const uint64_t mask) -> uint64_t {
-  uint64_t result;
-#ifdef _WIN32
-  result = _pdep_u64(x, mask);
-#elif defined(__x86_64__)
-  asm("movq %1, %%r9;"
-      "movq %2, %%r8;"
-      "pdepq %%r9, %%r8, %%r10;"
-      "movq %%r10, %0;"
-      : "=r"(result)
-      : "r"(mask), "r"(x)
-      : "r8", "r9", "r10");
-#else
-  throw std::runtime_error("pdepq not implemented");
-#endif
-  return result;
-}
-
-// Extract bits from unsigned 64-bit integer x at the corresponding bit
-// locations specified by mask to contiguous low bits to the function result;
-// the remaining upper bits in the result function are set to zero.
-inline auto pextq(const uint64_t x, const uint64_t mask) -> uint64_t {
-  uint64_t result;
-#ifdef _WIN32
-  result = _pext_u64(x, mask);
-#elif defined(__x86_64__)
-  asm("movq %1, %%r9;"
-      "movq %2, %%r8;"
-      "pextq %%r9, %%r8, %%r10;"
-      "movq %%r10, %0;"
-      : "=r"(result)
-      : "r"(mask), "r"(x)
-      : "r8", "r9", "r10");
-#else
-  throw std::runtime_error("pextq not implemented");
-#endif
-  return result;
-}
-
-// Encodes the point (lat, lon) to a 64-bit integer geohash using the Bit
-// Manipulation Instruction Set 2.
-static auto encode_bim2(const double lat, const double lon) -> uint64_t {
-  auto y = pdepq(
+  // The explicit _pdep_u64 calls require BMI2 support.
+  auto y = _pdep_u64(
       lat == 90.0 ? 0X3FFFFFFFFFF : shrq(1.5 + (lat * 0.005555555555555556)),
-      0x5555555555555555);
-  auto x = pdepq(
+      0x5555555555555555UL);
+  auto x = _pdep_u64(
       lon == 180.0 ? 0X3FFFFFFFFFF : shrq(1.5 + (lon * 0.002777777777777778)),
-      0x5555555555555555);
+      0x5555555555555555UL);
+
   return (x << 1U) | y;
 }
 
 // Deinterleave the bits of x into 32-bit words containing the even and odd
 // bitlevels of x, respectively.
-static auto deinterleave_bim2(const uint64_t x)
-    -> std::tuple<uint32_t, uint32_t> {
-  auto lat = pextq(x, 0x5555555555555555);
-  auto lon = pextq(x, 0XAAAAAAAAAAAAAAAA);
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((target("bmi2")))
+#endif
+inline auto
+deinterleave_bmi2(const uint64_t x) -> std::tuple<uint32_t, uint32_t> {
+  // The explicit _pext_u64 calls require BMI2 support.
+  auto lat = _pext_u64(x, 0x5555555555555555UL);
+  auto lon = _pext_u64(x, 0XAAAAAAAAAAAAAAAAUL);
 
   return std::make_tuple(static_cast<uint32_t>(lat),
                          static_cast<uint32_t>(lon));
@@ -190,9 +146,9 @@ using deinterleaver_t = std::tuple<uint32_t, uint32_t> (*)(uint64_t);
 static const bool have_bim2 = codec::has_bmi2();
 
 // Sets the encoding/decoding functions according to the CPU capacity
-static encoder_t const encoder = have_bim2 ? codec::encode_bim2 : codec::encode;
+static encoder_t const encoder = have_bim2 ? codec::encode_bmi2 : codec::encode;
 static deinterleaver_t const deinterleaver =
-    have_bim2 ? codec::deinterleave_bim2 : codec::deinterleave;
+    have_bim2 ? codec::deinterleave_bmi2 : codec::deinterleave;
 
 // ---------------------------------------------------------------------------
 auto format_bytes(size_t bytes) -> std::string {
