@@ -1,6 +1,13 @@
 Changelog
 #########
 
+2025.8.0
+--------
+* Update subproject commit for pybind11 to v3.0.0
+* Update copyright year in LICENSE and specify license type in setup.py
+* Refactor nearest function to compare absolute distances directly, improving
+  clarity and consistency in logic (#32).
+
 2015.3.0
 --------
 
