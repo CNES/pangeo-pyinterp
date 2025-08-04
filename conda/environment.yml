@@ -1,6 +1,6 @@
 name: pyinterp
 dependencies:
-  - boost-cpp
+  - boost-devel
   - cartopy>=0.20.0
   - cmake
   - coverage
