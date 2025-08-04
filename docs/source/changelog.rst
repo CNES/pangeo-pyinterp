@@ -1,6 +1,13 @@
 Changelog
 #########
 
+2025.8.1
+--------
+* [Fix] Refactored BMI2-related functions to use _pdep_u64 and _pext_u64
+  directly, removed custom assembly implementations, fixed a typo in have_bim2
+  (renamed to have_bmi2), and added missing include headers for better
+  compatibility and maintainability.
+
 2025.8.0
 --------
 * Update subproject commit for pybind11 to v3.0.0
