@@ -126,7 +126,8 @@
         "cholesky": "cpp",
         "__verbose_abort": "cpp",
         "specialfunctions": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "diff": "cpp"
     },
     "python.testing.pytestArgs": [
         "."
