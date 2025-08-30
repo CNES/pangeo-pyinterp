@@ -24,7 +24,7 @@ Changelog
 * Refactor nearest function to compare absolute distances directly, improving
   clarity and consistency in logic (#32).
 
-2015.3.0
+2025.3.0
 --------
 
 * Introduced a new fitting model, "c_spline_not_a_knot", for spline interpolation.
