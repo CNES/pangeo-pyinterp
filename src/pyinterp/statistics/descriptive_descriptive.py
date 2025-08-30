@@ -62,7 +62,7 @@ class DescriptiveStatistics:
     Args:
         values: Array containing numbers whose statistics are desired.
 
-            . note::
+            .. note::
 
                 NaNs are automatically ignored.
 
@@ -73,7 +73,7 @@ class DescriptiveStatistics:
         dtype: Data type of the returned array. By default, the data type is
             ``numpy.float64``.
 
-    . seealso::
+    .. seealso::
 
         Pébay, P., Terriberry, T.B., Kolla, H. et al.
         Numerically stable, scalable formulas for parallel and online
