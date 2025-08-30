@@ -33,6 +33,9 @@ using WindowFunction = detail::math::window::Function;
 /// Type of covariance functions exposed in the Python module.
 using CovarianceFunction = detail::math::CovarianceFunction;
 
+/// Type of drift functions exposed in the Python module.
+using DriftFunction = detail::math::DriftFunction;
+
 /// RTree spatial index for geodetic point
 ///
 /// @note
@@ -317,29 +320,30 @@ class RTree : public detail::geometry::RTree<Point, Type> {
     }
   }
 
-  auto universal_kriging(const array_t &coordinates,
-                         const std::optional<coordinate_t> &radius,
-                         const uint32_t k, const CovarianceFunction cov,
-                         const coordinate_t sigma, const coordinate_t lambda,
-                         const bool within, const size_t num_threads) const
-      -> pybind11::tuple {
+  auto kriging(const array_t &coordinates,
+               const std::optional<coordinate_t> &radius, const uint32_t k,
+               const CovarianceFunction cov,
+               const std::optional<DriftFunction> &drift_function,
+               const coordinate_t sigma, const coordinate_t lambda,
+               const coordinate_t nugget, const bool within,
+               const size_t num_threads) const -> pybind11::tuple {
     detail::check_array_ndim("coordinates", 2, coordinates);
 
     switch (coordinates.shape(1)) {
       case dimension_t::value - 1:
-        return _universal_kriging<dimension_t::value - 1>(
+        return _kriging<dimension_t::value - 1>(
             ecef_ ? &RTree<Point, Type>::from_xy
                   : &RTree<Point, Type>::from_lon_lat,
             coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, cov,
-            sigma, lambda, within, num_threads);
+            drift_function, sigma, lambda, nugget, within, num_threads);
       case dimension_t::value:
-        return _universal_kriging<dimension_t::value>(
+        return _kriging<dimension_t::value>(
             ecef_ ? &RTree<Point, Type>::from_xyz
                   : &RTree<Point, Type>::from_lon_lat,
             coordinates,
             radius.value_or(std::numeric_limits<coordinate_t>::max()), k, cov,
-            sigma, lambda, within, num_threads);
+            drift_function, sigma, lambda, nugget, within, num_threads);
       default:
         throw std::invalid_argument(RTree<Point, Type>::invalid_shape());
     }
@@ -728,18 +732,19 @@ class RTree : public detail::geometry::RTree<Point, Type> {
 
   /// Linear interpolation
   template <size_t M>
-  auto _universal_kriging(Converter converter,
-                          const pybind11::array_t<coordinate_t> &coordinates,
-                          const coordinate_t radius, const uint32_t k,
-                          const CovarianceFunction &cov,
-                          const coordinate_t sigma, const coordinate_t lambda,
-                          const bool within, const size_t num_threads) const
-      -> pybind11::tuple {
+  auto _kriging(Converter converter,
+                const pybind11::array_t<coordinate_t> &coordinates,
+                const coordinate_t radius, const uint32_t k,
+                const CovarianceFunction &cov,
+                const std::optional<DriftFunction> &drift_function,
+                const coordinate_t sigma, const coordinate_t lambda,
+                const coordinate_t nugget, const bool within,
+                const size_t num_threads) const -> pybind11::tuple {
     auto _coordinates = coordinates.template unchecked<2>();
     auto size = coordinates.shape(0);
 
-    auto kriging_handler =
-        detail::math::Kriging<promotion_t>(sigma, lambda, cov);
+    auto kriging_handler = detail::math::Kriging<promotion_t>(
+        sigma, lambda, nugget, cov, drift_function);
 
     // Allocation of result vectors.
     auto data =
@@ -767,8 +772,8 @@ class RTree : public detail::geometry::RTree<Point, Type> {
                     std::invoke(converter, *this,
                                 Eigen::Map<const Vector<coordinate_t>>(
                                     &_coordinates(ix, 0), M)));
-                auto result = base_t::universal_kriging(
-                    point, radius, k, within, kriging_handler);
+                auto result =
+                    base_t::kriging(point, radius, k, within, kriging_handler);
                 _data(ix) = result.first;
                 _neighbors(ix) = result.second;
               }

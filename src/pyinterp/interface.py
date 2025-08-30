@@ -9,6 +9,7 @@ Interface with the library core
 from __future__ import annotations
 
 import re
+import warnings
 
 import numpy
 
@@ -23,6 +24,7 @@ __all__ = [
     '_core_function',
     '_core_radial_basis_function',
     '_core_window_function',
+    '_core_drift_function',
 ]
 
 
@@ -108,8 +110,33 @@ def _core_covariance_function(
             'whittle_matern',
     ]:
         raise ValueError(f'Covariance function {covariance!r} is not defined')
+    if covariance == 'whittle_matern':
+        warnings.warn(
+            'Covariance function "whittle_matern" is '
+            'deprecated. Use "matern_32" instead.',
+            DeprecationWarning,
+            stacklevel=3)
+    if covariance == 'exponential':
+        warnings.warn(
+            'Covariance function "exponential" is '
+            'deprecated. Use "matern_12" instead.',
+            DeprecationWarning,
+            stacklevel=3)
     covariance = '_'.join(item.capitalize() for item in covariance.split('_'))
     return getattr(core.CovarianceFunction, covariance)
+
+
+def _core_drift_function(drift: str | None) -> core.DriftFunction | None:
+    if drift is None:
+        return None
+
+    if drift not in [
+            'linear',
+            'quadratic',
+    ]:
+        raise ValueError(f'Drift function {drift!r} is not defined')
+    drift = '_'.join(item.capitalize() for item in drift.split('_'))
+    return getattr(core.DriftFunction, drift)
 
 
 def _core_radial_basis_function(

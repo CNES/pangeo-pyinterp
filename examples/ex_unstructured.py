@@ -69,8 +69,8 @@ mesh.packing(numpy.vstack((lons, lats)).T, data)
 #   <pyinterp.RTree.radial_basis_function>` or RBF
 # * :py:meth:`Window Function
 #   <pyinterp.RTree.window_function>`
-# * :py:meth:`Universal Kriging
-#   <pyinterp.RTree.universal_kriging>`
+# * :py:meth:`Kriging
+#   <pyinterp.RTree.kriging>`
 #
 # Inverse Distance Weighting (IDW), Radial Basis Function (RBF), and Kriging are
 # all interpolation methods used to estimate a value for a target location based
@@ -170,12 +170,14 @@ wf = wf.reshape(mx.shape)
 
 # %%
 # Interpolation with a Universal Kriging
-kriging, neighbors = mesh.universal_kriging(
+kriging, neighbors = mesh.kriging(
     numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,
     covariance='gaussian',
-    alpha=1_000_000,
+    drift_function='linear',  # linear trend in (x,y[,z])
+    nugget=1e-6,
+    alpha=1_000_000,  # range parameter (meters)
     num_threads=0)
 kriging = kriging.reshape(mx.shape)
 

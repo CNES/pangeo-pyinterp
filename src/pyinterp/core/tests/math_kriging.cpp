@@ -30,6 +30,6 @@ TEST(MathLoess, Loess) {
 
   auto interpolator = math::Kriging<double>(1, 0.25, math::kMatern_52);
 
-  auto x = interpolator.universal_kriging(coordinates, values, query);
+  auto x = interpolator(coordinates, values, query);
   EXPECT_NEAR(x, 0.0388, 1e-3);
 }

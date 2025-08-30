@@ -342,12 +342,11 @@ class RTree {
   /// @param within If true, the method ensures that the neighbors found are
   /// located around the point of interest. In other words, this parameter
   /// ensures that the calculated values will not be extrapolated.
-  /// @param kriging The kriging model to be used.
+  /// @param model The kriging model to be used.
   /// @return a tuple containing the interpolated value and the number of
   /// neighbors used in the calculation.
-  auto universal_kriging(const Point &point, const coordinate_t radius,
-                         const uint32_t k, const bool within,
-                         const math::Kriging<promotion_t> &kriging) const
+  auto kriging(const Point &point, const coordinate_t radius, const uint32_t k,
+               const bool within, const math::Kriging<promotion_t> &model) const
       -> std::pair<coordinate_t, uint32_t> {
     auto [coordinates, values] =
         within ? nearest_within(point, boost::geometry::default_strategy(),
@@ -359,9 +358,8 @@ class RTree {
     auto requested_point = Eigen::Vector3<promotion_t>(
         boost::geometry::get<0>(point), boost::geometry::get<1>(point),
         boost::geometry::get<2>(point));
-    return std::make_pair(
-        kriging.universal_kriging(coordinates, values, requested_point),
-        static_cast<uint32_t>(coordinates.cols()));
+    return std::make_pair(model(coordinates, values, requested_point),
+                          static_cast<uint32_t>(coordinates.cols()));
   }
 
   /// Search for the nearest K neighbors of a given point using the given

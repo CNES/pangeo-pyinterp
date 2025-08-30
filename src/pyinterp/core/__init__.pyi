@@ -485,14 +485,12 @@ class BivariateInterpolator3D:
 class CovarianceFunction:
     __members__: ClassVar[dict] = ...  # read-only
     Cauchy: ClassVar[CovarianceFunction] = ...
-    Exponential: ClassVar[CovarianceFunction] = ...
     Gaussian: ClassVar[CovarianceFunction] = ...
     Linear: ClassVar[CovarianceFunction] = ...
     Matern_12: ClassVar[CovarianceFunction] = ...
     Matern_32: ClassVar[CovarianceFunction] = ...
     Matern_52: ClassVar[CovarianceFunction] = ...
     Spherical: ClassVar[CovarianceFunction] = ...
-    WhittleMatern: ClassVar[CovarianceFunction] = ...
     __entries: ClassVar[dict] = ...
 
     def __init__(self, value: int) -> None:
@@ -632,6 +630,46 @@ class DescriptiveStatisticsFloat64:
 
     def __setstate__(self, state: tuple) -> None:
         ...
+
+
+class DriftFunction:
+    __members__: ClassVar[dict] = ...  # read-only
+    Linear: ClassVar[DriftFunction] = ...
+    Quadratic: ClassVar[DriftFunction] = ...
+    __entries: ClassVar[dict] = ...
+
+    def __init__(self, value: int) -> None:
+        ...
+
+    def __eq__(self, other: object) -> bool:
+        ...
+
+    def __getstate__(self) -> int:
+        ...
+
+    def __hash__(self) -> int:
+        ...
+
+    def __index__(self) -> int:
+        ...
+
+    def __int__(self) -> int:
+        ...
+
+    def __ne__(self, other: object) -> bool:
+        ...
+
+    def __setstate__(self, state: int) -> None:
+        ...
+
+    @property
+    def name(self) -> str:
+        ...
+
+    @property
+    def value(self) -> int:
+        ...
+
 
 
 class GeoHash:
@@ -1356,13 +1394,15 @@ class RTree3DFloat32:
                               num_threads: int = ...) -> tuple:
         ...
 
-    def universal_kriging(self,
+    def kriging(self,
                           coordinates: ArrayFloat32,
                           radius: Optional[float] = ...,
                           k: int = ...,
                           covariance: CovarianceFunction = ...,
+                          drift: DriftFunction | None = ...,
                           sigma: float = ...,
                           alpha: float = ...,
+                          nugget: float = ...,
                           within: bool = ...,
                           num_threads: int = ...) -> tuple:
         ...
@@ -1447,13 +1487,15 @@ class RTree3DFloat64:
                               num_threads: int = ...) -> tuple:
         ...
 
-    def universal_kriging(self,
+    def kriging(self,
                           coordinates: ArrayFloat64,
                           radius: Optional[float] = ...,
                           k: int = ...,
                           covariance: CovarianceFunction = ...,
+                          drift: DriftFunction | None = ...,
                           sigma: float = ...,
                           alpha: float = ...,
+                          nugget: float = ...,
                           within: bool = ...,
                           num_threads: int = ...) -> tuple:
         ...

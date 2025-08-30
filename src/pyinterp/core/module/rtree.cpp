@@ -229,14 +229,14 @@ Returns:
     The interpolated value and the number of neighbors used for the calculation.
 )__doc__")
                .c_str())
-      .def("universal_kriging", &RTree::universal_kriging,
-           py::arg("coordinates"), py::arg("radius") = std::nullopt,
-           py::arg("k") = 9,
+      .def("kriging", &RTree::kriging, py::arg("coordinates"),
+           py::arg("radius") = std::nullopt, py::arg("k") = 9,
            py::arg("covariance") = pyinterp::CovarianceFunction::kMatern_32,
-           py::arg("sigma") = 1, py::arg("alpha") = 1'000'000,
+           py::arg("drift_function") = std::nullopt, py::arg("sigma") = 1,
+           py::arg("alpha") = 1'000'000, py::arg("nugget") = 0,
            py::arg("within") = true, py::arg("num_threads") = 0,
            (R"__doc__(
-Universal Kriging interpolation of the value at the requested position.
+Kriging interpolation of the value at the requested position.
 
 Args:
     )__doc__" +
@@ -247,13 +247,17 @@ Args:
         interpolated value. Defaults to ``9``.
     covariance: The covariance function to be used. Defaults to
         :py:attr:`pyinterp.core.CovarianceFunction.Matern_52`.
+    drift_function: The drift function to use for universal kriging. If not
+        provided, simple kriging will be used. Defaults to ``None``.
     sigma: The magnitude parameter. Determines the overall scale of the
         covariance function. It represents the maximum possible covariance
         between two points. Defaults to ``1``.
     alpha: Decay rate parameter. Determines the rate at which the covariance
         decreases. It represents the spatial scale of the covariance function
         and can be used to control the smoothness of the spatial dependence
-        structure.
+        structure. Defaults to ``1,000,000``.
+    nugget: Nugget effect term. A small positive value added to the diagonal of
+        the covariance matrix for numerical stability. Defaults to ``0``.
     within: If true, the method ensures that the neighbors found are located
         around the point of interest. Defaults to ``true``.
     num_threads: The number of threads to use for the computation. If 0 all CPUs
@@ -261,6 +265,10 @@ Args:
         which is useful for debugging. Defaults to ``0``.
 Returns:
     The interpolated value and the number of neighbors used for the calculation.
+
+.. note::
+    Universal kriging is used if a drift function is provided. Otherwise,
+    simple kriging with a known (zero) mean is used.
 )__doc__")
                .c_str())
       .def("value", &RTree::value, py::arg("coordinates"),

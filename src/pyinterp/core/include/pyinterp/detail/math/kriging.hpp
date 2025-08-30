@@ -12,22 +12,7 @@
 
 namespace pyinterp::detail::math {
 
-/// Matern covariance function
-// template <typename T>
-// inline auto matern_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
-//                               const Eigen::Ref<const Eigen::Vector3<T>>& p2,
-//                               const T& sigma, const T& lambda, const T& nu)
-//                               -> T {
-//   auto r = (p1 - p2).norm();
-//   auto result = sigma * sigma;
-//   auto d = r / lambda;
-//   auto bessel = boost::math::cyl_bessel_k(nu, d);
-//   result *= std::pow(2, 1 - nu) / boost::math::tgamma(nu);
-//   result *= std::pow(d, nu) * bessel;
-//   return result;
-// }
-
-/// Matern covariance function for nu = 0.5
+/// Matern covariance function for nu = 0.5 (i.e., exponential covariance)
 template <typename T>
 inline auto matern_covariance_12(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
                                  const Eigen::Ref<const Eigen::Vector3<T>>& p2,
@@ -61,17 +46,6 @@ inline auto matern_covariance_52(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
   return result;
 }
 
-/// Whittle-Matern covariance function
-template <typename T>
-inline auto whittle_matern_covariance(
-    const Eigen::Ref<const Eigen::Vector3<T>>& p1,
-    const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T& sigma,
-    const T& lambda) -> T {
-  auto r = (p1 - p2).norm();
-  return math::sqr(sigma) * (T(1) + std::sqrt(T(3)) * r / lambda) *
-         std::exp(-std::sqrt(T(3)) * r / lambda);
-}
-
 /// Cauchy covariance function
 template <typename T>
 inline auto cauchy_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
@@ -79,16 +53,6 @@ inline auto cauchy_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
                               const T& sigma, const T& lambda) -> T {
   auto r = (p1 - p2).norm();
   return math::sqr(sigma) / (1 + math::sqr(r / lambda));
-}
-
-/// Exponential covariance function
-template <typename T>
-inline auto exponential_covariance(
-    const Eigen::Ref<const Eigen::Vector3<T>>& p1,
-    const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T& sigma,
-    const T& lambda) -> T {
-  auto r = (p1 - p2).norm();
-  return math::sqr(sigma) * std::exp(-r / lambda);
 }
 
 /// Spherical covariance function
@@ -114,12 +78,18 @@ inline auto gaussian_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
 }
 
 /// Linear covariance function
+/// Uses the Wendland phi_{3,0}(r) = (1 - r/λ)^2_+ which is positive definite in
+/// R^3. Keeps the enum name kLinear for backward compatibility.
 template <typename T>
 inline auto linear_covariance(const Eigen::Ref<const Eigen::Vector3<T>>& p1,
                               const Eigen::Ref<const Eigen::Vector3<T>>& p2,
                               const T& sigma, const T& lambda) -> T {
   auto r = (p1 - p2).norm();
-  return math::sqr(sigma) * r;
+  if (r >= lambda) {
+    return T(0);
+  }
+  auto t = T(1) - r / lambda;
+  return math::sqr(sigma) * math::sqr(t);
 }
 
 /// Known Covariance functions.
@@ -127,12 +97,16 @@ enum CovarianceFunction : uint8_t {
   kMatern_12 = 0,
   kMatern_32 = 1,
   kMatern_52 = 2,
-  kWhittleMatern = 3,
-  kCauchy = 4,
-  kExponential = 5,
-  kSpherical = 6,
-  kGaussian = 7,
-  kLinear = 8,
+  kCauchy = 3,
+  kSpherical = 4,
+  kGaussian = 5,
+  kLinear = 6,
+};
+
+/// Known drift functions.
+enum DriftFunction : uint8_t {
+  kLinearDrift = 0,
+  kQuadraticDrift = 1,
 };
 
 /// @brief Krige the value of a point.
@@ -153,10 +127,21 @@ class Kriging {
   /// covariance decreases. It represents the spatial scale of the covariance
   /// function and can be used to control the smoothness of the spatial
   /// dependence structure.
+  /// @param nugget Nugget effect term. A small positive value added to the
+  /// diagonal of the covariance matrix for numerical stability.
   /// @param function The covariance function used to estimate the value of a
   /// point.
-  Kriging(const T& sigma, const T& lambda, const CovarianceFunction& function)
-      : sigma_(sigma), lambda_(lambda), function_(nullptr) {
+  /// @param drift_function The drift function to use for universal kriging. If
+  /// not provided, simple kriging will be used.
+  /// @note If no ``drift_function`` is specified, simple kriging with a known
+  /// (zero) mean is used.
+  Kriging(const T& sigma, const T& lambda, const T& nugget,
+          const CovarianceFunction& function,
+          const std::optional<DriftFunction>& drift_function = std::nullopt)
+      : sigma_(sigma),
+        lambda_(lambda),
+        nugget_(nugget),
+        drift_function_(drift_function.value_or(DriftFunction::kLinearDrift)) {
     switch (function) {
       case CovarianceFunction::kMatern_12:
         function_ = matern_covariance_12<T>;
@@ -167,14 +152,8 @@ class Kriging {
       case CovarianceFunction::kMatern_52:
         function_ = matern_covariance_52<T>;
         break;
-      case CovarianceFunction::kWhittleMatern:
-        function_ = whittle_matern_covariance<T>;
-        break;
       case CovarianceFunction::kCauchy:
         function_ = cauchy_covariance<T>;
-        break;
-      case CovarianceFunction::kExponential:
-        function_ = exponential_covariance<T>;
         break;
       case CovarianceFunction::kSpherical:
         function_ = spherical_covariance<T>;
@@ -192,8 +171,13 @@ class Kriging {
       throw std::invalid_argument("sigma must be greater than 0");
     }
     if (lambda_ <= 0) {
-      throw std::invalid_argument("alpha must be greater than 0");
+      throw std::invalid_argument("lambda must be greater than 0");
     }
+    if (nugget_ < 0) {
+      throw std::invalid_argument("nugget must be >= 0");
+    }
+    method_ptr_ = drift_function.has_value() ? &Kriging::universal_kriging
+                                             : &Kriging::simple_kriging;
   }
 
   /// @brief Estimate the value of a point.
@@ -201,16 +185,67 @@ class Kriging {
   /// @param values Values of the points used to estimate the value.
   /// @param query Coordinates of the point to estimate.
   /// @return The estimated value of the point.
-  auto universal_kriging(const Eigen::Matrix<T, 3, -1>& coordinates,
-                         const Eigen::Matrix<T, -1, 1>& values,
-                         const Eigen::Vector3<T>& query) const -> T {
+  auto operator()(const Eigen::Matrix<T, 3, -1>& coordinates,
+                  const Eigen::Matrix<T, -1, 1>& values,
+                  const Eigen::Vector3<T>& query) const -> T {
+    return (this->*method_ptr_)(coordinates, values, query);
+  }
+
+ private:
+  using MethodPtr = T (Kriging::*)(const Eigen::Matrix<T, 3, -1>&,
+                                   const Eigen::Matrix<T, -1, 1>&,
+                                   const Eigen::Vector3<T>&) const;
+
+  const T sigma_;
+  const T lambda_;
+  const T nugget_;
+  DriftFunction drift_function_;
+  PtrCovarianceFunction function_;
+  MethodPtr method_ptr_;
+
+  /// @brief Get the drift terms for a given point.
+  /// @param point The point to get the drift terms for.
+  /// @param function The drift function to use.
+  /// @return The drift terms for the given point.
+  static auto get_drift_terms(const Eigen::Vector3<T>& point,
+                              const DriftFunction& function) -> Vector<T> {
+    switch (function) {
+      case DriftFunction::kLinearDrift: {
+        Vector<T> terms(4);
+        terms << 1, point(0), point(1), point(2);
+        return terms;
+      }
+      case DriftFunction::kQuadraticDrift: {
+        Vector<T> terms(10);
+        terms << 1, point(0), point(1), point(2), math::sqr(point(0)),
+            math::sqr(point(1)), math::sqr(point(2)), point(0) * point(1),
+            point(0) * point(2), point(1) * point(2);
+        return terms;
+      }
+      default:
+        throw std::invalid_argument("Invalid drift function");
+    }
+  }
+
+  /// @brief Estimate the value of a point using simple kriging.
+  /// @param coordinates Coordinates of the points used to estimate the value.
+  /// @param values Values of the points used to estimate the value.
+  /// @param query Coordinates of the point to estimate.
+  /// @return The estimated value of the point.
+  auto simple_kriging(const Eigen::Matrix<T, 3, -1>& coordinates,
+                      const Eigen::Matrix<T, -1, 1>& values,
+                      const Eigen::Vector3<T>& query) const -> T {
     auto k = coordinates.cols();
     Matrix<T> C(k, k);
-    for (int i = 0; i < k; i++) {
-      for (int j = 0; j < k; j++) {
+    for (int i = 0; i < k; ++i) {
+      for (int j = i; j < k; ++j) {
         C(i, j) =
             function_(coordinates.col(i), coordinates.col(j), sigma_, lambda_);
+        if (i != j) {
+          C(j, i) = C(i, j);
+        }
       }
+      C(i, i) += nugget_;  // add nugget on diagonal
     }
     Vector<T> c(k);
     for (int i = 0; i < k; i++) {
@@ -220,10 +255,53 @@ class Kriging {
     return values.dot(w);
   }
 
- private:
-  const T sigma_;
-  const T lambda_;
-  PtrCovarianceFunction function_;
+  /// @brief Estimate the value of a point using universal kriging.
+  /// @param coordinates Coordinates of the points used to estimate the value.
+  /// @param values Values of the points used to estimate the value.
+  /// @param query Coordinates of the point to estimate.
+  /// @return The estimated value of the point.
+  auto universal_kriging(const Eigen::Matrix<T, 3, -1>& coordinates,
+                         const Eigen::Matrix<T, -1, 1>& values,
+                         const Eigen::Vector3<T>& query) const -> T {
+    auto k = coordinates.cols();
+    auto f = get_drift_terms(query, drift_function_);
+    auto p = f.size();
+
+    Matrix<T> C(k, k);
+    for (auto i = 0; i < k; ++i) {
+      for (auto j = i; j < k; ++j) {
+        C(i, j) =
+            function_(coordinates.col(i), coordinates.col(j), sigma_, lambda_);
+        if (i != j) {
+          C(j, i) = C(i, j);
+        }
+      }
+      C(i, i) += nugget_;
+    }
+
+    Matrix<T> F(k, p);
+    for (auto i = 0; i < k; ++i) {
+      F.row(i) = get_drift_terms(coordinates.col(i), drift_function_);
+    }
+
+    Matrix<T> A(k + p, k + p);
+    A.topLeftCorner(k, k) = C;
+    A.topRightCorner(k, p) = F;
+    A.bottomLeftCorner(p, k) = F.transpose();
+    A.bottomRightCorner(p, p).setZero();
+
+    Vector<T> c(k);
+    for (int i = 0; i < k; i++) {
+      c[i] = function_(query, coordinates.col(i), sigma_, lambda_);
+    }
+
+    Vector<T> b(k + p);
+    b.head(k) = c;
+    b.tail(p) = f;
+
+    Vector<T> x = A.colPivHouseholderQr().solve(b);
+    return values.dot(x.head(k));
+  }
 };
 
 }  // namespace pyinterp::detail::math

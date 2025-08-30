@@ -59,18 +59,21 @@ void init_enum(py::module& core, py::module& fill) {
              "Matern covariance function with nu=3/2")
       .value("Matern_52", math::CovarianceFunction::kMatern_52,
              "Matern covariance function with nu=5/2")
-      .value("WhittleMatern", math::CovarianceFunction::kWhittleMatern,
-             "Whittle-Matern covariance function")
       .value("Cauchy", math::CovarianceFunction::kCauchy,
              "Cauchy covariance function")
-      .value("Exponential", math::CovarianceFunction::kExponential,
-             "Exponential covariance function")
       .value("Gaussian", math::CovarianceFunction::kGaussian,
              "Gaussian covariance function")
       .value("Spherical", math::CovarianceFunction::kSpherical,
              "Spherical covariance function")
       .value("Linear", math::CovarianceFunction::kLinear,
              "Linear covariance function");
+
+  py::enum_<math::DriftFunction>(core, "DriftFunction",
+                                 "Drift functions for universal kriging")
+      .value("Linear", math::DriftFunction::kLinearDrift,
+             "Linear drift function")
+      .value("Quadratic", math::DriftFunction::kQuadraticDrift,
+             "Quadratic drift function");
 
   py::enum_<pyinterp::fill::ValueType>(fill, "ValueType",
                                        R"__doc__(

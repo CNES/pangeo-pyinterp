@@ -81,8 +81,29 @@ def test_interpolate(pytestconfig):
     make_or_compare_reference('rtree_rbf.npy', data, dump)
     data, _ = mesh.window_function(coordinates, radius=2_000_000)
     make_or_compare_reference('rtree_wf.npy', data, dump)
-    data, _ = mesh.universal_kriging(coordinates)
+    data, _ = mesh.kriging(coordinates)
     make_or_compare_reference('rtree_uk.npy', data, dump)
+
+    # Test universal kriging with linear drift and nugget & custom alpha
+    data_linear, _ = mesh.kriging(coordinates,
+                                  covariance='matern_32',
+                                  drift_function='linear',
+                                  sigma=1.5,
+                                  alpha=500_000.0,
+                                  nugget=1e-6)
+    assert data_linear.shape == data.shape
+    # Ensure different result from simple kriging for at least some points
+    assert np.any(np.abs(data_linear - data) > 0)
+
+    # Test quadratic drift
+    data_quadratic, _ = mesh.kriging(coordinates,
+                                     covariance='gaussian',
+                                     drift_function='quadratic',
+                                     sigma=0.75,
+                                     alpha=250_000.0,
+                                     nugget=0.0)
+    assert data_quadratic.shape == data.shape
+    assert np.any(np.abs(data_quadratic - data_linear) > 0)
 
     with pytest.raises(ValueError):
         mesh.radial_basis_function(coordinates, epsilon=1, rbf='cubic')
@@ -97,4 +118,4 @@ def test_interpolate(pytestconfig):
     with pytest.raises(ValueError):
         mesh.window_function(coordinates, radius=1, wf='blackman', arg=2)
     with pytest.raises(ValueError):
-        mesh.universal_kriging(coordinates, radius=1, covariance='blackman')
+        mesh.kriging(coordinates, radius=1, covariance='blackman')

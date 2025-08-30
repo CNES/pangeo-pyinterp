@@ -1,6 +1,15 @@
 Changelog
 #########
 
+2025.9.0
+--------
+* Deprecated the `universal_kriging` method in favor of the more versatile
+  `kriging` method, which now supports both simple and universal kriging.
+  Updated documentation to reflect this change.
+* Refactor the RBF class by improving epsilon handling, enhancing the
+  interpolation matrix computation, and optimizing the distance calculation
+  method.
+
 2025.8.1
 --------
 * [Fix] Refactored BMI2-related functions to use _pdep_u64 and _pext_u64

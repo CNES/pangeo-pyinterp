@@ -8,6 +8,8 @@ RTree spatial index
 """
 from __future__ import annotations
 
+import warnings
+
 import numpy
 
 from . import core, geodetic, interface
@@ -406,6 +408,41 @@ class RTree:
             num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
         """Interpolate the values of a point using universal kriging.
 
+        See the :meth:`kriging` method for the description of the parameters.
+
+        .. deprecated:: 2025.9.0
+
+            universal_kriging method is deprecated, use :meth:`kriging` method
+            instead.
+        """
+        warnings.warn(
+            'universal_kriging method is deprecated, '
+            'use kriging method instead', DeprecationWarning)
+        return self.kriging(
+            coordinates,
+            radius=radius,
+            k=k,
+            covariance=covariance,
+            sigma=sigma,
+            alpha=alpha,
+            within=within,
+            num_threads=num_threads,
+        )
+
+    def kriging(self,
+                coordinates: numpy.ndarray,
+                *,
+                radius: float | None = None,
+                k: int = 9,
+                covariance: str | None = None,
+                drift_function: str | None = None,
+                sigma: float = 1.0,
+                alpha: float = 1_000_000.0,
+                nugget: float = 0.0,
+                within: bool = True,
+                num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
+        """Interpolate the values of a point using kriging.
+
         Args:
             coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
                 of observations and 3 represents the coordinates in theorder:
@@ -431,13 +468,8 @@ class RTree:
                 * ``matern_52``: :math:`\\sigma^2\\left(1+\\frac{\\sqrt{5}d}{
                   \\rho}+\\frac{5d^2}{3\\rho^2}\\right) \\exp\\left(-\\frac{
                   \\sqrt{5}d}{\\rho} \\right)`
-                * ``whittle_matern``: :math:`\\sigma^2 \\left(1 + \\sqrt{3}
-                  \\frac{d}{r} \\right) \\exp \\left(-\\sqrt{3} \\frac{d}{r}
-                  \\right)`
                 * ``cauchy``: :math:`\\sigma^2 \\left(1 + \\frac{d}{\\rho}
                   \\right)^{-1}`
-                * ``exponential``: :math:`\\sigma^2 \\exp \\left(-\\frac{d}{
-                  \\rho} \\right)`
                 * ``gaussian``: :math:`\\sigma^2 \\exp \\left(-\\frac{d^2}{
                   \\rho^2} \\right)`
                 * ``spherical``: :math:`\\sigma^2 \\left(1 - \\frac{3d}{2r}
@@ -445,30 +477,47 @@ class RTree:
                   \\right)`
                 * ``linear``: :math:`\\sigma^2 \\left(1 - \\frac{d}{r}
                   \\right) \\left(\\frac{d}{r} \\le 1 \\right)`
-            sigma: The sigma parameter of the covariance function. Defaults to
-                ``1.0``. Determines the overall scale of the covariance
-                function. It represents the maximum possible covariance between
-                two points.
-            alpha: The alpha parameter of the covariance function. Defaults to
-                ``1_000_000.0``. Determines the rate at which the covariance
-                decreases. It represents the spatial scale of the covariance
-                function and can be used to control the smoothness of the
-                spatial dependence structure.
+            drift_function: The drift (trend) function to be used for universal
+                kriging. This parameter can take one of the following values:
+
+                * ``linear``: :math:`m(x,y,z) = \\beta_0 + \\beta_1 x +
+                  \\beta_2 y + \\beta_3 z`
+                * ``quadratic``: :math:`m(x,y,z) = \\beta_0 + \\beta_1 x +
+                  \\beta_2 y + \\beta_3 z + \\beta_4 x^2 + \\beta_5 y^2 +
+                  \\beta_6 z^2 + \\beta_7 xy + \\beta_8 xz + \\beta_9 yz`
+
+                Defaults to ``None`` (simple kriging with known mean 0).
+            sigma: The sill (magnitude) parameter :math:`\\sigma` of the
+                covariance function. Determines the overall scale (maximum
+                covariance).
+            alpha: The range parameter :math:`\\rho`. Determines how quickly
+                the covariance decays with distance. Units must match the
+                distance units used internally (geodetic/ECEF -> meters,
+                pure Cartesian -> user units).
+            nugget: Nugget effect (added to the covariance matrix diagonal).
+                Accounts for measurement error or unresolved microscale
+                variability. Must be :math:`\\ge 0`.
             within: If true, the method ensures that the neighbors found are
-                located around the point of interest. In other words, this
-                parameter ensures that the calculated values will not be
-                extrapolated. Defaults to ``true``.
-            num_threads: The number of threads to use for the computation. If 0
-                all CPUs are used. If 1 is given, no parallel computing code is
-                used at all, which is useful for debugging. Defaults to ``0``.
+                located around the point of interest (prevents extrapolation).
+            num_threads: Number of threads to use. ``0`` uses all available,
+                ``1`` disables parallelism (useful for debugging).
         Returns:
             The interpolated value and the number of neighbors used in the
             calculation.
+
+        .. note::
+            * If ``drift_function`` is ``None``, simple kriging with known mean
+              0 is applied.
+            * If ``drift_function`` is provided, universal kriging augments the
+              system with the corresponding trend basis functions.
+            * ``alpha`` corresponds to the range parameter :math:`\\rho`
+              controlling spatial correlation extent.
         """
-        return self._instance.universal_kriging(
+        return self._instance.kriging(
             coordinates, radius, k,
-            interface._core_covariance_function(covariance), sigma, alpha,
-            within, num_threads)
+            interface._core_covariance_function(covariance),
+            interface._core_drift_function(drift_function), sigma, alpha,
+            nugget, within, num_threads)
 
     def __getstate__(self) -> tuple:
         """Return the state of the object for pickling purposes.

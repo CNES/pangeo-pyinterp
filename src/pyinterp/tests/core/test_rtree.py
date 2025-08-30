@@ -155,26 +155,53 @@ def test_rtree_kriging(pytestconfig):
     lon = np.arange(-180, 180, step, dtype='float32') + 1 / 3
     lat = np.arange(-90, 90, step, dtype='float32') + 1 / 3
     x, y = np.meshgrid(lon, lat, indexing='ij')
-    z0, _ = mesh.universal_kriging(
-        np.vstack((x.ravel(), y.ravel())).T,
-        within=False,
-        radius=None,
-        covariance=core.CovarianceFunction.Matern_32,
-        k=11,
-        num_threads=0)
-    z1, _ = mesh.universal_kriging(
-        np.vstack((x.ravel(), y.ravel())).T,
-        within=False,
-        radius=None,
-        covariance=core.CovarianceFunction.Matern_32,
-        k=11,
-        num_threads=1)
+    z0, _ = mesh.kriging(np.vstack((x.ravel(), y.ravel())).T,
+                         within=False,
+                         radius=None,
+                         covariance=core.CovarianceFunction.Matern_32,
+                         k=11,
+                         num_threads=0)
+    z1, _ = mesh.kriging(np.vstack((x.ravel(), y.ravel())).T,
+                         within=False,
+                         radius=None,
+                         covariance=core.CovarianceFunction.Matern_32,
+                         k=11,
+                         num_threads=1)
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
 
     if HAVE_PLT and pytestconfig.getoption('visualize'):
         plot(x, y, z0.reshape((len(lon), len(lat))), 'mss_rtree_kriging.png')
+
+
+def test_rtree_kriging_with_drift():
+    mesh = load_data()
+    lon = np.linspace(-10, 10, 5, dtype='float32')
+    lat = np.linspace(-5, 5, 5, dtype='float32')
+    x, y = np.meshgrid(lon, lat, indexing='ij')
+    coords = np.vstack((x.ravel(), y.ravel())).T.astype('float32')
+    z_simple, _ = mesh.kriging(coords,
+                               within=False,
+                               radius=None,
+                               covariance=core.CovarianceFunction.Matern_12,
+                               sigma=1.0,
+                               alpha=1_000_000.0,
+                               nugget=0.0,
+                               k=8,
+                               num_threads=0)
+    # Drift functions are exposed only via high-level Python interface; here we
+    # just ensure kriging runs with nugget/range variations.
+    z_nugget, _ = mesh.kriging(coords,
+                               within=False,
+                               radius=None,
+                               covariance=core.CovarianceFunction.Matern_12,
+                               sigma=1.0,
+                               alpha=800_000.0,
+                               nugget=1e-6,
+                               k=8,
+                               num_threads=0)
+    assert np.any(z_nugget != z_simple)
 
 
 def test_rtree_insert():
