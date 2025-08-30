@@ -3,8 +3,7 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
-#include <Eigen/Core>
-#include <Eigen/LU>
+#include <Eigen/Dense>
 #include <cmath>
 #include <functional>
 
@@ -45,7 +44,7 @@ class RBF {
   /// @param rbf The radial basis function, based on the radius, r, given by the
   /// norm (Euclidean distance)
   RBF(const T &epsilon, const T &smooth, const RadialBasisFunction rbf)
-      : epsilon_(T(1) / epsilon), smooth_(smooth) {
+      : epsilon_reciprocal_(T(1) / epsilon), smooth_(smooth) {
     switch (rbf) {
       case RadialBasisFunction::Cubic:
         function_ = &RBF::cubic;
@@ -71,6 +70,9 @@ class RBF {
     }
   }
 
+  /// Default destructor
+  virtual ~RBF() = default;
+
   /// Calculates the interpolated values
   ///
   /// @param xk Coordinates of the nodes
@@ -85,24 +87,31 @@ class RBF {
     const auto r = distance_matrix(xk, xk);
 
     // Default epsilon to approximate average distance between nodes
-    const auto epsilon =
-        std::isnan(epsilon_) ? 1 / RBF<T>::average(r) : epsilon_;
+    const auto epsilon = std::isnan(epsilon_reciprocal_)
+                             ? 1 / RBF<T>::average(r)
+                             : epsilon_reciprocal_;
 
-    // TODO(fbriol)
+    // Build the interpolation matrix
     auto A = function_(r, epsilon);
 
     // Apply smoothing factor if needed
     if (smooth_) {
-      A -= Matrix<T>::Identity(xk.cols(), xk.cols()) * smooth_;
+      A += Matrix<T>::Identity(xk.cols(), xk.cols()) * smooth_;
     }
 
-    return function_(distance_matrix(xk, xi), epsilon) *
-           RBF<T>::solve_linear_system(A, yk);
+    // Solve the linear system for the weights
+    const auto weights = RBF<T>::solve_linear_system(A, yk);
+
+    // Calculate the interpolated values
+    const auto r_xi = distance_matrix(xi, xk);
+    const auto B = function_(r_xi, epsilon);
+    return B * weights;
   }
 
  private:
-  /// Adjustable constant for gaussian or multiquadrics functions
-  T epsilon_;
+  /// Adjustable constant for gaussian or multiquadrics functions. We store
+  /// here the reciprocal value as it is often used in calculations.
+  T epsilon_reciprocal_;
 
   /// Smooth factor
   T smooth_;
@@ -127,7 +136,7 @@ class RBF {
   virtual auto calculate_distance(const Eigen::Ref<const Vector<T>> &x,
                                   const Eigen::Ref<const Vector<T>> &y) const
       -> T {
-    return std::sqrt((x - y).array().pow(2).sum());
+    return (x - y).norm();
   }
 
   /// Multiquadric
@@ -185,8 +194,8 @@ class RBF {
   /// Resolution of the linear system
   static auto solve_linear_system(const Matrix<T> &A, const Vector<T> &di)
       -> Vector<T> {
-    Eigen::FullPivLU<Matrix<T>> lu(A);
-    return lu.solve(di);
+    Eigen::LDLT<Matrix<T>> ldlt(A);
+    return ldlt.solve(di);
   }
 };
 
