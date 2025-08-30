@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 #include <cmath>
 #include <functional>
+#include <stdexcept>
 
 #include "pyinterp/eigen.hpp"
 
@@ -35,16 +36,22 @@ class RBF {
 
   /// Default constructor
   ///
-  /// @param epsilon Adjustable constant for gaussian or multiquadrics
-  /// functions - defaults to approximate average distance between nodes
-  /// (which is a good start).
+  /// @param epsilon Characteristic length scale parameter provided by user.
+  /// Internally the reciprocal (1/epsilon) is stored because the implemented
+  /// formulas use (r / epsilon). For Gaussian & (Inverse)Multiquadric kernels
+  /// we compute exp(-(r/epsilon)^2) and sqrt(1 + (r/epsilon)^2) etc. Thus the
+  /// internal variable passed to the kernel is 1/epsilon.
+  /// If the provided epsilon is NaN, an automatic value is chosen equal to the
+  /// average distance between distinct nodes (NOT its reciprocal). Because we
+  /// store 1/epsilon, when epsilon is auto-computed we actually store its
+  /// reciprocal directly during interpolation.
   /// @param smooth Values greater than zero increase the smoothness of the
   /// approximation. 0 is for interpolation (default), the function will always
   /// go through the nodal points in this case.
   /// @param rbf The radial basis function, based on the radius, r, given by the
   /// norm (Euclidean distance)
   RBF(const T &epsilon, const T &smooth, const RadialBasisFunction rbf)
-      : epsilon_reciprocal_(T(1) / epsilon), smooth_(smooth) {
+      : epsilon_reciprocal_(T(1) / epsilon), smooth_(smooth), rbf_(rbf) {
     switch (rbf) {
       case RadialBasisFunction::Cubic:
         function_ = &RBF::cubic;
@@ -75,9 +82,9 @@ class RBF {
 
   /// Calculates the interpolated values
   ///
-  /// @param xk Coordinates of the nodes
-  /// @param yk Values of the nodes
-  /// @param xi Coordinates to evaluate the interpolant at.
+  /// @param xk Coordinates of the nodes (shape: dim x N)
+  /// @param yk Values of the nodes (size: N)
+  /// @param xi Coordinates to evaluate the interpolant at (shape: dim x M)
   /// @return interpolated values for each coordinates provided.
   [[nodiscard]] auto interpolate(const Eigen::Ref<const Matrix<T>> &xk,
                                  const Eigen::Ref<const Vector<T>> &yk,
@@ -91,30 +98,93 @@ class RBF {
                              ? 1 / RBF<T>::average(r)
                              : epsilon_reciprocal_;
 
-    // Build the interpolation matrix
+    // Build the interpolation matrix Φ
     auto A = function_(r, epsilon);
 
-    // Apply smoothing factor if needed
+    // Apply smoothing factor if needed (Tikhonov diagonal term)
     if (smooth_) {
       A += Matrix<T>::Identity(xk.cols(), xk.cols()) * smooth_;
     }
 
-    // Solve the linear system for the weights
-    const auto weights = RBF<T>::solve_linear_system(A, yk);
+    // Determine if we must augment with polynomial terms to satisfy the
+    // conditional positive definiteness constraints. For Linear, Cubic and
+    // ThinPlate kernels, we include a polynomial basis of degree 1: {1, x_i}
+    // for each spatial dimension i.
+    const bool augment = (rbf_ == RadialBasisFunction::Linear ||
+                          rbf_ == RadialBasisFunction::Cubic ||
+                          rbf_ == RadialBasisFunction::ThinPlate);
 
-    // Calculate the interpolated values
+    Vector<T> weights;      // w
+    Vector<T> poly_coeffs;  // λ (if augment)
+
+    if (augment) {
+      const Eigen::Index dim = xk.rows();
+      const Eigen::Index N = xk.cols();
+      const Eigen::Index q = dim + 1;  // constant + linear terms
+      if (N < q) {
+        // Not enough points to build augmented system; inform caller to
+        // request more neighbors (k) instead of silently falling back.
+        throw std::invalid_argument(
+            "Not enough points to perform polynomial augmentation for the "
+            "selected RBF. Need at least " +
+            std::to_string(q) + " points, got " + std::to_string(N) +
+            ". Increase the number of neighbors (k).");
+      }
+      // Build polynomial matrix P (N x q)
+      Matrix<T> P(N, q);
+      P.col(0).setOnes();
+      for (Eigen::Index d = 0; d < dim; ++d) {
+        P.col(d + 1) = xk.row(d).transpose();
+      }
+
+      // Assemble block matrix K = [ Φ  P ]
+      //                            [ Pᵀ 0 ]
+      Matrix<T> K(N + q, N + q);
+      K.setZero();
+      K.topLeftCorner(N, N) = A;
+      K.topRightCorner(N, q) = P;
+      K.bottomLeftCorner(q, N) = P.transpose();
+      // bottom-right already zero
+
+      Vector<T> rhs(N + q);
+      rhs.head(N) = yk;
+      rhs.tail(q).setZero();
+
+      Eigen::LDLT<Matrix<T>> ldlt(K);
+      auto sol = ldlt.solve(rhs);
+      weights = sol.head(N);
+      poly_coeffs = sol.tail(q);
+
+      // Interpolate: f(x) = Σ w_i φ(||x - x_i||) + p(x)
+      const auto r_xi = distance_matrix(xi, xk);
+      const auto B = function_(r_xi, epsilon);  // M x N
+
+      // Polynomial part P_x (M x q)
+      Matrix<T> P_x(xi.cols(), q);
+      P_x.col(0).setOnes();
+      for (Eigen::Index d = 0; d < dim; ++d) {
+        P_x.col(d + 1) = xi.row(d).transpose();
+      }
+      return B * weights + P_x * poly_coeffs;
+    }
+
+    // Fallback: classic RBF without polynomial augmentation
+    const auto weights_fallback = RBF<T>::solve_linear_system(A, yk);
     const auto r_xi = distance_matrix(xi, xk);
     const auto B = function_(r_xi, epsilon);
-    return B * weights;
+    return B * weights_fallback;
   }
 
  private:
-  /// Adjustable constant for gaussian or multiquadrics functions. We store
-  /// here the reciprocal value as it is often used in calculations.
+  /// Adjustable constant for gaussian or multiquadric family. We store the
+  /// reciprocal value as it is directly used in the implemented formulas.
   T epsilon_reciprocal_;
 
-  /// Smooth factor
+  /// Smooth factor (>=0 expected, validated at higher layer)
   T smooth_;
+
+  /// Radial basis function enum used (needed to decide augmentation)
+  RadialBasisFunction rbf_;
 
   /// Radial basis function, based on the radius
   PtrRadialBasisFunction function_;
@@ -139,19 +209,19 @@ class RBF {
     return (x - y).norm();
   }
 
-  /// Multiquadric
+  /// Multiquadric ( ( (r/ε)^2 + 1 )^{1/2} ) where internal epsilon is 1/ε
   static auto multiquadric(const Eigen::Ref<const Matrix<T>> &r,
                            const T epsilon) -> Matrix<T> {
     return ((epsilon * r).array().pow(2) + 1).sqrt();
   }
 
-  /// Inverse multiquadric
+  /// Inverse multiquadric ( 1 / multiquadric )
   static auto inverse_multiquadric(const Eigen::Ref<const Matrix<T>> &r,
                                    const T epsilon) -> Matrix<T> {
     return 1.0 / multiquadric(r, epsilon).array();
   }
 
-  /// Gauss
+  /// Gaussian: exp(-(r/ε)^2) where internal epsilon is 1/ε
   static auto gaussian(const Eigen::Ref<const Matrix<T>> &r, const T epsilon)
       -> Matrix<T> {
     return (-(epsilon * r).array().pow(2)).exp();
@@ -169,7 +239,7 @@ class RBF {
     return r.array().pow(3);
   }
 
-  /// Thin plate spline
+  /// Thin plate spline φ(r)=r^2 log(r)
   static auto thin_plate(const Eigen::Ref<const Matrix<T>> &r,
                          const T /*epsilon*/) -> Matrix<T> {
     return (r.array() == 0).select(0, r.array().pow(2) * r.array().log());
