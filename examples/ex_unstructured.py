@@ -28,6 +28,18 @@ import pyinterp
 
 mesh = pyinterp.RTree()
 
+
+# %%
+# We will create a synthetic topography-like field to illustrate the
+# interpolation methods.
+def topography_field(lons, lats):
+    """A topography-like field."""
+    return (numpy.sin(numpy.radians(lons) * 3) *
+            numpy.cos(numpy.radians(lats) * 2) +
+            0.5 * numpy.sin(numpy.radians(lons) * 5) *
+            numpy.sin(numpy.radians(lats) * 4))
+
+
 # %%
 # Then, we will insert points into the tree. The class allows you to add points
 # using two algorithms. The first one called :py:meth:`packing
@@ -42,7 +54,7 @@ Y0, Y1 = -45, 30
 generator = numpy.random.Generator(numpy.random.PCG64(0))
 lons = generator.uniform(low=X0, high=X1, size=(SIZE, ))
 lats = generator.uniform(low=Y0, high=Y1, size=(SIZE, ))
-data = generator.uniform(low=-1.0, high=1.0, size=(SIZE, ))
+data = topography_field(lons, lats)
 
 # %%
 # Populates the search tree
@@ -73,6 +85,13 @@ mesh.packing(numpy.vstack((lons, lats)).T, data)
 # over-smoothed results in areas with a lot of sample points and under-smoothed
 # results in areas with few sample points.
 #
+# The Window Function method, much like IDW, uses a weighted average of the
+# surrounding sample points. However, instead of the weight being solely
+# determined by the inverse distance, it is determined by a kernel function (the
+# "window"). This function gives the most weight to points at the center of the
+# window and progressively less weight to points further away. This can
+# sometimes provide a smoother result than IDW.
+#
 # RBF, on the other hand, models the spatial relationship between sample points
 # and the target location by using a mathematical function (radial basis
 # function) that is based on the distance between the points. The radial basis
@@ -91,11 +110,29 @@ mesh.packing(numpy.vstack((lons, lats)).T, data)
 # than IDW and RBF in many cases, but it requires a good understanding of the
 # spatial structure of the data and can be computationally demanding.
 #
-# In summary, IDW is a simple and computationally efficient method, RBF is
-# flexible but can be susceptible to overfitting, and Kriging is more accurate
-# but requires a good understanding of the spatial structure of the data. The
-# choice of method depends on the nature of the data, the spatial resolution
-# required, and the computational resources available.
+# In summary, the choice of interpolation method is a trade-off between
+# simplicity, computational cost, and the quality of the results.
+#
+# * **Inverse Distance Weighting (IDW)** and **Window Function** are
+#   straightforward and fast, making them excellent choices for quick
+#   interpolations or when dealing with very large datasets where
+#   computational efficiency is a priority. However, they may produce overly
+#   smoothed results.
+#
+# * **Radial Basis Functions (RBF)** offer more flexibility and can capture
+#   more complex spatial relationships, but they come at a higher
+#   computational cost and require careful parameter tuning to avoid
+#   overfitting.
+#
+# * **Universal Kriging** is the most sophisticated method, often yielding the
+#   most accurate results by modeling the underlying spatial correlation of the
+#   data. This accuracy, however, comes with the highest computational expense
+#   and requires a good understanding of geostatistics to configure properly.
+#
+# Ultimately, the best method depends on the specific requirements of your
+# application, including the nature of your data, the desired accuracy, and
+# the available computational resources. The following visual comparison will
+# help illustrate the practical differences between these four techniques.
 #
 # We start by interpolating using the IDW method
 STEP = 1 / 32
@@ -116,7 +153,7 @@ rbf, neighbors = mesh.radial_basis_function(
     numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,  # We are looking for at most 11 neighbors
-    rbf='linear',
+    rbf='thin_plate',
     smooth=1e-4,
     num_threads=0)
 rbf = rbf.reshape(mx.shape)
@@ -137,17 +174,35 @@ kriging, neighbors = mesh.universal_kriging(
     numpy.vstack((mx.ravel(), my.ravel())).T,
     within=False,  # Extrapolation is forbidden
     k=11,
-    covariance='matern_12',
-    alpha=100_000,
+    covariance='gaussian',
+    alpha=1_000_000,
     num_threads=0)
 kriging = kriging.reshape(mx.shape)
 
 # %%
+# Let's visualize the "true" field
+vmax = 1.2
+vmin = -1.3
+fig = matplotlib.pyplot.figure(figsize=(6, 5))
+ax = fig.add_subplot(111)
+pcm = ax.pcolormesh(mx,
+                    my,
+                    topography_field(mx, my),
+                    cmap='jet',
+                    shading='auto',
+                    vmin=vmin,
+                    vmax=vmax)
+ax.set_title('True field')
+fig.colorbar(pcm, ax=ax, shrink=0.8, location='bottom')
+
+# %%
 # Let's visualize our interpolated data
-vmin = -1
-vmax = 1
-fig = matplotlib.pyplot.figure(figsize=(10, 20))
-ax1 = fig.add_subplot(411)
+
+fig = matplotlib.pyplot.figure(figsize=(12, 10))
+fig.suptitle('Comparison of Interpolation Methods', fontsize=16)
+
+# IDW interpolation
+ax1 = fig.add_subplot(221)
 pcm = ax1.pcolormesh(mx,
                      my,
                      idw,
@@ -156,7 +211,9 @@ pcm = ax1.pcolormesh(mx,
                      vmin=vmin,
                      vmax=vmax)
 ax1.set_title('IDW interpolation')
-ax2 = fig.add_subplot(412)
+
+# RBF interpolation
+ax2 = fig.add_subplot(222)
 pcm = ax2.pcolormesh(mx,
                      my,
                      rbf,
@@ -165,7 +222,9 @@ pcm = ax2.pcolormesh(mx,
                      vmin=vmin,
                      vmax=vmax)
 ax2.set_title('RBF interpolation')
-ax3 = fig.add_subplot(413)
+
+# Window function interpolation
+ax3 = fig.add_subplot(223)
 pcm = ax3.pcolormesh(mx,
                      my,
                      wf,
@@ -174,7 +233,9 @@ pcm = ax3.pcolormesh(mx,
                      vmin=vmin,
                      vmax=vmax)
 ax3.set_title('Window function interpolation')
-ax4 = fig.add_subplot(414)
+
+# Universal Kriging interpolation
+ax4 = fig.add_subplot(224)
 pcm = ax4.pcolormesh(mx,
                      my,
                      kriging,
@@ -183,4 +244,58 @@ pcm = ax4.pcolormesh(mx,
                      vmin=vmin,
                      vmax=vmax)
 ax4.set_title('Universal Kriging interpolation')
-fig.colorbar(pcm, ax=[ax1, ax2, ax3, ax4], shrink=0.8)
+
+fig.colorbar(pcm, ax=[ax1, ax2, ax3, ax4], shrink=0.6, location='bottom')
+
+# Compute the true field values for the grid
+true_field = topography_field(mx.ravel(), my.ravel()).reshape(mx.shape)
+
+# Calculate relative errors for each interpolation method
+idw_error = numpy.abs((idw - true_field) / true_field)
+rbf_error = numpy.abs((rbf - true_field) / true_field)
+wf_error = numpy.abs((wf - true_field) / true_field)
+kriging_error = numpy.abs((kriging - true_field) / true_field)
+
+# %%
+# Plot the relative errors
+fig = matplotlib.pyplot.figure(figsize=(12, 10))
+fig.suptitle('Relative Errors', fontsize=16)
+
+# IDW Relative Error
+ax1 = fig.add_subplot(221)
+pcm = ax1.pcolormesh(mx,
+                     my,
+                     idw_error,
+                     cmap='jet',
+                     shading='auto',
+                     vmin=0,
+                     vmax=1)
+ax1.set_title('IDW Relative Error')
+
+# RBF Relative Error
+ax2 = fig.add_subplot(222)
+ax2.pcolormesh(mx, my, rbf_error, cmap='jet', shading='auto', vmin=0, vmax=1)
+ax2.set_title('RBF Relative Error')
+
+# Window Function Relative Error
+ax3 = fig.add_subplot(223)
+ax3.pcolormesh(mx, my, wf_error, cmap='jet', shading='auto', vmin=0, vmax=1)
+ax3.set_title('Window Function Relative Error')
+
+# Universal Kriging Relative Error
+ax4 = fig.add_subplot(224)
+ax4.pcolormesh(mx,
+               my,
+               kriging_error,
+               cmap='jet',
+               shading='auto',
+               vmin=0,
+               vmax=1)
+ax4.set_title('Universal Kriging Relative Error')
+
+# Add a single colorbar for all error plots
+cbar = fig.colorbar(pcm,
+                    ax=[ax1, ax2, ax3, ax4],
+                    shrink=0.8,
+                    location='bottom')
+cbar.set_label('Relative Error')
