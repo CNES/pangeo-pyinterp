@@ -1,23 +1,16 @@
 """
-*******
+.. _example_binning:
+
 Binning
-*******
+=======
 
-=========
-Binning2D
-=========
-
-Statistical data binning is a way to group several more or less continuous
-values into a smaller number of *bins*. For example, if you have irregularly
-distributed data over the oceans, you can organize these observations into a
-lower number of geographical intervals (for example, by grouping them all five
-degrees into latitudes and longitudes).
-
-In this example, we will calculate drifter velocity statistics on the Black Sea
-over a period of 9 years.
+Binning is a technique used to group continuous values into a smaller number of
+bins. This is particularly useful when you have irregularly distributed data and
+want to analyze it on a regular grid. In this example, we will use pyinterp's
+2D binning functionality to calculate drifter velocity statistics in the Black
+Sea over a 9-year period.
 """
 import cartopy.crs
-import matplotlib
 import matplotlib.pyplot
 import numpy
 
@@ -26,136 +19,127 @@ import pyinterp.backends.xarray
 import pyinterp.tests
 
 # %%
-# The first step is to load the data into memory and create the interpolator
-# object:
+# Loading the Data
+# ----------------
+#
+# First, we load the drifter data, which includes longitude, latitude, and
+# velocity components (u and v).
 ds = pyinterp.tests.load_aoml()
 
 # %%
-# Let's start by calculating the standard for vectors u and v.
+# We then calculate the velocity magnitude from the u and v components.
 norm = (ds.ud**2 + ds.vd**2)**0.5
 
 # %%
-# Now, we will describe the grid used to calculate our :py:class:`binned
-# <pyinterp.Binning2D>` statistics.
+# Defining the Grid
+# -----------------
+#
+# Next, we define the 2D grid on which we will bin the data. The grid is defined
+# by two axes: one for longitude and one for latitude.
 binning = pyinterp.Binning2D(
-    pyinterp.Axis(numpy.arange(27, 42, 0.3), is_circle=True),
-    pyinterp.Axis(numpy.arange(40, 47, 0.3)))
+    pyinterp.Axis(numpy.arange(27, 42, 0.3, dtype=numpy.float64),
+                  is_circle=True),
+    pyinterp.Axis(numpy.arange(40, 47, 0.3, dtype=numpy.float64)))
 print(binning)
 
 # %%
-# We push the loaded data into the different defined bins using :ref:`simple
-# binning <bilinear_binning>`.
+# Simple Binning
+# --------------
+#
+# With simple binning, each data point is assigned to the bin that contains its
+# coordinates. We push the data into the bins and then compute the mean of the
+# values in each bin.
 binning.clear()
 binning.push(ds.lon, ds.lat, norm, True)
+simple_mean = binning.variable('mean')
 
 # %%
-# .. note ::
+# .. note::
 #
-#   If the processed data is larger than the available RAM, it's possible to use
-#   Dask to parallel the calculation. To do this, an instance must be built,
-#   then the data must be added using the :py:meth:`push_delayed
-#   <pyinterp.Binning2D.push_delayed>` method. This method will return a graph,
-#   which when executed will return a new instance containing the calculated
-#   statistics.
+#   For datasets larger than the available RAM, you can use Dask for parallel
+#   computation. The :py:meth:`push_delayed <pyinterp.Binning2D.push_delayed>`
+#   method returns a Dask graph, which can be computed to get the result.
 #
 #   .. code:: python
 #
 #       binning = binning.push_delayed(lon, lat, data).compute()
 #
-# It is possible to retrieve other statistical :py:meth:`variables
-# <pyinterp.Binning2D.variable>` such as variance, minimum, maximum, etc.
-nearest = binning.variable('mean')
+# You can also compute other statistical variables like variance, minimum, and
+# maximum using the :py:meth:`variable <pyinterp.Binning2D.variable>` method.
 
 # %%
-# Then, we push the loaded data into the different defined bins using
-# :ref:`linear binning <bilinear_binning>`.
+# Linear Binning
+# --------------
+#
+# Linear binning is a more advanced technique where each data point contributes
+# to the four nearest bins, weighted by its distance to the center of each bin.
+# This generally produces a smoother result.
 binning.clear()
 binning.push(ds.lon, ds.lat, norm, False)
-linear = binning.variable('mean')
+linear_mean = binning.variable('mean')
 
 # %%
-# We visualize our result
+# Visualizing the Results
+# -----------------------
+#
+# Finally, we visualize the results of both simple and linear binning.
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
+fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
 ax1 = fig.add_subplot(211, projection=cartopy.crs.PlateCarree())
 lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
 pcm = ax1.pcolormesh(lon,
                      lat,
-                     nearest,
+                     simple_mean,
                      cmap='jet',
                      shading='auto',
                      vmin=0,
                      vmax=1,
                      transform=cartopy.crs.PlateCarree())
+ax1.set_extent([27, 42, 40, 47], crs=cartopy.crs.PlateCarree())
 ax1.coastlines()
-ax1.set_title('Simple binning.')
+ax1.set_title('Simple Binning')
 
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
-lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
 pcm = ax2.pcolormesh(lon,
                      lat,
-                     linear,
+                     linear_mean,
                      cmap='jet',
                      shading='auto',
                      vmin=0,
                      vmax=1,
                      transform=cartopy.crs.PlateCarree())
+ax2.set_extent([27, 42, 40, 47], crs=cartopy.crs.PlateCarree())
 ax2.coastlines()
-ax2.set_title('Linear binning.')
+ax2.set_title('Linear Binning')
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
-fig.show()
 
 # %%
-# ===========
 # Histogram2D
-# ===========
+# -----------
 #
-# :py:class:`This class<pyinterp.Histogram2D>`, like the previous one, allows
-# calculating a binning using distribution and obtains the median value of the
-# pixels. histograms. In addition, this approach calculates the quantiles of the
+# The :py:class:`Histogram2D <pyinterp.Histogram2D>` class is similar to the
+# :py:class:`Binning2D <pyinterp.Binning2D>` class, but it calculates the
+# histogram of the data in each bin instead of the statistics.
 #
-# Note that the algorithm used defines a maximum size of the number of bins
-# handled by each histogram. If the number of observations is greater than the
-# capacity of the histogram, the histogram will be compressed to best present
-# this distribution in limited memory size. The description of the exact
-# algorithm is in the article `A Streaming Parallel Decision Tree Algorithm
-# <http://jmlr.org/papers/v11/ben-haim10a.html>`_.
-hist2d = pyinterp.Histogram2D(
-    pyinterp.Axis(numpy.arange(27, 42, 0.3), is_circle=True),
-    pyinterp.Axis(numpy.arange(40, 47, 0.3)))
-print(hist2d)
+# Let's calculate the 2D histogram of the drifter data.
+hist = pyinterp.Histogram2D(
+    pyinterp.Axis(numpy.arange(27, 42, 0.3, dtype=numpy.float64),
+                  is_circle=True),
+    pyinterp.Axis(numpy.arange(40, 47, 0.3, dtype=numpy.float64)))
+hist.push(ds.lon, ds.lat, norm)
 
 # %%
-# We push the loaded data into the different defined bins using the method
-# :py:meth:`push <pyinterp.Histogram2D.push>`.
-hist2d.push(ds.lon, ds.lat, norm)
-
-# %%
-# We visualize the mean vs median of the distribution.
-fig = matplotlib.pyplot.figure(figsize=(10, 8))
-ax1 = fig.add_subplot(211, projection=cartopy.crs.PlateCarree())
-lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
+# We can then visualize the histogram.
+fig = matplotlib.pyplot.figure(figsize=(10, 4))
+fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
+ax1 = fig.add_subplot(111, projection=cartopy.crs.PlateCarree())
 pcm = ax1.pcolormesh(lon,
                      lat,
-                     nearest,
+                     hist.variable(),
                      cmap='jet',
                      shading='auto',
-                     vmin=0,
-                     vmax=1,
                      transform=cartopy.crs.PlateCarree())
+ax1.set_extent([27, 42, 40, 47], crs=cartopy.crs.PlateCarree())
 ax1.coastlines()
-ax1.set_title('Mean')
-
-ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
-lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
-pcm = ax2.pcolormesh(lon,
-                     lat,
-                     hist2d.variable('quantile', 0.5),
-                     cmap='jet',
-                     shading='auto',
-                     vmin=0,
-                     vmax=1,
-                     transform=cartopy.crs.PlateCarree())
-ax2.coastlines()
-ax2.set_title('Median')
-fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
-fig.show()
+ax1.set_title('2D Histogram')
+fig.colorbar(pcm, ax=ax1, shrink=0.8)

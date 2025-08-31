@@ -1,28 +1,11 @@
 """
-****************
-3D interpolation
-****************
+.. _example_3d_interpolation:
 
-Interpolation of a three-dimensional regular grid.
+3D Interpolation
+================
 
-Trivariate
-==========
-
-The :py:func:`trivariate <pyinterp.trivariate>` interpolation allows obtaining
-values at arbitrary points in a 3D space of a function defined on a grid.
-
-This method performs a bilinear interpolation in 2D space by considering the
-axes of longitude and latitude of the grid, then performs a linear
-interpolation in the third dimension. Its interface is similar to the
-:py:func:`bivariate <pyinterp.bivariate>` class except for a third axis, which
-is handled by this object.
-
-.. note::
-
-    When using a time axis, care must be taken to use the same unit of dates,
-    between the axis defined and the dates supplied during interpolation. The
-    function :py:meth:`pyinterp.TemporalAxis.safe_cast` automates this task and
-    will warn you if there is an inconsistency during the date conversion.
+This example demonstrates how to perform 3D interpolation on a regular grid. The
+pyinterp library supports both trivariate and bicubic interpolation for 3D data.
 """
 import cartopy.crs
 import matplotlib
@@ -34,25 +17,28 @@ import pyinterp.backends.xarray
 import pyinterp.tests
 
 # %%
-# The first step is to load the data into memory and create the interpolator
-# object:
+# Trivariate Interpolation
+# ------------------------
+#
+# Trivariate interpolation extends bivariate interpolation to three dimensions.
+# It performs a bilinear interpolation on the 2D spatial plane (longitude and
+# latitude) and then a linear interpolation on the third dimension (in this
+# case, time).
+#
+# First, we load the 3D dataset and create the interpolator object.
 ds = pyinterp.tests.load_grid3d()
 interpolator = pyinterp.backends.xarray.Grid3D(ds.tcw)
 
 # %%
-# We will build a new grid that will be used to build a new interpolated grid.
+# Next, we define the coordinates for interpolation. To avoid interpolating at
+# the exact grid points, we introduce a slight shift.
 #
-# .. note ::
+# .. note::
 #
-#   The coordinates used for interpolation are shifted to avoid using the
-#   points of the trivariate function.
-#
-# .. warning ::
-#
-#   When using a time axis, care must be taken to use the same unit of dates,
-#   between the axis defined and the dates supplied during interpolation. The
-#   function :py:meth:`pyinterp.TemporalAxis.safe_cast` automates this task and
-#   will warn you if there is an inconsistency during the date conversion.
+#   When working with a time axis, ensure that the date units are consistent
+#   between the grid and the interpolation coordinates. The
+#   :py:meth:`pyinterp.TemporalAxis.safe_cast` method can help manage date
+#   conversions and prevent inconsistencies.
 mx, my, mz = numpy.meshgrid(numpy.arange(-180, 180, 0.25) + 1 / 3.0,
                             numpy.arange(-80, 80, 0.25) + 1 / 3.0,
                             numpy.array(['2002-07-02T15:00:00'],
@@ -60,8 +46,7 @@ mx, my, mz = numpy.meshgrid(numpy.arange(-180, 180, 0.25) + 1 / 3.0,
                             indexing='ij')
 
 # %%
-# We interpolate our grid using a :py:meth:`classical
-# <pyinterp.backends.xarray.Grid3D.trivariate>`:
+# Now, we perform the trivariate interpolation.
 trivariate = interpolator.trivariate({
     'longitude': mx.ravel(),
     'latitude': my.ravel(),
@@ -69,20 +54,22 @@ trivariate = interpolator.trivariate({
 })
 
 # %%
-# Bicubic on 3D grid
-# ==================
+# Bicubic Interpolation on a 3D Grid
+# ----------------------------------
 #
-# Used grid organizes the latitudes in descending order. We ask our
-# constructor to flip this axis in order to correctly evaluate the bicubic
-# interpolation from this 3D cube (only necessary to perform a bicubic
-# interpolation).
+# For smoother results, you can use bicubic interpolation for the spatial
+# dimensions, followed by a linear interpolation on the third dimension.
+#
+# .. note::
+#
+#   Bicubic interpolation requires that the grid axes are strictly increasing.
+#   If your latitudes are in descending order, you can set the `increasing_axes`
+#   parameter to ``True`` to automatically flip them.
 interpolator = pyinterp.backends.xarray.Grid3D(ds.data_vars['tcw'],
                                                increasing_axes=True)
 
 # %%
-# We interpolate our grid using a :py:meth:`bicubic
-# <pyinterp.backends.xarray.Grid3D.bicubic>` interpolation in space followed by
-# a linear interpolation in the temporal axis:
+# We then perform the bicubic interpolation.
 bicubic = interpolator.bicubic({
     'longitude': mx.ravel(),
     'latitude': my.ravel(),
@@ -90,15 +77,46 @@ bicubic = interpolator.bicubic({
 })
 
 # %%
-# We transform our result cubes into a matrix.
+# To visualize the results, we reshape the output arrays and extract the
+# longitude and latitude coordinates.
 trivariate = trivariate.reshape(mx.shape).squeeze(axis=2)
 bicubic = bicubic.reshape(mx.shape).squeeze(axis=2)
 lons = mx[:, 0].squeeze()
 lats = my[0, :].squeeze()
 
 # %%
-# Let's visualize our results.
+# Finally, let's plot the results of both trivariate and bicubic interpolation.
+fig = matplotlib.pyplot.figure(figsize=(10, 8))
+fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
+ax1 = fig.add_subplot(
+    211, projection=cartopy.crs.PlateCarree(central_longitude=180))
+ax1.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+pcm = ax1.pcolormesh(lons,
+                     lats,
+                     trivariate.T,
+                     cmap='jet',
+                     shading='auto',
+                     transform=cartopy.crs.PlateCarree())
+ax1.coastlines()
+ax1.set_title('Trivariate Interpolation')
+ax2 = fig.add_subplot(
+    212, projection=cartopy.crs.PlateCarree(central_longitude=180))
+ax2.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+pcm = ax2.pcolormesh(lons,
+                     lats,
+                     bicubic.T,
+                     cmap='jet',
+                     shading='auto',
+                     transform=cartopy.crs.PlateCarree())
+ax2.coastlines()
+ax2.set_title('Bicubic Interpolation')
+fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
+
+# %%
+# Same plot as above, but zoomed into a specific region to better highlight the
+# differences between the two interpolation methods.
 fig = matplotlib.pyplot.figure(figsize=(5, 8))
+fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 pcm = ax1.pcolormesh(lons,
@@ -127,4 +145,3 @@ ax2.coastlines()
 ax2.set_extent([80, 170, -45, 30], crs=cartopy.crs.PlateCarree())
 ax2.set_title('Spline & Linear in time')
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
-fig.show()

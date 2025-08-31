@@ -1,76 +1,71 @@
 """
-*****************
-Unstructured grid
-*****************
+Unstructured Grid Interpolation
+===============================
 
-Interpolation of unstructured grids.
+This example illustrates the various interpolation methods available for
+unstructured grids, such as data from satellite tracks or other non-uniform
+sources.
 
-The interpolation of this object is based on a :py:class:`R*Tree
-<pyinterp.RTree>` structure. To begin with, we start by building this
-object. By default, this object considers the WGS-84 geodetic coordinate system.
-But you can define another one using the class :py:class:`Spheroid
-<pyinterp.geodetic.Spheroid>`.
+The core of unstructured grid interpolation in ``pyinterp`` is the
+:py:class:`pyinterp.RTree` class, which uses an R-tree data structure for
+efficient spatial queries.
 
-.. note::
-
-  By default, the class converts coordinates from the WGS-84 geodetic system
-  to a Cartesian coordinate system. However, if you set the parameter ``ecef``
-  to ``True``, this transformation is disabled. In this case, both input and
-  output coordinates are expected to be in the Cartesian coordinate system,
-  and the RTree will handle only Cartesian coordinates without any conversion.
+First, we'll create a synthetic dataset to represent our unstructured grid.
 """
-
 # %%
+import cartopy.crs
+import cartopy.feature
 import matplotlib.pyplot
 import numpy
 
 import pyinterp
 
+# %%
+# The R-tree can be configured to work with different geodetic systems. The
+# default is WGS-84. Here, we'll use the default.
 mesh = pyinterp.RTree()
 
 
 # %%
-# We will create a synthetic topography-like field to illustrate the
-# interpolation methods.
-def topography_field(lons, lats):
-    """A topography-like field."""
-    return (numpy.sin(numpy.radians(lons) * 3) *
-            numpy.cos(numpy.radians(lats) * 2) +
-            0.5 * numpy.sin(numpy.radians(lons) * 5) *
-            numpy.sin(numpy.radians(lats) * 4))
+# We will create a synthetic field of data to simulate measurements from an
+# unstructured grid.
+def field(lon, lat):
+    """A synthetic field of data."""
+    return (
+        numpy.sin(numpy.radians(lon) * 3) * numpy.cos(numpy.radians(lat) * 2) +
+        0.5 * numpy.sin(numpy.radians(lon) * 5) *
+        numpy.sin(numpy.radians(lat) * 4))
 
 
 # %%
-# Then, we will insert points into the tree. The class allows you to add points
-# using two algorithms. The first one called :py:meth:`packing
-# <pyinterp.RTree.packing>`, will enable you to enter the values in the tree at
-# once. This mechanism is the recommended solution to create an optimized
-# in-memory structure, both in terms of construction time and queries. When this
-# is not possible, you can insert new information into the tree as you go along
-# using the :py:meth:`insert <pyinterp.RTree.insert>` method.
-SIZE = 2000
+# Now, we generate random longitude and latitude points and populate our R-tree
+# with these points and their corresponding data values. The
+# :py:meth:`~pyinterp.RTree.packing` method is the most efficient way to build
+# the tree from a complete dataset at once.
+N_POINTS = 2000
 X0, X1 = 80, 170
 Y0, Y1 = -45, 30
 generator = numpy.random.Generator(numpy.random.PCG64(0))
-lons = generator.uniform(low=X0, high=X1, size=(SIZE, ))
-lats = generator.uniform(low=Y0, high=Y1, size=(SIZE, ))
-data = topography_field(lons, lats)
+lons = generator.uniform(low=X0, high=X1, size=(N_POINTS, ))
+lats = generator.uniform(low=Y0, high=Y1, size=(N_POINTS, ))
+data = field(lons, lats)
 
-# %%
-# Populates the search tree
 mesh.packing(numpy.vstack((lons, lats)).T, data)
 
 # %%
-# When the tree is created, you can interpolate data with four algorithms:
+# For our interpolation, we need a grid where we want to estimate the values.
+# We'll create a regular grid for this purpose.
+STEP = 0.5
+mx, my = numpy.meshgrid(numpy.arange(X0, X1 + STEP, STEP),
+                        numpy.arange(Y0, Y1 + STEP, STEP),
+                        indexing='ij')
+
+# %%
+# Interpolation Methods
+# ---------------------
 #
-# * :py:meth:`Inverse Distance Weighting
-#   <pyinterp.RTree.inverse_distance_weighting>` or IDW
-# * :py:meth:`Radial Basis Function
-#   <pyinterp.RTree.radial_basis_function>` or RBF
-# * :py:meth:`Window Function
-#   <pyinterp.RTree.window_function>`
-# * :py:meth:`Kriging
-#   <pyinterp.RTree.kriging>`
+# ``pyinterp`` offers several methods for interpolating data from an
+# unstructured grid. We will now apply and visualize each of them.
 #
 # Inverse Distance Weighting (IDW), Radial Basis Function (RBF), and Kriging are
 # all interpolation methods used to estimate a value for a target location based
@@ -98,206 +93,133 @@ mesh.packing(numpy.vstack((lons, lats)).T, data)
 # function is usually Gaussian, multiquadric, or inverse multiquadric. The
 # estimated value at the target location is obtained by summing up the weighted
 # contributions of all sample points. This method is more flexible than IDW as
-# it can produce a wide range of interpolation results, but it can also be
-# computationally expensive and susceptible to overfitting if not implemented
-# carefully.
+# it can produce both smooth and non-smooth surfaces depending on the chosen
+# radial basis function. However, it can be computationally expensive and may
+# produce artifacts in areas with sparse or clustered sample points.
 #
-# Kriging, also known as Gaussian process regression, is a geostatistical method
-# that models the spatial structure of the underlying data by using a covariance
-# matrix. The estimated value at the target location is obtained by solving a
-# set of linear equations that balance the fit to the sample points and the
-# smoothness of the estimated surface. Kriging can produce more accurate results
-# than IDW and RBF in many cases, but it requires a good understanding of the
-# spatial structure of the data and can be computationally demanding.
+# Kriging is a geostatistical interpolation method that uses a variogram to
+# model the spatial correlation between sample points. The variogram describes
+# how the similarity between sample points decreases as the distance between
+# them increases. The estimated value at the target location is obtained by a
+# weighted average of the surrounding sample points, where the weights are
+# determined by the variogram model. This method is considered to be the most
+# accurate interpolation method as it provides an optimal and unbiased estimate
+# of the value at the target location. However, it is also the most
+# computationally expensive and requires a good understanding of the underlying
+# spatial structure of the data.
 #
 # In summary, the choice of interpolation method is a trade-off between
 # simplicity, computational cost, and the quality of the results.
 #
-# * **Inverse Distance Weighting (IDW)** and **Window Function** are
-#   straightforward and fast, making them excellent choices for quick
-#   interpolations or when dealing with very large datasets where
-#   computational efficiency is a priority. However, they may produce overly
-#   smoothed results.
+# * **IDW** is a good starting point as it is simple and fast.
+# * The **Window Function** can provide a smoother alternative to IDW.
+# * **RBF** offers more flexibility but at a higher computational cost and with
+#   a risk of artifacts.
+# * **Kriging** is the most accurate method but also the most complex and
+#   computationally intensive, requiring a good understanding of the data's
+#   spatial structure.
 #
-# * **Radial Basis Functions (RBF)** offer more flexibility and can capture
-#   more complex spatial relationships, but they come at a higher
-#   computational cost and require careful parameter tuning to avoid
-#   overfitting.
+# In this notebook, we will compare the results of these four interpolation
+# methods on a synthetic dataset.
 #
-# * **Universal Kriging** is the most sophisticated method, often yielding the
-#   most accurate results by modeling the underlying spatial correlation of the
-#   data. This accuracy, however, comes with the highest computational expense
-#   and requires a good understanding of geostatistics to configure properly.
-#
-# Ultimately, the best method depends on the specific requirements of your
-# application, including the nature of your data, the desired accuracy, and
-# the available computational resources. The following visual comparison will
-# help illustrate the practical differences between these four techniques.
-#
-# We start by interpolating using the IDW method
-STEP = 1 / 32
-mx, my = numpy.meshgrid(numpy.arange(X0, X1 + STEP, STEP),
-                        numpy.arange(Y0, Y1 + STEP, STEP),
-                        indexing='ij')
-
-idw, neighbors = mesh.inverse_distance_weighting(
+# Inverse Distance Weighting (IDW)
+# ********************************
+idw, _ = mesh.inverse_distance_weighting(
     numpy.vstack((mx.ravel(), my.ravel())).T,
-    within=False,  # Extrapolation is forbidden
-    k=11,  # We are looking for at most 11 neighbors
-    num_threads=0)
+    within=False,
+    k=11,
+    radius=None,
+    num_threads=0,
+)
 idw = idw.reshape(mx.shape)
 
 # %%
-# Interpolation with RBF method
-rbf, neighbors = mesh.radial_basis_function(
-    numpy.vstack((mx.ravel(), my.ravel())).T,
-    within=False,  # Extrapolation is forbidden
-    k=11,  # We are looking for at most 11 neighbors
-    rbf='thin_plate',
-    smooth=1e-4,
-    num_threads=0)
+# Radial Basis Function (RBF)
+# ***************************
+rbf, _ = mesh.radial_basis_function(numpy.vstack((mx.ravel(), my.ravel())).T,
+                                    within=False,
+                                    k=11,
+                                    rbf='multiquadric',
+                                    epsilon=None,
+                                    smooth=0,
+                                    num_threads=0)
 rbf = rbf.reshape(mx.shape)
 
 # %%
-# Interpolation with a Window Function
-wf, neighbors = mesh.window_function(
-    numpy.vstack((mx.ravel(), my.ravel())).T,
-    within=False,  # Extrapolation is forbidden
-    k=11,
-    wf='parzen',
-    num_threads=0)
+# Window Function
+# ***************
+wf, _ = mesh.window_function(numpy.vstack((mx.ravel(), my.ravel())).T,
+                             within=False,
+                             k=11,
+                             wf='parzen',
+                             radius=None,
+                             num_threads=0)
 wf = wf.reshape(mx.shape)
 
 # %%
-# Interpolation with a Universal Kriging
-kriging, neighbors = mesh.kriging(
-    numpy.vstack((mx.ravel(), my.ravel())).T,
-    within=False,  # Extrapolation is forbidden
-    k=11,
-    covariance='gaussian',
-    drift_function='linear',  # linear trend in (x,y[,z])
-    nugget=1e-6,
-    alpha=1_000_000,  # range parameter (meters)
-    num_threads=0)
+# Kriging
+# *******
+kriging, _ = mesh.kriging(numpy.vstack((mx.ravel(), my.ravel())).T,
+                          within=False,
+                          k=11,
+                          radius=None,
+                          covariance='gaussian',
+                          drift_function='linear',
+                          num_threads=0)
 kriging = kriging.reshape(mx.shape)
 
 # %%
-# Let's visualize the "true" field
-vmax = 1.2
-vmin = -1.3
-fig = matplotlib.pyplot.figure(figsize=(6, 5))
-ax = fig.add_subplot(111)
-pcm = ax.pcolormesh(mx,
-                    my,
-                    topography_field(mx, my),
-                    cmap='jet',
-                    shading='auto',
-                    vmin=vmin,
-                    vmax=vmax)
-ax.set_title('True field')
-fig.colorbar(pcm, ax=ax, shrink=0.8, location='bottom')
+# Visualization of Results
+# ------------------------
+#
+# Finally, let's visualize the original scattered data and the results of the
+# different interpolation methods on a map.
+fig = matplotlib.pyplot.figure(figsize=(20, 10))
+fig.patch.set_alpha(0.0)
+gs = fig.add_gridspec(2, 4)
+ax1 = fig.add_subplot(gs[0, 0], projection=cartopy.crs.PlateCarree())
+ax2 = fig.add_subplot(gs[0, 1], projection=cartopy.crs.PlateCarree())
+ax3 = fig.add_subplot(gs[0, 2], projection=cartopy.crs.PlateCarree())
+ax4 = fig.add_subplot(gs[0, 3], projection=cartopy.crs.PlateCarree())
+ax5 = fig.add_subplot(gs[1, 0], projection=cartopy.crs.PlateCarree())
+ax6 = fig.add_subplot(gs[1, 1], projection=cartopy.crs.PlateCarree())
+ax7 = fig.add_subplot(gs[1, 2], projection=cartopy.crs.PlateCarree())
+ax8 = fig.add_subplot(gs[1, 3], projection=cartopy.crs.PlateCarree())
 
-# %%
-# Let's visualize our interpolated data
 
-fig = matplotlib.pyplot.figure(figsize=(12, 10))
-fig.suptitle('Comparison of Interpolation Methods', fontsize=16)
+# Common plotting function
+def plot_grid(ax, grid, title, cmap, vmin, vmax):
+    """Helper function to plot interpolated grids."""
+    pcm = ax.pcolormesh(mx,
+                        my,
+                        grid,
+                        cmap=cmap,
+                        transform=cartopy.crs.PlateCarree(),
+                        vmin=vmin,
+                        vmax=vmax)
+    ax.coastlines()
+    ax.add_feature(cartopy.feature.BORDERS, linestyle='-')
+    ax.set_title(title)
+    return pcm
 
-# IDW interpolation
-ax1 = fig.add_subplot(221)
-pcm = ax1.pcolormesh(mx,
-                     my,
-                     idw,
-                     cmap='jet',
-                     shading='auto',
-                     vmin=vmin,
-                     vmax=vmax)
-ax1.set_title('IDW interpolation')
 
-# RBF interpolation
-ax2 = fig.add_subplot(222)
-pcm = ax2.pcolormesh(mx,
-                     my,
-                     rbf,
-                     cmap='jet',
-                     shading='auto',
-                     vmin=vmin,
-                     vmax=vmax)
-ax2.set_title('RBF interpolation')
+# Plotting each interpolation result
+true = field(mx, my)
+plot_grid(ax1, idw, 'Inverse Distance Weighting', 'viridis', -1, 1)
+plot_grid(ax2, rbf, 'Radial Basis Function', 'viridis', -1, 1)
+plot_grid(ax3, wf, 'Window Function', 'viridis', -1, 1)
+plot_grid(ax4, kriging, 'Kriging', 'viridis', -1, 1)
 
-# Window function interpolation
-ax3 = fig.add_subplot(223)
-pcm = ax3.pcolormesh(mx,
-                     my,
-                     wf,
-                     cmap='jet',
-                     shading='auto',
-                     vmin=vmin,
-                     vmax=vmax)
-ax3.set_title('Window function interpolation')
+# Plotting errors
+error_idw = numpy.where(true != 0, (idw - true) / true, 0)
+error_rbf = numpy.where(true != 0, (rbf - true) / true, 0)
+error_wf = numpy.where(true != 0, (wf - true) / true, 0)
+error_kriging = numpy.where(true != 0, (kriging - true) / true, 0)
 
-# Universal Kriging interpolation
-ax4 = fig.add_subplot(224)
-pcm = ax4.pcolormesh(mx,
-                     my,
-                     kriging,
-                     cmap='jet',
-                     shading='auto',
-                     vmin=vmin,
-                     vmax=vmax)
-ax4.set_title('Universal Kriging interpolation')
+plot_grid(ax5, error_idw, 'IDW Relative Error', 'RdBu_r', -0.5, 0.5)
+plot_grid(ax6, error_rbf, 'RBF Relative Error', 'RdBu_r', -0.5, 0.5)
+plot_grid(ax7, error_wf, 'Window Function Relative Error', 'RdBu_r', -0.5, 0.5)
+plot_grid(ax8, error_kriging, 'Kriging Relative Error', 'RdBu_r', -0.5, 0.5)
 
-fig.colorbar(pcm, ax=[ax1, ax2, ax3, ax4], shrink=0.6, location='bottom')
-
-# Compute the true field values for the grid
-true_field = topography_field(mx.ravel(), my.ravel()).reshape(mx.shape)
-
-# Calculate relative errors for each interpolation method
-idw_error = numpy.abs((idw - true_field) / true_field)
-rbf_error = numpy.abs((rbf - true_field) / true_field)
-wf_error = numpy.abs((wf - true_field) / true_field)
-kriging_error = numpy.abs((kriging - true_field) / true_field)
-
-# %%
-# Plot the relative errors
-fig = matplotlib.pyplot.figure(figsize=(12, 10))
-fig.suptitle('Relative Errors', fontsize=16)
-
-# IDW Relative Error
-ax1 = fig.add_subplot(221)
-pcm = ax1.pcolormesh(mx,
-                     my,
-                     idw_error,
-                     cmap='jet',
-                     shading='auto',
-                     vmin=0,
-                     vmax=1)
-ax1.set_title('IDW Relative Error')
-
-# RBF Relative Error
-ax2 = fig.add_subplot(222)
-ax2.pcolormesh(mx, my, rbf_error, cmap='jet', shading='auto', vmin=0, vmax=1)
-ax2.set_title('RBF Relative Error')
-
-# Window Function Relative Error
-ax3 = fig.add_subplot(223)
-ax3.pcolormesh(mx, my, wf_error, cmap='jet', shading='auto', vmin=0, vmax=1)
-ax3.set_title('Window Function Relative Error')
-
-# Universal Kriging Relative Error
-ax4 = fig.add_subplot(224)
-ax4.pcolormesh(mx,
-               my,
-               kriging_error,
-               cmap='jet',
-               shading='auto',
-               vmin=0,
-               vmax=1)
-ax4.set_title('Universal Kriging Relative Error')
-
-# Add a single colorbar for all error plots
-cbar = fig.colorbar(pcm,
-                    ax=[ax1, ax2, ax3, ax4],
-                    shrink=0.8,
-                    location='bottom')
-cbar.set_label('Relative Error')
+fig.tight_layout()
+matplotlib.pyplot.show()

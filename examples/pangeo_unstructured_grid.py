@@ -1,15 +1,18 @@
 """
-************************************
-Interpolation of LLC4320 ocean model
-************************************
+LLC4320 Ocean Model Interpolation
+=================================
 
-Interpolation of LLC4320 ocean model
+This example demonstrates how to interpolate data from the high-resolution
+LLC4320 ocean model, which uses a curvilinear grid. This type of grid is a
+prime example of unstructured data that ``pyinterp`` can handle efficiently.
 
-The interpolation of this object is based on a :py:class:`R*Tree
-<pyinterp.RTree>` structure. To begin with, we start by building this
-object. By default, this object considers the WGS-84 geodetic coordinate system.
-But you can define another one using the class :py:class:`Spheroid
-<pyinterp.geodetic.Spheroid>`.
+The interpolation is performed using an :py:class:`pyinterp.RTree`, which is
+ideal for spatial queries on non-uniform grids.
+
+.. note::
+
+    This example requires access to the Pangeo cloud data store and is not
+    executed by default during the documentation build.
 """
 import cartopy.crs
 import cartopy.mpl.ticker

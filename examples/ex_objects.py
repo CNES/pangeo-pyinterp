@@ -1,18 +1,17 @@
 """
-***************************
-Create interpolator objects
-***************************
+.. _example_objects:
 
-In this example, we are going to build the basic objects allowing to carry out
-interpolations.
+Interpolator Objects
+====================
 
-Before starting, we will examine the properties of a Cartesian grid and the
-different classes associated with these objects.
+This example explains how to create the fundamental objects required for
+interpolation with ``pyinterp``: the axes and the grid. These objects are the
+building blocks for defining the space and data on which interpolation will be
+performed.
 
-
-Step-by-step creation of grids
-##############################
+First, let's import the necessary libraries and load a sample dataset.
 """
+# %%
 import timeit
 
 import numpy
@@ -22,6 +21,7 @@ import pyinterp
 import pyinterp.backends.xarray
 import pyinterp.tests
 
+# Load a 3D test grid from the library's test data
 ds = pyinterp.tests.load_grid3d()
 lon, lat, time, tcw = (
     ds['longitude'].values,
@@ -31,103 +31,105 @@ lon, lat, time, tcw = (
 )
 
 # %%
-# This regular 3-dimensional grid is associated with three axes:
+# Defining Axes
+# -------------
+# An axis defines the coordinates for one dimension of the grid. ``pyinterp``
+# provides specialized axis objects for performance and to handle specific cases
+# like circular (e.g., longitude) and temporal axes.
 #
-# * longitudes,
-# * latitudes and
-# * time.
-#
-# To perform the calculations quickly, we will build three objects that will be
-# used by the interpolator to search for the data to be used. Let's start with
-# the y-axis representing the latitude axis.
+# Regular Axis
+# ++++++++++++
+# A regular axis is a simple, monotonically increasing or decreasing array of
+# coordinates. Here, we create an axis for latitude.
 y_axis = pyinterp.Axis(lat)
+print('Latitude axis:')
 print(y_axis)
 
 # %%
-# For example, you can search for the closest point to 0.12 degrees north
-# latitude.
-y_axis.find_index([0.12])
+# You can use the :py:meth:`pyinterp.Axis.find_index` method to find the nearest
+# grid index for a given coordinate.
+print(f'Index for latitude 0.12°: {y_axis.find_index([0.12])}')
 
 # %%
-# Then, the x-axis representing the longitudinal axis. In this case, the axis is
-# an axis representing a 360 degree circle.
+# Circular Axis (Longitude)
+# +++++++++++++++++++++++++
+# For axes that wrap around, like longitude, you can create a "circular" axis.
+# This ensures that coordinates are correctly handled at the boundary (e.g.,
+# -180° and 180° are treated as the same point).
 x_axis = pyinterp.Axis(lon, is_circle=True)
+print('\nLongitude axis (circular):')
 print(x_axis)
 
 # %%
-# The values -180 and 180 degrees represent the same point on the axis.
-print(x_axis.find_index([-180]) == x_axis.find_index([180]))
+# With a circular axis, boundary points are correctly identified as identical.
+print('Are indices for -180° and 180° the same? '
+      f'{x_axis.find_index([-180]) == x_axis.find_index([180])}')
 
 # %%
-# Finally, we create the time axis
+# Temporal Axis
+# +++++++++++++
+# For time coordinates, ``pyinterp`` provides a highly optimized
+# :py:class:`pyinterp.TemporalAxis` class.
 t_axis = pyinterp.TemporalAxis(time)
+print('Time axis:')
 print(t_axis)
 
 # %%
-# As these objects must communicate in C++ memory space, we use objects specific
-# to the library much faster than other data models and manage the axes
-# representing a circle. For example if we compare these objects to Pandas
-# indexes:
+# Performance Comparison
+# ----------------------
+# ``pyinterp`` axis objects are implemented in C++ and are significantly faster
+# for lookups than equivalent objects in libraries like ``pandas``. Let's
+# compare the performance of :py:class:`pyinterp.Axis` against
+# ``pandas.Index`` for finding indices.
+#
+# **Longitude Axis:**
 values = lon[10:20] + 1 / 3
 index = pandas.Index(lon)
-print('pandas.Index: %f' % timeit.timeit('index.searchsorted(values)',
-                                         globals={
-                                             'index': index,
-                                             'values': values
-                                         }))
-print('pyinterp.Axis %f' % timeit.timeit('x_axis.find_index(values)',
-                                         globals={
-                                             'x_axis': x_axis,
-                                             'values': values
-                                         }))
+print('Performance for Longitude Axis:')
+print(f'  pandas.Index:  '
+      f"{timeit.timeit('index.searchsorted(values)', globals=globals()):.6f}s")
+print(f'  pyinterp.Axis: '
+      f"{timeit.timeit('x_axis.find_index(values)', globals=globals()):.6f}s")
 
 # %%
-# This time axis is also very efficient compared to the pandas index.
+# **Time Axis:**
 index = pandas.Index(time)
 values = time + numpy.timedelta64(1, 'ns')
-print('pandas.Index: %f' % timeit.timeit('index.searchsorted(values)',
-                                         globals={
-                                             'index': index,
-                                             'values': values
-                                         }))
-print('pyinterp.Axis %f' % timeit.timeit('t_axis.find_index(values)',
-                                         globals={
-                                             't_axis': t_axis,
-                                             'values': values
-                                         }))
+print('Performance for Time Axis:')
+print(f'  pandas.Index:        '
+      f"{timeit.timeit('index.searchsorted(values)', globals=globals()):.6f}s")
+print(f'  pyinterp.TemporalAxis: '
+      f"{timeit.timeit('t_axis.find_index(values)', globals=globals()):.6f}s")
 
 # %%
+# Creating a Grid
+# ---------------
+# Once the axes are defined, you can create a grid object that holds the data.
+# The grid object takes the axes and the data array as input. The data must be
+# organized to match the order of the axes: (time, latitude, longitude).
+#
+# Here, we create a :py:class:`pyinterp.Grid3D` object for the total column
+# water vapor (TCW) data.
 # Before constructing the tensor for pyinterp, we must begin to organize the
-# tensor data so that it is properly stored in memory for pyinterp.
-
-# %%
-#   * The shape of the tensor must be (len(x_axis), len(y_axis), len(t_axis))
+# data in a grid with the values of the axes in the first dimensions of the
+# tensor.
+#
+# In our case, the time, latitude, longitude axes must be sorted in this order.
 tcw = tcw.T
-# %%
-# .. warning::
-#
-#   If the array handled is a masked array, the masked values must be set to
-#   nan.
-#
+grid = pyinterp.Grid3D(x_axis, y_axis, t_axis, tcw)
+print('Grid object:')
+print(grid)
 
 # %%
-# Now we can build the object handling the regular 3-dimensional grid.
-#
-# .. note::
-#   Grid data are not copied, the Grid3D class just keeps a reference on the
-#   handled array. Axis data are copied for non-uniform axes, and only examined
-#   for regular axes.
-grid_3d = pyinterp.Grid3D(x_axis, y_axis, t_axis, tcw)
-print(grid_3d)
+# Using the XArray Backend
+# ------------------------
+# For convenience, ``pyinterp`` provides a backend that can directly create a
+# grid interpolator from an ``xarray.DataArray``. This avoids the need to
 
-# %%
-# xarray backend
-# ##############
+# manually create the axes and grid objects.
 #
-# The construction of these objects manipulating the :py:class:`regular grids
-# <pyinterp.backends.xarray.RegularGridInterpolator>` can be done more easily
-# using the `xarray <http://xarray.pydata.org/>`_ library and `CF
-# <https://cfconventions.org/>`_ convention usually found in NetCDF files.
-interpolator = pyinterp.backends.xarray.RegularGridInterpolator(
-    pyinterp.tests.load_grid3d().tcw)
-print(interpolator.grid)
+# The backend automatically detects the axis types (regular, circular, temporal)
+# and creates the appropriate grid interpolator.
+interpolator = pyinterp.backends.xarray.Grid3D(ds['tcw'])
+print('Interpolator from xarray.DataArray:')
+print(interpolator)

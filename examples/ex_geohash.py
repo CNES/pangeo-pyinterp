@@ -3,13 +3,29 @@
 Geohash
 *******
 
-Geohashing is a geocoding method used to encode geographic coordinates (latitude
-and longitude) into a short string of digits and letters delineating an area on
-a map, which is called a cell, with varying resolutions. The more characters in
-the string, the more precise the location.
+Geohashing is a geocoding method used to encode geographic coordinates
+(latitude and longitude) into a short string of digits and letters. This string,
+also known as a geohash, delineates a rectangular area on a map, called a cell.
+The longer the string, the smaller the cell and the more precise the location.
+
+This library provides two ways to work with geohashes:
+
+*   The :py:class:`pyinterp.GeoHash` class allows for an object-oriented
+    manipulation of a geohash.
+*   The :py:mod:`pyinterp.geohash` module provides functions for vectorized
+    computation of geohashes.
+
+In general, you should use the `pyinterp.GeoHash` class when you want to
+manipulate a few geohashes, and the `pyinterp.geohash` module when you want to
+process a large number of geohashes stored in `numpy` arrays.
+
+The following sections will demonstrate how to use both approaches.
 
 Geohash Grid
 ============
+
+First, let's define a few functions to visualize geohash grids. These functions
+are for illustrative purposes and are not part of the `pyinterp` library.
 """
 import timeit
 
@@ -122,59 +138,66 @@ plot_geohash_grid(4,
                   polygon=pyinterp.GeoHash.from_string('dds').bounding_box())
 
 # %%
-# The :py:class:`GeoHash<pyinterp.GeoHash>` class allows encoding a coordinate
-# into a GeoHash code in order to examine its properties: precision, number of
-# bits, code, coordinates of the grid cell, etc.
+# Object-Oriented Interface
+# =========================
+#
+# The :py:class:`pyinterp.GeoHash` class allows for an object-oriented
+# manipulation of a geohash. You can create a geohash from a longitude and
+# latitude, and then access its properties.
 code = pyinterp.GeoHash(-67.5, 22.5, precision=4)
-print(f'code = {code!s})')
-print(f'precision = {code.precision()}')
-print(f'number of bits = {code.number_of_bits()}')
-print(f'lon/lat = {code.center()}')
+print(f'The geohash is {code!s}')
+print(f'The precision of the geohash is {code.precision()}')
+print(f'The number of bits is {code.number_of_bits()}')
+print(f'The center of the cell is at {code.center()}')
 
 # %%
-# You can also use this class to get the neighboring GeoHash codes of this
-# instance.
+# You can also use this class to get the neighboring geohash codes.
 [str(item) for item in code.neighbors()]
 
-# On the other hand, when you want to encode a large volume of data, you should
-# use functions that work on numpy arrays.
-
 # %%
-# Encoding coordinates
+# Vectorized Interface
 # ====================
 #
+# On the other hand, when you want to encode a large volume of data, you should
+# use functions that work on `numpy` arrays.
+#
 # Generation of dummy data
-SIZE = 1000000
+SIZE = 1_000_000
 generator = numpy.random.Generator(numpy.random.PCG64(0))
 lon = generator.uniform(-180, 180, SIZE)
 lat = generator.uniform(-80, 80, SIZE)
 measures = generator.random(SIZE)
 
 # %%
-# Encoding the data
+# Encoding the data is done using the :py:func:`pyinterp.geohash.encode`
+# function.
 codes = pyinterp.geohash.encode(lon, lat, precision=4)
 print(codes)
 
-# As you can see, the resulting codes are encoding as numpy byte arrays.
+# %%
+# As you can see, the resulting codes are encoding as numpy byte arrays. This is
+# to save memory and speed up the processing. This algorithm is very fast, which
+# makes it possible to process a lot of data quickly.
+#
+# The following benchmark measures the time it takes to encode the coordinates
+# into geohashes.
+elapsed = timeit.timeit('pyinterp.geohash.encode(lon, lat, precision=12)',
+                        number=50,
+                        globals={
+                            'pyinterp': pyinterp,
+                            'lon': lon,
+                            'lat': lat
+                        }) / 50
+print(f'Elapsed time: {elapsed:.6f} seconds')
 
 # %%
-# This algorithm is very fast, which makes it possible to process a lot of data
-# quickly.
-timeit.timeit('pyinterp.geohash.encode(lon, lat)',
-              number=50,
-              globals={
-                  'pyinterp': pyinterp,
-                  'lon': lon,
-                  'lat': lat
-              }) / 50
-
-# %%
-# The inverse operation is also possible.
+# The inverse operation is also possible using the
+# :py:func:`pyinterp.geohash.decode` function.
 lon, lat = pyinterp.geohash.decode(codes)
 
 # %%
 # You can also use the :py:func:`pyinterp.geohash.transform` to transform
-# coordinates from one précision to another.
+# geohashes from one precision to another.
 codes = pyinterp.geohash.transform(codes, precision=1)
 print(codes)
 
@@ -184,8 +207,8 @@ print(codes)
 
 # %%
 # The :py:func:`pyinterp.geohash.bounding_boxes` function allows calculating the
-# GeoHash codes contained in a box or a polygon. This function allows,
-# for example, to obtain all the GeoHash codes present on the Mediterranean.
+# geohash codes contained in a box or a polygon. This function allows, for
+# example, to obtain all the geohash codes present on the Mediterranean Sea.
 MEDITERRANEAN_SEA = [(-1.43504, 35.38124), (-1.68901, 35.18381),
                      (-1.93947, 35.18664), (-2.18994, 35.18945),
                      (-2.44041, 35.19223), (-2.69089, 35.19498),
@@ -265,6 +288,11 @@ plot_geohash_grid(precision, polygon=polygon, caption=False)
 # %%
 # Density calculation
 # ===================
+#
+# Finally, we will calculate the density of points in each geohash cell. For
+# this, we will use the :py:func:`pyinterp.geohash.encode` function to get the
+# geohash of each point, and then we will group the points by geohash and count
+# the number of points in each cell.
 df = pandas.DataFrame({
     'lon': lon,
     'lat': lat,
@@ -273,11 +301,27 @@ df = pandas.DataFrame({
 })
 df.set_index('geohash', inplace=True)
 df = df.groupby('geohash').count()['measures'].rename('count').to_frame()
+
+# %%
+# Then, we calculate the density of points in each cell by dividing the number
+# of points by the area of the cell in square kilometers.
 df['density'] = df['count'] / (
     pyinterp.geohash.area(df.index.values.astype('S')) / 1e6)
-array = pyinterp.geohash.to_xarray(df.index.values.astype('S'), df.density)
+
+# %%
+# Finally, we can visualize the density of points on a map. For this, we will
+# use the :py:func:`pyinterp.geohash.to_xarray` function to convert the geohash
+# and the density into an :py:class:`xarray.DataArray`.
+array = pyinterp.geohash.to_xarray(df.index.values.astype('S'),
+                                   df.density.values)
 array = array.where(array != 0, numpy.nan)
 
-fig = matplotlib.pyplot.figure()
-ax = fig.add_subplot(111)
-_ = array.plot(ax=ax)
+fig = matplotlib.pyplot.figure(figsize=(10, 5))
+ax = fig.add_subplot(111, projection=cartopy.crs.PlateCarree())
+array.plot(ax=ax,
+           transform=cartopy.crs.PlateCarree(),
+           cmap='viridis',
+           robust=True)
+ax.coastlines()
+ax.gridlines(draw_labels=True)
+ax.set_global()

@@ -1,15 +1,12 @@
 """
-****************
-2D interpolation
-****************
+.. _example_2d_interpolation:
 
-Interpolation of a two-dimensional regular grid.
+2D Interpolation
+================
 
-Bivariate
-#########
-
-Perform a :py:func:`bivariate <pyinterp.bivariate>` interpolation of gridded
-data points.
+This example illustrates how to perform 2D interpolation of a variable on a
+regular grid. The pyinterp library provides several interpolation methods, and
+this guide will walk you through bivariate and bicubic interpolation.
 """
 import cartopy.crs
 import matplotlib
@@ -21,40 +18,42 @@ import pyinterp.backends.xarray
 import pyinterp.tests
 
 # %%
-# The first step is to load the data into memory and create the interpolator
-# object:
+# Bivariate Interpolation
+# -----------------------
 #
-# .. note ::
-#     An exception will be thrown if the constructor is not able to determine
-#     which axes are the longitudes and latitudes. You can force the data to be
-#     read by specifying on the longitude and latitude axes the respective
-#     ``degrees_east`` and ``degrees_north`` attribute ``units``. If your grid
-#     does not contain geodetic coordinates, set the ``geodetic`` option of the
-#     constructor to ``False``.
+# Bivariate interpolation is a common method for estimating the value of a
+# variable at a new point based on its surrounding grid points. In this section,
+# we will perform bivariate interpolation using pyinterp.
+#
+# First, we load the data and create the interpolator object. The constructor
+# will automatically detect the longitude and latitude axes. If it fails, you
+# can specify them by setting the ``units`` attribute to ``degrees_east`` and
+# ``degrees_north``. If your grid is not geodetic, set the ``geodetic``
+# parameter to ``False``.
 ds = pyinterp.tests.load_grid2d()
 interpolator = pyinterp.backends.xarray.Grid2D(ds.mss)
 
 # %%
-# We will then build the coordinates on which we want to interpolate our grid:
-#
-# .. note::
-#   The coordinates used for interpolation are shifted to avoid using the
-#   points of the bivariate function.
+# Next, we define the coordinates where we want to interpolate the grid. To
+# avoid interpolating at the grid points themselves, we shift the coordinates
+# slightly.
 mx, my = numpy.meshgrid(numpy.arange(-180, 180, 1) + 1 / 3.0,
                         numpy.arange(-89, 89, 1) + 1 / 3.0,
                         indexing='ij')
 
 # %%
-# The grid is :py:meth:`interpolated
-# <pyinterp.backends.xarray.Grid2D.bivariate>` to the desired coordinates:
+# Now, we interpolate the grid to the new coordinates using the
+# :py:meth:`bivariate <pyinterp.backends.xarray.Grid2D.bivariate>` method.
 mss = interpolator.bivariate(coords={
     'lon': mx.ravel(),
     'lat': my.ravel()
 }).reshape(mx.shape)
 
 # %%
-# Let's visualize the original grid and the result of the interpolation.
+# To visualize the results, we can plot the original grid and the interpolated
+# grid.
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
+fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 lons, lats = numpy.meshgrid(ds.lon, ds.lat, indexing='ij')
@@ -66,6 +65,7 @@ pcm = ax1.pcolormesh(lons,
                      transform=cartopy.crs.PlateCarree(),
                      vmin=-0.1,
                      vmax=0.1)
+ax1.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
 ax1.coastlines()
 ax1.set_title('Original MSS')
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
@@ -77,33 +77,73 @@ pcm = ax2.pcolormesh(mx,
                      transform=cartopy.crs.PlateCarree(),
                      vmin=-0.1,
                      vmax=0.1)
+ax2.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
 ax2.coastlines()
 ax2.set_title('Bilinear Interpolated MSS')
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
-fig.show()
 
 # %%
-# Values can be interpolated with several methods: *bilinear*, *nearest*, and
-# *inverse distance weighting*. Distance calculations, if necessary, are
-# calculated using the `Haversine formula
+# The bivariate method supports several interpolation techniques, including
+# bilinear, nearest neighbor, and inverse distance weighting. Distance
+# calculations are performed using the `Haversine formula
 # <https://en.wikipedia.org/wiki/Haversine_formula>`_.
 #
-# Bicubic
-# #######
+# Bicubic Interpolation
+# ---------------------
 #
-# To interpolate data points on a regular two-dimensional grid. The interpolated
-# surface is smoother than the corresponding surfaces obtained by bilinear
-# interpolation.
+# Bicubic interpolation provides a smoother result compared to bivariate
+# interpolation by considering a 4x4 neighborhood of grid points.
 #
 # .. warning::
 #
-#     When using this interpolator, pay attention to the undefined values.
-#     Because as long as the calculation window uses an indefinite point, the
-#     interpolator will compute indeterminate values. In other words, this
-#     interpolator increases the area covered by the masked values. To avoid
-#     this behavior, it is necessary to :doc:`pre-process <ex_fill_undef>` the
-#     grid to delete undefined values.
-#
+#       When using this interpolator, pay attention to NaN values. If the
+#       calculation window contains even a single NaN, the result of the
+#       interpolation will also be NaN, due to NaN propagation in arithmetic
+#       operations. This means the masked region effectively grows during
+#       interpolation. To avoid this behavior, you should
+#       :doc:`pre-process <ex_fill_undef>` the grid to replace or remove NaN
+#       values.
+
+# %%
+# The following code performs bicubic interpolation on the same grid.
+mss_bicubic = interpolator.bicubic(coords={
+    'lon': mx.ravel(),
+    'lat': my.ravel()
+}).reshape(mx.shape)
+
+# %%
+# Let's visualize the result of the bicubic interpolation and compare it with
+# the original data.
+fig = matplotlib.pyplot.figure(figsize=(10, 8))
+fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
+ax1 = fig.add_subplot(
+    211, projection=cartopy.crs.PlateCarree(central_longitude=180))
+pcm = ax1.pcolormesh(lons,
+                     lats,
+                     ds.mss.T,
+                     cmap='jet',
+                     shading='auto',
+                     transform=cartopy.crs.PlateCarree(),
+                     vmin=-0.1,
+                     vmax=0.1)
+ax1.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax1.coastlines()
+ax1.set_title('Original MSS')
+ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
+pcm = ax2.pcolormesh(mx,
+                     my,
+                     mss_bicubic,
+                     cmap='jet',
+                     shading='auto',
+                     transform=cartopy.crs.PlateCarree(),
+                     vmin=-0.1,
+                     vmax=0.1)
+ax2.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax2.coastlines()
+ax2.set_title('Bicubic Interpolated MSS')
+fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
+
+# %%
 # The interpolation :py:meth:`bicubic <pyinterp.backends.xarray.Grid2D.bicubic>`
 # function has more parameters to define the data frame used by the spline
 # functions and how to process the edges of the regional grids:
@@ -129,6 +169,7 @@ mss = interpolator.bicubic(
 #        interpolator = pyinterp.backends.xarray.Grid2D(
 #            ds.mss, increasing_axes=True)
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
+fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180))
 pcm = ax1.pcolormesh(lons,
@@ -139,6 +180,7 @@ pcm = ax1.pcolormesh(lons,
                      transform=cartopy.crs.PlateCarree(),
                      vmin=-0.1,
                      vmax=0.1)
+ax1.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
 ax1.coastlines()
 ax1.set_title('Original MSS')
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
@@ -150,7 +192,6 @@ pcm = ax2.pcolormesh(mx,
                      transform=cartopy.crs.PlateCarree(),
                      vmin=-0.1,
                      vmax=0.1)
+ax2.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
 ax2.coastlines()
 ax2.set_title('Bicubic Interpolated MSS')
-fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
-fig.show()

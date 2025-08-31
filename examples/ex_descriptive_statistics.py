@@ -1,16 +1,19 @@
 """
-**********************
-Descriptive Statistics
-**********************
+.. _example_descriptive_statistics:
 
-Numpy offers many statistical functions, but if you want to obtain several
-statistical variables from the same array, it's necessary to process the data
-several times to calculate the various parameters. This example shows how to use
-the DescriptiveStatistics class to obtain several statistical variables with a
-single calculation. Also, the calculation algorithm is incremental and is more
-numerically stable.
+Descriptive Statistics
+======================
+
+While NumPy provides a wide range of statistical functions, calculating multiple
+statistical variables from the same array often requires multiple passes over
+the data. The :py:class:`pyinterp.DescriptiveStatistics` class offers a more
+efficient solution by computing several statistical variables in a single pass.
+This approach is not only faster but also more numerically stable, thanks to its
+incremental calculation algorithm.
 
 .. note::
+
+    This implementation is based on the following paper:
 
     Pébay, P., Terriberry, T.B., Kolla, H. et al.
     Numerically stable, scalable formulas for parallel and online
@@ -21,60 +24,65 @@ numerically stable.
     https://doi.org/10.1007/s00180-015-0637-z
 """
 # %%
+# Basic Usage
+# -----------
+#
+# Let's start by creating a random array and using it to initialize the
+# :py:class:`pyinterp.DescriptiveStatistics` class.
 import dask.array
 import numpy
 
 import pyinterp
 
-# %%
-# Create a random array
 generator = numpy.random.Generator(numpy.random.PCG64(0))
 values = generator.random((2, 4, 6, 8))
 
-# %%
-# Create a DescriptiveStatistics object.
 ds = pyinterp.DescriptiveStatistics(values)
 
 # %%
-# The constructor will calculate the statistical variables on the provided data.
-# The calculated variables are stored in the instance and can be accessed using
-# different methods:
+# Once the object is created, you can access various statistical variables,
+# such as the count, mean, variance, standard deviation, skewness, kurtosis,
+# minimum, maximum, and sum.
+print(f'Count: {ds.count()}')
+print(f'Mean: {ds.mean()}')
+print(f'Variance: {ds.var()}')
+
+# %%
+# You can also get all the calculated statistical variables as a structured
+# NumPy array.
+stats_array = ds.array()
+print('Structured array of statistics:')
+print(stats_array)
+
+# %%
+# Computing Statistics Along an Axis
+# ----------------------------------
 #
-# * mean
-# * var
-# * std
-# * skewness
-# * kurtosis
-# * min
-# * max
-# * sum
-# * sum_of_weights
-# * count
-ds.count()
+# Similar to NumPy, you can compute statistics along a specific axis by
+# providing the ``axis`` parameter.
+ds_axis = pyinterp.DescriptiveStatistics(values, axis=(1, 2))
+print('Mean along axis (1, 2):')
+print(ds_axis.mean())
 
 # %%
-ds.mean()
+# Working with Dask Arrays
+# ------------------------
+#
+# The :py:class:`pyinterp.DescriptiveStatistics` class also supports Dask
+# arrays, allowing you to work with datasets that are larger than memory.
+dask_values = dask.array.from_array(values, chunks=(2, 2, 2, 2))
+ds_dask = pyinterp.DescriptiveStatistics(dask_values, axis=(1, 2))
+print('Mean with Dask array:')
+print(ds_dask.mean())
 
 # %%
-# It's possible to get a structured numpy array containing the different
-# statistical variables calculated.
-ds.array()
-
-# %%
-# Like numpy, it's possible to compute statistics along axis.
-ds = pyinterp.DescriptiveStatistics(values, axis=(1, 2))
-ds.mean()
-
-# %%
-# The class can also process a dask array. In this case, the call to the
-# constructor triggers the calculation.
-ds = pyinterp.DescriptiveStatistics(dask.array.from_array(values,
-                                                          chunks=(2, 2, 2, 2)),
-                                    axis=(1, 2))
-ds.mean()
-
-# %%
-# Finally, it's possible to calculate weighted statistics.
+# Weighted Statistics
+# -------------------
+#
+# You can also calculate weighted statistics by providing a ``weights`` array.
 weights = generator.random((2, 4, 6, 8))
-ds = pyinterp.DescriptiveStatistics(values, weights=weights, axis=(1, 2))
-ds.mean()
+ds_weighted = pyinterp.DescriptiveStatistics(values,
+                                             weights=weights,
+                                             axis=(1, 2))
+print('Weighted mean:')
+print(ds_weighted.mean())
