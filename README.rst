@@ -16,17 +16,17 @@ problem, but written entirely in Python, the performance of these projects was
 not quite sufficient for our needs. That is why this project started.
 
 With this library, you can interpolate `2D
-<https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.grid.Grid2D.html#pyinterp.grid.Grid2D>`_,
+<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.grid.Grid2D.html#pyinterp.grid.Grid2D>`_,
 `3D
-<https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.grid.Grid3D.html#pyinterp.grid.Grid3D>`_,
+<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.grid.Grid3D.html#pyinterp.grid.Grid3D>`_,
 or `4D
-<https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.grid.Grid4D.html#pyinterp.grid.Grid4D>`_
+<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.grid.Grid4D.html#pyinterp.grid.Grid4D>`_
 fields using ``n-variate`` and ``bicubic`` `interpolators
-<https://pangeo-pyinterp.readthedocs.io/en/latest/api.html#cartesian-interpolators>`_
+<https://cnes.github.io/pangeo-pyinterp/api.html#cartesian-interpolators>`_
 and `unstructured grids
-<https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.RTree.html>`_.
+<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.RTree.html>`_.
 You can also apply for a data `binning
-<https://pangeo-pyinterp.readthedocs.io/en/latest/api.html#binning>`_ on the
+<https://cnes.github.io/pangeo-pyinterp/api.html#binning>`_ on the
 bivariate area by simple or linear binning.
 
 The library core is written in C++ using the `Boost C++ Libraries
@@ -45,10 +45,10 @@ in the neighborhood. This behavior is a concern when you need to interpolate
 values near the mask of some fields. The library provides utilities to fill the
 undefined values:
 
-* `loess <https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.fill.loess.html>`_
+* `loess <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.loess.html>`_
   to fill the undefined values on the boundary between the defined/undefined
   values using local regression.
-* `gauss_seidel <https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.fill.gauss_seidel.html>`_
+* `gauss_seidel <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.gauss_seidel.html>`_
   to fill all undefined values in a grid using the Gauss-Seidel method by
   relaxation.
 
@@ -68,7 +68,7 @@ grid from the coordinates of a point. These axes are either:
   89.940374 degrees.
 
 These objects are manipulated by the class `pyinterp.Axis
-<https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.Axis.html>`_,
+<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.Axis.html>`_,
 which will choose, according to Axis definition, the best implementation. This
 object will allow you to find the two indexes framing a given value. This
 operating mode allows better performance when searching for a regular axis (a
@@ -84,7 +84,7 @@ Temporal Axes
 -------------
 
 The `pyinterp.TemporalAxis
-<https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.TemporalAxis.html>`_
+<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.TemporalAxis.html>`_
 class handles temporal axes, i.e., axes defined by 64-bit integer vectors, which
 is the encoding used by `numpy
 <https://docs.scipy.org/doc/numpy/reference/arrays.datetime.html>`_ to control
@@ -112,8 +112,8 @@ disadvantage of this implementation is that it requires fairly more memory, as
 one more element gets used to index the value of the Cartesian space.
 
 The management of the `LLA
-<https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.geodetic.Coordinates.ecef_to_lla.html>`_/`ECEF
-<https://pangeo-pyinterp.readthedocs.io/en/latest/generated/pyinterp.geodetic.Coordinates.lla_to_ecef.html>`_
+<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.geodetic.Coordinates.ecef_to_lla.html>`_/`ECEF
+<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.geodetic.Coordinates.lla_to_ecef.html>`_
 coordinate conversion is managed to use the `Olson, D.K.
 <https://ieeexplore.ieee.org/document/481290>`_ algorithm. It has an excellent
 performance with the accuracy of 1e-8 meters for altitude.
