@@ -11,6 +11,7 @@ the dependencies needed to build the library.
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    setup/build
    setup/pip

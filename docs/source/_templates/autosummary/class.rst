@@ -12,7 +12,9 @@
    {%- set protected = [] -%}
    {%- set special = [] -%}
    {%- set inherited_meth = [] -%}
-   {%- set skip = ['__abstractmethods__',
+   {%- set skip = [
+                   '_pybind11_conduit_v1_',
+                   '__abstractmethods__',
                    '__annotations__',
                    '__dict__',
                    '__doc__',

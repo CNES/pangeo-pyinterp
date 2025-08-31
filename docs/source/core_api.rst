@@ -5,10 +5,12 @@
 Core API Documentation
 ######################
 
-Functions and classes implemented in the C++ module
+Low-level classes & functions implemented in the compiled extension module (``pyinterp.core``).
+Most users should start with the high-level :doc:`api` overview.
 
-Axis
-----
+Axes
+====
+Core axis primitives.
 
 .. autosummary::
   :toctree: generated/
@@ -17,8 +19,9 @@ Axis
   core.AxisInt64
   core.TemporalAxis
 
-numpy datetime utilities
-------------------------
+NumPy Datetime Utilities
+========================
+Vectorized helpers for working with ``numpy.datetime64`` values.
 
 .. autosummary::
   :toctree: generated/
@@ -30,8 +33,9 @@ numpy datetime utilities
   core.dateutils.time
   core.dateutils.weekday
 
-Bicubic interpolation
----------------------
+Bicubic & Spline Routines
+=========================
+Internal bicubic spline interpolation kernels.
 
 .. autosummary::
   :toctree: generated/
@@ -42,7 +46,8 @@ Bicubic interpolation
   core.spline_float64
 
 Binning
--------
+=======
+Core accumulation structures by dtype.
 
 .. autosummary::
   :toctree: generated/
@@ -54,8 +59,9 @@ Binning
   core.Histogram2DFloat64
   core.Histogram2DFloat32
 
-Bivariate interpolators
------------------------
+Bivariate Interpolators
+=======================
+Object oriented 2D interpolator classes.
 
 .. autosummary::
   :toctree: generated/
@@ -65,8 +71,9 @@ Bivariate interpolators
   core.InverseDistanceWeighting2D
   core.Nearest2D
 
-Bivariate interpolations
-------------------------
+Bivariate Kernel Functions
+==========================
+Vectorized functional 2D interpolation routines.
 
 .. autosummary::
   :toctree: generated/
@@ -76,7 +83,8 @@ Bivariate interpolations
   core.bivariate_float64
 
 Cartesian Grids
----------------
+===============
+Typed grid containers.
 
 .. autosummary::
   :toctree: generated/
@@ -92,7 +100,8 @@ Cartesian Grids
   core.Grid4DFloat64
 
 Univariate Descriptive Statistics
----------------------------------
+=================================
+Streaming statistics.
 
 .. autosummary::
   :toctree: generated/
@@ -101,7 +110,8 @@ Univariate Descriptive Statistics
   core.DescriptiveStatisticsFloat64
 
 Geodetic System
----------------
+===============
+Geodetic primitives and spatial operations.
 
 .. autosummary::
   :toctree: generated/
@@ -116,8 +126,9 @@ Geodetic System
   core.geodetic.RTree
   core.geodetic.Spheroid
 
-Geohash integer
----------------
+Geohash (Integer)
+=================
+Integer encoded geohash helpers.
 
 .. autosummary::
   :toctree: generated/
@@ -126,8 +137,9 @@ Geohash integer
   core.geohash.int64.encode
   core.geohash.int64.neighbors
 
-Geohash bytes
--------------
+Geohash (Bytes)
+===============
+Byte encoded geohash helpers and transformations.
 
 .. autosummary::
   :toctree: generated/
@@ -142,7 +154,8 @@ Geohash bytes
   core.geohash.where
 
 Temporal Cartesian Grids
-------------------------
+========================
+Grids extended with a time dimension.
 
 .. autosummary::
   :toctree: generated/
@@ -152,8 +165,9 @@ Temporal Cartesian Grids
   core.TemporalGrid4DFloat32
   core.TemporalGrid4DFloat64
 
-4D interpolation
-----------------
+4D Interpolation Kernels
+========================
+Functional 4D interpolation (space + time) routines.
 
 .. autosummary::
   :toctree: generated/
@@ -162,7 +176,9 @@ Temporal Cartesian Grids
   core.quadrivariate_float64
 
 R*Tree
-------
+======
+Spatial index & associated interpolation kernels.
+
 .. autosummary::
   :toctree: generated/
 
@@ -171,8 +187,9 @@ R*Tree
   core.RTree3DFloat32
   core.RTree3DFloat64
 
-Replace undefined values
-------------------------
+Replace Undefined Values
+========================
+Gap filling routines and supporting types.
 
 .. autosummary::
   :toctree: generated/
@@ -184,8 +201,9 @@ Replace undefined values
   core.fill.gauss_seidel_float64
   core.fill.gauss_seidel_float32
 
-3D interpolators
-----------------
+3D Interpolators
+================
+Object oriented 3D interpolator classes.
 
 .. autosummary::
   :toctree: generated/
@@ -195,8 +213,9 @@ Replace undefined values
   core.InverseDistanceWeighting3D
   core.Nearest3D
 
-Temporal 3D interpolators
--------------------------
+Temporal 3D Interpolators
+=========================
+Object oriented 3D + time interpolator classes.
 
 .. autosummary::
   :toctree: generated/
@@ -206,8 +225,9 @@ Temporal 3D interpolators
   core.TemporalInverseDistanceWeighting3D
   core.TemporalNearest3D
 
-3D interpolations
------------------
+3D Interpolation Kernels
+========================
+Vectorized functional 3D interpolation routines.
 
 .. autosummary::
   :toctree: generated/

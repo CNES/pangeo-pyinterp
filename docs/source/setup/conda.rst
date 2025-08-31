@@ -1,18 +1,24 @@
-Setup with Anaconda
-*******************
+Setup with Anaconda / conda-forge
+*********************************
 
-`Anaconda <https://anaconda.org/>`_  is a free and open-source distribution of
-the Python programming language for scientific computing, which aims to simplify
-package management and deployment. The package management system ``conda``
-manages package versions.
+`conda <https://docs.conda.io/>`_ (or the faster drop-in replacement
+`mamba <https://mamba.readthedocs.io/>`_) can install pre-built binaries with
+all compiled dependencies.
 
-The first step is to install the anaconda distribution. The installation manual
-for this software is detailed `here <https://docs.anaconda.com/anaconda/install/>`_.
+Install::
 
-To install the software using `conda`, execute the following command: ::
+    conda install -c conda-forge pyinterp
 
-    conda install pyinterp -c conda-forge
+(Or with mamba)::
 
-This command will install the software and the necessary dependencies. More
-information is available on the syntax of this command on the `related
-documentation <https://conda.io/projects/conda/en/latest/commands/install.html>`_.
+    mamba install -c conda-forge pyinterp
+
+Optional packages you may want::
+
+    conda install xarray dask cartopy pandas
+
+To keep everything current::
+
+    conda update --all
+
+See :doc:`build` for details if you need to compile from source instead.

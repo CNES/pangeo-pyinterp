@@ -1,9 +1,20 @@
 Setup with pip
 **************
 
-It is also possible to use "pip" to install the library. Before running this
-command, please make sure that the :ref:`C++ software and libraries
-<requirements>` needed to compile the library kernel are installed. Then,
-install pyinterp with pip: ::
+You can also install the library with ``pip``. Since no wheels are provided, pip
+builds the library from source, so all dependencies must be installed beforehand
 
-    $ pip install pyinterp
+Prerequisites see :ref:`requirements` in :doc:`build`.
+
+Basic install::
+
+    pip install pyinterp
+
+Upgrade to the latest release::
+
+    pip install -U pyinterp
+
+If the build fails, verify CMake, a C++20 compiler, Boost and Eigen are present,
+then retry with increased verbosity::
+
+    pip install -v pyinterp

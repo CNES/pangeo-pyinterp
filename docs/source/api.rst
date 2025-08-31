@@ -5,19 +5,45 @@
 API Documentation
 #################
 
-Geographic indexers
-===================
+This page presents the high-level public Python API grouped by theme. For low-level
+(C++ binding) symbols see :doc:`core_api`.
+
+Coordinates & Axes
+==================
+Fundamental 1D axis helpers used by grid and interpolator objects.
 
 .. autosummary::
   :toctree: generated/
 
   Axis
   AxisInt64
-  RTree
   TemporalAxis
 
-geohash
--------
+CF Metadata Helpers
+===================
+Identify axis meaning from CF-compliant unit strings.
+
+.. autosummary::
+  :toctree: generated/
+
+  cf.AxisLatitudeUnit
+  cf.AxisLongitudeUnit
+  cf.AxisTimeUnit
+  cf.AxisUnit
+
+Spatial Index
+=============
+Spatial search structures.
+
+.. autosummary::
+  :toctree: generated/
+
+  RTree
+
+Geohash
+=======
+Encode geographic coordinates into compact base32 strings and work with the
+resulting discrete spatial grid.
 
 .. autosummary::
   :toctree: generated/
@@ -32,41 +58,9 @@ geohash
   geohash.transform
   geohash.where
 
-Binning
-=======
-
-.. autosummary::
-  :toctree: generated/
-
-  Binning1D
-  Binning2D
-  Histogram2D
-
-Cartesian Grids
-===============
-
-.. autosummary::
-  :toctree: generated/
-
-  grid.Grid2D
-  grid.Grid3D
-  grid.Grid4D
-
-Climate and Forecast
-====================
-
-Axis identification from CF attribute values.
-
-.. autosummary::
-  :toctree: generated/
-
-  cf.AxisLatitudeUnit
-  cf.AxisLongitudeUnit
-  cf.AxisTimeUnit
-  cf.AxisUnit
-
-Geodetic systems
-================
+Geodetic Utilities
+==================
+Geodetic primitives, distance helpers and spherical geometry utilities.
 
 .. autosummary::
   :toctree: generated/
@@ -83,38 +77,54 @@ Geodetic systems
   geodetic.RTree
   geodetic.Spheroid
 
-.. _cartesian_interpolators:
+Binning & Histograms
+====================
+One and two dimensional statistical accumulation utilities.
 
-1D interpolators
-================
+.. autosummary::
+  :toctree: generated/
+
+  Binning1D
+  Binning2D
+  Histogram2D
+
+Cartesian Grids
+===============
+Regular rectilinear grid containers used with interpolators.
+
+.. autosummary::
+  :toctree: generated/
+
+  grid.Grid2D
+  grid.Grid3D
+  grid.Grid4D
+
+Filling Undefined Values
+========================
+Functions for filling missing values in grids.
+
+.. autosummary::
+  :toctree: generated/
+
+  fill.gauss_seidel
+  fill.loess
+
+Interpolators
+=============
+Scalar field interpolation functions over Cartesian grids.
 
 .. autosummary::
   :toctree: generated/
 
   interpolate1d
-
-Cartesian interpolators
-=======================
-
-.. autosummary::
-  :toctree: generated/
-
   bicubic
   bivariate
   trivariate
   quadrivariate
 
-Fill undefined values
+Univariate Statistics
 =====================
-
-.. autosummary::
-  :toctree: generated/
-
-  fill.loess
-  fill.gauss_seidel
-
-Univariate statistics
-=====================
+Streaming descriptive statistics of 1D sample streams.
 
 .. autosummary::
   :toctree: generated/
@@ -124,6 +134,7 @@ Univariate statistics
 
 Orbit Interpolation
 ===================
+Work with repeating satellite orbits and derived passes/swaths.
 
 .. autosummary::
   :toctree: generated/
@@ -136,11 +147,9 @@ Orbit Interpolation
   Pass
   Swath
 
-
-Xarray
-======
-
-Construction of Cartesian interpolators from xarray.DataArray
+Xarray Backends
+===============
+Helpers for constructing interpolators directly from ``xarray.DataArray`` objects.
 
 .. autosummary::
   :toctree: generated/
