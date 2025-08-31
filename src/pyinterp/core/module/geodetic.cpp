@@ -1131,11 +1131,12 @@ Args:
       .def("__repr__", &geodetic::LineString::to_string,
            "Called by the ``repr()`` built-in function to compute the string "
            "representation of a point.")
-      .def("__iter__",
-           [](const geodetic::LineString &self) {
-             return py::make_iterator(self.begin(), self.end(),
-                                      py::keep_alive<0, 1>());
-           })
+      .def(
+          "__iter__",
+          [](const geodetic::LineString &self) {
+            return py::make_iterator(self.begin(), self.end());
+          },
+          py::keep_alive<0, 1>())
       .def(
           "curvilinear_distance",
           [](const geodetic::LineString &self, const std::string &strategy,
