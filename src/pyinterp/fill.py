@@ -66,9 +66,9 @@ def gauss_seidel(mesh: grid.Grid2D | grid.Grid3D,
         first_guess: Specifies the type of first guess grid.
             Supported values are:
 
-                * ``zero`` means use ``0.0`` as an initial guess;
-                * ``zonal_average`` means that zonal averages (i.e, averages in
-                  the X-axis direction) will be used.
+            * ``zero`` means use ``0.0`` as an initial guess;
+            * ``zonal_average`` means that zonal averages (i.e, averages in
+              the X-axis direction) will be used.
 
             Defaults to ``zonal_average``.
 
