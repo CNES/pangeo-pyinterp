@@ -125,7 +125,6 @@ print(grid)
 # ------------------------
 # For convenience, ``pyinterp`` provides a backend that can directly create a
 # grid interpolator from an ``xarray.DataArray``. This avoids the need to
-
 # manually create the axes and grid objects.
 #
 # The backend automatically detects the axis types (regular, circular, temporal)
