@@ -1,5 +1,6 @@
 Example Gallery
 ===============
 
-This gallery of examples shows a variety of relatively small snippets or
-examples of tasks that can be done with the ``pyinterp`` core package.
+Explore practical examples showcasing essential features and workflows,
+including data handling, interpolation, advanced geospatial analysis, and
+integration with Pangeo.

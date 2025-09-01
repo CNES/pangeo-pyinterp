@@ -130,7 +130,7 @@ print(f'Index of 1 degree: {index}')
 
 # %%
 # TemporalAxis
-# ============
+# ------------
 #
 # Time axes allow for manipulating axes representing dates or time differences.
 # These objects are specialized to handle the 64-bit integers used by numpy to

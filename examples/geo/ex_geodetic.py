@@ -201,7 +201,7 @@ ax.legend()
 
 # %%
 # Crossover Detection
-# ===================
+# -------------------
 # The :py:class:`pyinterp.geodetic.Crossover` class is used to find the
 # intersection point between two line segments, which is particularly useful for
 # finding crossovers between satellite tracks.

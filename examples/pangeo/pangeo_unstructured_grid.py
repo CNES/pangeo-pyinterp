@@ -142,5 +142,5 @@ fig.show()
 # %%
 # The image below illustrates the result of the IDW interpolation:
 #
-# .. figure:: ../pictures/mit_gcm.png
+# .. figure:: ../../pictures/mit_gcm.png
 #     :align: center

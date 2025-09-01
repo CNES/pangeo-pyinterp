@@ -189,11 +189,55 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
+
+class SubsectionSorter:
+    """Sorts example files within a subsection based on a predefined order."""
+
+    def __init__(self, *args) -> None:
+        pass
+
+    def __call__(self, fname):
+        order = {
+            'ex_objects.py': 0,
+            'ex_axis.py': 1,
+            'ex_geodetic.py': 2,
+            'ex_geohash.py': 3,
+            'ex_2d.py': 4,
+            'ex_3d.py': 5,
+            'ex_4d.py': 6,
+            'ex_unstructured.py': 7,
+            'ex_orbit.py': 8,
+            'pangeo_unstructured_grid.py': 9,
+            'pangeo_time_series.py': 10,
+            'ex_descriptive_statistics.py': 11,
+            'ex_binning.py': 12,
+            'ex_dateutils.py': 13,
+            'ex_fill_undef.py': 14,
+        }
+        return order[pathlib.Path(fname).name]
+
+
+def section_sorter(dirname):
+    """Sorts sections based on a predefined order."""
+    order = {
+        'core': 0,
+        'grid': 1,
+        'stats': 2,
+        'geo': 3,
+        'utilities': 4,
+        'orbit': 5,
+        'pangeo': 6,
+    }
+    return order[pathlib.Path(dirname).name]
+
+
 # -- Extension configuration -------------------------------------------------
 sphinx_gallery_conf = {
     'examples_dirs': [HERE.parent.parent.joinpath('examples')],
     'filename_pattern': r'[\\\/]ex_',
     'pypandoc': False,
+    'subsection_order': section_sorter,
+    'within_subsection_order': SubsectionSorter,
     'binder': {
         'org': 'CNES',
         'repo': 'pangeo-pyinterp',

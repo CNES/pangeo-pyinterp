@@ -191,7 +191,7 @@ fig.colorbar(sc)
 # %%
 # The image below illustrates the result of the code above:
 #
-# .. figure:: ../pictures/time_series.png
+# .. figure:: ../../pictures/time_series.png
 #     :align: center
 #
 #     Time series of SLA observed by float #62423050
