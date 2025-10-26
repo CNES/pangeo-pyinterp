@@ -116,6 +116,42 @@ jobs:
       run: |
         pytest -v -ra
 
+  linux_arm64:
+    name: ${{ matrix.python-version }}-arm64
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12']
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+        fetch-tags: true
+    - name: Setup Miniconda
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        cache-downloads: true
+        condarc: |
+          channels:
+            - conda-forge
+        create-args: |
+          python=${{ matrix.python-version }}
+        environment-name: pyinterp
+        environment-file: conda/environment.yml
+        init-shell: bash
+    - name: Build extension
+      shell: bash -l {0}
+      run: |
+        python setup.py build_ext
+        python setup.py build
+    - name: Run tests
+      shell: bash -l {0}
+      run: |
+        pytest -v -ra
 
   macos:
     name: macos
