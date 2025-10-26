@@ -1726,9 +1726,9 @@ Returns:
 
 .. seealso::
 
-    Olson, D.K. "Converting earth-Centered, Earth-Fixed Coordinates to
-    Geodetic Coordinates," IEEE Transactions on Aerospace and Electronic
-    Systems, Vol. 32, No. 1, January 1996, pp. 473-476.
+    Vermeille, H. (2002). Direct transformation from geocentric to geodetic
+    coordinates. Journal of Geodesy, 76(8), 451–454.
+    DOI: https://doi.org/10.1007/s00190-002-0273-6
   )__doc__")
       .def("lla_to_ecef", &geodetic::Coordinates::lla_to_ecef<double>,
            py::arg("lon"), py::arg("lat"), py::arg("alt"),

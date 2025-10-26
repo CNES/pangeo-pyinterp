@@ -20,22 +20,14 @@ class Coordinates {
     auto _system = spheroid.value_or(Spheroid());
     // semi-major axis
     a_ = _system.semi_major_axis();
-    // flatenning (is only necessary for serialization/deserialization)
+    // flattening (is only necessary for serialization/deserialization)
     f_ = _system.flattening();
     // first eccentricity squared
     e2_ = _system.first_eccentricity_squared();
-    // a1 = a*e2
-    a1_ = a_ * e2_;
-    // a2 = a1*a1
-    a2_ = a1_ * a1_;
-    // a3 = a1*e2/2
-    a3_ = a1_ * (e2_ * 0.5);
-    // a4 = 2.5*a2
-    a4_ = 2.5 * a2_;
-    // a5 = a1+a3
-    a5_ = a1_ + a3_;
-    // a6 = 1-e2
-    a6_ = 1 - e2_;
+    // inv_a2 = 1/(a*a)
+    reciprocal_a_squared_ = 1 / (a_ * a_);
+    // e2_squared = e2 * e2
+    e2_squared_ = e2_ * e2_;
   }
 
   // Default destructor
@@ -64,49 +56,34 @@ class Coordinates {
   template <typename T>
   auto ecef_to_lla(const geometry::Point3D<T> &ecef) const noexcept
       -> geometry::EquatorialPoint3D<T> {
-    const double x = boost::geometry::get<0>(ecef);
-    const double y = boost::geometry::get<1>(ecef);
-    const double z = boost::geometry::get<2>(ecef);
-    const double zp = std::abs(z);
-    const double w2 = math::sqr(x) + math::sqr(y);
-    const double w = std::sqrt(w2);
-    const double inv_r2 = 1 / (w2 + math::sqr(z));
-    const double inv_r = std::sqrt(inv_r2);
-    const double s2 = math::sqr(z) * inv_r2;
-    const double c2 = w2 * inv_r2;
+    const T x = boost::geometry::get<0>(ecef);
+    const T y = boost::geometry::get<1>(ecef);
+    const T z = boost::geometry::get<2>(ecef);
 
-    double u = a2_ * inv_r;
-    double v = a3_ - a4_ * inv_r;
-    double s;
-    double c;
-    double ss;
-    double lat;
+    const T lon = std::atan2(y, x);
 
-    if (c2 > 0.3) {
-      s = (zp * inv_r) * (1.0 + c2 * (a1_ + u + s2 * v) * inv_r);
-      lat = std::asin(s);
-      ss = s * s;
-      c = std::sqrt(1.0 - ss);
-    } else {
-      c = (w * inv_r) * (1.0 - s2 * (a5_ - u - c2 * v) * inv_r);
-      lat = std::acos(c);
-      ss = 1.0 - c * c;
-      s = std::sqrt(ss);
-    }
+    // Vermeille's method (2002)
+    const T p = (x * x + y * y) * reciprocal_a_squared_;
+    const T q = ((1.0 - e2_) * (z * z)) * reciprocal_a_squared_;
+    const T r = (p + q - e2_squared_) / 6.0;
 
-    const double g = 1.0 - e2_ * ss;
-    const double rg = a_ / std::sqrt(g);
-    const double rf = a6_ * rg;
-    u = w - rg * c;
-    v = zp - rf * s;
-    const double f = c * u + s * v;
-    const double m = c * v - s * u;
-    const double p = m / (rf / g + f);
-    lat += p;
-    if (z < 0.0) {
-      lat = -lat;
-    }
-    return {T(math::atan2d(y, x)), T(math::degrees(lat)), T(f + m * p * 0.5)};
+    const T s = (e2_squared_ * p * q) / (4.0 * r * r * r);
+    /// The paper uses `(1+s+sqrt(s*(2+s)))^(1/3)`.
+    /// std::cbrt is used for the cube root, which is often faster and more
+    /// stable. The expression is algebraically equivalent to
+    /// `cbrt(1 + s + sqrt(s * (2 + s)))`.
+    const T t = std::cbrt(1.0 + s + std::sqrt(s * (2.0 + s)));
+    const T u = r * (1.0 + t + 1.0 / t);
+    const T v = std::sqrt((u * u) + (e2_squared_ * q));
+    const T w = e2_ * (u + v - q) / (2.0 * v);
+    const T k = std::sqrt(u + v + (w * w)) - w;
+    const T d = k * std::sqrt((x * x) + (y * y)) / (k + e2_);
+
+    const T lat = std::atan2(z, d);
+    const T alt = (k + e2_ - 1.0) / k * std::sqrt((d * d) + (z * z));
+
+    // Convert radians to degrees for your Geographic struct
+    return {math::degrees(lon), math::degrees(lat), alt};
   }
 
   /// Converts Geographic coordinates latitude, longitude, and altitude to
@@ -133,7 +110,7 @@ class Coordinates {
   }
 
  private:
-  double a_, f_, e2_, a1_, a2_, a3_, a4_, a5_, a6_;
+  double a_, e2_, f_, reciprocal_a_squared_, e2_squared_;
 };
 
 }  // namespace pyinterp::detail::geodetic

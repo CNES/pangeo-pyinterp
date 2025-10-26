@@ -114,8 +114,8 @@ one more element gets used to index the value of the Cartesian space.
 The management of the `LLA
 <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.geodetic.Coordinates.ecef_to_lla.html>`_/`ECEF
 <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.geodetic.Coordinates.lla_to_ecef.html>`_
-coordinate conversion is managed to use the `Olson, D.K.
-<https://ieeexplore.ieee.org/document/481290>`_ algorithm. It has an excellent
+coordinate conversion is managed to use the `Vermeille, H.
+<https://doi.org/10.1007/s00190-002-0273-6>`_ algorithm. It has an excellent
 performance with the accuracy of 1e-8 meters for altitude.
 
 Geohash

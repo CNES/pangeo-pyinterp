@@ -75,8 +75,10 @@ class Spheroid {
   /// @return \f$e^2=\frac{a^2-b^2}{a^2}\f$
   [[nodiscard]] constexpr auto first_eccentricity_squared() const noexcept
       -> double {
-    double a2 = math::sqr(semi_major_axis_);
-    return (a2 - math::sqr(semi_minor_axis())) / a2;
+    // This formula calculates the first eccentricity squared in a numerically
+    // stable way. It is optimized as f * (2 - f) to reduce the number of
+    // operations for better performance.
+    return flattening_ * (2.0 - flattening_);
   }
 
   /// Gets the second eccentricity squared
