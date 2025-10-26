@@ -138,10 +138,22 @@ jobs:
         condarc: |
           channels:
             - conda-forge
-        create-args: |
-          python=${{ matrix.python-version }}
         environment-name: pyinterp
-        environment-file: conda/environment.yml
+        create-args: >-
+          - python=${{ matrix.python-version }}
+          - cmake
+          - cxx-compiler
+          - dask
+          - eigen
+          - libboost-devel
+          - make
+          - numcodecs
+          - numpy
+          - pandas
+          - pip
+          - pytest
+          - setuptools
+          - xarray
         init-shell: bash
     - name: Build extension
       shell: bash -l {0}
