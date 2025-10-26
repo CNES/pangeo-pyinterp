@@ -270,7 +270,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     ]
 
     boolean_options = setuptools.command.build_ext.build_ext.boolean_options
-    boolean_options += ['mkl']
+    boolean_options += [
+        'build_unittests',
+        'code_coverage',
+        'mkl',
+        'reconfigure',
+    ]
 
     def initialize_options(self) -> None:
         """Set the default values of the options."""
@@ -407,7 +412,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         prepare_cmake_arguments(
             is_windows,
-            self.code_coverage is True,
+            self.code_coverage is not None,
             cfg,
             extdir,
             cmake_args,
