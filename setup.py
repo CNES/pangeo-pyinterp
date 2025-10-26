@@ -228,29 +228,29 @@ class CMakeExtension(setuptools.Extension):
     # pylint: enable=too-few-public-methods
 
 
-def build_cmake_options(
+def prepare_cmake_arguments(
     is_windows: bool,
     code_coverage: bool,
     config: str,
     extdir: str,
-) -> list[str]:
-    """Return the default CMake generator."""
-    result: list[str] = []
+    cmake_args: list[str],
+    build_args: list[str],
+) -> None:
+    """Update cmake and build arguments based on the platform."""
     if not is_windows:
-        result += ['--', f'-j{os.cpu_count()}']
+        build_args += ['--', f'-j{os.cpu_count()}']
         if platform.system() == 'Darwin':
-            result += [
+            cmake_args += [
                 f'-DCMAKE_OSX_DEPLOYMENT_TARGET={OSX_DEPLOYMENT_TARGET}'
             ]
         if code_coverage:
-            result += ['-DCODE_COVERAGE=ON']
+            cmake_args += ['-DCODE_COVERAGE=ON']
     else:
-        result += [
+        cmake_args += [
             '-DCMAKE_GENERATOR_PLATFORM=x64',
             f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={extdir}',
         ]
-        result += ['--', '/m']
-    return result
+        build_args += ['--', '/m']
 
 
 # pylint: disable=too-many-instance-attributes
@@ -405,8 +405,14 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             cmake_args.append(
                 '-G' + os.environ.get('CMAKE_GEN', 'Visual Studio 16 2019'))
 
-        cmake_args += build_cmake_options(is_windows, self.code_coverage
-                                          is True, cfg, extdir)
+        prepare_cmake_arguments(
+            is_windows,
+            self.code_coverage is True,
+            cfg,
+            extdir,
+            cmake_args,
+            build_args,
+        )
 
         if self.cmake_args:
             cmake_args.extend(self.cmake_args.split())
