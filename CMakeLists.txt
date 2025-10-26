@@ -136,9 +136,12 @@ if(NOT WIN32)
     string(APPEND CMAKE_CXX_FLAGS " -Wpedantic")
   endif()
 
-  # Suppress psabi warning on ARM64 due to Boost Geometry ABI changes
+  # Suppress warnings on ARM64 NEON code
   if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
+    # Suppress psabi warning due to Boost Geometry ABI changes
     string(APPEND CMAKE_CXX_FLAGS " -Wno-psabi")
+    # Suppress class-memaccess warning in Eigen NEON packet math
+    string(APPEND CMAKE_CXX_FLAGS " -Wno-class-memaccess")
   endif()
 endif()
 
