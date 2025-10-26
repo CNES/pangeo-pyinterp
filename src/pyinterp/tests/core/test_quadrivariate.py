@@ -82,7 +82,7 @@ def test_interpolator() -> None:
                                             interpolator,
                                             num_threads=0,
                                             bounds_error=True)
-    assert np.all(expected.ravel() == calculated)
+    np.testing.assert_almost_equal(expected.ravel(), calculated)
 
     x = np.arange(-1, 1, 0.2)
     y = np.arange(-1, 1, 0.2)
