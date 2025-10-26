@@ -1,14 +1,20 @@
 Changelog
 #########
 
-2025.9.0
---------
+2025.11.0
+---------
 * Deprecated the `universal_kriging` method in favor of the more versatile
   `kriging` method, which now supports both simple and universal kriging.
-  Updated documentation to reflect this change.
-* Refactor the RBF class by improving epsilon handling, enhancing the
-  interpolation matrix computation, and optimizing the distance calculation
-  method.
+  Updated the documentation accordingly.
+* Refactored the RBF class to improve epsilon handling, enhance interpolation
+  matrix computation, and optimize the distance calculation method.
+* Enabled builds on Linux ARM64 architectures.
+* Replaced the Olson, D.K. algorithm with the Vermeille, H. algorithm for
+  geodetic to ECEF conversions, improving numerical stability and accuracy.
+* Optimized the "spline not a knot" fitting model by using Eigen::SparseLU for
+  solving linear systems, resulting in better performance.
+* Adopted ruff for code formatting and linting, and improved code typing with
+  more precise type hints and annotations.
 
 2025.8.1
 --------
