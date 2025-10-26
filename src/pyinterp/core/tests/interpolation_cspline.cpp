@@ -207,5 +207,6 @@ TEST(CSplineNotAKnot, MinSize) {
 
   xa.conservativeResize(3);
   ya.conservativeResize(3);
-  EXPECT_THROW(interpolator(xa, ya, 2.0), std::invalid_argument);
+  auto yi = interpolator(xa, ya, 2.0);
+  EXPECT_TRUE(std::isnan(yi));
 }
