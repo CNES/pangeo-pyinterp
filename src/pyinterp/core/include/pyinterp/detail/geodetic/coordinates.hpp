@@ -56,31 +56,31 @@ class Coordinates {
   template <typename T>
   auto ecef_to_lla(const geometry::Point3D<T> &ecef) const noexcept
       -> geometry::EquatorialPoint3D<T> {
-    const T x = boost::geometry::get<0>(ecef);
-    const T y = boost::geometry::get<1>(ecef);
-    const T z = boost::geometry::get<2>(ecef);
-
-    const T lon = std::atan2(y, x);
+    const double x = boost::geometry::get<0>(ecef);
+    const double y = boost::geometry::get<1>(ecef);
+    const double z = boost::geometry::get<2>(ecef);
 
     // Vermeille's method (2002)
-    const T p = (x * x + y * y) * reciprocal_a_squared_;
-    const T q = ((1.0 - e2_) * (z * z)) * reciprocal_a_squared_;
-    const T r = (p + q - e2_squared_) / 6.0;
+    const double p = (x * x + y * y) * reciprocal_a_squared_;
+    const double q = ((1.0 - e2_) * (z * z)) * reciprocal_a_squared_;
+    const double r = (p + q - e2_squared_) / 6.0;
 
-    const T s = (e2_squared_ * p * q) / (4.0 * r * r * r);
+    const double s = (e2_squared_ * p * q) / (4.0 * r * r * r);
     /// The paper uses `(1+s+sqrt(s*(2+s)))^(1/3)`.
     /// std::cbrt is used for the cube root, which is often faster and more
     /// stable. The expression is algebraically equivalent to
     /// `cbrt(1 + s + sqrt(s * (2 + s)))`.
-    const T t = std::cbrt(1.0 + s + std::sqrt(s * (2.0 + s)));
-    const T u = r * (1.0 + t + 1.0 / t);
-    const T v = std::sqrt((u * u) + (e2_squared_ * q));
-    const T w = e2_ * (u + v - q) / (2.0 * v);
-    const T k = std::sqrt(u + v + (w * w)) - w;
-    const T d = k * std::sqrt((x * x) + (y * y)) / (k + e2_);
+    const double t = std::cbrt(1.0 + s + std::sqrt(s * (2.0 + s)));
+    const double u = r * (1.0 + t + 1.0 / t);
+    const double v = std::sqrt((u * u) + (e2_squared_ * q));
+    const double w = e2_ * (u + v - q) / (2.0 * v);
+    const double k = std::sqrt(u + v + (w * w)) - w;
+    const double d = k * std::sqrt((x * x) + (y * y)) / (k + e2_);
 
-    const T lat = std::atan2(z, d);
-    const T alt = (k + e2_ - 1.0) / k * std::sqrt((d * d) + (z * z));
+    const T lon = static_cast<T>(std::atan2(y, x));
+    const T lat = static_cast<T>(std::atan2(z, d));
+    const T alt =
+        static_cast<T>((k + e2_ - 1.0) / k * std::sqrt((d * d) + (z * z)));
 
     // Convert radians to degrees for your Geographic struct
     return {math::degrees(lon), math::degrees(lat), alt};
