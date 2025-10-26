@@ -4,16 +4,39 @@
 # license that can be found in the LICENSE file.
 cmake_minimum_required(VERSION 3.10)
 
+# ##############################################################################
+# Import CMake modules
+# ##############################################################################
 include(CheckFunctionExists)
 include(CheckCXXSourceRuns)
 
+# ##############################################################################
+# Check if the source directory is different from the build directory This is to
+# prevent in-source builds.
+# ##############################################################################
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}")
   message(FATAL_ERROR "The build directory must be different from the \
         root directory of this software.")
 endif()
 
-cmake_policy(SET CMP0048 NEW)
+# ##############################################################################
+# Configure additional paths for CMake to search for custom modules
+# ##############################################################################
+set(CMAKE_MODULE_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/tools;"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_MODULE_PATH}")
+
+# ##############################################################################
+# Project settings
+# ##############################################################################
 project(pyinterp LANGUAGES CXX)
+
+# ##############################################################################
+# CMake policies
+# ##############################################################################
+if(POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif()
 
 if(POLICY CMP0063)
   cmake_policy(SET CMP0063 NEW)
@@ -35,6 +58,12 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
+# ##############################################################################
+# Configure compiler flags and options
+# ##############################################################################
+
+# Define the build type Asan to enable address sanitizer if the compiler matches
+# the requirements (GCC or Clang)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   set(SANITIZE "address,undefined")
   if(UNIX AND NOT APPLE)
@@ -60,11 +89,6 @@ endif()
 set_property(
   CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel"
                                   "RelWithDebInfo" "ASan")
-
-# CMake module search path
-set(CMAKE_MODULE_PATH
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/tools;"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_MODULE_PATH}")
 
 # By default, build type is set to release, with debugging information.
 if(NOT CMAKE_BUILD_TYPE)
@@ -99,11 +123,6 @@ macro(CHECK_CXX_COMPILER_AND_linker_flags result cxx_flags linker_flags)
   set(CMAKE_REQUIRED_LIBRARIES "")
   unset(result)
 endmacro()
-
-if(NOT WIN32)
-  set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-  find_package(Threads REQUIRED)
-endif()
 
 # Always use libc++ on Clang
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -189,11 +208,16 @@ endmacro()
 
 check_floating_point_is_iec559()
 
-# Code Coverage Configuration
-add_library(cpp_coverage INTERFACE)
-
+# ##############################################################################
+# Configure the build options
+# ##############################################################################
 option(CODE_COVERAGE "Enable coverage reporting" OFF)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
+
+# ##############################################################################
+# Code Coverage Configuration
+# ##############################################################################
+add_library(cpp_coverage INTERFACE)
 
 if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(cpp_coverage INTERFACE -O0 -g --coverage)
@@ -204,6 +228,16 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   endif()
 endif()
 
+# ##############################################################################
+# Configure the project dependencies
+# ##############################################################################
+
+# Threads
+if(NOT WIN32)
+  set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+  find_package(Threads REQUIRED)
+endif()
+
 # Python
 add_definitions(-DPYBIND11_ASSERT_GIL_HELD_INCREF_DECREF)
 find_package(Python3 COMPONENTS Interpreter Development)
@@ -212,7 +246,13 @@ find_package(Python3 COMPONENTS Interpreter Development)
 find_package(Boost 1.79 REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-# Blas
+# BLAS
+#
+# If the environment variable MKLROOT is defined, we will try to use MKL as a
+# dynamic library first. If it fails, we will try to use MKL lp64 model with
+# sequential code. If MKL is not found, we will try to use OpenBLAS or Apple
+# Accelerate framework. If none of them is found, we will use the generic
+# implementation of BLAS provided by Eigen.
 if(DEFINED ENV{MKLROOT})
   # First try to use MKL as a single dynamic library (conda-forge)
   set(BLA_VENDOR Intel10_64_dyn)
@@ -263,7 +303,9 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 include(CTest)
 find_package(GTest)
 
-# Enable clang-tidy
+# ##############################################################################
+# Enable clang-tidy if requested
+# ##############################################################################
 if(ENABLE_CLANG_TIDY)
   find_program(
     CLANG_TIDY_EXE
@@ -287,10 +329,64 @@ if(ENABLE_CLANG_TIDY)
   message(STATUS "clang-tidy enabled.")
 endif()
 
+# When building Python bindings with a static library, we need to set symbol
+# visibility to hidden to prevent symbol conflicts in the Python module. This
+# avoids collisions between symbols from different libraries when the Python
+# extension is loaded.
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# ##############################################################################
+# Add subdirectories
+# ##############################################################################
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/include)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11)
 add_subdirectory(src/pyinterp/core)
+
+# ##############################################################################
+# Print configuration summary
+# ##############################################################################
+
+# Helper function to format boolean option
+function(format_enabled value_ result_var)
+  if(value_)
+    set(${result_var}
+        "ON"
+        PARENT_SCOPE)
+  else()
+    set(${result_var}
+        "OFF"
+        PARENT_SCOPE)
+  endif()
+endfunction()
+
+format_enabled(CODE_COVERAGE CODE_COVERAGE_LINE)
+format_enabled(ENABLE_CLANG_TIDY CLANG_TIDY_LINE)
+
+set(CONFIG_LINES
+    "==================[ PyInterp Configuration Summary ]=================="
+    "Platform:               ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR}"
+    "Build type:             ${CMAKE_BUILD_TYPE}"
+    "CMake Version:          ${CMAKE_VERSION}"
+    "C++ flags:              ${CMAKE_CXX_FLAGS}"
+    "C++ Standard Required:  ${CMAKE_CXX_STANDARD_REQUIRED}"
+    "C++ Standard:           ${CMAKE_CXX_STANDARD}"
+    "Linker flags:           ${CMAKE_EXE_LINKER_FLAGS}"
+    "Compiler ID:            ${CMAKE_CXX_COMPILER_ID}"
+    "Compiler Version:       ${CMAKE_CXX_COMPILER_VERSION}"
+    "Boost include dir:      ${Boost_INCLUDE_DIRS}"
+    "Eigen3 include dir:     ${EIGEN3_INCLUDE_DIR}"
+    "BLAS:                   ${BLA_VENDOR}"
+    "Code Coverage:          ${CODE_COVERAGE_LINE}"
+    "Clang-Tidy:             ${CLANG_TIDY_LINE}"
+    "Python3:                ${Python3_VERSION}"
+    "======================================================================")
+
+foreach(line ${CONFIG_LINES})
+  message(STATUS "${line}")
+endforeach()
+
+unset(CODE_COVERAGE_LINE)
+unset(CLANG_TIDY_LINE)
+unset(CONFIG_LINES)
