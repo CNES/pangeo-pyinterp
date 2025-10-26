@@ -25,7 +25,7 @@ class CSpline : public CSplineBase<T> {
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   constexpr auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
-      -> void override;
+      -> bool override;
 
   /// @brief Solve a symmetric tridiagonal system
   /// @param x The solution of the system
@@ -64,8 +64,10 @@ constexpr auto CSpline<T>::solve_symmetric_tridiagonal(T *x) -> void {
 
 template <typename T>
 constexpr auto CSpline<T>::compute_coefficients(const Vector<T> &xa,
-                                                const Vector<T> &ya) -> void {
-  Interpolator1D<T>::compute_coefficients(xa, ya);
+                                                const Vector<T> &ya) -> bool {
+  if (!Interpolator1D<T>::compute_coefficients(xa, ya)) {
+    return false;
+  }
   const auto size = xa.size();
   const auto size_m2 = size - 2;
   if (this->x_.size() != size) {
@@ -97,6 +99,7 @@ constexpr auto CSpline<T>::compute_coefficients(const Vector<T> &xa,
     this->b_(i) = 3 * (y_i1 * g_i1 - y_i0 * g_i0);
   }
   solve_symmetric_tridiagonal(this->x_.data() + 1);
+  return true;
 }
 
 }  // namespace pyinterp::detail::interpolation

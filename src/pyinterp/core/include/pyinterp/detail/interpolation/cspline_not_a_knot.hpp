@@ -24,14 +24,16 @@ class CSplineNotAKnot : public CSplineBase<T> {
   /// points) by solving an \f$n\times n\f$ system with not‑a‑knot boundary
   /// conditions.
   constexpr auto compute_coefficients(const Vector<T>& xa, const Vector<T>& ya)
-      -> void override;
+      -> bool override;
 };
 
 template <typename T>
 constexpr auto CSplineNotAKnot<T>::compute_coefficients(const Vector<T>& xa,
                                                         const Vector<T>& ya)
-    -> void {
-  Interpolator1D<T>::compute_coefficients(xa, ya);
+    -> bool {
+  if (!Interpolator1D<T>::compute_coefficients(xa, ya)) {
+    return false;
+  }
   const auto size = xa.size();
   const auto size_m1 = size - 1;
   const auto size_m2 = size - 2;
@@ -77,6 +79,7 @@ constexpr auto CSplineNotAKnot<T>::compute_coefficients(const Vector<T>& xa,
 
   // Solve the full system A * x_ = b_.
   this->x_ = this->A_.colPivHouseholderQr().solve(this->b_);
+  return true;
 }
 
 }  // namespace pyinterp::detail::interpolation

@@ -21,8 +21,8 @@ class Interpolator1D : public Interpolator<T> {
   /// @param x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
   auto operator()(const Vector<T> &xa, const Vector<T> &ya, const T &x) -> T {
-    compute_coefficients(xa, ya);
-    return interpolate_(xa, ya, x);
+    return compute_coefficients(xa, ya) ? interpolate_(xa, ya, x)
+                                        : std::numeric_limits<T>::quiet_NaN();
   }
 
   /// Interpolate the values of y at x.
@@ -32,7 +32,9 @@ class Interpolator1D : public Interpolator<T> {
   /// @return The interpolated values at the points x.
   auto operator()(const Vector<T> &xa, const Vector<T> &ya, const Vector<T> &x)
       -> Vector<T> {
-    compute_coefficients(xa, ya);
+    if (!compute_coefficients(xa, ya)) {
+      return Vector<T>::Constant(x.size(), std::numeric_limits<T>::quiet_NaN());
+    }
     auto y = Vector<T>(x.size());
     for (Eigen::Index i = 0; i < x.size(); ++i) {
       y(i) = interpolate_(xa, ya, x(i));
@@ -46,7 +48,9 @@ class Interpolator1D : public Interpolator<T> {
   /// @param x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
   auto derivative(const Vector<T> &xa, const Vector<T> &ya, const T &x) -> T {
-    compute_coefficients(xa, ya);
+    if (!compute_coefficients(xa, ya)) {
+      return std::numeric_limits<T>::quiet_NaN();
+    }
     return derivative_(xa, ya, x);
   }
 
@@ -57,7 +61,9 @@ class Interpolator1D : public Interpolator<T> {
   /// @return The derivatives of the interpolation function at the points x.
   auto derivative(const Vector<T> &xa, const Vector<T> &ya, const Vector<T> &x)
       -> Vector<T> {
-    compute_coefficients(xa, ya);
+    if (!compute_coefficients(xa, ya)) {
+      return Vector<T>::Constant(x.size(), std::numeric_limits<T>::quiet_NaN());
+    }
     auto y = Vector<T>(x.size());
     for (Eigen::Index i = 0; i < x.size(); ++i) {
       y(i) = derivative_(xa, ya, x(i));
@@ -76,14 +82,11 @@ class Interpolator1D : public Interpolator<T> {
 
   /// Check if the arrays are valid.
   virtual constexpr auto compute_coefficients(const Vector<T> &xa,
-                                              const Vector<T> &ya) -> void {
+                                              const Vector<T> &ya) -> bool {
     if (xa.size() != ya.size()) {
       throw std::invalid_argument("xa and ya must have the same size");
     }
-    if (xa.size() < min_size()) {
-      throw std::invalid_argument("xa and ya must have at least " +
-                                  std::to_string(min_size()) + " elements");
-    }
+    return (xa.size() >= min_size());
   }
 };
 

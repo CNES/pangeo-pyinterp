@@ -37,7 +37,7 @@ class Bicubic : public Interpolator2D<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param za Z-values of the data points.
   constexpr auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya,
-                                      const Matrix<T> &za) -> void override;
+                                      const Matrix<T> &za) -> bool override;
 
   Matrix<T> zx_{};
   Matrix<T> zy_{};
@@ -48,8 +48,10 @@ class Bicubic : public Interpolator2D<T> {
 template <typename T>
 constexpr auto Bicubic<T>::compute_coefficients(const Vector<T> &xa,
                                                 const Vector<T> &ya,
-                                                const Matrix<T> &za) -> void {
-  Interpolator2D<T>::compute_coefficients(xa, ya, za);
+                                                const Matrix<T> &za) -> bool {
+  if (!Interpolator2D<T>::compute_coefficients(xa, ya, za)) {
+    return false;
+  }
   auto xsize = xa.size();
   auto ysize = ya.size();
 
@@ -68,6 +70,7 @@ constexpr auto Bicubic<T>::compute_coefficients(const Vector<T> &xa,
   for (Eigen::Index j = 0; j < ysize; ++j) {
     zxy_.col(j) = spline_.derivative(xa, zy_.col(j), xa);
   }
+  return true;
 }
 
 template <typename T>

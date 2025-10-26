@@ -25,7 +25,9 @@ class Interpolator2D : public Interpolator<T> {
   /// @return The interpolated value at the point x.
   auto operator()(const Vector<T> &xa, const Vector<T> &ya, const Matrix<T> &za,
                   const T &x, const T &y) -> T {
-    compute_coefficients(xa, ya, za);
+    if (!compute_coefficients(xa, ya, za)) {
+      return std::numeric_limits<T>::quiet_NaN();
+    }
     return interpolate_(xa, ya, za, x, y);
   }
 
@@ -38,7 +40,9 @@ class Interpolator2D : public Interpolator<T> {
   /// @return The interpolated value at the point x.
   auto operator()(const Vector<T> &xa, const Vector<T> &ya, const Matrix<T> &za,
                   const Vector<T> &x, const Vector<T> &y) -> Vector<T> {
-    compute_coefficients(xa, ya, za);
+    if (!compute_coefficients(xa, ya, za)) {
+      return Vector<T>::Constant(x.size(), std::numeric_limits<T>::quiet_NaN());
+    }
     auto z = Vector<T>(x.size());
     for (Eigen::Index i = 0; i < x.size(); ++i) {
       z(i) = interpolate_(xa, ya, za, x(i), y(i));
@@ -54,7 +58,7 @@ class Interpolator2D : public Interpolator<T> {
 
   /// Check if the arrays are valid.
   virtual auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya,
-                                    const Matrix<T> &za) -> void {
+                                    const Matrix<T> &za) -> bool {
     if (xa.size() != za.rows()) {
       throw std::invalid_argument(
           "xa and za must have the same number of rows");
@@ -63,14 +67,7 @@ class Interpolator2D : public Interpolator<T> {
       throw std::invalid_argument(
           "ya and za must have the same number of columns");
     }
-    if (xa.size() < min_size()) {
-      throw std::invalid_argument("xa must have at least " +
-                                  std::to_string(min_size()) + " elements");
-    }
-    if (ya.size() < min_size()) {
-      throw std::invalid_argument("ya must have at least " +
-                                  std::to_string(min_size()) + " elements");
-    }
+    return (xa.size() >= min_size() && ya.size() >= min_size());
   }
 };
 

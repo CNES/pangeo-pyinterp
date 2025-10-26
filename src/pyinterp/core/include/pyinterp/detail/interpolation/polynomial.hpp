@@ -26,7 +26,7 @@ class Polynomial : public Interpolator1D<T> {
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   constexpr auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
-      -> void override;
+      -> bool override;
 
   /// Compute the coefficients of the interpolation
   /// @param xa X-coordinates of the data points.
@@ -54,8 +54,10 @@ class Polynomial : public Interpolator1D<T> {
 template <typename T>
 constexpr auto Polynomial<T>::compute_coefficients(const Vector<T> &xa,
                                                    const Vector<T> &ya)
-    -> void {
-  Interpolator1D<T>::compute_coefficients(xa, ya);
+    -> bool {
+  if (!Interpolator1D<T>::compute_coefficients(xa, ya)) {
+    return false;
+  }
   auto size = xa.size();
   if (work_.size() < size) {
     work_.resize(size);
@@ -70,6 +72,7 @@ constexpr auto Polynomial<T>::compute_coefficients(const Vector<T> &xa,
             .array() /
         (xa.segment(ix, size - ix) - xa.segment(ix - 1, size - ix)).array();
   }
+  return true;
 }
 
 template <typename T>

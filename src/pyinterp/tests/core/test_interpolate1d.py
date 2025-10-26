@@ -19,5 +19,5 @@ def test_interpolate1d() -> None:
 
     assert pytest.approx(numpy.cos(-x**2 / 9.0), rel=1e-6) == yi[index]
 
-    with pytest.raises(ValueError):
-        core.interpolate1d(core.Axis(x), y, xi, half_window_size=0)
+    yi = core.interpolate1d(core.Axis(x), y, xi, half_window_size=1)
+    assert numpy.all(numpy.isnan(yi))

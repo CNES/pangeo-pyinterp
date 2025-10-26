@@ -40,7 +40,7 @@ class Steffen : public Interpolator1D<T> {
   /// @param xa X-coordinates of the data points.
   /// @param ya Y-coordinates of the data points.
   constexpr auto compute_coefficients(const Vector<T> &xa, const Vector<T> &ya)
-      -> void override;
+      -> bool override;
 
   /// Return the sign of x multiplied by the sign of y
   static constexpr auto copysign(const T &x, const T &y) -> T {
@@ -52,8 +52,10 @@ class Steffen : public Interpolator1D<T> {
 
 template <typename T>
 constexpr auto Steffen<T>::compute_coefficients(const Vector<T> &xa,
-                                                const Vector<T> &ya) -> void {
-  Interpolator1D<T>::compute_coefficients(xa, ya);
+                                                const Vector<T> &ya) -> bool {
+  if (!Interpolator1D<T>::compute_coefficients(xa, ya)) {
+    return false;
+  }
   auto size = xa.size();
   if (y_prime_.size() < size) {
     y_prime_.resize(size);
@@ -87,6 +89,7 @@ constexpr auto Steffen<T>::compute_coefficients(const Vector<T> &xa,
   // section 2.2
   y_prime_[size - 1] =
       (ya[size - 1] - ya[size - 2]) / (xa[size - 1] - xa[size - 2]);
+  return true;
 }
 
 template <typename T>
