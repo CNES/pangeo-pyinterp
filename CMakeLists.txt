@@ -252,6 +252,7 @@ find_package(Eigen3 3.3.1 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 # GoogleTest
+include(CTest)
 find_package(GTest)
 
 # Enable clang-tidy
