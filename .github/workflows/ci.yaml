@@ -140,20 +140,20 @@ jobs:
             - conda-forge
         environment-name: pyinterp
         create-args: >-
-          - python=${{ matrix.python-version }}
-          - cmake
-          - cxx-compiler
-          - dask
-          - eigen
-          - libboost-devel
-          - make
-          - numcodecs
-          - numpy
-          - pandas
-          - pip
-          - pytest
-          - setuptools
-          - xarray
+          python=${{ matrix.python-version }}
+          cmake
+          cxx-compiler
+          dask
+          eigen
+          libboost-devel
+          make
+          numcodecs
+          numpy
+          pandas
+          pip
+          pytest
+          setuptools
+          xarray
         init-shell: bash
     - name: Build extension
       shell: bash -l {0}
