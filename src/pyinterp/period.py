@@ -1,19 +1,19 @@
-"""
-Time period
-===========
-"""
+"""Time period."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar
 import re
+from types import GenericAlias
 
 import numpy
+import numpy.typing
 
 if TYPE_CHECKING:
     from .typing import (
-        NDArray,
-        NDArrayDateTime,
-        NDArrayTimeDelta,
+        NDArray1DBool,
+        NDArray1DDateTime,
+        NDArray1DTimeDelta,
+        NDArray2DDateTime,
         NDArrayStructured,
     )
 
@@ -27,9 +27,35 @@ RESOLUTION: list[str] = [
     'as', 'fs', 'ps', 'ns', 'us', 'ms', 's', 'm', 'h', 'D', 'W', 'M', 'Y'
 ]
 
+#: Type of the structured array representing a period.
+DTypePeriod = numpy.dtype([('begin', numpy.datetime64),
+                           ('last', numpy.datetime64)])
 
-def _time64_unit(dtype: numpy.dtype):
-    """Gets the unit of time."""
+if TYPE_CHECKING:
+    #: Type alias for a structured array representing periods.
+    NDArrayPeriodType = numpy.ndarray[tuple[int], numpy.dtype[numpy.void]]
+else:
+    NDArrayPeriodType = GenericAlias(
+        numpy.ndarray,
+        (tuple[int], DTypePeriod),
+    )
+
+
+def _time64_unit(dtype: numpy.dtype) -> str:
+    """Get the unit of time.
+
+    Extract the time unit from a numpy datetime64 or timedelta64 dtype.
+
+    Args:
+        dtype: The numpy dtype to extract the unit from.
+
+    Returns:
+        The time unit string.
+
+    Raises:
+        ValueError: If the dtype is not a time duration.
+
+    """
     match = PATTERN(dtype.name)
     if match is None:
         raise ValueError(f'dtype is not a time duration: {dtype}')
@@ -37,32 +63,52 @@ def _time64_unit(dtype: numpy.dtype):
 
 
 def _min_time64_unit(*args: numpy.dtype) -> str:
-    """Gets the minimum time unit."""
+    """Get the minimum time unit.
+
+    Find the finest time resolution among the provided dtypes.
+
+    Args:
+        *args: Variable number of numpy dtypes to compare.
+
+    Returns:
+        The minimum time unit string.
+
+    """
     index = min(RESOLUTION.index(_time64_unit(item)) for item in args)
     return RESOLUTION[index]
 
 
-def _datetime64_to_int64(value: Any, resolution: str) -> Any:
+def _datetime64_to_int64(
+    value: numpy.datetime64,
+    resolution: str,
+) -> int:
     """Convert values to numpy.int64."""
-    return value.astype(f'M8[{resolution}]').astype(numpy.int64)
+    return value.astype(f'M8[{resolution}]').astype(numpy.int64).item()
 
 
 class Period(core.Period):
-    """Creates a Period from begin to last eg: [begin, last)
+    """Represent a time period with a begin and end time.
+
+    Create a time period defined by a begin and end point. The end point is
+    the last point in the time period and must be the same or greater than
+    the begin point.
 
     Args:
-        begin: The beginning of the period.
-        end: The ending of the period.
-        within: If true, the given period defines a closed interval
-            (i.e. the end date is within the period), otherwise the
-            interval is open.
+        begin: The starting point of the period.
+        last: The last point in the period.
+
+    Raises:
+        ValueError: If last < begin.
+
     """
+
     __slots__ = ('resolution', )
 
     def __init__(self,
                  begin: numpy.datetime64,
                  end: numpy.datetime64,
                  within: bool = True) -> None:
+        """Initialize a Period instance."""
         self.resolution = _min_time64_unit(begin.dtype, end.dtype)
         begin = numpy.datetime64(  # type: ignore[call-overload]
             begin,
@@ -80,19 +126,26 @@ class Period(core.Period):
         super().__init__(begin.astype(int), end.astype(int), True)
 
     def __reduce__(self) -> str | tuple[Any, ...]:
+        """Get the state for serialization."""
         return self.__class__, (self.begin, self.last, True)
 
     def as_base_class(self) -> core.Period:
-        """Returns the base class of the period.
+        """Convert this Period to its base class representation.
 
         Returns:
-            The base class of the period.
+            The base class representation of the period.
+
         """
         return core.Period(super().begin, super().last, True)
 
     @property
     def begin(self) -> numpy.datetime64:  # type: ignore[override]
-        """Gets the beginning of the period."""
+        """Get the beginning of the period.
+
+        Returns:
+            The starting point of the period as a numpy datetime64.
+
+        """
         return numpy.datetime64(  # type: ignore[call-overload]
             super().begin,
             self.resolution,
@@ -100,27 +153,40 @@ class Period(core.Period):
 
     @property
     def last(self) -> numpy.datetime64:  # type: ignore[override]
-        """Gets the beginning of the period."""
+        """Get the last time point in the period.
+
+        Returns:
+            The last point in the period as a numpy datetime64.
+
+        """
         return numpy.datetime64(  # type: ignore[call-overload]
             super().last,
             self.resolution,
         )
 
     def end(self) -> numpy.datetime64:  # type: ignore[override]
-        """Gets the end of the period."""
+        """Get the ending point of the time period.
+
+        The end point is one unit past the last point in the period.
+
+        Returns:
+            The ending point (one unit past the last point).
+
+        """
         return numpy.datetime64(  # type: ignore[call-overload]
             super().end(),
             self.resolution,
         )
 
     def as_resolution(self, resolution: str) -> Period:
-        """Converts the period to a period with a different resolution.
+        """Convert the period to a different time resolution.
 
         Args:
-            resolution: The new resolution.
+            resolution: The new resolution string (e.g., 'D', 'h', 's').
 
         Returns:
-            A new period with the given resolution.
+            A new period with the specified resolution.
+
         """
         return Period(
             numpy.datetime64(  # type: ignore[call-overload]
@@ -135,23 +201,40 @@ class Period(core.Period):
         )
 
     def __repr__(self) -> str:
+        """Get the string representation of the period."""
         return f'Period(begin={self.begin!r}, end={self.last!r}, within=True)'
 
     def __str__(self) -> str:
+        """Get the string representation of the period."""
         return f'[{self.begin}, {self.end()})'
 
+    def __hash__(self) -> int:
+        """Compute the hash value of the period."""
+        return hash((self.begin, self.last, self.resolution))
+
     def duration(self) -> numpy.timedelta64:  # type: ignore[override]
-        """Gets the duration of the period."""
+        """Calculate the duration of the period.
+
+        Returns:
+            The duration as a numpy timedelta64 (end - begin).
+
+        """
         return numpy.timedelta64(  # type: ignore[call-overload]
             super().duration(),
             self.resolution,
         )
 
     def is_null(self) -> bool:
-        """True if period is ill formed (length is zero or less)"""
+        """Check if the period is ill-formed.
+
+        Returns:
+            True if the period length is zero or less.
+
+        """
         return super().is_null()
 
     def __eq__(self, lhs: object) -> bool:
+        """Equal comparison between periods."""
         if not isinstance(lhs, Period):
             return NotImplemented
         if self.resolution != lhs.resolution:
@@ -159,9 +242,11 @@ class Period(core.Period):
         return super().__eq__(lhs)
 
     def __ne__(self, rhs: object) -> bool:
+        """Not-equal comparison between periods."""
         return not self.__eq__(rhs)
 
-    def __lt__(self, lhs: Any) -> bool:
+    def __lt__(self, lhs: object) -> bool:
+        """Less-than comparison between periods."""
         if not isinstance(lhs, Period):
             return NotImplemented
         if self.resolution != lhs.resolution:
@@ -172,16 +257,17 @@ class Period(core.Period):
         self,
         other: numpy.datetime64 | Period,
     ) -> bool:
-        """Checks if the given period is contains this period.
+        """Check if this period contains the given point or period.
 
         Args:
-            other: The other period to check.
+            other: The datetime64 point or Period to check for containment.
 
         Returns:
-            * True if other is a date and is inside the period, zero length
-              periods contain no points
-            * True if other is a period and  fully contains (or equals) the
-              other period
+            * True if other is a date and is inside the period (zero length
+              periods contain no points)
+            * True if other is a period and this period fully contains (or
+              equals) the other period
+
         """
         if isinstance(other, Period):
             if self.resolution != other.resolution:
@@ -193,7 +279,7 @@ class Period(core.Period):
         ))
 
     def is_adjacent(self, other: Period) -> bool:  # type: ignore[override]
-        """True if periods are next to each other without a gap.
+        """Check if two periods are next to each other without a gap.
 
         In the example below, p1 and p2 are adjacent, but p3 is not adjacent
         with either of p1 or p2.
@@ -205,22 +291,23 @@ class Period(core.Period):
                 [-p3-)
 
         Args:
-            other: The other period to check.
+            other: The other period to check adjacency with.
 
         Returns:
-            * True if other is a date and is adjacent to this period
-            * True if other is a period and is adjacent to this period
+            True if the other period is adjacent to this period.
+
         """
         if self.resolution != other.resolution:
             other = other.as_resolution(self.resolution, )
         return super().is_adjacent(other)
 
-    def is_before(self,
-                  point: numpy.datetime64) -> bool:  # type: ignore[override]
-        """True if all of the period is prior to the passed point or end <=
-        point.
+    def is_before(  # type: ignore[override]
+            self,
+            point: numpy.datetime64,
+    ) -> bool:
+        """Check if the entire period is prior to the passed point.
 
-        In the example below points 4 and 5 return true.
+        Test if end <= point. In the example below, points 4 and 5 return true.
 
         .. code-block:: text
 
@@ -229,21 +316,25 @@ class Period(core.Period):
             1   2    3     4   5
 
         Args:
-            point: The point to check.
+            point: The datetime64 point to compare against.
 
         Returns:
-            True if point is before the period
+            True if the entire period is before the point.
+
         """
         return super().is_before(_datetime64_to_int64(
             point,
             self.resolution,
         ))
 
-    def is_after(self,
-                 point: numpy.datetime64) -> bool:  # type: ignore[override]
-        """True if all of the period is prior or point < start.
+    def is_after(  # type: ignore[override]
+            self,
+            point: numpy.datetime64,
+    ) -> bool:
+        """Check if the entire period is after the passed point.
 
-        In the example below only point 1 would evaluate to true.
+        Test if point < start. In the example below, only point 1 evaluates to
+        true.
 
         .. code-block:: text
 
@@ -252,10 +343,11 @@ class Period(core.Period):
             1   2    3     4   5
 
         Args:
-            point: The point to check.
+            point: The datetime64 point to compare against.
 
         Returns:
-            True if point is after the period
+            True if the entire period is after the point.
+
         """
         return super().is_after(_datetime64_to_int64(
             point,
@@ -263,9 +355,9 @@ class Period(core.Period):
         ))
 
     def intersects(self, other: Period) -> bool:  # type: ignore[override]
-        """True if the periods overlap in any way.
+        """Check if the periods overlap in any way.
 
-        In the example below p1 intersects with p2, p4, and p6.
+        In the example below, p1 intersects with p2, p4, and p6.
 
         .. code-block:: text
 
@@ -277,24 +369,25 @@ class Period(core.Period):
                     [-p6-)
 
         Args:
-            other: The other period to check.
+            other: The other period to test for intersection.
 
         Returns:
-            True if the periods intersect
+            True if the periods overlap.
+
         """
         if self.resolution != other.resolution:
             other = other.as_resolution(self.resolution, )
         return super().intersects(other)
 
     def intersection(self, other: Period) -> Period:  # type: ignore[override]
-        """Returns the period of intersection or null period if no
-        intersection.
+        """Calculate the period of intersection.
 
         Args:
-            other: The other period to check.
+            other: The other period to intersect with.
 
         Returns:
-            The intersection period or null period if no intersection.
+            The intersection period, or a null period if no intersection exists.
+
         """
         if self.resolution != other.resolution:
             other = other.as_resolution(self.resolution, )
@@ -312,13 +405,14 @@ class Period(core.Period):
         )
 
     def merge(self, other: Period) -> Period:  # type: ignore[override]
-        """Returns the union of intersecting periods -- or null period.
+        """Calculate the union of intersecting periods.
 
         Args:
-            other: The other period to merge.
+            other: The other period to merge with.
 
         Returns:
-            The union period of intersection or null if no intersection.
+            The merged period if periods intersect, or a null period otherwise.
+
         """
         if self.resolution != other.resolution:
             other = other.as_resolution(self.resolution, )
@@ -344,13 +438,17 @@ class PeriodList:
 
     Args:
         periods: A list of periods.
+
     """
+
     DTYPE: ClassVar[list[tuple[str, type]]] = [('begin', numpy.int64),
                                                ('last', numpy.int64)]
 
     def __init__(self,
-                 periods: NDArrayDateTime | core.PeriodList,
+                 periods: NDArrayStructured | NDArray2DDateTime
+                 | core.PeriodList,
                  dtype: numpy.dtype | None = None) -> None:
+        """Initialize a PeriodList instance."""
         if isinstance(periods, core.PeriodList):
             if dtype is None:
                 raise ValueError('dtype must be specified when passing in a '
@@ -360,7 +458,7 @@ class PeriodList:
         else:
             if not numpy.issubdtype(periods.dtype, numpy.datetime64):
                 raise TypeError('periods must be a numpy.datetime64 array')
-            if len(periods.shape) != 2:
+            if len(periods.shape) != 2:  # noqa: PLR2004
                 raise ValueError(
                     'periods must be a 2d array of numpy.datetime64')
             self._instance = core.PeriodList(
@@ -378,26 +476,40 @@ class PeriodList:
         return cls(core.PeriodList(array), numpy.dtype('M8[ns]'))
 
     def __len__(self) -> int:
+        """Get the number of periods in the list."""
         return len(self._instance)
 
     def __getstate__(self) -> tuple[Any, ...]:
+        """Get the state of the object for serialization."""
         return (self._datetime64, self._dtype, self._timedelta64,
                 self._instance)
 
     def __setstate__(self, state: tuple[Any, ...]) -> None:
+        """Restore the state of the object from serialization."""
         (self._datetime64, self._dtype, self._timedelta64,
          self._instance) = state
 
     @property
-    def periods(self) -> NDArrayStructured:
-        """The periods in the list."""
+    def periods(self) -> NDArrayPeriodType:
+        """Get the periods in the list.
+
+        Returns:
+            The periods as a structured numpy array.
+
+        """
         return self._instance.periods.astype(self._dtype)
 
     def __repr__(self) -> str:
+        """Get the string representation of this instance."""
         return repr(self.periods)
 
     def are_periods_sorted_and_disjointed(self) -> bool:
-        """True if the periods are sorted and disjoint."""
+        """Check if the periods are sorted and disjoint.
+
+        Returns:
+            True if periods are sorted chronologically and do not overlap.
+
+        """
         return self._instance.are_periods_sorted_and_disjointed()
 
     def join_adjacent_periods(
@@ -405,14 +517,16 @@ class PeriodList:
         epsilon: numpy.timedelta64 | None = None,
         inplace: bool = False,
     ) -> PeriodList:
-        """Join the periods together if they are adjacent.
+        """Join adjacent periods together.
 
         Args:
-            epsilon The maximum gap between periods to join.
-            inplace: If true, the periods will be joined in place.
+            epsilon: The maximum gap between periods to consider them adjacent.
+            inplace: If True, modify this object in place rather than creating
+            a new one.
 
         Returns:
-            A new PeriodList with the periods joined.
+            A PeriodList with adjacent periods joined together.
+
         """
         epsilon = epsilon.astype(
             self._timedelta64) if epsilon else numpy.timedelta64(0, 's')
@@ -424,64 +538,76 @@ class PeriodList:
         return PeriodList(instance, dtype=self._datetime64)
 
     def within(self, period: Period) -> PeriodList:
-        """Returns a PeriodList containing only periods within the given
-        period.
+        """Filter to only periods within the given period.
 
         Args:
-            period The period to filter by.
+            period: The period to use as a filter.
 
         Returns:
-            A new PeriodList with only periods within the given period.
+            A new PeriodList containing only periods within the given period.
+
         """
         return PeriodList(self._instance.within(period.as_base_class()),
                           dtype=self._datetime64)
 
     def intersection(self, period: Period) -> PeriodList:
-        """Returns a PeriodList containing only periods that intersect the
-        given period.
+        """Filter to only periods that intersect the given period.
 
         Args:
-            period The period to filter by.
+            period: The period to test for intersection.
 
         Returns:
-            A new PeriodList with only periods that intersect the given
+            A new PeriodList containing only periods that intersect the given
             period.
+
         """
         return PeriodList(self._instance.intersection(period.as_base_class()),
                           dtype=self._datetime64)
 
-    def duration(self) -> NDArrayTimeDelta:
-        """Returns the duration of the periods in the PeriodList."""
+    def duration(self) -> NDArray1DTimeDelta:
+        """Calculate the duration of each period in the list.
+
+        Returns:
+            An array of timedelta64 values representing each period's duration.
+
+        """
         periods = self.periods
         return periods['last'] - periods['begin']
 
     def filter(self, min_duration: numpy.timedelta64) -> PeriodList:
-        """Returns a PeriodList containing only periods longer than the given
-        duration.
+        """Filter to only periods longer than the given duration.
 
         Args:
-            min_duration The minimum duration to filter by.
+            min_duration: The minimum duration threshold.
 
         Returns:
-            A new PeriodList with only periods longer than the given duration.
+            A new PeriodList containing only periods with
+            duration >= min_duration.
+
         """
         min_duration = min_duration.astype(self._timedelta64)
         return PeriodList(self._instance.filter(min_duration.astype('int64')),
                           dtype=self._datetime64)
 
     def sort(self) -> PeriodList:
-        """Sort the periods in the PeriodList."""
+        """Sort the periods chronologically in place.
+
+        Returns:
+            This PeriodList instance with sorted periods.
+
+        """
         self._instance.sort()
         return self
 
     def merge(self, other: PeriodList) -> PeriodList:
-        """Merge two PeriodLists together.
+        """Merge another PeriodList into this one.
 
         Args:
-            other The PeriodList to merge with.
+            other: The PeriodList to merge into this one.
 
         Returns:
-            A new PeriodList with the periods merged.
+            This PeriodList instance with the other periods merged in.
+
         """
         if self._datetime64 != other._datetime64:
             periods = other.periods.astype(self._datetime64)
@@ -489,9 +615,8 @@ class PeriodList:
         self._instance.merge(other._instance)
         return self
 
-    def cross_a_period(self, dates: NDArrayDateTime) -> NDArray:
-        """Search the provided dates for those that do not traverse any of the
-        periods managed by this instance.
+    def cross_a_period(self, dates: NDArray1DDateTime) -> NDArray1DBool:
+        """Search for dates that do not traverse any managed period.
 
         If the instance handles these periods:
 
@@ -515,13 +640,14 @@ class PeriodList:
             dates: The dates to check.
 
         Returns:
-            A boolean array indicating if the dates cross a period.
+            A boolean array where True indicates the date crosses a period
+            boundary.
+
         """
         return self._instance.cross_a_period(dates.astype(self._datetime64))
 
-    def belong_to_a_period(self, dates: NDArrayDateTime) -> NDArray:
-        """Search the provided dates for those that belong to any of the
-        periods managed by this instance.
+    def belong_to_a_period(self, dates: NDArray1DDateTime) -> NDArray1DBool:
+        """Search for dates that belong to any managed period.
 
         If the instance handles these periods:
 
@@ -545,7 +671,8 @@ class PeriodList:
             dates: The dates to check.
 
         Returns:
-            A boolean array indicating if the dates belong to a period.
+            A boolean array where True indicates the date belongs to a period.
+
         """
         return self._instance.belong_to_a_period(dates.astype(
             self._datetime64))
@@ -553,16 +680,16 @@ class PeriodList:
     def is_it_close(self,
                     date: numpy.datetime64,
                     epsilon: numpy.timedelta64 | None = None) -> bool:
-        """Determines whether the date, given in parameter, is close to a
-        period.
+        """Determine whether a date is close to any managed period.
 
         Args:
-            date: timestamp to test
-            epsilon: Maximum difference to be taken into account between the
-                given date and the period to consider the closest date affected
-                by the period found.
+            date: The timestamp to test.
+            epsilon: Maximum time difference to consider a date as close to a
+                period. Defaults to zero if not specified.
+
         Returns:
-            True if the given is close to a period
+            True if the date is within epsilon of any period boundary.
+
         """
         epsilon = epsilon or numpy.timedelta64(0, 's')
         return self._instance.is_it_close(

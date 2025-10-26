@@ -1,6 +1,4 @@
-"""
-*******************
-Orbit Interpolation
+"""Orbit Interpolation
 *******************
 
 This example demonstrates how to use ``pyinterp`` to interpolate satellite
@@ -34,6 +32,7 @@ def load_test_ephemeris(
     Returns:
         A tuple containing the height of the orbit, the ephemeris, and the
         duration of the cycle.
+
     """
     with open(filename, encoding='utf-8') as stream:
         lines = stream.readlines()

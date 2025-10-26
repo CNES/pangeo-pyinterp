@@ -2,6 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for date utilities."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import datetime
 import random
 
@@ -10,9 +14,15 @@ import pytest
 
 from ... import core
 
+if TYPE_CHECKING:
+    from ...typing import NDArray1DDateTime
 
-def make_date(samples=10000,
-              resolution='us') -> tuple[list[datetime.datetime], np.ndarray]:
+
+def make_date(
+    samples: int = 10000,
+    resolution: str = 'us',
+) -> tuple[list[datetime.datetime], NDArray1DDateTime]:
+    """Generate random dates for testing."""
     epoch = datetime.datetime(1970, 1, 1)
     delta = datetime.datetime.now() - datetime.datetime(1970, 1, 1)
 
@@ -24,7 +34,8 @@ def make_date(samples=10000,
 
 
 @pytest.mark.parametrize('resolution', ['ms', 'us', 'ns'])
-def test_date(resolution):
+def test_date(resolution: str) -> None:
+    """Test date extraction from datetime64."""
     pydates, npdates = make_date(resolution=resolution)
     yms = core.dateutils.date(npdates)
 
@@ -36,7 +47,8 @@ def test_date(resolution):
 
 
 @pytest.mark.parametrize('resolution', ['ms', 'us', 'ns'])
-def test_datetime(resolution):
+def test_datetime(resolution: str) -> None:
+    """Test datetime extraction from datetime64."""
     expected, npdates = make_date(resolution=resolution)
     pydates = core.dateutils.datetime(npdates)
 
@@ -48,7 +60,8 @@ def test_datetime(resolution):
 
 
 @pytest.mark.parametrize('resolution', ['ms', 'us', 'ns'])
-def test_timedelta_since_january(resolution):
+def test_timedelta_since_january(resolution: str) -> None:
+    """Test timedelta since January extraction from datetime64."""
     pydates, npdates = make_date(resolution=resolution)
     days = core.dateutils.timedelta_since_january(npdates)
 
@@ -70,7 +83,8 @@ def test_timedelta_since_january(resolution):
 
 
 @pytest.mark.parametrize('resolution', ['ms', 'us', 'ns'])
-def test_isocalendar(resolution):
+def test_isocalendar(resolution: str) -> None:
+    """Test isocalendar extraction from datetime64."""
     pydates, npdates = make_date(resolution=resolution)
     isocalendar = core.dateutils.isocalendar(npdates)
 
@@ -82,7 +96,8 @@ def test_isocalendar(resolution):
 
 
 @pytest.mark.parametrize('resolution', ['ms', 'us', 'ns'])
-def test_time(resolution):
+def test_time(resolution: str) -> None:
+    """Test time extraction from datetime64."""
     pydates, npdates = make_date(resolution=resolution)
     hms = core.dateutils.time(npdates)
 
@@ -94,16 +109,18 @@ def test_time(resolution):
 
 
 @pytest.mark.parametrize('resolution', ['ms', 'us', 'ns'])
-def test_weekday(resolution):
+def test_weekday(resolution: str) -> None:
+    """Test weekday extraction from datetime64."""
     pydates, npdates = make_date(resolution=resolution)
     weekday = core.dateutils.weekday(npdates)
 
     for ix, item in enumerate(weekday):
-        _, _, weekday = pydates[ix].isocalendar()
-        assert item == weekday % 7
+        _, _, py_weekday = pydates[ix].isocalendar()
+        assert item == py_weekday % 7
 
 
-def test_wrong_units():
+def test_wrong_units() -> None:
+    """Test dateutils with wrong units."""
     _, npdates = make_date(10)
 
     with pytest.raises(ValueError):
@@ -116,7 +133,8 @@ def test_wrong_units():
 @pytest.mark.parametrize(
     'resolution',
     ['Y', 'M', 'W', 'D', 'h', 'm', 's', 'ms', 'us', 'ns', 'ps', 'as'])
-def test_format_date(resolution):
+def test_format_date(resolution: str) -> None:
+    """Test conversion of datetime64 to string."""
     _, npdates = make_date(60, resolution=resolution)
     for item in npdates:
         value = item.astype('int64')

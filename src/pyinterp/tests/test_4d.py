@@ -2,11 +2,13 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for 4D interpolation."""
 import collections
 import pickle
 
 import numpy as np
 import pytest
+from pytest import Config
 
 import pyinterp
 
@@ -15,7 +17,9 @@ from .. import Axis, Grid4D, TemporalAxis, bicubic
 from ..backends import xarray as xr_backend
 
 
-def test_4d(pytestconfig):
+def test_4d(pytestconfig: Config) -> None:
+    """Test Grid4D with quadrivariate and bicubic interpolation."""
+    grid: xr_backend.Grid4D | xr_backend.RegularGridInterpolator
     grid = xr_backend.Grid4D(load_grid4d().pressure, increasing_axes=True)
 
     assert isinstance(grid, xr_backend.Grid4D)
@@ -55,29 +59,39 @@ def test_4d(pytestconfig):
                               pytestconfig.getoption('dump'))
 
     with pytest.raises(ValueError):
-        time = 5
-        x, y, t = np.meshgrid(lon, lat, level, time, indexing='ij')
-        pressure = grid.quadrivariate(collections.OrderedDict(
-            longitude=x.ravel(),
-            latitude=y.ravel(),
-            level=z.ravel(),
-            time=t.ravel()),
-                                      bounds_error=True)
+        invalid_time = 5
+        x, y, t, _ = np.meshgrid(
+            lon,
+            lat,
+            level,
+            invalid_time,
+            indexing='ij',
+        )
+        pressure = grid.quadrivariate(
+            collections.OrderedDict(longitude=x.ravel(),
+                                    latitude=y.ravel(),
+                                    level=z.ravel(),
+                                    time=t.ravel()),
+            bounds_error=True,
+        )
 
     with pytest.raises(ValueError):
-        pressure = grid.bicubic(collections.OrderedDict(longitude=x.ravel(),
-                                                        latitude=y.ravel(),
-                                                        level=z.ravel(),
-                                                        time=t.ravel()),
-                                bounds_error=True)
+        pressure = grid.bicubic(
+            collections.OrderedDict(longitude=x.ravel(),
+                                    latitude=y.ravel(),
+                                    level=z.ravel(),
+                                    time=t.ravel()),
+            bounds_error=True,
+        )
 
     grid = xr_backend.RegularGridInterpolator(load_grid4d().pressure,
                                               increasing_axes=True)
-    assert grid.ndim, 4
+    assert grid.ndim == 4
     assert isinstance(grid.grid, xr_backend.Grid4D)
 
 
-def test_4d_swap_dim():
+def test_4d_swap_dim() -> None:
+    """Test that the backend handles different time representations."""
     ds = load_grid4d()
     ds = ds.transpose('level', 'latitude', 'longitude', 'time')
     grid = xr_backend.Grid4D(ds.pressure, increasing_axes=True)
@@ -89,7 +103,8 @@ def test_4d_swap_dim():
         grid = xr_backend.Grid4D(ds.pressure, increasing_axes=True)
 
 
-def test_4d_degraded():
+def test_4d_degraded() -> None:
+    """Test Grid4D with bicubic interpolation degraded to bilinear."""
     grid = xr_backend.Grid4D(load_grid4d().pressure, increasing_axes=True)
     zero = np.array([0])
     with pytest.raises(ValueError):

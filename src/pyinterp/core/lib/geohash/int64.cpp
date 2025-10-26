@@ -107,8 +107,7 @@ constexpr auto encode(const double lat, const double lon) -> uint64_t {
 #if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("bmi2")))
 #endif
-inline auto
-encode_bmi2(const double lat, const double lon) -> uint64_t {
+inline auto encode_bmi2(const double lat, const double lon) -> uint64_t {
   auto shrq = [](const double val) {
     return std::bit_cast<uint64_t>(val) >> 20U;
   };
@@ -136,8 +135,8 @@ inline auto encode_bmi2(const double lat, const double lon) -> uint64_t {
 #if defined(__GNUC__) || defined(__clang__)
 __attribute__((target("bmi2")))
 #endif
-inline auto
-deinterleave_bmi2(const uint64_t x) -> std::tuple<uint32_t, uint32_t> {
+inline auto deinterleave_bmi2(const uint64_t x)
+    -> std::tuple<uint32_t, uint32_t> {
   // The explicit _pext_u64 calls require BMI2 support.
   auto lat = _pext_u64(x, 0x5555555555555555UL);
   auto lon = _pext_u64(x, 0XAAAAAAAAAAAAAAAAUL);

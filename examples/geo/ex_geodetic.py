@@ -1,5 +1,4 @@
-"""
-.. _example_geodetic:
+""".. _example_geodetic:
 
 Geodetic Objects
 ================
@@ -180,7 +179,8 @@ ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
 ax.set_extent([-100, -80, 15, 35])
 
 # Plot the polygon boundary
-poly_lon, poly_lat = zip(*((pt.lon, pt.lat) for pt in gulf_of_mexico.outer))
+poly_lon, poly_lat = zip(*((pt.lon, pt.lat) for pt in gulf_of_mexico.outer),
+                         strict=False)
 poly_lon = numpy.array(poly_lon)
 poly_lat = numpy.array(poly_lat)
 

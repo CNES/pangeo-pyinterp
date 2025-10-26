@@ -2,26 +2,26 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-Quadrivariate interpolation
-===========================
-"""
+"""Quadrivariate interpolation."""
+
 import numpy
 
 from .. import core, grid, interface
 
 
-def quadrivariate(grid4d: grid.Grid4D,
-                  x: numpy.ndarray,
-                  y: numpy.ndarray,
-                  z: numpy.ndarray,
-                  u: numpy.ndarray,
-                  interpolator: str = 'bilinear',
-                  z_method: str = 'linear',
-                  u_method: str = 'linear',
-                  bounds_error: bool = False,
-                  num_threads: int = 0,
-                  **kwargs) -> numpy.ndarray:
+def quadrivariate(
+    grid4d: grid.Grid4D,
+    x: numpy.ndarray,
+    y: numpy.ndarray,
+    z: numpy.ndarray,
+    u: numpy.ndarray,
+    interpolator: str = 'bilinear',
+    z_method: str = 'linear',
+    u_method: str = 'linear',
+    bounds_error: bool = False,
+    num_threads: int = 0,
+    **kwargs: int,
+) -> numpy.ndarray:
     """Interpolate the values provided on the defined quadrivariate function.
 
     Args:
@@ -45,10 +45,14 @@ def quadrivariate(grid4d: grid.Grid4D,
         num_threads: The number of threads to use for the computation. If 0 all
             CPUs are used. If 1 is given, no parallel computing code is used at
             all, which is useful for debugging. Defaults to ``0``.
-        p: The power to be used by the interpolator inverse_distance_weighting.
-            Default to ``2``.
+        kwargs: Additional keyword arguments. Currently only ``p`` is
+            recognized: the power parameter used by the
+            ``inverse_distance_weighting`` interpolator. Default for ``p`` is
+            2.
+
     Returns:
         Values interpolated.
+
     """
     instance = grid4d._instance
     function = interface._core_function('quadrivariate', instance)

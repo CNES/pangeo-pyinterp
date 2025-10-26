@@ -2,6 +2,9 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Unit tests for Binning1D and Binning2D classes."""
+from __future__ import annotations
+
 import copy
 import os
 import pickle
@@ -12,13 +15,22 @@ try:
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
+
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from .. import load_grid2d, make_or_compare_reference
 from ... import core
 
+if TYPE_CHECKING:
+    from pytest import Config
 
-def plot(x, y, z, filename):
+    from ...typing import NDArray1D, NDArray2D
+
+
+def plot(x: NDArray1D, y: NDArray1D, z: NDArray2D, filename: str) -> None:
+    """Plot 2D data."""
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
     value = z.mean()
     std = z.std()
@@ -32,12 +44,14 @@ def plot(x, y, z, filename):
                    pad_inches=0.4)
 
 
-def load_data():
+def load_data() -> tuple[NDArray1D, NDArray1D, NDArray2D]:
+    """Load test data."""
     ds = load_grid2d()
     return ds['lon'].values, ds['lat'].values, ds['mss'].values.T
 
 
-def test_binning2d_accessors():
+def test_binning2d_accessors() -> None:
+    """Test Binning2D accessors."""
     x_axis = core.Axis(np.linspace(-180, 180, 10), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 10))
 
@@ -57,7 +71,8 @@ def test_binning2d_accessors():
     assert count.mean() == 0
 
 
-def test_binning2d_methods(pytestconfig):
+def test_binning2d_methods(pytestconfig: Config) -> None:
+    """Test Binning2D methods."""
     visualize = pytestconfig.getoption('visualize')
     dump = pytestconfig.getoption('dump')
     x_axis = core.Axis(np.linspace(-180, 180, 361 // 4), is_circle=True)
@@ -100,7 +115,8 @@ def test_binning2d_methods(pytestconfig):
     assert isinstance(binning.variance(), np.ndarray)
 
 
-def test_binning2d_pickle():
+def test_binning2d_pickle() -> None:
+    """Test pickling and unpickling of Binning2D."""
     x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 1))
 
@@ -130,7 +146,8 @@ def test_binning2d_pickle():
     assert np.all(np.isnan(other.kurtosis()))
 
 
-def test_binning2d_iadd():
+def test_binning2d_iadd() -> None:
+    """Test in-place addition of Binning2D."""
     x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 1))
 
@@ -161,7 +178,8 @@ def test_binning2d_iadd():
     assert np.all(np.isnan(other.kurtosis()))
 
 
-def test_binning1d_accessors():
+def test_binning1d_accessors() -> None:
+    """Test Binning1D accessors."""
     x_axis = core.Axis(np.linspace(-100, 100, 10))
 
     binning = core.Binning1DFloat64(x_axis)
@@ -183,12 +201,13 @@ def test_binning1d_accessors():
     assert count.mean() == 0
 
 
-def test_binning1d_methods():
+def test_binning1d_methods() -> None:
+    """Test Binning1D methods."""
     x_axis = core.Axis(np.linspace(-100, 100, 361 // 4), is_circle=True)
 
     binning = core.Binning1DFloat64(x_axis, )
     x, y, z = load_data()
-    mx, my = np.meshgrid(x, y, indexing='ij')
+    mx, _my = np.meshgrid(x, y, indexing='ij')
     binning.push(mx.ravel(), z.ravel())
 
     count = binning.count()
@@ -205,7 +224,8 @@ def test_binning1d_methods():
     assert isinstance(binning.variance(), np.ndarray)
 
 
-def test_binning1d_pickle():
+def test_binning1d_pickle() -> None:
+    """Test pickling and unpickling of Binning1D."""
     x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
 
     binning = core.Binning1DFloat64(x_axis)
@@ -234,7 +254,8 @@ def test_binning1d_pickle():
     assert np.all(np.isnan(other.kurtosis()))
 
 
-def test_binning1d_iadd():
+def test_binning1d_iadd() -> None:
+    """Test in-place addition of Binning1D."""
     x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
 
     binning = core.Binning1DFloat64(x_axis)
@@ -264,7 +285,8 @@ def test_binning1d_iadd():
     assert np.all(np.isnan(other.kurtosis()))
 
 
-def test_binning1d_with_range():
+def test_binning1d_with_range() -> None:
+    """Test Binning1D with range."""
     x_axis = core.Axis(np.array([100, 105, 110]), is_circle=False)
 
     binning = core.Binning1DFloat64(x_axis, range=(95, 115))

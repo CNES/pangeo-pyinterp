@@ -2,6 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for streaming histogram computation."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import pickle
 
 import numpy as np
@@ -15,8 +19,11 @@ from .test_descriptive_statistics import (
     weighted_mom4,
 )
 
+if TYPE_CHECKING:
+    from ...typing import NDArray
 
-def weighted_quantile(data, weights, perc):
+
+def weighted_quantile(data: NDArray, weights: NDArray, perc: float) -> float:
     """Calculate weighted quantile."""
     ix = np.argsort(data)
     data = data[ix]
@@ -25,7 +32,7 @@ def weighted_quantile(data, weights, perc):
     return np.interp(perc, cdf, data)
 
 
-def test_empty_container():
+def test_empty_container() -> None:
     """Test the calculation of statistics on an empty container."""
     ds = core.StreamingHistogramFloat64(np.array([]))
 
@@ -40,9 +47,10 @@ def test_empty_container():
     assert np.isnan(ds.kurtosis())
 
 
-def test_flatten():
+def test_flatten() -> None:
     """Test the calculation of statistics on a vector."""
-    values = np.random.random_sample(1000)
+    rng = np.random.default_rng()
+    values = rng.random(1000)
     ds = core.StreamingHistogramFloat64(values, bin_count=1000)
 
     assert ds.count() == values.size
@@ -73,9 +81,10 @@ def test_flatten():
                                           abs=1e-3)
 
 
-def test_merge():
+def test_merge() -> None:
     """Test merging."""
-    values = np.random.random_sample(1000)
+    rng = np.random.default_rng()
+    values = rng.random(1000)
     instance1 = core.StreamingHistogramFloat64(values[:500], bin_count=1000)
     instance2 = core.StreamingHistogramFloat64(values[500:], bin_count=1000)
 
@@ -95,9 +104,10 @@ def test_merge():
         weighted_mom3(values, np.ones(values.size)))
 
 
-def test_pickle():
+def test_pickle() -> None:
     """Test pickling."""
-    values = np.random.random_sample(1000)
+    rng = np.random.default_rng()
+    values = rng.random(1000)
     ds = core.StreamingHistogramFloat64(values)
     other = pickle.loads(pickle.dumps(ds))
     assert other.count() == ds.count()
@@ -111,10 +121,11 @@ def test_pickle():
     assert other.variance() == ds.variance()
 
 
-def test_weighted():
+def test_weighted() -> None:
     """Test weighted statistics."""
-    values = np.random.random_sample(1000)
-    weights = np.random.random_sample(1000)
+    rng = np.random.default_rng()
+    values = rng.random(1000)
+    weights = rng.random(1000)
     ds = core.StreamingHistogramFloat64(values,
                                         weights=weights,
                                         bin_count=1000)
@@ -152,14 +163,17 @@ def test_weighted():
                                           abs=1e-2)
 
 
-def test_axis():
+def test_axis() -> None:
     """Test axes along which the statistics are computed."""
-    values = np.random.random_sample((2, 3, 4, 5, 6, 7))
+    rng = np.random.default_rng()
+    values = rng.random((2, 3, 4, 5, 6, 7))
 
-    def check_axis(values, axis):
-        ds = core.StreamingHistogramFloat64(values,
-                                            axis=axis,
-                                            bin_count=values.size)
+    def check_axis(values: NDArray, axis: tuple[int, ...] | None) -> None:
+        ds = core.StreamingHistogramFloat64(
+            values,
+            axis=list(axis) if axis is not None else None,
+            bin_count=values.size,
+        )
         assert np.all(ds.count() == np.sum(values * 0 + 1, axis=axis))
         assert np.all(ds.max() == np.max(values, axis=axis))
         assert ds.mean() == pytest.approx(np.mean(values, axis=axis))
@@ -176,6 +190,6 @@ def test_axis():
     check_axis(values, (1, 3, 5))
 
     with pytest.raises(ValueError):
-        core.DescriptiveStatisticsFloat64(values, axis=(12, ))  # type: ignore
+        core.DescriptiveStatisticsFloat64(values, axis=[12])
     with pytest.raises(ValueError):
-        core.DescriptiveStatisticsFloat64(values, axis=(-1, ))  # type: ignore
+        core.DescriptiveStatisticsFloat64(values, axis=[-1])

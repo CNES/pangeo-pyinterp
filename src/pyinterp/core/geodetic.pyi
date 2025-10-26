@@ -10,8 +10,10 @@ from typing import (
     overload,
 )
 
+from sympy import Array
+
 from .. import core
-from .array import Array1DBool, Array1DFloat64, Array2DFloat64
+from ..typing import NDArray1DBool, NDArray1DFloat64, NDArray2DFloat64
 
 class Box:
     __hash__: ClassVar[None] = ...  # type: ignore[assignment]
@@ -41,9 +43,9 @@ class Box:
 
     @overload
     def covered_by(self,
-                   lon: Array1DFloat64,
-                   lat: Array1DFloat64,
-                   num_threads: int = ...) -> Array1DBool:
+                   lon: NDArray1DFloat64,
+                   lat: NDArray1DFloat64,
+                   num_threads: int = ...) -> NDArray1DBool:
         ...
 
     @overload
@@ -94,25 +96,25 @@ class Coordinates:
         ...
 
     def ecef_to_lla(self,
-                    x: Array1DFloat64,
-                    y: Array1DFloat64,
-                    z: Array1DFloat64,
-                    num_threads: int = ...) -> tuple:
+                    x: NDArray1DFloat64,
+                    y: NDArray1DFloat64,
+                    z: NDArray1DFloat64,
+                    num_threads: int = ...,) -> tuple[NDArray1DFloat64, NDArray1DFloat64, NDArray1DFloat64]:
         ...
 
     def lla_to_ecef(self,
-                    lon: Array1DFloat64,
-                    lat: Array1DFloat64,
-                    alt: Array1DFloat64,
-                    num_threads: int = ...) -> tuple:
+                    lon: NDArray1DFloat64,
+                    lat: NDArray1DFloat64,
+                    alt: NDArray1DFloat64,
+                    num_threads: int = ...,) -> tuple[NDArray1DFloat64, NDArray1DFloat64, NDArray1DFloat64]:
         ...
 
     def transform(self,
                   target: Coordinates,
-                  lon: Array1DFloat64,
-                  lat: Array1DFloat64,
-                  alt: Array1DFloat64,
-                  num_threads: int = ...) -> tuple:
+                  lon: NDArray1DFloat64,
+                  lat: NDArray1DFloat64,
+                  alt: NDArray1DFloat64,
+                  num_threads: int = ...,) -> tuple[NDArray1DFloat64, NDArray1DFloat64, NDArray1DFloat64]:
         ...
 
     def __getstate__(self) -> tuple:
@@ -175,7 +177,7 @@ class LineString:
         ...
 
     @overload
-    def __init__(self, lon: Array1DFloat64, lat: Array1DFloat64) -> None:
+    def __init__(self, lon: NDArray1DFloat64, lat: NDArray1DFloat64) -> None:
         ...
 
     def append(self, point: Point) -> None:
@@ -190,16 +192,16 @@ class LineString:
     @overload
     def closest_point(
         self,
-        lon: Array1DFloat64,
-        lat: Array1DFloat64,
+        lon: NDArray1DFloat64,
+        lat: NDArray1DFloat64,
         wgs: Optional[Spheroid] = None,
         num_threads: int = 0,
-    ) -> Tuple[Array1DFloat64, Array1DFloat64]:
+    ) -> Tuple[NDArray1DFloat64, NDArray1DFloat64]:
         ...
 
     def curvilinear_distance(self,
                              strategy: str = 'thomas',
-                             wgs: Optional[Spheroid] = None) -> Array1DFloat64:
+                             wgs: Optional[Spheroid] = None) -> NDArray1DFloat64:
         ...
 
     @staticmethod
@@ -281,9 +283,9 @@ class MultiPolygon:
 
     @overload
     def covered_by(self,
-                   lon: Array1DFloat64,
-                   lat: Array1DFloat64,
-                   num_threads: int = ...) -> Array1DBool:
+                   lon: NDArray1DFloat64,
+                   lat: NDArray1DFloat64,
+                   num_threads: int = ...) -> NDArray1DBool:
         ...
 
     @overload
@@ -447,9 +449,9 @@ class Polygon:
 
     @overload
     def covered_by(self,
-                   lon: Array1DFloat64,
-                   lat: Array1DFloat64,
-                   num_threads: int = ...) -> Array1DBool:
+                   lon: NDArray1DFloat64,
+                   lat: NDArray1DFloat64,
+                   num_threads: int = ...) -> NDArray1DBool:
         ...
 
     def difference(self, other: Polygon) -> MultiPolygon:
@@ -538,13 +540,13 @@ class RTree:
     def clear(self) -> None:
         ...
 
-    def insert(self, lon: Array1DFloat64, lat: Array1DFloat64,
-               values: Array1DFloat64) -> None:
+    def insert(self, lon: NDArray1DFloat64, lat: NDArray1DFloat64,
+               values: NDArray1DFloat64) -> None:
         ...
 
     def inverse_distance_weighting(self,
-                                   lon: Array1DFloat64,
-                                   lat: Array1DFloat64,
+                                   lon: NDArray1DFloat64,
+                                   lat: NDArray1DFloat64,
                                    radius: Optional[float] = ...,
                                    k: int = ...,
                                    p: int = ...,
@@ -552,21 +554,21 @@ class RTree:
                                    num_threads: int = ...) -> tuple:
         ...
 
-    def packing(self, lon: Array1DFloat64, lat: Array1DFloat64,
-                values: Array1DFloat64) -> None:
+    def packing(self, lon: NDArray1DFloat64, lat: NDArray1DFloat64,
+                values: NDArray1DFloat64) -> None:
         ...
 
     def query(self,
-              lon: Array1DBool,
-              lat: Array1DBool,
+              lon: NDArray1DBool,
+              lat: NDArray1DBool,
               k: int = ...,
               within: bool = ...,
               num_threads: int = ...) -> tuple:
         ...
 
     def radial_basis_function(self,
-                              lon: Array1DFloat64,
-                              lat: Array1DFloat64,
+                              lon: NDArray1DFloat64,
+                              lat: NDArray1DFloat64,
                               radius: Optional[float] = ...,
                               k: int = ...,
                               rbf: core.RadialBasisFunction = ...,
@@ -577,8 +579,8 @@ class RTree:
         ...
 
     def window_function(self,
-                        lon: Array1DFloat64,
-                        lat: Array1DFloat64,
+                        lon: NDArray1DFloat64,
+                        lat: NDArray1DFloat64,
                         radius: float = ...,
                         k: int = ...,
                         wf: core.WindowFunction = ...,
@@ -678,10 +680,10 @@ class _Spheroid:
 
 
 def calculate_crossover(
-        lon1: Array1DFloat64,
-        lat1: Array1DFloat64,
-        lon2: Array1DFloat64,
-        lat2: Array1DFloat64,
+        lon1: NDArray1DFloat64,
+        lat1: NDArray1DFloat64,
+        lon2: NDArray1DFloat64,
+        lat2: NDArray1DFloat64,
         predicate: Optional[float] = None,
         strategy: str = "thomas",
         wgs: Optional[Spheroid] = None,
@@ -691,10 +693,10 @@ def calculate_crossover(
 
 
 def calculate_crossover_list(
-        lon1: Array1DFloat64,
-        lat1: Array1DFloat64,
-        lon2: Array1DFloat64,
-        lat2: Array1DFloat64,
+        lon1: NDArray1DFloat64,
+        lat1: NDArray1DFloat64,
+        lon2: NDArray1DFloat64,
+        lat2: NDArray1DFloat64,
         predicate: Optional[float] = None,
         strategy: str = "thomas",
         wgs: Optional[Spheroid] = None,
@@ -703,26 +705,26 @@ def calculate_crossover_list(
 
 
 def calculate_swath(
-    lon_nadir: Array1DFloat64,
-    lat_nadir: Array1DFloat64,
+    lon_nadir: NDArray1DFloat64,
+    lat_nadir: NDArray1DFloat64,
     delta_ac: float,
     half_gap: float,
     half_swath: int,
     spheroid: Optional[Spheroid] = None,
-) -> Tuple[Array2DFloat64, Array2DFloat64]:
+) -> Tuple[NDArray2DFloat64, NDArray2DFloat64]:
     ...
 
 
-def coordinate_distances(lon1: Array1DFloat64,
-                         lat1: Array1DFloat64,
-                         lon2: Array1DFloat64,
-                         lat2: Array1DFloat64,
+def coordinate_distances(lon1: NDArray1DFloat64,
+                         lat1: NDArray1DFloat64,
+                         lon2: NDArray1DFloat64,
+                         lat2: NDArray1DFloat64,
                          strategy: str = ...,
                          wgs: Optional[Spheroid] = None,
-                         num_threads: int = ...) -> Array1DFloat64:
+                         num_threads: int = ...) -> NDArray1DFloat64:
     ...
 
 
-def normalize_longitudes(lon: Array1DFloat64,
-                         min_lon: float = ...) -> Array1DFloat64 | None:
+def normalize_longitudes(lon: NDArray1DFloat64,
+                         min_lon: float = ...) -> NDArray1DFloat64 | None:
     ...

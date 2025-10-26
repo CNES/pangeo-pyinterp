@@ -1,5 +1,4 @@
-"""
-LLC4320 Ocean Model Interpolation
+"""LLC4320 Ocean Model Interpolation
 =================================
 
 This example demonstrates how to interpolate data from the high-resolution

@@ -2,15 +2,26 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-Regular grids
-=============
-"""
+"""Regular grids."""
 from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import numpy
 
 from . import core, interface
+
+if TYPE_CHECKING:
+    from .typing import NDArray2D, NDArray3D, NDArray4D
+
+#: Two dimensional type variable
+NUM_DIMS_2 = 2
+
+#: Three dimensional type variable
+NUM_DIMS_3 = 3
+
+#: Four dimensional type variable
+NUM_DIMS_4 = 4
 
 
 class Grid2D:
@@ -27,7 +38,6 @@ class Grid2D:
             default, the decreasing axes are not modified.
 
     Examples:
-
         >>> import numpy as np
         >>> import pyinterp
         >>> x_axis = pyinterp.Axis(numpy.arange(-180.0, 180.0, 1.0),
@@ -56,11 +66,18 @@ class Grid2D:
                 max_value: 79.0
                 step: 1.0
                 is_circle: False
-    """
-    #: The number of grid dimensions handled by this object.
-    _DIMENSIONS = 2
 
-    def __init__(self, *args, increasing_axes: str | None = None):
+    """
+
+    #: The number of grid dimensions handled by this object.
+    _DIMENSIONS = NUM_DIMS_2
+
+    def __init__(
+        self,
+        *args: Any,  # noqa: ANN401
+        increasing_axes: str | None = None,
+    ) -> None:
+        """Initialize a Grid2D instance."""
         prefix = ''
         for item in args:
             if isinstance(item, core.TemporalAxis):
@@ -86,11 +103,10 @@ class Grid2D:
         self._instance = getattr(core, _class)(*args)
         self._prefix = prefix
 
-    def __repr__(self):
-        """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance."""
+    def __repr__(self) -> str:
+        """Get the string representation of this instance."""
 
-        def pad(string, length):
+        def pad(string: str, length: int) -> str:
             """Pad a string to a given length."""
             return '\n'.join([(' ' * length if ix else '') + line
                               for ix, line in enumerate(string.split('\n'))])
@@ -113,6 +129,7 @@ class Grid2D:
 
         Returns:
             X-Axis.
+
         """
         return self._instance.x
 
@@ -122,15 +139,17 @@ class Grid2D:
 
         Returns:
             Y-Axis.
+
         """
         return self._instance.y
 
     @property
-    def array(self) -> numpy.ndarray:
+    def array(self) -> NDArray2D:
         """Gets the values handled by this instance.
 
         Returns:
             numpy.ndarray: values.
+
         """
         return self._instance.array
 
@@ -155,7 +174,6 @@ class Grid3D(Grid2D):
         interpolations as a time axis.
 
     Examples:
-
         >>> import numpy as np
         >>> import pyinterp
         >>> x_axis = pyinterp.Axis(numpy.arange(-180.0, 180.0, 1.0),
@@ -166,11 +184,30 @@ class Grid3D(Grid2D):
         ...     numpy.array(['2000-01-01'], dtype="datetime64[s]"))
         >>> array = numpy.zeros((len(x_axis), len(y_axis), len(z_axis)))
         >>> grid = pyinterp.Grid3D(x_axis, y_axis, z_axis, array)
-    """
-    _DIMENSIONS = 3
 
-    def __init__(self, *args, increasing_axes: str | None = None):
+    """
+
+    _DIMENSIONS = NUM_DIMS_3
+
+    def __init__(
+        self,
+        *args: Any,  # noqa: ANN401
+        increasing_axes: str | None = None,
+    ) -> None:
+        """Initialize a Grid3D instance."""
         super().__init__(*args, increasing_axes=increasing_axes)
+
+    if TYPE_CHECKING:
+
+        @property
+        def array(self) -> NDArray3D:  # type: ignore[override]
+            """Gets the values handled by this instance.
+
+            Returns:
+                numpy.ndarray: values.
+
+            """
+            ...
 
     @property
     def z(self) -> core.Axis | core.TemporalAxis:
@@ -178,6 +215,7 @@ class Grid3D(Grid2D):
 
         Returns:
             Z-Axis.
+
         """
         return self._instance.z
 
@@ -200,11 +238,30 @@ class Grid4D(Grid3D):
 
         If the Z axis is a temporal axis, the grid will handle this axis
         during interpolations as a time axis.
-    """
-    _DIMENSIONS = 4
 
-    def __init__(self, *args, increasing_axes: str | None = None):
+    """
+
+    _DIMENSIONS = NUM_DIMS_4
+
+    def __init__(
+        self,
+        *args: Any,  # noqa: ANN401
+        increasing_axes: str | None = None,
+    ) -> None:
+        """Initialize a Grid4D instance."""
         super().__init__(*args, increasing_axes=increasing_axes)
+
+    if TYPE_CHECKING:
+
+        @property
+        def array(self) -> NDArray4D:  # type: ignore[override]
+            """Gets the values handled by this instance.
+
+            Returns:
+                numpy.ndarray: values.
+
+            """
+            ...
 
     @property
     def u(self) -> core.Axis:
@@ -212,16 +269,21 @@ class Grid4D(Grid3D):
 
         Returns:
             U-Axis.
+
         """
         return self._instance.u
 
 
-def _core_variate_interpolator(instance: object, interpolator: str, **kwargs):
+def _core_variate_interpolator(
+        instance: object,
+        interpolator: str,
+        **kwargs: Any,  # noqa: ANN401
+) -> Any:  # noqa: ANN401
     """Obtain the interpolator from the string provided."""
     if isinstance(instance, Grid2D):
         dimensions = instance._DIMENSIONS
         # 4D interpolation uses the 3D interpolator
-        if dimensions > 3:
+        if dimensions > NUM_DIMS_3:
             dimensions -= 1
     else:
         raise TypeError('instance is not an object handling a grid.')

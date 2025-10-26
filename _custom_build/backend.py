@@ -2,7 +2,11 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Custom build backend."""
+
 import argparse
+from collections.abc import Mapping
+import os
 import sys
 
 import setuptools.build_meta
@@ -35,9 +39,10 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
     Reference: https://setuptools.pypa.io/en/latest/build_meta.html
     """
 
-    def run_setup(self, setup_script='setup.py'):
+    def run_setup(self, setup_script: str = 'setup.py') -> None:
         """Run the setup script."""
-        args = usage(self.config_settings or {})  # type: ignore[arg-type]
+        config_settings = getattr(self, 'config_settings', None)
+        args = usage(config_settings or {})  # type: ignore[arg-type]
         setuptools_args = []
         if args.c_compiler:
             setuptools_args.append(f"--c-compiler={args.c_compiler}")
@@ -51,17 +56,27 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
             setuptools_args.append('--mkl=yes')
 
         if setuptools_args:
-            sys.argv = (sys.argv[:1] + ['build_ext'] + setuptools_args +
-                        sys.argv[1:])
-        return super().run_setup(setup_script)
+            first, last = sys.argv[:1], sys.argv[1:]
+            sys.argv = [*first, 'build_ext', *setuptools_args, *last]
+        super().run_setup(setup_script)
 
     def build_wheel(
         self,
-        wheel_directory,
-        config_settings=None,
-        metadata_directory=None,
-    ):
-        """Build the wheel."""
+        wheel_directory: str | os.PathLike[str],
+        config_settings: Mapping[str, str | list[str] | None] | None = None,
+        metadata_directory: str | os.PathLike[str] | None = None,
+    ) -> str:
+        """Build the wheel.
+
+        Args:
+            wheel_directory: The directory to store the wheel.
+            config_settings: The configuration settings.
+            metadata_directory: The metadata directory.
+
+        Returns:
+            str: The path to the built wheel.
+
+        """
         self.config_settings = config_settings
         return super().build_wheel(
             wheel_directory,
@@ -69,5 +84,35 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
             metadata_directory,
         )
 
+    def build_editable(
+        self,
+        wheel_directory: str | os.PathLike[str],
+        config_settings: Mapping[str, str | list[str] | None] | None = None,
+        metadata_directory: str | os.PathLike[str] | None = None,
+    ) -> str:
+        """Build an editable wheel.
 
-build_wheel = _CustomBuildMetaBackend().build_wheel
+        Args:
+            wheel_directory: The directory to store the wheel.
+            config_settings: The configuration settings.
+            metadata_directory: The metadata directory.
+
+        Returns:
+            str: The path to the built editable wheel.
+
+        """
+        self.config_settings = config_settings
+        return super().build_editable(
+            wheel_directory,
+            config_settings,
+            metadata_directory,
+        )
+
+
+# Custom build backend
+_backend = _CustomBuildMetaBackend()
+build_wheel = _backend.build_wheel
+build_editable = _backend.build_editable
+get_requires_for_build_editable = _backend.get_requires_for_build_editable
+prepare_metadata_for_build_editable = (
+    _backend.prepare_metadata_for_build_editable)

@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Common utilities for tests."""
 from __future__ import annotations
 
 import json
@@ -22,6 +23,7 @@ def make_or_compare_reference(filename: str, values: numpy.ndarray,
         filename (str): The filename to create or compare against.
         values (np.ndarray): The values to compare against.
         dump (bool): Whether to dump the values to the file.
+
     """
     path = ROOT.joinpath(filename)
     if dump:
@@ -55,7 +57,7 @@ def load_grid2d() -> xarray.Dataset:
     return ds
 
 
-def load_aoml():
+def load_aoml() -> xarray.Dataset:
     """Return path to the AOML dataset."""
 
     def _decode_datetime64(array: numpy.ndarray) -> numpy.ndarray:
@@ -79,7 +81,7 @@ def load_aoml():
     return ds
 
 
-def positions_path():
+def positions_path() -> pathlib.Path:
     """Return path to the ARGO positions."""
     return ROOT.joinpath('positions.csv')
 
@@ -103,7 +105,7 @@ def load_grid3d() -> xarray.Dataset:
     return ds
 
 
-def load_grid4d():
+def load_grid4d() -> xarray.Dataset:
     """Return path to the Grid 4D."""
 
     def _decode_datetime64(array: numpy.ndarray) -> numpy.ndarray:
@@ -129,37 +131,37 @@ def load_grid4d():
     return ds
 
 
-def geohash_bbox_path():
+def geohash_bbox_path() -> pathlib.Path:
     """Return path to the GeoHash bounding box."""
     return ROOT.joinpath('geohash_bbox.json')
 
 
-def geohash_neighbors_path():
+def geohash_neighbors_path() -> pathlib.Path:
     """Return path to the GeoHash neighbors."""
     return ROOT.joinpath('geohash_neighbors.json')
 
 
-def geohash_path():
+def geohash_path() -> pathlib.Path:
     """Return path to the GeoHash dataset."""
     return ROOT.joinpath('geohash.json')
 
 
-def polygon_path():
+def polygon_path() -> pathlib.Path:
     """Return path to the polygon dataset."""
     return ROOT.joinpath('polygon.json')
 
 
-def multipolygon_path():
+def multipolygon_path() -> pathlib.Path:
     """Return path to the polygon dataset."""
     return ROOT.joinpath('multipolygon.json')
 
 
-def swot_calval_ephemeris_path():
+def swot_calval_ephemeris_path() -> pathlib.Path:
     """Return path to the SWOT Calval ephemeris."""
     return ROOT.joinpath('ephemeris_calval_sept2015.txt')
 
 
-def parallel_lines():
+def parallel_lines() -> pathlib.Path:
     """Return path to the parallel lines dataset."""
     return ROOT.joinpath('parallel_lines.json')
 
@@ -169,6 +171,7 @@ def run(pattern: str | None = None) -> None:
 
     Args:
         pattern (str, optional): A regex pattern to match against test names.
+
     """
     args = ['-x', str(pathlib.Path(__file__).parent.resolve())]
     if pattern is not None:

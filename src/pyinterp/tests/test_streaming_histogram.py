@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Unit tests for the StreamingHistogram class."""
 import pickle
 
 import dask.array as da
@@ -10,10 +11,16 @@ import pytest
 
 from . import load_grid2d, load_grid3d, load_grid4d
 from .. import StreamingHistogram
+from ..typing import NDArray
 from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 
 
-def check_stats(histogram, values, dtype, error):
+def check_stats(
+    histogram: StreamingHistogram,
+    values: NDArray,
+    dtype: np.dtype,
+    error: float,
+) -> None:
     """Check the statistics of a streaming histogram."""
     assert isinstance(histogram, StreamingHistogram)
     assert histogram.count() == values.size
@@ -43,9 +50,10 @@ def check_stats(histogram, values, dtype, error):
 
 @pytest.mark.parametrize(('dtype', 'error'), [(np.float32, 1e-4),
                                               (np.float64, 1e-6)])
-def test_streaming_histogram_1d(dtype, error):
+def test_streaming_histogram_1d(dtype: np.dtype, error: float) -> None:
     """Test the computation of streaming histogram for a 1D array."""
-    values = np.random.random_sample((10000, )).astype(dtype)
+    rng = np.random.default_rng()
+    values = rng.random((10000, )).astype(dtype)
     histogram = StreamingHistogram(values, dtype=dtype, bin_count=values.size)
 
     check_stats(histogram, values, dtype, error)
@@ -67,32 +75,39 @@ def test_streaming_histogram_1d(dtype, error):
     assert isinstance(str(histogram), str)
 
 
-def test_streaming_histogram_iadd():
+def test_streaming_histogram_iadd() -> None:
+    """Test the addition of two StreamingHistogram objects in place."""
     size = 5000 * 2
-    v0 = np.random.random_sample((size // 2, ))
-    ds = StreamingHistogram(v0, dtype=np.float64, bin_count=size)
-    v1 = np.random.random_sample((size // 2, ))
-    ds += StreamingHistogram(v1, dtype=np.float64, bin_count=size)
-    check_stats(ds, np.concatenate((v0, v1)), np.float64, 1e-6)
+    rng = np.random.default_rng()
+    v0 = rng.random((size // 2, ))
+    ds = StreamingHistogram(v0, dtype=np.dtype(np.float64), bin_count=size)
+    v1 = rng.random((size // 2, ))
+    ds += StreamingHistogram(v1, dtype=np.dtype(np.float64), bin_count=size)
+    check_stats(ds, np.concatenate((v0, v1)), np.dtype(np.float64), 1e-6)
 
     with pytest.raises(TypeError):
         ds += v1
 
     with pytest.raises(TypeError):
         ds2 = StreamingHistogram(v0.astype('float32'),
-                                 dtype=np.float32,
-                                 bin_count=size)  # type: ignore
+                                 dtype=np.dtype(np.float32),
+                                 bin_count=size)
         ds += ds2
 
     with pytest.raises(ValueError):
-        StreamingHistogram(v0, dtype=np.int32, bin_count=size)
+        StreamingHistogram(v0, dtype=np.dtype(np.int32), bin_count=size)
 
 
-def test_axis():
+def test_axis() -> None:
     """Test the computation of streaming histogram for a reduced tensor."""
-    values = np.random.random_sample((2, 3, 4, 5, 6, 7))
+    rng = np.random.default_rng()
+    values = rng.random((2, 3, 4, 5, 6, 7))
 
-    def check_axis(values, axis, delayed=False):
+    def check_axis(
+        values: NDArray,
+        axis: int | tuple[int, ...] | None,
+        delayed: bool = False,
+    ) -> None:
         histogram = StreamingHistogram(
             da.asarray(values) if delayed else values,
             axis=axis,
@@ -118,7 +133,7 @@ def test_axis():
     check_axis(values, (1, 3, 5), delayed=True)
 
 
-def test_grid():
+def test_grid() -> None:
     """Test the computation of streaming histogram for a grid."""
     data = load_grid2d().mss
     histogram = StreamingHistogram(data)

@@ -2,6 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for bivariate interpolation."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import os
 import pickle
 
@@ -18,8 +22,14 @@ import numpy as np
 from .. import load_grid2d, make_or_compare_reference
 from ... import core
 
+if TYPE_CHECKING:
+    from pytest import Config
 
-def plot(x, y, z, filename):
+    from ...typing import NDArray1D, NDArray2D
+
+
+def plot(x: NDArray1D, y: NDArray1D, z: NDArray2D, filename: str) -> None:
+    """Plot the interpolated data."""
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
     value = z.mean()
     std = z.std()
@@ -33,14 +43,15 @@ def plot(x, y, z, filename):
                    pad_inches=0.4)
 
 
-def load_data(is_circle=True):
+def load_data(is_circle: bool = True) -> core.Grid2DFloat64:
+    """Load test data."""
     ds = load_grid2d()
     z = ds['mss'].values.T
     return core.Grid2DFloat64(core.Axis(ds['lon'].values, is_circle=is_circle),
                               core.Axis(ds['lat'].values), z)
 
 
-def test_grid2d_init():
+def test_grid2d_init() -> None:
     """Test construction and accessors of the object."""
     grid = load_data()
     assert isinstance(grid.x, core.Axis)
@@ -48,7 +59,7 @@ def test_grid2d_init():
     assert isinstance(grid.array, np.ndarray)
 
 
-def test_grid2d_pickle():
+def test_grid2d_pickle() -> None:
     """Serialization test."""
     grid = load_data()
     other = pickle.loads(pickle.dumps(grid))
@@ -58,8 +69,14 @@ def test_grid2d_pickle():
         np.ma.fix_invalid(grid.array) == np.ma.fix_invalid(other.array))
 
 
-def run_bivariate(step, interpolator, filename, visualize, dump):
-    """Testing an interpolation method."""
+def run_bivariate(
+    step: float,
+    interpolator: core.BivariateInterpolator2D,
+    filename: str,
+    visualize: bool,
+    dump: bool,
+) -> NDArray2D:
+    """Test bivariate interpolation."""
     grid = load_data()
     lon = np.arange(-180, 180, step) + 1 / 3
     lat = np.arange(-90, 90, step) + 1 / 3
@@ -99,7 +116,7 @@ def run_bivariate(step, interpolator, filename, visualize, dump):
     return z0
 
 
-def test_bivariate_interpolator(pytestconfig):
+def test_bivariate_interpolator(pytestconfig: Config) -> None:
     """Testing of different interpolation methods."""
     visualize = pytestconfig.getoption('visualize')
     dump = pytestconfig.getoption('dump')
@@ -116,7 +133,7 @@ def test_bivariate_interpolator(pytestconfig):
     assert (b - c).std() != 0
 
 
-def test_bivariate_pickle():
+def test_bivariate_pickle() -> None:
     """Serialization of interpolator properties."""
     for item in [
             'InverseDistanceWeighting2D', 'InverseDistanceWeighting3D',
@@ -127,7 +144,7 @@ def test_bivariate_pickle():
         assert isinstance(pickle.loads(pickle.dumps(obj)), getattr(core, item))
 
 
-def test_spline_interpolator(pytestconfig):
+def test_spline_interpolator(pytestconfig: Config) -> None:
     """Testing of different spline interpolation methods."""
     visualize = pytestconfig.getoption('visualize')
     dump = pytestconfig.getoption('dump')
@@ -170,7 +187,7 @@ def test_spline_interpolator(pytestconfig):
                             num_threads=0)
 
 
-def test_spline_degraded(pytestconfig):
+def test_spline_degraded(pytestconfig: Config) -> None:
     """Testing of different spline interpolation methods."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1 / 3

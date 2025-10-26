@@ -1,5 +1,4 @@
-"""
-.. _example_dateutils:
+""".. _example_dateutils:
 
 Date and Time Utilities
 =======================
@@ -26,8 +25,8 @@ import numpy
 import pyinterp
 
 
-def make_date(samples=10):
-    """Generates random dates."""
+def make_date(samples: int = 10) -> numpy.ndarray:
+    """Generate random dates."""
     epoch = datetime.datetime(1970, 1, 1)
     delta = datetime.datetime.now() - datetime.datetime(1970, 1, 1)
 

@@ -2,13 +2,15 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for 1D interpolation."""
 import numpy
 import pytest
 
 from ... import core
 
 
-def test_interpolate1d():
+def test_interpolate1d() -> None:
+    """Test 1D interpolation."""
     xi = numpy.linspace(0, 100, num=200, endpoint=True)
     x = numpy.concatenate((xi[::4], xi[-1:]))
     y = numpy.cos(-x**2 / 9.0)

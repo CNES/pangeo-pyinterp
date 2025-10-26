@@ -2,11 +2,13 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for 2D interpolation."""
 import collections
 import pickle
 
 import numpy as np
 import pytest
+from pytest import Config
 import xarray as xr
 
 from . import load_grid2d, make_or_compare_reference
@@ -14,13 +16,15 @@ from .. import Axis, Grid2D, Grid3D, bicubic, core
 from ..backends import xarray as xr_backend
 
 
-def test_axis_identifier():
+def test_axis_identifier() -> None:
+    """Test AxisIdentifier class."""
     ident = xr_backend.AxisIdentifier(xr.DataArray())
     assert ident.longitude() is None
     assert ident.latitude() is None
 
 
-def test_dims_from_data_array():
+def test_dims_from_data_array() -> None:
+    """Test dimension extraction from DataArray."""
     array = xr.DataArray()
     with pytest.raises(ValueError):
         xr_backend._dims_from_data_array(array, True, 1)
@@ -36,8 +40,10 @@ def test_dims_from_data_array():
         xr_backend._dims_from_data_array(array, True, 2)
 
 
-def test_biavariate(pytestconfig):
+def test_bivariate(pytestconfig: Config) -> None:
+    """Test Grid2D with bivariate interpolation."""
     dump = pytestconfig.getoption('dump')
+    grid: xr_backend.Grid2D | Grid2D | xr_backend.RegularGridInterpolator
     grid = xr_backend.Grid2D(load_grid2d().mss)
 
     assert isinstance(grid, xr_backend.Grid2D)
@@ -76,7 +82,7 @@ def test_biavariate(pytestconfig):
     assert np.ma.fix_invalid(z).mean() != np.ma.fix_invalid(w).mean()
 
     with pytest.raises(TypeError):
-        grid.bivariate((x.ravel(), y.ravel()))  # type: ignore
+        grid.bivariate((x.ravel(), y.ravel()))  # type: ignore[arg-type]
 
     with pytest.raises(IndexError):
         grid.bivariate(
@@ -92,8 +98,14 @@ def test_biavariate(pytestconfig):
         grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
                        bounds_error=True)
 
-    lon = Axis(np.linspace(0, 360, 100), is_circle=True)
-    lat = Axis(np.linspace(-80, 80, 50), is_circle=False)
+    lon = Axis(  # type: ignore[assignment]
+        np.linspace(0, 360, 100, dtype=np.float64),
+        is_circle=True,
+    )
+    lat = Axis(  # type: ignore[assignment]
+        np.linspace(-80, 80, 50, dtype=np.float64),
+        is_circle=False,
+    )
     array, _ = np.meshgrid(lon[:], lat[:])
 
     with pytest.raises(ValueError):
@@ -107,7 +119,8 @@ def test_biavariate(pytestconfig):
     with pytest.raises(ValueError):
         Grid2D(lon, lat, array, increasing_axes='_')
 
-    grid = xr_backend.RegularGridInterpolator(load_grid2d().mss)
+    grid = xr_backend.RegularGridInterpolator(  # type: ignore[assignment]
+        load_grid2d().mss)
     z = grid(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
              method='bilinear')
     assert isinstance(z, np.ndarray)
@@ -126,10 +139,12 @@ def test_biavariate(pytestconfig):
     assert isinstance(other, xr_backend.RegularGridInterpolator)
 
 
-def test_bicubic(pytestconfig):
+def test_bicubic(pytestconfig: Config) -> None:
+    """Test Grid2D with bicubic interpolation."""
     dump = pytestconfig.getoption('dump')
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1
+    grid: xr_backend.Grid2D | Grid2D | xr_backend.RegularGridInterpolator
     grid = xr_backend.Grid2D(load_grid2d().mss)
 
     lon = np.arange(-180, 180, step) + 1 / 3
@@ -148,7 +163,7 @@ def test_bicubic(pytestconfig):
                                                      lat=y.ravel()),
                              fitting_model=fitting_model)
         make_or_compare_reference(f'bicubic_{fitting_model}.npy', other, dump)
-        assert (z - other).mean() != 0  # type: ignore
+        assert (z - other).mean() != 0
 
     with pytest.raises(ValueError):
         grid.bicubic(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()),
@@ -195,7 +210,8 @@ def test_bicubic(pytestconfig):
     assert isinstance(z, np.ndarray)
 
 
-def test_grid_2d_int8(pytestconfig):
+def test_grid_2d_int8(pytestconfig: Config) -> None:
+    """Test Grid2D with int8 data type."""
     dump = pytestconfig.getoption('dump')
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1
@@ -218,7 +234,8 @@ def test_grid_2d_int8(pytestconfig):
     assert np.mean(z) != 0
 
 
-def test_grid_2d_uint8(pytestconfig):
+def test_grid_2d_uint8(pytestconfig: Config) -> None:
+    """Test Grid2D with uint8 data type."""
     dump = pytestconfig.getoption('dump')
 
     grid = load_grid2d().mss

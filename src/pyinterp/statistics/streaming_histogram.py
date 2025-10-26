@@ -2,19 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-Calculate statistics of a stream of values
-------------------------------------------
-"""
+"""Calculate statistics of a stream of values."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-import sys
-
-if sys.version_info[:2] > (3, 10):
-    from typing import Self
-else:
-    Self = 'DescriptiveStatistics'
+from typing import TYPE_CHECKING, Self
 
 import dask.array.core
 import numpy
@@ -32,11 +23,17 @@ def _delayed(
     axis: Iterable[int] | None = None,
     bin_count: int | None = None,
 ) -> core.StreamingHistogramFloat64 | core.StreamingHistogramFloat32:
-    """Calculate the descriptive statistics of a dask array."""
+    """Calculate descriptive statistics of a dask array."""
     if weights is not None and values.shape != weights.shape:
         raise ValueError('values and weights must have the same shape')
 
-    def _process_block(attr, x, w, axis, bin_count):
+    def _process_block(
+        attr: str,
+        x: numpy.ndarray,
+        w: numpy.ndarray | None,
+        axis: Iterable[int] | None,
+        bin_count: int | None,
+    ) -> numpy.ndarray:
         instance = getattr(core, attr)(values=x,
                                        weights=w,
                                        axis=axis,
@@ -56,7 +53,7 @@ def _delayed(
 
 
 class StreamingHistogram:
-    """Streaming histogram.
+    """Compute streaming histogram for statistical analysis.
 
     The bins in the histogram have no predefined size, so that as values are
     pushed into the histogram, bins are added and merged as soon as their
@@ -96,15 +93,18 @@ class StreamingHistogram:
         If you do not want to estimate the quantiles of the dataset, use the
         class :py:class:`DescriptiveStatistics <pyinterp.DescriptiveStatistics>`
         which will give you more accurate results.
+
     """
 
-    def __init__(self,
-                 values: dask.array.core.Array | numpy.ndarray,
-                 weights: None |
-                 (dask.array.core.Array | numpy.ndarray) = None,
-                 axis: int | Iterable[int] | None = None,
-                 bin_count: int | None = None,
-                 dtype: numpy.dtype | None = None) -> None:
+    def __init__(
+        self,
+        values: dask.array.core.Array | numpy.ndarray,
+        weights: None | (dask.array.core.Array | numpy.ndarray) = None,
+        axis: int | Iterable[int] | None = None,
+        bin_count: int | None = None,
+        dtype: numpy.dtype | None = None,
+    ) -> None:
+        """Initialize streaming histogram object."""
         if isinstance(axis, int):
             axis = (axis, )
         dtype = dtype or numpy.dtype('float64')
@@ -130,14 +130,15 @@ class StreamingHistogram:
                                                  axis=axis,
                                                  bin_count=bin_count)
 
-    def __iadd__(self, other: Any) -> Self:
-        """Adds a new histogram to the current one.
+    def __iadd__(self, other: object) -> Self:
+        """Add a new histogram to the current one.
 
         Args:
-            The histogram to add to the current one.
+            other: The histogram to add to the current one.
 
         Returns:
             itself.
+
         """
         if isinstance(other, StreamingHistogram):
             if type(self._instance) != type(other._instance):  # noqa: E721
@@ -149,15 +150,16 @@ class StreamingHistogram:
         return self
 
     def bins(self) -> numpy.ndarray:
-        """Returns the histogram bins.
+        """Return the histogram bins.
 
         Returns:
             The histogram bins.
+
         """
         return self._instance.bins()
 
     def size(self) -> numpy.ndarray:
-        """Returns the number of bins allocated to calculate the histogram.
+        """Return the number of bins allocated to calculate the histogram.
 
         If :py:meth:`size() <pyinterp.StreamingHistogram.size>` is equal to
         :py:meth:`count() <pyinterp.StreamingHistogram.count>` then the
@@ -167,88 +169,99 @@ class StreamingHistogram:
 
         Returns:
             Number of bins allocated to calculate the histogram.
+
         """
         return self._instance.size()
 
     def count(self) -> numpy.ndarray:
-        """Returns the count of samples.
+        """Return the count of samples.
 
         Returns:
             The count of samples.
+
         """
         return self._instance.count()
 
     def kurtosis(self) -> numpy.ndarray:
-        """Returns the kurtosis of samples.
+        """Return the kurtosis of samples.
 
         Returns:
             The kurtosis of samples.
+
         """
         return self._instance.kurtosis()
 
     def max(self) -> numpy.ndarray:
-        """Returns the maximum of samples.
+        """Return the maximum of samples.
 
         Returns:
             The maximum of samples.
+
         """
         return self._instance.max()
 
     def mean(self) -> numpy.ndarray:
-        """Returns the mean of samples.
+        """Return the mean of samples.
 
         Returns:
             The mean of samples.
+
         """
         return self._instance.mean()
 
     def min(self) -> numpy.ndarray:
-        """Returns the minimum of samples.
+        """Return the minimum of samples.
 
         Returns:
             The minimum of samples.
+
         """
         return self._instance.min()
 
     def skewness(self) -> numpy.ndarray:
-        """Returns the skewness of samples.
+        """Return the skewness of samples.
 
         Returns:
             The skewness of samples.
+
         """
         return self._instance.skewness()
 
     def sum_of_weights(self) -> numpy.ndarray:
-        """Returns the sum of weights.
+        """Return the sum of weights.
 
         Returns:
             The sum of weights.
+
         """
         return self._instance.sum_of_weights()
 
     def var(self) -> numpy.ndarray:
-        """Returns the variance of samples.
+        """Return the variance of samples.
 
         Returns:
             The variance of samples.
+
         """
         return self._instance.variance()
 
     def std(self) -> numpy.ndarray:
-        """Returns the standard deviation of samples.
+        """Return the standard deviation of samples.
 
         Returns:
             The standard deviation of samples.
+
         """
         return numpy.sqrt(self.var())
 
     def quantile(self, q: float = 0.5) -> numpy.ndarray:
-        """Returns the q quantile of samples.
+        """Return the q quantile of samples.
 
         Args:
-            q (float): Quantile to compute. Default is ``0.5`` (median).
+            q: Quantile to compute. Default is ``0.5`` (median).
 
         Returns:
             The q quantile of samples.
+
         """
         return self._instance.quantile(q)

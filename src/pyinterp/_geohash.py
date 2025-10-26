@@ -1,7 +1,4 @@
-"""
-Geohash encoding and decoding
------------------------------
-"""
+"""Geohash encoding and decoding."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -57,6 +54,7 @@ class GeoHash(BaseGeoHash):
 
         Returns:
             Grid of the geohash.
+
         """
         bbox = box or geodetic.Box.whole_earth()
         _, nlon, nlat = cls.grid_properties(bbox, precision)
@@ -104,12 +102,15 @@ class GeoHash(BaseGeoHash):
 
         Throws:
             ValueError: If the code is not a valid geohash.
+
         """
         return GeoHash(*BaseGeoHash.from_string(code, round).reduce())
 
     def __repr__(self) -> str:
+        """Get the string representation of this instance."""
         lon, lat, precision = super().reduce()
         return f'{self.__class__.__name__}({lon}, {lat}, {precision})'
 
     def __reduce__(self) -> tuple[type, tuple[float, float, int]]:
+        """Get the state for serialization."""
         return (self.__class__, super().reduce())

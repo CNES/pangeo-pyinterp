@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Unit tests for the Histogram2D class."""
 import dask.array as da
 import numpy as np
 import pytest
@@ -10,12 +11,13 @@ from . import load_grid2d
 from .. import Axis, Histogram2D
 
 
-def build_instance(dtype):
+def build_instance(dtype: np.dtype) -> None:
     """Build an instance of Histogram2D with a given dtype."""
     ds = load_grid2d()
 
-    x_axis = Axis(np.arange(-180, 180, 5), is_circle=True)
-    y_axis = Axis(np.arange(-90, 95, 5))
+    x_axis = Axis(np.arange(-180.0, 180.0, 5.0, dtype=np.float64),
+                  is_circle=True)
+    y_axis = Axis(np.arange(-90.0, 95.0, 5.0, dtype=np.float64))
     hist2d = Histogram2D(x_axis, y_axis, bin_counts=40, dtype=dtype)
     assert x_axis == hist2d.x
     assert y_axis == hist2d.y
@@ -39,16 +41,16 @@ def build_instance(dtype):
         hist2d.variable('_')
 
 
-def test_histogram2d():
+def test_histogram2d() -> None:
     """Test Histogram2D class."""
-    build_instance(np.float64)
-    build_instance(np.float32)
+    build_instance(np.dtype(np.float64))
+    build_instance(np.dtype(np.float32))
 
     with pytest.raises(ValueError):
-        build_instance(np.int8)
+        build_instance(np.dtype(np.int8))
 
 
-def test_dask():
+def test_dask() -> None:
     """Test Histogram2D with dask arrays."""
     x_axis = Axis(np.linspace(-180, 180, 1), is_circle=True)
     y_axis = Axis(np.linspace(-80, 80, 1))
@@ -63,4 +65,4 @@ def test_dask():
     assert np.all(hist2d.variable('count') == 32768)
     assert hist2d.variable('mean')[0, 0] == pytest.approx(z.mean().compute())
     assert hist2d.variable('variance')[0, 0] == pytest.approx(
-        z.std().compute()**2, rel=1e-4, abs=1e-4)  # type: ignore
+        z.std().compute()**2, rel=1e-4, abs=1e-4)

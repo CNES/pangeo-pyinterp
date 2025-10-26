@@ -2,10 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-Interface with the library core
-===============================
-"""
+"""Interface with the library core."""
 from __future__ import annotations
 
 import re
@@ -21,11 +18,31 @@ PATTERN = re.compile(r'((?:Float|Int|UInt)\d+)').search
 __all__ = [
     '_core_class_suffix',
     '_core_covariance_function',
+    '_core_drift_function',
     '_core_function',
     '_core_radial_basis_function',
     '_core_window_function',
-    '_core_drift_function',
 ]
+
+#: Default mappings for all handled dtypes
+_DEFAULT_SUFFIX_MAP = {
+    numpy.float64: 'Float64',
+    numpy.int64: 'Float64',
+    numpy.uint64: 'Float64',
+    numpy.float32: 'Float32',
+    numpy.int32: 'Float32',
+    numpy.uint32: 'Float32',
+    numpy.int16: 'Float32',
+    numpy.uint16: 'Float32',
+    numpy.int8: 'Float32',
+    numpy.uint8: 'Float32',
+}
+
+#: Special mappings when handle_integer=True (overrides defaults)
+_INT_SUFFIX_MAP = {
+    numpy.int8: 'Int8',
+    numpy.uint8: 'UInt8',
+}
 
 
 def _core_class_suffix(x: numpy.ndarray, handle_integer: bool = False) -> str:
@@ -33,35 +50,33 @@ def _core_class_suffix(x: numpy.ndarray, handle_integer: bool = False) -> str:
 
     Args:
         x: array to process
-        handle_integer: if True, the integer type is handled
+        handle_integer: if True, the 8-bit integer types (int8, uint8)
+                        are handled specifically. Otherwise, all integers
+                        are mapped to float equivalents.
+
     Returns:
         str: the class suffix
+
+    Raises:
+        ValueError: if the array's dtype is not handled.
+
     """
     dtype = x.dtype.type
-    result: str
-    if dtype == numpy.float64:
-        result = 'Float64'
-    elif dtype == numpy.float32:
-        result = 'Float32'
-    elif dtype == numpy.int64:
-        result = 'Float64'
-    elif dtype == numpy.uint64:
-        result = 'Float64'
-    elif dtype == numpy.int32:
-        result = 'Float32'
-    elif dtype == numpy.uint32:
-        result = 'Float32'
-    elif dtype == numpy.int16:
-        result = 'Float32'
-    elif dtype == numpy.uint16:
-        result = 'Float32'
-    elif dtype == numpy.int8:
-        result = 'Float32' if not handle_integer else 'Int8'
-    elif dtype == numpy.uint8:
-        result = 'Float32' if not handle_integer else 'UInt8'
-    else:
-        raise ValueError('Unhandled dtype: ' + str(dtype))
-    return result
+
+    if handle_integer:
+        # First, try the special integer map.
+        suffix = _INT_SUFFIX_MAP.get(dtype)
+        if suffix:
+            return suffix
+
+    # If not handling integers specially, or if the type wasn't
+    # in the special map, fall back to the default map.
+    suffix = _DEFAULT_SUFFIX_MAP.get(dtype)
+    if suffix:
+        return suffix
+
+    # If the dtype wasn't in any applicable map, it's unhandled.
+    raise ValueError(f'Unhandled dtype: {dtype}')
 
 
 def _core_function(function: str, instance: object) -> str:
@@ -72,6 +87,7 @@ def _core_function(function: str, instance: object) -> str:
         instance: grid instance
     Returns:
         str: the class suffix
+
     """
     if not isinstance(instance, (
             core.Grid2DFloat64,

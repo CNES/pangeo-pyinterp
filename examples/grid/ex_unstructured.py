@@ -1,5 +1,4 @@
-"""
-Unstructured Grid Interpolation
+"""Unstructured Grid Interpolation
 ===============================
 
 This example illustrates the various interpolation methods available for

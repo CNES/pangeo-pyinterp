@@ -1,24 +1,28 @@
-import numpy
+from typing import SupportsInt
 
-def date(array: numpy.ndarray) -> numpy.ndarray:
+from ..typing import NDArray, NDArrayInt64, NDArrayStructured, NDArrayTimeDelta
+
+def date(array: NDArray) -> NDArrayStructured:
     ...
 
 
-def datetime(array: numpy.ndarray) -> numpy.ndarray:
+def datetime(array: NDArray) -> NDArray:
+    ...
+
+def datetime64_to_str(value: SupportsInt, resolution: str) -> str: ...
+
+
+def timedelta_since_january(array: NDArray) -> NDArrayTimeDelta:
     ...
 
 
-def timedelta_since_january(array: numpy.ndarray) -> numpy.ndarray:
+def isocalendar(array: NDArray) -> NDArrayStructured:
     ...
 
 
-def isocalendar(array: numpy.ndarray) -> numpy.ndarray:
+def time(array: NDArray) -> NDArrayStructured:
     ...
 
 
-def time(array: numpy.ndarray) -> numpy.ndarray:
-    ...
-
-
-def weekday(array: numpy.ndarray) -> numpy.ndarray:
+def weekday(array: NDArray) -> NDArrayInt64:
     ...

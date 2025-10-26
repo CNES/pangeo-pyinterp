@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for orbit interpolation functions."""
 import os
 
 import numpy as np
@@ -14,7 +15,7 @@ from ..typing import NDArray
 def load_test_ephemeris(
     filename: os.PathLike
 ) -> tuple[float, NDArray, NDArray, NDArray, np.timedelta64]:
-    """Loads the ephemeris from a text file.
+    """Load the ephemeris from a text file.
 
     Args:
         filename: Name of the file to be loaded.
@@ -22,12 +23,13 @@ def load_test_ephemeris(
     Returns:
         A tuple containing the height of the orbit, the ephemeris and the
         duration of the cycle.
+
     """
     with open(filename) as stream:
         lines = stream.readlines()
 
-    def to_dict(comments) -> dict[str, float]:
-        """Returns a dictionary describing the parameters of the orbit."""
+    def to_dict(comments: list[str]) -> dict[str, float]:
+        """Return a dictionary describing the parameters of the orbit."""
         result = {}
         for item in comments:
             assert item.startswith('#'), 'Comments must start with #'
@@ -58,13 +60,13 @@ def load_test_ephemeris(
     )
 
 
-def test_calculate_orbit():
+def test_calculate_orbit() -> None:
     """Test the calculation of the orbit."""
     orbit = calculate_orbit(*load_test_ephemeris(swot_calval_ephemeris_path()))
     assert orbit.passes_per_cycle() == 28
 
 
-def test_calculate_pass():
+def test_calculate_pass() -> None:
     """Test the calculation of the pass."""
     orbit = calculate_orbit(*load_test_ephemeris(swot_calval_ephemeris_path()))
     pass_ = calculate_pass(2, orbit)

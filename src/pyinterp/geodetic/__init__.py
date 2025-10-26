@@ -1,13 +1,10 @@
-"""
-Geographic coordinate system
-----------------------------
-"""
+"""Geographic coordinate system."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import numpy
+    from ..typing import NDArray1DFloat64
 
 from .. import interface
 from ..core import geodetic
@@ -37,7 +34,9 @@ __all__ = [
 
 
 class Spheroid(geodetic.Spheroid):
-    """World Geodetic System (WGS).
+    """Represent a World Geodetic System (WGS).
+
+    Define an ellipsoid model for geodetic calculations.
 
     Args:
         parameters: A tuple that defines:
@@ -57,57 +56,76 @@ class Spheroid(geodetic.Spheroid):
         >>> grs80 = pyinterp.geodetic.Spheroid((6378137, 1 / 298.257222101))
         >>> grs80
         Spheroid(6378137.0, 0.003352810681182319)
+
     """
 
-    def __init__(self, parameters: tuple[float, float] | None = None):
+    def __init__(self, parameters: tuple[float, float] | None = None) -> None:
+        """Initialize a Spheroid instance."""
         super().__init__(*(parameters or ()))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return a string representation of the Spheroid instance."""
         return f'Spheroid({self.semi_major_axis}, {self.flattening})'
 
 
 class Coordinates(geodetic.Coordinates):
-    """World Geodetic Coordinates System.
+    """Represent a World Geodetic Coordinates System.
+
+    Manage geodetic coordinates using a specified spheroid model.
 
     Args:
         spheroid: WGS System. If this argument is not defined, the instance
             manages a WGS84 ellipsoid.
+
     """
 
-    def __init__(self, spheroid: Spheroid | None = None):
+    def __init__(self, spheroid: Spheroid | None = None) -> None:
+        """Initialize a Coordinates instance."""
         super().__init__(spheroid)
 
 
 class Point(geodetic.Point):
-    """Handle a point in an equatorial spherical coordinate system in degrees.
+    """Handle a point in an equatorial spherical coordinate system.
+
+    Represent a geographic point using longitude and latitude in degrees.
 
     Args:
         lon: Longitude in degrees of the point.
         lat: Latitude in degrees of the point.
+
     """
 
-    def __init__(self, lon: float = 0, lat: float = 0):
+    def __init__(self, lon: float = 0, lat: float = 0) -> None:
+        """Initialize a Point instance."""
         super().__init__(lon, lat)
 
 
 class Box(geodetic.Box):
-    """Defines a box made of two describing points in a spherical coordinates
-    system in degrees.
+    """Define a box made of two describing points in spherical coordinates.
+
+    Represent a rectangular region using minimum and maximum corner points in
+    degrees.
 
     Args:
         min_corner: the minimum corner point (lower left) of the box.
         max_corner: the maximum corner point (upper right) of the box.
+
     """
 
     def __init__(self,
                  min_corner: Point | None = None,
-                 max_corner: Point | None = None):
+                 max_corner: Point | None = None) -> None:
+        """Initialize a Box instance."""
         super().__init__(min_corner or geodetic.Point(), max_corner
                          or geodetic.Point())
 
 
 class Polygon(geodetic.Polygon):
-    """The polygon contains an outer ring and zero or more inner rings.
+    """Represent a polygon with an outer ring and optional inner rings.
+
+    Define a polygon containing one outer ring and zero or more inner rings
+    (holes).
+
     Args:
         outer: outer ring.
         inners: list of inner rings.
@@ -117,16 +135,20 @@ class Polygon(geodetic.Polygon):
             :py:class:`pyinterp.geodetic.Point`.
         ValueError: if inners is not a list of list of
             :py:class:`pyinterp.geodetic.Point`.
+
     """
 
     def __init__(self,
                  outer: list[Point],
                  inners: list[list[Point]] | None = None) -> None:
+        """Initialize a Polygon instance."""
         super().__init__(outer, inners)
 
 
 class MultiPolygon(geodetic.MultiPolygon):
-    """The multi-polygon contains a list of polygons.
+    """Represent a collection of polygons.
+
+    Define a multi-polygon containing a list of polygons.
 
     Args:
         polygons: list of polygons. If this argument is not defined, the
@@ -135,16 +157,20 @@ class MultiPolygon(geodetic.MultiPolygon):
     Raises:
         ValueError: if polygons is not a list of
             :py:class:`pyinterp.geodetic.Polygon`.
+
     """
 
     def __init__(self, polygons: list[Polygon] | None = None) -> None:
+        """Initialize a MultiPolygon instance."""
         args = (polygons, ) if polygons is not None else ()
         super().__init__(*args)
 
 
-def normalize_longitudes(lon: numpy.ndarray,
-                         min_lon: float = -180.0) -> numpy.ndarray:
-    """Normalizes longitudes to the range ``[min_lon, min_lon + 360)``.
+def normalize_longitudes(lon: NDArray1DFloat64,
+                         min_lon: float = -180.0) -> NDArray1DFloat64:
+    """Normalize longitudes to the range ``[min_lon, min_lon + 360)``.
+
+    Adjust longitude values to fall within the specified range.
 
     Args:
         lon: Longitudes in degrees.
@@ -152,6 +178,7 @@ def normalize_longitudes(lon: numpy.ndarray,
 
     Returns:
         Longitudes normalized to the range ``[min_lon, min_lon + 360)``.
+
     """
     if lon.flags.writeable:
         geodetic.normalize_longitudes(lon, min_lon)
@@ -161,28 +188,34 @@ def normalize_longitudes(lon: numpy.ndarray,
 
 
 class RTree(geodetic.RTree):
-    """A spatial index based on the R-tree data structure.
+    """Provide a spatial index based on the R-tree data structure.
+
+    Create a spatial indexing structure for efficient geographic queries.
 
     Args:
         spheroid: WGS of the coordinate system used to calculate distance.
             If this argument is not defined, the instance manages a WGS84
             ellipsoid.
+
     """
 
     def __init__(self, spheroid: Spheroid | None = None) -> None:
+        """Initialize a RTree instance."""
         super().__init__(spheroid)
 
     def inverse_distance_weighting(
             self,
-            lon: numpy.ndarray,
-            lat: numpy.ndarray,
+            lon: NDArray1DFloat64,
+            lat: NDArray1DFloat64,
             radius: float | None = None,
             k: int = 9,
             p: int = 2,
             within: bool = True,
-            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Interpolation of the value at the requested position by inverse
-        distance weighting method.
+            num_threads: int = 0) -> tuple[NDArray1DFloat64, NDArray1DFloat64]:
+        """Interpolate values using inverse distance weighting method.
+
+        Calculate interpolated values at requested positions using the inverse
+        distance weighting approach.
 
         Args:
             lon: Longitudes in degrees.
@@ -199,17 +232,19 @@ class RTree(geodetic.RTree):
             num_threads: The number of threads to use for the computation. If 0
                 all CPUs are used. If 1 is given, no parallel computing code is
                 used at all, which is useful for debugging. Defaults to ``0``.
+
         Returns:
             The interpolated value and the number of neighbors used in
             the calculation.
+
         """
         return super().inverse_distance_weighting(lon, lat, radius, k, p,
                                                   within, num_threads)
 
     def radial_basis_function(  # type: ignore[override]
         self,
-        lon: numpy.ndarray,
-        lat: numpy.ndarray,
+        lon: NDArray1DFloat64,
+        lat: NDArray1DFloat64,
         radius: float | None = None,
         k: int = 9,
         rbf: str | None = None,
@@ -217,9 +252,11 @@ class RTree(geodetic.RTree):
         smooth: float = 0,
         within: bool = True,
         num_threads: int = 0,
-    ) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Interpolation of the value at the requested position by radial basis
-        function interpolation.
+    ) -> tuple[NDArray1DFloat64, NDArray1DFloat64]:
+        r"""Interpolate values using radial basis function interpolation.
+
+        Calculate interpolated values at requested positions using radial basis
+        functions.
 
         Args:
             lon: Longitudes in degrees.
@@ -254,9 +291,11 @@ class RTree(geodetic.RTree):
             num_threads: The number of threads to use for the computation. If 0
                 all CPUs are used. If 1 is given, no parallel computing code is
                 used at all, which is useful for debugging. Defaults to ``0``.
+
         Returns:
             The interpolated value and the number of neighbors used in the
             calculation.
+
         """
         return super().radial_basis_function(
             lon, lat, radius, k,
@@ -265,17 +304,19 @@ class RTree(geodetic.RTree):
 
     def window_function(  # type: ignore[override]
         self,
-        lon: numpy.ndarray,
-        lat: numpy.ndarray,
+        lon: NDArray1DFloat64,
+        lat: NDArray1DFloat64,
         radius: float,
         k: int = 9,
         wf: str | None = None,
         arg: float | None = None,
         within: bool = True,
         num_threads: int = 0,
-    ) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Interpolation of the value at the requested position by window
-        function.
+    ) -> tuple[NDArray1DFloat64, NDArray1DFloat64]:
+        r"""Interpolate values using a window function.
+
+        Calculate interpolated values at requested positions using a specified
+        window function.
 
         The interpolated value will be equal to the expression:
 
@@ -348,9 +389,11 @@ class RTree(geodetic.RTree):
             num_threads: The number of threads to use for the computation. If 0
                 all CPUs are used. If 1 is given, no parallel computing code is
                 used at all, which is useful for debugging. Defaults to ``0``.
+
         Returns:
             The interpolated value and the number of neighbors used in the
             calculation.
+
         """
         return super().window_function(
             lon, lat, radius, k, interface._core_window_function(wf, arg), arg,

@@ -1,6 +1,4 @@
-"""
-***********
-Time series
+"""Time series
 ***********
 
 Interpolation of a time series
@@ -72,6 +70,7 @@ class TimeSeries:
         Returns:
             pyinterp.backends.xarray.Grid3D: The interpolator handling the
             interpolation of the grid series.
+
         """
         if start < self.series.min() or end > self.series.max():
             raise IndexError(

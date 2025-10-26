@@ -1,5 +1,4 @@
-"""
-.. _example_axis:
+""".. _example_axis:
 
 Manipulating Axes
 =================

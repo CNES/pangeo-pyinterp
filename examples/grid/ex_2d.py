@@ -1,5 +1,4 @@
-"""
-.. _example_2d_interpolation:
+""".. _example_2d_interpolation:
 
 2D Interpolation
 ================

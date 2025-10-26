@@ -1,5 +1,4 @@
-"""
-.. _example_binning:
+""".. _example_binning:
 
 Binning
 =======

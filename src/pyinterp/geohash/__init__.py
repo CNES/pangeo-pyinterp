@@ -2,10 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-GeoHash bytes
--------------
-"""
+"""GeoHash bytes."""
 from . import int64
 from .. import geodetic
 from ..core.geohash import (

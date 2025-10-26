@@ -2,11 +2,14 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for geodetic module."""
 import os
 import pickle
 
 import numpy
 import pytest
+
+from ..typing import NDArray1DFloat64
 
 try:
     import matplotlib.colors
@@ -15,11 +18,24 @@ try:
 except ImportError:
     HAVE_PLT = False
 
+from typing import TYPE_CHECKING
+
+from pytest import Config
+
 from .. import geodetic
 from ..tests import load_grid2d
 
+if TYPE_CHECKING:
+    from pyinterp import core
 
-def plot(x, y, z, filename):
+
+def plot(
+    x: NDArray1DFloat64,
+    y: NDArray1DFloat64,
+    z: NDArray1DFloat64,
+    filename: str,
+) -> None:
+    """Plot data on a regular grid."""
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
     z = numpy.ma.fix_invalid(z)
     value = z.mean()
@@ -34,7 +50,8 @@ def plot(x, y, z, filename):
                    pad_inches=0.4)
 
 
-def load_data():
+def load_data() -> geodetic.RTree:
+    """Load test data."""
     ds = load_grid2d()
     z = ds.mss.T
     mesh = geodetic.RTree()
@@ -43,33 +60,37 @@ def load_data():
     return mesh
 
 
-def test_spheroid():
+def test_spheroid() -> None:
+    """Test the geodetic.Spheroid class."""
     wgs = geodetic.Spheroid()
     assert isinstance(wgs, geodetic.Spheroid)
     with pytest.raises(TypeError):
-        wgs = geodetic.Spheroid(12.0)  # type: ignore
+        wgs = geodetic.Spheroid(12.0)  # type: ignore[arg-type]
     with pytest.raises(TypeError):
-        wgs = geodetic.Spheroid((12.0, 3.0, 5))  # type: ignore
+        wgs = geodetic.Spheroid((12.0, 3.0, 5))  # type: ignore[arg-type]
     wgs = geodetic.Spheroid((1, 1))
     assert isinstance(wgs, geodetic.Spheroid)
     assert str(wgs) == 'Spheroid(1.0, 1.0)'
 
 
-def test_coordinates():
+def test_coordinates() -> None:
+    """Test the geodetic.Coordinates class."""
     wgs = geodetic.Coordinates()
     assert isinstance(wgs, geodetic.Coordinates)
     wgs = geodetic.Coordinates(geodetic.Spheroid())
     assert isinstance(wgs, geodetic.Coordinates)
 
 
-def test_point():
+def test_point() -> None:
+    """Test the geodetic.Point class."""
     pt = geodetic.Point(1, 2)
     assert pt.lon == 1
     assert pt.lat == 2
 
 
-def test_box():
-    box = geodetic.Box()
+def test_box() -> None:
+    """Test the geodetic.Box class."""
+    box: core.geodetic.Box = geodetic.Box()
     assert isinstance(box, geodetic.Box)
 
     box = geodetic.Box.whole_earth()
@@ -85,7 +106,8 @@ def test_box():
     assert box.max_corner.lat == 4
 
 
-def test_polygon():
+def test_polygon() -> None:
+    """Test the geodetic.Polygon class."""
     outer = [
         geodetic.Point(0, 0),
         geodetic.Point(0, 5),
@@ -111,17 +133,18 @@ def test_polygon():
         ) == 'POLYGON((0 0,0 5,5 5,5 0,0 0),(1 1,4 1,4 4,1 4,1 1))'
 
     with pytest.raises(ValueError):
-        inners.append(5)  # type: ignore
+        inners.append(5)  # type: ignore[arg-type]
         polygon = geodetic.Polygon(outer, [inners])
 
     with pytest.raises(TypeError):
-        polygon = geodetic.Polygon(outer, [1])  # type: ignore
+        polygon = geodetic.Polygon(outer, [1])  # type: ignore[list-item]
 
     with pytest.raises(ValueError):
-        polygon = geodetic.Polygon([1])  # type: ignore
+        polygon = geodetic.Polygon([1])  # type: ignore[list-item]
 
 
-def test_multipolygon():
+def test_multipolygon() -> None:
+    """Test the geodetic.MultiPolygon class."""
     multipolygon = geodetic.MultiPolygon()
     multipolygon.append(
         geodetic.Polygon([
@@ -142,26 +165,52 @@ def test_multipolygon():
         ) == 'MULTIPOLYGON(((0 0,0 5,5 5,5 0,0 0)))'
 
 
-def test_rtree(pytestconfig):
+def test_rtree(pytestconfig: Config) -> None:
+    """Test the geodetic.RTree class."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1
     mesh = load_data()
     lon = numpy.arange(-180, 180, step) + 1 / 3.0
     lat = numpy.arange(-90, 90, step) + 1 / 3.0
     x, y = numpy.meshgrid(lon, lat, indexing='ij')
-    data, _ = mesh.query(x.ravel(), y.ravel())
-    data, _ = mesh.inverse_distance_weighting(x.ravel(), y.ravel())
+    data, _ = mesh.query(
+        x.ravel(),
+        y.ravel(),
+    )
+    data, _ = mesh.inverse_distance_weighting(
+        x.ravel(),
+        y.ravel(),
+    )
     if HAVE_PLT and pytestconfig.getoption('visualize'):
-        plot(x, y, data.reshape((len(lon), len(lat))),
-             'mss_geodetic_rtree_idw.png')
-    data, _ = mesh.radial_basis_function(x.ravel(), y.ravel())
+        plot(
+            x,
+            y,
+            data.reshape((len(lon), len(lat))),
+            'mss_geodetic_rtree_idw.png',
+        )
+    data, _ = mesh.radial_basis_function(
+        x.ravel(),
+        y.ravel(),
+    )
     if HAVE_PLT and pytestconfig.getoption('visualize'):
-        plot(x, y, data.reshape((len(lon), len(lat))),
-             'mss_geodetic_rtree_rbf.png')
-    data, _ = mesh.window_function(x.ravel(), y.ravel(), radius=2_000_000)
+        plot(
+            x,
+            y,
+            data.reshape((len(lon), len(lat))),
+            'mss_geodetic_rtree_rbf.png',
+        )
+    data, _ = mesh.window_function(
+        x.ravel(),
+        y.ravel(),
+        radius=2_000_000,
+    )
     if HAVE_PLT and pytestconfig.getoption('visualize'):
-        plot(x, y, data.reshape((len(lon), len(lat))),
-             'mss_geodetic_rtree_wf.png')
+        plot(
+            x,
+            y,
+            data.reshape((len(lon), len(lat))),
+            'mss_geodetic_rtree_wf.png',
+        )
 
     with pytest.raises(ValueError):
         mesh.radial_basis_function(x.ravel(),

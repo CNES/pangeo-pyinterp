@@ -2,13 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-Histogram 2D
-------------
-"""
+"""Histogram 2D."""
 from __future__ import annotations
 
-from typing import Union
+from typing import TYPE_CHECKING, Union
 import copy
 
 import dask.array.core
@@ -16,18 +13,21 @@ import numpy
 
 from . import core
 
+if TYPE_CHECKING:
+    from .typing import NDArray, NDArray1D, NDArray2D
+
 #: The type of the histogram 2D
 Histogram2DTyped = Union[core.Histogram2DFloat64, core.Histogram2DFloat32]
 
 
 class Histogram2D:
-    """Group a number of more or less continuous values into a smaller number
-    of "bins" located on a grid.
+    """Group continuous values into bins located on a grid.
 
-    This class will build for each pixel of the defined grid, a histogram. This
-    histogram will be used to compute the statistics.
+    Build a histogram for each pixel of the defined grid to compute statistics.
+    This class groups a number of more or less continuous values into a smaller
+    number of "bins" located on a grid.
 
-    Histogram used uses the algorithm described in the paper `A Streaming
+    This class uses the algorithm described in the paper `A Streaming
     Parallel Decision Tree Algorithm`. Therefore, if the number of observations
     to be taken into account in a pixel exceeds the maximum number of bins, the
     calculated statistics will be an approximate value of the exact statistical
@@ -61,13 +61,15 @@ class Histogram2D:
         A Streaming Parallel Decision Tree Algorithm,
         Journal of Machine Learning Research, 11, 28, 849-872
         http://jmlr.org/papers/v11/ben-haim10a.html
+
     """
 
     def __init__(self,
                  x: core.Axis,
                  y: core.Axis,
                  bin_counts: int | None = None,
-                 dtype: numpy.dtype | None = None):
+                 dtype: numpy.dtype | None = None) -> None:
+        """Initialize a Histogram2D instance."""
         dtype = dtype or numpy.dtype('float64')
         if dtype == numpy.dtype('float64'):
             self._instance: Histogram2DTyped = core.Histogram2DFloat64(
@@ -80,21 +82,23 @@ class Histogram2D:
 
     @property
     def x(self) -> core.Axis:
-        """Gets the bin centers for the X Axis of the grid."""
+        """Get the bin centers for the X Axis of the grid."""
         return self._instance.x
 
     @property
     def y(self) -> core.Axis:
-        """Gets the bin centers for the Y Axis of the grid."""
+        """Get the bin centers for the Y Axis of the grid."""
         return self._instance.y
 
     def clear(self) -> None:
-        """Clears the data inside each bin."""
+        """Clear the data inside each bin."""
         self._instance.clear()
 
     def __repr__(self) -> str:
-        """Called by the ``repr()`` built-in function to compute the string
-        representation of this instance."""
+        """Compute the string representation of this instance.
+
+        Called by the ``repr()`` built-in function.
+        """
         result = [f'<{self.__class__.__module__}.{self.__class__.__name__}>']
         result.append('Axis:')
         result.append(f'  x: {self._instance.x}')
@@ -102,21 +106,21 @@ class Histogram2D:
         return '\n'.join(result)
 
     def __add__(self, other: Histogram2D) -> Histogram2D:
-        """Overrides the default behavior of the ``+`` operator."""
+        """Override the default behavior of the ``+`` operator."""
         if self.dtype != other.dtype:
             raise ValueError('dtype mismatch')
         result = copy.copy(self)
         result._instance += other._instance  # type: ignore[operator]
         return result
 
-    def push(self, x: numpy.ndarray, y: numpy.ndarray,
-             z: numpy.ndarray) -> None:
+    def push(self, x: NDArray, y: NDArray, z: NDArray) -> None:
         """Push new samples into the defined bins.
 
         Args:
             x: X coordinates of the samples.
             y: Y coordinates of the samples.
             z: New samples to push into the defined bins.
+
         """
         x = numpy.asarray(x).ravel()
         y = numpy.asarray(y).ravel()
@@ -125,9 +129,9 @@ class Histogram2D:
 
     def push_delayed(
         self,
-        x: numpy.ndarray | dask.array.core.Array,
-        y: numpy.ndarray | dask.array.core.Array,
-        z: numpy.ndarray | dask.array.core.Array,
+        x: NDArray | dask.array.core.Array,
+        y: NDArray | dask.array.core.Array,
+        z: NDArray | dask.array.core.Array,
     ) -> dask.array.core.Array:
         """Push new samples into the defined bins from dask array.
 
@@ -135,6 +139,7 @@ class Histogram2D:
             x: X coordinates of the samples.
             y: Y coordinates of the samples.
             z: New samples to push into the defined bins.
+
         Returns:
             The calculation graph producing the update of the grid from the
             provided samples. Running the graph will return an instance of this
@@ -144,12 +149,20 @@ class Histogram2D:
         .. seealso ::
 
             :py:meth:`push <pyinterp.Histogram2D.push>`
+
         """
         x = dask.array.core.asarray(x)
         y = dask.array.core.asarray(y)
         z = dask.array.core.asarray(z)
 
-        def _process_block(x, y, z, x_axis, y_axis, dtype):
+        def _process_block(
+            x: NDArray1D,
+            y: NDArray1D,
+            z: NDArray1D,
+            x_axis: core.Axis,
+            y_axis: core.Axis,
+            dtype: numpy.dtype,
+        ) -> NDArray1D:
             hist2d = Histogram2D(x_axis, y_axis, dtype=dtype)
             hist2d.push(x, y, z)
             return numpy.array([hist2d], dtype='object')
@@ -163,8 +176,15 @@ class Histogram2D:
                                           self.dtype,
                                           dtype='object').sum()
 
-    def variable(self, statistics: str = 'mean', *args) -> numpy.ndarray:
-        """Gets the regular grid containing the calculated statistics.
+    def variable(
+        self,
+        statistics: str = 'mean',
+        *args: float,
+    ) -> NDArray2D:
+        """Get the regular grid containing the calculated statistics.
+
+        Return the grid with the requested statistical variable computed from
+        the histogram data.
 
         Args:
             statistics: The statistics to compute
@@ -187,6 +207,7 @@ class Histogram2D:
 
         Returns:
             The dataset representing the calculated statistical variable.
+
         """
         try:
             return getattr(self._instance, statistics)(*args)

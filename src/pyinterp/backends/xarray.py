@@ -2,15 +2,13 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-XArray
-------
+"""XArray backend.
 
 Build interpolation objects from xarray.DataArray instances
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import pickle
 
 from .. import cf, core, grid, interpolator
@@ -25,23 +23,28 @@ __all__ = ['Grid2D', 'Grid3D', 'Grid4D', 'RegularGridInterpolator']
 
 
 class AxisIdentifier:
-    """Identification of the axes defining longitudes, latitudes in a CF file.
+    """Identify axes defining longitudes and latitudes in a CF file.
+
+    This class determines which dimensions in a data array correspond to
+    longitude and latitude coordinates based on CF conventions.
 
     Args:
         data_array: The data array to be identified.
+
     """
 
-    def __init__(self, data_array: xr.DataArray):
+    def __init__(self, data_array: xr.DataArray) -> None:
         self.data_array = data_array
 
     def _axis(self, units: cf.AxisUnit) -> str | None:
-        """Returns the name of the dimension that defines an axis.
+        """Return the name of the dimension that defines an axis.
 
         Args:
             units: The units of the axis
 
         Returns:
             The name of the coordinate
+
         """
         for name, coord in self.data_array.coords.items():
             if hasattr(coord, 'units') and coord.units in units:
@@ -49,18 +52,20 @@ class AxisIdentifier:
         return None
 
     def longitude(self) -> str | None:
-        """Returns the name of the dimension that defines a longitude axis.
+        """Return the name of the dimension that defines a longitude axis.
 
         Returns:
             The name of the longitude coordinate
+
         """
         return self._axis(cf.AxisLongitudeUnit())
 
     def latitude(self) -> str | None:
-        """Returns the name of the dimension that defines a latitude axis.
+        """Return the name of the dimension that defines a latitude axis.
 
         Returns:
             The name of the latitude coordinates
+
         """
         return self._axis(cf.AxisLatitudeUnit())
 
@@ -68,8 +73,10 @@ class AxisIdentifier:
 def _dims_from_data_array(data_array: xr.DataArray,
                           geodetic: bool,
                           ndims: int | None = 2) -> tuple[str, str]:
-    """Gets the name of the dimensions that define the grid axes. the
-    longitudes and latitudes of the data array.
+    """Get the name of dimensions that define the grid axes.
+
+    Extract the names of the dimensions that define the longitudes and
+    latitudes (or x, y coordinates) of the data array.
 
     Args:
         data_array: Provided data array
@@ -85,6 +92,7 @@ def _dims_from_data_array(data_array: xr.DataArray,
             longitude/latitude axis
         ValueError if the number of dimensions is different from the number of
             dimensions of the grid provided.
+
     """
     size = len(data_array.shape)
     if size != ndims:
@@ -111,8 +119,10 @@ def _coords(
     dims: tuple,
     datetime64: tuple[Hashable, core.TemporalAxis] | None = None,
 ) -> tuple:
-    """Get the list of arguments to provide to the grid interpolation
-    functions.
+    """Get the list of arguments to provide to grid interpolation functions.
+
+    Extract and decode coordinates according to the grid dimensions and
+    temporal axis properties.
 
     Args:
         coords: Mapping from dimension names to the new coordinates. New
@@ -128,6 +138,7 @@ def _coords(
         IndexError if the number of coordinates is different from the
             number of grid dimensions
         IndexError if one of the coordinates is not used by this grid.
+
     """
     if not isinstance(coords, dict):
         raise TypeError('coords must be an instance of dict')
@@ -148,7 +159,10 @@ def _coords(
 
 
 class Grid2D(grid.Grid2D):
-    """Builds a Grid2D from the Xarray data provided.
+    """Build a Grid2D from Xarray data.
+
+    Create a 2D grid interpolation object from the provided Xarray data array,
+    with optional axis ordering and geodetic coordinate support.
 
     Args:
         data_array: Provided data
@@ -175,12 +189,14 @@ class Grid2D(grid.Grid2D):
         ValueError: if the provided data array doesn't define a
             longitude/latitude axis if ``geodetic`` is True.
         ValueError: if the number of dimensions is different of 2.
+
     """
 
     def __init__(self,
                  data_array: xr.DataArray,
                  increasing_axes: bool = False,
-                 geodetic: bool = True):
+                 geodetic: bool = True) -> None:
+        """Initialize the 2D grid from an Xarray data array."""
         self._dims = _dims_from_data_array(data_array, geodetic)
         super().__init__(
             core.Axis(data_array.coords[self._dims[0]].values,
@@ -189,7 +205,12 @@ class Grid2D(grid.Grid2D):
             data_array.transpose(*self._dims).values,
             increasing_axes='inplace' if increasing_axes else None)
 
-    def bivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def bivariate(
+            self,
+            coords: dict[str, np.ndarray],
+            *args: Any,  # noqa: ANN401
+            **kwargs: Any,  # noqa: ANN401
+    ) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -202,11 +223,17 @@ class Grid2D(grid.Grid2D):
 
         Returns:
             The interpolated values.
+
         """
         return interpolator.bivariate(self, *_coords(coords, self._dims),
                                       *args, **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def bicubic(
+            self,
+            coords: dict[str, np.ndarray],
+            *args: Any,  # noqa: ANN401
+            **kwargs: Any,  # noqa: ANN401
+    ) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -219,13 +246,18 @@ class Grid2D(grid.Grid2D):
 
         Returns:
             The interpolated values.
+
         """
         return interpolator.bicubic(self, *_coords(coords, self._dims), *args,
                                     **kwargs)
 
 
 class Grid3D(grid.Grid3D):
-    """Builds a Grid3D from the Xarray data provided.
+    """Build a Grid3D from Xarray data.
+
+    Create a 3D grid interpolation object from the provided Xarray data array,
+    with optional axis ordering and geodetic coordinate support. Supports
+    temporal axes with datetime64 or timedelta64 data types.
 
     Args:
         data_array: Provided data array
@@ -251,12 +283,14 @@ class Grid3D(grid.Grid3D):
         ValueError: if the provided data array doesn't define a
             longitude/latitude axis if ``geodetic`` is True.
         ValueError: if the number of dimensions is different of 3.
+
     """
 
     def __init__(self,
                  data_array: xr.DataArray,
                  increasing_axes: bool = False,
-                 geodetic: bool = True):
+                 geodetic: bool = True) -> None:
+        """Initialize the 3D grid from an Xarray data array."""
         x, y = _dims_from_data_array(data_array, geodetic, ndims=3)
         z = (set(data_array.dims) - {x, y}).pop()
         self._dims = (x, y, z)
@@ -276,7 +310,12 @@ class Grid3D(grid.Grid3D):
             data_array.transpose(x, y, z).values,
             increasing_axes='inplace' if increasing_axes else None)
 
-    def trivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def trivariate(
+            self,
+            coords: dict[str, np.ndarray],
+            *args: Any,  # noqa: ANN401
+            **kwargs: Any,  # noqa: ANN401
+    ) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -291,12 +330,18 @@ class Grid3D(grid.Grid3D):
 
         Returns:
             The interpolated values.
+
         """
         return interpolator.trivariate(
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def bicubic(
+            self,
+            coords: dict[str, np.ndarray],
+            *args: Any,  # noqa: ANN401
+            **kwargs: Any,  # noqa: ANN401
+    ) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -309,6 +354,7 @@ class Grid3D(grid.Grid3D):
 
         Returns:
             The interpolated values.
+
         """
         return interpolator.bicubic(
             self, *_coords(coords, self._dims, self._datetime64), *args,
@@ -316,7 +362,11 @@ class Grid3D(grid.Grid3D):
 
 
 class Grid4D(grid.Grid4D):
-    """Builds a Grid4D from the Xarray data provided.
+    """Build a Grid4D from Xarray data.
+
+    Create a 4D grid interpolation object from the provided Xarray data array,
+    with optional axis ordering and geodetic coordinate support. Supports
+    one temporal axis with datetime64 data type.
 
     Args:
         data_array: Provided data array.
@@ -342,12 +392,14 @@ class Grid4D(grid.Grid4D):
         ValueError: if the provided data array doesn't define a
             longitude/latitude axis if ``geodetic`` is True.
         ValueError: if the number of dimensions is different of 4.
+
     """
 
     def __init__(self,
                  data_array: xr.DataArray,
                  increasing_axes: bool = False,
-                 geodetic: bool = True):
+                 geodetic: bool = True) -> None:
+        """Initialize the 4D grid from an Xarray data array."""
         x, y = _dims_from_data_array(data_array, geodetic, ndims=4)
         z, u = tuple(set(data_array.dims) - {x, y})
 
@@ -379,7 +431,12 @@ class Grid4D(grid.Grid4D):
             data_array.transpose(x, y, z, u).values,
             increasing_axes='inplace' if increasing_axes else None)
 
-    def quadrivariate(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def quadrivariate(
+            self,
+            coords: dict[str, np.ndarray],
+            *args: Any,  # noqa: ANN401
+            **kwargs: Any,  # noqa: ANN401
+    ) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -394,12 +451,18 @@ class Grid4D(grid.Grid4D):
 
         Returns:
             The interpolated values.
+
         """
         return interpolator.quadrivariate(
             self, *_coords(coords, self._dims, self._datetime64), *args,
             **kwargs)
 
-    def bicubic(self, coords: dict, *args, **kwargs) -> np.ndarray:
+    def bicubic(
+            self,
+            coords: dict[str, np.ndarray],
+            *args: Any,  # noqa: ANN401
+            **kwargs: Any,  # noqa: ANN401
+    ) -> np.ndarray:
         """Evaluate the interpolation defined for the given coordinates.
 
         Args:
@@ -412,6 +475,7 @@ class Grid4D(grid.Grid4D):
 
         Returns:
             The interpolated values.
+
         """
         return interpolator.bicubic(
             self, *_coords(coords, self._dims, self._datetime64), *args,
@@ -419,7 +483,11 @@ class Grid4D(grid.Grid4D):
 
 
 class RegularGridInterpolator:
-    """Interpolation on a regular grid in arbitrary dimensions.
+    """Interpolate on a regular grid in arbitrary dimensions.
+
+    Perform interpolation on a regular grid with uneven spacing support.
+    Supports linear, nearest neighbors, inverse distance weighting, and
+    bicubic interpolation methods.
 
     The data must be defined on a regular grid; the grid spacing however may be
     uneven.  Linear, nearest neighbors, inverse distance weighting and bicubic
@@ -451,22 +519,24 @@ class RegularGridInterpolator:
             longitude/latitude axis if ``geodetic`` is True.
         NotImplementedError: if the number of dimensions in the array is
             less than 2 or more than 4.
+
     """
 
     def __init__(self,
                  array: xr.DataArray,
                  increasing_axes: bool = True,
-                 geodetic: bool = True):
-        if len(array.shape) == 2:
+                 geodetic: bool = True) -> None:
+        """Initialize the interpolator from an Xarray data array."""
+        if len(array.shape) == grid.NUM_DIMS_2:
             self._grid: (Grid2D | Grid3D | Grid4D) = Grid2D(
                 array, increasing_axes=increasing_axes, geodetic=geodetic)
             self._interp = self._grid.bivariate
-        elif len(array.shape) == 3:
+        elif len(array.shape) == grid.NUM_DIMS_3:
             self._grid = Grid3D(array,
                                 increasing_axes=increasing_axes,
                                 geodetic=geodetic)
             self._interp = self._grid.trivariate
-        elif len(array.shape) == 4:
+        elif len(array.shape) == grid.NUM_DIMS_4:
             self._grid = Grid4D(array,
                                 increasing_axes=increasing_axes,
                                 geodetic=geodetic)
@@ -476,42 +546,51 @@ class RegularGridInterpolator:
                 'Only the 2D, 3D or 4D grids can be interpolated.')
 
     def __getstate__(self) -> tuple[bytes]:
+        """Get the state for pickling."""
         # Walk around a bug with pybind11 and pickle starting with Python 3.9
         # Serialize the object here with highest protocol.
         return (pickle.dumps((self._grid, self._interp),
                              protocol=pickle.HIGHEST_PROTOCOL), )
 
     def __setstate__(self, state: tuple[bytes]) -> None:
+        """Set the state for unpickling."""
         # Walk around a bug with pybind11 and pickle starting with Python 3.9
         # Deserialize the object here with highest protocol.
         self._grid, self._interp = pickle.loads(state[0])
 
     @property
     def ndim(self) -> int:
-        """Gets the number of array dimensions.
+        """Get the number of array dimensions.
 
         Returns:
             Number of array dimensions.
+
         """
         return self._grid.array.ndim
 
     @property
     def grid(self) -> Grid2D | Grid3D | Grid4D:
-        """Gets the instance of handling the regular grid for interpolations.
+        """Get the instance handling the regular grid for interpolations.
 
         Returns:
             The regular grid.
+
         """
         return self._grid
 
-    def __call__(self,
-                 coords: dict,
-                 method: str = 'bilinear',
-                 bounds_error: bool = False,
-                 bicubic_kwargs: dict | None = None,
-                 num_threads: int = 0,
-                 **kwargs) -> np.ndarray:
-        """Interpolation at coordinates.
+    def __call__(
+            self,
+            coords: dict,
+            method: str = 'bilinear',
+            bounds_error: bool = False,
+            bicubic_kwargs: dict | None = None,
+            num_threads: int = 0,
+            **kwargs: Any,  # noqa: ANN401
+    ) -> np.ndarray:
+        """Interpolate at coordinates.
+
+        Perform interpolation at the specified coordinates using the chosen
+        method and parameters.
 
         Args:
             coords: Mapping from dimension names to the new coordinates.
@@ -534,8 +613,10 @@ class RegularGridInterpolator:
                 :py:meth:`pyinterp.trivariate <pyinterp.trivariate>` or
                 :py:meth:`pyinterp.quadrivariate <pyinterp.quadrivariate>`
                 depending on the number of dimensions of the grid.
+
         Returns:
             New array on the new coordinates.
+
         """
         if method == 'bicubic':
             bicubic_kwargs = bicubic_kwargs or {}

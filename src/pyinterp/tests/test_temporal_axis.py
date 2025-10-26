@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Unit tests for the TemporalAxis class."""
 import datetime
 import pickle
 
@@ -9,9 +10,11 @@ import numpy as np
 import pytest
 
 from .. import TemporalAxis
+from ..typing import NDArray
 
 
-def new_axis(timedelta: bool = False):
+def new_axis(timedelta: bool = False) -> tuple[NDArray, TemporalAxis]:
+    """Create a new TemporalAxis for testing."""
     start = datetime.datetime(2000, 1, 1)
     if timedelta:
         values = np.array(
@@ -25,7 +28,8 @@ def new_axis(timedelta: bool = False):
     return values, TemporalAxis(values)
 
 
-def test_datetime64_constructor():
+def test_datetime64_constructor() -> None:
+    """Test TemporalAxis constructed with datetime64 values."""
     values, axis = new_axis()
     assert isinstance(str(axis), str)
     assert str(axis) == ("""<pyinterp.core.TemporalAxis>
@@ -70,7 +74,8 @@ def test_datetime64_constructor():
         axis.safe_cast(values)
 
 
-def test_timedelta64_constructor():
+def test_timedelta64_constructor() -> None:
+    """Test TemporalAxis constructed with timedelta64 values."""
     values, axis = new_axis(timedelta=True)
     assert isinstance(str(axis), str)
     assert str(axis) == ("""<pyinterp.core.TemporalAxis>
@@ -109,7 +114,8 @@ def test_timedelta64_constructor():
         axis.safe_cast(values)
 
 
-def test_temporal_axis_degraded():
+def test_temporal_axis_degraded() -> None:
+    """Test degraded cases for TemporalAxis."""
     with pytest.raises(ValueError):
         TemporalAxis(np.arange(10))
 
@@ -123,7 +129,8 @@ def test_temporal_axis_degraded():
                  dtype='datetime64[D]')).dtype == np.dtype('datetime64[s]')
 
 
-def test_pickle():
+def test_pickle() -> None:
+    """Test pickling support."""
     values, axis = new_axis()
     other = pickle.loads(pickle.dumps(axis))
     assert axis == other

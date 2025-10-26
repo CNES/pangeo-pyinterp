@@ -2,6 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for RTree-based interpolation."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import os
 import pickle
 
@@ -18,8 +22,14 @@ import numpy as np
 from .. import load_grid2d
 from ... import core
 
+if TYPE_CHECKING:
+    from pytest import Config
 
-def plot(x, y, z, filename):
+    from ...typing import NDArray1D, NDArray2D
+
+
+def plot(x: NDArray1D, y: NDArray1D, z: NDArray2D, filename: str) -> None:
+    """Plot the interpolated data."""
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
     value = z.mean()
     std = z.std()
@@ -33,8 +43,8 @@ def plot(x, y, z, filename):
                    pad_inches=0.4)
 
 
-def load_data(packing=True):
-    """Creating the search tree."""
+def load_data(packing: bool = True) -> core.RTree3DFloat32:
+    """Load test data."""
     ds = load_grid2d()
     z = ds['mss'].values.T
     x = ds['lon'].values
@@ -57,26 +67,28 @@ def load_data(packing=True):
     return mesh
 
 
-def test_rtree_idw(pytestconfig):
-    """Interpolation test."""
+def test_rtree_idw(pytestconfig: Config) -> None:
+    """Test inverse distance weighting interpolation."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 20 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, step, dtype='float32') + 1 / 3
-    lat = np.arange(-90, 90, step, dtype='float32') + 1 / 3
+    lon = np.arange(-180, 180, step, dtype='float32') + np.float32(1 / 3)
+    lat = np.arange(-90, 90, step, dtype='float32') + np.float32(1 / 3)
     x, y = np.meshgrid(lon, lat, indexing='ij')
-    z0, _ = mesh.inverse_distance_weighting(np.vstack(
-        (x.ravel(), y.ravel())).T,
-                                            within=False,
-                                            radius=None,
-                                            k=8,
-                                            num_threads=0)
-    z1, _ = mesh.inverse_distance_weighting(np.vstack(
-        (x.ravel(), y.ravel())).T,
-                                            within=False,
-                                            radius=None,
-                                            k=8,
-                                            num_threads=1)
+    z0, _ = mesh.inverse_distance_weighting(
+        np.vstack((x.ravel(), y.ravel())).T,
+        within=False,
+        radius=None,
+        k=8,
+        num_threads=0,
+    )
+    z1, _ = mesh.inverse_distance_weighting(
+        np.vstack((x.ravel(), y.ravel())).T,
+        within=False,
+        radius=None,
+        k=8,
+        num_threads=1,
+    )
     z0 = np.ma.fix_invalid(z0)
     z1 = np.ma.fix_invalid(z1)
     assert np.all(z1 == z0)
@@ -85,13 +97,13 @@ def test_rtree_idw(pytestconfig):
         plot(x, y, z0.reshape((len(lon), len(lat))), 'mss_rtree_idw.png')
 
 
-def test_rtree_rbf(pytestconfig):
-    """Interpolation test."""
+def test_rtree_rbf(pytestconfig: Config) -> None:
+    """Test radial basis function interpolation."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 20 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, step, dtype='float32') + 1 / 3
-    lat = np.arange(-90, 90, step, dtype='float32') + 1 / 3
+    lon = np.arange(-180, 180, step, dtype='float32') + np.float32(1 / 3)
+    lat = np.arange(-90, 90, step, dtype='float32') + np.float32(1 / 3)
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z0, _ = mesh.radial_basis_function(
         np.vstack((x.ravel(), y.ravel())).T,
@@ -119,13 +131,13 @@ def test_rtree_rbf(pytestconfig):
         plot(x, y, z0.reshape((len(lon), len(lat))), 'mss_rtree_rbf.png')
 
 
-def test_rtree_window_function(pytestconfig):
-    """Interpolation test."""
+def test_rtree_window_function(pytestconfig: Config) -> None:
+    """Test window function interpolation."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 20 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, step, dtype='float32') + 1 / 3
-    lat = np.arange(-90, 90, step, dtype='float32') + 1 / 3
+    lon = np.arange(-180, 180, step, dtype='float32') + np.float32(1 / 3)
+    lat = np.arange(-90, 90, step, dtype='float32') + np.float32(1 / 3)
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z0, _ = mesh.window_function(np.vstack((x.ravel(), y.ravel())).T,
                                  within=False,
@@ -147,13 +159,13 @@ def test_rtree_window_function(pytestconfig):
         plot(x, y, z0.reshape((len(lon), len(lat))), 'mss_rtree_wf.png')
 
 
-def test_rtree_kriging(pytestconfig):
-    """Interpolation test."""
+def test_rtree_kriging(pytestconfig: Config) -> None:
+    """Test kriging interpolation."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 20 if measure_coverage else 1
     mesh = load_data()
-    lon = np.arange(-180, 180, step, dtype='float32') + 1 / 3
-    lat = np.arange(-90, 90, step, dtype='float32') + 1 / 3
+    lon = np.arange(-180, 180, step, dtype='float32') + np.float32(1 / 3)
+    lat = np.arange(-90, 90, step, dtype='float32') + np.float32(1 / 3)
     x, y = np.meshgrid(lon, lat, indexing='ij')
     z0, _ = mesh.kriging(np.vstack((x.ravel(), y.ravel())).T,
                          within=False,
@@ -175,7 +187,8 @@ def test_rtree_kriging(pytestconfig):
         plot(x, y, z0.reshape((len(lon), len(lat))), 'mss_rtree_kriging.png')
 
 
-def test_rtree_kriging_with_drift():
+def test_rtree_kriging_with_drift() -> None:
+    """Interpolation test with drift functions."""
     mesh = load_data()
     lon = np.linspace(-10, 10, 5, dtype='float32')
     lat = np.linspace(-5, 5, 5, dtype='float32')
@@ -204,14 +217,14 @@ def test_rtree_kriging_with_drift():
     assert np.any(z_nugget != z_simple)
 
 
-def test_rtree_insert():
+def test_rtree_insert() -> None:
     """Data insertion test."""
     mesh = load_data(packing=False)
     assert isinstance(mesh, core.RTree3DFloat32)
     assert len(mesh) != 0
 
 
-def test_rtree_query():
+def test_rtree_query() -> None:
     """Data insertion test."""
     mesh = load_data(packing=True)
     assert len(mesh) != 0
@@ -238,14 +251,15 @@ def test_rtree_query():
     assert np.all(~np.isnan(values))
 
 
-def test_rtree_pickle():
+def test_rtree_pickle() -> None:
     """Serialization test."""
     interpolator = load_data()
     other = pickle.loads(pickle.dumps(interpolator))
     assert isinstance(other, core.RTree3DFloat32)
 
 
-def test_rtree_ecef():
+def test_rtree_ecef() -> None:
+    """Test RTree3DFloat32 with ECEF coordinates."""
     x = np.array([70, 55, 35, 55, 65, 85], dtype=np.float32)
     y = np.array([33, 30, 35, 45, 63, 50], dtype=np.float32)
     z = np.array([0, 1, 2, 3, 4, 5], dtype=np.float32)

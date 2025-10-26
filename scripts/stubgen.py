@@ -1,5 +1,4 @@
-"""
-Generates stubs for the core modules.
+"""Generates stubs for the core modules.
 =====================================
 """
 import os

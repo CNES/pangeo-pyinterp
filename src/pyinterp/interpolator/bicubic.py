@@ -2,28 +2,30 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-Bicubic interpolation
-=====================
-"""
+"""Bicubic interpolation."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy
+
+if TYPE_CHECKING:
+    from ..typing import NDArray1D
 
 from .. import core, grid, interface
 
 
 def bicubic(mesh: grid.Grid2D | grid.Grid3D | grid.Grid4D,
-            x: numpy.ndarray,
-            y: numpy.ndarray,
-            z: numpy.ndarray | None = None,
-            u: numpy.ndarray | None = None,
+            x: NDArray1D,
+            y: NDArray1D,
+            z: NDArray1D | None = None,
+            u: NDArray1D | None = None,
             nx: int = 3,
             ny: int = 3,
             fitting_model: str = 'bicubic',
             boundary: str = 'undef',
             bounds_error: bool = False,
-            num_threads: int = 0) -> numpy.ndarray:
+            num_threads: int = 0) -> NDArray1D:
     """Bicubic gridded interpolator.
 
     Args:
@@ -62,8 +64,10 @@ def bicubic(mesh: grid.Grid2D | grid.Grid3D | grid.Grid4D,
         num_threads: The number of threads to use for the computation. If 0 all
             CPUs are used. If 1 is given, no parallel computing code is used at
             all, which is useful for debugging. Defaults to ``0``.
+
     Returns:
         Values interpolated.
+
     """
     if not mesh.x.is_ascending():
         raise ValueError('X-axis is not increasing')

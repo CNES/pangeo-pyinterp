@@ -1,5 +1,4 @@
-"""
-.. _example_objects:
+""".. _example_objects:
 
 Interpolator Objects
 ====================

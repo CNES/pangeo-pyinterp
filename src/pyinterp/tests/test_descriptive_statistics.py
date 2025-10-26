@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for descriptive statistics computation."""
 import pickle
 
 import dask.array as da
@@ -10,10 +11,12 @@ import pytest
 
 from . import load_grid2d, load_grid3d, load_grid4d
 from .. import DescriptiveStatistics
+from ..typing import NDArray, NDArray1DFloat64
 from .core.test_descriptive_statistics import weighted_mom3, weighted_mom4
 
 
-def check_stats(ds, values, dtype, error):
+def check_stats(ds: DescriptiveStatistics, values: NDArray, dtype: np.dtype,
+                error: float) -> None:
     """Check the statistics of a DescriptiveStatistics object."""
     assert isinstance(ds, DescriptiveStatistics)
     assert ds.count() == values.size
@@ -32,9 +35,10 @@ def check_stats(ds, values, dtype, error):
 
 @pytest.mark.parametrize(('dtype', 'error'), [(np.float32, 1e-4),
                                               (np.float64, 1e-6)])
-def test_descriptive_statistics_1d(dtype, error):
+def test_descriptive_statistics_1d(dtype: np.dtype, error: float) -> None:
     """Test the computation of descriptive statistics for a 1D array."""
-    values = np.random.random_sample((10000, )).astype(dtype)
+    rng = np.random.default_rng()
+    values = rng.random((10000, )).astype(dtype)
     ds = DescriptiveStatistics(values, dtype=dtype)
 
     check_stats(ds, values, dtype, error)
@@ -53,10 +57,12 @@ def test_descriptive_statistics_1d(dtype, error):
 
 @pytest.mark.parametrize(('dtype', 'error'), [(np.float32, 1e-4),
                                               (np.float64, 1e-6)])
-def test_descriptive_statistics_iadd(dtype, error):
-    v0 = np.random.random_sample((5000, )).astype(dtype)
+def test_descriptive_statistics_iadd(dtype: np.dtype, error: float) -> None:
+    """Test the addition of two DescriptiveStatistics objects in place."""
+    rng = np.random.default_rng()
+    v0 = rng.random((5000, )).astype(dtype)
     ds = DescriptiveStatistics(v0, dtype=dtype)
-    v1 = np.random.random_sample((5000, )).astype(dtype)
+    v1 = rng.random((5000, )).astype(dtype)
     ds += DescriptiveStatistics(v1, dtype=dtype)
     check_stats(ds, np.concatenate((v0, v1)), dtype, error)
 
@@ -64,18 +70,22 @@ def test_descriptive_statistics_iadd(dtype, error):
         ds += v1
 
     with pytest.raises(TypeError):
-        ds2 = DescriptiveStatistics(v0,
-                                    dtype=np.float32 if dtype == np.float64
-                                    else np.float64)  # type: ignore
+        ds2 = DescriptiveStatistics(
+            v0,
+            dtype=np.dtype(np.float32 if dtype == np.float64 else np.float64),
+        )
         ds += ds2
 
 
 @pytest.mark.parametrize(('dtype', 'error'), [(np.float32, 1e-4),
                                               (np.float64, 1e-6)])
-def test_descriptive_statistics_add(dtype, error):
-    v0 = np.random.random_sample((5000, )).astype(dtype)
+def test_descriptive_statistics_add(dtype: np.dtype, error: float) -> None:
+    """Test the addition of two DescriptiveStatistics objects."""
+    rng = np.random.default_rng()
+
+    v0 = rng.random((5000, )).astype(dtype)
     ds = DescriptiveStatistics(v0, dtype=dtype)
-    v1 = np.random.random_sample((5000, )).astype(dtype)
+    v1 = rng.random((5000, )).astype(dtype)
     ds = ds + DescriptiveStatistics(v1, dtype=dtype)
     check_stats(ds, np.concatenate((v0, v1)), dtype, error)
 
@@ -83,15 +93,17 @@ def test_descriptive_statistics_add(dtype, error):
         ds + v1
 
     with pytest.raises(TypeError):
-        ds2 = DescriptiveStatistics(v0,
-                                    dtype=np.float32 if dtype == np.float64
-                                    else np.float64)  # type: ignore
+        ds2 = DescriptiveStatistics(
+            v0,
+            dtype=np.dtype(np.float32 if dtype == np.float64 else np.float64),
+        )
         ds + ds2
 
 
-def test_array():
+def test_array() -> None:
     """Test the computation of descriptive statistics for a tensor."""
-    values = np.random.random_sample((2, 20, 30))
+    rng = np.random.default_rng()
+    values = rng.random((2, 20, 30))
     ds = DescriptiveStatistics(values, axis=(0, ))
 
     array = ds.array()
@@ -111,11 +123,16 @@ def test_array():
         ds = DescriptiveStatistics(values, axis=(0, ), dtype=np.dtype('S1'))
 
 
-def test_axis():
+def test_axis() -> None:
     """Test the computation of descriptive statistics for a reduced tensor."""
-    values = np.random.random_sample((2, 3, 4, 5, 6, 7))
+    rng = np.random.default_rng()
+    values = rng.random((2, 3, 4, 5, 6, 7))
 
-    def check_axis(values, axis, delayed=False):
+    def check_axis(
+        values: NDArray1DFloat64,
+        axis: int | tuple[int, ...] | None,
+        delayed: bool = False,
+    ) -> None:
         ds = DescriptiveStatistics(da.asarray(values) if delayed else values,
                                    axis=axis)
         assert np.all(ds.count() == np.sum(values * 0 + 1, axis=axis))
@@ -137,7 +154,7 @@ def test_axis():
     check_axis(values, (1, 3, 5), delayed=True)
 
 
-def test_grid():
+def test_grid() -> None:
     """Test the computation of descriptive statistics for a grid."""
     data = load_grid2d().mss
     ds = DescriptiveStatistics(data)

@@ -1,28 +1,55 @@
-"""
-Replace undefined values
-------------------------
-"""
+"""Replace undefined values."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, overload
 import concurrent.futures
 
 import numpy
 
 from . import core, grid, interface
+from .grid import NUM_DIMS_2
 
 if TYPE_CHECKING:
-    from .typing import NDArray
+    from .typing import (
+        NDArray1D,
+        NDArray2D,
+        NDArray2DFloat32,
+        NDArray2DFloat64,
+        NDArray3D,
+    )
+
+
+@overload
+def loess(  # type: ignore[overload-overlap]
+    mesh: grid.Grid3D,
+    nx: int = 3,
+    ny: int = 3,
+    value_type: str | None = None,
+    num_threads: int = 0,
+) -> NDArray3D:
+    ...
+
+
+@overload
+def loess(
+    mesh: grid.Grid2D,
+    nx: int = 3,
+    ny: int = 3,
+    value_type: str | None = None,
+    num_threads: int = 0,
+) -> NDArray2D:
+    ...
 
 
 def loess(mesh: grid.Grid2D | grid.Grid3D,
           nx: int = 3,
           ny: int = 3,
           value_type: str | None = None,
-          num_threads: int = 0):
-    """Filter values using a locally weighted regression function or LOESS. The
-    weight function used for LOESS is the tri-cube weight function,
-    :math:`w(x)=(1-|d|^3)^3`.
+          num_threads: int = 0) -> NDArray2D | NDArray3D:
+    """Filter values using a locally weighted regression function (LOESS).
+
+    Apply LOESS filtering to fill or smooth grid values using the tri-cube
+    weight function: :math:`w(x)=(1-|d|^3)^3`.
 
     Args:
         mesh: Grid function on a uniform 2-dimensional grid to be filled.
@@ -38,6 +65,7 @@ def loess(mesh: grid.Grid2D | grid.Grid3D,
 
     Returns:
         The grid will have NaN filled with extrapolated values.
+
     """
     value_type = value_type or 'undefined'
     instance = mesh._instance
@@ -52,14 +80,42 @@ def loess(mesh: grid.Grid2D | grid.Grid3D,
                                         num_threads)
 
 
-def gauss_seidel(mesh: grid.Grid2D | grid.Grid3D,
-                 first_guess: str = 'zonal_average',
-                 max_iteration: int | None = None,
-                 epsilon: float = 1e-4,
-                 relaxation: float | None = None,
-                 num_threads: int = 0):
-    """Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
-    method by relaxation.
+@overload
+def gauss_seidel(  # type: ignore[overload-overlap]
+    mesh: grid.Grid3D,
+    first_guess: str = 'zonal_average',
+    max_iteration: int | None = None,
+    epsilon: float = 1e-4,
+    relaxation: float | None = None,
+    num_threads: int = 0,
+) -> tuple[bool, NDArray3D]:
+    ...
+
+
+@overload
+def gauss_seidel(
+    mesh: grid.Grid2D,
+    first_guess: str = 'zonal_average',
+    max_iteration: int | None = None,
+    epsilon: float = 1e-4,
+    relaxation: float | None = None,
+    num_threads: int = 0,
+) -> tuple[bool, NDArray2D]:
+    ...
+
+
+def gauss_seidel(
+    mesh: grid.Grid2D | grid.Grid3D,
+    first_guess: str = 'zonal_average',
+    max_iteration: int | None = None,
+    epsilon: float = 1e-4,
+    relaxation: float | None = None,
+    num_threads: int = 0,
+) -> tuple[bool, NDArray2D | NDArray3D]:
+    r"""Replace all undefined values (NaN) in a grid using Gauss-Seidel method.
+
+    Apply the Gauss-Seidel method by relaxation to fill all undefined values
+    (NaN) in a grid.
 
     Args:
         mesh: Grid function on a uniform 2/3-dimensional grid to be filled.
@@ -72,7 +128,7 @@ def gauss_seidel(mesh: grid.Grid2D | grid.Grid3D,
 
             Defaults to ``zonal_average``.
 
-        max_iterations: Maximum number of iterations to be used by relaxation.
+        max_iteration: Maximum number of iterations to be used by relaxation.
             The default value is equal to the product of the grid dimensions.
         epsilon: Tolerance for ending relaxation before the maximum number of
             iterations limit. Defaults to ``1e-4``.
@@ -97,6 +153,7 @@ def gauss_seidel(mesh: grid.Grid2D | grid.Grid3D,
         A boolean indicating if the calculation has converged, i. e. if
         the value of the residues is lower than the ``epsilon`` limit set, and
         the the grid will have the all NaN filled with extrapolated values.
+
     """
     if first_guess not in ['zero', 'zonal_average']:
         raise ValueError(f'first_guess type {first_guess!r} is not defined')
@@ -144,24 +201,27 @@ def gauss_seidel(mesh: grid.Grid2D | grid.Grid3D,
     return residual <= epsilon, filled
 
 
-def matrix(x: NDArray,
-           fill_value: Any = numpy.nan,
-           in_place: bool = True) -> NDArray:
-    """Fills in the gaps between defined values in a 2-dimensional array.
+def matrix(x: NDArray2DFloat32 | NDArray2DFloat64,
+           fill_value: float | None = None,
+           in_place: bool = True) -> NDArray2DFloat32 | NDArray2DFloat64:
+    """Fill in the gaps between defined values in a 2-dimensional array.
 
     Args:
         x: data to be filled.
-        fill_value: Value used to fill undefined values.
+        fill_value: Value used to fill undefined values. Should be compatible
+            with the dtype of x (float32 or float64).
         in_place: If true, the data is filled in place. Defaults to ``True``.
 
     Returns:
         The data filled.
+
     """
-    if len(x.shape) != 2:
+    fill_value = fill_value or numpy.nan
+    if len(x.shape) != NUM_DIMS_2:
         raise ValueError('x must be a 2-dimensional array')
     dtype = x.dtype
     if not in_place:
-        x = numpy.copy(x)
+        x = numpy.copy(x)  # type: ignore[assignment]
     if dtype == numpy.float32:
         core.fill.matrix_float32(
             x,  # type: ignore[arg-type]
@@ -174,18 +234,23 @@ def matrix(x: NDArray,
     return x
 
 
-def vector(x: NDArray,
-           fill_value: Any = numpy.nan,
-           in_place: bool = True) -> NDArray:
+def vector(
+    x: NDArray1D,
+    fill_value: numpy.generic | None = None,
+    in_place: bool = True,
+) -> NDArray1D:
     """Fill in the gaps between defined values in a 1-dimensional array.
 
     Args:
         x: data to be filled.
-        fill_value: Value used to fill undefined values.
+        fill_value: Value used to fill undefined values. The type should be
+            compatible with the dtype of x (float for float32/float64, int for
+            int64, datetime64 for datetime64, timedelta64 for timedelta64).
         in_place: If true, the data is filled in place. Defaults to ``True``.
 
     Returns:
         The data filled.
+
     """
     if not isinstance(x, numpy.ndarray):
         raise ValueError('x must be a numpy.ndarray')
@@ -197,23 +262,23 @@ def vector(x: NDArray,
     if dtype == numpy.float32:
         core.fill.vector_float32(
             x,  # type: ignore[arg-type]
-            fill_value,
+            float('NaN') if fill_value is None else float(fill_value),
         )
     elif dtype == numpy.float64:
         core.fill.vector_float64(
             x,  # type: ignore[arg-type]
-            fill_value,
+            float('NaN') if fill_value is None else float(fill_value),
         )
     elif dtype == numpy.int64:
         core.fill.vector_int64(
             x,  # type: ignore[arg-type]
-            fill_value,
+            2**63 - 1 if fill_value is None else int(fill_value),
         )
     elif numpy.issubdtype(dtype, numpy.datetime64) or numpy.issubdtype(
             dtype, numpy.timedelta64):
         core.fill.vector_int64(
-            x.view(numpy.int64),  # type: ignore[arg-type]
-            fill_value.view(numpy.int64),
+            x.view(int),  # type: ignore[arg-type]
+            numpy.datetime64(fill_value).view(int),  # type: ignore[type-var]
         )
     else:
         raise ValueError(f'unsupported data type {dtype}')

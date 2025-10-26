@@ -2,18 +2,20 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Unit tests for the RTree class."""
 import pickle
 
 import numpy as np
 import pytest
+from pytest import Config
 
 import pyinterp
-import pyinterp.backends.xarray
 
 from . import load_grid2d, make_or_compare_reference
 
 
-def build_rtree(dtype):
+def build_rtree(dtype: np.dtype) -> None:
+    """Build an RTree instance with a given dtype."""
     lon = np.arange(-180, 180, 10).astype(dtype)
     lat = np.arange(-90, 90, 10).astype(dtype)
     lon, lat = np.meshgrid(lon, lat)
@@ -40,19 +42,21 @@ def build_rtree(dtype):
     assert isinstance(pickle.loads(pickle.dumps(mesh)), pyinterp.RTree)
 
 
-def test_init():
-    build_rtree(dtype=np.float32)
-    build_rtree(dtype=np.float64)
+def test_init() -> None:
+    """Test RTree initialization."""
+    build_rtree(dtype=np.dtype(np.float32))
+    build_rtree(dtype=np.dtype(np.float64))
 
     with pytest.raises(ValueError):
-        build_rtree(np.int8)
+        build_rtree(np.dtype(np.int8))
 
     with pytest.raises(ValueError):
         mesh = pyinterp.RTree()
         mesh.__setstate__((1, ))
 
 
-def load_data():
+def load_data() -> pyinterp.RTree:
+    """Load test data into an RTree instance."""
     ds = load_grid2d()
     z = ds.mss.T
     x, y = np.meshgrid(ds.lon.values, ds.lat.values, indexing='ij')
@@ -61,7 +65,8 @@ def load_data():
     return mesh
 
 
-def test_interpolate(pytestconfig):
+def test_interpolate(pytestconfig: Config) -> None:
+    """Test RTree interpolation methods."""
     dump = pytestconfig.getoption('dump')
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1 / 3

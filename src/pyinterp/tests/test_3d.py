@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for 3D interpolation."""
 import collections
 import datetime
 import pickle
@@ -14,7 +15,9 @@ from .. import Axis, Grid3D, TemporalAxis
 from ..backends import xarray as xr_backend
 
 
-def test_3d():
+def test_3d() -> None:
+    """Test Grid3D with trivariate and bicubic interpolation."""
+    grid: xr_backend.Grid3D | xr_backend.RegularGridInterpolator
     grid = xr_backend.Grid3D(load_grid3d().tcw, increasing_axes=True)
 
     assert isinstance(grid, xr_backend.Grid3D)
@@ -76,7 +79,8 @@ def test_3d():
     assert isinstance(z, np.ndarray)
 
 
-def test_backend():
+def test_backend() -> None:
+    """Test that the backend handles different time representations."""
     ds = load_grid3d()
     grid = xr_backend.Grid3D(ds.tcw, increasing_axes=True)
     lon = np.arange(-180, 180, 10)

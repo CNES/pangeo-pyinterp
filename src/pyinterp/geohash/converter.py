@@ -1,15 +1,19 @@
-"""
-Geohash converters
-------------------
-"""
+"""Geohash converters."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy
 import xarray
 
 from .. import core
 from ..core import geohash
 
+if TYPE_CHECKING:
+    from ..typing import NDArray
 
-def to_xarray(hashes: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
+
+def to_xarray(hashes: NDArray, data: NDArray) -> xarray.DataArray:
     """Get the XArray grid representing the GeoHash grid.
 
     Args:
@@ -18,6 +22,7 @@ def to_xarray(hashes: numpy.ndarray, data: numpy.ndarray) -> xarray.DataArray:
 
     Returns:
         The XArray grid representing the GeoHash grid.
+
     """
     if hashes.shape != data.shape:
         raise ValueError(

@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for geohash neighbors computation."""
 import json
 
 import numpy as np
@@ -10,7 +11,8 @@ from .. import geohash_neighbors_path
 from ... import GeoHash, geodetic, geohash
 
 
-def test_neighbors():
+def test_neighbors() -> None:
+    """Tests for geohash neighbors computation."""
     with open(geohash_neighbors_path()) as stream:
         cases = json.load(stream)
 

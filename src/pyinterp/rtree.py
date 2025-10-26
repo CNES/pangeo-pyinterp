@@ -2,17 +2,25 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-RTree spatial index
--------------------
-"""
+"""RTree spatial index."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, overload
 import warnings
 
 import numpy
 
 from . import core, geodetic, interface
+
+if TYPE_CHECKING:
+    from .typing import (
+        NDArray1DFloat32,
+        NDArray1DFloat64,
+        NDArray2DFloat32,
+        NDArray2DFloat64,
+        NDArray3DFloat32,
+        NDArray3DFloat64,
+    )
 
 
 class RTree:
@@ -32,12 +40,13 @@ class RTree:
         ValueError: if the data type is not handled by the object, or if the
             a geodetic system is provided and the coordinates system is ECEF
             (ecef keyword is set to True).
+
     """
 
     def __init__(self,
                  system: geodetic.Spheroid | None = None,
                  dtype: numpy.dtype | None = None,
-                 ecef: bool = False):
+                 ecef: bool = False) -> None:
         """Initialize a new R*Tree."""
         self._instance: core.RTree3DFloat32 | core.RTree3DFloat64
         dtype = dtype or numpy.dtype('float64')
@@ -52,31 +61,67 @@ class RTree:
     def bounds(
             self
     ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
-        """Returns the box able to contain all values stored in the container.
+        """Get the bounding box containing all stored values.
 
         Returns:
-            A tuple that contains the coordinates of the minimum and maximum
+            A tuple containing the coordinates of the minimum and maximum
             corners of the box able to contain all values stored in the
-            container or an empty tuple if there are no values in the container.
+            container, or an empty tuple if the container is empty.
+
         """
         return self._instance.bounds()
 
     def clear(self) -> None:
-        """Removes all values stored in the container."""
+        """Remove all values stored in the container."""
         return self._instance.clear()
 
-    def __len__(self):
-        """Returns the number of values stored in the tree."""
+    def __len__(self) -> int:
+        """Get the number of values stored in the tree.
+
+        Returns:
+            The number of values in the tree.
+
+        """
         return self._instance.__len__()
 
-    def __bool__(self):
-        """Returns true if the tree is not empty."""
+    def __bool__(self) -> bool:
+        """Check if the tree is not empty.
+
+        Returns:
+            True if the tree contains values, False otherwise.
+
+        """
         return self._instance.__bool__()
 
-    def packing(self, coordinates: numpy.ndarray,
-                values: numpy.ndarray) -> None:
-        """The tree is created using packing algorithm (The old data is erased
-        before construction.)
+    @overload
+    def packing(self, coordinates: NDArray2DFloat32,
+                values: NDArray1DFloat32) -> None:
+        ...
+
+    @overload
+    def packing(self, coordinates: NDArray3DFloat32,
+                values: NDArray1DFloat32) -> None:
+        ...
+
+    @overload
+    def packing(self, coordinates: NDArray2DFloat64,
+                values: NDArray1DFloat64) -> None:
+        ...
+
+    @overload
+    def packing(self, coordinates: NDArray3DFloat64,
+                values: NDArray1DFloat64) -> None:
+        ...
+
+    def packing(
+        self,
+        coordinates: NDArray2DFloat32 | NDArray3DFloat32 | NDArray2DFloat64
+        | NDArray3DFloat64,
+        values: NDArray1DFloat32 | NDArray1DFloat64,
+    ) -> None:
+        """Create the tree using packing algorithm.
+
+        The old data is erased before construction.
 
         Args:
             coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
@@ -91,8 +136,9 @@ class RTree:
                 altitude) in degrees, degrees, and meters, respectively.
             values: An array of size ``(n)`` containing the values associated
                 with the coordinates provided.
+
         """
-        self._instance.packing(coordinates, values)
+        self._instance.packing(coordinates, values)  # type: ignore[arg-type]
 
     def insert(self, coordinates: numpy.ndarray,
                values: numpy.ndarray) -> None:
@@ -111,6 +157,7 @@ class RTree:
                 altitude) in degrees, degrees, and meters, respectively.
             values: An array of size ``(n)`` containing the values associated
                 with the coordinates provided.
+
         """
         self._instance.insert(coordinates, values)
 
@@ -120,8 +167,7 @@ class RTree:
               k: int = 4,
               within: bool = True,
               num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Get the coordinates and values for the K-nearest neighbors of a
-        given point.
+        """Get the coordinates and values for the K-nearest neighbors.
 
         Args:
             coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
@@ -153,6 +199,7 @@ class RTree:
             of dimension ``(k, n)`` where ``n`` is equal to 2 if the provided
             coordinates matrix defines only x and y, and 3 if the defines x, y,
             and z.
+
         """
         return self._instance.value(coordinates, radius, k, within,
                                     num_threads)
@@ -182,6 +229,7 @@ class RTree:
             num_threads: The number of threads to use for the computation. If 0
                 all CPUs are used. If 1 is given, no parallel computing code is
                 used at all, which is useful for debugging. Defaults to ``0``.
+
         Returns:
             A tuple containing a matrix describing for each provided position,
             the distance between the provided position and the found neighbors
@@ -190,6 +238,7 @@ class RTree:
             neighbors found for all provided positions.
             If no neighbors are found, the distance and the value are set to
             ``-1``.
+
         """
         return self._instance.query(coordinates, k, within, num_threads)
 
@@ -201,8 +250,7 @@ class RTree:
             p: int = 2,
             within: bool = True,
             num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Interpolation of the value at the requested position by inverse
-        distance weighting method.
+        """Interpolate values using inverse distance weighting method.
 
         Args:
             coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
@@ -227,9 +275,11 @@ class RTree:
             num_threads: The number of threads to use for the computation. If 0
                 all CPUs are used. If 1 is given, no parallel computing code is
                 used at all, which is useful for debugging. Defaults to ``0``.
+
         Returns:
             The interpolated value and the number of neighbors used in
             the calculation.
+
         """
         return self._instance.inverse_distance_weighting(
             coordinates, radius, k, p, within, num_threads)
@@ -244,8 +294,7 @@ class RTree:
             smooth: float = 0,
             within: bool = True,
             num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Interpolation of the value at the requested position by radial basis
-        function interpolation.
+        r"""Interpolate values using radial basis function interpolation.
 
         Args:
             coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
@@ -288,9 +337,11 @@ class RTree:
             num_threads: The number of threads to use for the computation. If 0
                 all CPUs are used. If 1 is given, no parallel computing code is
                 used at all, which is useful for debugging. Defaults to ``0``.
+
         Returns:
             The interpolated value and the number of neighbors used in the
             calculation.
+
         """
         return self._instance.radial_basis_function(
             coordinates, radius, k,
@@ -306,8 +357,7 @@ class RTree:
             arg: float | None = None,
             within: bool = True,
             num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Interpolation of the value at the requested position by window
-        function.
+        r"""Interpolate values using a window function.
 
         The interpolated value will be equal to the expression:
 
@@ -388,9 +438,11 @@ class RTree:
             num_threads: The number of threads to use for the computation. If 0
                 all CPUs are used. If 1 is given, no parallel computing code is
                 used at all, which is useful for debugging. Defaults to ``0``.
+
         Returns:
             The interpolated value and the number of neighbors used in the
             calculation.
+
         """
         return self._instance.window_function(
             coordinates, radius, k, interface._core_window_function(wf, arg),
@@ -417,7 +469,9 @@ class RTree:
         """
         warnings.warn(
             'universal_kriging method is deprecated, '
-            'use kriging method instead', DeprecationWarning)
+            'use kriging method instead',
+            DeprecationWarning,
+            stacklevel=2)
         return self.kriging(
             coordinates,
             radius=radius,
@@ -441,7 +495,7 @@ class RTree:
                 nugget: float = 0.0,
                 within: bool = True,
                 num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Interpolate the values of a point using kriging.
+        r"""Interpolate the values of a point using kriging.
 
         Args:
             coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the number
@@ -501,6 +555,7 @@ class RTree:
                 located around the point of interest (prevents extrapolation).
             num_threads: Number of threads to use. ``0`` uses all available,
                 ``1`` disables parallelism (useful for debugging).
+
         Returns:
             The interpolated value and the number of neighbors used in the
             calculation.
@@ -512,6 +567,7 @@ class RTree:
               system with the corresponding trend basis functions.
             * ``alpha`` corresponds to the range parameter :math:`\\rho`
               controlling spatial correlation extent.
+
         """
         return self._instance.kriging(
             coordinates, radius, k,
@@ -520,20 +576,22 @@ class RTree:
             nugget, within, num_threads)
 
     def __getstate__(self) -> tuple:
-        """Return the state of the object for pickling purposes.
+        """Get the state of the object for pickling.
 
         Returns:
             The state of the object for pickling purposes.
+
         """
         return (self.dtype, self._instance.__getstate__())
 
-    def __setstate__(self, state: tuple):
+    def __setstate__(self, state: tuple) -> None:
         """Set the state of the object from pickling.
 
         Args:
             state: The state of the object for pickling purposes.
+
         """
-        if len(state) != 2:
+        if len(state) != 2:  # noqa: PLR2004
             raise ValueError('invalid state')
         _class = RTree(None, state[0])
         self.dtype = _class.dtype

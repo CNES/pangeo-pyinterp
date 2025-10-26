@@ -1,6 +1,4 @@
-"""
-*******
-Geohash
+"""Geohash
 *******
 
 Geohashing is a geocoding method used to encode geographic coordinates

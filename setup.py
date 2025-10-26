@@ -2,8 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""This script is the entry point for building, distributing and installing
-this module using distutils/setuptools."""
+"""Setup script for the pyinterp package."""
 from __future__ import annotations
 
 from typing import Any, ClassVar
@@ -39,8 +38,11 @@ def compare_setuptools_version(required: tuple[int, ...]) -> bool:
     return current >= required
 
 
-def distutils_dirname(prefix=None, extname=None) -> pathlib.Path:
-    """Returns the name of the build directory."""
+def distutils_dirname(
+    prefix: str | None = None,
+    extname: str | None = None,
+) -> pathlib.Path:
+    """Return the name of the build directory."""
     prefix = prefix or 'lib'
     extname = '' if extname is None else os.sep.join(extname.split('.')[:-1])
     if compare_setuptools_version((62, 1)):
@@ -52,9 +54,8 @@ def distutils_dirname(prefix=None, extname=None) -> pathlib.Path:
         f'{prefix}.{sysconfig.get_platform()}-{MAJOR}.{MINOR}', extname)
 
 
-def execute(cmd) -> str:
-    """Executes a command and returns the lines displayed on the standard
-    output."""
+def execute(cmd: str) -> str:
+    """Execute a command and return its standard output as a string."""
     with subprocess.Popen(cmd,
                           shell=True,
                           stdout=subprocess.PIPE,
@@ -63,8 +64,8 @@ def execute(cmd) -> str:
         return process.stdout.read().decode()
 
 
-def update_meta(path, version) -> None:
-    """Updating the version number description in conda/meta.yaml."""
+def update_meta(path: pathlib.Path, version: str) -> None:
+    """Update the version number description in conda/meta.yaml."""
     with open(path, encoding='utf-8') as stream:
         lines = stream.readlines()
     pattern = re.compile(r'{% set version = ".*" %}')
@@ -78,8 +79,8 @@ def update_meta(path, version) -> None:
         stream.write(''.join(lines))
 
 
-def update_environment(path, version) -> None:
-    """Updating the version number description in conda environment."""
+def update_environment(path: pathlib.Path, version: str) -> None:
+    """Update the version number description in conda environment."""
     with open(path, encoding='utf-8') as stream:
         lines = stream.readlines()
     pattern = re.compile(r'(\s+-\s+pyinterp)\s*>=\s*(.+)')
@@ -93,46 +94,55 @@ def update_environment(path, version) -> None:
         stream.write(''.join(lines))
 
 
-def revision() -> str:
-    """Returns the software version."""
-    os.chdir(WORKING_DIRECTORY)
-    module = pathlib.Path(WORKING_DIRECTORY, 'src', 'pyinterp', 'version.py')
+def get_version_from_file(module: pathlib.Path) -> str:
+    """Extract version from existing version.py file."""
+    pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
+    with open(module, encoding='utf-8') as stream:
+        for line in stream:
+            match = pattern.search(line)
+            if match:
+                return match.group(1)
+    raise AssertionError('Version not found in version.py')
 
-    # If the ".git" directory exists, this function is executed in the
-    # development environment, otherwise it's a release.
-    if not pathlib.Path(WORKING_DIRECTORY, '.git').exists():
-        pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
-        with open(module, encoding='utf-8') as stream:
-            for line in stream:
-                match = pattern.search(line)
-                if match:
-                    return match.group(1)
-        raise AssertionError
 
+def parse_git_version() -> tuple[str, str]:
+    """Parse git describe output to get version and sha1.
+
+    Returns:
+        A tuple of (version, sha1)
+
+    """
     stdout: Any = execute(
         'git describe --tags --dirty --long --always').strip()
     pattern = re.compile(r'([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?')
     match = pattern.search(stdout)
+
     if match is None:
         # No tag found, use the last commit
         pattern = re.compile(r'([\w\d]+)(?:-(dirty))?')
         match = pattern.search(stdout)
         assert match is not None, f'Unable to parse git output {stdout!r}'
-        version = '0.0'
-        sha1 = match.group(1)
-    else:
-        version = match.group(1)
-        commits = int(match.group(2))
-        sha1 = match.group(3)
-        if commits != 0:
-            version += f'.dev{commits}'
+        return '0.0', match.group(1)
 
+    version = match.group(1)
+    commits = int(match.group(2))
+    sha1 = match.group(3)
+
+    if commits != 0:
+        version += f'.dev{commits}'
+
+    return version, sha1
+
+
+def get_commit_date(sha1: str) -> datetime.datetime:
+    """Get the commit date for a given SHA1."""
     stdout = execute(f"git log  {sha1} -1 --format=\"%H %at\"")
-    stdout = stdout.strip().split()
-    date = datetime.datetime.fromtimestamp(int(stdout[1]))
+    lines = stdout.strip().split()
+    return datetime.datetime.fromtimestamp(int(lines[1]))
 
-    # Conda configuration files are not present in the distribution, but only
-    # in the GIT repository of the source code.
+
+def update_conda_files(version: str) -> None:
+    """Update conda configuration files with the new version."""
     meta = pathlib.Path(WORKING_DIRECTORY, 'conda', 'meta.yaml')
     if meta.exists():
         update_meta(meta, version)
@@ -143,12 +153,14 @@ def revision() -> str:
             pathlib.Path(WORKING_DIRECTORY, 'binder', 'environment.yml'),
             version)
 
-    # Updating the version number description for sphinx
+
+def update_sphinx_conf(version: str, date: datetime.datetime) -> None:
+    """Update the sphinx configuration file with version and date."""
     conf = pathlib.Path(WORKING_DIRECTORY, 'docs', 'source', 'conf.py')
     with open(conf, encoding='utf-8') as stream:
         lines = stream.readlines()
-    pattern = re.compile(r'(\w+)\s+=\s+(.*)')
 
+    pattern = re.compile(r'(\w+)\s+=\s+(.*)')
     for idx, line in enumerate(lines):
         match = pattern.search(line)
         if match is not None:
@@ -162,27 +174,46 @@ def revision() -> str:
     with open(conf, 'w', encoding='utf-8') as stream:
         stream.write(''.join(lines))
 
-    # Finally, write the file containing the version number.
+
+def write_version_module(module: pathlib.Path, version: str,
+                         date: datetime.datetime) -> None:
+    """Write the version.py module with version and date information."""
     with open(module, 'w', encoding='utf-8') as handler:
         handler.write(f'''# Copyright (c) {date.year} CNES
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-Get software version information
-================================
-"""
+"""Get software version information"""
 
 
 def release() -> str:
-    """Returns the software version number"""
+    """Return the software version number"""
     return "{version}"
 
 
 def date() -> str:
-    """Returns the creation date of this release"""
+    """Return the creation date of this release"""
     return "{date:%d %B %Y}"
 ''')
+
+
+def revision() -> str:
+    """Return the software version."""
+    os.chdir(WORKING_DIRECTORY)
+    module = pathlib.Path(WORKING_DIRECTORY, 'src', 'pyinterp', 'version.py')
+
+    # If the ".git" directory exists, this function is executed in the
+    # development environment, otherwise it's a release.
+    if not pathlib.Path(WORKING_DIRECTORY, '.git').exists():
+        return get_version_from_file(module)
+
+    version, sha1 = parse_git_version()
+    date = get_commit_date(sha1)
+
+    update_conda_files(version)
+    update_sphinx_conf(version, date)
+    write_version_module(module, version, date)
+
     return version
 
 
@@ -190,15 +221,42 @@ def date() -> str:
 class CMakeExtension(setuptools.Extension):
     """Python extension to build."""
 
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
+        """Initialize the extension."""
         super().__init__(name, sources=[])
 
     # pylint: enable=too-few-public-methods
 
 
+def build_cmake_options(
+    is_windows: bool,
+    code_coverage: bool,
+    config: str,
+    extdir: str,
+) -> list[str]:
+    """Return the default CMake generator."""
+    result: list[str] = []
+    if not is_windows:
+        result += ['--', f'-j{os.cpu_count()}']
+        if platform.system() == 'Darwin':
+            result += [
+                f'-DCMAKE_OSX_DEPLOYMENT_TARGET={OSX_DEPLOYMENT_TARGET}'
+            ]
+        if code_coverage:
+            result += ['-DCODE_COVERAGE=ON']
+    else:
+        result += [
+            '-DCMAKE_GENERATOR_PLATFORM=x64',
+            f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={extdir}',
+        ]
+        result += ['--', '/m']
+    return result
+
+
 # pylint: disable=too-many-instance-attributes
 class BuildExt(setuptools.command.build_ext.build_ext):
     """Build everything needed to install."""
+
     user_options = setuptools.command.build_ext.build_ext.user_options
     user_options += [
         ('build-unittests', None, 'Build the unit tests of the C++ extension'),
@@ -215,8 +273,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     boolean_options += ['mkl']
 
     def initialize_options(self) -> None:
-        """Set default values for all the options that this command
-        supports."""
+        """Set the default values of the options."""
         super().initialize_options()
         self.build_unittests = None
         self.code_coverage = None
@@ -239,6 +296,20 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             self.build_cmake(ext)
         super().run()
 
+    def build_extension(self, ext: setuptools.Extension) -> None:
+        """Build a single extension.
+
+        For CMakeExtension, skip the default build process since cmake already
+        built it.
+        """
+        if isinstance(ext, CMakeExtension):
+            return
+        super().build_extension(ext)
+
+    def get_outputs(self) -> list[str]:
+        """Return the list of files generated by building."""
+        return super().get_outputs()
+
     @staticmethod
     def set_conda_mklroot() -> None:
         """Set the default MKL path in Anaconda's environment."""
@@ -252,13 +323,13 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     @staticmethod
     def conda_prefix() -> str | None:
-        """Returns the conda prefix."""
+        """Return the conda prefix."""
         if 'CONDA_PREFIX' in os.environ:
             return os.environ['CONDA_PREFIX']
         return None
 
     def set_cmake_user_options(self) -> list[str]:
-        """Sets the options defined by the user."""
+        """Set the options defined by the user."""
         result = []
 
         conda_prefix = self.conda_prefix()
@@ -278,7 +349,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         return result
 
     def get_config(self) -> str:
-        """Returns the configuration to use."""
+        """Return the configuration to use."""
         cfg: str
         if self.debug:
             cfg = 'Debug'
@@ -289,7 +360,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         return cfg
 
     def cmake_arguments(self, cfg: str, extdir: str) -> list[str]:
-        """Returns the cmake arguments."""
+        """Return the cmake arguments."""
         cmake_args: list[str] = [
             '-DCMAKE_BUILD_TYPE=' + cfg,
             '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
@@ -304,14 +375,24 @@ class BuildExt(setuptools.command.build_ext.build_ext):
                               sysconfig.get_path('include'))
         return cmake_args
 
-    def build_cmake(self, ext) -> None:
+    def get_extdir(self, ext: CMakeExtension) -> pathlib.Path:
+        """Detect if the build is in editable mode."""
+        extdir = pathlib.Path(self.get_ext_fullpath(ext.name)).parent.resolve()
+        # If the extension is built in the "root/build/lib.*" directory,
+        # then it is not an editable install.
+        if distutils_dirname().resolve() != extdir.parent:
+            return pathlib.Path(
+                self.build_lib).joinpath(*ext.name.split('.')[:-1])
+        return extdir
+
+    def build_cmake(self, ext: CMakeExtension) -> None:
         """Execute cmake to build the Python extension."""
         # These dirs will be created in build_py, so if you don't have
         # any python sources to bundle, the dirs will be missing
         build_temp = pathlib.Path(WORKING_DIRECTORY, self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
-        extdir = str(
-            pathlib.Path(self.get_ext_fullpath(ext.name)).parent.resolve())
+        extdir = str(self.get_extdir(ext))
+
         cfg = self.get_config()
         cmake_args = self.cmake_arguments(cfg, extdir)
         build_args = ['--config', cfg]
@@ -324,20 +405,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             cmake_args.append(
                 '-G' + os.environ.get('CMAKE_GEN', 'Visual Studio 16 2019'))
 
-        if not is_windows:
-            build_args += ['--', f'-j{os.cpu_count()}']
-            if platform.system() == 'Darwin':
-                cmake_args += [
-                    f'-DCMAKE_OSX_DEPLOYMENT_TARGET={OSX_DEPLOYMENT_TARGET}'
-                ]
-            if self.code_coverage:
-                cmake_args += ['-DCODE_COVERAGE=ON']
-        else:
-            cmake_args += [
-                '-DCMAKE_GENERATOR_PLATFORM=x64',
-                f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}',
-            ]
-            build_args += ['--', '/m']
+        cmake_args += build_cmake_options(is_windows, self.code_coverage
+                                          is True, cfg, extdir)
 
         if self.cmake_args:
             cmake_args.extend(self.cmake_args.split())
@@ -366,19 +435,19 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
 class CxxTestRunner(setuptools.Command):
     """Compile and launch the C++ tests."""
+
     description: ClassVar[str] = 'run the C++ tests'
     user_options: ClassVar[list[tuple[str, str | None, str]]] = []
 
-    def initialize_options(self):
-        """Set default values for all the options that this command
-        supports."""
+    def initialize_options(self) -> None:
+        """Set the default values of the options."""
         if platform.system() == 'Windows':
             raise RuntimeError('Code coverage is not supported on Windows')
 
-    def finalize_options(self):
+    def finalize_options(self) -> None:
         """Set final values for all the options that this command supports."""
 
-    def run(self):
+    def run(self) -> None:
         """Run tests."""
         # Directory used during the generating the C++ extension.
         tempdir = distutils_dirname('temp')
@@ -399,11 +468,11 @@ class CxxTestRunner(setuptools.Command):
 
 
 class SDist(setuptools.command.sdist.sdist):
-    """Custom sdist command that copies the pytest configuration file into the
-    package."""
+    """Copy pytest config into package."""
+
     user_options = setuptools.command.sdist.sdist.user_options
 
-    def run(self):
+    def run(self) -> None:
         """Carry out the action."""
         source = WORKING_DIRECTORY.joinpath('conftest.py')
         target = WORKING_DIRECTORY.joinpath('src', 'pyinterp', 'conftest.py')
@@ -414,14 +483,14 @@ class SDist(setuptools.command.sdist.sdist):
             target.rename(source)
 
 
-def long_description():
-    """Reads the README file."""
+def long_description() -> str:
+    """Read the README file."""
     with pathlib.Path(WORKING_DIRECTORY,
                       'README.rst').open(encoding='utf-8') as stream:
         return stream.read()
 
 
-def typehints():
+def typehints() -> list[tuple[str, list[Any]]]:
     """Get the list of type information files."""
     pyi = []
     for root, _, files in os.walk(WORKING_DIRECTORY):
@@ -432,8 +501,8 @@ def typehints():
     return [(str(pathlib.Path('pyinterp', 'core')), pyi)]
 
 
-def main():
-    """Main function."""
+def main() -> None:
+    """Set up module."""
     install_requires = ['dask', 'numpy', 'xarray >= 0.13']
     setuptools.setup(
         author='CNES/CLS',
@@ -445,7 +514,6 @@ def main():
             'Operating System :: POSIX',
             'Operating System :: MacOS',
             'Operating System :: Microsoft :: Windows',
-            'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
             'Programming Language :: Python :: 3.12',
             'Programming Language :: Python :: 3.13',
@@ -475,7 +543,7 @@ def main():
             exclude=['pyinterp.core*'],
         ),
         platforms=['POSIX', 'MacOS', 'Windows'],
-        python_requires='>=3.10',
+        python_requires='>=3.11',
         url='https://github.com/CNES/pangeo-pyinterp',
         version=revision(),
         zip_safe=False,

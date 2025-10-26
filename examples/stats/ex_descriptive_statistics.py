@@ -1,5 +1,4 @@
-"""
-.. _example_descriptive_statistics:
+""".. _example_descriptive_statistics:
 
 Descriptive Statistics
 ======================

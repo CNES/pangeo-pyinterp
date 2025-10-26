@@ -1,5 +1,4 @@
-"""
-.. _example_fill_undef:
+""".. _example_fill_undef:
 
 Filling Undefined Values
 ========================

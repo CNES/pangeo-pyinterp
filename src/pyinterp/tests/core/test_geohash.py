@@ -2,32 +2,36 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for geohash computations."""
+from __future__ import annotations
+
 import numpy
 import pytest
 
 from ...core import GeoHash, geodetic, geohash
 
-testcases = [['77mkh2hcj7mz', -26.015434642, -26.173663656],
-             ['wthnssq3w00x', 29.291182895, 118.331595326],
-             ['z3jsmt1sde4r', 51.400326027, 154.228244707],
-             ['18ecpnqdg4s1', -86.976900779, -106.90988479],
-             ['u90suzhjqv2s', 51.49934315, 23.417648894],
-             ['k940p3ewmmyq', -39.365655496, 25.636144008],
-             ['6g4wv2sze6ms', -26.934429639, -52.496991862],
-             ['jhfyx4dqnczq', -62.123898484, 49.178194037],
-             ['j80g4mkqz3z9', -89.442648795, 68.659722351],
-             ['hq9z7cjwrcw4', -52.156511416, 13.883626414]]
+testcases: list[tuple[str, float, float]] = [
+    ('77mkh2hcj7mz', -26.015434642, -26.173663656),
+    ('wthnssq3w00x', 29.291182895, 118.331595326),
+    ('z3jsmt1sde4r', 51.400326027, 154.228244707),
+    ('18ecpnqdg4s1', -86.976900779, -106.90988479),
+    ('u90suzhjqv2s', 51.49934315, 23.417648894),
+    ('k940p3ewmmyq', -39.365655496, 25.636144008),
+    ('6g4wv2sze6ms', -26.934429639, -52.496991862),
+    ('jhfyx4dqnczq', -62.123898484, 49.178194037),
+    ('j80g4mkqz3z9', -89.442648795, 68.659722351),
+    ('hq9z7cjwrcw4', -52.156511416, 13.88362641),
+]
 
 
-def test_string_numpy():
+def test_string_numpy() -> None:
+    """Test geohash encoding and decoding with numpy arrays of strings."""
     strs = numpy.array([item[0] for item in testcases], dtype='S')
     lons, lats = geohash.decode(strs, round=True)
     assert numpy.all(
-        numpy.abs(  # type: ignore
-            lons - numpy.array([item[2] for item in testcases])) < 1e-6)
+        numpy.abs(lons - numpy.array([item[2] for item in testcases])) < 1e-6)
     assert numpy.all(
-        numpy.abs(  # type: ignore
-            lats - numpy.array([item[1] for item in testcases])) < 1e-6)
+        numpy.abs(lats - numpy.array([item[1] for item in testcases])) < 1e-6)
 
     strs = numpy.array([item[0] for item in testcases], dtype='U')
     with pytest.raises(ValueError):
@@ -35,7 +39,7 @@ def test_string_numpy():
     strs = numpy.array([item[0] for item in testcases],
                        dtype='S').reshape(5, 2)
     with pytest.raises(ValueError):
-        geohash.decode(strs, round=True)
+        geohash.decode(strs, round=True)  # type: ignore[arg-type]
     strs = numpy.array([b'0' * 24], dtype='S')
     with pytest.raises(ValueError):
         geohash.decode(strs, round=True)
@@ -53,11 +57,12 @@ def test_string_numpy():
         indexes = geohash.where(strs)
 
 
-def test_bounding_boxes():
+def test_bounding_boxes() -> None:
+    """Test the bounding_boxes function."""
     bboxes = geohash.bounding_boxes(precision=1)
     assert len(bboxes) == 32
     for bbox in bboxes:
-        code = GeoHash.from_string(bbox.decode())
+        code = GeoHash.from_string(bbox.decode())  # type: ignore[attr-defined]
         case = geohash.bounding_boxes(code.bounding_box(), precision=1)
         assert len(case) == 1
         assert case[0] == bbox
@@ -78,7 +83,8 @@ def test_bounding_boxes():
     assert bboxes[0] == b'07z'
 
 
-def test_bounding_zoom():
+def test_bounding_zoom() -> None:
+    """Test the transform function."""
     bboxes = geohash.bounding_boxes(precision=1)
     assert len(bboxes) == 32
 
@@ -89,7 +95,8 @@ def test_bounding_zoom():
             bboxes))
 
 
-def test_class():
+def test_class() -> None:
+    """Test GeoHash class."""
     for code, lat, lon in testcases:
         instance = GeoHash.from_string(code)
         assert str(instance) == code
@@ -108,7 +115,8 @@ def test_class():
         GeoHash.from_string('%%%%%')
 
 
-def test_error_with_precision():
+def test_error_with_precision() -> None:
+    """Test the error_with_precision method."""
     error = GeoHash.error_with_precision(1)
     assert error == (45.0, 45.0)
 

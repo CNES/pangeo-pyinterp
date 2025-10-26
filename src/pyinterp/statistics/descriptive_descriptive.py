@@ -2,29 +2,21 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-Descriptive statistics
-----------------------
-"""
+"""Descriptive statistics."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-import sys
-
-# Self is unavailable in Python 3.10
-if sys.version_info[:2] > (3, 10):
-    from typing import Self
-else:
-    Self = 'DescriptiveStatistics'
+from typing import TYPE_CHECKING, Self
 import copy
 
 import dask.array.core
 import numpy
 
+from .. import core
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-from .. import core
+    from ..typing import NDArray, NDArray1D, NDArrayInt64, NDArrayStructured
 
 
 def _delayed(
@@ -37,7 +29,12 @@ def _delayed(
     if weights is not None and values.shape != weights.shape:
         raise ValueError('values and weights must have the same shape')
 
-    def _process_block(attr, x, w, axis):
+    def _process_block(
+        attr: str,
+        x: NDArray,
+        w: NDArray,
+        axis: Iterable[int] | None,
+    ) -> NDArray1D:
         instance = getattr(core, attr)(values=x, weights=w, axis=axis)
         return numpy.array([instance], dtype='object')
 
@@ -82,14 +79,15 @@ class DescriptiveStatistics:
         Comput Stat 31, 1305-1325,
         2016,
         https://doi.org/10.1007/s00180-015-0637-z
+
     """
 
     def __init__(self,
-                 values: dask.array.core.Array | numpy.ndarray,
-                 weights: None |
-                 (dask.array.core.Array | numpy.ndarray) = None,
+                 values: dask.array.core.Array | NDArray,
+                 weights: None | (dask.array.core.Array | NDArray) = None,
                  axis: int | Iterable[int] | None = None,
                  dtype: numpy.dtype | None = None) -> None:
+        """Initialize the descriptive statistics container."""
         if isinstance(axis, int):
             axis = (axis, )
         dtype = dtype or numpy.dtype('float64')
@@ -110,21 +108,23 @@ class DescriptiveStatistics:
             self._instance = getattr(core, attr)(values, weights, axis)
 
     def copy(self) -> DescriptiveStatistics:
-        """Creates a copy of the current descriptive statistics container.
+        """Create a copy of the current descriptive statistics container.
 
         Returns:
-            Returns a copy of the current descriptive statistics container.
+            A copy of the current descriptive statistics container.
+
         """
         cls = type(self)
         result = cls.__new__(cls)
         result._instance = self._instance.__copy__()
         return result
 
-    def __iadd__(self, other: Any) -> Self:
-        """Adds a new descriptive statistics container to the current one.
+    def __iadd__(self, other: object) -> Self:
+        """Add a new descriptive statistics container to the current one.
 
         Returns:
-            Returns itself.
+            This object (self).
+
         """
         if isinstance(other, DescriptiveStatistics):
             if type(self._instance) != type(other._instance):  # noqa: E721
@@ -135,12 +135,12 @@ class DescriptiveStatistics:
         raise TypeError('unsupported operand type(s) for +='
                         f": '{type(self)}' and '{type(other)}'")
 
-    def __add__(self, other: Any) -> DescriptiveStatistics:
-        """Adds a new descriptive statistics container to the current one.
+    def __add__(self, other: object) -> DescriptiveStatistics:
+        """Add a new descriptive statistics container to the current one.
 
         Returns:
-            DescriptiveStatistics: Returns a new descriptive statistics
-                container.
+            A new descriptive statistics container.
+
         """
         if isinstance(other, DescriptiveStatistics):
             if type(self._instance) != type(other._instance):  # noqa: E721
@@ -152,72 +152,80 @@ class DescriptiveStatistics:
         raise TypeError('unsupported operand type(s) for +='
                         f": '{type(self)}' and '{type(other)}'")
 
-    def count(self) -> numpy.ndarray:
-        """Returns the count of samples.
+    def count(self) -> NDArrayInt64:
+        """Get the count of samples.
 
         Returns:
             The count of samples.
+
         """
         return self._instance.count()
 
-    def kurtosis(self) -> numpy.ndarray:
-        """Returns the kurtosis of samples.
+    def kurtosis(self) -> NDArray:
+        """Get the kurtosis of samples.
 
         Returns:
             The kurtosis of samples.
+
         """
         return self._instance.kurtosis()
 
-    def max(self) -> numpy.ndarray:
-        """Returns the maximum of samples.
+    def max(self) -> NDArray:
+        """Get the maximum of samples.
 
         Returns:
             The maximum of samples.
+
         """
         return self._instance.max()
 
-    def mean(self) -> numpy.ndarray:
-        """Returns the mean of samples.
+    def mean(self) -> NDArray:
+        """Get the mean of samples.
 
         Returns:
             The mean of samples.
+
         """
         return self._instance.mean()
 
-    def min(self) -> numpy.ndarray:
-        """Returns the minimum of samples.
+    def min(self) -> NDArray:
+        """Get the minimum of samples.
 
         Returns:
             The minimum of samples.
+
         """
         return self._instance.min()
 
-    def skewness(self) -> numpy.ndarray:
-        """Returns the skewness of samples.
+    def skewness(self) -> NDArray:
+        """Get the skewness of samples.
 
         Returns:
             The skewness of samples.
+
         """
         return self._instance.skewness()
 
-    def sum(self) -> numpy.ndarray:
-        """Returns the sum of samples.
+    def sum(self) -> NDArray:
+        """Get the sum of samples.
 
         Returns:
             The sum of samples.
+
         """
         return self._instance.sum()
 
-    def sum_of_weights(self) -> numpy.ndarray:
-        """Returns the sum of weights.
+    def sum_of_weights(self) -> NDArray:
+        """Get the sum of weights.
 
         Returns:
             The sum of weights.
+
         """
         return self._instance.sum_of_weights()
 
-    def var(self, ddof: int = 0) -> numpy.ndarray:
-        """Returns the variance of samples.
+    def var(self, ddof: int = 0) -> NDArray:
+        """Get the variance of samples.
 
         Args:
             ddof: Means Delta Degrees of Freedom. The divisor used in
@@ -226,11 +234,12 @@ class DescriptiveStatistics:
 
         Returns:
             The variance of samples.
+
         """
         return self._instance.variance(ddof)
 
-    def std(self, ddof: int = 0) -> numpy.ndarray:
-        """Returns the standard deviation of samples.
+    def std(self, ddof: int = 0) -> NDArray:
+        """Get the standard deviation of samples.
 
         Args:
             ddof: Means Delta Degrees of Freedom. The divisor used in
@@ -239,12 +248,15 @@ class DescriptiveStatistics:
 
         Returns:
             The standard deviation of samples.
+
         """
         return numpy.sqrt(self.var(ddof=ddof))
 
-    def array(self) -> numpy.ndarray:
-        """Returns the different statistical variables calculated in a numpy
-        structured table with the following fields:
+    def array(self) -> NDArrayStructured:
+        """Get the statistical variables as a structured numpy array.
+
+        Return all calculated statistical variables in a numpy structured
+        table with the following fields:
 
         - ``count``: Number of samples.
         - ``kurtosis``: Kurtosis of samples.
@@ -257,8 +269,8 @@ class DescriptiveStatistics:
         - ``var``: Variance of samples (ddof is equal to zero).
 
         Returns:
-            The different statistical variables calculated in a numpy
-            structured table.
+            The statistical variables in a numpy structured table.
+
         """
         dreal = 'f8' if isinstance(self._instance,
                                    core.DescriptiveStatisticsFloat64) else 'f4'
@@ -275,5 +287,6 @@ class DescriptiveStatistics:
         return result
 
     def __str__(self) -> str:
+        """Get the string representation of the descriptive statistics."""
         array, shape = self._instance.__getstate__()
         return str(array.reshape(shape))

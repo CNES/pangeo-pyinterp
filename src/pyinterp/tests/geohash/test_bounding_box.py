@@ -2,13 +2,15 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for geohash bounding box computation."""
 import json
 
 from .. import geohash_bbox_path
 from ... import GeoHash, geodetic
 
 
-def test_bbox():
+def test_bbox() -> None:
+    """Tests for geohash bounding box computation."""
     with open(geohash_bbox_path()) as stream:
         cases = json.load(stream)
     for hash_str, (min_lat, max_lat, min_lng, max_lng) in cases:

@@ -2,6 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for 2D histogram binning."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import copy
 import os
 import pickle
@@ -12,13 +16,20 @@ try:
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
+from _pytest.config import Config
 import numpy as np
 
 from .. import load_grid2d
 from ... import core
 
+if TYPE_CHECKING:
+    from pytest import Config
 
-def plot(x, y, z, filename):
+    from ...typing import NDArray1D, NDArray2D
+
+
+def plot(x: NDArray1D, y: NDArray1D, z: NDArray2D, filename: str) -> None:
+    """Plot the histogrammed data."""
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
     value = z.mean()
     std = z.std()
@@ -32,12 +43,14 @@ def plot(x, y, z, filename):
                    pad_inches=0.4)
 
 
-def load_data():
+def load_data() -> tuple[NDArray1D, NDArray1D, NDArray2D]:
+    """Load test data."""
     ds = load_grid2d()
     return ds['lon'].values, ds['lat'].values, ds['mss'].values.T
 
 
-def test_histogram2d_constructor():
+def test_histogram2d_constructor() -> None:
+    """Test construction and accessors of the object."""
     x_axis = core.Axis(np.linspace(-180, 180, 10), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 10))
 
@@ -57,7 +70,8 @@ def test_histogram2d_constructor():
     assert count.mean() == 0
 
 
-def test_binning2d_methods(pytestconfig):
+def test_binning2d_methods(pytestconfig: Config) -> None:
+    """Test the methods of the Histogram2DFloat64 class."""
     x_axis = core.Axis(np.linspace(-180, 180, 361 // 4), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 180 // 4))
 
@@ -91,12 +105,17 @@ def test_binning2d_methods(pytestconfig):
     assert histograms.dtype == np.dtype([('value', 'f8'), ('weight', 'f8')])
 
 
-def test_binning2d_pickle():
+def test_binning2d_pickle() -> None:
+    """Test the pickling and unpickling of the Histogram2DFloat64 class."""
     x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 1))
 
     hist2d = core.Histogram2DFloat64(x_axis, y_axis, None)
-    hist2d.push([-180], [-90], [np.pi])  # type: ignore
+    hist2d.push(
+        np.array([-180], dtype=float),
+        np.array([-90], dtype=float),
+        np.array([np.pi], dtype=float),
+    )
 
     assert np.all(hist2d.count() == 1)
     assert np.all(hist2d.mean() == np.pi)
@@ -117,7 +136,8 @@ def test_binning2d_pickle():
     assert np.all(np.isnan(hist2d.kurtosis()))
 
 
-def test_binning2d_iadd():
+def test_binning2d_iadd() -> None:
+    """Test the in-place addition of the Histogram2DFloat64 class."""
     x_axis = core.Axis(np.linspace(-180, 180, 1), is_circle=True)
     y_axis = core.Axis(np.linspace(-90, 90, 1))
 

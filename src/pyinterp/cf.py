@@ -2,10 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""
-CF (Climate and Forecast)
--------------------------
-"""
+"""CF (Climate and Forecast)."""
 from __future__ import annotations
 
 
@@ -18,6 +15,7 @@ class AxisUnit(list):
 
         Returns:
             list: The known units.
+
         """
         return self
 
@@ -25,7 +23,8 @@ class AxisUnit(list):
 class AxisLatitudeUnit(AxisUnit):
     """Units known to the axis defining the latitude."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize an AxisLatitudeUnit instance."""
         super().__init__((
             'degrees_north',
             'degree_north',
@@ -39,7 +38,8 @@ class AxisLatitudeUnit(AxisUnit):
 class AxisLongitudeUnit(AxisUnit):
     """Units known to the axis defining the longitude."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize an AxisLongitudeUnit instance."""
         super().__init__((
             'degrees_east',
             'degree_east',
@@ -53,5 +53,6 @@ class AxisLongitudeUnit(AxisUnit):
 class AxisTimeUnit(AxisUnit):
     """Units known to the axis defining the time."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize an AxisTimeUnit instance."""
         super().__init__(('days', 'seconds'))

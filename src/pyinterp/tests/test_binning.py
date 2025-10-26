@@ -2,6 +2,7 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for binning classes."""
 import dask.array as da
 import pytest
 
@@ -11,16 +12,18 @@ try:
 except ImportError:
     HAVE_SCIPY = False
 import numpy as np
+from pytest import Config
 
 from . import load_grid2d
 from .. import Axis, Binning1D, Binning2D, geodetic
 
 
-def build_binning2d_instance(step, dtype):
+def build_binning2d_instance(step: int, dtype: np.dtype) -> None:
+    """Build a Binning2D instance and test its methods."""
     ds = load_grid2d()
 
-    x_axis = Axis(np.arange(-180, 180, step), is_circle=True)
-    y_axis = Axis(np.arange(-90, 95, step))
+    x_axis = Axis(np.arange(-180, 180, step, dtype=np.float64), is_circle=True)
+    y_axis = Axis(np.arange(-90, 95, step, dtype=np.float64))
     binning = Binning2D(x_axis, y_axis, geodetic.Spheroid(), dtype=dtype)
     assert x_axis == binning.x
     assert y_axis == binning.y
@@ -49,17 +52,19 @@ def build_binning2d_instance(step, dtype):
         binning.variable('_')
 
 
-def test_binning2d(pytestconfig):
+def test_binning2d(pytestconfig: Config) -> None:
+    """Test Binning2D class."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1
-    build_binning2d_instance(step, np.float64)
-    build_binning2d_instance(step, np.float32)
+    build_binning2d_instance(step, np.dtype(np.float64))
+    build_binning2d_instance(step, np.dtype(np.float32))
 
     with pytest.raises(ValueError):
-        build_binning2d_instance(step, np.int8)
+        build_binning2d_instance(step, np.dtype(np.int8))
 
 
-def test_binning2d_dask(pytestconfig):
+def test_binning2d_dask(pytestconfig: Config) -> None:
+    """Test Binning2D with Dask arrays."""
     x_axis = Axis(np.linspace(-180, 180, 1), is_circle=True)
     y_axis = Axis(np.linspace(-80, 80, 1))
     binning = Binning2D(x_axis, y_axis)
@@ -74,28 +79,29 @@ def test_binning2d_dask(pytestconfig):
     assert binning.variable('sum_of_weights')[0, 0] == 32768
     assert binning.variable('mean')[0, 0] == pytest.approx(z.mean().compute())
     assert binning.variable('variance')[0, 0] == pytest.approx(
-        z.std().compute()**2)  # type: ignore
+        z.std().compute()**2)
     assert binning.variable('sum')[0, 0] == pytest.approx(z.sum().compute())
     if HAVE_SCIPY:
         assert binning.variable('kurtosis')[0, 0] == pytest.approx(
-            das.kurtosis(z).compute())  # type: ignore
+            das.kurtosis(z).compute())
         assert binning.variable('skewness')[0, 0] == pytest.approx(
-            das.skew(z).compute())  # type: ignore
+            das.skew(z).compute())
 
 
-def build_binning1d_instance(dtype):
+def build_binning1d_instance(dtype: np.dtype) -> None:
+    """Build a Binning1D instance and test its methods."""
     ds = load_grid2d()
 
-    x_axis = Axis(np.arange(-180, 180, 5))
+    x_axis = Axis(np.arange(-180, 180, 5, dtype=np.float64))
     binning = Binning1D(x_axis, dtype=dtype)
     assert x_axis == binning.x
     with pytest.raises(AttributeError):
-        binning.y
+        _ = binning.y  # type: ignore[attr-defined]
     with pytest.raises(AttributeError):
-        binning.wgs
+        _ = binning.wgs  # type: ignore[attr-defined]
     assert isinstance(str(binning), str)
 
-    lon, lat = np.meshgrid(ds.lon, ds.lat)
+    lon, _lat = np.meshgrid(ds.lon, ds.lat)
     binning.push(lon, ds.mss)
     mean = binning.variable('mean')
     assert isinstance(mean, np.ndarray)
@@ -106,15 +112,17 @@ def build_binning1d_instance(dtype):
         binning.variable('_')
 
 
-def test_binning1d():
-    build_binning1d_instance(np.float64)
-    build_binning1d_instance(np.float32)
+def test_binning1d() -> None:
+    """Test Binning1D class."""
+    build_binning1d_instance(np.dtype(np.float64))
+    build_binning1d_instance(np.dtype(np.float32))
 
     with pytest.raises(ValueError):
-        build_binning1d_instance(np.int8)
+        build_binning1d_instance(np.dtype(np.int8))
 
 
-def test_binning1d_dask():
+def test_binning1d_dask() -> None:
+    """Test Binning1D with Dask arrays."""
     x_axis = Axis(np.linspace(-180, 180, 1), is_circle=True)
     binning = Binning1D(x_axis)
 
@@ -127,10 +135,10 @@ def test_binning1d_dask():
     assert binning.variable('sum_of_weights')[0, 0] == 32768
     assert binning.variable('mean')[0, 0] == pytest.approx(z.mean().compute())
     assert binning.variable('variance')[0, 0] == pytest.approx(
-        z.std().compute()**2)  # type: ignore
+        z.std().compute()**2)
     assert binning.variable('sum')[0, 0] == pytest.approx(z.sum().compute())
     if HAVE_SCIPY:
         assert binning.variable('kurtosis')[0, 0] == pytest.approx(
-            das.kurtosis(z).compute())  # type: ignore
+            das.kurtosis(z).compute())
         assert binning.variable('skewness')[0, 0] == pytest.approx(
-            das.skew(z).compute())  # type: ignore
+            das.skew(z).compute())

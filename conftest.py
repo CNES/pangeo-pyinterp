@@ -2,10 +2,17 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Pytest configuration file."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import os
 import pathlib
 import sys
 import sysconfig
+
+if TYPE_CHECKING:
+    import pytest
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -15,8 +22,8 @@ MINOR = sys.version_info[1]
 WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 
-def build_dirname(extname=None):
-    """Returns the name of the build directory."""
+def build_dirname(extname: str | None = None) -> pathlib.Path:
+    """Return the name of the build directory."""
     extname = '' if extname is None else os.sep.join(extname.split('.')[:-1])
     path = pathlib.Path(
         WORKING_DIRECTORY, 'build',
@@ -29,7 +36,7 @@ def build_dirname(extname=None):
         extname)
 
 
-def push_front_syspath():
+def push_front_syspath() -> None:
     """Add the build directory to the front of sys.path."""
     if WORKING_DIRECTORY.joinpath('setup.py').exists():
         # We are in the root directory of the development tree
@@ -39,7 +46,7 @@ def push_front_syspath():
 push_front_syspath()
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     """Add command line options to pytest."""
     parser.addoption('--visualize', action='store_true', default=False)
     parser.addoption('--dump', action='store_true', default=False)

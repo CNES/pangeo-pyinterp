@@ -1,3 +1,5 @@
+"""Tests for period handling."""
+from typing import TYPE_CHECKING
 import pickle
 
 import numpy
@@ -5,38 +7,41 @@ import pytest
 
 from ..period import Period, PeriodList
 
+if TYPE_CHECKING:
+    from ..typing import NDArray1DDateTime
+
 
 def datetime64(value: int) -> numpy.datetime64:
-    """Converts an integer to a datetime64."""
+    """Convert an integer to a datetime64."""
     return numpy.datetime64(value, 'D')
 
 
 def timedelta64(value: int) -> numpy.timedelta64:
-    """Converts an integer to a timedelta64."""
+    """Convert an integer to a timedelta64."""
     return numpy.timedelta64(value, 'D')
 
 
 def make_period(start: int, end: int, within: bool = False) -> Period:
-    """Creates a period from two integers."""
+    """Create a period from two integers."""
     return Period(datetime64(start), datetime64(end), within=within)
 
 
-def period1(within=False):
-    """Creates the period [1, 10)"""
+def period1(within: bool = False) -> Period:
+    """Create the period [1, 10)."""
     return make_period(1, 10, within=within)
 
 
-def period2():
-    """Creates the period [5, 30)"""
+def period2() -> Period:
+    """Create the period [5, 30)."""
     return make_period(5, 30)
 
 
-def period3():
-    """Creates the period [35, 81)"""
+def period3() -> Period:
+    """Create the period [35, 81)."""
     return make_period(35, 81)
 
 
-def test_interface():
+def test_interface() -> None:
     """Tests the interface of the Period class."""
     p1 = period1()
     assert p1.begin == datetime64(1)
@@ -75,7 +80,7 @@ def test_interface():
     assert len(p2) == 25
 
 
-def test_cmp():
+def test_cmp() -> None:
     """Tests the comparison operators of the Period class."""
     p1 = period1()
     p2 = period2()
@@ -87,7 +92,7 @@ def test_cmp():
     assert p3 > p2
 
 
-def test_relation():
+def test_relation() -> None:
     """Tests the relation operators of the Period class."""
     p1 = period1()
     p2 = period2()
@@ -116,7 +121,7 @@ def test_relation():
     assert p1.merge(p3).is_null()
 
 
-def test_zero_length_period():
+def test_zero_length_period() -> None:
     """Tests the behavior of a zero-length period."""
     zero_len = make_period(3, 3)
     assert len(zero_len) == 0
@@ -144,7 +149,7 @@ def test_zero_length_period():
     assert zero_len.intersection(p1) == zero_len
 
 
-def test_invalid_period():
+def test_invalid_period() -> None:
     """Tests the behavior of a null period."""
     null_per = make_period(5, 1)
     with pytest.raises(ValueError):
@@ -167,7 +172,7 @@ def test_invalid_period():
     assert null_per.is_adjacent(make_period(1, 10))
 
 
-def test_invalid():
+def test_invalid() -> None:
     """Tests the behavior of invalid periods."""
     p1x = make_period(0, -2)
     assert p1x.begin == datetime64(0)
@@ -249,9 +254,8 @@ def test_invalid():
     assert not p2x.is_null()
 
 
-def test_period_as_resolution():
-    """Tests the conversion of the period to a period with a different
-    resolution."""
+def test_period_as_resolution() -> None:
+    """Test resolution conversion."""
     begin = numpy.datetime64('2019-01-01')
     end = numpy.datetime64('2019-01-03')
     period = Period(begin, end, within=True)
@@ -266,9 +270,8 @@ def test_period_as_resolution():
     assert period.as_resolution('D') == period
 
 
-def test_period_from_different_resolutions():
-    """Tests the conversion of the period to a period with a different
-    resolution."""
+def test_period_from_different_resolutions() -> None:
+    """Tests Period creation from different resolutions."""
     begin = numpy.datetime64('2019-01-01T00:00:00', 's')
     end = numpy.datetime64('2019-01-03T00:00:00', 'D')
     period = Period(begin, end, within=True)
@@ -276,7 +279,7 @@ def test_period_from_different_resolutions():
     assert str(period) == '[2019-01-01T00:00:00, 2019-01-03T00:00:01)'
 
 
-def test_period_list():
+def test_period_list() -> None:
     """Tests the PeriodList class."""
     start = numpy.datetime64('2018-01-01', 's')
     end = numpy.datetime64('2019-01-01', 's')
@@ -284,27 +287,24 @@ def test_period_list():
     duration = numpy.timedelta64(1, 'D')
     samples = (end - start) // duration
 
-    mask = numpy.random.randint(0, 2, samples)
-    periods = []
-
-    for ix in range(samples):
-        if mask[ix]:
-            periods.append(
-                (start + ix * duration, start + (ix + 1) * duration))
-    periods = PeriodList(numpy.array(periods).T)
+    rng = numpy.random.default_rng(42)
+    mask = rng.integers(0, 2, samples)
+    periods = PeriodList(
+        numpy.array([(start + ix * duration, start + (ix + 1) * duration)
+                     for ix in range(samples) if mask[ix]]).T)
     arr = periods.periods
-    assert numpy.any((arr['begin'][1:] - arr['last'][:-1])  # type: ignore
-                     == numpy.timedelta64(0, 's'))
+    assert numpy.any((arr['begin'][1:] -
+                      arr['last'][:-1]) == numpy.timedelta64(0, 's'))
     periods = periods.join_adjacent_periods()
     arr = periods.periods
-    assert numpy.all((arr['begin'][1:] - arr['last'][:-1])  # type: ignore
-                     != numpy.timedelta64(0, 's'))
+    assert numpy.all((arr['begin'][1:] -
+                      arr['last'][:-1]) != numpy.timedelta64(0, 's'))
     assert numpy.all(
         periods.filter(numpy.timedelta64(2, 'D')).duration() >=
         numpy.timedelta64(2, 'D'))
 
 
-def test_period_list_empty():
+def test_period_list_empty() -> None:
     """Tests an empty PeriodList."""
     instance = PeriodList.empty()
     assert len(instance.periods) == 0
@@ -325,13 +325,10 @@ def test_period_list_empty():
     duration = numpy.timedelta64(1, 'h')
     samples = (end - start) // duration
 
-    periods = []
-
-    for ix in range(samples):
-        periods.append(
-            (start + ix * duration,
-             start + (ix + 1) * duration - numpy.timedelta64(1, 's')))
-    periods = PeriodList(numpy.array(periods).T)
+    periods = PeriodList(
+        numpy.array([(start + ix * duration,
+                      start + (ix + 1) * duration - numpy.timedelta64(1, 's'))
+                     for ix in range(samples)]).T)
 
     assert numpy.all(instance.merge(periods).periods == periods.periods)
 
@@ -340,7 +337,7 @@ def test_period_list_empty():
     assert len(instance.sort()) == 0
 
 
-def test_period_list_cross_a_period():
+def test_period_list_cross_a_period() -> None:
     """Tests the PeriodList.cross_a_period method."""
     periods = numpy.array(
         [['2019-12-01T02:33:57.989', '2019-12-01T03:24:59.504'],
@@ -352,9 +349,9 @@ def test_period_list_cross_a_period():
     )
     handler = PeriodList(periods.T)
 
-    dates = numpy.arange(numpy.datetime64('2019-12-02T00:42', 'ms'),
-                         numpy.datetime64('2019-12-02T01:40', 'ms'),
-                         numpy.timedelta64(1, 's'))
+    dates: NDArray1DDateTime = numpy.arange(
+        numpy.datetime64('2019-12-02T00:42', 'ms'),
+        numpy.datetime64('2019-12-02T01:40', 'ms'), numpy.timedelta64(1, 's'))
     flags = handler.cross_a_period(dates)
     indices = numpy.where(~flags)
     assert numpy.all(
@@ -396,7 +393,7 @@ def test_period_list_cross_a_period():
     assert dates[~flags][0] > numpy.datetime64('2019-12-01T03:24:59.504', 'ms')
 
 
-def test_period_list_belong_to_a_period():
+def test_period_list_belong_to_a_period() -> None:
     """Tests the PeriodList.belong_to_a_period method."""
     periods = numpy.array(
         [['2019-12-01T02:33:57.989', '2019-12-01T03:24:59.504'],
@@ -407,9 +404,9 @@ def test_period_list_belong_to_a_period():
         dtype='datetime64[ms]',
     )
     handler = PeriodList(periods.T)
-    dates = numpy.arange(numpy.datetime64('2019-12-01T00:00', 'ms'),
-                         numpy.datetime64('2019-12-02T01:40', 'ms'),
-                         numpy.timedelta64(1, 's'))
+    dates: NDArray1DDateTime = numpy.arange(
+        numpy.datetime64('2019-12-01T00:00', 'ms'),
+        numpy.datetime64('2019-12-02T01:40', 'ms'), numpy.timedelta64(1, 's'))
     flags = handler.belong_to_a_period(dates)
     mask = ((dates >= numpy.datetime64('2019-12-01T02:33:57.989', 'ms')) &
             (dates <= numpy.datetime64('2019-12-01T03:24:59.504', 'ms')))
@@ -424,7 +421,8 @@ def test_period_list_belong_to_a_period():
     assert numpy.all(flags == mask)
 
 
-def test_eclipse():
+def test_eclipse() -> None:
+    """Tests eclipse period handling."""
     periods = numpy.array(
         [['2019-12-10T11:02:53.581', '2019-12-10T11:02:53.581'],
          ['2019-12-10T11:03:03.494', '2019-12-10T11:03:03.494'],

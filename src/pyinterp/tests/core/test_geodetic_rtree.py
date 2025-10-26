@@ -2,6 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for geodetic RTree interpolation."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import os
 import pickle
 
@@ -11,14 +15,21 @@ try:
     HAVE_PLT = True
 except ImportError:
     HAVE_PLT = False
+from _pytest.config import Config
 import numpy as np
 
 from .. import load_grid2d
 from ... import core
 from ...core import geodetic
 
+if TYPE_CHECKING:
+    from pytest import Config
 
-def plot(x, y, z, filename):
+    from ...typing import NDArray1D, NDArray2D
+
+
+def plot(x: NDArray1D, y: NDArray1D, z: NDArray2D, filename: str) -> None:
+    """Plot the interpolated data."""
     figure = matplotlib.pyplot.figure(figsize=(15, 15), dpi=150)
     value = z.mean()
     std = z.std()
@@ -32,8 +43,8 @@ def plot(x, y, z, filename):
                    pad_inches=0.4)
 
 
-def load_data(packing=True):
-    """Creating the search tree."""
+def load_data(packing: bool = True) -> geodetic.RTree:
+    """Load test data."""
     ds = load_grid2d()
     z = ds['mss'].values.T
     x = ds['lon'].values
@@ -50,7 +61,7 @@ def load_data(packing=True):
     return mesh
 
 
-def test_geodetic_rtree_idw(pytestconfig):
+def test_geodetic_rtree_idw(pytestconfig: Config) -> None:
     """Interpolation test."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1
@@ -71,7 +82,7 @@ def test_geodetic_rtree_idw(pytestconfig):
              'mss_geodetic_rtree_idw.png')
 
 
-def test_geodetic_rtree_rbf(pytestconfig):
+def test_geodetic_rtree_rbf(pytestconfig: Config) -> None:
     """Interpolation test."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1
@@ -95,7 +106,7 @@ def test_geodetic_rtree_rbf(pytestconfig):
              'mss_geodetic_rtree_rbf.png')
 
 
-def test_geodetic_rtree_window_function(pytestconfig):
+def test_geodetic_rtree_window_function(pytestconfig: Config) -> None:
     """Interpolation test."""
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1
@@ -117,14 +128,14 @@ def test_geodetic_rtree_window_function(pytestconfig):
              'mss_geodetic_rtree_wf.png')
 
 
-def test_geodetic_rtree_insert():
+def test_geodetic_rtree_insert() -> None:
     """Data insertion test."""
     mesh = load_data(packing=False)
     assert isinstance(mesh, geodetic.RTree)
     assert len(mesh) != 0
 
 
-def test_geodetic_rtree_query():
+def test_geodetic_rtree_query() -> None:
     """Data insertion test."""
     mesh = load_data(packing=True)
     assert len(mesh) != 0
@@ -133,7 +144,7 @@ def test_geodetic_rtree_query():
     assert values.shape == (1, 4)
 
 
-def test_geodetic_rtree_pickle():
+def test_geodetic_rtree_pickle() -> None:
     """Serialization test."""
     interpolator = load_data()
     other = pickle.loads(pickle.dumps(interpolator))

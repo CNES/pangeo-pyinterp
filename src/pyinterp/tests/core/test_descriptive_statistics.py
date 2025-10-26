@@ -2,6 +2,10 @@
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
+"""Tests for descriptive statistics computation."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 import pickle
 
 import numpy as np
@@ -9,26 +13,29 @@ import pytest
 
 from ... import core
 
+if TYPE_CHECKING:
+    from ...typing import NDArray
 
-def weighted_mom1(values, weights):
+
+def weighted_mom1(values: NDArray, weights: NDArray) -> np.floating:
     """Return the weighted moment 1 of the values."""
     return np.average(values, weights=weights)
 
 
-def weighted_mom2(values, weights):
+def weighted_mom2(values: NDArray, weights: NDArray) -> np.floating:
     """Return the weighted moment 2 of the values."""
     average = weighted_mom1(values, weights)
     return np.average((values - average)**2, weights=weights)
 
 
-def weighted_mom3(values, weights):
+def weighted_mom3(values: NDArray, weights: NDArray) -> np.floating:
     """Return the weighted moment 3 of the values."""
     average = weighted_mom1(values, weights)
     mom2 = weighted_mom2(values, weights)
     return np.average(((values - average) / np.sqrt(mom2))**3, weights=weights)
 
 
-def weighted_mom4(values, weights):
+def weighted_mom4(values: NDArray, weights: NDArray) -> np.floating:
     """Return the weighted moment 4 of the values."""
     average = weighted_mom1(values, weights)
     mom2 = weighted_mom2(values, weights)
@@ -36,7 +43,7 @@ def weighted_mom4(values, weights):
                       weights=weights)
 
 
-def test_empty_container():
+def test_empty_container() -> None:
     """Test the calculation of statistics on an empty container."""
     ds = core.DescriptiveStatisticsFloat64(np.array([]))
 
@@ -51,9 +58,10 @@ def test_empty_container():
     assert np.isnan(ds.kurtosis())
 
 
-def test_flatten():
+def test_flatten() -> None:
     """Test the calculation of statistics on a vector."""
-    values = np.random.random_sample(1000)
+    rng = np.random.default_rng()
+    values = rng.random(1000)
     ds = core.DescriptiveStatisticsFloat64(values)
 
     assert ds.count() == values.size
@@ -69,9 +77,10 @@ def test_flatten():
         weighted_mom3(values, np.ones(values.size)))
 
 
-def test_merge():
+def test_merge() -> None:
     """Test merging."""
-    values = np.random.random_sample(1000)
+    rng = np.random.default_rng()
+    values = rng.random(1000)
     instance1 = core.DescriptiveStatisticsFloat64(values[:500])
     instance2 = core.DescriptiveStatisticsFloat64(values[500:])
 
@@ -91,9 +100,10 @@ def test_merge():
         weighted_mom3(values, np.ones(values.size)))
 
 
-def test_pickle():
+def test_pickle() -> None:
     """Test pickling."""
-    values = np.random.random_sample(1000)
+    rng = np.random.default_rng()
+    values = rng.random(1000)
     ds = core.DescriptiveStatisticsFloat64(values)
     other = pickle.loads(pickle.dumps(ds))
     assert other.count() == ds.count()
@@ -107,10 +117,11 @@ def test_pickle():
     assert other.kurtosis() == ds.kurtosis()
 
 
-def test_weighted():
+def test_weighted() -> None:
     """Test weighted statistics."""
-    values = np.random.random_sample(1000)
-    weights = np.random.random_sample(1000)
+    rng = np.random.default_rng()
+    values = rng.random(1000)
+    weights = rng.random(1000)
     ds = core.DescriptiveStatisticsFloat64(values, weights=weights)
 
     assert ds.count() == values.size
@@ -127,12 +138,19 @@ def test_weighted():
         core.DescriptiveStatisticsFloat64(values, weights=weights[:100])
 
 
-def test_axis():
+def test_axis() -> None:
     """Test axes along which the statistics are computed."""
-    values = np.random.random_sample((2, 3, 4, 5, 6, 7))
+    rng = np.random.default_rng()
+    values = rng.random((2, 3, 4, 5, 6, 7))
 
-    def check_axis(values, axis):
-        ds = core.DescriptiveStatisticsFloat64(values, axis=axis)
+    def check_axis(
+        values: NDArray,
+        axis: tuple[int, ...] | None,
+    ) -> None:
+        ds = core.DescriptiveStatisticsFloat64(
+            values,
+            axis=list(axis) if axis is not None else None,
+        )
         assert np.all(ds.count() == np.sum(values * 0 + 1, axis=axis))
         assert np.all(ds.max() == np.max(values, axis=axis))
         assert ds.mean() == pytest.approx(np.mean(values, axis=axis))
@@ -147,6 +165,6 @@ def test_axis():
     check_axis(values, (1, 3, 5))
 
     with pytest.raises(ValueError):
-        core.DescriptiveStatisticsFloat64(values, axis=(12, ))  # type: ignore
+        core.DescriptiveStatisticsFloat64(values, axis=[12])
     with pytest.raises(ValueError):
-        core.DescriptiveStatisticsFloat64(values, axis=(-1, ))  # type: ignore
+        core.DescriptiveStatisticsFloat64(values, axis=[-1])
