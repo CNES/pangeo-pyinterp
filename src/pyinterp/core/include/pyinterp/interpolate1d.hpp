@@ -70,7 +70,7 @@ auto interpolate_1d(const pyinterp::Axis<double>& x,
         detail::calculate_start_end_size(index, axis->size(), half_window_size);
 
     // Select the data in the current window
-    const Vector<double> yw = y.segment(start, n);
+    const Vector<double>& yw = y.segment(start, n);
 
     // Interpolation of the current value
     result(ix) = (*interpolator)(axis->slice(start, n), yw, xi(ix));
