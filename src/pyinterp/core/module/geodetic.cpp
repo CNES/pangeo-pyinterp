@@ -173,12 +173,7 @@ Returns:
 
 static void init_geodetic_box(py::class_<geodetic::Box> &class_) {
   class_.def(py::init<>())
-      .def(py::init([](geodetic::Point min_corner, geodetic::Point max_corner) {
-             if (min_corner.lon() > max_corner.lon()) {
-               std::swap(min_corner, max_corner);
-             }
-             return geodetic::Box(min_corner, max_corner);
-           }),
+      .def(py::init<const geodetic::Point &, const geodetic::Point &>(),
            py::arg("min_corner"), py::arg("max_corner"))
       .def_static("from_geojson", &geodetic::Box::from_geojson,
                   py::arg("array"), R"__doc__(

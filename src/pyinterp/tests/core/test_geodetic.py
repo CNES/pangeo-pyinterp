@@ -222,6 +222,147 @@ def test_box_pickle() -> None:
     assert not a != b
 
 
+def test_box_dateline_crossing() -> None:
+    """Test Box class with dateline crossing coordinates."""
+    # Create a box that would cross the dateline: 170°E to -170°W
+    min_corner = core.geodetic.Point(170, -10)
+    max_corner = core.geodetic.Point(-170, 10)
+    box = core.geodetic.Box(min_corner, max_corner)
+
+    # Box stores corners as given
+    assert box.min_corner.lon == 170
+    assert box.min_corner.lat == -10
+    # The max_corner longitude is internally adjusted to 190° to handle dateline
+    # crossing, since Boost geometry requires min_lon <= max_lon.
+    assert box.max_corner.lon == 190
+    assert box.max_corner.lat == 10
+
+    # Test WKT representation
+    wkt = box.wkt()
+    assert isinstance(wkt, str)
+    assert 'POLYGON' in wkt
+
+    # Test points that should be inside if dateline crossing is handled
+    # correctly
+    test_inside = [
+        (170, 0),  # Left edge at 170°E
+        (175, 0),  # Inside at 175°E
+        (180, 5),  # On dateline at 180°
+        (-180, -5),  # On dateline at -180°
+        (-175, 0),  # Inside at -175°W
+        (-170, 0),  # Right edge at -170°W
+    ]
+
+    # Test points that should be outside
+    test_outside = [
+        (0, 0),  # Prime meridian
+        (160, 0),  # West of box at 160°E
+        (-160, 0),  # East of box at -160°W
+        (175, 15),  # North of box
+        (175, -15),  # South of box
+    ]
+
+    for lon, lat in test_inside:
+        assert box.covered_by(core.geodetic.Point(lon, lat))
+
+    for lon, lat in test_outside:
+        assert not box.covered_by(core.geodetic.Point(lon, lat))
+
+
+def test_box_dateline_crossing_array() -> None:
+    """Test Box class array method with dateline crossing coordinates."""
+    min_corner = core.geodetic.Point(170, -10)
+    max_corner = core.geodetic.Point(-170, 10)
+    box = core.geodetic.Box(min_corner, max_corner)
+
+    # Same test points as DatelineCrossingBox test
+    lon = np.array([175, -175, 180, -180, 0, 160, -160, 175, 175],
+                   dtype=np.float64)
+    lat = np.array([0, 0, 5, -5, 0, 0, 0, 15, -15], dtype=np.float64)
+
+    # Test array method
+    flags_array = box.covered_by(lon, lat)
+
+    # Test single-point method for comparison
+    flags_single = np.array([
+        box.covered_by(core.geodetic.Point(lon[i], lat[i]))
+        for i in range(len(lon))
+    ],
+                            dtype=bool)
+
+    all_match = True
+    for i in range(len(lon)):
+        match = flags_single[i] == flags_array[i]
+        all_match = all_match and match
+
+    # Verify consistency between single-point and array methods
+    assert np.all(flags_single == flags_array)
+
+    # Test multi-threading consistency
+    flags_mt = box.covered_by(lon, lat, num_threads=2)
+    assert np.all(flags_array == flags_mt)
+
+
+def test_box_large_dateline_crossing() -> None:
+    """Test Box with large dateline-crossing area (100°E to -94°W = 266°E).
+
+    This tests a box that spans from 100°E to 266°E (-94°W), covering:
+    - Box 1: [100°E to 180°E] (eastern hemisphere)
+    - Box 2: [-180°W to -94°W] (western hemisphere)
+
+    The normalized approach converts max_lon from -94 to 266 (= -94 + 360).
+    """
+    min_lon, min_lat = 100, -66
+    max_lon, max_lat = -94, 66  # Equivalent to 266° when normalized
+
+    box = core.geodetic.Box(core.geodetic.Point(min_lon, min_lat),
+                            core.geodetic.Point(max_lon, max_lat))
+
+    # Test points across the entire range
+    test_cases = [
+        # Inside - Eastern hemisphere (100°E to 180°E)
+        (100, 0, True),  # Left edge at 100°E
+        (120, 30, True),  # Inside eastern hemisphere at 120°E
+        (150, -50, True),  # Inside eastern hemisphere at 150°E
+        (180, 60, True),  # On dateline at 180°
+
+        # Inside - Western hemisphere (-180°W to -94°W)
+        (-180, -60, True),  # On dateline at -180°
+        (-150, 0, True),  # Inside western hemisphere at -150°W
+        (-100, 50, True),  # Inside western hemisphere at -100°W
+        (-94, 0, True),  # Right edge at -94°W
+
+        # Outside - Before 100°E
+        (50, 0, False),  # Outside: 50°E (before min)
+        (90, 30, False),  # Outside: 90°E (before min)
+
+        # Outside - After -94°W (between -94°W and 100°E going eastward)
+        (-90, 0, False),  # Outside: -90°W (after max)
+        (-50, 30, False),  # Outside: -50°W (gap area)
+        (0, 0, False),  # Outside: Prime meridian (gap area)
+        (50, -30, False),  # Outside: 50°E (gap area)
+
+        # Outside - Latitude out of bounds
+        (150, 70, False),  # Outside: Above max_lat
+        (150, -70, False),  # Outside: Below min_lat
+        (-150, 80, False),  # Outside: Above max_lat
+    ]
+
+    flags_single = []
+    lons = []
+    lats = []
+    for lon, lat, expected in test_cases:
+        point = core.geodetic.Point(lon, lat)
+        result = box.covered_by(point)
+        assert result == expected
+        flags_single.append(result)
+        lons.append(lon)
+        lats.append(lat)
+
+    flags = box.covered_by(np.array(lons), np.array(lats))
+    assert np.array_equal(flags, np.array(flags_single))
+
+
 def test_polygon() -> None:
     """Test construction and accessors of the object."""
     polygon = core.geodetic.Polygon.read_wkt('POLYGON((0 0,0 7,4 2,2 0,0 0))')
