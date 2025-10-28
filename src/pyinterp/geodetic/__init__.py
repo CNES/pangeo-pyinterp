@@ -104,11 +104,64 @@ class Box(geodetic.Box):
     """Define a box made of two describing points in spherical coordinates.
 
     Represent a rectangular region using minimum and maximum corner points in
-    degrees.
+    degrees. The Box class supports both standard rectangular regions and
+    dateline-crossing regions.
 
     Args:
         min_corner: the minimum corner point (lower left) of the box.
         max_corner: the maximum corner point (upper right) of the box.
+
+    Note:
+        **Handling the International Date Line:**
+
+        When creating a box that crosses the International Date Line (180°/-180°
+        longitude), the Box class automatically detects this situation when
+        ``max_corner.lon < min_corner.lon`` and normalizes the coordinates
+        internally.
+
+        For example, a box from 170°E to -170°W (crossing the dateline) should
+        be specified with:
+
+        * ``min_corner = Point(170, -10)``
+        * ``max_corner = Point(-170, 10)``
+
+        The Box will automatically handle this as a dateline-crossing region
+        spanning from 170°E eastward through 180° to -170°W, rather than
+        incorrectly wrapping westward from 170°E to -170°W.
+
+        For queries, longitude values are automatically normalized to match the
+        box's coordinate system, so you can use standard [-180, 180] coordinates
+        when testing point containment.
+
+    Examples:
+        Create a standard box that doesn't cross the dateline:
+
+        >>> import pyinterp.geodetic
+        >>> box = pyinterp.geodetic.Box(
+        ...     pyinterp.geodetic.Point(-10, -5),
+        ...     pyinterp.geodetic.Point(10, 5))
+        >>> box.covered_by(pyinterp.geodetic.Point(0, 0))
+        True
+        >>> box.covered_by(pyinterp.geodetic.Point(20, 0))
+        False
+
+        Create a box crossing the International Date Line:
+
+        >>> dateline_box = pyinterp.geodetic.Box(
+        ...     pyinterp.geodetic.Point(170, -10),
+        ...     pyinterp.geodetic.Point(-170, 10))
+        >>> # Points on both sides of the dateline
+        >>> dateline_box.covered_by(pyinterp.geodetic.Point(175, 0))
+        True
+        >>> dateline_box.covered_by(pyinterp.geodetic.Point(-175, 0))
+        True
+        >>> # Point in the gap (outside the box)
+        >>> dateline_box.covered_by(pyinterp.geodetic.Point(0, 0))
+        False
+
+    See Also:
+        :ref:`example_dateline_box`: Example demonstrating dateline handling
+        with the Box class.
 
     """
 

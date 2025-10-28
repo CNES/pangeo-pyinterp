@@ -275,7 +275,6 @@ def test_box_dateline_crossing_array() -> None:
     max_corner = core.geodetic.Point(-170, 10)
     box = core.geodetic.Box(min_corner, max_corner)
 
-    # Same test points as DatelineCrossingBox test
     lon = np.array([175, -175, 180, -180, 0, 160, -160, 175, 175],
                    dtype=np.float64)
     lat = np.array([0, 0, 5, -5, 0, 0, 0, 15, -15], dtype=np.float64)

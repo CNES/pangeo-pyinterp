@@ -276,3 +276,91 @@ if intersection_point:
 
 ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
 ax.legend()
+
+# %%
+# .. _example_dateline_box:
+#
+# Handling the International Date Line with Box
+# ----------------------------------------------
+# Geographic boxes that span the International Date Line (180°/-180° longitude)
+# require special handling. The Box class automatically detects and manages
+# dateline-crossing regions.
+#
+# Understanding Dateline Crossing
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# When a box is defined with ``min_corner.lon > max_corner.lon``, the Box
+# interprets this as a region that crosses the dateline, spanning eastward from
+# the minimum longitude through 180° to the maximum longitude.
+#
+# Example: A box from 170°E to -170°W covers:
+#
+# - Eastern section: 170°E to 180°E
+# - Western section: -180°W to -170°W
+#
+# Let's create a dateline-crossing box and visualize it.
+dateline_box = pyinterp.geodetic.Box(
+    pyinterp.geodetic.Point(170, -30),  # min: 170°E, 30°S
+    pyinterp.geodetic.Point(-170, 30))  # max: -170°W, 30°N
+
+print(f'Dateline-crossing box: {dateline_box}')
+
+# %%
+# Testing Points Around the Dateline
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Let's test various points to understand which are inside the box.
+test_points = [
+    (170, 0, 'Left edge (170°E)'),
+    (175, 0, 'Eastern section (175°E)'),
+    (180, 10, 'On dateline (180°)'),
+    (-180, -10, 'On dateline (-180°)'),
+    (-175, 0, 'Western section (-175°W)'),
+    (-170, 0, 'Right edge (-170°W)'),
+    (0, 0, 'Prime meridian (gap)'),
+    (160, 0, 'West of box (160°E)'),
+    (-160, 0, 'East of box (-160°W)'),
+]
+
+print('\nPoint containment test:')
+print(f'{"Longitude":<12} {"Latitude":<10} {"Inside?":<10} {"Description"}')
+print('-' * 60)
+
+for lon, lat, description in test_points:
+    point = pyinterp.geodetic.Point(lon, lat)
+    is_inside = dateline_box.covered_by(point)
+    status = '✅' if is_inside else '❌'
+    print(f'{lon:>9.1f}   {lat:>9.1f} {status:^10}  {description}')
+
+# %%
+# Visualizing the Dateline-Crossing Box
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+fig = matplotlib.pyplot.figure(figsize=(10, 8))
+ax = fig.add_subplot(111,
+                     projection=cartopy.crs.PlateCarree(central_longitude=180))
+ax.add_feature(cartopy.feature.LAND)
+ax.add_feature(cartopy.feature.OCEAN)
+ax.add_feature(cartopy.feature.COASTLINE)
+ax.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
+ax.set_extent([140, -140, -40, 40])
+# Plot the box boundaries (using normalized longitude for dateline crossing)
+box_lon = [170, 190, 190, 170, 170]  # 190 = -170 + 360
+box_lat = [-30, -30, 30, 30, -30]
+ax.plot(box_lon,
+        box_lat,
+        color='red',
+        linewidth=2,
+        transform=cartopy.crs.Geodetic(),
+        label='Dateline-Crossing Box')
+
+# Plot test points
+for lon, lat, description in test_points:
+    point = pyinterp.geodetic.Point(lon, lat)
+    is_inside = dateline_box.covered_by(point)
+    color = 'green' if is_inside else 'gray'
+    ax.plot(lon,
+            lat,
+            'o',
+            color=color,
+            markersize=8,
+            transform=cartopy.crs.PlateCarree())
+ax.legend()
+matplotlib.pyplot.tight_layout()
