@@ -232,21 +232,25 @@ void implement_bivariate(pybind11::module &m, const std::string &suffix) {
         pybind11::arg("x"), pybind11::arg("y"), pybind11::arg("interpolator"),
         pybind11::arg("bounds_error") = false, pybind11::arg("num_threads") = 0,
         R"__doc__(
-Interpolate the values provided on the defined bivariate function.
+Interpolate values on a bivariate function.
+
+Performs bivariate interpolation of the values provided on a 2D grid using
+the specified interpolator.
 
 Args:
     grid: Grid containing the values to be interpolated.
-    x: X-values.
-    y: Y-values.
-    interpolator: 2D interpolator used to interpolate.
-    bounds_error: If True, when interpolated values are requested outside of the
-        domain of the input axes (x,y), a ValueError is raised. If False, then
-        value is set to NaN.
-    num_threads: The number of threads to use for the computation. If 0 all CPUs
-        are used. If 1 is given, no parallel computing code is used at all,
-        which is useful for debugging. Defaults to ``0``.
+    x: X-coordinate values.
+    y: Y-coordinate values.
+    interpolator: 2D interpolator used to interpolate values on the grid.
+    bounds_error: If True, raises ValueError when interpolated values are
+        requested outside the domain of the input axes (x, y). If False,
+        sets values to NaN. Defaults to False.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
+
 Returns:
-    numpy.ndarray: Values interpolated.
+    Array of interpolated values.
 )__doc__");
 }
 

@@ -152,25 +152,29 @@ void implement_trivariate(pybind11::module &m, const std::string &prefix,
         pybind11::arg("z_method") = pybind11::none(),
         pybind11::arg("bounds_error") = false, pybind11::arg("num_threads") = 0,
         R"__doc__(
-Interpolate the values provided on the defined trivariate function.
+Interpolate values on a trivariate function.
+
+Performs trivariate interpolation of the values provided on a 3D grid using
+the specified interpolator and z-axis interpolation method.
 
 Args:
     grid: Grid containing the values to be interpolated.
-    x: X-values.
-    y: Y-values.
-    z: Z-values.
+    x: X-coordinate values.
+    y: Y-coordinate values.
+    z: Z-coordinate values.
     interpolator: 3D interpolator used to interpolate values on the surface
         (x, y, z).
-    z_method: The method of interpolation to perform on Z-axis. Supported are
-        ``linear`` and ``nearest``. Default to ``linear``.
-    bounds_error: If True, when interpolated values are requested outside of the
-        domain of the input axes (x,y,z), a ValueError is raised. If False, then
-        value is set to NaN.
-    num_threads: The number of threads to use for the computation. If 0 all CPUs
-        are used. If 1 is given, no parallel computing code is used at all,
-        which is useful for debugging. Defaults to ``0``.
+    z_method: Method of interpolation to perform on Z-axis. Supported values
+        are ``linear`` and ``nearest``. Defaults to ``linear``.
+    bounds_error: If True, raises ValueError when interpolated values are
+        requested outside the domain of the input axes (x, y, z). If False,
+        sets values to NaN. Defaults to False.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
+
 Returns:
-    Values interpolated.
+    Array of interpolated values.
 )__doc__");
 }
 

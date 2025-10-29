@@ -17,17 +17,16 @@ template <size_t N>
 static auto coordinates_help() -> std::string {
   auto ss = std::stringstream();
   static_assert(N == 3, "The dimension must be 3.");
-  ss << "coordinates: a matrix of shape ``(n, 3)``, where ``n`` is the\n"
-        "        number of observations and 3 represents the coordinates in\n"
-        "        the order: x, y, and z.\n"
-        "        If the matrix shape is ``(n, 2)``, the z-coordinate is\n"
-        "        assumed to be zero.\n"
-        "        The coordinates (x, y, z) are in the Cartesian coordinate\n"
-        "        system (ECEF) if the instance is configured to use this\n"
-        "        system (ecef keyword set to True during construction).\n"
-        "        Otherwise, the coordinates are in the geodetic system\n"
-        "        (longitude, latitude, and altitude) in degrees, degrees,\n"
-        "        and meters, respectively.";
+  ss << "coordinates: Array of shape ``(n, 3)`` or ``(n, 2)`` containing\n"
+        "        observation coordinates. Here ``n`` is the number of\n"
+        "        observations and each row represents a coordinate in the\n"
+        "        order x, y, and optionally z. If the matrix shape is\n"
+        "        ``(n, 2)``, the z-coordinate is assumed to be zero.\n"
+        "        The coordinate system depends on the instance configuration:\n"
+        "        If ``ecef=True``, coordinates are in the Cartesian\n"
+        "        coordinate system (ECEF). Otherwise, coordinates are in the\n"
+        "        geodetic system (longitude, latitude, altitude) in degrees,\n"
+        "        degrees, and meters, respectively.";
   return ss.str();
 }
 
@@ -44,35 +43,38 @@ static void implement_rtree(py::module &m, const char *const suffix) {
   py::class_<RTree>(
       m, class_name<dimension_t::value>(suffix).c_str(),
       (class_name<dimension_t::value>(suffix) +
-       "(self, spheroid: Optional[pyinterp.core.geodetic.Spheroid] = None)" +
+       "(self, spheroid: pyinterp.core.geodetic.Spheroid | None = None)" +
        R"__doc__(
+Create a spatial index for geodetic scalar values.
 
-RTree spatial index for geodetic scalar values
+This class implements an R*-tree spatial index to efficiently query and
+interpolate values on the sphere. It supports both geodetic (longitude,
+latitude, altitude) and Cartesian (ECEF) coordinate systems.
 
 Args:
-    spheroid: WGS of the coordinate system used to transform equatorial spherical
-        positions (longitudes, latitudes, altitude) into ECEF coordinates. If
-        not set the geodetic system used is WGS-84.
-    ecef: If true, the coordinates managed by this instance are always in the
-        Cartesian coordinate system (ECEF). If true, no conversion to the LLA
-        system is performed. Defaults to ``False``.
+    spheroid: World Geodetic System (WGS) of the coordinate system used to
+        transform geodetic positions (longitude, latitude, altitude) into
+        ECEF coordinates. If not set, WGS-84 is used. Defaults to None.
+    ecef: If True, coordinates managed by this instance are in the Cartesian
+        coordinate system (ECEF) and no conversion from geodetic coordinates
+        is performed. Defaults to False.
 
 Raises:
-    ValueError: If a Cartesian coordinate system (ECEF) is desired, there is no
-        need to use a geodetic system for LLA to ECEF conversion. Please set
-        either the spheroid or ecef parameter, but not both.
+    ValueError: If both spheroid and ecef are specified. Either the spheroid
+        or ecef parameter should be set, but not both.
 )__doc__")
           .c_str())
       .def(py::init<std::optional<pyinterp::geodetic::Spheroid>, bool>(),
            py::arg("spheroid") = std::nullopt, py::arg("ecef") = false)
       .def("bounds", &RTree::equatorial_bounds,
            R"__doc__(
+Get the bounding box containing all stored values.
+
 Returns the box able to contain all values stored in the container.
 
 Returns:
-    tuple: A tuple that contains the coordinates of the minimum and
-    maximum corners of the box able to contain all values stored in the
-    container or an empty tuple if there are no values in the container.
+    Tuple of coordinates of the minimum and maximum corners of the bounding box,
+    or an empty tuple if the container is empty.
   )__doc__")
       .def(
           "__copy__", [](const RTree &self) { return RTree(self); },
@@ -89,24 +91,28 @@ Returns:
       .def("packing", &RTree::packing, py::arg("coordinates"),
            py::arg("values"),
            (R"__doc__(
-The tree is created using packing algorithm (The old data is erased
-before construction.)
+Build the spatial index using a packing algorithm.
+
+Constructs the R*-tree using the packing algorithm. This method erases any
+existing data before construction.
 
 Args:
     )__doc__" +
             coordinates_help<dimension_t::value>() + R"__doc__(
-    values: An array of size ``(n)`` containing the values associated with the
+    values: Array of size (n) containing the values associated with the
         coordinates provided.
 )__doc__")
                .c_str())
       .def("insert", &RTree::insert, py::arg("coordinates"), py::arg("values"),
            (R"__doc__(
-Insert new data into the search tree.
+Add new data into the spatial index.
+
+Inserts coordinates and associated values into the R*-tree.
 
 Args:
     )__doc__" +
             coordinates_help<dimension_t::value>() + R"__doc__(
-    values: An array of size ``(n)`` containing the values associated with the
+    values: Array of size (n) containing the values associated with the
         coordinates provided.
 )__doc__")
                .c_str())
@@ -120,24 +126,25 @@ Args:
           py::arg("coordinates"), py::arg("k") = 4, py::arg("within") = false,
           py::arg("num_threads") = 0,
           (R"__doc__(
-Search for the nearest K nearest neighbors of a given point.
+Find the K nearest neighbors of given points.
+
+Searches for the nearest neighbors to the provided coordinates in the spatial
+index.
 
 Args:
     )__doc__" +
            coordinates_help<dimension_t::value>() + R"__doc__(
-    k: The number of nearest neighbors to be used for calculating the
-        interpolated value. Defaults to ``4``.
-    within: If true, the method ensures that the neighbors found are located
-        within the point of interest. Defaults to ``false``.
-    num_threads: The number of threads to use for the computation. If 0 all CPUs
-        are used. If 1 is given, no parallel computing code is used at all,
-        which is useful for debugging. Defaults to ``0``.
+    k: Number of nearest neighbors to return. Defaults to 4.
+    within: If True, ensures that neighbors are located around the point of
+        interest (no extrapolation). Defaults to False.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
+
 Returns:
-    A tuple containing a matrix describing for each provided position, the
-    distance between the provided position and the found neighbors (in meters if
-    the RTree handles LLA coordinates, otherwise in Cartesian units) and a
-    matrix containing the value of the different neighbors found for all
-    provided positions.
+    Tuple containing (1) a matrix of distances between each provided position
+    and the found neighbors (in meters for LLA coordinates, Cartesian units
+    for ECEF), and (2) a matrix of values for the neighbors found.
 )__doc__")
               .c_str())
       .def("inverse_distance_weighting", &RTree::inverse_distance_weighting,
@@ -145,27 +152,27 @@ Returns:
            py::arg("k") = 9, py::arg("p") = 2, py::arg("within") = true,
            py::arg("num_threads") = 0,
            (R"__doc__(
-Interpolation of the value at the requested position by inverse distance
-weighting method.
+Interpolate values using inverse distance weighting.
+
+Performs inverse distance weighted interpolation at the requested positions
+using the K nearest neighbors found within the specified search radius.
 
 Args:
     )__doc__" +
             coordinates_help<dimension_t::value>() + R"__doc__(
-    radius: The maximum radius of the search (m). Defaults The maximum
-    distance
-        between two points.
-    k: The number of nearest neighbors to be used for calculating the
-        interpolated value. Defaults to ``9``.
-    p: The power parameters. Defaults to ``2``. within (bool, optional): If
-        true, the method ensures that the neighbors found are located around the
-        point of interest. In other words, this parameter ensures that the
-        calculated values will not be extrapolated. Defaults to ``true``.
-    num_threads: The number of threads to use for the computation. If 0 all CPUs
-        are used. If 1 is given, no parallel computing code is used at all,
-        which is useful for debugging. Defaults to ``0``.
+    radius: Maximum search radius in meters. Defaults to the largest
+        representable value.
+    k: Number of nearest neighbors to use for interpolation. Defaults to 9.
+    p: Power parameter for inverse distance weighting. Defaults to 2.
+    within: If True, ensures neighbors are located around the point of
+        interest (no extrapolation). Defaults to True.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
+
 Returns:
-    The interpolated value and the number of neighbors used in the
-    calculation.
+    Tuple containing the interpolated value and the number of neighbors used
+    in the calculation.
 )__doc__")
                .c_str())
       .def("radial_basis_function", &RTree::radial_basis_function,
@@ -176,30 +183,32 @@ Returns:
            py::arg("smooth") = 0, py::arg("within") = true,
            py::arg("num_threads") = 0,
            (R"__doc__(
-Interpolation of the value at the requested position by radial basis function
-interpolation.
+Interpolate values using radial basis functions.
+
+Performs radial basis function (RBF) interpolation at the requested positions
+using the K nearest neighbors found within the specified search radius.
 
 Args:
     )__doc__" +
             coordinates_help<dimension_t::value>() + R"__doc__(
-    radius: The maximum radius of the search (m). Default to the largest value
-        that can be represented on a float.
-    k: The number of nearest neighbors to be used for calculating the
-        interpolated value. Defaults to ``9``.
-    rbf: The radial basis function, based on the radius, r, given by the
-        distance between points. Default to
-        :py:attr:`pyinterp.core.RadialBasisFunction.Multiquadric`.
-    epsilon: Adjustable constant for gaussian or multiquadrics functions.
-        Default to the average distance between nodes.
-    smooth: Values greater than zero increase the smoothness of the
-        approximation.
-    within: If true, the method ensures that the neighbors found are located
-        around the point of interest. Defaults to ``true``.
-    num_threads: The number of threads to use for the computation. If 0 all CPUs
-        are used. If 1 is given, no parallel computing code is used at all,
-        which is useful for debugging. Defaults to ``0``.
+    radius: Maximum search radius in meters. Defaults to the largest
+        representable value.
+    k: Number of nearest neighbors to use for interpolation. Defaults to 9.
+    rbf: The radial basis function to use (e.g., Multiquadric, Gaussian).
+        Defaults to Multiquadric.
+    epsilon: Adjustable constant for Gaussian or Multiquadrics functions.
+        Defaults to the average distance between nodes.
+    smooth: Smoothness parameter. Values greater than zero increase the
+        smoothness of the approximation. Defaults to 0.
+    within: If True, ensures neighbors are located around the point of
+        interest (no extrapolation). Defaults to True.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
+
 Returns:
-    The interpolated value and the number of neighbors used for the calculation.
+    Tuple containing the interpolated value and the number of neighbors used
+    for the calculation.
 )__doc__")
                .c_str())
       .def("window_function", &RTree::window_function, py::arg("coordinates"),
@@ -208,25 +217,29 @@ Returns:
            py::arg("arg") = std::nullopt, py::arg("within") = true,
            py::arg("num_threads") = 0,
            (R"__doc__(
-Interpolation of the value at the requested position by window function.
+Interpolate values using a window function.
+
+Performs window function interpolation at the requested positions using the K
+nearest neighbors found within the specified search radius.
 
 Args:
     )__doc__" +
             coordinates_help<dimension_t::value>() + R"__doc__(
-    radius: The maximum radius of the search (m). Default to the largest value
-        that can be represented on a float.
-    k: The number of nearest neighbors to be used for calculating the
-        interpolated value. Defaults to ``9``.
-    wf: The window function to be used. Defaults to
-        :py:attr:`pyinterp.core.WindowFunction.Hamming`.
-    arg: The optional argument of the window function. Defaults to ``None``.
-    within: If true, the method ensures that the neighbors found are located
-        around the point of interest. Defaults to ``true``.
-    num_threads: The number of threads to use for the computation. If 0 all CPUs
-        are used. If 1 is given, no parallel computing code is used at all,
-        which is useful for debugging. Defaults to ``0``.
+    radius: Maximum search radius in meters. Defaults to the largest
+        representable value.
+    k: Number of nearest neighbors to use for interpolation. Defaults to 9.
+    wf: Window function to be used (e.g., Hamming, Hanning, Blackman).
+        Defaults to Hamming.
+    arg: Optional argument of the window function. Defaults to None.
+    within: If True, ensures neighbors are located around the point of
+        interest (no extrapolation). Defaults to True.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
+
 Returns:
-    The interpolated value and the number of neighbors used for the calculation.
+    Tuple containing the interpolated value and the number of neighbors used
+    for the calculation.
 )__doc__")
                .c_str())
       .def("kriging", &RTree::kriging, py::arg("coordinates"),
@@ -236,37 +249,38 @@ Returns:
            py::arg("alpha") = 1'000'000, py::arg("nugget") = 0,
            py::arg("within") = true, py::arg("num_threads") = 0,
            (R"__doc__(
-Kriging interpolation of the value at the requested position.
+Interpolate values using kriging.
+
+Performs kriging interpolation at the requested positions using the K nearest
+neighbors found within the specified search radius. Supports both simple kriging
+(with zero mean) and universal kriging (with a drift function).
 
 Args:
     )__doc__" +
             coordinates_help<dimension_t::value>() + R"__doc__(
-    radius: The maximum radius of the search (m). Default to the largest value
-        that can be represented on a float.
-    k: The number of nearest neighbors to be used for calculating the
-        interpolated value. Defaults to ``9``.
-    covariance: The covariance function to be used. Defaults to
-        :py:attr:`pyinterp.core.CovarianceFunction.Matern_52`.
-    drift_function: The drift function to use for universal kriging. If not
-        provided, simple kriging will be used. Defaults to ``None``.
-    sigma: The magnitude parameter. Determines the overall scale of the
-        covariance function. It represents the maximum possible covariance
-        between two points. Defaults to ``1``.
-    alpha: Decay rate parameter. Determines the rate at which the covariance
-        decreases. It represents the spatial scale of the covariance function
-        and can be used to control the smoothness of the spatial dependence
-        structure. Defaults to ``1,000,000``.
-    nugget: Nugget effect term. A small positive value added to the diagonal of
-        the covariance matrix for numerical stability. Defaults to ``0``.
-    within: If true, the method ensures that the neighbors found are located
-        around the point of interest. Defaults to ``true``.
-    num_threads: The number of threads to use for the computation. If 0 all CPUs
-        are used. If 1 is given, no parallel computing code is used at all,
-        which is useful for debugging. Defaults to ``0``.
-Returns:
-    The interpolated value and the number of neighbors used for the calculation.
+    radius: Maximum search radius in meters. Defaults to the largest
+        representable value.
+    k: Number of nearest neighbors to use for interpolation. Defaults to 9.
+    covariance: Covariance function to use (e.g., Matern, Gaussian).
+        Defaults to Matern_32.
+    drift_function: Drift function for universal kriging. If not provided,
+        simple kriging is used. Defaults to None.
+    sigma: Magnitude parameter determining the overall scale of the covariance
+        function. Defaults to 1.
+    alpha: Decay rate parameter controlling the rate at which covariance
+        decreases. Defaults to 1,000,000.
+    nugget: Nugget effect term for numerical stability. Defaults to 0.
+    within: If True, ensures neighbors are located around the point of
+        interest (no extrapolation). Defaults to True.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
 
-.. note::
+Returns:
+    Tuple containing the interpolated value and the number of neighbors used
+    for the calculation.
+
+Note:
     Universal kriging is used if a drift function is provided. Otherwise,
     simple kriging with a known (zero) mean is used.
 )__doc__")
@@ -275,28 +289,30 @@ Returns:
            py::arg("radius") = std::nullopt, py::arg("k") = 4,
            py::arg("within") = false, py::arg("num_threads") = 0,
            (R"__doc__(
-Get the K nearest neighbors of a given point.
+Get the K nearest neighbors of given points.
+
+Retrieves the coordinates and values of the K nearest neighbors for each
+provided position.
 
 Args:
     )__doc__" +
             coordinates_help<dimension_t::value>() + R"__doc__(
-    radius: The maximum radius of the search (m). By default, no limit is
-        applied.
-    k: The number of nearest neighbors to be used for calculating the
-        interpolated value. Defaults to ``4``.
-    within: If true, the method ensures that the neighbors found are located
-        around the point of interest. Defaults to ``false``.
-    num_threads: The number of threads to use for the computation. If 0 all CPUs
-        are used. If 1 is given, no parallel computing code is used at all,
-        which is useful for debugging. Defaults to ``0``.
-Returns:
-    A tuple of matrices containing the coordinates and values of the
-    different neighbors found for all provided positions.
+    radius: Maximum search radius in meters. By default, no limit is applied.
+    k: Number of nearest neighbors to retrieve. Defaults to 4.
+    within: If True, ensures neighbors are located around the point of
+        interest (no extrapolation). Defaults to False.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
 
-.. note::
-    The matrix containing the coordinates of the neighbors is a matrix of
-    dimension ``(k, n)`` where ``n`` is equal to 2 if the provided coordinates
-    matrix defines only x and y, and 3 if the defines x, y, and z.
+Returns:
+    Tuple of (coordinates, values) arrays for the K nearest neighbors found
+    for each provided position. The coordinates array has shape (k, 2) or
+    (k, 3) depending on whether z-coordinates were provided.
+
+Note:
+    The neighbor coordinates array has dimension (k, n) where n is 2 if the
+    input coordinates only define x and y, and 3 if they define x, y, and z.
 )__doc__")
                .c_str())
       .def(py::pickle([](const RTree &self) { return self.getstate(); },

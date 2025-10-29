@@ -17,11 +17,13 @@ void implement_streaming_histogram(py::module &m, const std::string &suffix) {
       m, ("StreamingHistogram" + suffix).c_str(),
       ("StreamingHistogram" + suffix +
        "(self,"
-       " values: numpy.ndarray[numpy.float32],"
-       " weights: Optional[numpy.ndarray[numpy.float32]] = None,"
-       " axis: Optional[List[int]] = None,"
-       " bin_count: Optional[int] = None)" +
+       " values: numpy.ndarray[tuple[int, ...], numpy.dtype[numpy.float32]],"
+       " weights: numpy.ndarray[tuple[int, ...], numpy.dtype[numpy.float32]]"
+       " | None = None,"
+       " axis: list[int] | None = None,"
+       " bin_count: int | None = None)"
        R"__doc__(
+Compute streaming histogram for statistical analysis.
 
 Args:
     values: Array containing numbers whose statistics are desired.

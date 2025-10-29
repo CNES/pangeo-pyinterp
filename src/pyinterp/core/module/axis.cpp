@@ -22,11 +22,10 @@ auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>> &axis,
           [](const Axis &self) -> std::string {
             return static_cast<std::string>(self);
           },
-          "Called by the ``repr()`` built-in function to compute the string "
-          "representation of an Axis.")
+          "Return the string representation of this Axis.")
       .def(
           "__copy__", [](const Axis &self) { return Axis(self); },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
       .def(
           "__getitem__",
@@ -37,7 +36,7 @@ auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>> &axis,
       .def("__getitem__", &Axis::coordinate_values, py::arg("indices"))
       .def(
           "__len__", [](const Axis &self) { return self.size(); },
-          "Called to implement the built-in function ``len()``")
+          "Return the length of the axis.")
       .def(
           "is_regular",
           [](const Axis &self) -> bool { return self.is_regular(); },
@@ -45,7 +44,7 @@ auto implement_axis(py::class_<Axis, std::shared_ptr<Axis>> &axis,
 Check if this axis values are spaced regularly.
 
 Returns:
-  True if this axis values are spaced regularly.
+    True if this axis values are spaced regularly.
 )__doc__")
       .def(
           "flip",
@@ -80,13 +79,13 @@ Returns:
             return self.find_index(coordinates, bounded);
           },
           py::arg("coordinates"), py::arg("bounded") = false, R"__doc__(
-Given coordinate positions, find what grid elements contains them, or is
-closest to them.
+Find grid elements that contain or are closest to coordinate positions.
 
 Args:
     coordinates: Positions in this coordinate system.
     bounded: False if you want to obtain the closest value to a coordinate
         outside the axis definition range.
+
 Returns:
     Index of the grid points containing them or -1 if the ``bounded`` parameter
     is set to false and if one of the searched indexes is out of the definition
@@ -100,8 +99,9 @@ Returns:
             return self.find_indexes(coordinates);
           },
           py::arg("coordinates"), R"__doc__(
-For all coordinate positions, search for the axis elements around them. This
-means that for n coordinate ``ix`` of the provided array, the method searches
+Search for axis elements around all coordinate positions.
+
+For n coordinate ``ix`` of the provided array, the method searches
 the indexes ``i0`` and ``i1`` as follow:
 
 .. code::
@@ -113,6 +113,7 @@ The provided coordinates located outside the axis definition range are set to
 
 Args:
     coordinates: Positions in this coordinate system.
+
 Returns:
     A matrix of shape ``(n, 2)``. The first column of the matrix contains the
     indexes ``i0`` and the second column the indexes ``i1`` found.
@@ -127,12 +128,12 @@ Returns:
           "__eq__",
           [](const Axis &self, const Axis &rhs) -> bool { return self == rhs; },
           py::arg("other"),
-          "Overrides the default behavior of the ``==`` operator.")
+          "Override the default behavior of the ``==`` operator.")
       .def(
           "__ne__",
           [](const Axis &self, const Axis &rhs) -> bool { return self != rhs; },
           py::arg("other"),
-          "Overrides the default behavior of the ``!=`` operator.")
+          "Override the default behavior of the ``!=`` operator.")
       .def(py::pickle(
           [](const Axis &self) { return self.getstate(); },
           [](const py::tuple &state) { return Axis::setstate(state); }));
@@ -141,8 +142,14 @@ Returns:
 static void init_core_axis(py::module &m) {
   using Axis = pyinterp::Axis<double>;
 
-  auto axis = py::class_<Axis, std::shared_ptr<Axis>>(m, "Axis", R"__doc__(
-Axis(self, values: numpy.ndarray[numpy.float64], epsilon: float = 1e-06, is_circle: bool = False)
+  auto axis = py::class_<Axis, std::shared_ptr<Axis>>(
+      m, "Axis",
+      "Axis(self, "
+      "values: numpy.ndarray[tuple[int], numpy.dtype[numpy.float64]], "
+      "epsilon: float = 1e-06, "
+      "is_circle: bool = False)"
+      R"__doc__(
+Create a coordinate axis for variable values.
 
 A coordinate axis is a Variable that specifies one of the coordinates
 of a variable's values.
@@ -182,12 +189,13 @@ Returns:
     The last value.
 )__doc__")
       .def("increment", &Axis::increment, R"__doc__(
-Get increment value if is_regular().
+Get the increment value if axis is regular.
 
 Raises:
     RuntimeError: if this instance does not represent a regular axis.
+
 Returns:
-    float: Increment value.
+    Increment value.
 )__doc__")
       .def("min_value", &Axis::min_value, R"__doc__(
 Get the minimum coordinate value.
@@ -206,9 +214,12 @@ Returns:
 
 auto init_axis_int64(py::module &m)
     -> py::class_<AxisInt64, std::shared_ptr<AxisInt64>> {
-  auto axis = py::class_<AxisInt64, std::shared_ptr<AxisInt64>>(m, "AxisInt64",
-                                                                R"__doc__(
-AxisInt64(self, values: numpy.ndarray[numpy.int64])
+  auto axis = py::class_<AxisInt64, std::shared_ptr<AxisInt64>>(
+      m, "AxisInt64",
+      "AxisInt64(self, "
+      "values: numpy.ndarray[tuple[int], numpy.dtype[numpy.int64]])"
+      R"__doc__(
+Create a coordinate axis with integer values.
 
 A coordinate axis is a Variable that specifies one of the coordinates
 of a variable's values.
@@ -235,10 +246,11 @@ Returns:
     The last value.
 )__doc__")
       .def("increment", &AxisInt64::increment, R"__doc__(
-Get increment value if is_regular().
+Get the increment value if axis is regular.
 
 Raises:
     RuntimeError: if this instance does not represent a regular axis.
+
 Returns:
     Increment value.
 )__doc__")
@@ -266,10 +278,11 @@ void init_temporal_axis(
   auto axis = py::class_<pyinterp::TemporalAxis,
                          std::shared_ptr<pyinterp::TemporalAxis>>(
       m, "TemporalAxis", base_class,
+      "TemporalAxis(self, "
+      "values: numpy.ndarray[tuple[int], "
+      "numpy.dtype[numpy.datetime64 | numpy.timedelta64]])"
       R"__doc__(
-TemporalAxis(self, values: numpy.ndarray)
-
-Time axis
+Create a time axis for temporal coordinates.
 
 Args:
     values: Items representing the datetimes or timedeltas of the axis.
@@ -314,7 +327,7 @@ Examples:
            }),
            py::arg("values"))
       .def("dtype", &pyinterp::TemporalAxis::dtype, R"__doc__(
-Data-type of the axis's elements.
+Get the data-type of the axis's elements.
 
 Returns:
     Numpy dtype object.
@@ -332,10 +345,11 @@ Returns:
     The last value.
 )__doc__")
       .def("increment", &pyinterp::TemporalAxis::increment, R"__doc__(
-Get increment value if is_regular().
+Get the increment value if axis is regular.
 
 Raises:
     RuntimeError: if this instance does not represent a regular axis.
+
 Returns:
     Increment value.
 )__doc__")
@@ -357,8 +371,7 @@ Returns:
               -> py::array { return self.safe_cast("values", array); },
           py::arg("values"),
           R"__doc__(
-Convert the values of the vector in the same unit as the time axis
-handled by this instance.
+Convert values to the same unit as the time axis.
 
 Args:
     values: Values to convert.

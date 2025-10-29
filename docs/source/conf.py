@@ -39,9 +39,9 @@ copyright = '(2025, CNES/CLS)'
 author = 'CNES/CLS'
 
 # The short X.Y version
-version = '2025.8.1'
+version = '2025.8.1.dev40'
 # The full version, including alpha/beta/rc tags
-release = '2025.8.1'
+release = '2025.8.1.dev40'
 
 # -- General configuration ---------------------------------------------------
 
@@ -53,9 +53,14 @@ release = '2025.8.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.autosummary',
-    'sphinx.ext.mathjax', 'sphinx.ext.napoleon', 'sphinx.ext.viewcode',
-    'sphinx_gallery.gen_gallery', 'sphinx_inline_tabs'
+    'sphinx_gallery.gen_gallery',
+    'sphinx_inline_tabs',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
 ]
 
 autosummary_generate = True

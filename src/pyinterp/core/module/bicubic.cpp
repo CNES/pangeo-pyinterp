@@ -255,7 +255,7 @@ void implement_bicubic(py::module &m, const std::string &prefix,
         py::arg("fitting_model") = default_fitting_model,
         py::arg("boundary") = "undef", py::arg("bounds_error") = false,
         py::arg("num_threads") = 0,
-        (prefix + R"__doc__( gridded 2D interpolation.
+        (prefix + R"__doc__( interpolate values on a 2D grid.
 
 Args:
     grid: Grid containing the values to be interpolated.
@@ -274,8 +274,9 @@ Args:
     num_threads: The number of threads to use for the computation. If 0 all
         CPUs are used. If 1 is given, no parallel computing code is used at all,
         which is useful for debugging. Defaults to ``0``.
+
 Returns:
-    Values interpolated
+    Values interpolated.
   )__doc__")
             .c_str());
 }
@@ -290,21 +291,21 @@ void implement_bicubic_3d(py::module &m, const std::string &prefix,
   function_prefix[0] = static_cast<char>(std::tolower(function_prefix[0]));
   function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
-  m.def(
-      (function_prefix + "_" + function_suffix).c_str(),
-      &pyinterp::bicubic_3d<DataType, AxisType, Interpolator>, py::arg("grid"),
-      py::arg("x"), py::arg("y"), py::arg("z"), py::arg("nx") = 3,
-      py::arg("ny") = 3, py::arg("fitting_model") = default_fitting_model,
-      py::arg("boundary") = "undef", py::arg("bounds_error") = false,
-      py::arg("num_threads") = 0,
-      (prefix + R"__doc__( gridded 3D interpolation.
+  m.def((function_prefix + "_" + function_suffix).c_str(),
+        &pyinterp::bicubic_3d<DataType, AxisType, Interpolator>,
+        py::arg("grid"), py::arg("x"), py::arg("y"), py::arg("z"),
+        py::arg("nx") = 3, py::arg("ny") = 3,
+        py::arg("fitting_model") = default_fitting_model,
+        py::arg("boundary") = "undef", py::arg("bounds_error") = false,
+        py::arg("num_threads") = 0,
+        (prefix + R"__doc__( interpolate values on a 3D grid.
 
-A )__doc__" +
-       function_prefix +
-       R"__doc__( 2D interpolation is performed along the X and Y axes of the 3D grid,
-and linearly along the Z axis between the two values obtained by the spatial
+Perform )__doc__" +
+         function_prefix +
+         R"__doc__( 2D interpolation along the X and Y axes of the 3D grid,
+and linear interpolation along the Z axis between the two values obtained by the spatial
 )__doc__" +
-       function_prefix + R"__doc__( 2D interpolation.
+         function_prefix + R"__doc__( 2D interpolation.
 
 Args:
     grid: Grid containing the values to be interpolated.
@@ -316,7 +317,7 @@ Args:
     ny: The number of Y coordinate values required to perform the interpolation.
         Defaults to ``3``.
     fitting_model: Type of interpolation to be performed. Defaults to `)__doc__" +
-       default_fitting_model + R"__doc__(`
+         default_fitting_model + R"__doc__(`
     boundary: Type of axis boundary management. Defaults to ``undef``.
     bounds_error: If True, when interpolated values are requested outside of the
         domain of the input axes (x,y), a ValueError is raised. If False, then
@@ -324,10 +325,11 @@ Args:
     num_threads: The number of threads to use for the computation. If 0 all CPUs
         are used. If 1 is given, no parallel computing code is used at all,
         which is useful for debugging. Defaults to ``0``.
+
 Returns:
     Values interpolated.
   )__doc__")
-          .c_str());
+            .c_str());
 }
 
 template <typename DataType, typename AxisType, typename Interpolator>
@@ -340,21 +342,21 @@ void implement_bicubic_4d(py::module &m, const std::string &prefix,
   function_prefix[0] = static_cast<char>(std::tolower(function_prefix[0]));
   function_suffix[0] = static_cast<char>(std::tolower(function_suffix[0]));
 
-  m.def(
-      (function_prefix + "_" + function_suffix).c_str(),
-      &pyinterp::bicubic_4d<DataType, AxisType, Interpolator>, py::arg("grid"),
-      py::arg("x"), py::arg("y"), py::arg("z"), py::arg("u"), py::arg("nx") = 3,
-      py::arg("ny") = 3, py::arg("fitting_model") = default_fitting_model,
-      py::arg("boundary") = "undef", py::arg("bounds_error") = false,
-      py::arg("num_threads") = 0,
-      (prefix + R"__doc__( gridded 4D interpolation
+  m.def((function_prefix + "_" + function_suffix).c_str(),
+        &pyinterp::bicubic_4d<DataType, AxisType, Interpolator>,
+        py::arg("grid"), py::arg("x"), py::arg("y"), py::arg("z"), py::arg("u"),
+        py::arg("nx") = 3, py::arg("ny") = 3,
+        py::arg("fitting_model") = default_fitting_model,
+        py::arg("boundary") = "undef", py::arg("bounds_error") = false,
+        py::arg("num_threads") = 0,
+        (prefix + R"__doc__( interpolate values on a 4D grid.
 
-A )__doc__" +
-       function_prefix +
-       R"__doc__( 2D interpolation is performed along the X and Y axes of the 4D grid,
-and linearly along the Z and U axes between the four values obtained by the
+Perform )__doc__" +
+         function_prefix +
+         R"__doc__( 2D interpolation along the X and Y axes of the 4D grid,
+and linear interpolation along the Z and U axes between the four values obtained by the
 spatial )__doc__" +
-       function_prefix + R"__doc__( 2D interpolation.
+         function_prefix + R"__doc__( 2D interpolation.
 
 Args:
     grid: Grid containing the values to be interpolated.
@@ -367,7 +369,7 @@ Args:
     ny: The number of Y coordinate values required to perform the interpolation.
         Defaults to ``3``.
     fitting_model: Type of interpolation to be performed. Defaults to `)__doc__" +
-       default_fitting_model + R"__doc__(`
+         default_fitting_model + R"__doc__(`
     boundary: Type of axis boundary management. Defaults to ``undef``.
     bounds_error: If True, when interpolated values are requested outside of the
         domain of the input axes (x,y), a ValueError is raised. If False, then
@@ -375,10 +377,11 @@ Args:
     num_threads: The number of threads to use for the computation. If 0 all CPUs
         are used. If 1 is given, no parallel computing code is used at all,
         which is useful for debugging. Defaults to ``0``.
+
 Returns:
     Values interpolated.
   )__doc__")
-          .c_str());
+            .c_str());
 }
 
 void init_bicubic(py::module &m) {

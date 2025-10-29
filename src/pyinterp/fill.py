@@ -16,7 +16,19 @@ if TYPE_CHECKING:
         NDArray2DFloat32,
         NDArray2DFloat64,
         NDArray3D,
+        NDArray4D,
     )
+
+
+@overload
+def loess(  # type: ignore[overload-overlap]
+    mesh: grid.Grid4D,
+    nx: int = 3,
+    ny: int = 3,
+    value_type: str | None = None,
+    num_threads: int = 0,
+) -> NDArray4D:
+    ...
 
 
 @overload
@@ -41,11 +53,11 @@ def loess(
     ...
 
 
-def loess(mesh: grid.Grid2D | grid.Grid3D,
+def loess(mesh: grid.Grid2D | grid.Grid3D | grid.Grid4D,
           nx: int = 3,
           ny: int = 3,
           value_type: str | None = None,
-          num_threads: int = 0) -> NDArray2D | NDArray3D:
+          num_threads: int = 0) -> NDArray2D | NDArray3D | NDArray4D:
     """Filter values using a locally weighted regression function (LOESS).
 
     Apply LOESS filtering to fill or smooth grid values using the tri-cube
@@ -142,9 +154,9 @@ def gauss_seidel(
             If this parameter is not set, the method will choose the optimal
             value that allows the convergence criterion to be achieved in
             :math:`O(N)` iterations, for a grid of size :math:`N_x=N_y=N`,
-            ``relaxation`` = :math:`{2\\over{1+{\\pi\\over{N}}}}`; if the grid
-            is of size :math:`Nx \\times Ny`,
-            :math:`N = N_{x}N_{y}\\sqrt{2\\over{N_{x}^2+N_{y}^2}}`
+            ``relaxation`` = :math:`{2\over{1+{\pi\over{N}}}}`; if the grid
+            is of size :math:`Nx \times Ny`,
+            :math:`N = N_{x}N_{y}\sqrt{2\over{N_{x}^2+N_{y}^2}}`
         num_threads: The number of threads to use for the computation. If 0 all
             CPUs are used. If 1 is given, no parallel computing code is used at
             all, which is useful for debugging. Defaults to ``0``.

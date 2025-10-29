@@ -35,14 +35,19 @@ void init_geohash_int64(py::module &m) {
        },
        py::arg("lon"), py::arg("lat"), py::arg("precision") = 64,
        R"__doc__(
-Encode coordinates into geohash with the given precision.
+Encode geographic coordinates into geohash codes.
+
+This function encodes the given longitude and latitude coordinates into
+geohash codes with the specified precision.
 
 Args:
     lon: Longitudes in degrees.
     lat: Latitudes in degrees.
     precision: Number of bits used to encode the geohash code.
+
 Returns:
     Geohash codes.
+
 Raises:
     ValueError: If the given precision is not within [1, 64].
     ValueError: If the lon and lat vectors have different sizes.
@@ -57,15 +62,21 @@ Raises:
           },
           py::arg("hash"), py::arg("precision") = 64, py::arg("round") = false,
           R"__doc__(
-Decode hash into a geographic points with the given precision.
+Decode geohash into geographic coordinates.
+
+This function decodes geohash codes into longitude and latitude coordinates
+with the specified precision. Optionally rounds the coordinates to the
+accuracy defined by the geohash.
 
 Args:
-    hash: GeoHash.
-    precision: Required accuracy.
-    round: If true, the coordinates of the point will be rounded to the accuracy
-        defined by the GeoHash."
+    hash: GeoHash code to decode.
+    precision: Required accuracy (bits).
+    round: If true, the coordinates of the point will be rounded to the
+        accuracy defined by the GeoHash.
+
 Returns:
-    Longitudes/latitudes of the decoded points.
+    Tuple of (longitudes, latitudes) of the decoded points.
+
 Raises:
     ValueError: If the given precision is not within [1, 64].
 )__doc__")
@@ -78,14 +89,19 @@ Raises:
           },
           py::arg("hash"), py::arg("precision") = 64,
           R"__doc__(
-Returns all neighbors hash clockwise from north around northwest
-at the given precision.
+Get all neighbors of a geohash code.
+
+This function returns all eight neighboring geohash codes arranged clockwise
+starting from the north direction around the specified hash at the given
+precision level.
 
 Args:
     hash: Geohash code.
-    precision: Required accuracy.
+    precision: Required accuracy (bits).
+
 Returns:
-    Geohash codes.
+    Array of eight neighboring geohash codes.
+
 Raises:
     ValueError: If the given precision is not within [1, 64].
 )__doc__");

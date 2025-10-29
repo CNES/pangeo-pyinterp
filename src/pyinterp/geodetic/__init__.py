@@ -322,15 +322,15 @@ class RTree(geodetic.RTree):
                 given by the distance between points. This parameter can take
                 one of the following values:
 
-                * ``cubic``: :math:`\\varphi(r) = r^3`
-                * ``gaussian``: :math:`\\varphi(r) = e^{-(\\dfrac{r}
-                  {\\varepsilon})^2}`
-                * ``inverse_multiquadric``: :math:`\\varphi(r) = \\dfrac{1}
-                  {\\sqrt{1+(\\dfrac{r}{\\varepsilon})^2}}`
-                * ``linear``: :math:`\\varphi(r) = r`
-                * ``multiquadric``: :math:`\\varphi(r) = \\sqrt{1+(
-                  \\dfrac{r}{\\varepsilon})^2}`
-                * ``thin_plate``: :math:`\\varphi(r) = r^2 \\ln(r)`
+                * ``cubic``: :math:`\varphi(r) = r^3`
+                * ``gaussian``: :math:`\varphi(r) = e^{-(\dfrac{r}
+                  {\varepsilon})^2}`
+                * ``inverse_multiquadric``: :math:`\varphi(r) = \dfrac{1}
+                  {\sqrt{1+(\dfrac{r}{\varepsilon})^2}}`
+                * ``linear``: :math:`\varphi(r) = r`
+                * ``multiquadric``: :math:`\varphi(r) = \sqrt{1+(
+                  \dfrac{r}{\varepsilon})^2}`
+                * ``thin_plate``: :math:`\varphi(r) = r^2 \ln(r)`
 
                 Default to ``multiquadric``
             epsilon: adjustable constant for gaussian or multiquadrics
@@ -375,13 +375,13 @@ class RTree(geodetic.RTree):
 
         .. math::
 
-            \\frac{\\sum_{i=1}^{k} \\omega(d_i,r)x_i}
-            {\\sum_{i=1}^{k} \\omega(d_i,r)}
+            \frac{\sum_{i=1}^{k} \omega(d_i,r)x_i}
+            {\sum_{i=1}^{k} \omega(d_i,r)}
 
         where :math:`d_i` is the distance between the point of interest and
         the :math:`i`-th neighbor, :math:`r` is the radius of the search,
         :math:`x_i` is the value of the :math:`i`-th neighbor, and
-        :math:`\\omega(d_i,r)` is weight calculated by the window function
+        :math:`\omega(d_i,r)` is weight calculated by the window function
         describe above.
 
         Args:
@@ -394,44 +394,44 @@ class RTree(geodetic.RTree):
                 points (:math:`d`) and the radius (:math:`r`). This parameter
                 can take one of the following values:
 
-                * ``blackman``: :math:`w(d) = 0.42659 - 0.49656 \\cos(
-                  \\frac{\\pi (d + r)}{r}) + 0.076849 \\cos(
-                  \\frac{2 \\pi (d + r)}{r})`
+                * ``blackman``: :math:`w(d) = 0.42659 - 0.49656 \cos(
+                  \frac{\pi (d + r)}{r}) + 0.076849 \cos(
+                  \frac{2 \pi (d + r)}{r})`
                 * ``blackman_harris``: :math:`w(d) = 0.35875 - 0.48829
-                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.14128
-                  \\cos(\\frac{2 \\pi (d + r)}{r}) - 0.01168
-                  \\cos(\\frac{3 \\pi (d + r)}{r})`
+                  \cos(\frac{\pi (d + r)}{r}) + 0.14128
+                  \cos(\frac{2 \pi (d + r)}{r}) - 0.01168
+                  \cos(\frac{3 \pi (d + r)}{r})`
                 * ``boxcar``: :math:`w(d) = 1`
                 * ``flat_top``: :math:`w(d) = 0.21557895 -
-                  0.41663158 \\cos(\\frac{\\pi (d + r)}{r}) +
-                  0.277263158 \\cos(\\frac{2 \\pi (d + r)}{r}) -
-                  0.083578947 \\cos(\\frac{3 \\pi (d + r)}{r}) +
-                  0.006947368 \\cos(\\frac{4 \\pi (d + r)}{r})`
-                * ``lanczos``: :math:`w(d) = \\left\\{\\begin{array}{ll}
-                  sinc(\\frac{d}{r}) \\times sinc(\\frac{d}{arg \\times r}),
-                  & d \\le arg \\times r \\\\ 0,
-                  & d \\gt arg \\times r \\end{array} \\right\\}`
-                * ``gaussian``: :math:`w(d) = e^{ -\\frac{1}{2}\\left(
-                  \\frac{d}{\\sigma}\\right)^2 }`
+                  0.41663158 \cos(\frac{\pi (d + r)}{r}) +
+                  0.277263158 \cos(\frac{2 \pi (d + r)}{r}) -
+                  0.083578947 \cos(\frac{3 \pi (d + r)}{r}) +
+                  0.006947368 \cos(\frac{4 \pi (d + r)}{r})`
+                * ``lanczos``: :math:`w(d) = \left\{\begin{array}{ll}
+                  sinc(\frac{d}{r}) \times sinc(\frac{d}{arg \times r}),
+                  & d \le arg \times r \\ 0,
+                  & d \gt arg \times r \end{array} \right\}`
+                * ``gaussian``: :math:`w(d) = e^{ -\frac{1}{2}\left(
+                  \frac{d}{\sigma}\right)^2 }`
                 * ``hamming``: :math:`w(d) = 0.53836 - 0.46164
-                  \\cos(\\frac{\\pi (d + r)}{r})`
+                  \cos(\frac{\pi (d + r)}{r})`
                 * ``nuttall``: :math:`w(d) = 0.3635819 - 0.4891775
-                  \\cos(\\frac{\\pi (d + r)}{r}) + 0.1365995
-                  \\cos(\\frac{2 \\pi (d + r)}{r})`
-                * ``parzen``: :math:`w(d) = \\left\\{ \\begin{array}{ll} 1 - 6
-                  \\left(\\frac{2*d}{2*r}\\right)^2
-                  \\left(1 - \\frac{2*d}{2*r}\\right),
-                  & d \\le \\frac{2r + arg}{4} \\\\
-                  2\\left(1 - \\frac{2*d}{2*r}\\right)^3
-                  & \\frac{2r + arg}{2} \\le d \\lt \\frac{2r +arg}{4}
-                  \\end{array} \\right\\}`
-                * ``parzen_swot``: :math:`w(d) = \\left\\{\\begin{array}{ll}
-                  1 - 6\\left(\\frac{2 * d}{2 * r}\\right)^2
-                  + 6\\left(1 - \\frac{2 * d}{2 * r}\\right), &
-                  d \\le \\frac{2r}{4} \\\\
-                  2\\left(1 - \\frac{2 * d}{2 * r}\\right)^3 &
-                  \\frac{2r}{2} \\ge d \\gt \\frac{2r}{4} \\end{array}
-                  \\right\\}`
+                  \cos(\frac{\pi (d + r)}{r}) + 0.1365995
+                  \cos(\frac{2 \pi (d + r)}{r})`
+                * ``parzen``: :math:`w(d) = \left\{ \begin{array}{ll} 1 - 6
+                  \left(\frac{2*d}{2*r}\right)^2
+                  \left(1 - \frac{2*d}{2*r}\right),
+                  & d \le \frac{2r + arg}{4} \\
+                  2\left(1 - \frac{2*d}{2*r}\right)^3
+                  & \frac{2r + arg}{2} \le d \lt \frac{2r +arg}{4}
+                  \end{array} \right\}`
+                * ``parzen_swot``: :math:`w(d) = \left\{\begin{array}{ll}
+                  1 - 6\left(\frac{2 * d}{2 * r}\right)^2
+                  + 6\left(1 - \frac{2 * d}{2 * r}\right), &
+                  d \le \frac{2r}{4} \\
+                  2\left(1 - \frac{2 * d}{2 * r}\right)^3 &
+                  \frac{2r}{2} \ge d \gt \frac{2r}{4} \end{array}
+                  \right\}`
             arg: The optional argument of the window function. Defaults to
                 ``1`` for ``lanczos``, to ``0`` for ``parzen`` and for all
                 other functions is ``None``.

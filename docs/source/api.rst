@@ -158,3 +158,9 @@ Helpers for constructing interpolators directly from ``xarray.DataArray`` object
   backends.xarray.Grid3D
   backends.xarray.Grid4D
   backends.xarray.RegularGridInterpolator
+
+Type Hints
+==========
+Type aliases for numpy array shapes used throughout the library.
+
+.. automodule:: pyinterp.typing

@@ -20,8 +20,9 @@ void implement_binning(py::module &m, const std::string &suffix) {
       ("Binning2D" + suffix +
        "(self, x: pyinterp.core.Axis,"
        " y: pyinterp.core.Axis,"
-       " wgs: Optional[pyinterp.core.geodetic.Spheroid] = None)"
+       " wgs: pyinterp.core.geodetic.Spheroid | None = None)"
        R"__doc__(
+Create a 2D binning for grouping values into bins on a grid.
 
 Group a number of more or less continuous values into a smaller number of
 "bins" located on a grid.
@@ -43,7 +44,7 @@ Args:
       .def_property_readonly(
           "x", [](const pyinterp::Binning2D<Type> &self) { return self.x(); },
           R"__doc__(
-Gets the bin centers for the X Axis of the grid.
+Get the bin centers for the X Axis of the grid.
 
 Returns:
     X-Axis.
@@ -51,7 +52,7 @@ Returns:
       .def_property_readonly(
           "y", [](const pyinterp::Binning2D<Type> &self) { return self.y(); },
           R"__doc__(
-Gets the bin centers for the Y Axis of the grid.
+Get the bin centers for the Y Axis of the grid.
 
 Returns:
     Y-Axis.
@@ -60,12 +61,13 @@ Returns:
           "wgs",
           [](const pyinterp::Binning2D<Type> &self) { return self.wgs(); },
           R"__doc__(
-Gets the WGS system handled by this instance.
+Get the WGS system handled by this instance.
 
 Returns:
     Geodetic system.
 )__doc__")
-      .def("clear", &pyinterp::Binning2D<Type>::clear, "Reset the statistics.")
+      .def("clear", &pyinterp::Binning2D<Type>::clear,
+           "Reset the statistics and clear all bins.")
       .def("count", &pyinterp::Binning2D<Type>::count,
            R"__doc__(
 Compute the count of points within each bin.
@@ -109,7 +111,7 @@ Args:
     x: X coordinates of the values to push.
     y: Y coordinates of the values to push.
     z: New samples to push.
-    simple:  If true, a simple binning 2D is used otherwise a linear binning 2d
+    simple: If true, a simple binning 2D is used otherwise a linear binning 2D
         is applied.
 )__doc__")
       .def("sum", &pyinterp::Binning2D<Type>::sum,
@@ -139,7 +141,7 @@ Returns:
 Compute the variance of values for points within each bin.
 
 Args:
-    ddof: Means Delta Degrees of Freedom. The divisor used in calculations is
+    ddof: Delta Degrees of Freedom. The divisor used in calculations is
         N - ``ddof``, where N represents the number of elements. By default
         ``ddof`` is zero.
 
@@ -147,14 +149,14 @@ Returns:
     Variance of values for points within each bin.
 )__doc__")
       .def("__iadd__", &pyinterp::Binning2D<Type>::operator+=, py::arg("other"),
-           "Overrides the default behavior of the ``+=`` operator.",
+           "Override the default behavior of the ``+=`` operator.",
            py::call_guard<py::gil_scoped_release>())
       .def(
           "__copy__",
           [](const pyinterp::Binning2D<Type> &self) {
             return pyinterp::Binning2D<Type>(self);
           },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const pyinterp::Binning2D<Type> &self) { return self.getstate(); },
@@ -165,6 +167,7 @@ Returns:
   py::class_<pyinterp::Binning1D<Type>, pyinterp::Binning2D<Type>>(
       m, ("Binning1D" + suffix).c_str(),
       ("Binning1D" + suffix + R"__doc__((self, x: pyinterp.core.Axis)
+Create a 1D binning for grouping values into bins on a vector.
 
 Group a number of more or less continuous values into a smaller number of
 "bins" located on a vector.
@@ -189,7 +192,7 @@ Args:
 )__doc__")
       .def("range", &pyinterp::Binning1D<Type>::range,
            R"__doc__(
-Gets the range of the binning.
+Get the range of the binning.
 
 Returns:
     Range of the binning.

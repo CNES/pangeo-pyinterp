@@ -108,6 +108,8 @@ Streaming statistics.
 
   core.DescriptiveStatisticsFloat32
   core.DescriptiveStatisticsFloat64
+  core.StreamingHistogramFloat64
+  core.StreamingHistogramFloat32
 
 Geodetic System
 ===============

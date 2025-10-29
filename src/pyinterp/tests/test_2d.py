@@ -56,9 +56,11 @@ def test_bivariate(pytestconfig: Config) -> None:
     assert isinstance(grid.y, Axis)
     assert isinstance(grid.array, np.ndarray)
 
-    lon = np.arange(-180, 180, 1) + 1 / 3.0
-    lat = np.arange(-90, 90, 1) + 1 / 3.0
-    x, y = np.meshgrid(lon, lat, indexing='ij')
+    x, y = np.meshgrid(
+        np.arange(-180, 180, 1) + 1 / 3.0,
+        np.arange(-90, 90, 1) + 1 / 3.0,
+        indexing='ij',
+    )
 
     z = grid.bivariate(collections.OrderedDict(lon=x.ravel(), lat=y.ravel()))
     assert isinstance(z, np.ndarray)
@@ -144,7 +146,8 @@ def test_bicubic(pytestconfig: Config) -> None:
     dump = pytestconfig.getoption('dump')
     measure_coverage = pytestconfig.getoption('measure_coverage')
     step = 10 if measure_coverage else 1
-    grid: xr_backend.Grid2D | Grid2D | xr_backend.RegularGridInterpolator
+    grid: (Grid2D | Grid3D | xr_backend.Grid2D
+           | xr_backend.RegularGridInterpolator)
     grid = xr_backend.Grid2D(load_grid2d().mss)
 
     lon = np.arange(-180, 180, step) + 1 / 3

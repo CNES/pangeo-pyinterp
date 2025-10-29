@@ -13,12 +13,12 @@ namespace py = pybind11;
 template <typename Type>
 void implement_histogram_2d(py::module &m, const std::string &suffix) {
   PYBIND11_NUMPY_DTYPE(pyinterp::detail::math::Bin<Type>, value, weight);
-  py::class_<pyinterp::Histogram2D<Type>>(m, ("Histogram2D" + suffix).c_str(),
-                                          ("Histogram2D" + suffix +
-                                           "(self, x: pyinterp.core.Axis,"
-                                           " y: pyinterp.core.Axis,"
-                                           " bins: Optional[int] = None)" +
-                                           R"__doc__(
+  py::class_<pyinterp::Histogram2D<Type>>(
+      m, ("Histogram2D" + suffix).c_str(),
+      ("Histogram2D" + suffix +
+       "(self, x: pyinterp.core.Axis, y: pyinterp.core.Axis,"
+       " bins: int | None = None)" +
+       R"__doc__(Group continuous values into bins located on a grid.
 
 Group a number of more or less continuous values into a smaller number of
 "bins" located on a grid.
@@ -30,7 +30,7 @@ Args:
         Default is None, which means that the number of bins is computed
         automatically.
 )__doc__")
-                                              .c_str())
+          .c_str())
       .def(py::init<std::shared_ptr<pyinterp::Axis<double>>,
                     std::shared_ptr<pyinterp::Axis<double>>,
                     const std::optional<size_t> &>(),
@@ -38,7 +38,7 @@ Args:
       .def_property_readonly(
           "x", [](const pyinterp::Histogram2D<Type> &self) { return self.x(); },
           R"__doc__(
-Gets the bin centers for the X Axis of the grid.
+Get the bin centers for the X Axis of the grid.
 
 Returns:
     X-Axis.
@@ -46,7 +46,7 @@ Returns:
       .def_property_readonly(
           "y", [](const pyinterp::Histogram2D<Type> &self) { return self.y(); },
           R"__doc__(
-Gets the bin centers for the Y Axis of the grid.
+Get the bin centers for the Y Axis of the grid.
 
 Returns:
     pyinterp.core.Axis: Y-Axis.
@@ -141,11 +141,11 @@ Returns:
           [](const pyinterp::Histogram2D<Type> &self) {
             return pyinterp::Histogram2D<Type>(self);
           },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
       .def("__iadd__", &pyinterp::Histogram2D<Type>::operator+=,
            py::arg("other"),
-           "Overrides the default behavior of the ``+=`` operator.",
+           "Override the default behavior of the ``+=`` operator.",
            py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const pyinterp::Histogram2D<Type> &self) {

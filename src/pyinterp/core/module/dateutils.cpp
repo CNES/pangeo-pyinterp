@@ -170,66 +170,87 @@ void init_dateutils(py::module &m) {
   PYBIND11_NUMPY_DTYPE(dateutils::ISOCalendar, year, week, weekday);
 
   m.def("date", &detail::date, py::arg("array"), R"__doc__(
-Return the date part of the dates.
+Extract the date part from a datetime64 array.
+
+Extracts the year, month, and day components from numpy datetime64 values
+and returns them as a structured array.
 
 Args:
     array: Numpy array of datetime64 to process.
 
 Returns:
-    A structured numpy array containing three fields: ``year``, ``month`` and
+    Structured numpy array containing three fields: ``year``, ``month``, and
     ``day``.
 )__doc__")
       .def("datetime", &detail::datetime, py::arg("array"), R"__doc__(
-Return the data as an array of native Python datetime objects.
+Convert datetime64 values to native Python datetime objects.
+
+Transforms numpy datetime64 array elements into an array of native Python
+datetime.datetime objects preserving the precision of the input.
 
 Args:
     array: Numpy array of datetime64 to process.
 
 Returns:
-    Object dtype array containing native Python datetime objects.
+    Object dtype array containing native Python datetime.datetime objects.
 )__doc__")
       .def("timedelta_since_january", &detail::timedelta_since_january,
            py::arg("array"),
            R"__doc__(
-Return the number the timedelta since the first January.
+Calculate the timedelta since January 1st.
+
+Computes the elapsed time (timedelta) from January 1st of each year in the
+input datetime64 array, taking into account the precision of the input.
 
 Args:
     array: Numpy array of datetime64 to process.
 
 Returns:
-    timedelta64 dtype array containing the time delta since the first January.
+    timedelta64 dtype array containing the time delta since January 1st of
+    the respective years.
 )__doc__")
       .def("isocalendar", &detail::isocalendar, py::arg("array"),
            R"__doc__(
-Return the ISO calendar of dates.
+Extract the ISO calendar from datetime64 values.
+
+Computes the ISO year, week number, and weekday for each datetime64 value.
+Follows the ISO 8601 standard for week dates where week 1 contains the first
+Thursday of the year.
 
 Args:
     array: Numpy array of datetime64 to process.
 
 Returns:
-    A structured numpy array containing three fields: ``year``, ``week`` and
+    Structured numpy array containing three fields: ``year``, ``week``, and
     ``weekday``.
 
-.. seealso:: datetime.date.isocalendar.
+See Also:
+    datetime.date.isocalendar
 )__doc__")
       .def("time", &detail::time, py::arg("array"), R"__doc__(
-Return the time part of the dates.
+Extract the time part from a datetime64 array.
+
+Extracts the hour, minute, and second components from numpy datetime64 values
+and returns them as a structured array.
 
 Args:
     array: Numpy array of datetime64 to process.
 
 Returns:
-    A structured numpy array containing three fields: ``hour``, ``minute`` and
+    Structured numpy array containing three fields: ``hour``, ``minute``, and
     ``second``.
 )__doc__")
       .def("weekday", &detail::weekday, py::arg("array"), R"__doc__(
-Return the weekday of the dates; Sunday is 0 ... Saturday is 6.
+Get the weekday for each date in the datetime64 array.
+
+Returns the day of week for each datetime64 value where Sunday is 0 and
+Saturday is 6, following Python's datetime.weekday() convention.
 
 Args:
     array: Numpy array of datetime64 to process.
 
 Returns:
-    Int dtype array containing weekday of the dates.
+    Integer dtype array containing weekday values (0=Sunday, 6=Saturday).
 )__doc__")
       // Intentionally undocumented: this function is used only for unit tests
       .def(

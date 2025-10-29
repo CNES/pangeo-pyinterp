@@ -18,12 +18,12 @@ void implement_descriptive_statistics(py::module &m,
       m, ("DescriptiveStatistics" + suffix).c_str(),
       ("DescriptiveStatistics" + suffix +
        "(self,"
-       " values: numpy.ndarray[numpy.float64],"
-       " weights: Optional[numpy.ndarray[numpy.float64]] = None,"
-       " axis: Optional[List[int]] = None)"
+       " values: numpy.ndarray[tuple[int, ...], numpy.dtype[numpy.float64]],"
+       " weights: [numpy.ndarray[tuple[int, ...], numpy.dtype[numpy.float64]] "
+       "| None = None,"
+       " axis: list[int] | None = None)"
        R"__doc__(
-
-Univariate descriptive statistics.
+Compute univariate descriptive statistics.
 
 Args:
     values: Array containing numbers whose statistics are
@@ -44,46 +44,46 @@ Args:
           [](const pyinterp::DescriptiveStatistics<Type> &self) {
             return pyinterp::DescriptiveStatistics<Type>(self);
           },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
       .def("count", &pyinterp::DescriptiveStatistics<Type>::count,
            R"__doc__(
-Returns the count of samples.
+Return the count of samples.
 
 Returns:
     Count of samples.
 )__doc__")
       .def("kurtosis", &pyinterp::DescriptiveStatistics<Type>::kurtosis,
            R"__doc__(
-Returns the kurtosis of samples.
+Return the kurtosis of samples.
 
 Returns:
     Kurtosis of samples.
 )__doc__")
       .def("max", &pyinterp::DescriptiveStatistics<Type>::max,
            R"__doc__(
-Returns maximum of samples.
+Return the maximum of samples.
 
 Returns:
     Maximum of samples.
 )__doc__")
       .def("mean", &pyinterp::DescriptiveStatistics<Type>::mean,
            R"__doc__(
-Returns the mean of samples.
+Return the mean of samples.
 
 Returns:
     Mean of samples.
 )__doc__")
       .def("min", &pyinterp::DescriptiveStatistics<Type>::min,
            R"__doc__(
-Returns the minimum of samples.
+Return the minimum of samples.
 
 Returns:
     Minimum of samples.
 )__doc__")
       .def("sum", &pyinterp::DescriptiveStatistics<Type>::sum,
            R"__doc__(
-Returns the sum of samples.
+Return the sum of samples.
 
 Returns:
     Sum of samples.
@@ -91,14 +91,14 @@ Returns:
       .def("sum_of_weights",
            &pyinterp::DescriptiveStatistics<Type>::sum_of_weights,
            R"__doc__(
-Returns the sum of samples.
+Return the sum of weights.
 
 Returns:
-    Sum of samples.
+    Sum of weights.
 )__doc__")
       .def("skewness", &pyinterp::DescriptiveStatistics<Type>::skewness,
            R"__doc__(
-Returns the skewness of samples.
+Return the skewness of samples.
 
 Returns:
     Skewness of samples.
@@ -106,10 +106,10 @@ Returns:
       .def("variance", &pyinterp::DescriptiveStatistics<Type>::variance,
            py::arg("ddof") = 0,
            R"__doc__(
-Returns the variance of samples.
+Return the variance of samples.
 
 Args:
-    ddof: Means Delta Degrees of Freedom. The divisor used in calculations is
+    ddof: Delta Degrees of Freedom. The divisor used in calculations is
         N - ``ddof``, where N represents the number of elements. By default
         ``ddof`` is zero.
 
@@ -118,7 +118,7 @@ Returns:
 )__doc__")
       .def("__iadd__", &pyinterp::DescriptiveStatistics<Type>::operator+=,
            py::arg("other"),
-           "Overrides the default behavior of the ``+=`` operator.",
+           "Override the default behavior of the ``+=`` operator.",
            py::call_guard<py::gil_scoped_release>())
       .def(
           "__add__",
@@ -129,7 +129,7 @@ Returns:
             return result;
           },
           py::arg("other"),
-          "Overrides the default behavior of the ``+`` operator.",
+          "Override the default behavior of the ``+`` operator.",
           py::call_guard<py::gil_scoped_release>())
       .def(py::pickle(
           [](const pyinterp::DescriptiveStatistics<Type> &self) {

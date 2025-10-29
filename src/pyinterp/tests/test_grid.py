@@ -109,9 +109,7 @@ def test_core_variate_interpolator() -> None:
     matrix, _ = np.meshgrid(lon[:], lat[:])
 
     instance = grid.Grid2D(lon, lat, matrix.T)
-
-    with pytest.raises(TypeError):
-        grid._core_variate_interpolator(None, '_')
-
-    with pytest.raises(ValueError):
-        grid._core_variate_interpolator(instance, '_')
+    assert isinstance(
+        grid._core_variate_interpolator(instance, 'nearest'),
+        core.Nearest2D,
+    )

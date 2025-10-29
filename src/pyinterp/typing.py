@@ -4,9 +4,146 @@
 # BSD-style license that can be found in the LICENSE file.
 """Typing definitions.
 
-.. py:data:: NDArray
+.. data:: NDArray
 
-    A numpy tensor with any type.
+    A numpy array of any data type. This alias corresponds to
+    numpy.typing.NDArray[Any].
+
+.. data:: NDArray1D
+
+    A numpy array specifically of one dimension.
+
+.. data:: NDArray1DBool
+
+    A numpy array specifically of one dimension with numpy.bool_ elements.
+
+.. data:: NDArray1DDateTime
+
+    A numpy array specifically of one dimension with numpy.datetime64 elements.
+
+.. data:: NDArray1DFloat32
+
+    A numpy array specifically of one dimension with numpy.float32 elements.
+
+.. data:: NDArray1DFloat64
+
+    A numpy array specifically of one dimension with numpy.float64 elements.
+
+.. data:: NDArray1DInt64
+
+    A numpy array specifically of one dimension with numpy.int64 elements.
+
+.. data:: NDArray1DStr
+
+    A numpy array specifically of one dimension with numpy.str_ elements.
+
+.. data:: NDArray1DTimeDelta
+
+    A numpy array specifically of one dimension with numpy.timedelta64 elements.
+
+.. data:: NDArray1DUInt64
+
+    A numpy array specifically of one dimension with numpy.uint64 elements.
+
+.. data:: NDArray2D
+
+    A numpy array specifically of two dimensions.
+
+.. data:: NDArray2DBool
+
+    A numpy array specifically of two dimensions with numpy.bool_ elements.
+
+.. data:: NDArray2DDateTime
+
+    A numpy array specifically of two dimensions with numpy.datetime64 elements.
+
+.. data:: NDArray2DFloat32
+
+    A numpy array specifically of two dimensions with numpy.float32 elements.
+
+.. data:: NDArray2DFloat64
+
+    A numpy array specifically of two dimensions with numpy.float64 elements.
+
+.. data:: NDArray2DInt8
+
+    A numpy array specifically of two dimensions with numpy.int8 elements.
+
+.. data:: NDArray2DUInt8
+
+    A numpy array specifically of two dimensions with numpy.uint8 elements.
+
+.. data:: NDArray2DUInt64
+
+    A numpy array specifically of two dimensions with numpy.uint64 elements.
+
+.. data:: NDArray3D
+
+    A numpy array specifically of three dimensions.
+
+.. data:: NDArray3DFloat32
+
+    A numpy array specifically of three dimensions with numpy.float32 elements.
+
+.. data:: NDArray3DFloat64
+
+    A numpy array specifically of three dimensions with numpy.float64 elements.
+
+.. data:: NDArray3DInt8
+
+    A numpy array specifically of three dimensions with numpy.int8 elements.
+
+.. data:: NDArray3DUInt8
+
+    A numpy array specifically of three dimensions with numpy.uint8 elements.
+
+.. data:: NDArray4D
+
+    A numpy array specifically of four dimensions.
+
+.. data:: NDArray4DFloat32
+
+    A numpy array specifically of four dimensions with numpy.float32 elements.
+
+.. data:: NDArray4DFloat64
+
+    A numpy array specifically of four dimensions with numpy.float64 elements.
+
+.. data:: NDArray4DInt8
+
+    A numpy array specifically of four dimensions with numpy.int8 elements.
+
+.. data:: NDArray4DUInt8
+
+    A numpy array specifically of four dimensions with numpy.uint8 elements.
+
+.. data:: NDArrayDateTime
+
+    A numpy array of any dimension with numpy.datetime64 elements.
+
+.. data:: NDArrayFloat32
+
+    A numpy array of any dimension with numpy.float32 elements.
+
+.. data:: NDArrayFloat64
+
+    A numpy array of any dimension with numpy.float64 elements.
+
+.. data:: NDArrayInt64
+
+    A numpy array of any dimension with numpy.int64 elements.
+
+.. data:: NDArrayStructured
+
+    A numpy array of any dimension with structured elements.
+
+.. data:: NDArrayTimeDelta
+
+    A numpy array of any dimension with numpy.timedelta64 elements.
+
+.. data:: NDArrayUInt64
+
+    A numpy array of any dimension with numpy.uint64 elements.
 
 """
 from __future__ import annotations

@@ -43,7 +43,7 @@ static void init_geodetic_point(py::module &m) {
   py::class_<geodetic::Point>(m, "Point", R"__doc__(
 Point(self, lon: float = 0, lat: float = 0)
 
-Handle a point in a geographic coordinates system in degrees.
+Create a point in a geographic coordinate system.
 
 Args:
     lon: Longitude in degrees.
@@ -120,7 +120,7 @@ Returns:
             return ss.str();
           },
           R"__doc__(
-Gets the OGC Well-Known Text (WKT) representation of this instance.
+Get the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
     The WKT representation.
@@ -143,12 +143,11 @@ Returns:
 )__doc__",
           py::call_guard<py::gil_scoped_release>())
       .def("__repr__", &geodetic::Point::to_string,
-           "Called by the ``repr()`` built-in function to compute the string "
-           "representation of a point.")
+           "Return the string representation of this point.")
       .def(
           "__copy__",
           [](const geodetic::Point &self) { return geodetic::Point(self); },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
       .def(
           "__eq__",
@@ -156,14 +155,14 @@ Returns:
             return boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
-          "Overrides the default behavior of the ``==`` operator.")
+          "Override the default behavior of the ``==`` operator.")
       .def(
           "__ne__",
           [](const geodetic::Point &self, const geodetic::Point &rhs) -> bool {
             return !boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
-          "Overrides the default behavior of the ``!=`` operator.")
+          "Override the default behavior of the ``!=`` operator.")
       .def(py::pickle(
           [](const geodetic::Point &self) { return self.getstate(); },
           [](const py::tuple &state) {
@@ -199,13 +198,13 @@ Returns:
           },
           "The maximal corner (upper right) of the box.")
       .def_static("whole_earth", &geodetic::Box::whole_earth,
-                  "Returns the box covering the whole earth.")
+                  "Return the box covering the whole earth.")
       .def(
           "as_polygon",
           [](const geodetic::Box &self) -> geodetic::Polygon {
             return static_cast<geodetic::Polygon>(self);
           },
-          "Returns the box as a polygon.")
+          "Return the box as a polygon.")
       .def("centroid", &geodetic::Box::centroid,
            R"__doc__(
 Computes the centroid of the box.
@@ -307,7 +306,7 @@ Returns:
             return ss.str();
           },
           R"__doc__(
-Gets the OGC Well-Known Text (WKT) representation of this instance.
+Get the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
     The WKT representation.
@@ -332,7 +331,7 @@ Returns:
       .def(
           "__copy__",
           [](const geodetic::Box &self) { return geodetic::Box(self); },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
       .def(
           "__eq__",
@@ -340,17 +339,16 @@ Returns:
             return boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
-          "Overrides the default behavior of the ``==`` operator.")
+          "Override the default behavior of the ``==`` operator.")
       .def(
           "__ne__",
           [](const geodetic::Box &self, const geodetic::Box &rhs) -> bool {
             return !boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
-          "Overrides the default behavior of the ``!=`` operator.")
+          "Override the default behavior of the ``!=`` operator.")
       .def("__repr__", &geodetic::Box::to_string,
-           "Called by the ``repr()`` built-in function to compute the string "
-           "representation of a box.")
+           "Return the string representation of this box.")
       .def(py::pickle([](const geodetic::Box &self) { return self.getstate(); },
                       [](const py::tuple &state) {
                         return geodetic::Box::setstate(state);
@@ -380,23 +378,22 @@ Returns:
       .def(
           "__copy__",
           [](const geodetic::Polygon &self) { return geodetic::Polygon(self); },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
       .def(
           "__eq__",
           [](const geodetic::Polygon &self, const geodetic::Polygon &rhs)
               -> bool { return boost::geometry::equals(self, rhs); },
           py::arg("other"),
-          "Overrides the default behavior of the ``==`` operator.")
+          "Override the default behavior of the ``==`` operator.")
       .def(
           "__ne__",
           [](const geodetic::Polygon &self, const geodetic::Polygon &rhs)
               -> bool { return !boost::geometry::equals(self, rhs); },
           py::arg("other"),
-          "Overrides the default behavior of the ``!=`` operator.")
+          "Override the default behavior of the ``!=`` operator.")
       .def("__repr__", &geodetic::Polygon::to_string,
-           "Called by the ``repr()`` built-in function to compute the string "
-           "representation of a point.")
+           "Return the string representation of this polygon.")
       .def("envelope", &geodetic::Polygon::envelope,
            R"__doc__(
 Calculates the envelope of this polygon.
@@ -406,13 +403,13 @@ Returns:
 )__doc__",
            py::call_guard<py::gil_scoped_release>())
       .def("num_interior_rings", &geodetic::Polygon::num_interior_rings,
-           "Returns the number of the interior rings.")
+           "Return the number of interior rings.")
       .def_property_readonly(
           "is_valid",
           [](const geodetic::Polygon &self) {
             return boost::geometry::is_valid(self);
           },
-          "Returns whether the polygon is valid.")
+          "Return whether the polygon is valid.")
       .def(
           "correct",
           [](const geodetic::Polygon &self) {
@@ -421,7 +418,7 @@ Returns:
             return polygon;
           },
           R"__doc__(
-Corrects a Polygon
+Correct a polygon.
 
 Returns:
     The corrected polygon.
@@ -456,7 +453,7 @@ Returns:
       .def("perimeter", &geodetic::Polygon::perimeter,
            py::arg("wgs") = std::nullopt,
            R"__doc__(
-Computes the perimeter of this polygon.
+Compute the perimeter of this polygon.
 
 Args:
     wgs: The WGS84 ellipsoid to use when computing the perimeter.
@@ -471,10 +468,11 @@ Returns:
               -> geodetic::MultiPolygon { return self.union_(other); },
           py::arg("other"),
           R"__doc__(
-Computes the union of this polygon with another.
+Compute the union of this polygon with another.
 
 Args:
     other: The polygon to compute the union with.
+
 Returns:
     The union of this polygon with the provided polygon.
 )__doc__",
@@ -485,10 +483,11 @@ Returns:
               -> geodetic::MultiPolygon { return self.intersection(other); },
           py::arg("other"),
           R"__doc__(
-Computes the intersection of this polygon with another.
+Compute the intersection of this polygon with another.
 
 Args:
     other: The polygon to compute the intersection with.
+
 Returns:
     The intersection of this polygon with the provided polygon.
 )__doc__",
@@ -501,7 +500,7 @@ Returns:
           },
           py::arg("line_string"),
           R"__doc__(
-Computes the intersection of this polygon with a line string.
+Compute the intersection of this polygon with a line string.
 
 Args:
     other: The line string to compute the intersection with.
@@ -516,10 +515,11 @@ Returns:
               -> bool { return self.intersects(other); },
           py::arg("other"),
           R"__doc__(
-Checks if this polygon intersects another.
+Check if this polygon intersects another.
 
 Args:
     other: The polygon to check for intersection with.
+
 Returns:
     True if this polygon intersects the provided polygon, False otherwise.
 )__doc__",
@@ -530,10 +530,11 @@ Returns:
               -> bool { return self.touches(other); },
           py::arg("other"),
           R"__doc__(
-Checks if this polygon touches another.
+Check if this polygon touches another.
 
 Args:
     other: The polygon to check for touch with.
+
 Returns:
     True if this polygon touches the provided polygon, False otherwise.
 )__doc__",
@@ -631,7 +632,7 @@ Returns:
             return ss.str();
           },
           R"__doc__(
-Gets the OGC Well-Known Text (WKT) representation of this instance.
+Get the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
     The WKT representation.
@@ -662,7 +663,7 @@ Returns:
 
 static void init_geodetic_multipolygon(
     py::class_<geodetic::MultiPolygon> &class_) {
-  class_.def(py::init<>(), "Defaults to an empty MultiPolygon.")
+  class_.def(py::init<>(), "Default to an empty MultiPolygon.")
       .def(py::init<const py::list &>(), py::arg("polygons"), R"__doc__(
 Initializes a MultiPolygon from a list of polygons.
 
@@ -679,17 +680,18 @@ Returns:
     The MultiPolygon initialized from the GeoJSON coordinate array.
 )__doc__")
       .def("num_interior_rings", &geodetic::MultiPolygon::num_interior_rings,
-           "Returns the number of the interior rings of all polygons.")
+           "Return the number of interior rings of all polygons.")
       .def(
           "union",
           [](const geodetic::MultiPolygon &self, const geodetic::Polygon &other)
               -> geodetic::MultiPolygon { return self.union_(other); },
           py::arg("other"),
           R"__doc__(
-Computes the union of this multi-polygon with a polygon.
+Compute the union of this multi-polygon with a polygon.
 
 Args:
     other: The polygon to compute the union with.
+
 Returns:
     The union of this multi-polygon with the provided polygon.
 )__doc__",
@@ -702,10 +704,11 @@ Returns:
           },
           py::arg("other"),
           R"__doc__(
-Computes the union of this multi-polygon with another multi-polygon.
+Compute the union of this multi-polygon with another multi-polygon.
 
 Args:
     other: The multi-polygon to compute the union with.
+
 Returns:
     The union of this multi-polygon with the provided multi-polygon.
 )__doc__",
@@ -716,10 +719,11 @@ Returns:
               -> geodetic::MultiPolygon { return self.intersection(other); },
           py::arg("other"),
           R"__doc__(
-Computes the intersection of this multi-polygon with a polygon.
+Compute the intersection of this multi-polygon with a polygon.
 
 Args:
     other: The polygon to compute the intersection with.
+
 Returns:
     The intersection of this multi-polygon with the provided polygon.
 )__doc__",
@@ -732,10 +736,11 @@ Returns:
           },
           py::arg("other"),
           R"__doc__(
-Computes the intersection of this multi-polygon with another multi-polygon.
+Compute the intersection of this multi-polygon with another multi-polygon.
 
 Args:
     other: The multi-polygon to compute the intersection with.
+
 Returns:
     The intersection of this multi-polygon with the provided multi-polygon.
 )__doc__",
@@ -746,10 +751,11 @@ Returns:
               -> bool { return self.intersects(other); },
           py::arg("other"),
           R"__doc__(
-Checks if this multi-polygon intersects with a polygon.
+Check if this multi-polygon intersects with a polygon.
 
 Args:
     other: The polygon to check for intersection with.
+
 Returns:
     True if this multi-polygon intersects with the provided polygon, False
     otherwise.
@@ -763,10 +769,11 @@ Returns:
           },
           py::arg("other"),
           R"__doc__(
-Checks if this multi-polygon intersects with another multi-polygon.
+Check if this multi-polygon intersects with another multi-polygon.
 
 Args:
     other: The multi-polygon to check for intersection with.
+
 Returns:
     True if this multi-polygon intersects with the provided multi-polygon,
     False otherwise.
@@ -778,10 +785,11 @@ Returns:
               -> bool { return self.touches(other); },
           py::arg("other"),
           R"__doc__(
-Checks if this multi-polygon touches a polygon.
+Check if this multi-polygon touches a polygon.
 
 Args:
     other: The polygon to check for touches with.
+
 Returns:
     True if this multi-polygon touches the provided polygon, False otherwise.
 )__doc__",
@@ -794,12 +802,13 @@ Returns:
           },
           py::arg("other"),
           R"__doc__(
-Checks if this multi-polygon touches another multi-polygon.
+Check if this multi-polygon touches another multi-polygon.
 
 Args:
     other: The multi-polygon to check for touches with.
+
 Returns:
-    True if this multi-polygon touches the provided multi-polygon, False
+    True if this multi-polygon touches the provided multi-polygon, False otherwise.
 )__doc__",
           py::call_guard<py::gil_scoped_release>())
       .def(
@@ -819,7 +828,7 @@ Args:
           [](const geodetic::MultiPolygon &self) {
             return geodetic::MultiPolygon(self);
           },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
       .def(
           "__add__",
@@ -830,15 +839,15 @@ Args:
             return result;
           },
           py::arg("other"),
-          "Overrides the + operator to concatenate two MultiPolygons.",
+          "Override the + operator to concatenate two MultiPolygons.",
           py::call_guard<py::gil_scoped_release>())
       .def("__iadd__", &geodetic::MultiPolygon::operator+=, py::arg("other"),
-           "Overrides the default behavior of the ``+=`` operator.",
+           "Override the default behavior of the ``+=`` operator.",
            py::call_guard<py::gil_scoped_release>())
       .def("__len__", &geodetic::MultiPolygon::size,
-           "Returns the number of polygons in this instance.")
+           "Return the number of polygons in this instance.")
       .def("__getitem__", &geodetic::MultiPolygon::operator(), py::arg("index"),
-           "Returns the polygon at the given index.")
+           "Return the polygon at the given index.")
       .def(
           "__contains__",
           [](const geodetic::MultiPolygon &self,
@@ -861,7 +870,7 @@ Args:
             return boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
-          "Overrides the default behavior of the ``==`` operator.",
+          "Override the default behavior of the ``==`` operator.",
           py::call_guard<py::gil_scoped_release>())
       .def(
           "__ne__",
@@ -870,11 +879,10 @@ Args:
             return !boost::geometry::equals(self, rhs);
           },
           py::arg("other"),
-          "Overrides the default behavior of the ``!=`` operator.",
+          "Override the default behavior of the ``!=`` operator.",
           py::call_guard<py::gil_scoped_release>())
       .def("__repr__", &geodetic::MultiPolygon::to_string,
-           "Called by the ``repr()`` built-in function to compute the string "
-           "representation of a point.")
+           "Return the string representation of this multi-polygon.")
       .def("envelope", &geodetic::MultiPolygon::envelope,
            R"__doc__(
 Calculates the envelope of this multi-polygon.
@@ -993,7 +1001,7 @@ Returns:
             return ss.str();
           },
           R"__doc__(
-Gets the OGC Well-Known Text (WKT) representation of this instance.
+Get the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
     The WKT representation.
@@ -1025,7 +1033,12 @@ Returns:
 static void init_geodetic_linestring(py::module &m) {
   py::class_<geodetic::LineString>(
       m, "LineString",
-      R"__doc__(LineString(self, lon: numpy.ndarray, lat: numpy.ndarray)
+      "LineString(self, "
+      "lon: numpy.ndarray[tuple[int], numpy.dtype[numpy.float64]], "
+      "lat: numpy.ndarray[tuple[int], numpy.dtype[numpy.float64]]) -> None"
+      R"__doc__(
+
+Create a linestring as a collection of points.
 
 A linestring (named so by OGC) is a collection of points.
 
@@ -1063,7 +1076,7 @@ Returns:
             return ss.str();
           },
           R"__doc__(
-Gets the OGC Well-Known Text (WKT) representation of this instance.
+Get the OGC Well-Known Text (WKT) representation of this instance.
 
 Returns:
     The WKT representation.
@@ -1102,30 +1115,29 @@ Args:
           [](const geodetic::LineString &self) {
             return geodetic::LineString(self);
           },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
       .def("__len__", &geodetic::LineString::size,
-           "Called to implement the built-in function ``len()``")
+           "Return the length of the linestring.")
       .def(
           "__getitem__",
           [](const geodetic::LineString &self,
              size_t index) -> geodetic::Point { return self(index); },
-          py::arg("index"), "Returns the point at the given index.")
+          py::arg("index"), "Return the point at the given index.")
       .def(
           "__eq__",
           [](const geodetic::LineString &self, const geodetic::LineString &rhs)
               -> bool { return boost::geometry::equals(self, rhs); },
           py::arg("other"),
-          "Overrides the default behavior of the ``==`` operator.")
+          "Override the default behavior of the ``==`` operator.")
       .def(
           "__ne__",
           [](const geodetic::LineString &self, const geodetic::LineString &rhs)
               -> bool { return !boost::geometry::equals(self, rhs); },
           py::arg("other"),
-          "Overrides the default behavior of the ``!=`` operator.")
+          "Override the default behavior of the ``!=`` operator.")
       .def("__repr__", &geodetic::LineString::to_string,
-           "Called by the ``repr()`` built-in function to compute the string "
-           "representation of a point.")
+           "Return the string representation of this linestring.")
       .def(
           "__iter__",
           [](const geodetic::LineString &self) {
@@ -1141,12 +1153,12 @@ Args:
           },
           py::arg("strategy") = "thomas", py::arg("wgs") = std::nullopt,
           R"__doc__(
-Computes the curvilinear distance between the points of this instance.
+Compute the curvilinear distance between the points of this instance.
 
 Args:
-    strategy: the distance strategy to use. This parameter can take the values
-        ``andoyer``, ``thomas`` or ``vincenty``
-    wgs: the spheroid to use. If not provided, the WGS84 spheroid is used.
+    strategy: The distance strategy to use. This parameter can take the values
+        ``andoyer``, ``thomas`` or ``vincenty``.
+    wgs: The spheroid to use. If not provided, the WGS84 spheroid is used.
 
 Returns:
     The curvilinear distance between the points of this instance.
@@ -1173,7 +1185,7 @@ Returns:
               -> geodetic::LineString { return self.intersection(rhs, wgs); },
           py::arg("rhs"), py::arg("wgs") = std::nullopt,
           R"__doc__(
-Computes the intersection between this linestring and another linestring.
+Compute the intersection between this linestring and another linestring.
 
 Args:
     rhs: The linestring to test.
@@ -1192,7 +1204,7 @@ Returns:
           },
           py::arg("rhs"), py::arg("wgs") = std::nullopt,
           R"__doc__(
-Computes the intersection between this linestring and a polygon.
+Compute the intersection between this linestring and a polygon.
 
 Args:
     rhs: The polygon to use.
@@ -1214,7 +1226,7 @@ Returns:
           py::arg("tolerance"), py::arg("strategy") = "thomas",
           py::arg("wgs") = std::nullopt,
           R"__doc__(
-Simplifies this linestring using the Douglas-Peucker algorithm.
+Simplify this linestring using the Douglas-Peucker algorithm.
 
 Args:
     tolerance: The tolerance to use.
@@ -1234,7 +1246,7 @@ Returns:
           },
           py::arg("point"), py::arg("wgs") = std::nullopt,
           R"__doc__(
-Computes the closest point on this linestring to the given point.
+Compute the closest point on this linestring to the given point.
 
 Args:
     point: The point to test.
@@ -1256,7 +1268,7 @@ Returns:
           py::arg("lon"), py::arg("lat"), py::arg("wgs") = std::nullopt,
           py::arg("num_threads") = 0,
           R"__doc__(
-Computes the closest point on this linestring to the given points.
+Compute the closest point on this linestring to the given points.
 
 Args:
     lon: The longitude of the points to test.
@@ -1284,7 +1296,6 @@ void init_geodetic_crossover(py::module &m) {
       " half_orbit_1: pyinterp.core.geodetic.LineString,"
       " half_orbit_2: pyinterp.core.geodetic.LineString)"
       R"__doc__(
-
 Calculate the crossover between two half-orbits.
 
 Args:
@@ -1296,10 +1307,10 @@ Args:
            py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("half_orbit_1",
                              &geodetic::Crossover::get_half_orbit_1,
-                             "Returns the first half-orbit.")
+                             "Return the first half-orbit.")
       .def_property_readonly("half_orbit_2",
                              &geodetic::Crossover::get_half_orbit_2,
-                             "Returns the second half-orbit.")
+                             "Return the second half-orbit.")
       .def("search", &geodetic::Crossover::search,
            py::arg("wgs") = std::nullopt,
            R"__doc__(
@@ -1381,9 +1392,9 @@ Returns:
 static auto init_geodetic_rtree(py::module &m) {
   py::class_<geodetic::RTree>(
       m, "RTree",
-      "RTree(self, spheroid: Optional[pyinterp.core.geodetic.Spheroid] = None)"
+      "RTree(self, spheroid: pyinterp.core.geodetic.Spheroid | None = None)"
       R"__doc__(
-R*Tree spatial index.
+Create an R*Tree spatial index.
 
 Args:
     spheroid: WGS of the coordinate system used to calculate the distance.
@@ -1393,17 +1404,14 @@ Args:
       .def(
           "__copy__",
           [](const geodetic::RTree &self) { return geodetic::RTree(self); },
-          "Implements the shallow copy operation.",
+          "Implement the shallow copy operation.",
           py::call_guard<py::gil_scoped_release>())
-      .def("__len__", &geodetic::RTree::size,
-           "Called to implement the built-in function ``len()``")
+      .def("__len__", &geodetic::RTree::size, "Return the length of the RTree.")
       .def(
           "__bool__", [](const geodetic::RTree &self) { return !self.empty(); },
-          "Called to implement truth value testing and the built-in "
-          "operation "
-          "``bool()``.")
+          "Return the truth value of the RTree (non-empty).")
       .def("clear", &geodetic::RTree::clear,
-           "Removes all values stored in the container.")
+           "Remove all values stored in the container.")
       .def("packing", &geodetic::RTree::packing, py::arg("lon"), py::arg("lat"),
            py::arg("values"),
            R"__doc__(
@@ -1559,17 +1567,17 @@ void init_geodetic(py::module &m) {
 
   py::class_<geodetic::Spheroid, pyinterp::detail::geodetic::Spheroid>(
       m, "Spheroid",
-      R"(
-Spheroid(self, semi_major_axis: float, flattening: float)
-
-World Geodetic System (WGS).
+      "Spheroid(self, semi_major_axis: float, flattening: float)"
+      R"__doc__(
+Create a World Geodetic System (WGS).
 
 Args:
     semi_major_axis: Semi-major axis of ellipsoid, in meters.
     flattening: Flattening of ellipsoid.
-.. note::
+
+Note:
     The default constructor initializes a WGS-84 ellipsoid.
-)")
+)__doc__")
       .def(py::init<>())
       .def(py::init<double, double>(), py::arg("semi_major_axis"),
            py::arg("flattening"))
@@ -1581,33 +1589,34 @@ Args:
           "Flattening of ellipsoid (:math:`f=\\frac{a-b}{a}`).")
       .def("semi_minor_axis", &geodetic::Spheroid::semi_minor_axis,
            R"__doc__(
-Gets the semiminor axis.
+Get the semi-minor axis.
 
 Returns:
     :math:`b=a(1-f)`
 )__doc__")
       .def("first_eccentricity_squared",
            &geodetic::Spheroid::first_eccentricity_squared, R"__doc__(
-Gets the first eccentricity squared.
+Get the first eccentricity squared.
 
 Returns:
     :math:`e^2=\frac{a^2-b^2}{a^2}`
 )__doc__")
       .def("second_eccentricity_squared",
            &geodetic::Spheroid::second_eccentricity_squared, R"__doc__(
-Gets the second eccentricity squared.
+Get the second eccentricity squared.
 
 Returns:
-    float: :math:`e^2=\frac{a^2-b^2}{b^2}`
+    :math:`e^2=\frac{a^2-b^2}{b^2}`
 )__doc__")
       .def("equatorial_circumference",
            &geodetic::Spheroid::equatorial_circumference,
            py::arg("semi_major_axis") = true, R"__doc__(
-Gets the equatorial circumference.
+Get the equatorial circumference.
 
 Args:
     semi_major_axis: True to get the equatorial circumference for the
         semi-majors axis, False for the semi-minor axis. Defaults to ``true``.
+
 Returns:
     :math:`2\pi \times a` if semi_major_axis is true otherwise
     :math:`2\pi \times b`.
@@ -1615,7 +1624,7 @@ Returns:
       .def("polar_radius_of_curvature",
            &geodetic::Spheroid::polar_radius_of_curvature,
            R"__doc__(
-Gets the polar radius of curvature.
+Get the polar radius of curvature.
 
 Returns:
     :math:`\frac{a^2}{b}`
@@ -1623,26 +1632,26 @@ Returns:
       .def("equatorial_radius_of_curvature",
            &geodetic::Spheroid::equatorial_radius_of_curvature,
            R"__doc__(
-Gets the equatorial radius of curvature for a meridian.
+Get the equatorial radius of curvature for a meridian.
 
 Returns:
     :math:`\frac{b^2}{a}`
 )__doc__")
       .def("axis_ratio", &geodetic::Spheroid::axis_ratio, R"__doc__(
-Gets the axis ratio.
+Get the axis ratio.
 
 Returns:
     :math:`\frac{b}{a}`
 )__doc__")
       .def("linear_eccentricity", &geodetic::Spheroid::linear_eccentricity,
            R"__doc__(
-Gets the linear eccentricity.
+Get the linear eccentricity.
 
 Returns:
     :math:`E=\sqrt{{a^2}-{b^2}}`
 )__doc__")
       .def("mean_radius", &geodetic::Spheroid::mean_radius, R"__doc__(
-Gets the mean radius.
+Get the mean radius.
 
 Returns:
     :math:`R_1=\frac{2a+b}{3}`
@@ -1650,7 +1659,7 @@ Returns:
       .def("geocentric_radius", &geodetic::Spheroid::geocentric_radius,
            py::arg("lat"),
            R"__doc__(
-Gets the geocentric radius at the given latitude $\phi$.
+Get the geocentric radius at the given latitude :math:`\phi`.
 
 Args:
     lat: The latitude, in degrees.
@@ -1663,22 +1672,22 @@ Returns:
 )__doc__")
       .def("authalic_radius", &geodetic::Spheroid::authalic_radius,
            R"__doc__(
-Gets the authalic radius.
+Get the authalic radius.
 
 Returns:
     :math:`R_2=\sqrt{\frac{a^2+\frac{ab^2}{E}ln(\frac{a + E}{b})}{2}}`
 )__doc__")
       .def("volumetric_radius", &geodetic::Spheroid::volumetric_radius,
            R"__doc__(
-Gets the volumetric radius.
+Get the volumetric radius.
 
 Returns:
     :math:`R_3=\sqrt[3]{a^{2}b}`
 )__doc__")
       .def("__eq__", &geodetic::Spheroid::operator==, py::arg("other"),
-           "Overrides the default behavior of the ``==`` operator.")
+           "Override the default behavior of the ``==`` operator.")
       .def("__ne__", &geodetic::Spheroid::operator!=, py::arg("other"),
-           "Overrides the default behavior of the ``!=`` operator.")
+           "Override the default behavior of the ``!=`` operator.")
       .def(py::pickle(
           [](const geodetic::Spheroid &self) { return self.getstate(); },
           [](const py::tuple &state) {
@@ -1688,14 +1697,13 @@ Returns:
   py::class_<geodetic::Coordinates>(
       m, "Coordinates",
       "Coordinates(self, "
-      "spheroid: Optional[pyinterp.core.geodetic.Spheroid] = None)"
-      R"(
-
-World Geodetic Coordinates System.
+      "spheroid: pyinterp.core.geodetic.Spheroid | None = None)"
+      R"__doc__(
+Create a World Geodetic Coordinates System.
 
 Args:
     spheroid: Optional spheroid to use. Defaults to WGS-84.
-)")
+)__doc__")
       .def(py::init<std::optional<geodetic::Spheroid>>(),
            py::arg("spheroid") = std::nullopt)
       .def_property_readonly("spheroid", &geodetic::Coordinates::spheroid,
@@ -1771,30 +1779,36 @@ Returns:
   auto box = py::class_<geodetic::Box>(m, "Box", R"__doc__(
 Box(self, min_corner: Point, max_corner: Point)
 
-Defines a box made of two describing points.
+Define a box made of two corner points.
 
 Args:
-    min_corner: the minimum corner point (lower left) of the box.
-    max_corner: the maximum corner point (upper right) of the box.
+    min_corner: The minimum corner point (lower left) of the box.
+    max_corner: The maximum corner point (upper right) of the box.
 )__doc__");
 
   auto polygon = py::class_<geodetic::Polygon>(
       m, "Polygon",
-      R"(Polygon(self, outer: list, inners: Optional[list] = None)
+      "Polygon(self, "
+      "outer: list[pyinterp.core.geodetic.Point], "
+      "inners: list[list[pyinterp.core.geodetic.Point]] | None = None)"
+      R"__doc__(
+Create a polygon with an outer ring and optional inner rings.
 
 The polygon contains an outer ring and zero or more inner rings.
 
 Args:
-    outer: outer ring.
-    inners: list of inner rings.
+    outer: Outer ring.
+    inners: List of inner rings.
+
 Raises:
-    ValueError: if outer is not a list of pyinterp.geodetic.Point.
-    ValueError: if inners is not a list of list of pyinterp.geodetic.Point.
-)");
+    ValueError: If outer is not a list of pyinterp.geodetic.Point.
+    ValueError: If inners is not a list of list of pyinterp.geodetic.Point.
+)__doc__");
 
   auto multipolygon = py::class_<geodetic::MultiPolygon>(m, "MultiPolygon",
                                                          R"__doc__(
-A MultiPolygon is a collection of polygons.
+MultiPolygon(self, polygons: list[pyinterp.core.geodetic.Polygon])
+Create a MultiPolygon collection of polygons.
 
 Args:
     polygons: The polygons to use.

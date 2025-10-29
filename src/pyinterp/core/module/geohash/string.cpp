@@ -35,14 +35,20 @@ void init_geohash_string(py::module &m) {
        },
        py::arg("lon"), py::arg("lat"), py::arg("precision") = 12,
        R"__doc__(
-Encode coordinates into geohash with the given precision.
+Encode geographic coordinates into geohash strings.
+
+This function encodes the given longitude and latitude coordinates into
+geohash strings with the specified precision.
 
 Args:
     lon: Longitudes in degrees.
     lat: Latitudes in degrees.
-    precision: Number of bits used to encode the geohash code. Defaults to 12.
+    precision: Number of characters used to encode the geohash code.
+        Defaults to 12.
+
 Returns:
-    Geohash codes.
+    Geohash codes as strings.
+
 Raises:
     ValueError: If the given precision is not within [1, 12].
     ValueError: If the lon and lat vectors have different sizes.
@@ -55,14 +61,18 @@ Raises:
           },
           py::arg("hash"), py::arg("round") = false,
           R"__doc__(
-Decode hashes into a geographic points.
+Decode geohash strings into geographic coordinates.
+
+This function decodes geohash strings into longitude and latitude coordinates.
+Optionally rounds the coordinates to the accuracy defined by the geohash.
 
 Args:
-    hash: GeoHash codes.
-    round: If true, the coordinates of the point will be rounded to the accuracy
-        defined by the GeoHash. Defaults to False.
+    hash: GeoHash codes to decode.
+    round: If true, the coordinates of the point will be rounded to the
+        accuracy defined by the GeoHash. Defaults to False.
+
 Returns:
-    Longitudes/latitudes of the decoded points.
+    Tuple of (longitudes, latitudes) of the decoded points.
 )__doc__")
       .def(
           "area",
@@ -72,14 +82,18 @@ Returns:
           },
           py::arg("hash"), py::arg("wgs") = py::none(),
           R"__doc__(
-Calculated the area caovered by the GeoHash codes.
+Calculate the area covered by geohash codes.
+
+This function computes the area (in square meters) covered by the provided
+geohash codes using the specified geodetic reference system.
 
 Args:
     hash: GeoHash codes.
-    wgs: WGS used to calculate the area. Defaults to WGS84.
+    wgs: WGS (World Geodetic System) used to calculate the area.
+        Defaults to WGS84.
 
 Returns:
-   Calculated areas.
+    Array of calculated areas in square meters.
 )__doc__")
       .def(
           "bounding_boxes",
@@ -90,13 +104,18 @@ Returns:
           },
           py::arg("box") = py::none(), py::arg("precision") = 1,
           R"__doc__(
-Returns all geohash codes contained in the defined bounding box.
+Get all geohash codes within a bounding box.
+
+This function returns all geohash codes contained in the defined bounding box
+at the specified precision level.
 
 Args:
-    box: Bounding box. Default to the global bounding box.
-    precision: Required accuracy. Defaults to 1.
+    box: Bounding box defining the region. Defaults to the global bounding box.
+    precision: Required accuracy level. Defaults to 1.
+
 Returns:
-    GeoHash codes.
+    Array of GeoHash codes.
+
 Raises:
     ValueError: If the given precision is not within [1, 12].
     MemoryError: If the memory is not sufficient to store the result.
@@ -112,17 +131,22 @@ Raises:
           py::arg("polygon"), py::arg("precision") = 1,
           py::arg("num_threads") = 0,
           R"__doc__(
-Returns all geohash codes contained in the defined polygon.
+Get all geohash codes within a polygon.
+
+This function returns all geohash codes contained in the defined polygon at
+the specified precision level. Supports parallel computation using multiple
+threads.
 
 Args:
-    polygon: Polygon.
-    precision: Required accuracy. Defaults to ``1``.
-    num_threads: The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    polygon: Polygon defining the region.
+    precision: Required accuracy level. Defaults to 1.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
+
 Returns:
-    GeoHash codes.
+    Array of GeoHash codes.
+
 Raises:
     ValueError: If the given precision is not within [1, 12].
     MemoryError: If the memory is not sufficient to store the result.
@@ -138,17 +162,22 @@ Raises:
           py::arg("polygons"), py::arg("precision") = 1,
           py::arg("num_threads") = 0,
           R"__doc__(
-Returns all geohash codes contained in one or more defined polygons.
+Get all geohash codes within one or more polygons.
+
+This function returns all geohash codes contained in one or more defined
+polygons at the specified precision level. Supports parallel computation using
+multiple threads.
 
 Args:
-    polygons: MultiPolygon.
-    precision: Required accuracy. Defaults to ``1``.
-    num_threads: The number of threads to use for the
-        computation. If 0 all CPUs are used. If 1 is given, no parallel
-        computing code is used at all, which is useful for debugging.
-        Defaults to ``0``.
+    polygons: MultiPolygon defining one or more regions.
+    precision: Required accuracy level. Defaults to 1.
+    num_threads: Number of threads to use for computation. If 0, all CPUs
+        are used. If 1, no parallel computing is used (useful for debugging).
+        Defaults to 0.
+
 Returns:
-    GeoHash codes.
+    Array of GeoHash codes.
+
 Raises:
     ValueError: If the given precision is not within [1, 12].
     MemoryError: If the memory is not sufficient to store the result.
@@ -167,13 +196,17 @@ Raises:
           },
           py::arg("hash"),
           R"__doc__(
-Returns the start and end indexes of the different GeoHash boxes.
+Get the start and end indexes for successive geohash codes.
+
+Returns a dictionary mapping successive identical geohash codes to their
+start and end positions in the input array.
 
 Args:
-    hash: GeoHash codes.
+    hash: Array of GeoHash codes.
+
 Returns:
-    Dictionary between successive identical geohash codes and start and
-    end indexes in the table provided as input.
+    Dictionary where keys are geohash codes (as bytes) and values are tuples
+    of (start_index, end_index) in the input array.
 )__doc__")
       .def(
           "transform",
@@ -182,15 +215,19 @@ Returns:
             return geohash::string::transform(hash, precision);
           },
           py::arg("hash"), py::arg("precision") = 1, R"__doc__(
-Transforms the given codes from one precision to another. If the given
-precision is higher than the precision of the given codes, the result contains
-a zoom in, otherwise it contains a zoom out.
+Transform geohash codes between different precision levels.
+
+Changes the precision of the given geohash codes. If the target precision is
+higher than the current precision, the result contains a zoom in; otherwise
+it contains a zoom out.
 
 Args:
-    hash: GeoHash codes.
-    precision: Required accuracy. Defaults to ``1``.
+    hash: Array of GeoHash codes.
+    precision: Target accuracy level. Defaults to 1.
+
 Returns:
-    GeoHash codes transformed.
+    Array of GeoHash codes at the new precision level.
+
 Raises:
     ValueError: If the given precision is not within [1, 12].
 )__doc__");
