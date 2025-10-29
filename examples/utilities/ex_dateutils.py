@@ -49,7 +49,7 @@ print(dates)
 # :py:func:`pyinterp.dateutils.date <pyinterp.core.dateutils.date>` function.
 # This returns a structured NumPy array.
 date_components = pyinterp.dateutils.date(dates)
-print('\\nDate components:')
+print('Date components:')
 print(date_components)
 
 # %%
@@ -60,7 +60,7 @@ print(date_components)
 # using the :py:func:`pyinterp.dateutils.time <pyinterp.core.dateutils.time>`
 # function.
 time_components = pyinterp.dateutils.time(dates)
-print('\\nTime components:')
+print('Time components:')
 print(time_components)
 
 # %%
@@ -71,7 +71,7 @@ print(time_components)
 # <pyinterp.core.dateutils.isocalendar>` function returns the ISO calendar
 # information (year, week number, and weekday) for each date.
 iso_calendar = pyinterp.dateutils.isocalendar(dates)
-print('\\nISO calendar:')
+print('ISO calendar:')
 print(iso_calendar)
 
 # %%
@@ -82,7 +82,7 @@ print(iso_calendar)
 # the :py:func:`pyinterp.dateutils.weekday <pyinterp.core.dateutils.weekday>`
 # function.
 weekday = pyinterp.dateutils.weekday(dates)
-print('\\nWeekday (Sunday=0):')
+print('Weekday (Sunday=0):')
 print(weekday)
 
 # %%
@@ -94,7 +94,7 @@ print(weekday)
 # the time difference between each date and the first day of its corresponding
 # year.
 timedelta = pyinterp.dateutils.timedelta_since_january(dates)
-print('\\nTime since January 1st:')
+print('Time since January 1st:')
 print(timedelta)
 
 # %%
@@ -106,5 +106,5 @@ print(timedelta)
 # :py:func:`pyinterp.dateutils.datetime <pyinterp.core.dateutils.datetime>`
 # function.
 datetime_objects = pyinterp.dateutils.datetime(dates)
-print('\\nDatetime objects:')
+print('Datetime objects:')
 print(datetime_objects)
