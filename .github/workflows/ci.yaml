@@ -144,7 +144,6 @@ jobs:
           cmake
           cxx-compiler
           dask
-          eigen
           libboost-devel
           make
           numcodecs

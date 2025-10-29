@@ -199,6 +199,14 @@ class DescriptiveStatistics {
     return *this;
   }
 
+  /// Combines two accumulators.
+  constexpr auto operator+(const DescriptiveStatistics &rhs) const noexcept
+      -> DescriptiveStatistics {
+    auto result = *this;
+    result += rhs;
+    return result;
+  }
+
  private:
   Accumulators<T> acc_{};
 

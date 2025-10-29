@@ -175,6 +175,14 @@ class StreamingHistogram {
     trim();
   }
 
+  /// Merges two histograms and returns the result.
+  inline auto operator+(const StreamingHistogram<T> &other) const
+      -> StreamingHistogram<T> {
+    auto result = *this;
+    result += other;
+    return result;
+  }
+
   /// Returns the number of samples pushed into the histogram.
   [[nodiscard]] constexpr auto count() const -> uint64_t { return count_; }
 
