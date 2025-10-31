@@ -375,7 +375,6 @@ set(CONFIG_LINES
     "Compiler ID:            ${CMAKE_CXX_COMPILER_ID}"
     "Compiler Version:       ${CMAKE_CXX_COMPILER_VERSION}"
     "Boost include dir:      ${Boost_INCLUDE_DIRS}"
-    "Eigen3 include dir:     ${EIGEN3_INCLUDE_DIR}"
     "BLAS:                   ${BLA_VENDOR}"
     "Code Coverage:          ${CODE_COVERAGE_LINE}"
     "Clang-Tidy:             ${CLANG_TIDY_LINE}"
