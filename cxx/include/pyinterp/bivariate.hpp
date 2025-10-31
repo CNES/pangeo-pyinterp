@@ -210,7 +210,15 @@ void implement_bivariate_interpolator(pybind11::module &m,
       m, (prefix + "InverseDistanceWeighting" + suffix).c_str(), interpolator,
       ("Inverse distance weighting interpolation in a " + suffix + " space.")
           .c_str())
-      .def(pybind11::init<int>(), pybind11::kw_only(), pybind11::arg("p") = 2)
+      .def(pybind11::init<>([](const pybind11::kwargs &kwargs) {
+        try {
+          auto p = kwargs.contains("p") ? kwargs["p"].cast<int>() : 2;
+          return InverseDistanceWeighting<Point, T>(p);
+        } catch (const pybind11::cast_error &e) {
+          throw std::invalid_argument(
+              "keyword argument 'p' must be of type int");
+        }
+      }))
       .def(pybind11::pickle(
           [](const InverseDistanceWeighting<Point, T> &self) {
             return self.getstate();
