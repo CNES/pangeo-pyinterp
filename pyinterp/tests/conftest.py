@@ -5,6 +5,7 @@
 """Pytest configuration file."""
 import pytest
 
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Add command line options to pytest."""
     parser.addoption('--visualize', action='store_true', default=False)

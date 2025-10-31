@@ -475,7 +475,6 @@ class CxxTestRunner(setuptools.Command):
         ])
 
 
-
 def long_description() -> str:
     """Read the README file."""
     with pathlib.Path(WORKING_DIRECTORY,
@@ -515,13 +514,12 @@ def main() -> None:
         long_description_content_type='text/x-rst',
         name='pyinterp',
         package_data={
-            "pyinterp": ["py.typed", "*.pyi"],
+            'pyinterp': ['py.typed', '*.pyi'],
             'pyinterp.tests': ['dataset/*'],
         },
-        package_dir={"pyinterp": "pyinterp"},
+        package_dir={'pyinterp': 'pyinterp'},
         packages=setuptools.find_namespace_packages(
-            include=["pyinterp", "pyinterp.*"],
-        ),
+            include=['pyinterp', 'pyinterp.*'], ),
         platforms=['POSIX', 'MacOS', 'Windows'],
         python_requires='>=3.11',
         url='https://github.com/CNES/pangeo-pyinterp',
