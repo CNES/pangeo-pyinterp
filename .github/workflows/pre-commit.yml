@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v3
     - run: |
-        cat <<EOF > src/pyinterp/version.py
+        cat <<EOF > pyinterp/version.py
         def release():
           return "0.0.0"
         def date():
