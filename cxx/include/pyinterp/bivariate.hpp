@@ -210,7 +210,7 @@ void implement_bivariate_interpolator(pybind11::module &m,
       m, (prefix + "InverseDistanceWeighting" + suffix).c_str(), interpolator,
       ("Inverse distance weighting interpolation in a " + suffix + " space.")
           .c_str())
-      .def(pybind11::init<int>(), pybind11::arg("p") = 2)
+      .def(pybind11::init<int>(), pybind11::kw_only(), pybind11::arg("p") = 2)
       .def(pybind11::pickle(
           [](const InverseDistanceWeighting<Point, T> &self) {
             return self.getstate();
