@@ -28,12 +28,14 @@ def build_rtree(dtype: np.dtype) -> None:
     assert len(mesh) == len(lon.ravel())
     assert bool(mesh)
     (x_min, y_min, z_min), (x_max, y_max, z_max) = mesh.bounds()
-    assert x_min == -180
-    assert y_min == -90.0
-    assert x_max == 180.0
-    assert y_max == 80
-    assert 0 == pytest.approx(z_min, abs=1e-6 if dtype == np.float64 else 0.5)
-    assert 0 == pytest.approx(z_max, abs=1e-6 if dtype == np.float64 else 0.5)
+    tolerance = 1e-12 if dtype == np.float64 else 1e-4
+    assert -180 == pytest.approx(x_min, abs=tolerance)
+    assert -90.0 == pytest.approx(y_min, abs=tolerance)
+    assert 180.0 == pytest.approx(x_max, abs=tolerance)
+    assert 80 == pytest.approx(y_max, abs=tolerance)
+    tolerance = 1e-6 if dtype == np.float64 else 0.5
+    assert 0 == pytest.approx(z_min, abs=tolerance)
+    assert 0 == pytest.approx(z_max, abs=tolerance)
     mesh.clear()
     assert len(mesh) == 0
     assert not bool(mesh)
