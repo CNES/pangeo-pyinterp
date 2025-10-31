@@ -84,6 +84,27 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
             metadata_directory,
         )
 
+    def build_sdist(
+        self,
+        sdist_directory: str | os.PathLike[str],
+        config_settings: Mapping[str, str | list[str] | None] | None = None,
+    ) -> str:
+        """Build the source distribution.
+
+        Args:
+            sdist_directory: The directory to store the source distribution.
+            config_settings: The configuration settings.
+
+        Returns:
+            str: The path to the built source distribution.
+
+        """
+        self.config_settings = config_settings
+        return super().build_sdist(
+            sdist_directory,
+            config_settings,
+        )
+
     def build_editable(
         self,
         wheel_directory: str | os.PathLike[str],
@@ -113,6 +134,8 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
 _backend = _CustomBuildMetaBackend()
 build_wheel = _backend.build_wheel
 build_editable = _backend.build_editable
+build_sdist = _backend.build_sdist
+get_requires_for_build_wheel = _backend.get_requires_for_build_wheel
 get_requires_for_build_editable = _backend.get_requires_for_build_editable
 prepare_metadata_for_build_editable = (
     _backend.prepare_metadata_for_build_editable)
