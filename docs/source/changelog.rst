@@ -21,6 +21,8 @@ Changelog
   improvements and new features.
 * Added Eigen as a git submodule to ensure consistent builds across
   different environments.
+* Reorganized the source directory structure to clearly separate C++ and Python
+  code, improving maintainability.
 
 2025.8.1
 --------
