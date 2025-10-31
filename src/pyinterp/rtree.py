@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
+import warnings
 
 import numpy
 
@@ -446,6 +447,41 @@ class RTree:
         return self._instance.window_function(
             coordinates, radius, k, interface._core_window_function(wf, arg),
             arg, within, num_threads)
+
+    def universal_kriging(
+            self,
+            coordinates: numpy.ndarray,
+            radius: float | None = None,
+            k: int = 9,
+            covariance: str | None = None,
+            sigma: float = 1.0,
+            alpha: float = 1_000_000.0,
+            within: bool = True,
+            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
+        """Interpolate the values of a point using universal kriging.
+
+        See the :meth:`kriging` method for the description of the parameters.
+
+        .. deprecated:: 2025.9.0
+
+            universal_kriging method is deprecated, use :meth:`kriging` method
+            instead.
+        """
+        warnings.warn(
+            'universal_kriging method is deprecated, '
+            'use kriging method instead',
+            DeprecationWarning,
+            stacklevel=2)
+        return self.kriging(
+            coordinates,
+            radius=radius,
+            k=k,
+            covariance=covariance,
+            sigma=sigma,
+            alpha=alpha,
+            within=within,
+            num_threads=num_threads,
+        )
 
     def kriging(self,
                 coordinates: numpy.ndarray,
