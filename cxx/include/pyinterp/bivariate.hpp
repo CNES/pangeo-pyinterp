@@ -214,7 +214,7 @@ void implement_bivariate_interpolator(pybind11::module &m,
         try {
           auto p = kwargs.contains("p") ? kwargs["p"].cast<int>() : 2;
           return InverseDistanceWeighting<Point, T>(p);
-        } catch (const pybind11::cast_error &e) {
+        } catch (const pybind11::cast_error &) {
           throw std::invalid_argument(
               "keyword argument 'p' must be of type int");
         }
