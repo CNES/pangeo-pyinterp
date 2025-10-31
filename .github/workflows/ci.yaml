@@ -52,7 +52,7 @@ jobs:
     - name: Run tests and measure coverage
       shell: bash -l {0}
       run: |
-        pytest -v -ra --cov=pyinterp --cov-report=lcov --measure-coverage
+        pytest -v -ra --cov=build --cov-report=lcov --measure-coverage
         python setup.py gtest
 
     - name: Filter and merge coverage
