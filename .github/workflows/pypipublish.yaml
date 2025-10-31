@@ -23,4 +23,4 @@ jobs:
       - name: Build and publish
         run: |
           python setup.py sdist
-          twine upload -r testpypi dist/ --username __token__ --password ${{ secrets.PYPI_PASSWORD }}
+          twine upload --username __token__ --password ${{ secrets.PYPI_PASSWORD }} -r testpypi dist/*
