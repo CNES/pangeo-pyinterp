@@ -341,7 +341,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # ##############################################################################
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/include)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11)
-add_subdirectory(src/pyinterp/core)
+add_subdirectory(cxx)
 
 # ##############################################################################
 # Print configuration summary

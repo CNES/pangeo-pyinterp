@@ -57,3 +57,9 @@ split-on-trailing-comma = false
 # Like Black, use double quotes for strings.
 quote-style = "double"
 docstring-code-format = true
+
+[tool.pytest.ini_options]
+minversion = "3.0"
+norecursedirs = "third_party"
+testpaths = "build"
+addopts = "--import-mode=importlib"

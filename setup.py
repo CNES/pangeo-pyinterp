@@ -17,9 +17,6 @@ import sysconfig
 
 import setuptools
 import setuptools.command.build_ext
-import setuptools.command.install
-import setuptools.command.sdist
-import setuptools.command.test
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -200,7 +197,7 @@ def date() -> str:
 def revision() -> str:
     """Return the software version."""
     os.chdir(WORKING_DIRECTORY)
-    module = pathlib.Path(WORKING_DIRECTORY, 'src', 'pyinterp', 'version.py')
+    module = pathlib.Path(WORKING_DIRECTORY, 'pyinterp', 'version.py')
 
     # If the ".git" directory exists, this function is executed in the
     # development environment, otherwise it's a release.
@@ -478,21 +475,6 @@ class CxxTestRunner(setuptools.Command):
         ])
 
 
-class SDist(setuptools.command.sdist.sdist):
-    """Copy pytest config into package."""
-
-    user_options = setuptools.command.sdist.sdist.user_options
-
-    def run(self) -> None:
-        """Carry out the action."""
-        source = WORKING_DIRECTORY.joinpath('conftest.py')
-        target = WORKING_DIRECTORY.joinpath('src', 'pyinterp', 'conftest.py')
-        source.rename(target)
-        try:
-            super().run()
-        finally:
-            target.rename(source)
-
 
 def long_description() -> str:
     """Read the README file."""
@@ -520,16 +502,9 @@ def main() -> None:
         ],
         cmdclass={
             'build_ext': BuildExt,
-            'sdist': SDist,
             'gtest': CxxTestRunner,
         },
         description='Interpolation of geo-referenced data for Python.',
-        exclude_package_data={
-            'pyinterp': [
-                'core/CMakeLists.txt', 'core/include/*', 'core/lib/*',
-                'core/module/*', 'core/tests/*'
-            ],
-        },
         ext_modules=[CMakeExtension(name='pyinterp.core')],
         install_requires=install_requires,
         include_package_data=True,
@@ -540,13 +515,12 @@ def main() -> None:
         long_description_content_type='text/x-rst',
         name='pyinterp',
         package_data={
-            'pyinterp': ['py.typed', 'core/*.pyi', 'core/geohash/*.pyi'],
+            "pyinterp": ["py.typed", "*.pyi"],
             'pyinterp.tests': ['dataset/*'],
         },
-        package_dir={'': 'src'},
+        package_dir={"pyinterp": "pyinterp"},
         packages=setuptools.find_namespace_packages(
-            where='src',
-            exclude=['pyinterp.core*'],
+            include=["pyinterp", "pyinterp.*"],
         ),
         platforms=['POSIX', 'MacOS', 'Windows'],
         python_requires='>=3.11',

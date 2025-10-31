@@ -1,7 +1,7 @@
 recursive-include _custom_build *
 recursive-include docs *
-recursive-include src *
-recursive-include src *.pyi
+recursive-include cxx *
+recursive-include pyinterp *.pyi
 recursive-include third_party *
 recursive-exclude scripts *
 include CMakeLists.txt

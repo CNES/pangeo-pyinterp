@@ -117,10 +117,7 @@ docs/source/readme.rst
 docs/source/sg_execution_times.rst
 
 # Generated source files
-src/pyinterp/version.py
+pyinterp/version.py
 
 # Generated files for regression testing
-src/pyinterp/tests/**/*.npy
-
-# Core libraries
-!src/pyinterp/core/lib
+pyinterp/tests/**/*.npy
