@@ -7,18 +7,22 @@ import pytest
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    """Add command line options to pytest.
+    """Register pytest command-line options.
 
-    This function is called early by pytest to register custom options.
-    These options may also be defined in pyinterp/tests/conftest.py
-    when pytest runs from the build directory.
+    This root conftest.py adds options only when they are not already
+    defined in pyinterp/tests/conftest.py, preventing duplicate registration.
     """
-    # Only add options if they haven't been added already
-    try:
-        parser.addoption('--visualize', action='store_true', default=False)
-        parser.addoption('--dump', action='store_true', default=False)
-        parser.addoption('--measure-coverage',
-                         action='store_true',
-                         default=False)
-    except ValueError:
-        pass  # Already added
+
+    def add_option_if_not_exists(option_name: str,
+                                 **kwargs: str | bool) -> None:
+        """Add option only if it doesn't already exist."""
+        try:
+            parser.addoption(option_name, **kwargs)
+        except ValueError:
+            pass  # Option already registered
+
+    add_option_if_not_exists('--visualize', action='store_true', default=False)
+    add_option_if_not_exists('--dump', action='store_true', default=False)
+    add_option_if_not_exists('--measure-coverage',
+                             action='store_true',
+                             default=False)
