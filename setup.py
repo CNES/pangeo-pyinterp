@@ -501,17 +501,6 @@ def long_description() -> str:
         return stream.read()
 
 
-def typehints() -> list[tuple[str, list[Any]]]:
-    """Get the list of type information files."""
-    pyi = []
-    for root, _, files in os.walk(WORKING_DIRECTORY):
-        pyi += [
-            str(pathlib.Path(root, item).relative_to(WORKING_DIRECTORY))
-            for item in files if item.endswith('.pyi')
-        ]
-    return [(str(pathlib.Path('pyinterp', 'core')), pyi)]
-
-
 def main() -> None:
     """Set up module."""
     install_requires = ['dask', 'numpy', 'xarray >= 0.13']
@@ -534,10 +523,16 @@ def main() -> None:
             'sdist': SDist,
             'gtest': CxxTestRunner,
         },
-        data_files=typehints(),
         description='Interpolation of geo-referenced data for Python.',
+        exclude_package_data={
+            'pyinterp': [
+                'core/CMakeLists.txt', 'core/include/*', 'core/lib/*',
+                'core/module/*', 'core/tests/*'
+            ],
+        },
         ext_modules=[CMakeExtension(name='pyinterp.core')],
         install_requires=install_requires,
+        include_package_data=True,
         keywords='interpolation, geospatial, geohash, geodetic',
         license='BSD-3-Clause',
         license_files=('LICENSE', ),
