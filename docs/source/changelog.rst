@@ -15,6 +15,12 @@ Changelog
   solving linear systems, resulting in better performance.
 * Adopted ruff for code formatting and linting, and improved code typing with
   more precise type hints and annotations.
+* Updated pre-commit hooks to their latest versions in
+  `.pre-commit-config.yaml`.
+* Upgraded the Eigen library to v5.0.0 to gain performance improvements and
+  improvements and new features.
+* Added Eigen as a git submodule to ensure consistent builds across
+  different environments.
 
 2025.8.1
 --------
