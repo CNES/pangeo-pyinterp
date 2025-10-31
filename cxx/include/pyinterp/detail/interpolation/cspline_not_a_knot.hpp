@@ -22,6 +22,9 @@ class CSplineNotAKnot : public CSplineBase<T> {
   /// @brief Triplet type for sparse matrix construction
   using Triplet = Eigen::Triplet<T>;
 
+  /// @brief Index type for the sparse matrix
+  using StorageIndex = Eigen::SparseMatrix<T>::StorageIndex;
+
   /// @brief Default constructor.
   CSplineNotAKnot() : CSplineBase<T>(), triplets_{} {}
 
@@ -88,7 +91,7 @@ auto CSplineNotAKnot<T>::compute_coefficients(const Vector<T>& xa,
   triplets_.emplace_back(0, 2, -h(0));
 
   // Rows 1 to n-2: Standard cubic spline tridiagonal equations
-  for (int64_t i = 1; i <= size_m2; ++i) {
+  for (StorageIndex i = 1; i <= static_cast<StorageIndex>(size_m2); ++i) {
     triplets_.emplace_back(i, i - 1, h(i - 1));
     triplets_.emplace_back(i, i, T(2) * (h(i - 1) + h(i)));
     triplets_.emplace_back(i, i + 1, h(i));
