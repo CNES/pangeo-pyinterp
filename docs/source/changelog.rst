@@ -3,8 +3,8 @@ Changelog
 
 2025.11.0
 ---------
-* Deprecated the `universal_kriging` method in favor of the more versatile
-  `kriging` method, which now supports both simple and universal kriging.
+* Deprecated the ``universal_kriging`` method in favor of the more versatile
+  ``kriging`` method, which now supports both simple and universal kriging.
   Updated the documentation accordingly.
 * Refactored the RBF class to improve epsilon handling, enhance interpolation
   matrix computation, and optimize the distance calculation method.
@@ -16,7 +16,7 @@ Changelog
 * Adopted ruff for code formatting and linting, and improved code typing with
   more precise type hints and annotations.
 * Updated pre-commit hooks to their latest versions in
-  `.pre-commit-config.yaml`.
+  ``.pre-commit-config.yaml``.
 * Upgraded the Eigen library to v5.0.0 to gain performance improvements and
   improvements and new features.
 * Added Eigen as a git submodule to ensure consistent builds across
