@@ -461,7 +461,7 @@ class CxxTestRunner(setuptools.Command):
         tempdir = distutils_dirname('temp')
 
         # Navigate to the directory containing the C++ tests and run them.
-        os.chdir(str(tempdir / 'src' / 'pyinterp' / 'core' / 'tests'))
+        os.chdir(str(tempdir / 'cxx' / 'tests'))
         self.spawn(['ctest', '--output-on-failure'])
 
         # File containing the coverage report.
