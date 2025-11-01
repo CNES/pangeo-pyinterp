@@ -144,4 +144,4 @@ storing a location in a database, or for indexing a location in a database.
 .. |License| image:: https://anaconda.org/conda-forge/pyinterp/badges/license.svg?service=github
     :target: https://opensource.org/licenses/BSD-3-Clause
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
-    :target: https://mybinder.org/v2/gh/CNES/pangeo-pyinterp/master?filepath=notebooks/auto_examples/
+    :target: https://mybinder.org/v2/gh/CNES/pangeo-pyinterp/master?urlpath=lab/tree/notebooks/auto_examples/
