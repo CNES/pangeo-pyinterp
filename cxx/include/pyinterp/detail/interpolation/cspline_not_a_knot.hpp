@@ -91,10 +91,14 @@ auto CSplineNotAKnot<T>::compute_coefficients(const Vector<T>& xa,
   triplets_.emplace_back(0, 2, -h(0));
 
   // Rows 1 to n-2: Standard cubic spline tridiagonal equations
-  for (StorageIndex i = 1; i <= static_cast<StorageIndex>(size_m2); ++i) {
-    triplets_.emplace_back(i, i - 1, h(i - 1));
-    triplets_.emplace_back(i, i, T(2) * (h(i - 1) + h(i)));
-    triplets_.emplace_back(i, i + 1, h(i));
+  for (int64_t i = 1; i <= size_m2; ++i) {
+    const auto a = static_cast<StorageIndex>(i);
+    const auto a_m1 = static_cast<StorageIndex>(i - 1);
+    const auto a_p1 = static_cast<StorageIndex>(i + 1);
+
+    triplets_.emplace_back(a, a_m1, h(i - 1));
+    triplets_.emplace_back(a, a, T(2) * (h(i - 1) + h(i)));
+    triplets_.emplace_back(a, a_p1, h(i));
   }
 
   // Row n-1: Right not-a-knot condition
