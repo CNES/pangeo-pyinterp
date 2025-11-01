@@ -56,7 +56,7 @@ print(f'Index for latitude 0.12°: {y_axis.find_index([0.12])}')
 # This ensures that coordinates are correctly handled at the boundary (e.g.,
 # -180° and 180° are treated as the same point).
 x_axis = pyinterp.Axis(lon, is_circle=True)
-print('\nLongitude axis (circular):')
+print('Longitude axis (circular):')
 print(x_axis)
 
 # %%
