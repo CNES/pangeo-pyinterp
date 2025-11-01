@@ -349,7 +349,7 @@ add_subdirectory(cxx)
 
 # Helper function to format boolean option
 function(format_enabled value_ result_var)
-  if(value_)
+  if(${value_})
     set(${result_var}
         "ON"
         PARENT_SCOPE)
