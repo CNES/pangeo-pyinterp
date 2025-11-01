@@ -8,7 +8,8 @@ cp -r examples binder $TMP_CONTENT_DIR
 find . -delete
 
 GENERATED_NOTEBOOKS_DIR=.generated-notebooks
-cp -r $TMP_CONTENT_DIR/examples $GENERATED_NOTEBOOKS_DIR
+mkdir -p $GENERATED_NOTEBOOKS_DIR
+find $TMP_CONTENT_DIR/examples -name '*.py' -exec cp '{}' $GENERATED_NOTEBOOKS_DIR ';'
 
 find $GENERATED_NOTEBOOKS_DIR -name '*.py' -exec sphinx_gallery_py2jupyter '{}' +
 NON_NOTEBOOKS=$(find $GENERATED_NOTEBOOKS_DIR -type f | grep -v '\.ipynb')
