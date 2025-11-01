@@ -12,7 +12,7 @@ add_library(pyinterp STATIC ${IMPLEMENT})
 target_include_directories(pyinterp PUBLIC ${Python3_INCLUDE_DIRS})
 target_link_libraries(
   pyinterp
-  PRIVATE
+  PRIVATE ${BLAS_LIBRARIES}
   PUBLIC cpp_coverage)
 
 file(GLOB_RECURSE SOURCES "module/*.cpp")
