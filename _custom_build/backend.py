@@ -17,6 +17,9 @@ def usage(args: dict[str, str | list[str] | None]) -> argparse.Namespace:
     parser = argparse.ArgumentParser('Custom build backend')
     parser.add_argument('--c-compiler', help='Preferred C compiler')
     parser.add_argument('--cxx-compiler', help='Preferred C++ compiler')
+    parser.add_argument('--fft',
+                        help='FFT library to use',
+                        choices=['mkl', 'pocketfft'])
     parser.add_argument('--generator', help='Selected CMake generator')
     parser.add_argument('--cmake-args', help='Additional arguments for CMake')
     parser.add_argument('--mkl', help='Using MKL as BLAS library')
@@ -48,6 +51,8 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
             setuptools_args.append(f"--c-compiler={args.c_compiler}")
         if args.cxx_compiler:
             setuptools_args.append(f"--cxx-compiler={args.cxx_compiler}")
+        if args.fft:
+            setuptools_args.append(f"--fft={args.fft}")
         if args.generator:
             setuptools_args.append(f"--generator={args.generator}")
         if args.cmake_args:

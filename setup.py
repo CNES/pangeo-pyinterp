@@ -28,6 +28,15 @@ WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 # OSX deployment target
 OSX_DEPLOYMENT_TARGET = '11.0'
 
+# MKL-FFT library
+MKL_FFT = 'mkl'
+
+# PocketFFT library
+POCKETFFT = 'pocketfft'
+
+# FFT choices
+FFT_CHOICES = [MKL_FFT, POCKETFFT]
+
 
 def compare_setuptools_version(required: tuple[int, ...]) -> bool:
     """Compare the version of setuptools with the required version."""
@@ -258,6 +267,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     user_options += [
         ('build-unittests', None, 'Build the unit tests of the C++ extension'),
         ('c-compiler=', None, 'Preferred C compiler'),
+        ('fft=', None, 'Select FFT library: pocketfft or MKL'),
         ('cmake-args=', None, 'Additional arguments for CMake'),
         ('code-coverage', None, 'Enable coverage reporting'),
         ('cxx-compiler=', None, 'Preferred C++ compiler'),
@@ -282,6 +292,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         self.c_compiler = None
         self.cmake_args = None
         self.cxx_compiler = None
+        self.fft = None
         self.generator = None
         self.mkl = None
         self.reconfigure = None
@@ -291,6 +302,10 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         super().finalize_options()
         if self.code_coverage is not None and platform.system() == 'Windows':
             raise RuntimeError('Code coverage is not supported on Windows')
+        if self.fft is not None and self.fft not in FFT_CHOICES:
+            raise ValueError(
+                f"Invalid value for option 'fft'. "
+                f"Choose one of: {', '.join(FFT_CHOICES)}", )
 
     def run(self) -> None:
         """Carry out the action."""
@@ -342,10 +357,13 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if self.cxx_compiler is not None:
             result.append('-DCMAKE_CXX_COMPILER=' + self.cxx_compiler)
 
+        if self.fft is not None:
+            result.append(f"-DFFT_IMPLEMENTATION={self.fft}")
+
         if conda_prefix is not None:
             result.append('-DCMAKE_PREFIX_PATH=' + conda_prefix)
 
-        if self.mkl:
+        if self.mkl or self.fft == MKL_FFT:
             self.set_conda_mklroot()
 
         return result

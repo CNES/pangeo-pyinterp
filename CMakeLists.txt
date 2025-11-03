@@ -215,6 +215,20 @@ option(CODE_COVERAGE "Enable coverage reporting" OFF)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
 
 # ##############################################################################
+# FFT implementation selection
+# ##############################################################################
+set(FFT_IMPLEMENTATION
+    "pocketfft"
+    CACHE STRING "Choose the FFT implementation: mkl, pocketfft")
+set(_choices "mkl" "pocketfft")
+set_property(CACHE FFT_IMPLEMENTATION PROPERTY STRINGS _choices)
+
+if(NOT ${FFT_IMPLEMENTATION} IN_LIST _choices)
+  message(FATAL_ERROR "Invalid FFT implementation. Choose between mkl "
+                      "and pocketfft not ${FFT_IMPLEMENTATION}.")
+endif()
+
+# ##############################################################################
 # Code Coverage Configuration
 # ##############################################################################
 add_library(cpp_coverage INTERFACE)
@@ -303,6 +317,39 @@ include(CTest)
 find_package(GTest)
 
 # ##############################################################################
+# Parse FFT implementation configuration
+# ##############################################################################
+# MKL-FFT
+if(FFT_IMPLEMENTATION STREQUAL "mkl")
+  if(BLAS_FOUND AND BLA_VENDOR MATCHES "Intel")
+    find_path(
+      MKL_INCLUDE_DIR
+      NAMES mkl_dfti.h
+      HINTS $ENV{MKLROOT}/include $ENV{CONDA_PREFIX}/include)
+    if(MKL_INCLUDE_DIR)
+      add_definitions(-DUSE_MKL_DTFI)
+      set(DUSE_MKL_DTFI ON)
+      set(FFT_LIBRARIES BLAS::BLAS)
+    else()
+      message(
+        FATAL_ERROR "MKL not found. Cannot use MKL as the FFT implementation.")
+    endif()
+  else()
+    message(
+      FATAL_ERROR "MKL not found. Cannot use MKL as the FFT implementation.")
+  endif()
+endif()
+
+# MKL does not provide a Discrete Cosine Transform (DCT). Always use pocketfft
+# for DCTs even when MKL is chosen as the FFT backend.
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
+add_compile_definitions(POCKETFFT_NO_MULTITHREADING)
+add_compile_definitions(POCKETFFT_CACHE_SIZE=1)
+if(FFT_IMPLEMENTATION STREQUAL "pocketfft")
+  set(FFT_LIBRARIES)
+endif()
+
+# ##############################################################################
 # Enable clang-tidy if requested
 # ##############################################################################
 if(ENABLE_CLANG_TIDY)
@@ -375,6 +422,7 @@ set(CONFIG_LINES
     "Compiler ID:            ${CMAKE_CXX_COMPILER_ID}"
     "Compiler Version:       ${CMAKE_CXX_COMPILER_VERSION}"
     "Boost include dir:      ${Boost_INCLUDE_DIRS}"
+    "FFT Implementation:     ${FFT_IMPLEMENTATION}"
     "BLAS:                   ${BLA_VENDOR}"
     "Code Coverage:          ${CODE_COVERAGE_LINE}"
     "Clang-Tidy:             ${CLANG_TIDY_LINE}"

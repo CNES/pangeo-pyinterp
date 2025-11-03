@@ -4,6 +4,8 @@
 // BSD-style license that can be found in the LICENSE file.
 #include "pyinterp/fill.hpp"
 
+#include <pybind11/eigen.h>
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 
 #include <cctype>
@@ -78,6 +80,33 @@ Args:
 
 Returns:
     The number of iterations performed and the maximum residual value.
+)__doc__",
+        py::call_guard<py::gil_scoped_release>());
+
+  m.def(("fft_inpaint_" + function_suffix).c_str(),
+        &pyinterp::fill::fft_inpaint<Type>, py::arg("grid"),
+        py::arg("first_guess") = pyinterp::fill::kZonalAverage,
+        py::arg("is_circle") = true, py::arg("max_iterations") = 500,
+        py::arg("epsilon") = 1e-4, py::arg("sigma") = 10.0,
+        py::arg("num_threads") = 0,
+        R"__doc__(
+Replace all undefined values (NaN) in a grid using spectral in-painting.
+
+Args:
+    grid: The grid to be processed
+    first_guess: Method to use for the first guess.
+    is_circle: If true, uses a Fast Fourier Transform (FFT) assuming periodic
+        boundaries. If false, uses a Discrete Cosine Transform (DCT) assuming
+        reflective boundaries.
+    max_iterations: Maximum number of iterations.
+    epsilon: Tolerance for ending relaxation.
+    sigma: Standard deviation of the Gaussian low-pass filter in pixel units.
+        Controls the smoothness of the fill.
+    num_threads: The number of threads to use for the computation.
+
+Returns:
+    A tuple containing the number of iterations performed and the maximum
+    residual value.
 )__doc__",
         py::call_guard<py::gil_scoped_release>());
 

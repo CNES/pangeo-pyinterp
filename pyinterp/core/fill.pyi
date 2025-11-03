@@ -103,6 +103,26 @@ class ValueType:
         ...
 
 
+def fft_inpaint_float32(grid: NDArray2DFloat32,
+                        first_guess: FirstGuess = ...,
+                        is_circle: bool = ...,
+                        max_iterations: int = ...,
+                        epsilon: float = ...,
+                        sigma: float = ...,
+                        num_threads: int = ...) -> tuple[int, float]:
+    ...
+
+
+def fft_inpaint_float64(grid: NDArray2DFloat64,
+                        first_guess: FirstGuess = ...,
+                        is_circle: bool = ...,
+                        max_iterations: int = ...,
+                        epsilon: float = ...,
+                        sigma: float = ...,
+                        num_threads: int = ...) -> tuple[int, float]:
+    ...
+
+
 def gauss_seidel_float32(grid: NDArray2DFloat32,
                          first_guess: FirstGuess = ...,
                          is_circle: bool = ...,
