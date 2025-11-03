@@ -54,12 +54,12 @@ auto fft_inpaint(Eigen::Ref<RowMajorMatrix<Type>> &grid,
 
   // Replace NaN in original_values with 0 to avoid issues in select operations
   // These values won't be used (we only select from non-NaN positions)
-  original_values = (mask.array()).select(0, original_values);
+  original_values = (mask.array()).select(Type(0), original_values);
 
   // Calculation of the first guess with the chosen method
   switch (first_guess) {
     case FirstGuess::kZero:
-      grid = (mask.array()).select(0, grid);
+      grid = (mask.array()).select(Type(0), grid);
       break;
     case FirstGuess::kZonalAverage:
       set_zonal_average<Type>(grid, mask, num_threads);
@@ -70,7 +70,7 @@ auto fft_inpaint(Eigen::Ref<RowMajorMatrix<Type>> &grid,
   }
   const auto x_size = grid.rows();
   const auto y_size = grid.cols();
-  const Type sigma_sq = 2.0 * sigma * sigma;
+  const Type sigma_sq = Type(2) * sigma * sigma;
 
   // Workspaces and transform objects
   std::optional<detail::math::FFT2D<Type>> fft;
@@ -89,13 +89,13 @@ auto fft_inpaint(Eigen::Ref<RowMajorMatrix<Type>> &grid,
     // Pre-compute FFT Kernel (Gaussian in frequency space)
     for (int64_t ix = 0; ix < kernel_fft.rows(); ++ix) {
       // Frequency u (with shift for FFT)
-      const Type u = (ix < x_size / 2) ? ix : (ix - x_size);
+      const Type u = (ix < x_size / 2) ? Type(ix) : Type(ix - x_size);
       for (int64_t iy = 0; iy < kernel_fft.cols(); ++iy) {
         // Frequency v (no shift for R2C complex layout)
-        const Type v = iy;
+        const Type v = Type(iy);
         const Type dist_sq = (u * u) + (v * v);
         kernel_fft(ix, iy) =
-            std::complex<Type>(std::exp(-dist_sq / sigma_sq), 0.0);
+            std::complex<Type>(std::exp(-dist_sq / sigma_sq), Type(0));
       }
     }
   } else {
@@ -106,10 +106,10 @@ auto fft_inpaint(Eigen::Ref<RowMajorMatrix<Type>> &grid,
     // Pre-compute DCT Kernel (Gaussian in frequency space)
     for (int64_t ix = 0; ix < kernel_dct.rows(); ++ix) {
       // Frequency u (no shift for DCT)
-      const Type u = ix;
+      const Type u = Type(ix);
       for (int64_t iy = 0; iy < kernel_dct.cols(); ++iy) {
         // Frequency v (no shift for DCT)
-        const Type v = iy;
+        const Type v = Type(iy);
         const Type dist_sq = (u * u) + (v * v);
         kernel_dct(ix, iy) = std::exp(-dist_sq / sigma_sq);
       }
@@ -118,7 +118,7 @@ auto fft_inpaint(Eigen::Ref<RowMajorMatrix<Type>> &grid,
 
   // Initialization of the function results.
   size_t iteration = 0;
-  Type max_residual = 0;
+  Type max_residual = Type(0);
   auto previous_grid = RowMajorMatrix<Type>(grid);
 
   for (; iteration < max_iterations; ++iteration) {
@@ -140,7 +140,7 @@ auto fft_inpaint(Eigen::Ref<RowMajorMatrix<Type>> &grid,
     // Check Convergence
     auto diff = (grid.array() - previous_grid.array()).abs();
     // Select residual only from undefined pixels
-    auto masked_diff = (mask.array()).select(diff, 0.0);
+    auto masked_diff = (mask.array()).select(diff, Type(0));
     max_residual = masked_diff.maxCoeff();
 
     if (max_residual < epsilon) {
