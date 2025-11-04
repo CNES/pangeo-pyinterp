@@ -343,7 +343,6 @@ endif()
 # MKL does not provide a Discrete Cosine Transform (DCT). Always use pocketfft
 # for DCTs even when MKL is chosen as the FFT backend.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
-add_compile_definitions(POCKETFFT_CACHE_SIZE=1)
 if(FFT_IMPLEMENTATION STREQUAL "pocketfft")
   set(FFT_LIBRARIES)
 endif()
