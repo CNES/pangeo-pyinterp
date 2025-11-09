@@ -86,7 +86,7 @@ Returns:
   m.def(("multigrid_" + function_suffix).c_str(),
         &pyinterp::fill::multigrid<Type>, py::arg("grid"),
         py::arg("first_guess") = pyinterp::fill::kZonalAverage,
-        py::arg("is_circle") = true, py::arg("max_iterations") = 500,
+        py::arg("is_circle") = true, py::arg("max_iterations") = 100,
         py::arg("epsilon") = 1e-4, py::arg("pre_smooth") = 2,
         py::arg("post_smooth") = 2, py::arg("num_threads") = 0,
         R"__doc__(

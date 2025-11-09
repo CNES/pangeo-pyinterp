@@ -213,6 +213,143 @@ def gauss_seidel(
     return residual <= epsilon, filled
 
 
+def multi_grid(
+    grid: NDArray2DFloat32 | NDArray2DFloat64,
+    first_guess: str = 'zonal_average',
+    is_circle: bool = False,
+    max_iterations: int | None = None,
+    epsilon: float = 1e-4,
+    pre_smooth: int = 2,
+    post_smooth: int = 2,
+    num_threads: int = 0,
+) -> tuple[int, float]:
+    """Replace undefined values (NaN) in a 2-D grid using the multigrid V-cycle.
+
+    Apply the multigrid V-cycle method to fill NaN values in a 2-D array.
+
+    Args:
+        grid: The grid to be processed.
+        first_guess: Method to use for the first guess. Supported values are
+            ``zero`` (use ``0.0``) and ``zonal_average`` (use zonal averages
+            along the X axis). Defaults to ``zonal_average``.
+        is_circle: True if the X axis of the grid defines a circle.
+        max_iterations: Maximum number of iterations to be used by the
+            multigrid method. If None, defaults to the product of the grid
+            dimensions.
+        epsilon: Tolerance for ending the multigrid method before reaching the
+            maximum number of iterations. Defaults to ``1e-4``.
+        pre_smooth: Number of smoothing iterations to perform before
+            restriction. Defaults to ``2``.
+        post_smooth: Number of smoothing iterations to perform after
+            prolongation. Defaults to ``2``.
+        num_threads: Number of threads to use for the computation. If 0 all
+            CPUs are used. If 1 is given, no parallel computing code is used,
+            which is useful for debugging. Defaults to ``0``.
+
+    Returns:
+        A tuple with the number of iterations performed and the final residual
+        value.
+
+    """
+    if first_guess not in ['zero', 'zonal_average']:
+        raise ValueError(f'first_guess type {first_guess!r} is not defined')
+
+    if max_iterations is None:
+        max_iterations = grid.shape[0] * grid.shape[1]
+
+    first_guess_enum = getattr(
+        core.fill.FirstGuess,
+        ''.join(item.capitalize() for item in first_guess.split('_')))
+
+    if grid.dtype == numpy.float32:
+        return core.fill.multigrid_float32(
+            grid,  # type: ignore[arg-type]
+            first_guess_enum,
+            is_circle,
+            max_iterations,
+            epsilon,
+            pre_smooth,
+            post_smooth,
+            num_threads,
+        )
+    return core.fill.multigrid_float64(
+        grid,  # type: ignore[arg-type]
+        first_guess_enum,
+        is_circle,
+        max_iterations,
+        epsilon,
+        pre_smooth,
+        post_smooth,
+        num_threads,
+    )
+
+
+def fft_inpaint(
+    grid: NDArray2DFloat32 | NDArray2DFloat64,
+    first_guess: str = 'zonal_average',
+    is_circle: bool = False,
+    max_iterations: int | None = None,
+    epsilon: float = 1e-4,
+    sigma: float = 10.0,
+    num_threads: int = 0,
+) -> tuple[int, float]:
+    """Fill undefined values in a grid using spectral in-painting.
+
+    Replace NaN values in a 2D array using a spectral in-painting approach.
+    Uses a Fast Fourier Transform (FFT) for periodic boundaries (is_circle=True)
+    or a Discrete Cosine Transform (DCT) for reflective boundaries
+    (is_circle=False). A Gaussian low-pass filter (sigma) controls the
+    smoothness of the fill.
+
+    Args:
+        grid: The grid to be processed
+        first_guess: Method to use for the first guess.
+        is_circle: If true, uses a Fast Fourier Transform (FFT) assuming
+            periodic boundaries. If false, uses a Discrete Cosine Transform
+            (DCT) assuming reflective boundaries. Defaults to ``False``.
+        max_iterations: Maximum number of iterations. Defaults to ``500``.
+        epsilon: Tolerance for ending relaxation. Defaults to ``1e-4``.
+        sigma: Standard deviation of the Gaussian low-pass filter in pixel
+            units. Controls the smoothness of the fill. Defaults to ``10.0``.
+        num_threads: The number of threads to use for the computation.
+            Defaults to ``0``.
+
+    Returns:
+        A tuple containing the number of iterations performed and the maximum
+        residual value.
+
+    """
+    if first_guess not in ['zero', 'zonal_average']:
+        raise ValueError(f'first_guess type {first_guess!r} is not defined')
+
+    if max_iterations is None:
+        max_iterations = grid.shape[0] * grid.shape[1]
+
+    first_guess_enum = getattr(
+        core.fill.FirstGuess,
+        ''.join(item.capitalize() for item in first_guess.split('_')))
+
+    if grid.dtype == numpy.float32:
+        return core.fill.fft_inpaint_float32(
+            grid,  # type: ignore[arg-type]
+            first_guess_enum,
+            is_circle,
+            max_iterations,
+            epsilon,
+            sigma,
+            num_threads,
+        )
+    return core.fill.fft_inpaint_float64(
+        grid,  # type: ignore[arg-type]
+        first_guess_enum,
+        is_circle,
+        max_iterations,
+        epsilon,
+        sigma,
+        num_threads,
+    )
+
+
 def matrix(x: NDArray2DFloat32 | NDArray2DFloat64,
            fill_value: float | None = None,
            in_place: bool = True) -> NDArray2DFloat32 | NDArray2DFloat64:

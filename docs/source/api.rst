@@ -106,8 +106,10 @@ Functions for filling missing values in grids.
 .. autosummary::
   :toctree: generated/
 
+  fill.fft_inpaint
   fill.gauss_seidel
   fill.loess
+  fill.multi_grid
 
 Interpolators
 =============

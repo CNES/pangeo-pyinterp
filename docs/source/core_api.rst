@@ -185,12 +185,16 @@ Gap filling routines and supporting types.
 .. autosummary::
   :toctree: generated/
 
-  core.fill.ValueType
   core.fill.FirstGuess
-  core.fill.loess_float64
-  core.fill.loess_float32
-  core.fill.gauss_seidel_float64
+  core.fill.ValueType
+  core.fill.fft_inpaint_float32
+  core.fill.fft_inpaint_float64
   core.fill.gauss_seidel_float32
+  core.fill.gauss_seidel_float64
+  core.fill.loess_float32
+  core.fill.loess_float64
+  core.fill.multigrid_float32
+  core.fill.multigrid_float64
 
 3D Interpolators
 ================
