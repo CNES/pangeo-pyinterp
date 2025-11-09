@@ -100,7 +100,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'furo'
+html_theme = 'sphinx_book_theme'
 html_title = 'PyInterp'
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -114,9 +114,12 @@ html_title = 'PyInterp'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 html_theme_options = {
-    'light_logo': 'pyinterp-light.svg',
-    'dark_logo': 'pyinterp-dark.svg',
-    'sidebar_hide_name': True,
+    'logo': {
+        'image_light': '_static/pyinterp-light.svg',
+        'image_dark': '_static/pyinterp-dark.svg',
+    },
+    'repository_url': 'https://github.com/CNES/pangeo-pyinterp',
+    'use_repository_button': True,
 }
 
 # Custom sidebar templates, must be a dictionary that maps document names
