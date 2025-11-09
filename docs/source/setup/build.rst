@@ -166,9 +166,10 @@ To do this, type the following command: ::
 
 .. note::
 
-    The documentation uses `furo <https://github.com/pradyunsg/furo>`_ as HTML
-    style. This package must be available before running the above command. You
-    can install it with corda-forge or pip.
+    The documentation uses `sphinx-book-theme
+    <https://github.com/executablebooks/sphinx-book-theme>`_ as HTML style. This
+    package must be available before running the above command. You can install
+    it with conda-forge or pip.
 
 Install
 =======

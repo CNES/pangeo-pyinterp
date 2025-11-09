@@ -5,7 +5,7 @@ dependencies:
   - cmake
   - coverage
   - dask
-  - furo
+  - sphinx-book-theme
   - gtest
   - numcodecs
   - numpy
