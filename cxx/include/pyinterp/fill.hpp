@@ -8,3 +8,4 @@
 #include "pyinterp/fill/gauss_seidel.hpp"
 #include "pyinterp/fill/loess.hpp"
 #include "pyinterp/fill/matrix.hpp"
+#include "pyinterp/fill/multi_grid.hpp"

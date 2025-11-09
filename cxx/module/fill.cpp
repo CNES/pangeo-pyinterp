@@ -83,6 +83,32 @@ Returns:
 )__doc__",
         py::call_guard<py::gil_scoped_release>());
 
+  m.def(("multigrid_" + function_suffix).c_str(),
+        &pyinterp::fill::multigrid<Type>, py::arg("grid"),
+        py::arg("first_guess") = pyinterp::fill::kZonalAverage,
+        py::arg("is_circle") = true, py::arg("max_iterations") = 500,
+        py::arg("epsilon") = 1e-4, py::arg("pre_smooth") = 2,
+        py::arg("post_smooth") = 2, py::arg("num_threads") = 0,
+        R"__doc__(
+Replace all undefined values (NaN) in a grid using multigrid method.
+
+Args:
+    grid: The grid to be processed
+    first_guess: Method to use for the first guess.
+    is_circle: If true, uses periodic boundaries along the X-axis. If false,
+        uses reflective boundaries.
+    max_iterations: Maximum number of iterations.
+    epsilon: Tolerance for ending relaxation.
+    pre_smooth: Number of pre-smoothing iterations per level (default: 2).
+    post_smooth: Number of post-smoothing iterations per level (default: 2).
+    num_threads: The number of threads to use for the computation.
+
+Returns:
+    A tuple containing the number of iterations performed and the maximum
+    residual value.
+)__doc__",
+        py::call_guard<py::gil_scoped_release>());
+
   m.def(("fft_inpaint_" + function_suffix).c_str(),
         &pyinterp::fill::fft_inpaint<Type>, py::arg("grid"),
         py::arg("first_guess") = pyinterp::fill::kZonalAverage,

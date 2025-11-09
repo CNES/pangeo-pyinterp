@@ -7,23 +7,31 @@
 #include <tuple>
 
 #include "pyinterp/eigen.hpp"
+#include "pyinterp/fill/boundary.hpp"
 #include "pyinterp/fill/enum.hpp"
 #include "pyinterp/fill/utils.hpp"
 
 namespace pyinterp {
 namespace detail {
 
-///  Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
-///  method by relaxation.
+/// @brief Performs red-black Gauss-Seidel smoothing with optional RHS.
 ///
-/// @param grid The grid to be processed
-/// @param is_circle True if the X axis of the grid defines a circle.
-/// @param relaxation Relaxation constant
-/// @return maximum residual value
-template <typename Type>
-auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> &grid, Matrix<bool> &mask,
-                  const bool is_circle, const Type relaxation,
-                  const size_t num_threads) -> Type {
+/// @tparam Type Data type
+/// @tparam GridType Type of the grid to be updated
+/// @tparam RhsType Type of the right-hand side
+/// @tparam MaskType Type of the boolean mask
+/// @param grid The grid to be updated
+/// @param rhs The right-hand side (f in Au = f). Use zeros for homogeneous
+/// case.
+/// @param mask Boolean mask indicating which cells to update
+/// @param is_circle True if the X axis defines a circle (periodic boundary)
+/// @param relaxation SOR relaxation parameter (1.0 = pure Gauss-Seidel)
+/// @param num_threads Number of threads for parallel execution
+/// @return Maximum residual value across all updated cells
+template <typename Type, typename GridType, typename RhsType, typename MaskType>
+auto gauss_seidel_core(GridType &grid, const RhsType &rhs, const MaskType &mask,
+                       const bool is_circle, const Type relaxation,
+                       const size_t num_threads) -> Type {
   // Shape of the grid
   auto x_size = grid.rows();
   auto y_size = grid.cols();
@@ -33,7 +41,6 @@ auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> &grid, Matrix<bool> &mask,
   auto except = std::exception_ptr(nullptr);
 
   // Thread worker responsible for processing red or black cells.
-  //
   // @param y_start First index y of the band to be processed.
   // @param y_end Last index y, excluded, of the band to be processed.
   // @param red_black Whether the band is red or black.
@@ -42,21 +49,20 @@ auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> &grid, Matrix<bool> &mask,
                     const int red_black, Type *max_residual) -> void {
     // Update the cell grid[ix, iy] using the Gauss-Seidel method.
     //
-    // @param ix0 ix - 1
-    // @param ix Index of the pixel to be modified.
-    // @param ix1 ix + 1
-    // @param iy0 iy - 1
-    // @param iy Index of the pixel to be modified.
-    // @param iy1 iy + 1
-    auto cell_fill = [&grid, &relaxation, &max_residual](
-                         const int64_t ix0, const int64_t ix, const int64_t ix1,
-                         const int64_t iy0, const int64_t iy,
-                         const int64_t iy1) {
+    // @param nbr Neighbor indices structure
+    // @param ix Index x of the pixel to be modified.
+    // @param iy Index y of the pixel to be modified.
+    auto cell_fill = [&grid, &rhs, &relaxation, &max_residual](
+                         const fill::DynamicNeighbors &nbr, const int64_t ix,
+                         const int64_t iy) {
       auto &cell = grid(ix, iy);
-      auto residual = (Type(0.25) * (grid(ix0, iy) + grid(ix1, iy) +
-                                     grid(ix, iy0) + grid(ix, iy1)) -
-                       cell) *
-                      relaxation;
+      // For Au = f: u_new = 0.25 * (neighbors + f)
+      // residual = (u_new - u_old) is the correction applied
+      auto residual =
+          (Type(0.25) * (grid(nbr.ix0, iy) + grid(nbr.ix1, iy) +
+                         grid(ix, nbr.iy0) + grid(ix, nbr.iy1) + rhs(ix, iy)) -
+           cell) *
+          relaxation;
       cell += residual;
       *max_residual = std::max(*max_residual, std::fabs(residual));
     };
@@ -66,16 +72,18 @@ auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> &grid, Matrix<bool> &mask,
     *max_residual = Type(0);
 
     try {
+      // Create boundary helper once for this thread
+      fill::DynamicNeighbors nbr(x_size, y_size, is_circle, false);
+
       for (auto ix = 0; ix < x_size; ++ix) {
-        auto ix0 = ix == 0 ? (is_circle ? x_size - 1 : 1) : ix - 1;
-        auto ix1 = ix == x_size - 1 ? (is_circle ? 0 : x_size - 2) : ix + 1;
+        // Update x-neighbors once per row
+        nbr.update_x(ix);
 
         for (auto iy = y_start; iy < y_end; ++iy) {
           if (mask(ix, iy) && ((ix + iy) % 2) == red_black) {
-            auto iy0 = iy == 0 ? 1 : iy - 1;
-            auto iy1 = iy == y_size - 1 ? y_size - 2 : iy + 1;
-
-            cell_fill(ix0, ix, ix1, iy0, iy, iy1);
+            // Update y-neighbors for current cell
+            nbr.update_y(iy);
+            cell_fill(nbr, ix, iy);
           }
         }
       }
@@ -130,6 +138,18 @@ auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> &grid, Matrix<bool> &mask,
     return *std::max_element(max_residuals.begin(), max_residuals.end());
   };
   return std::max(calculate(0), calculate(1));
+}
+
+/// @brief Wrapper for backward compatibility: Gauss-Seidel for homogeneous case
+/// (f=0).
+template <typename Type>
+auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> &grid, Matrix<bool> &mask,
+                  const bool is_circle, const Type relaxation,
+                  const size_t num_threads) -> Type {
+  // Create zero RHS for homogeneous case
+  Matrix<Type> rhs = Matrix<Type>::Zero(grid.rows(), grid.cols());
+  return gauss_seidel_core<Type>(grid, rhs, mask, is_circle, relaxation,
+                                 num_threads);
 }
 
 }  // namespace detail

@@ -24,6 +24,7 @@ from ..typing import (
     NDArray4DFloat64,
 )
 
+
 class FirstGuess:
     __members__: ClassVar[dict] = ...  # read-only
     Zero: ClassVar[FirstGuess] = ...
@@ -238,6 +239,28 @@ def matrix_float32(x: NDArray2DFloat32, fill_value: float = ...) -> None:
 
 
 def matrix_float64(x: NDArray2DFloat64, fill_value: float = ...) -> None:
+    ...
+
+
+def multigrid_float32(grid: NDArray2DFloat32,
+                      first_guess: FirstGuess = ...,
+                      is_circle: bool = ...,
+                      max_iterations: int = ...,
+                      epsilon: float = ...,
+                      pre_smooth: int = ...,
+                      post_smooth: int = ...,
+                      num_threads: int = ...) -> tuple[int, float]:
+    ...
+
+
+def multigrid_float64(grid: NDArray2DFloat64,
+                      first_guess: FirstGuess = ...,
+                      is_circle: bool = ...,
+                      max_iterations: int = ...,
+                      epsilon: float = ...,
+                      pre_smooth: int = ...,
+                      post_smooth: int = ...,
+                      num_threads: int = ...) -> tuple[int, float]:
     ...
 
 
