@@ -13,18 +13,22 @@
    {%- set special = [] -%}
    {%- set inherited_meth = [] -%}
    {%- set skip = [
-                   '_pybind11_conduit_v1_',
                    '__abstractmethods__',
+                   '__annotate_func__',
                    '__annotations__',
+                   '__annotations_cache__',
                    '__dict__',
                    '__doc__',
                    '__entries',
+                   '__firstlineno__',
                    '__hash__',
                    '__init__',
                    '__members__',
                    '__module__',
                    '__slots__',
-                   '__weakref__'] -%}
+                   '__static_attributes__',
+                   '__weakref__',
+                   '_pybind11_conduit_v1_'] -%}
 
    {%- for item in methods if not item in skip -%}
       {%- if item in inherited_members -%}

@@ -100,8 +100,8 @@ fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 #       interpolation will also be NaN, due to NaN propagation in arithmetic
 #       operations. This means the masked region effectively grows during
 #       interpolation. To avoid this behavior, you should
-#       :doc:`pre-process <ex_fill_undef>` the grid to replace or remove NaN
-#       values.
+#       :doc:`pre-process <../utilities/ex_fill_undef>` the grid to replace or
+#       remove NaN values.
 
 # %%
 # The following code performs bicubic interpolation on the same grid.

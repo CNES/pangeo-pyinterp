@@ -8,17 +8,6 @@ Core API Documentation
 Low-level classes & functions implemented in the compiled extension module (``pyinterp.core``).
 Most users should start with the high-level :doc:`api` overview.
 
-Axes
-====
-Core axis primitives.
-
-.. autosummary::
-  :toctree: generated/
-
-  core.Axis
-  core.AxisInt64
-  core.TemporalAxis
-
 NumPy Datetime Utilities
 ========================
 Vectorized helpers for working with ``numpy.datetime64`` values.

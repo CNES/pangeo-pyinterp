@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy
 
-from . import core, interface
+from . import Axis, TemporalAxis, core, interface
 
 if TYPE_CHECKING:
     from .typing import NDArray2D, NDArray3D, NDArray4D
@@ -131,8 +131,8 @@ class Grid2D:
 
     def __init__(
         self,
-        x: core.Axis,
-        y: core.Axis,
+        x: Axis,
+        y: Axis,
         array: NDArray2D,
         increasing_axes: str | None = None,
     ) -> None:
@@ -247,9 +247,9 @@ class Grid3D:
 
     def __init__(
         self,
-        x: core.Axis,
-        y: core.Axis,
-        z: core.Axis | core.TemporalAxis,
+        x: Axis,
+        y: Axis,
+        z: Axis | TemporalAxis,
         array: NDArray3D,
         increasing_axes: str | None = None,
     ) -> None:
@@ -338,10 +338,10 @@ class Grid4D:
 
     def __init__(
         self,
-        x: core.Axis,
-        y: core.Axis,
-        z: core.Axis | core.TemporalAxis,
-        u: core.Axis,
+        x: Axis,
+        y: Axis,
+        z: Axis | TemporalAxis,
+        u: Axis,
         array: NDArray4D,
         increasing_axes: str | None = None,
     ) -> None:
