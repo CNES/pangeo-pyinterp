@@ -24,7 +24,6 @@ from ..typing import (
     NDArray4DFloat64,
 )
 
-
 class FirstGuess:
     __members__: ClassVar[dict] = ...  # read-only
     Zero: ClassVar[FirstGuess] = ...
