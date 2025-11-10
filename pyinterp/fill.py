@@ -1,23 +1,30 @@
 """Replace undefined values."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
-import concurrent.futures
+from typing import TYPE_CHECKING, TypeVar, overload
 
 import numpy
 
 from . import core, grid, interface
 from .grid import NUM_DIMS_2
+from .typing import NDArray2DFloat32, NDArray2DFloat64
 
 if TYPE_CHECKING:
-    from .typing import (
-        NDArray1D,
-        NDArray2D,
-        NDArray2DFloat32,
-        NDArray2DFloat64,
-        NDArray3D,
-        NDArray4D,
-    )
+    from .typing import NDArray1D, NDArray2D, NDArray3D, NDArray4D
+
+#: TypeVar for 2D float arrays to preserve type through function calls
+_Float2DArray = TypeVar('_Float2DArray', NDArray2DFloat32, NDArray2DFloat64)
+
+
+def _core_function(prefix: str, dtype: numpy.dtype) -> str:
+    """Determine the core function name based on the data type."""
+    if dtype == numpy.float32:
+        return f'{prefix}_float32'
+    elif dtype == numpy.float64:
+        return f'{prefix}_float64'
+    else:
+        raise ValueError(f'Unsupported dtype {dtype}. '
+                         'Must be float32 or float64.')
 
 
 @overload
@@ -92,45 +99,23 @@ def loess(mesh: grid.Grid2D | grid.Grid3D | grid.Grid4D,
                                         num_threads)
 
 
-@overload
-def gauss_seidel(  # type: ignore[overload-overlap]
-    mesh: grid.Grid3D,
-    first_guess: str = 'zonal_average',
-    max_iteration: int | None = None,
-    epsilon: float = 1e-4,
-    relaxation: float | None = None,
-    num_threads: int = 0,
-) -> tuple[bool, NDArray3D]:
-    ...
-
-
-@overload
 def gauss_seidel(
-    mesh: grid.Grid2D,
+    array: _Float2DArray,
     first_guess: str = 'zonal_average',
+    is_circle: bool = False,
     max_iteration: int | None = None,
     epsilon: float = 1e-4,
     relaxation: float | None = None,
     num_threads: int = 0,
-) -> tuple[bool, NDArray2D]:
-    ...
-
-
-def gauss_seidel(
-    mesh: grid.Grid2D | grid.Grid3D,
-    first_guess: str = 'zonal_average',
-    max_iteration: int | None = None,
-    epsilon: float = 1e-4,
-    relaxation: float | None = None,
-    num_threads: int = 0,
-) -> tuple[bool, NDArray2D | NDArray3D]:
-    r"""Replace all undefined values (NaN) in a grid using Gauss-Seidel method.
+    in_place: bool = False,
+) -> tuple[int, float, _Float2DArray]:
+    r"""Replace all undefined values in a 2D grid using Gauss-Seidel method.
 
     Apply the Gauss-Seidel method by relaxation to fill all undefined values
-    (NaN) in a grid.
+    (NaN) in a 2D grid.
 
     Args:
-        mesh: Grid function on a uniform 2/3-dimensional grid to be filled.
+        array: 2D array to be filled with shape (ny, nx).
         first_guess: Specifies the type of first guess grid.
             Supported values are:
 
@@ -140,6 +125,8 @@ def gauss_seidel(
 
             Defaults to ``zonal_average``.
 
+        is_circle: If True, the X-axis is circular (e.g., longitude).
+            Defaults to ``False``.
         max_iteration: Maximum number of iterations to be used by relaxation.
             The default value is equal to the product of the grid dimensions.
         epsilon: Tolerance for ending relaxation before the maximum number of
@@ -160,61 +147,53 @@ def gauss_seidel(
         num_threads: The number of threads to use for the computation. If 0 all
             CPUs are used. If 1 is given, no parallel computing code is used at
             all, which is useful for debugging. Defaults to ``0``.
+        in_place: If True, the input array is modified in place. If False, a
+            copy is made and filled. Defaults to ``False``.
 
     Returns:
-        A boolean indicating if the calculation has converged, i. e. if
-        the value of the residues is lower than the ``epsilon`` limit set, and
-        the the grid will have the all NaN filled with extrapolated values.
+        A tuple containing the number of iterations performed, the final
+        residual value, and the filled array.
+
+    Note:
+        This function operates on 2D grids only. For greater dimensional data,
+        apply this function to each 2D slice independently:
+
+        .. code-block:: python
+
+            # For a 3D array with shape (ny, nx, nz)
+            filled_3d = np.empty_like(data_3d)
+            for iz in range(data_3d.shape[2]):
+                iterations, residual, filled_3d[:, :, iz] = gauss_seidel(
+                    data_3d[:, :, iz], is_circle=True
+                )
 
     """
     if first_guess not in ['zero', 'zonal_average']:
         raise ValueError(f'first_guess type {first_guess!r} is not defined')
 
-    ny = len(mesh.y)
-    nx = len(mesh.x)
-    nz = len(mesh.z) if isinstance(mesh, grid.Grid3D) else 0
-
+    ny, nx = array.shape
     if relaxation is None:
-        if nx == ny:
-            n = nx
-        else:
-            n = nx * ny * numpy.sqrt(2 / (nx**2 + ny**2))
+        n = nx if nx == ny else nx * ny * numpy.sqrt(2 / (nx**2 + ny**2))
         relaxation = 2 / (1 + numpy.pi / n)
 
-    if max_iteration is None:
-        max_iteration = nx * ny
+    max_iteration = max_iteration or ny * nx
 
-    first_guess = getattr(
+    first_guess_enum = getattr(
         core.fill.FirstGuess,
         ''.join(item.capitalize() for item in first_guess.split('_')))
 
-    instance = mesh._instance
-    function = interface._core_function('gauss_seidel', instance)
-    filled = numpy.copy(mesh.array)
-    if nz == 0:
-        _iterations, residual = getattr(core.fill,
-                                        function)(filled, first_guess,
-                                                  mesh.x.is_circle,
-                                                  max_iteration, epsilon,
-                                                  relaxation, num_threads)
-    else:
-        with concurrent.futures.ThreadPoolExecutor(
-                max_workers=num_threads if num_threads else None) as executor:
-            futures = [
-                executor.submit(getattr(core.fill, function), filled[:, :, iz],
-                                first_guess, mesh.x.is_circle, max_iteration,
-                                epsilon, relaxation, 1) for iz in range(nz)
-            ]
-            residuals = []
-            for future in concurrent.futures.as_completed(futures):
-                _, residual = future.result()
-                residuals.append(residual)
-            residual = max(residuals)
-    return residual <= epsilon, filled
+    filled = array if in_place else numpy.copy(array)
+    callable = _core_function('gauss_seidel', array.dtype)
+    iterations, residual = getattr(core.fill,
+                                   callable)(filled, first_guess_enum,
+                                             is_circle, max_iteration, epsilon,
+                                             relaxation, num_threads)
+
+    return iterations, residual, filled
 
 
 def multi_grid(
-    grid: NDArray2DFloat32 | NDArray2DFloat64,
+    array: _Float2DArray,
     first_guess: str = 'zonal_average',
     is_circle: bool = False,
     max_iterations: int | None = None,
@@ -222,19 +201,18 @@ def multi_grid(
     pre_smooth: int = 2,
     post_smooth: int = 2,
     num_threads: int = 0,
-) -> tuple[int, float]:
+    in_place: bool = False,
+) -> tuple[int, float, _Float2DArray]:
     """Replace undefined values (NaN) in a 2-D grid using the multigrid V-cycle.
 
-    Apply the multigrid V-cycle method to fill NaN values in a 2-D array.
-
     Args:
-        grid: The grid to be processed.
+        array: The array to be processed.
         first_guess: Method to use for the first guess. Supported values are
             ``zero`` (use ``0.0``) and ``zonal_average`` (use zonal averages
             along the X axis). Defaults to ``zonal_average``.
-        is_circle: True if the X axis of the grid defines a circle.
+        is_circle: True if the X axis of the array defines a circle.
         max_iterations: Maximum number of iterations to be used by the
-            multigrid method. If None, defaults to the product of the grid
+            multigrid method. If None, defaults to the product of the array
             dimensions.
         epsilon: Tolerance for ending the multigrid method before reaching the
             maximum number of iterations. Defaults to ``1e-4``.
@@ -245,54 +223,57 @@ def multi_grid(
         num_threads: Number of threads to use for the computation. If 0 all
             CPUs are used. If 1 is given, no parallel computing code is used,
             which is useful for debugging. Defaults to ``0``.
+        in_place: If True, the input array is modified in place. If False, a
+            copy is made and filled. Defaults to ``False``.
 
     Returns:
-        A tuple with the number of iterations performed and the final residual
-        value.
+        A tuple containing the number of iterations performed, the final
+        residual value, and the filled array.
+
+    Note:
+        This function operates on 2D grids only. For greater dimensional data,
+        apply this function to each 2D slice independently:
+
+        .. code-block:: python
+
+            # For a 3D array with shape (ny, nx, nz)
+            filled_3d = np.empty_like(data_3d)
+            for iz in range(data_3d.shape[2]):
+                iterations, residual, filled_3d[:, :, iz] = multi_grid(
+                    data_3d[:, :, iz], is_circle=True
+                )
 
     """
     if first_guess not in ['zero', 'zonal_average']:
         raise ValueError(f'first_guess type {first_guess!r} is not defined')
 
-    if max_iterations is None:
-        max_iterations = grid.shape[0] * grid.shape[1]
+    max_iterations = max_iterations or 1000
 
     first_guess_enum = getattr(
         core.fill.FirstGuess,
         ''.join(item.capitalize() for item in first_guess.split('_')))
 
-    if grid.dtype == numpy.float32:
-        return core.fill.multigrid_float32(
-            grid,  # type: ignore[arg-type]
-            first_guess_enum,
-            is_circle,
-            max_iterations,
-            epsilon,
-            pre_smooth,
-            post_smooth,
-            num_threads,
-        )
-    return core.fill.multigrid_float64(
-        grid,  # type: ignore[arg-type]
-        first_guess_enum,
-        is_circle,
-        max_iterations,
-        epsilon,
-        pre_smooth,
-        post_smooth,
-        num_threads,
-    )
+    filled = array if in_place else numpy.copy(array)
+    callable = _core_function('multigrid', array.dtype)
+    iterations, residual = getattr(core.fill,
+                                   callable)(filled, first_guess_enum,
+                                             is_circle, max_iterations,
+                                             epsilon, pre_smooth, post_smooth,
+                                             num_threads)
+
+    return iterations, residual, filled
 
 
 def fft_inpaint(
-    grid: NDArray2DFloat32 | NDArray2DFloat64,
+    array: _Float2DArray,
     first_guess: str = 'zonal_average',
     is_circle: bool = False,
     max_iterations: int | None = None,
     epsilon: float = 1e-4,
     sigma: float = 10.0,
     num_threads: int = 0,
-) -> tuple[int, float]:
+    in_place: bool = False,
+) -> tuple[int, float, _Float2DArray]:
     """Fill undefined values in a grid using spectral in-painting.
 
     Replace NaN values in a 2D array using a spectral in-painting approach.
@@ -302,7 +283,7 @@ def fft_inpaint(
     smoothness of the fill.
 
     Args:
-        grid: The grid to be processed
+        array: The array to be processed
         first_guess: Method to use for the first guess.
         is_circle: If true, uses a Fast Fourier Transform (FFT) assuming
             periodic boundaries. If false, uses a Discrete Cosine Transform
@@ -313,34 +294,43 @@ def fft_inpaint(
             units. Controls the smoothness of the fill. Defaults to ``10.0``.
         num_threads: The number of threads to use for the computation.
             Defaults to ``0``.
+        in_place: If True, the input array is modified in place. If False, a
+            copy is made and filled. Defaults to ``False``.
 
     Returns:
-        A tuple containing the number of iterations performed and the maximum
-        residual value.
+        A tuple containing the number of iterations performed, the maximum
+        residual value, and the filled array.
+
+    Note:
+        This function operates on 2D arrays only and requires a C contiguous
+        array. If you have higher dimensional data, apply this function to each
+        2D slice independently:
+
+        .. code-block:: python
+
+            # For a 3D array with shape (ny, nx, nz)
+            filled_3d = np.empty_like(data_3d)
+            for iz in range(data_3d.shape[2]):
+                c_contiguous_data = np.ascontiguousarray(data_3d[:, :, iz])
+                iterations, residual, filled_3d[:, :, iz] = fft_inpaint(
+                    c_contiguous_data, is_circle=True
+                )
 
     """
     if first_guess not in ['zero', 'zonal_average']:
         raise ValueError(f'first_guess type {first_guess!r} is not defined')
 
     if max_iterations is None:
-        max_iterations = grid.shape[0] * grid.shape[1]
+        max_iterations = array.shape[0] * array.shape[1]
 
     first_guess_enum = getattr(
         core.fill.FirstGuess,
         ''.join(item.capitalize() for item in first_guess.split('_')))
 
-    if grid.dtype == numpy.float32:
-        return core.fill.fft_inpaint_float32(
-            grid,  # type: ignore[arg-type]
-            first_guess_enum,
-            is_circle,
-            max_iterations,
-            epsilon,
-            sigma,
-            num_threads,
-        )
-    return core.fill.fft_inpaint_float64(
-        grid,  # type: ignore[arg-type]
+    filled = array if in_place else numpy.copy(array)
+    callable = _core_function('fft_inpaint', array.dtype)
+    iterations, residual = getattr(core.fill, callable)(
+        filled,  # type: ignore[arg-type]
         first_guess_enum,
         is_circle,
         max_iterations,
@@ -348,6 +338,8 @@ def fft_inpaint(
         sigma,
         num_threads,
     )
+
+    return iterations, residual, filled
 
 
 def matrix(x: NDArray2DFloat32 | NDArray2DFloat64,

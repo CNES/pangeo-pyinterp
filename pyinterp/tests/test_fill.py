@@ -53,9 +53,16 @@ def test_gauss_seidel() -> None:
     """Test the fill.gauss_seidel function with 2D grids."""
     grid = load_data()
     assert isinstance(grid, Grid2D)
-    _, filled0 = fill.gauss_seidel(grid, num_threads=0)
-    _, filled1 = fill.gauss_seidel(grid, num_threads=1)
-    _, filled2 = fill.gauss_seidel(grid, first_guess='zero', num_threads=0)
+    _, _, filled0 = fill.gauss_seidel(grid.array,
+                                      is_circle=grid.x.is_circle,
+                                      num_threads=0)
+    _, _, filled1 = fill.gauss_seidel(grid.array,
+                                      is_circle=grid.x.is_circle,
+                                      num_threads=1)
+    _, _, filled2 = fill.gauss_seidel(grid.array,
+                                      is_circle=grid.x.is_circle,
+                                      first_guess='zero',
+                                      num_threads=0)
     data = np.copy(grid.array)
     data[np.isnan(data)] = 0
     filled0[np.isnan(filled0)] = 0
@@ -67,14 +74,18 @@ def test_gauss_seidel() -> None:
     assert (filled2 - filled1).mean() != 0
 
     with pytest.raises(ValueError):
-        fill.gauss_seidel(grid, '_')
+        fill.gauss_seidel(grid.array,
+                          is_circle=grid.x.is_circle,
+                          first_guess='_')
 
     x_axis = Axis(np.linspace(-180, 180, 10), is_circle=True)
     y_axis = Axis(np.linspace(-90, 90, 10), is_circle=False)
     rng = np.random.default_rng(42)
     data = rng.random((len(x_axis), len(y_axis)))
     grid = Grid2D(x_axis, y_axis, data)
-    _, filled0 = fill.gauss_seidel(grid, num_threads=0)
+    _, _, filled0 = fill.gauss_seidel(grid.array,
+                                      is_circle=grid.x.is_circle,
+                                      num_threads=0)
     assert isinstance(filled0, np.ndarray)
 
 
@@ -95,11 +106,22 @@ def test_loess_3d() -> None:
 
 
 def test_gauss_seidel_3d() -> None:
-    """Test the fill.gauss_seidel function with 3D grids."""
+    """Test that gauss_seidel rejects 3D arrays with helpful error."""
     grid = load_data(True)
     assert isinstance(grid, Grid3D)
-    _, filled0 = fill.gauss_seidel(grid, num_threads=0)
-    assert (filled0[:, :, 0] - filled0[:, :, 1]).mean() == 0
+
+    # Should reject 3D arrays
+    with pytest.raises(ValueError, match='grid must be a 2D array'):
+        fill.gauss_seidel(
+            grid.array,  # type: ignore[type-var]
+            is_circle=grid.x.is_circle,
+        )
+
+    # But should work on individual slices
+    _, _, filled_slice = fill.gauss_seidel(grid.array[:, :, 0],
+                                           is_circle=grid.x.is_circle,
+                                           num_threads=0)
+    assert filled_slice.shape == grid.array[:, :, 0].shape
 
 
 def test_loess_4d() -> None:

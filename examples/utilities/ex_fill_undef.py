@@ -118,9 +118,11 @@ fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 # technique, available through the :py:func:`pyinterp.fill.gauss_seidel`
 # function. This iterative method is generally faster than LOESS.
 #
-# The function returns a tuple containing the filled grid and a convergence
-# flag.
-converged, filled = pyinterp.fill.gauss_seidel(grid)
+# The function returns a tuple containing a convergence flag and the filled
+# array. You need to pass the array data and specify whether the X-axis is
+# circular (e.g., for longitude).
+iterations, residual, filled = pyinterp.fill.gauss_seidel(
+    grid.array, is_circle=grid.x.is_circle)
 
 # %%
 # Let's visualize the result of the Gauss-Seidel relaxation.
