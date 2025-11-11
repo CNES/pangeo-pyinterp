@@ -259,7 +259,8 @@ void v_cycle(GridType& grid, const RhsType& rhs, const MaskType& mask,
   Matrix<Type> fine_error(x_size, y_size);
   fine_error.setZero();
   prolong_grid(fine_error, coarse_error, is_circle);
-  grid += fine_error;
+  // Only apply correction to masked (undefined) points
+  grid = mask.array().select(grid.array() + fine_error.array(), grid);
 
   // 6. Post-smoothing
   smooth<Type, GridType, RhsType, MaskType>(

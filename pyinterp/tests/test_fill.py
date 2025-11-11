@@ -170,3 +170,22 @@ def test_vector() -> None:
     xp[-2:] = np.datetime64('NaT')
     yp = fill.vector(xp, fill_value=np.datetime64('NaT'))
     assert np.all(yp == x)
+
+
+def test_fft_inpaint() -> None:
+    """Test the fill.fft_inpaint function with 2D grids."""
+    grid = load_data()
+    array = np.ascontiguousarray(grid.array)
+    _, _, filled = fill.fft_inpaint(array, num_threads=0)
+    assert np.nanmean(filled - grid.array) == 0
+
+    _, _, filled = fill.fft_inpaint(array, is_circle=True, num_threads=0)
+    assert np.nanmean(filled - grid.array) == 0
+
+
+def test_multigrid() -> None:
+    """Test the fill.multi_grid function with 2D grids."""
+    grid = load_data()
+    assert isinstance(grid, Grid2D)
+    _, _, filled = fill.multi_grid(grid.array, num_threads=0)
+    assert np.nanmean(filled - grid.array) == 0
