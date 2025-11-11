@@ -45,12 +45,16 @@ in the neighborhood. This behavior is a concern when you need to interpolate
 values near the mask of some fields. The library provides utilities to fill the
 undefined values:
 
+* `fft_inpaint <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.fft_inpaint.html>`_
+  to fill all undefined values in a grid using the FFT Inpainting method.
 * `loess <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.loess.html>`_
   to fill the undefined values on the boundary between the defined/undefined
   values using local regression.
 * `gauss_seidel <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.gauss_seidel.html>`_
   to fill all undefined values in a grid using the Gauss-Seidel method by
   relaxation.
+* `multi_grid <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.multi_grid.html>`_
+  to fill all undefined values in a grid using the Multi-Grid method.
 
 Geographic indexers
 ===================
