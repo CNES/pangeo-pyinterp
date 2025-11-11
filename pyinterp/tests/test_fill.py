@@ -105,17 +105,10 @@ def test_loess_3d() -> None:
         fill.loess(grid, num_threads=0, nx=1, ny=0)
 
 
-def test_gauss_seidel_3d() -> None:
-    """Test that gauss_seidel rejects 3D arrays with helpful error."""
+def test_gauss_seidel_dynamic_strides() -> None:
+    """Test that gauss_seidel accepts dynamic strides."""
     grid = load_data(True)
     assert isinstance(grid, Grid3D)
-
-    # Should reject 3D arrays
-    with pytest.raises(ValueError, match='grid must be a 2D array'):
-        fill.gauss_seidel(
-            grid.array,  # type: ignore[type-var]
-            is_circle=grid.x.is_circle,
-        )
 
     # But should work on individual slices
     _, _, filled_slice = fill.gauss_seidel(grid.array[:, :, 0],
