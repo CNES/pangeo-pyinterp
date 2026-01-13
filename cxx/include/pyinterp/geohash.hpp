@@ -1,10 +1,9 @@
-// Copyright (c) 2025 CNES
+// Copyright (c) 2026 CNES.
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+
 #pragma once
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
 #include <cstdint>
 #include <optional>
@@ -12,169 +11,129 @@
 #include <tuple>
 #include <vector>
 
-#include "pyinterp/geodetic/box.hpp"
-#include "pyinterp/geodetic/spheroid.hpp"
-#include "pyinterp/geohash/base32.hpp"
-#include "pyinterp/geohash/int64.hpp"
-#include "pyinterp/geohash/string.hpp"
+#include "pyinterp/geometry/geographic/box.hpp"
+#include "pyinterp/geometry/geographic/point.hpp"
+#include "pyinterp/geometry/geographic/spheroid.hpp"
 
-namespace pyinterp::geohash {
+namespace pyinterp {
 
-/// Geohashing is a geocoding method used to encode geographic coordinates
-/// (latitude and longitude) into a short string of digits and letters
-/// delineating an area on a map, which is called a cell, with varying
-/// resolutions. The more characters in the string, the more precise the
-/// location. The table below gives the correspondence between the number of
-/// characters, the size of the boxes of the grid at the equator and the total
-/// number of boxes.
+/// @brief Encode geographic coordinates into a geohash string.
 ///
-///             =========  ===============  ==========
-///             precision  lng/lat (km)     samples
-///             =========  ===============  ==========
-///             1          4950/4950        32
-///             2          618.75/1237.50   1024
-///             3          154.69/154.69    32768
-///             4          19.34/38.67      1048576
-///             5          4.83/4.83        33554432
-///             6          0.60/1.21        1073741824
-///             =========  ===============  ==========
+/// The more characters in the string, the more precise the location. The table
+/// below gives the correspondence between the number of characters, the size of
+/// the boxes of the grid at the equator and the total number of boxes.
+///
+/// | precision | lng/lat (km)      | samples      |
+/// |-----------|-------------------|--------------|
+/// | 1         | 4950/4950         | 32           |
+/// | 2         | 618.75/1237.50    | 1024         |
+/// | 3         | 154.69/154.69     | 32768        |
+/// | 4         | 19.34/38.67       | 1048576      |
+/// | 5         | 4.83/4.83         | 33554432     |
+/// | 6         | 0.60/1.21         | 1073741824   |
 ///
 /// Geohashes use Base-32 alphabet encoding (characters can be 0 to 9 and A to
 /// Z, excl A, I, L and O).
 ///
 /// The geohash is a compact way of representing a location, and is useful for
-/// storing a location in a database, or for indexing a location in a
-/// database.
+/// storing a location in a database, or for indexing a location in a database.
 class GeoHash {
  public:
-  /// GeoHash from longitude, latitude with number of characters.
-  ///
-  /// @param[in] longitude Longitude of the point.
-  /// @param[in] latitude Latitude of the point.
-  /// @param[in] precision Number of characters in the geohash.
-  GeoHash(double longitude, double latitude, uint32_t precision)
-      : code_(precision, '\0') {
-    if (precision > 12) {
-      throw std::invalid_argument("GeoHash precision must be <= 12");
-    }
-    string::encode(
-        {detail::math::normalize_angle(longitude, -180.0, 360.0), latitude},
-        code_.data(), precision);
-  }
+  /// @brief Construct a GeoHash from longitude, latitude with number of
+  /// characters
+  /// @param[in] longitude Longitude of the point
+  /// @param[in] latitude Latitude of the point
+  /// @param[in] precision Number of characters in the geohash (must be <= 12)
+  /// @throw std::invalid_argument if precision > 12
+  GeoHash(double longitude, double latitude, uint32_t precision);
 
-  /// GeoHash from its string representation.
-  ///
-  /// @param[in] geohash String representation of the geohash.
+  /// @brief Construct a GeoHash from its string representation
+  /// @param[in] code String representation of the geohash
   /// @param[in] round If true, the coordinates of the point will be rounded to
-  /// the accuracy defined by the GeoHash.
-  /// @throw std::invalid_argument if the geohash is not valid.
-  static auto from_string(const std::string &code, bool round) -> GeoHash {
-    auto precision = static_cast<uint32_t>(code.size());
-    if (precision > 12) {
-      throw std::invalid_argument("GeoHash precision must be <= 12");
-    }
-    if (!Base32().validate(code.data(), precision)) {
-      throw std::invalid_argument("GeoHash is not valid");
-    }
-    auto result = GeoHash(precision);
-    string::encode(string::decode(code.data(), precision, round),
-                   result.code_.data(), static_cast<uint32_t>(precision));
-    return result;
-  }
+  /// the accuracy defined by the GeoHash
+  /// @return GeoHash instance
+  /// @throw std::invalid_argument if the geohash is not valid or precision > 12
+  [[nodiscard]] static auto from_string(const std::string& code, bool round)
+      -> GeoHash;
 
-  /// Returns the bounding box of the geohash.
-  [[nodiscard]] inline auto bounding_box() const -> geodetic::Box {
-    return string::bounding_box(code_.data(), precision());
-  }
+  /// @brief Returns the bounding box of the geohash
+  /// @return Geodetic box representing the geohash bounds
+  [[nodiscard]] auto bounding_box() const -> geometry::geographic::Box;
 
-  /// Returns the center point of this.
-  [[nodiscard]] inline auto center() const -> geodetic::Point {
-    return bounding_box().centroid();
-  }
+  /// @brief Returns the center point of this geohash
+  /// @return Geodetic point at the center of the geohash
+  [[nodiscard]] auto center() const -> geometry::geographic::Point;
 
-  /// Returns the geohash code.
-  [[nodiscard]] inline auto string_value() const -> std::string {
-    return code_;
-  }
+  /// @brief Returns the geohash code as a string
+  /// @return String representation of the geohash
+  [[nodiscard]] auto string_value() const -> std::string { return code_; }
 
-  /// Returns the precision of the geohash.
-  [[nodiscard]] inline auto precision() const -> uint32_t {
+  /// @brief Returns the precision of the geohash
+  /// @return Number of characters in the geohash
+  [[nodiscard]] auto precision() const -> uint32_t {
     return static_cast<uint32_t>(code_.length());
   }
 
-  /// Returns the number of bits used to represent the geohash.
-  [[nodiscard]] inline auto number_of_bits() const -> uint32_t {
+  /// @brief Returns the number of bits used to represent the geohash
+  /// @return Number of bits (precision * 5)
+  [[nodiscard]] auto number_of_bits() const -> uint32_t {
     return precision() * 5;
   }
 
-  /// Returns the value of the integer64 stored in the geohash.
-  [[nodiscard]] auto integer_value(bool round) const -> uint64_t {
-    return int64::encode(string::decode(code_.data(), precision(), round),
-                         number_of_bits());
-  }
+  /// @brief Returns the value of the integer64 stored in the geohash
+  /// @param[in] round If true, returns rounded corner; otherwise centroid
+  /// @return 64-bit integer representation
+  [[nodiscard]] auto integer_value(bool round) const -> uint64_t;
 
-  /// Returns the eight neighbors of this.
-  ///
-  /// @return An array of GeoHash in the order N, NE, E, SE, S, SW, W, NW.
-  [[nodiscard]] auto neighbors() const -> std::vector<GeoHash> {
-    auto neighbors = int64::neighbors(integer_value(false), number_of_bits());
-    auto result = std::vector<GeoHash>();
-    result.reserve(8);
-    for (auto ix = 0; ix < 8; ++ix) {
-      auto code = std::string(precision(), '\0');
-      Base32::encode(neighbors[ix], code.data(), code.size());
-      result.emplace_back(GeoHash::from_string(code, false));
-    }
-    return result;
-  }
+  /// @brief Returns the eight neighbors of this geohash
+  /// @return Vector of GeoHash in the order N, NE, E, SE, S, SW, W, NW
+  [[nodiscard]] auto neighbors() const -> std::vector<GeoHash>;
 
-  /// Returns the area covered by this.
-  ///
-  /// @return The area of the geohash in square meters.
-  [[nodiscard]] inline auto area(
-      const std::optional<geodetic::Spheroid> &wgs) const -> double {
-    return string::area(code_.data(), precision(), wgs);
-  }
+  /// @brief Returns the area covered by this geohash
+  /// @param[in] wgs Optional spheroid for area calculation
+  /// @return The area of the geohash in square meters
+  [[nodiscard]] auto area(
+      const std::optional<geometry::geographic::Spheroid>& wgs) const -> double;
 
-  /// Gets the property of the grid covering the given box.
-  ///
-  /// @return A tuple of three elements containing: The GeoHash of the minimum
-  /// corner point, the number of cells in longitudes and latitudes.
-  [[nodiscard]] static auto grid_properties(const geodetic::Box &box,
-                                            uint32_t precision)
-      -> std::tuple<GeoHash, size_t, size_t> {
-    auto [code, lng_boxes, lat_boxes] =
-        int64::grid_properties(box, precision * 5);
-    return std::make_tuple(
-        GeoHash(int64::decode(code, precision * 5, false), precision),
-        lng_boxes, lat_boxes);
-  }
+  /// @brief Gets the property of the grid covering the given box
+  /// @param[in] box Geodetic box to cover
+  /// @param[in] precision Number of characters in the geohash
+  /// @return Tuple containing: The GeoHash of the minimum corner point, the
+  /// number of cells in longitudes and latitudes
+  [[nodiscard]] static auto grid_properties(
+      const geometry::geographic::Box& box, uint32_t precision)
+      -> std::tuple<GeoHash, size_t, size_t>;
 
-  /// Returns the precision in longitude/latitude and degrees for the given
+  /// @brief Returns the precision in longitude/latitude degrees for the given
   /// precision
-  [[nodiscard]] static auto error_with_precision(const uint32_t precision)
-      -> std::tuple<double, double> {
-    if (precision > 12) {
-      throw std::invalid_argument("GeoHash precision must be <= 12");
-    }
-    return int64::error_with_precision(precision * 5);
-  }
+  /// @param[in] precision Number of characters in the geohash
+  /// @return Tuple of (longitude_error, latitude_error) in degrees
+  /// @throw std::invalid_argument if precision > 12
+  [[nodiscard]] static auto error_with_precision(uint32_t precision)
+      -> std::tuple<double, double>;
 
-  /// Returns the arguments to rebuild this instance.
-  [[nodiscard]] auto reduce() const -> std::tuple<double, double, uint32_t> {
-    auto point = center();
-    return std::make_tuple(point.lon(), point.lat(), precision());
+  /// @brief Returns the arguments to rebuild this instance
+  /// @return Tuple of (longitude, latitude, precision)
+  [[nodiscard]] auto getstate() const -> std::tuple<double, double, uint32_t>;
+
+  /// @brief Return a string representation of the geohash
+  /// @return String representation
+  [[nodiscard]] explicit operator std::string() const {
+    return std::format("GeoHash('{}')", code_);
   }
 
  private:
+  /// @brief String representation of the geohash
   std::string code_{};
 
-  /// Default constructor.
-  explicit GeoHash(const size_t precision) : code_(precision, '\0') {}
+  /// @brief Default constructor for internal use
+  /// @param[in] precision Number of characters to reserve
+  explicit GeoHash(size_t precision);
 
-  /// GeoHash from lon/lat and number of characters.
-  GeoHash(const geodetic::Point &point, uint32_t precision)
-      : GeoHash(point.lon(), point.lat(), precision) {}
+  /// @brief GeoHash from point and precision
+  /// @param[in] point Geodetic point
+  /// @param[in] precision Number of characters
+  GeoHash(const geometry::geographic::Point& point, uint32_t precision);
 };
 
-}  // namespace pyinterp::geohash
+}  // namespace pyinterp

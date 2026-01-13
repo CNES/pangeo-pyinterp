@@ -1,0 +1,20 @@
+// Copyright (c) 2026 CNES.
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
+#include <nanobind/eigen/dense.h>
+#include <nanobind/nanobind.h>
+
+#include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
+#include "pyinterp/pybind/geometry/algorithms/for_each_point_covered_by.hpp"
+
+namespace pyinterp::geometry::geographic::pybind {
+
+auto init_for_each_point_covered_by(nanobind::module_& m) -> void {
+  using geometry::pybind::GeometryNamespace;
+  using geometry::pybind::init_for_each_point_covered_by;
+  init_for_each_point_covered_by<GeometryNamespace::kGeographic>(m);
+}
+
+}  // namespace pyinterp::geometry::geographic::pybind

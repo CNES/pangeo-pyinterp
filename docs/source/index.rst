@@ -7,6 +7,7 @@
    :hidden:
 
    changelog
+   migration
    setup
    auto_examples/index.rst
    api

@@ -8,13 +8,12 @@ repos:
         exclude: "(conda/meta.yaml|.clang\\-format)$"
       - id: debug-statements
       - id: end-of-file-fixer
-      - id: double-quote-string-fixer
       - id: mixed-line-ending
         args: [--fix=lf]
         exclude: docs/make.bat
       - id: trailing-whitespace
   - repo: https://github.com/asottile/pyupgrade
-    rev: "v3.21.0"
+    rev: "v3.21.2"
     hooks:
     - id: pyupgrade
       args: [--py311-plus]
@@ -23,26 +22,15 @@ repos:
     hooks:
       - id: flake8
         exclude: tests
+        args:
+          - --extend-ignore=E203
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.2
+    rev: v0.14.10
     hooks:
       - id: ruff
         args: [--fix]
-  - repo: https://github.com/PyCQA/isort
-    rev: 7.0.0
-    hooks:
-      - id: isort
-        name: isort (python)
-      - id: isort
-        name: isort (pyi)
-        types: [pyi]
-  - repo: https://github.com/google/yapf
-    rev: v0.43.0
-    hooks:
-      - id: yapf
-        additional_dependencies:
-          - toml
-        files: \.py(?:i)?
+      - id: ruff-format
+        args : [--line-length=79]
   # - repo: https://github.com/myint/docformatter
   #   rev: "v1.7.5"
   #   hooks:
@@ -62,12 +50,12 @@ repos:
       exclude: "(cf.py|pyinterp/.*json)$"
       args: [--ignore-words-list, "degreee"] # degreeE is a valid axis unit
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v21.1.2
+    rev: v21.1.8
     hooks:
       - id: clang-format
         exclude: "(dataset.*json)$"
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.18.2
+    rev: v1.19.1
     hooks:
       - id: mypy
         exclude: (examples|docs)/

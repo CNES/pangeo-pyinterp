@@ -5,24 +5,24 @@
 """Custom build backend."""
 
 import argparse
-from collections.abc import Mapping
 import os
 import sys
+from collections.abc import Mapping
 
 import setuptools.build_meta
 
 
 def usage(args: dict[str, str | list[str] | None]) -> argparse.Namespace:
     """Parse the command line arguments."""
-    parser = argparse.ArgumentParser('Custom build backend')
-    parser.add_argument('--c-compiler', help='Preferred C compiler')
-    parser.add_argument('--cxx-compiler', help='Preferred C++ compiler')
-    parser.add_argument('--fft',
-                        help='FFT library to use',
-                        choices=['mkl', 'pocketfft'])
-    parser.add_argument('--generator', help='Selected CMake generator')
-    parser.add_argument('--cmake-args', help='Additional arguments for CMake')
-    parser.add_argument('--mkl', help='Using MKL as BLAS library')
+    parser = argparse.ArgumentParser("Custom build backend")
+    parser.add_argument("--c-compiler", help="Preferred C compiler")
+    parser.add_argument("--cxx-compiler", help="Preferred C++ compiler")
+    parser.add_argument(
+        "--fft", help="FFT library to use", choices=["mkl", "pocketfft"]
+    )
+    parser.add_argument("--generator", help="Selected CMake generator")
+    parser.add_argument("--cmake-args", help="Additional arguments for CMake")
+    parser.add_argument("--mkl", help="Using MKL as BLAS library")
     return parser.parse_args(args=[f"--{k}={v}" for k, v in args.items()])
 
 
@@ -31,7 +31,7 @@ def decode_bool(value: str | None) -> bool:
     if value is None:
         return False
     value = value.lower()
-    return value in {'1', 'true', 'yes'}
+    return value in {"1", "true", "yes"}
 
 
 class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
@@ -42,9 +42,9 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
     Reference: https://setuptools.pypa.io/en/latest/build_meta.html
     """
 
-    def run_setup(self, setup_script: str = 'setup.py') -> None:
+    def run_setup(self, setup_script: str = "setup.py") -> None:
         """Run the setup script."""
-        config_settings = getattr(self, 'config_settings', None)
+        config_settings = getattr(self, "config_settings", None)
         args = usage(config_settings or {})  # type: ignore[arg-type]
         setuptools_args = []
         if args.c_compiler:
@@ -58,11 +58,11 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
         if args.cmake_args:
             setuptools_args.append(f"--cmake-args={args.cmake_args}")
         if decode_bool(args.mkl):
-            setuptools_args.append('--mkl=yes')
+            setuptools_args.append("--mkl=yes")
 
         if setuptools_args:
             first, last = sys.argv[:1], sys.argv[1:]
-            sys.argv = [*first, 'build_ext', *setuptools_args, *last]
+            sys.argv = [*first, "build_ext", *setuptools_args, *last]
         super().run_setup(setup_script)
 
     def build_wheel(
@@ -143,4 +143,5 @@ build_sdist = _backend.build_sdist
 get_requires_for_build_wheel = _backend.get_requires_for_build_wheel
 get_requires_for_build_editable = _backend.get_requires_for_build_editable
 prepare_metadata_for_build_editable = (
-    _backend.prepare_metadata_for_build_editable)
+    _backend.prepare_metadata_for_build_editable
+)

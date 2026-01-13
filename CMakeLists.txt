@@ -1,7 +1,3 @@
-# Copyright (c) 2025 CNES
-#
-# All rights reserved. Use of this source code is governed by a BSD-style
-# license that can be found in the LICENSE file.
 cmake_minimum_required(VERSION 3.10)
 
 # ##############################################################################
@@ -22,9 +18,8 @@ endif()
 # ##############################################################################
 # Configure additional paths for CMake to search for custom modules
 # ##############################################################################
-set(CMAKE_MODULE_PATH
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/tools;"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_MODULE_PATH}")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
+                      "${CMAKE_MODULE_PATH}")
 
 # ##############################################################################
 # Project settings
@@ -86,30 +81,33 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
       CACHE STRING "" FORCE)
 endif()
 
+# By default, build type is set to release, with debugging information.
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE
+      "RelWithDebInfo"
+      CACHE STRING "Choose the type of build" FORCE)
+endif()
+
 set_property(
   CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel"
                                   "RelWithDebInfo" "ASan")
 
-# By default, build type is set to release, with debugging information.
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
-endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-# The library must be built using C++20 compiler.
-set(CMAKE_CXX_STANDARD 20)
+# The library must be built using C++23 compiler.
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MACOSX_RPATH 1)
 
 include(CheckCXXCompilerFlag)
 if(NOT WIN32)
-  check_cxx_compiler_flag("-std=c++20" HAS_CPP20_FLAG)
+  check_cxx_compiler_flag("-std=c++23" HAS_CPP23_FLAG)
 else()
-  check_cxx_compiler_flag("/std:c++20" HAS_CPP20_FLAG)
+  check_cxx_compiler_flag("/std:c++latest" HAS_CPP23_FLAG)
 endif()
-if(NOT HAS_CPP20_FLAG)
-  message(FATAL_ERROR "Unsupported compiler -- requires C++20 support!")
+if(NOT HAS_CPP23_FLAG)
+  message(FATAL_ERROR "Unsupported compiler -- requires C++23 support!")
 endif()
 
 # Check if the C++ compiler and linker flags are set correctly.
@@ -165,6 +163,7 @@ if(NOT WIN32)
 endif()
 
 if(MSVC)
+  add_compile_options(/MP)
   # Disable warnings about using deprecated std::equal_to<>::result_type
   add_definitions(-D_SILENCE_CXX17_ADAPTOR_TYPEDEFS_DEPRECATION_WARNING)
   # Disable auto-linking and use cmake's dependency handling
@@ -211,7 +210,7 @@ check_floating_point_is_iec559()
 # ##############################################################################
 # Configure the build options
 # ##############################################################################
-option(CODE_COVERAGE "Enable coverage reporting" OFF)
+option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
 
 # ##############################################################################
@@ -233,12 +232,22 @@ endif()
 # ##############################################################################
 add_library(cpp_coverage INTERFACE)
 
-if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(cpp_coverage INTERFACE -O0 -g --coverage)
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
-    target_link_options(cpp_coverage INTERFACE --coverage)
+if(ENABLE_COVERAGE)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    set(CMAKE_MODULE_PATH
+        "${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMake-codecov/cmake"
+        "${CMAKE_MODULE_PATH}")
+    find_package(codecov)
+    target_compile_options(cpp_coverage INTERFACE -O0 -g --coverage)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+      target_link_options(cpp_coverage INTERFACE --coverage)
+    else()
+      target_link_libraries(cpp_coverage INTERFACE --coverage)
+    endif()
   else()
-    target_link_libraries(cpp_coverage INTERFACE --coverage)
+    message(
+      FATAL_ERROR
+        "Code coverage is only supported with GCC and Clang compilers.")
   endif()
 endif()
 
@@ -253,12 +262,27 @@ if(NOT WIN32)
 endif()
 
 # Python
-add_definitions(-DPYBIND11_ASSERT_GIL_HELD_INCREF_DECREF)
-find_package(Python3 COMPONENTS Interpreter Development)
+find_package(
+  Python3
+  COMPONENTS Interpreter Development.Module
+  REQUIRED)
+include_directories(SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 
-# Boost
-find_package(Boost 1.79 REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
+# Ensure Python::Module target exists (needed for nanobind on Windows)
+if(NOT TARGET Python::Module)
+  if(NOT TARGET Python::Python)
+    add_library(Python::Python INTERFACE IMPORTED)
+    set_target_properties(
+      Python::Python
+      PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${Python3_INCLUDE_DIRS}"
+                 INTERFACE_LINK_LIBRARIES "${Python3_LIBRARIES}")
+  endif()
+  add_library(Python::Module INTERFACE IMPORTED)
+  # cmake-format: off
+  set_target_properties(
+    Python::Module PROPERTIES INTERFACE_LINK_LIBRARIES "Python::Python")
+  # cmake-format: on
+endif()
 
 # BLAS
 #
@@ -288,7 +312,7 @@ if(BLAS_FOUND)
     if(MKL_INCLUDE_DIR)
       add_definitions(-DEIGEN_USE_MKL_ALL)
       add_definitions(-DMKL_LP64)
-      include_directories(${MKL_INCLUDE_DIR})
+      include_directories(SYSTEM PRIVATE ${MKL_INCLUDE_DIR})
     endif()
   endif()
 else()
@@ -306,11 +330,16 @@ else()
     message(
       WARNING "No BLAS library found. Eigen uses its own BLAS implementation.")
     set(BLAS_LIBRARIES "")
+    if(NOT TARGET BLAS::BLAS)
+      add_library(BLAS::BLAS INTERFACE IMPORTED)
+      set_target_properties(BLAS::BLAS PROPERTIES INTERFACE_LINK_LIBRARIES "")
+    endif()
   endif()
 endif()
 
 # Eigen3
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
+include_directories(SYSTEM PRIVATE
+                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
 
 # GoogleTest
 include(CTest)
@@ -342,13 +371,22 @@ endif()
 
 # MKL does not provide a Discrete Cosine Transform (DCT). Always use pocketfft
 # for DCTs even when MKL is chosen as the FFT backend.
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
+include_directories(SYSTEM PRIVATE
+                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
 if(FFT_IMPLEMENTATION STREQUAL "pocketfft")
   set(FFT_LIBRARIES)
 endif()
 
+# When building Python bindings with a static library, we need to set symbol
+# visibility to hidden to prevent symbol conflicts in the Python module. This
+# avoids collisions between symbols from different libraries when the Python
+# extension is loaded.
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # ##############################################################################
-# Enable clang-tidy if requested
+# Enable clang-tidy if requested (must be before add_subdirectory)
 # ##############################################################################
 if(ENABLE_CLANG_TIDY)
   find_program(
@@ -368,25 +406,42 @@ if(ENABLE_CLANG_TIDY)
       "clang-analyzer-*,portability-*,-portability-simd-intrinsics,google-*,"
       ";-fix")
   set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_CMD}")
+
+  unset(THIRD_PARTY)
   unset(CLANG_TIDY_EXE CACHE)
   unset(CLANG_TIDY_CMD CACHE)
-  message(STATUS "clang-tidy enabled.")
 endif()
-
-# When building Python bindings with a static library, we need to set symbol
-# visibility to hidden to prevent symbol conflicts in the Python module. This
-# avoids collisions between symbols from different libraries when the Python
-# extension is loaded.
-set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # ##############################################################################
 # Add subdirectories
 # ##############################################################################
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/include)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind)
+include_directories(SYSTEM
+                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind/include)
+
+# ##############################################################################
+# External dependencies
+# ##############################################################################
+find_package(Boost 1.80 REQUIRED)
+include_directories(SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+
 add_subdirectory(cxx)
+
+# ##############################################################################
+# Disable clang-tidy for third-party targets (after add_subdirectory)
+# ##############################################################################
+if(ENABLE_CLANG_TIDY)
+  set_target_properties(nanobind-static PROPERTIES CXX_CLANG_TIDY "")
+endif()
+
+# ##############################################################################
+# Set up coverage
+# ##############################################################################
+if(ENABLE_COVERAGE)
+  list(APPEND LCOV_REMOVE_PATTERNS "\"${PROJECT_SOURCE_DIR}/cxx/tests/*\"")
+  list(APPEND LCOV_REMOVE_PATTERNS "\"${PROJECT_SOURCE_DIR}/third_party/*\"")
+  coverage_evaluate()
+endif()
 
 # ##############################################################################
 # Print configuration summary
@@ -405,7 +460,7 @@ function(format_enabled value_ result_var)
   endif()
 endfunction()
 
-format_enabled(CODE_COVERAGE CODE_COVERAGE_LINE)
+format_enabled(ENABLE_COVERAGE CODE_COVERAGE_LINE)
 format_enabled(ENABLE_CLANG_TIDY CLANG_TIDY_LINE)
 
 set(CONFIG_LINES

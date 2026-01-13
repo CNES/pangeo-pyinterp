@@ -1,74 +1,117 @@
-# Copyright (c) 2025 CNES
+# Copyright (c) 2026 CNES.
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""pyinterp."""
+"""Pyinterp - Interpolation and geospatial operations for Python.
 
-from . import geodetic, geohash, version
-from ._geohash import GeoHash
-from .binning import Binning1D, Binning2D
+This package provides efficient interpolation methods for gridded data,
+geospatial operations, and statistical analysis tools.
+"""
+
+import copyreg
+from typing import Any
+
+from . import core, fill, geohash, geometry
 from .core import (
     Axis,
-    AxisInt64,
-    RadialBasisFunction,
+    Binning1D,
+    Binning1DFloat32,
+    Binning1DFloat64,
+    Binning2D,
+    Binning2DFloat32,
+    Binning2DFloat64,
+    DescriptiveStatistics,
+    Grid,
+    GridHolder,
+    Histogram2D,
+    Histogram2DFloat32,
+    Histogram2DFloat64,
+    RTree3D,
+    RTree3DFloat32,
+    RTree3DFloat64,
     TemporalAxis,
-    WindowFunction,
+    config,
     dateutils,
-    interpolate1d,
+    period,
 )
-from .grid import Grid2D, Grid3D, Grid4D
-from .histogram2d import Histogram2D
-from .interpolator.bicubic import bicubic
-from .interpolator.bivariate import bivariate
-from .interpolator.quadrivariate import quadrivariate
-from .interpolator.trivariate import trivariate
-from .orbit import (
-    EquatorCoordinates,
-    Orbit,
-    Pass,
-    Swath,
-    calculate_orbit,
-    calculate_pass,
-    calculate_swath,
+from .regular_grid_interpolator import (
+    bivariate,
+    quadrivariate,
+    trivariate,
+    univariate,
 )
-from .rtree import RTree
-from .statistics import DescriptiveStatistics, StreamingHistogram
+from .rtree import (
+    inverse_distance_weighting,
+    kriging,
+    query,
+    radial_basis_function,
+    window_function,
+)
 
-__version__ = version.release()
-__date__ = version.date()
-del version
+
+# Create Grid type aliases for runtime
+# These mirror the type stubs in core/__init__.pyi
+Grid1D = Grid
+Grid2D = Grid
+Grid3D = Grid
+Grid4D = Grid
+
+# Also add them to the core module namespace for core.Grid1D access
+core.Grid1D = Grid1D  # type: ignore[assignment,misc]
+core.Grid2D = Grid2D  # type: ignore[assignment,misc]
+core.Grid3D = Grid3D  # type: ignore[assignment,misc]
+core.Grid4D = Grid4D  # type: ignore[assignment,misc]
+
 
 __all__ = [
-    'Axis',
-    'AxisInt64',
-    'Binning1D',
-    'Binning2D',
-    'DescriptiveStatistics',
-    'EquatorCoordinates',
-    'GeoHash',
-    'Grid2D',
-    'Grid3D',
-    'Grid4D',
-    'Histogram2D',
-    'Orbit',
-    'Pass',
-    'RTree',
-    'RadialBasisFunction',
-    'StreamingHistogram',
-    'Swath',
-    'TemporalAxis',
-    'WindowFunction',
-    '__date__',
-    '__version__',
-    'bicubic',
-    'bivariate',
-    'calculate_orbit',
-    'calculate_pass',
-    'calculate_swath',
-    'dateutils',
-    'geodetic',
-    'geohash',
-    'interpolate1d',
-    'quadrivariate',
-    'trivariate',
+    "Axis",
+    "Binning1D",
+    "Binning1DFloat32",
+    "Binning1DFloat64",
+    "Binning2D",
+    "Binning2DFloat32",
+    "Binning2DFloat64",
+    "DescriptiveStatistics",
+    "Grid",
+    "Grid1D",
+    "Grid2D",
+    "Grid3D",
+    "Grid4D",
+    "GridHolder",
+    "Histogram2D",
+    "Histogram2DFloat32",
+    "Histogram2DFloat64",
+    "RTree3D",
+    "RTree3DFloat32",
+    "RTree3DFloat64",
+    "TemporalAxis",
+    "bivariate",
+    "config",
+    "dateutils",
+    "fill",
+    "geohash",
+    "geometry",
+    "inverse_distance_weighting",
+    "kriging",
+    "period",
+    "quadrivariate",
+    "query",
+    "radial_basis_function",
+    "trivariate",
+    "univariate",
+    "window_function",
 ]
+
+
+def _unpickle_grid(state: tuple[Any, ...]) -> core.GridHolder:
+    """Unpickle a Grid from state tuple (axes..., array)."""
+    return core.Grid(*state)
+
+
+def _reduce_grid(grid: core.GridHolder) -> tuple[Any, ...]:
+    """Pickle reducer for Grid objects."""
+    return (_unpickle_grid, (grid.__getstate__(),))
+
+
+# Register the pickle reducer for GridHolder (the actual C++ class)
+copyreg.pickle(core.GridHolder, _reduce_grid)

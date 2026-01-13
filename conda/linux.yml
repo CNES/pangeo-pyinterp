@@ -1,0 +1,19 @@
+name: pyinterp
+dependencies:
+  - cxx-compiler
+  - libboost-devel
+  - cmake
+  - coverage
+  - dask
+  - gtest
+  - numcodecs
+  - numpy
+  - pandas
+  - pip
+  - pytest
+  - lcov
+  - pytest-cov
+  - setuptools
+  - xarray
+channels:
+  - conda-forge

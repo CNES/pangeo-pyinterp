@@ -1,0 +1,14 @@
+name: pyinterp
+dependencies:
+  - libboost-devel
+  - cmake
+  - dask
+  - numcodecs
+  - numpy
+  - pandas
+  - pip
+  - pytest
+  - setuptools
+  - xarray
+channels:
+  - conda-forge

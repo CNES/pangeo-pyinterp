@@ -1,5 +1,8 @@
-# Copyright (c) 2025 CNES
+# Copyright (c) 2026 CNES.
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""Tests for geohash encoding and decoding."""
+"""Run core tests for pyinterp.
+
+This module contains tests for the core functionality of the pyinterp library.
+"""

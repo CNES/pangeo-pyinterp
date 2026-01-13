@@ -1,8 +1,10 @@
-// Copyright (c) 2025 CNES
+// Copyright (c) 2026 CNES.
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+
 #pragma once
+
 #include <Eigen/Core>
 
 namespace pyinterp {
@@ -17,6 +19,18 @@ using Vector = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template <typename T>
 using Matrix = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
+/// @brief Row major dynamic matrix of type T
+/// @tparam T The data type of the matrix elements.
+template <typename T>
+using RowMajorMatrix =
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+/// @brief Alias for a RowMajor Eigen Complex Matrix.
+/// @tparam T The data type of the matrix elements.
+template <typename T>
+using RowMajorComplexMatrix = Eigen::Matrix<std::complex<T>, Eigen::Dynamic,
+                                            Eigen::Dynamic, Eigen::RowMajor>;
+
 /// @brief Eigen reference block with dynamic inner stride
 /// @tparam T The data type of the vector elements.
 template <typename T>
@@ -29,17 +43,5 @@ using EigenDStride = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
 /// @tparam MatrixType The type of the matrix.
 template <typename T>
 using EigenDRef = Eigen::Ref<T, 0, EigenDStride>;
-
-/// @brief Row-major of type T
-/// @tparam T The data type of the matrix elements.
-template <typename T>
-using RowMajorMatrix =
-    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-
-/// @brief Alias for a RowMajor Eigen Complex Matrix.
-/// @tparam T The data type of the matrix elements.
-template <typename T>
-using RowMajorComplexMatrix = Eigen::Matrix<std::complex<T>, Eigen::Dynamic,
-                                            Eigen::Dynamic, Eigen::RowMajor>;
 
 }  // namespace pyinterp

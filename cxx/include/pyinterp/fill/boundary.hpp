@@ -1,16 +1,19 @@
+// Copyright (c) 2026 CNES.
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
 #pragma once
 
 #include <cstdint>
-#include <functional>
 
-namespace pyinterp {
+namespace pyinterp::fill {
 namespace detail {
 
 /// @brief Handles periodic boundary conditions for a grid index.
 /// Used when the grid wraps around (e.g., longitude coordinates).
 ///
-/// @param index The index to normalize
-/// @param size The size of the dimension
+/// @param[in] index The index to normalize
+/// @param[in] size The size of the dimension
 /// @return The normalized index within [0, size)
 ///
 /// Examples:
@@ -25,8 +28,8 @@ constexpr auto periodic_index(const int64_t index, const int64_t size)
 /// @brief Handles reflective (Neumann) boundary conditions for a grid index.
 /// Used when the grid has zero-derivative boundaries (values reflect at edges).
 ///
-/// @param index The index to clamp/reflect
-/// @param size The size of the dimension
+/// @param[in] index The index to clamp/reflect
+/// @param[in] size The size of the dimension
 /// @return The reflected index within [0, size)
 ///
 /// Examples:
@@ -34,20 +37,25 @@ constexpr auto periodic_index(const int64_t index, const int64_t size)
 ///   reflective_index(-2, 10) = 2
 ///   reflective_index(10, 10) = 8     (reflects at boundary)
 ///   reflective_index(11, 10) = 7
+///   reflective_index(18, 10) = 0
+///   reflective_index(19, 10) = 1
 constexpr auto reflective_index(const int64_t index, const int64_t size)
     -> int64_t {
-  if (index < 0) {
-    return -index;
+  if (size == 1) {
+    return 0;
   }
-  if (index >= size) {
-    return 2 * (size - 1) - index;
+  const int64_t period = 2 * (size - 1);
+  auto normalized = index % period;
+  if (normalized < 0) {
+    normalized += period;
   }
-  return index;
+  if (normalized < size) {
+    return normalized;
+  }
+  return period - normalized;
 }
 
 }  // namespace detail
-
-namespace fill {
 
 /// @brief Helper struct to compute neighbor indices with boundary conditions.
 ///
@@ -69,21 +77,21 @@ namespace fill {
 ///   }
 template <bool XPeriodic, bool YPeriodic>
 struct Neighbors {
-  int64_t ix0;  ///< Index of left neighbor (ix - 1)
-  int64_t ix1;  ///< Index of right neighbor (ix + 1)
-  int64_t iy0;  ///< Index of down neighbor (iy - 1)
-  int64_t iy1;  ///< Index of up neighbor (iy + 1)
+  int64_t ix0{};  ///< Index of left neighbor (ix - 1)
+  int64_t ix1{};  ///< Index of right neighbor (ix + 1)
+  int64_t iy0{};  ///< Index of down neighbor (iy - 1)
+  int64_t iy1{};  ///< Index of up neighbor (iy + 1)
 
   /// @brief Constructs the helper with grid dimensions.
   ///
-  /// @param x_size Size of x dimension
-  /// @param y_size Size of y dimension
+  /// @param[in] x_size Size of x dimension
+  /// @param[in] y_size Size of y dimension
   constexpr Neighbors(const int64_t x_size, const int64_t y_size)
-      : ix0(0), ix1(0), iy0(0), iy1(0), x_size_(x_size), y_size_(y_size) {}
+      : x_size_(x_size), y_size_(y_size) {}
 
   /// @brief Updates x-direction neighbor indices.
   ///
-  /// @param ix Current x index
+  /// @param[in] ix Current x index
   constexpr auto update_x(const int64_t ix) -> void {
     ix0 = XPeriodic ? detail::periodic_index(ix - 1, x_size_)
                     : detail::reflective_index(ix - 1, x_size_);
@@ -93,7 +101,7 @@ struct Neighbors {
 
   /// @brief Updates y-direction neighbor indices.
   ///
-  /// @param iy Current y index
+  /// @param[in] iy Current y index
   constexpr auto update_y(const int64_t iy) -> void {
     iy0 = YPeriodic ? detail::periodic_index(iy - 1, y_size_)
                     : detail::reflective_index(iy - 1, y_size_);
@@ -130,10 +138,10 @@ struct DynamicNeighbors {
 
   /// @brief Constructs the helper with grid dimensions and boundary types.
   ///
-  /// @param x_size Size of x dimension
-  /// @param y_size Size of y dimension
-  /// @param x_periodic True if x dimension uses periodic boundaries
-  /// @param y_periodic True if y dimension uses periodic boundaries
+  /// @param[in] x_size Size of x dimension
+  /// @param[in] y_size Size of y dimension
+  /// @param[in] x_periodic True if x dimension uses periodic boundaries
+  /// @param[in] y_periodic True if y dimension uses periodic boundaries
   constexpr DynamicNeighbors(const int64_t x_size, const int64_t y_size,
                              const bool x_periodic = false,
                              const bool y_periodic = false)
@@ -145,7 +153,7 @@ struct DynamicNeighbors {
 
   /// @brief Updates x-direction neighbor indices.
   ///
-  /// @param ix Current x index
+  /// @param[in] ix Current x index
   constexpr auto update_x(const int64_t ix) -> void {
     ix0 = get_x_(ix - 1, x_size_);
     ix1 = get_x_(ix + 1, x_size_);
@@ -166,5 +174,4 @@ struct DynamicNeighbors {
   int64_t (*get_y_)(int64_t, int64_t);  ///< Y-direction boundary function
 };
 
-}  // namespace fill
-}  // namespace pyinterp
+}  // namespace pyinterp::fill

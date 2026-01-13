@@ -1,0 +1,26 @@
+name: pyinterp
+dependencies:
+  - cartopy>=0.20.0
+  - clang_osx-arm64
+  - clangxx_osx-arm64
+  - cmake
+  - coverage
+  - dask
+  - gtest
+  - lcov
+  - libboost-devel
+  - libcxx
+  - numcodecs
+  - numpy
+  - pandas
+  - pip
+  - pypandoc
+  - pytest
+  - pytest-cov
+  - setuptools
+  - sphinx-book-theme
+  - sphinx-gallery
+  - sphinx-inline-tabs
+  - xarray
+channels:
+  - conda-forge

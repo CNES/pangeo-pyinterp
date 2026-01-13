@@ -11,6 +11,7 @@ common date and time calculations.
 This example will walk you through the various functions available in the
 ``pyinterp.dateutils`` module.
 """
+
 # %%
 # Generating Sample Data
 # ----------------------
@@ -31,13 +32,13 @@ def make_date(samples: int = 10) -> numpy.ndarray:
     delta = datetime.datetime.now() - datetime.datetime(1970, 1, 1)
 
     pydates = [epoch + random.random() * delta for _ in range(samples)]
-    npdates = numpy.array(pydates).astype('datetime64[ns]')
+    npdates = numpy.array(pydates).astype("datetime64[ns]")
 
     return npdates
 
 
 dates = make_date()
-print('Sample dates:')
+print("Sample dates:")
 print(dates)
 
 # %%
@@ -49,7 +50,7 @@ print(dates)
 # :py:func:`pyinterp.dateutils.date <pyinterp.core.dateutils.date>` function.
 # This returns a structured NumPy array.
 date_components = pyinterp.dateutils.date(dates)
-print('Date components:')
+print("Date components:")
 print(date_components)
 
 # %%
@@ -60,7 +61,7 @@ print(date_components)
 # using the :py:func:`pyinterp.dateutils.time <pyinterp.core.dateutils.time>`
 # function.
 time_components = pyinterp.dateutils.time(dates)
-print('Time components:')
+print("Time components:")
 print(time_components)
 
 # %%
@@ -71,7 +72,7 @@ print(time_components)
 # <pyinterp.core.dateutils.isocalendar>` function returns the ISO calendar
 # information (year, week number, and weekday) for each date.
 iso_calendar = pyinterp.dateutils.isocalendar(dates)
-print('ISO calendar:')
+print("ISO calendar:")
 print(iso_calendar)
 
 # %%
@@ -82,7 +83,7 @@ print(iso_calendar)
 # the :py:func:`pyinterp.dateutils.weekday <pyinterp.core.dateutils.weekday>`
 # function.
 weekday = pyinterp.dateutils.weekday(dates)
-print('Weekday (Sunday=0):')
+print("Weekday (Sunday=0):")
 print(weekday)
 
 # %%
@@ -94,17 +95,5 @@ print(weekday)
 # the time difference between each date and the first day of its corresponding
 # year.
 timedelta = pyinterp.dateutils.timedelta_since_january(dates)
-print('Time since January 1st:')
+print("Time since January 1st:")
 print(timedelta)
-
-# %%
-# Converting to datetime Objects
-# ------------------------------
-#
-# Finally, you can convert a NumPy array of dates to an array of Python's
-# native :py:class:`datetime.datetime` objects using the
-# :py:func:`pyinterp.dateutils.datetime <pyinterp.core.dateutils.datetime>`
-# function.
-datetime_objects = pyinterp.dateutils.datetime(dates)
-print('Datetime objects:')
-print(datetime_objects)

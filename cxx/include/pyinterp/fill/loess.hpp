@@ -1,300 +1,254 @@
+// Copyright (c) 2026 CNES.
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
 #pragma once
 
-#include "pyinterp/detail/thread.hpp"
-#include "pyinterp/fill/utils.hpp"
-#include "pyinterp/grid.hpp"
+#include <cmath>
+#include <concepts>
+#include <cstdint>
+#include <vector>
+
+#include "pyinterp/config/fill.hpp"
+#include "pyinterp/eigen.hpp"
+#include "pyinterp/fill/helpers.hpp"
+#include "pyinterp/parallel_for.hpp"
 
 namespace pyinterp::fill {
 
-/// Type of values processed by the Loess filter.
-enum ValueType {
-  kUndefined,  //!< Undefined values (fill undefined values)
-  kDefined,    //!< Defined values (smooth values)
-  kAll         //!< Smooth and fill values
+/// Supported floating-point types for LOESS operations.
+template <typename T>
+concept LoessScalar = std::floating_point<T>;
+
+namespace detail {
+
+/// Tri-cube weight function: w(d) = (1 - |d|³)³ for |d| ≤ 1, else 0.
+template <LoessScalar T>
+[[nodiscard]] constexpr auto tricube_weight(T distance) noexcept -> T {
+  if (distance > T{1}) {
+    return T{0};
+  }
+  // (1 - d^3)^3
+  const auto d3 = distance * distance * distance;
+  const auto tmp = T{1} - d3;
+  return tmp * tmp * tmp;
+}
+
+/// Determines if a value should be processed based on its defined status.
+template <LoessScalar T>
+[[nodiscard]] constexpr auto should_process(
+    T value, config::fill::LoessValueType value_type) noexcept -> bool {
+  const bool is_undefined = std::isnan(value);
+  switch (value_type) {
+    case config::fill::LoessValueType::kAll:
+      return true;
+    case config::fill::LoessValueType::kDefined:
+      return !is_undefined;
+    case config::fill::LoessValueType::kUndefined:
+      return is_undefined;
+  }
+  std::unreachable();
+}
+
+/// Thread-local workspace for LOESS computation.
+struct LoessWorkspace {
+  std::vector<std::int64_t> x_frame;
+  std::vector<std::int64_t> y_frame;
+
+  LoessWorkspace(std::uint32_t nx, std::uint32_t ny)
+      : x_frame(2 * static_cast<std::size_t>(nx) + 1),
+        y_frame(2 * static_cast<std::size_t>(ny) + 1) {}
 };
 
-/// Fills undefined values using a locally weighted regression function or
-/// LOESS. The weight function used for LOESS is the tri-cube weight
-/// function, w(x)=(1-|d|^{3})^{3}
+/// Compute LOESS value for a single point.
+/// @param[in] data_values Matrix containing the values for neighbor
+/// calculation.
+/// @param[in] config LOESS configuration parameters.
+/// @param[in] workspace Thread-local workspace for computations.
+/// @param[in] ix Row index of the target point.
+/// @param[in] iy Column index of the target point.
+/// @param[in] current_value Current value at (ix, iy) to return if no neighbors
+/// found.
+/// @return Computed LOESS value for the point at (ix, iy).
+template <LoessScalar T, typename Derived>
+[[nodiscard]] auto loess_point(const Eigen::MatrixBase<Derived>& data_values,
+                               const config::fill::Loess& config,
+                               const LoessWorkspace& workspace,
+                               const int64_t ix, const int64_t iy,
+                               const T current_value) -> T {
+  T weighted_sum{0};
+  T weight_sum{0};
+
+  const auto nx_inv = T{1} / static_cast<T>(config.nx());
+  const auto ny_inv = T{1} / static_cast<T>(config.ny());
+
+  for (const auto wx : workspace.x_frame) {
+    for (const auto wy : workspace.y_frame) {
+      const auto zi = data_values(wx, wy);
+
+      if (!std::isnan(zi)) {
+        // Normalize distances
+        const auto dx = static_cast<T>(wx - ix) * nx_inv;
+        const auto dy = static_cast<T>(wy - iy) * ny_inv;
+        const auto distance = std::sqrt(dx * dx + dy * dy);
+
+        // Apply tri-cube weight
+        const auto weight = tricube_weight(distance);
+
+        weighted_sum += weight * zi;
+        weight_sum += weight;
+      }
+    }
+  }
+
+  return weight_sum != T{0} ? weighted_sum / weight_sum : current_value;
+}
+
+/// Process a single row.
+/// @param[in] data_values Matrix providing neighbor values.
+/// @param[in] data_validity Matrix providing validity checks (should_process).
+/// @param[out] result Matrix to store computed LOESS values.
+/// @param[in] config LOESS configuration parameters.
+/// @param[in,out] workspace Thread-local workspace for computations.
+/// @param[in] ix Row index to process.
+template <LoessScalar T, typename Derived1, typename Derived2>
+void process_row(const Eigen::MatrixBase<Derived1>& data_values,
+                 const Eigen::MatrixBase<Derived2>& data_validity,
+                 RowMajorMatrix<T>& result, const config::fill::Loess& config,
+                 LoessWorkspace& workspace, const int64_t ix) {
+  const auto num_rows = data_values.rows();
+  const auto num_cols = data_values.cols();
+
+  // Build frame indices for x-axis
+  frame_index(ix, num_rows, config.is_periodic(), workspace.x_frame);
+
+  // Process all columns for this row
+  for (int64_t iy = 0; iy < num_cols; ++iy) {
+    // Check validity against the specific validity matrix
+    if (!should_process(data_validity(ix, iy), config.value_type())) {
+      result(ix, iy) = data_values(ix, iy);
+      continue;
+    }
+
+    frame_index(iy, num_cols, /*is_angle=*/false, workspace.y_frame);
+    result(ix, iy) = loess_point<T>(data_values, config, workspace, ix, iy,
+                                    data_values(ix, iy));
+  }
+}
+
+/// Compute zonal average (mean of all defined values).
+template <LoessScalar T>
+[[nodiscard]] auto compute_zonal_average(const RowMajorMatrix<T>& data) -> T {
+  const auto valid_mask = data.array().isFinite();
+  const auto count = valid_mask.count();
+
+  if (count == 0) {
+    return T{0};
+  }
+
+  const auto sum = valid_mask.select(data.array(), T{0}).sum();
+  return sum / static_cast<T>(count);
+}
+
+/// Apply initial guess to undefined values.
+template <LoessScalar T>
+void apply_first_guess(RowMajorMatrix<T>& data,
+                       config::fill::FirstGuess first_guess) {
+  const T fill_value = (first_guess == config::fill::FirstGuess::kZonalAverage)
+                           ? compute_zonal_average(data)
+                           : T{0};
+
+  data.array() = data.array().isNaN().select(fill_value, data.array());
+}
+
+/// Compute maximum absolute difference between two matrices.
+template <LoessScalar T>
+[[nodiscard]] auto compute_max_difference(const RowMajorMatrix<T>& current,
+                                          const RowMajorMatrix<T>& previous)
+    -> T {
+  const auto diff = (current.array() - previous.array()).abs();
+  const auto valid_mask = !diff.isNaN();
+
+  if (valid_mask.count() == 0) {
+    return T{0};
+  }
+
+  return valid_mask.select(diff, T{0}).maxCoeff();
+}
+
+/// Single-pass LOESS processing.
+/// @param[in] data_values Matrix containing the values for neighbor
+/// calculation.
+/// @param[in] data_validity Matrix providing validity checks (should_process).
+/// @param[out] result Matrix to store computed LOESS values.
+/// @param[in] config LOESS configuration parameters.
+template <LoessScalar T, typename Derived1, typename Derived2>
+void loess_single_pass(const Eigen::MatrixBase<Derived1>& data_values,
+                       const Eigen::MatrixBase<Derived2>& data_validity,
+                       RowMajorMatrix<T>& result,
+                       const config::fill::Loess& config) {
+  parallel_for(
+      data_values.rows(),
+      [&](std::int64_t start, std::int64_t end) {
+        LoessWorkspace workspace(config.nx(), config.ny());
+        for (int64_t ix = start; ix < end; ++ix) {
+          process_row(data_values, data_validity, result, config, workspace,
+                      ix);
+        }
+      },
+      config.num_threads());
+}
+
+}  // namespace detail
+
+/// Fills undefined values using locally weighted regression (LOESS).
 ///
-/// @param grid Grid Function on a uniform 2-dimensional grid to be filled.
-/// @param nx Number of points of the half-window to be taken into account
-/// along the longitude axis.
-/// @param nx Number of points of the half-window to be taken into account
-/// along the latitude axis.
-/// @param value_type Type of values processed by the filter
-/// @param num_threads The number of threads to use for the computation. If
-/// 0 all CPUs are used. If 1 is given, no parallel computing code is used
-/// at all, which is useful for debugging.
-/// @return The grid will have all the NaN filled with extrapolated values.
-template <typename Type>
-auto loess(const Grid2D<Type> &grid, const uint32_t nx, const uint32_t ny,
-           const ValueType value_type, const size_t num_threads)
-    -> pybind11::array_t<Type> {
-  check_windows_size("nx", nx, "ny", ny);
-  auto result = pybind11::array_t<Type>(
-      pybind11::array::ShapeContainer{grid.x()->size(), grid.y()->size()});
-  auto _result = result.template mutable_unchecked<2>();
+/// The weight function is the tri-cube: w(d) = (1 - |d|³)³
+///
+/// @tparam T Floating-point scalar type
+/// @param[in] data Input matrix to process
+/// @param[in] nx Half-window size along x-axis (rows)
+/// @param[in] ny Half-window size along y-axis (columns)
+/// @param[in] value_type Which values to process
+/// @param[in] config LOESS configuration
+/// @return New matrix with processed values
+template <LoessScalar T>
+[[nodiscard]] auto loess(const EigenDRef<const RowMajorMatrix<T>>& data,
+                         const config::fill::Loess& config)
+    -> RowMajorMatrix<T> {
+  RowMajorMatrix<T> result(data);
 
-  // Captures the detected exceptions in the calculation function
-  // (only the last exception captured is kept)
-  auto except = std::exception_ptr(nullptr);
-
-  auto worker = [&](const size_t start, const size_t end) {
-    try {
-      // Access to the shared pointer outside the loop to avoid data races
-      const auto &x_axis = *grid.x();
-      const auto &y_axis = *grid.y();
-      auto x_frame = std::vector<int64_t>(nx * 2 + 1);
-      auto y_frame = std::vector<int64_t>(ny * 2 + 1);
-
-      for (size_t ix = start; ix < end; ++ix) {
-        auto x = x_axis(ix);
-
-        // We retrieve the indexes framing the current value.
-        frame_index(ix, x_axis.size(), x_axis.is_angle(), x_frame);
-
-        // Read the first value of the calculated window.
-        const auto x0 = x_axis(x_frame[0]);
-
-        // The current value is normalized to the first value in the
-        // window.
-        if (x_axis.is_angle()) {
-          x = detail::math::normalize_angle(x, x0, 360.0);
-        }
-
-        for (int64_t iy = 0; iy < y_axis.size(); ++iy) {
-          auto z = grid.value(ix, iy);
-
-          // If the current value is masked.
-          const auto undefined = std::isnan(z);
-          if (value_type == kAll || (value_type == kDefined && !undefined) ||
-              (value_type == kUndefined && undefined)) {
-            auto y = y_axis(iy);
-
-            // We retrieve the indexes framing the current value.
-            frame_index(iy, y_axis.size(), false, y_frame);
-
-            // Initialization of values to calculate the extrapolated
-            // value.
-            auto value = Type(0);
-            auto weight = Type(0);
-
-            // For all the coordinates of the frame.
-            for (auto wx : x_frame) {
-              auto xi = x_axis(wx);
-
-              // We normalize the window's coordinates to its first value.
-              if (x_axis.is_angle()) {
-                xi = detail::math::normalize_angle(xi, x0, 360.0);
-              }
-
-              for (auto wy : y_frame) {
-                auto zi = grid.value(wx, wy);
-
-                // If the value is not masked, its weight is calculated from
-                // the tri-cube weight function
-                if (!std::isnan(zi)) {
-                  const auto power = 3.0;
-                  auto d =
-                      std::sqrt(detail::math::sqr(((xi - x)) / nx) +
-                                detail::math::sqr(((y_axis(wy) - y)) / ny));
-                  auto wi = d <= 1 ? std::pow((1.0 - std::pow(d, power)), power)
-                                   : 0.0;
-                  value += static_cast<Type>(wi * zi);
-                  weight += static_cast<Type>(wi);
-                }
-              }
-            }
-
-            // Finally, we calculate the extrapolated value if possible,
-            // otherwise we will recopy the masked original value.
-            if (weight != 0) {
-              z = value / weight;
-            }
-          }
-          _result(ix, iy) = z;
-        }
-      }
-    } catch (...) {
-      except = std::current_exception();
-    }
-  };
-
-  {
-    pybind11::gil_scoped_release release;
-    detail::dispatch(worker, grid.x()->size(), num_threads);
+  // Single Pass Filling
+  if (config.max_iterations() == 1) {
+    detail::loess_single_pass(data, data, result, config);
+    return result;
   }
-  return result;
-}
 
-template <typename Type, typename GridType, typename... Index>
-auto loess_(const GridType &grid, const uint32_t nx, const uint32_t ny,
-            const ValueType value_type, const Axis<double> &x_axis,
-            const Axis<double> &y_axis, const std::vector<int64_t> &x_frame,
-            std::vector<int64_t> &y_frame, const double x0, const double x,
-            const int64_t ix, const int64_t iy, Index &&...index) -> Type {
-  auto z = grid.value(ix, iy, index...);
+  // Iterative Filling
 
-  // If the current value is masked.
-  const auto undefined = std::isnan(z);
-  if (value_type == kAll || (value_type == kDefined && !undefined) ||
-      (value_type == kUndefined && undefined)) {
-    auto y = y_axis(iy);
+  // Apply first guess (replaces NaNs with 0 or Zonal Average)
+  // 'result' now contains NO NaNs.
+  detail::apply_first_guess(result, config.first_guess());
 
-    // We retrieve the indexes framing the current value.
-    frame_index(iy, y_axis.size(), false, y_frame);
+  // If max_iterations is 0, we just return the guess.
+  if (config.max_iterations() == 0) {
+    return result;
+  }
 
-    // Initialization of values to calculate the extrapolated
-    // value.
-    auto value = Type(0);
-    auto weight = Type(0);
+  RowMajorMatrix<T> previous;
 
-    // For all the coordinates of the frame.
-    for (auto wx : x_frame) {
-      auto xi = x_axis(wx);
+  for (uint32_t iter = 0; iter < config.max_iterations(); ++iter) {
+    previous = result;
 
-      // We normalize the window's coordinates to its first value.
-      if (x_axis.is_angle()) {
-        xi = detail::math::normalize_angle(xi, x0, 360.0);
-      }
+    detail::loess_single_pass(previous, data, result, config);
 
-      for (auto wy : y_frame) {
-        auto zi = grid.value(wx, wy, index...);
-
-        // If the value is not masked, its weight is calculated
-        // from the tri-cube weight function
-        if (!std::isnan(zi)) {
-          const auto power = 3.0;
-          auto d = std::sqrt(detail::math::sqr(((xi - x)) / nx) +
-                             detail::math::sqr(((y_axis(wy) - y)) / ny));
-          auto wi = d <= 1 ? std::pow((1.0 - std::pow(d, power)), power) : 0.0;
-          value += static_cast<Type>(wi * zi);
-          weight += static_cast<Type>(wi);
-        }
-      }
-    }
-    // Finally, we calculate the extrapolated value if possible,
-    // otherwise we will recopy the masked original value.
-    if (weight != 0) {
-      z = value / weight;
+    // Check convergence
+    if (detail::compute_max_difference(result, previous) <
+        static_cast<T>(config.epsilon())) {
+      break;
     }
   }
-  return z;
-}
 
-template <typename Type, typename AxisType>
-auto loess(const Grid3D<Type, AxisType> &grid, const uint32_t nx,
-           const uint32_t ny, const ValueType value_type,
-           const size_t num_threads) -> pybind11::array_t<Type> {
-  check_windows_size("nx", nx, "ny", ny);
-  auto result = pybind11::array_t<Type>(pybind11::array::ShapeContainer{
-      grid.x()->size(), grid.y()->size(), grid.z()->size()});
-  auto _result = result.template mutable_unchecked<3>();
-
-  // Captures the detected exceptions in the calculation function
-  // (only the last exception captured is kept)
-  auto except = std::exception_ptr(nullptr);
-
-  auto worker = [&](const size_t start, const size_t end) {
-    try {
-      // Access to the shared pointer outside the loop to avoid data races
-      const auto &x_axis = *grid.x();
-      const auto &y_axis = *grid.y();
-      auto x_frame = std::vector<int64_t>(nx * 2 + 1);
-      auto y_frame = std::vector<int64_t>(ny * 2 + 1);
-
-      for (size_t iz = start; iz < end; ++iz) {
-        for (int64_t ix = 0; ix < x_axis.size(); ++ix) {
-          auto x = x_axis(ix);
-
-          // We retrieve the indexes framing the current value.
-          frame_index(ix, x_axis.size(), x_axis.is_angle(), x_frame);
-
-          // Read the first value of the calculated window.
-          const auto x0 = x_axis(x_frame[0]);
-
-          // The current value is normalized to the first value in the
-          // window.
-          if (x_axis.is_angle()) {
-            x = detail::math::normalize_angle(x, x0, 360.0);
-          }
-
-          for (int64_t iy = 0; iy < y_axis.size(); ++iy) {
-            _result(ix, iy, iz) = loess_<Type, Grid3D<Type, AxisType>>(
-                grid, nx, ny, value_type, x_axis, y_axis, x_frame, y_frame, x0,
-                x, ix, iy, iz);
-          }
-        }
-      }
-    } catch (...) {
-      except = std::current_exception();
-    }
-  };
-
-  {
-    pybind11::gil_scoped_release release;
-    detail::dispatch(worker, grid.z()->size(), num_threads);
-  }
-  return result;
-}
-
-template <typename Type, typename AxisType>
-auto loess(const Grid4D<Type, AxisType> &grid, const uint32_t nx,
-           const uint32_t ny, const ValueType value_type,
-           const size_t num_threads) -> pybind11::array_t<Type> {
-  check_windows_size("nx", nx, "ny", ny);
-  auto result = pybind11::array_t<Type>(pybind11::array::ShapeContainer{
-      grid.x()->size(), grid.y()->size(), grid.z()->size(), grid.u()->size()});
-  auto _result = result.template mutable_unchecked<4>();
-
-  // Captures the detected exceptions in the calculation function
-  // (only the last exception captured is kept)
-  auto except = std::exception_ptr(nullptr);
-
-  auto worker = [&](const size_t start, const size_t end) {
-    try {
-      // Access to the shared pointer outside the loop to avoid data races
-      const auto &x_axis = *grid.x();
-      const auto &y_axis = *grid.y();
-      const auto &z_axis = *grid.z();
-      auto x_frame = std::vector<int64_t>(nx * 2 + 1);
-      auto y_frame = std::vector<int64_t>(ny * 2 + 1);
-
-      for (size_t iu = start; iu < end; ++iu) {
-        for (int64_t ix = 0; ix < x_axis.size(); ++ix) {
-          auto x = x_axis(ix);
-
-          // We retrieve the indexes framing the current value.
-          frame_index(ix, x_axis.size(), x_axis.is_angle(), x_frame);
-
-          // Read the first value of the calculated window.
-          const auto x0 = x_axis(x_frame[0]);
-
-          // The current value is normalized to the first value in the
-          // window.
-          if (x_axis.is_angle()) {
-            x = detail::math::normalize_angle(x, x0, 360.0);
-          }
-
-          for (int64_t iy = 0; iy < y_axis.size(); ++iy) {
-            for (int64_t iz = 0; iz < z_axis.size(); ++iz) {
-              _result(ix, iy, iz, iu) = loess_<Type, Grid4D<Type, AxisType>>(
-                  grid, nx, ny, value_type, x_axis, y_axis, x_frame, y_frame,
-                  x0, x, ix, iy, iz, iu);
-            }
-          }
-        }
-      }
-    } catch (...) {
-      except = std::current_exception();
-    }
-  };
-
-  {
-    pybind11::gil_scoped_release release;
-    detail::dispatch(worker, grid.u()->size(), num_threads);
-  }
   return result;
 }
 

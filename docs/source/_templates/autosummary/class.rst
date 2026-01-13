@@ -4,6 +4,7 @@
 
 .. autoclass:: {{ objname }}
    :show-inheritance:
+   :no-members:
    {% block methods %}
 
    {%- set attr = [] -%}

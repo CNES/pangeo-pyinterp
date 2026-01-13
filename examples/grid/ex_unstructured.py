@@ -11,7 +11,9 @@ efficient spatial queries.
 
 First, we'll create a synthetic dataset to represent our unstructured grid.
 """
+
 # %%
+#
 import cartopy.crs
 import cartopy.feature
 import matplotlib.pyplot
@@ -22,7 +24,7 @@ import pyinterp
 # %%
 # The R-tree can be configured to work with different geodetic systems. The
 # default is WGS-84. Here, we'll use the default.
-mesh = pyinterp.RTree()
+mesh = pyinterp.RTree3D()
 
 
 # %%
@@ -30,10 +32,11 @@ mesh = pyinterp.RTree()
 # unstructured grid.
 def field(lon, lat):
     """A synthetic field of data."""
-    return (
-        numpy.sin(numpy.radians(lon) * 3) * numpy.cos(numpy.radians(lat) * 2) +
-        0.5 * numpy.sin(numpy.radians(lon) * 5) *
-        numpy.sin(numpy.radians(lat) * 4))
+    return numpy.sin(numpy.radians(lon) * 3) * numpy.cos(
+        numpy.radians(lat) * 2
+    ) + 0.5 * numpy.sin(numpy.radians(lon) * 5) * numpy.sin(
+        numpy.radians(lat) * 4
+    )
 
 
 # %%
@@ -45,8 +48,8 @@ N_POINTS = 2000
 X0, X1 = 80, 170
 Y0, Y1 = -45, 30
 generator = numpy.random.Generator(numpy.random.PCG64(0))
-lons = generator.uniform(low=X0, high=X1, size=(N_POINTS, ))
-lats = generator.uniform(low=Y0, high=Y1, size=(N_POINTS, ))
+lons = generator.uniform(low=X0, high=X1, size=(N_POINTS,))
+lats = generator.uniform(low=Y0, high=Y1, size=(N_POINTS,))
 data = field(lons, lats)
 
 mesh.packing(numpy.vstack((lons, lats)).T, data)
@@ -55,9 +58,11 @@ mesh.packing(numpy.vstack((lons, lats)).T, data)
 # For our interpolation, we need a grid where we want to estimate the values.
 # We'll create a regular grid for this purpose.
 STEP = 0.5
-mx, my = numpy.meshgrid(numpy.arange(X0, X1 + STEP, STEP),
-                        numpy.arange(Y0, Y1 + STEP, STEP),
-                        indexing='ij')
+mx, my = numpy.meshgrid(
+    numpy.arange(X0, X1 + STEP, STEP),
+    numpy.arange(Y0, Y1 + STEP, STEP),
+    indexing="ij",
+)
 
 # %%
 # Interpolation Methods
@@ -66,24 +71,24 @@ mx, my = numpy.meshgrid(numpy.arange(X0, X1 + STEP, STEP),
 # ``pyinterp`` offers several methods for interpolating data from an
 # unstructured grid. We will now apply and visualize each of them.
 #
-# Inverse Distance Weighting (IDW), Radial Basis Function (RBF), and Kriging are
-# all interpolation methods used to estimate a value for a target location based
-# on the values of surrounding sample points. However, each method approaches
-# this estimation differently.
+# Inverse Distance Weighting (IDW), Radial Basis Function (RBF), and Kriging
+# are all interpolation methods used to estimate a value for a target location
+# based on the values of surrounding sample points. However, each method
+# approaches this estimation differently.
 #
-# IDW uses a weighted average of the surrounding sample points, where the weight
-# assigned to each point is inversely proportional to its distance from the
-# target location. The further away a sample point is from the target location,
-# the less influence it has on the estimated value. This method is relatively
-# simple to implement and computationally efficient, but it can produce
-# over-smoothed results in areas with a lot of sample points and under-smoothed
-# results in areas with few sample points.
+# IDW uses a weighted average of the surrounding sample points, where the
+# weight assigned to each point is inversely proportional to its distance from
+# the target location. The further away a sample point is from the target
+# location, the less influence it has on the estimated value. This method is
+# relatively simple to implement and computationally efficient, but it can
+# produce over-smoothed results in areas with a lot of sample points and
+# under-smoothed results in areas with few sample points.
 #
 # The Window Function method, much like IDW, uses a weighted average of the
 # surrounding sample points. However, instead of the weight being solely
-# determined by the inverse distance, it is determined by a kernel function (the
-# "window"). This function gives the most weight to points at the center of the
-# window and progressively less weight to points further away. This can
+# determined by the inverse distance, it is determined by a kernel function
+# (the "window"). This function gives the most weight to points at the center
+# of the window and progressively less weight to points further away. This can
 # sometimes provide a smoother result than IDW.
 #
 # RBF, on the other hand, models the spatial relationship between sample points
@@ -123,9 +128,10 @@ mx, my = numpy.meshgrid(numpy.arange(X0, X1 + STEP, STEP),
 #
 # Inverse Distance Weighting (IDW)
 # ********************************
-idw, _ = mesh.inverse_distance_weighting(
+idw, _ = pyinterp.inverse_distance_weighting(
+    mesh,
     numpy.vstack((mx.ravel(), my.ravel())).T,
-    within=False,
+    boundary_check="none",
     k=11,
     radius=None,
     num_threads=0,
@@ -135,36 +141,45 @@ idw = idw.reshape(mx.shape)
 # %%
 # Radial Basis Function (RBF)
 # ***************************
-rbf, _ = mesh.radial_basis_function(numpy.vstack((mx.ravel(), my.ravel())).T,
-                                    within=False,
-                                    k=11,
-                                    rbf='multiquadric',
-                                    epsilon=None,
-                                    smooth=0,
-                                    num_threads=0)
+rbf, _ = pyinterp.radial_basis_function(
+    mesh,
+    numpy.vstack((mx.ravel(), my.ravel())).T,
+    boundary_check="none",
+    k=11,
+    rbf="multiquadric",
+    epsilon=None,
+    smooth=0,
+    num_threads=0,
+)
 rbf = rbf.reshape(mx.shape)
 
 # %%
 # Window Function
 # ***************
-wf, _ = mesh.window_function(numpy.vstack((mx.ravel(), my.ravel())).T,
-                             within=False,
-                             k=11,
-                             wf='parzen',
-                             radius=None,
-                             num_threads=0)
+wf, _ = pyinterp.window_function(
+    mesh,
+    numpy.vstack((mx.ravel(), my.ravel())).T,
+    boundary_check="none",
+    k=11,
+    wf="parzen",
+    radius=None,
+    num_threads=0,
+)
 wf = wf.reshape(mx.shape)
 
 # %%
 # Kriging
 # *******
-kriging, _ = mesh.kriging(numpy.vstack((mx.ravel(), my.ravel())).T,
-                          within=False,
-                          k=11,
-                          radius=None,
-                          covariance='gaussian',
-                          drift_function='linear',
-                          num_threads=0)
+kriging, _ = pyinterp.kriging(
+    mesh,
+    numpy.vstack((mx.ravel(), my.ravel())).T,
+    boundary_check="none",
+    k=11,
+    radius=None,
+    covariance_model="gaussian",
+    drift_function="linear",
+    num_threads=0,
+)
 kriging = kriging.reshape(mx.shape)
 
 # %%
@@ -189,25 +204,27 @@ ax8 = fig.add_subplot(gs[1, 3], projection=cartopy.crs.PlateCarree())
 # Common plotting function
 def plot_grid(ax, grid, title, cmap, vmin, vmax):
     """Helper function to plot interpolated grids."""
-    pcm = ax.pcolormesh(mx,
-                        my,
-                        grid,
-                        cmap=cmap,
-                        transform=cartopy.crs.PlateCarree(),
-                        vmin=vmin,
-                        vmax=vmax)
+    pcm = ax.pcolormesh(
+        mx,
+        my,
+        grid,
+        cmap=cmap,
+        transform=cartopy.crs.PlateCarree(),
+        vmin=vmin,
+        vmax=vmax,
+    )
     ax.coastlines()
-    ax.add_feature(cartopy.feature.BORDERS, linestyle='-')
+    ax.add_feature(cartopy.feature.BORDERS, linestyle="-")
     ax.set_title(title)
     return pcm
 
 
 # Plotting each interpolation result
 true = field(mx, my)
-plot_grid(ax1, idw, 'Inverse Distance Weighting', 'viridis', -1, 1)
-plot_grid(ax2, rbf, 'Radial Basis Function', 'viridis', -1, 1)
-plot_grid(ax3, wf, 'Window Function', 'viridis', -1, 1)
-plot_grid(ax4, kriging, 'Kriging', 'viridis', -1, 1)
+plot_grid(ax1, idw, "Inverse Distance Weighting", "viridis", -1, 1)
+plot_grid(ax2, rbf, "Radial Basis Function", "viridis", -1, 1)
+plot_grid(ax3, wf, "Window Function", "viridis", -1, 1)
+plot_grid(ax4, kriging, "Kriging", "viridis", -1, 1)
 
 # Plotting errors
 error_idw = numpy.where(true != 0, (idw - true) / true, 0)
@@ -215,10 +232,12 @@ error_rbf = numpy.where(true != 0, (rbf - true) / true, 0)
 error_wf = numpy.where(true != 0, (wf - true) / true, 0)
 error_kriging = numpy.where(true != 0, (kriging - true) / true, 0)
 
-plot_grid(ax5, error_idw, 'IDW Relative Error', 'RdBu_r', -0.5, 0.5)
-plot_grid(ax6, error_rbf, 'RBF Relative Error', 'RdBu_r', -0.5, 0.5)
-plot_grid(ax7, error_wf, 'Window Function Relative Error', 'RdBu_r', -0.5, 0.5)
-plot_grid(ax8, error_kriging, 'Kriging Relative Error', 'RdBu_r', -0.5, 0.5)
+plot_grid(ax5, error_idw, "IDW Relative Error", "RdBu_r", -0.5, 0.5)
+plot_grid(ax6, error_rbf, "RBF Relative Error", "RdBu_r", -0.5, 0.5)
+plot_grid(ax7, error_wf, "Window Function Relative Error", "RdBu_r", -0.5, 0.5)
+plot_grid(ax8, error_kriging, "Kriging Relative Error", "RdBu_r", -0.5, 0.5)
 
 fig.tight_layout()
 matplotlib.pyplot.show()
+
+# %%

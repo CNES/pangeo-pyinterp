@@ -31,7 +31,7 @@ bivariate area by simple or linear binning.
 
 The library core is written in C++ using the `Boost C++ Libraries
 <https://www.boost.org/>`_, `Eigen3 <http://eigen.tuxfamily.org/>`_ and
-`pybind11 <https://github.com/pybind/pybind11/>`_ libraries.
+`nanobind <https://github.com/wjakob/nanobind/>`_ libraries.
 
 This software also uses `CMake <https://cmake.org/>`_ to configure the project
 and `Googletest <https://github.com/google/googletest>`_ to perform unit testing
@@ -121,6 +121,28 @@ The management of the `LLA
 coordinate conversion is managed to use the `Vermeille, H.
 <https://doi.org/10.1007/s00190-002-0273-6>`_ algorithm. It has an excellent
 performance with the accuracy of 1e-8 meters for altitude.
+
+Geometry
+--------
+
+This library provides Python bindings to `Boost Geometry
+<https://www.boost.org/doc/libs/release/libs/geometry/doc/html/index.html>`_
+concepts and algorithms for both geographic and Cartesian coordinate spaces.
+The geometry module offers a comprehensive set of geometric primitives including
+points, linestrings, polygons, rings, segments, and bounding boxes. For each
+coordinate space (``cartesian`` and ``geographic``), dedicated algorithms are
+provided for common geometric operations such as:
+
+* Computing areas and perimeters of geometries
+* Calculating distances and azimuths between points
+* Determining centroids and closest points
+* Performing buffer and envelope operations
+* Converting between coordinate spaces
+
+In the geographic space, additional features include support for multiple
+geodetic strategies (Andoyer, Karney, Thomas, Vincenty) for precise calculations
+on a spheroid, and coordinate transformations (LLA/ECEF, geographic to Cartesian
+conversions).
 
 Geohash
 -------

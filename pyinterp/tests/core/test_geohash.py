@@ -1,86 +1,73 @@
-# Copyright (c) 2025 CNES
+# Copyright (c) 2026 CNES.
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""Tests for geohash computations."""
-from __future__ import annotations
+"""Unit tests for pyinterp.core.geohash module."""
 
-import numpy
+import numpy as np
 import pytest
 
-from ...core import GeoHash, geodetic, geohash
+from ...core import geohash
 
-testcases: list[tuple[str, float, float]] = [
-    ('77mkh2hcj7mz', -26.015434642, -26.173663656),
-    ('wthnssq3w00x', 29.291182895, 118.331595326),
-    ('z3jsmt1sde4r', 51.400326027, 154.228244707),
-    ('18ecpnqdg4s1', -86.976900779, -106.90988479),
-    ('u90suzhjqv2s', 51.49934315, 23.417648894),
-    ('k940p3ewmmyq', -39.365655496, 25.636144008),
-    ('6g4wv2sze6ms', -26.934429639, -52.496991862),
-    ('jhfyx4dqnczq', -62.123898484, 49.178194037),
-    ('j80g4mkqz3z9', -89.442648795, 68.659722351),
-    ('hq9z7cjwrcw4', -52.156511416, 13.88362641),
+
+TEST_CASES: list[tuple[str, float, float]] = [
+    ("77mkh2hcj7mz", -26.015434642, -26.173663656),
+    ("wthnssq3w00x", 29.291182895, 118.331595326),
+    ("z3jsmt1sde4r", 51.400326027, 154.228244707),
+    ("18ecpnqdg4s1", -86.976900779, -106.90988479),
+    ("u90suzhjqv2s", 51.49934315, 23.417648894),
+    ("k940p3ewmmyq", -39.365655496, 25.636144008),
+    ("6g4wv2sze6ms", -26.934429639, -52.496991862),
+    ("jhfyx4dqnczq", -62.123898484, 49.178194037),
+    ("j80g4mkqz3z9", -89.442648795, 68.659722351),
+    ("hq9z7cjwrcw4", -52.156511416, 13.88362641),
 ]
 
 
 def test_string_numpy() -> None:
     """Test geohash encoding and decoding with numpy arrays of strings."""
-    strs = numpy.array([item[0] for item in testcases], dtype='S')
-    lons, lats = geohash.decode(strs, round=True)
-    assert numpy.all(
-        numpy.abs(lons - numpy.array([item[2] for item in testcases])) < 1e-6)
-    assert numpy.all(
-        numpy.abs(lats - numpy.array([item[1] for item in testcases])) < 1e-6)
+    # Test successful decoding with byte strings
+    geohashes = np.array([item[0] for item in TEST_CASES], dtype="S")
+    lons, lats = geohash.decode(geohashes, round=True)
 
-    strs = numpy.array([item[0] for item in testcases], dtype='U')
+    expected_lons = np.array([item[2] for item in TEST_CASES])
+    expected_lats = np.array([item[1] for item in TEST_CASES])
+
+    assert np.all(np.abs(lons - expected_lons) < 1e-6)
+    assert np.all(np.abs(lats - expected_lats) < 1e-6)
+
+    # Test error cases for decode
     with pytest.raises(ValueError):
-        geohash.decode(strs, round=True)
-    strs = numpy.array([item[0] for item in testcases],
-                       dtype='S').reshape(5, 2)
+        geohash.decode(
+            np.array([item[0] for item in TEST_CASES], dtype="U"), round=True
+        )
+
     with pytest.raises(ValueError):
-        geohash.decode(strs, round=True)  # type: ignore[arg-type]
-    strs = numpy.array([b'0' * 24], dtype='S')
+        geohash.decode(
+            geohashes.reshape(5, 2),  # type: ignore[arg-type]
+            round=True,
+        )
+
     with pytest.raises(ValueError):
-        geohash.decode(strs, round=True)
-    strs = numpy.array([item[0] for item in testcases], dtype='S')
-    strs = numpy.vstack((strs[:5], strs[5:]))
-    indexes = geohash.where(strs)
+        geohash.decode(np.array([b"0" * 24], dtype="S"), round=True)
+
+    # Test where() with valid input
+    stacked_geohashes = np.vstack((geohashes[:5], geohashes[5:]))
+    indexes = geohash.where(stacked_geohashes)
     assert isinstance(indexes, dict)
 
+    # Test error cases for where()
     with pytest.raises(ValueError):
-        indexes = geohash.where(strs.astype('U'))
+        geohash.where(stacked_geohashes.astype("U"))
 
-    strs = numpy.array([item[0] for item in testcases], dtype='S')
-    strs.reshape(1, 2, 5)
     with pytest.raises(ValueError):
-        indexes = geohash.where(strs)
-
-
-def test_bounding_boxes() -> None:
-    """Test the bounding_boxes function."""
-    bboxes = geohash.bounding_boxes(precision=1)
-    assert len(bboxes) == 32
-    for bbox in bboxes:
-        code = GeoHash.from_string(bbox.decode())  # type: ignore[attr-defined]
-        case = geohash.bounding_boxes(code.bounding_box(), precision=1)
-        assert len(case) == 1
-        assert case[0] == bbox
-
-        case = geohash.bounding_boxes(code.bounding_box(), precision=3)
-        assert len(case) == 2**10
-        assert all(item.startswith(bbox) for item in case)
-
-    with pytest.raises(MemoryError):
-        geohash.bounding_boxes(precision=12)
-
-    # Special case: the given polygon represents a single geohash
-    polygon = geodetic.Polygon.read_wkt(
-        'POLYGON((-158.4 -68.4,-158.4 -67.6,-157.6 -67.6,-157.6 -68.4,'
-        '-158.4 -68.4))')
-    bboxes = geohash.bounding_boxes(polygon, precision=3)
-    assert len(bboxes) == 1
-    assert bboxes[0] == b'07z'
+        geohash.where(
+            geohashes.reshape(  # type: ignore[arg-type]
+                1,
+                2,
+                5,
+            ),
+        )
 
 
 def test_bounding_zoom() -> None:
@@ -90,35 +77,6 @@ def test_bounding_zoom() -> None:
 
     zoom_in = geohash.transform(bboxes, precision=3)
     assert len(zoom_in) == 2**10 * 32
-    assert numpy.all(
-        numpy.sort(geohash.transform(zoom_in, precision=1)) == numpy.sort(
-            bboxes))
-
-
-def test_class() -> None:
-    """Test GeoHash class."""
-    for code, lat, lon in testcases:
-        instance = GeoHash.from_string(code)
-        assert str(instance) == code
-        point = instance.center()
-        assert lat == pytest.approx(point.lat, abs=1e-6)
-        assert lon == pytest.approx(point.lon, abs=1e-6)
-        assert instance.area() != 0
-
-    with pytest.raises(ValueError):
-        GeoHash(0, 0, 32)
-
-    with pytest.raises(ValueError):
-        GeoHash.from_string('0123456789012345678901234567890123456789')
-
-    with pytest.raises(ValueError):
-        GeoHash.from_string('%%%%%')
-
-
-def test_error_with_precision() -> None:
-    """Test the error_with_precision method."""
-    error = GeoHash.error_with_precision(1)
-    assert error == (45.0, 45.0)
-
-    with pytest.raises(ValueError):
-        GeoHash.error_with_precision(32)
+    assert np.all(
+        np.sort(geohash.transform(zoom_in, precision=1)) == np.sort(bboxes)
+    )

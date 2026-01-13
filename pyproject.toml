@@ -5,7 +5,7 @@ backend-path = ["_custom_build"]
 
 [tool.ruff]
 target-version = "py312"
-line-length = 80
+line-length = 79
 exclude = [
   "*.pyi",
   "docs",
@@ -29,6 +29,7 @@ select = [
   "FA",     # flake8-future-annotations
   "FLY",    # flynt
   "G",      # flake8-logging-format
+  "I",      # isort
   "INT",    # flake8-gettext
   "NPY002", # numpy-legacy-random
   "PERF",   # Perflint
@@ -50,7 +51,6 @@ select = [
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
-known-first-party = ["bang_core"]
 split-on-trailing-comma = false
 
 [tool.ruff.format]

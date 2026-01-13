@@ -1,17 +1,23 @@
+// Copyright (c) 2026 CNES.
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
 #pragma once
 
-#include <limits>
+#include <cmath>
+#include <exception>
 #include <stdexcept>
 #include <string>
 #include <thread>
 #include <tuple>
+#include <vector>
 
+#include "pyinterp/config/fill.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/fill/boundary.hpp"
-#include "pyinterp/fill/enum.hpp"
-#include "pyinterp/fill/utils.hpp"
+#include "pyinterp/fill/helpers.hpp"
 
-namespace pyinterp {
+namespace pyinterp::fill {
 namespace detail {
 
 /// @brief Performs red-black Gauss-Seidel smoothing with optional RHS.
@@ -24,13 +30,13 @@ namespace detail {
 /// @param rhs The right-hand side (f in Au = f). Use zeros for homogeneous
 /// case.
 /// @param mask Boolean mask indicating which cells to update
-/// @param is_circle True if the X axis defines a circle (periodic boundary)
+/// @param is_periodic True if the X axis defines a periodic boundary condition
 /// @param relaxation SOR relaxation parameter (1.0 = pure Gauss-Seidel)
 /// @param num_threads Number of threads for parallel execution
 /// @return Maximum residual value across all updated cells
 template <typename Type, typename GridType, typename RhsType, typename MaskType>
 auto gauss_seidel_core(GridType &grid, const RhsType &rhs, const MaskType &mask,
-                       const bool is_circle, const Type relaxation,
+                       const bool is_periodic, const Type relaxation,
                        const size_t num_threads) -> Type {
   // Shape of the grid
   auto x_size = grid.rows();
@@ -73,7 +79,7 @@ auto gauss_seidel_core(GridType &grid, const RhsType &rhs, const MaskType &mask,
 
     try {
       // Create boundary helper once for this thread
-      fill::DynamicNeighbors nbr(x_size, y_size, is_circle, false);
+      fill::DynamicNeighbors nbr(x_size, y_size, is_periodic, false);
 
       for (auto ix = 0; ix < x_size; ++ix) {
         // Update x-neighbors once per row
@@ -143,38 +149,27 @@ auto gauss_seidel_core(GridType &grid, const RhsType &rhs, const MaskType &mask,
 /// @brief Wrapper for backward compatibility: Gauss-Seidel for homogeneous case
 /// (f=0).
 template <typename Type>
-auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> &grid, Matrix<bool> &mask,
-                  const bool is_circle, const Type relaxation,
+auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> grid, Matrix<bool> &mask,
+                  const bool is_periodic, const Type relaxation,
                   const size_t num_threads) -> Type {
   // Create zero RHS for homogeneous case
   Matrix<Type> rhs = Matrix<Type>::Zero(grid.rows(), grid.cols());
-  return gauss_seidel_core<Type>(grid, rhs, mask, is_circle, relaxation,
+  return gauss_seidel_core<Type>(grid, rhs, mask, is_periodic, relaxation,
                                  num_threads);
 }
 
 }  // namespace detail
 
-namespace fill {
-
 /// Replaces all undefined values (NaN) in a grid using the Gauss-Seidel
 /// method by relaxation.
 ///
-/// @param grid The grid to be processed
-/// @param is_circle True if the X axis of the grid defines a circle.
-/// @param max_iterations Maximum number of iterations to be used by relaxation.
-/// @param epsilon Tolerance for ending relaxation before the maximum number of
-/// iterations limit.
-/// @param relaxation Relaxation constant
-/// @param num_threads The number of threads to use for the computation. If 0
-/// all CPUs are used. If 1 is given, no parallel computing code is used at all,
-/// which is useful for debugging.
+/// @param[in,out] grid The grid to be processed
+/// @param[in] config Configuration parameters for the Gauss-Seidel method.
 /// @return A tuple containing the number of iterations performed and the
 /// maximum residual value.
 template <typename Type>
-auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> &grid,
-                  const FirstGuess first_guess, const bool is_circle,
-                  const size_t max_iterations, const Type epsilon,
-                  const Type relaxation, size_t num_threads)
+[[nodiscard]] auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> grid,
+                                const config::fill::GaussSeidel &config)
     -> std::tuple<size_t, Type> {
   /// If the grid doesn't have an undefined value, this routine has nothing more
   /// to do.
@@ -182,41 +177,37 @@ auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> &grid,
     return std::make_tuple(0, Type(0));
   }
 
-  /// Calculation of the maximum number of threads if the user chooses.
-  if (num_threads == 0) {
-    num_threads = std::thread::hardware_concurrency();
-  }
-
   /// Calculation of the position of the undefined values on the grid.
   auto mask = Matrix<bool>(grid.array().isNaN());
 
   /// Calculation of the first guess with the chosen method
-  switch (first_guess) {
-    case FirstGuess::kZero:
+  switch (config.first_guess()) {
+    case config::fill::FirstGuess::kZero:
       grid = (mask.array()).select(0, grid);
       break;
-    case FirstGuess::kZonalAverage:
-      set_zonal_average<Type>(grid, mask, num_threads);
+    case config::fill::FirstGuess::kZonalAverage:
+      set_zonal_average<Type>(grid, mask, config.num_threads());
       break;
     default:
-      throw std::invalid_argument("Invalid guess type: " +
-                                  std::to_string(first_guess));
+      throw std::invalid_argument(
+          "Unsupported first guess method: " +
+          std::to_string(static_cast<int>(config.first_guess())));
   }
 
   // Initialization of the function results.
   size_t iteration = 0;
   Type max_residual = 0;
 
-  for (size_t it = 0; it < max_iterations; ++it) {
+  for (size_t it = 0; it < config.max_iterations(); ++it) {
     ++iteration;
-    max_residual = detail::gauss_seidel<Type>(grid, mask, is_circle, relaxation,
-                                              num_threads);
-    if (max_residual < epsilon) {
+    max_residual = detail::gauss_seidel<Type>(
+        grid, mask, config.is_periodic(),
+        static_cast<Type>(config.relaxation()), config.num_threads());
+    if (max_residual < static_cast<Type>(config.epsilon())) {
       break;
     }
   }
   return std::make_tuple(iteration, max_residual);
 }
 
-}  // namespace fill
-}  // namespace pyinterp
+}  // namespace pyinterp::fill

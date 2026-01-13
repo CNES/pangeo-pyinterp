@@ -4,17 +4,16 @@ Binning
 =======
 
 Binning is a technique used to group continuous values into a smaller number of
-bins. This is particularly useful when you have irregularly distributed data and
-want to analyze it on a regular grid. In this example, we will use pyinterp's
-2D binning functionality to calculate drifter velocity statistics in the Black
-Sea over a 9-year period.
+bins. This is particularly useful when you have irregularly distributed data
+and want to analyze it on a regular grid. In this example, we will use
+pyinterp's 2D binning functionality to calculate drifter velocity statistics in
+the Black Sea over a 9-year period.
 """
 import cartopy.crs
 import matplotlib.pyplot
 import numpy
 
 import pyinterp
-import pyinterp.backends.xarray
 import pyinterp.tests
 
 # %%
@@ -33,11 +32,11 @@ norm = (ds.ud**2 + ds.vd**2)**0.5
 # Defining the Grid
 # -----------------
 #
-# Next, we define the 2D grid on which we will bin the data. The grid is defined
-# by two axes: one for longitude and one for latitude.
+# Next, we define the 2D grid on which we will bin the data. The grid is
+# defined by two axes: one for longitude and one for latitude.
 binning = pyinterp.Binning2D(
     pyinterp.Axis(numpy.arange(27, 42, 0.3, dtype=numpy.float64),
-                  is_circle=True),
+                  period=360.0,),
     pyinterp.Axis(numpy.arange(40, 47, 0.3, dtype=numpy.float64)))
 print(binning)
 
@@ -49,8 +48,8 @@ print(binning)
 # coordinates. We push the data into the bins and then compute the mean of the
 # values in each bin.
 binning.clear()
-binning.push(ds.lon, ds.lat, norm, True)
-simple_mean = binning.variable('mean')
+binning.push(ds.lon.values, ds.lat.values, norm.values, True)
+simple_mean = binning.mean()
 
 # %%
 # .. note::
@@ -74,8 +73,8 @@ simple_mean = binning.variable('mean')
 # to the four nearest bins, weighted by its distance to the center of each bin.
 # This generally produces a smoother result.
 binning.clear()
-binning.push(ds.lon, ds.lat, norm, False)
-linear_mean = binning.variable('mean')
+binning.push(ds.lon.values, ds.lat.values, norm.values, False)
+linear_mean = binning.mean()
 
 # %%
 # Visualizing the Results
@@ -116,16 +115,16 @@ fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 # Histogram2D
 # -----------
 #
-# The :py:class:`Histogram2D <pyinterp.Histogram2D>` class is similar to the
+# The :py:class:`TDigest <pyinterp.TDigest>` class is similar to the
 # :py:class:`Binning2D <pyinterp.Binning2D>` class, but it calculates the
 # histogram of the data in each bin instead of the statistics.
 #
 # Let's calculate the 2D histogram of the drifter data.
 hist = pyinterp.Histogram2D(
     pyinterp.Axis(numpy.arange(27, 42, 0.3, dtype=numpy.float64),
-                  is_circle=True),
+                  period=360.0,),
     pyinterp.Axis(numpy.arange(40, 47, 0.3, dtype=numpy.float64)))
-hist.push(ds.lon, ds.lat, norm)
+hist.push(ds.lon.values, ds.lat.values, norm.values)
 
 # %%
 # We can then visualize the histogram.
@@ -134,7 +133,7 @@ fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
 ax1 = fig.add_subplot(111, projection=cartopy.crs.PlateCarree())
 pcm = ax1.pcolormesh(lon,
                      lat,
-                     hist.variable(),
+                     hist.mean(),
                      cmap='jet',
                      shading='auto',
                      transform=cartopy.crs.PlateCarree())

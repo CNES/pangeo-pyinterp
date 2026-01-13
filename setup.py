@@ -3,9 +3,9 @@
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
 """Setup script for the pyinterp package."""
+
 from __future__ import annotations
 
-from typing import Any, ClassVar
 import datetime
 import os
 import pathlib
@@ -14,9 +14,14 @@ import re
 import subprocess
 import sys
 import sysconfig
+from typing import Any, ClassVar
 
 import setuptools
 import setuptools.command.build_ext
+
+
+# Type alias for user options
+USER_OPTIONS = list[tuple[str, str, str]] | list[tuple[str, str | None, str]]
 
 # Check Python requirement
 MAJOR = sys.version_info[0]
@@ -26,13 +31,13 @@ MINOR = sys.version_info[1]
 WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 # OSX deployment target
-OSX_DEPLOYMENT_TARGET = '11.0'
+OSX_DEPLOYMENT_TARGET = "13.3"
 
 # MKL-FFT library
-MKL_FFT = 'mkl'
+MKL_FFT = "mkl"
 
 # PocketFFT library
-POCKETFFT = 'pocketfft'
+POCKETFFT = "pocketfft"
 
 # FFT choices
 FFT_CHOICES = [MKL_FFT, POCKETFFT]
@@ -40,7 +45,7 @@ FFT_CHOICES = [MKL_FFT, POCKETFFT]
 
 def compare_setuptools_version(required: tuple[int, ...]) -> bool:
     """Compare the version of setuptools with the required version."""
-    current = tuple(map(int, setuptools.__version__.split('.')[:2]))
+    current = tuple(map(int, setuptools.__version__.split(".")[:2]))
     return current >= required
 
 
@@ -49,30 +54,36 @@ def distutils_dirname(
     extname: str | None = None,
 ) -> pathlib.Path:
     """Return the name of the build directory."""
-    prefix = prefix or 'lib'
-    extname = '' if extname is None else os.sep.join(extname.split('.')[:-1])
+    prefix = prefix or "lib"
+    extname = "" if extname is None else os.sep.join(extname.split(".")[:-1])
     if compare_setuptools_version((62, 1)):
         return pathlib.Path(
-            WORKING_DIRECTORY, 'build', f'{prefix}.{sysconfig.get_platform()}-'
-            f'{sys.implementation.cache_tag}', extname)
+            WORKING_DIRECTORY,
+            "build",
+            f"{prefix}.{sysconfig.get_platform()}-"
+            f"{sys.implementation.cache_tag}",
+            extname,
+        )
     return pathlib.Path(
-        WORKING_DIRECTORY, 'build',
-        f'{prefix}.{sysconfig.get_platform()}-{MAJOR}.{MINOR}', extname)
+        WORKING_DIRECTORY,
+        "build",
+        f"{prefix}.{sysconfig.get_platform()}-{MAJOR}.{MINOR}",
+        extname,
+    )
 
 
 def execute(cmd: str) -> str:
     """Execute a command and return its standard output as a string."""
-    with subprocess.Popen(cmd,
-                          shell=True,
-                          stdout=subprocess.PIPE,
-                          stderr=subprocess.PIPE) as process:
+    with subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    ) as process:
         assert process.stdout is not None
         return process.stdout.read().decode()
 
 
 def update_meta(path: pathlib.Path, version: str) -> None:
     """Update the version number description in conda/meta.yaml."""
-    with open(path, encoding='utf-8') as stream:
+    with open(path, encoding="utf-8") as stream:
         lines = stream.readlines()
     pattern = re.compile(r'{% set version = ".*" %}')
 
@@ -81,34 +92,34 @@ def update_meta(path: pathlib.Path, version: str) -> None:
         if match is not None:
             lines[idx] = f'{{% set version = "{version}" %}}\n'
 
-    with open(path, 'w', encoding='utf-8') as stream:
-        stream.write(''.join(lines))
+    with open(path, "w", encoding="utf-8") as stream:
+        stream.write("".join(lines))
 
 
 def update_environment(path: pathlib.Path, version: str) -> None:
     """Update the version number description in conda environment."""
-    with open(path, encoding='utf-8') as stream:
+    with open(path, encoding="utf-8") as stream:
         lines = stream.readlines()
-    pattern = re.compile(r'(\s+-\s+pyinterp)\s*>=\s*(.+)')
+    pattern = re.compile(r"(\s+-\s+pyinterp)\s*>=\s*(.+)")
 
     for idx, line in enumerate(lines):
         match = pattern.search(line)
         if match is not None:
-            lines[idx] = f'{match.group(1)}>={version}\n'
+            lines[idx] = f"{match.group(1)}>={version}\n"
 
-    with open(path, 'w', encoding='utf-8') as stream:
-        stream.write(''.join(lines))
+    with open(path, "w", encoding="utf-8") as stream:
+        stream.write("".join(lines))
 
 
 def get_version_from_file(module: pathlib.Path) -> str:
     """Extract version from existing version.py file."""
     pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
-    with open(module, encoding='utf-8') as stream:
+    with open(module, encoding="utf-8") as stream:
         for line in stream:
             match = pattern.search(line)
             if match:
                 return match.group(1)
-    raise AssertionError('Version not found in version.py')
+    raise AssertionError("Version not found in version.py")
 
 
 def parse_git_version() -> tuple[str, str]:
@@ -119,72 +130,72 @@ def parse_git_version() -> tuple[str, str]:
 
     """
     stdout: Any = execute(
-        'git describe --tags --dirty --long --always').strip()
-    pattern = re.compile(r'([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?')
+        "git describe --tags --dirty --long --always"
+    ).strip()
+    pattern = re.compile(r"([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?")
     match = pattern.search(stdout)
 
     if match is None:
         # No tag found, use the last commit
-        pattern = re.compile(r'([\w\d]+)(?:-(dirty))?')
+        pattern = re.compile(r"([\w\d]+)(?:-(dirty))?")
         match = pattern.search(stdout)
-        assert match is not None, f'Unable to parse git output {stdout!r}'
-        return '0.0', match.group(1)
+        assert match is not None, f"Unable to parse git output {stdout!r}"
+        return "0.0", match.group(1)
 
     version = match.group(1)
     commits = int(match.group(2))
     sha1 = match.group(3)
 
     if commits != 0:
-        version += f'.dev{commits}'
+        version += f".dev{commits}"
 
     return version, sha1
 
 
 def get_commit_date(sha1: str) -> datetime.datetime:
     """Get the commit date for a given SHA1."""
-    stdout = execute(f"git log  {sha1} -1 --format=\"%H %at\"")
+    stdout = execute(f'git log  {sha1} -1 --format="%H %at"')
     lines = stdout.strip().split()
     return datetime.datetime.fromtimestamp(int(lines[1]))
 
 
 def update_conda_files(version: str) -> None:
     """Update conda configuration files with the new version."""
-    meta = pathlib.Path(WORKING_DIRECTORY, 'conda', 'meta.yaml')
+    meta = pathlib.Path(WORKING_DIRECTORY, "conda", "meta.yaml")
     if meta.exists():
         update_meta(meta, version)
         update_environment(
-            pathlib.Path(WORKING_DIRECTORY, 'conda', 'environment.yml'),
-            version)
-        update_environment(
-            pathlib.Path(WORKING_DIRECTORY, 'binder', 'environment.yml'),
-            version)
+            pathlib.Path(WORKING_DIRECTORY, "binder", "environment.yml"),
+            version,
+        )
 
 
 def update_sphinx_conf(version: str, date: datetime.datetime) -> None:
     """Update the sphinx configuration file with version and date."""
-    conf = pathlib.Path(WORKING_DIRECTORY, 'docs', 'source', 'conf.py')
-    with open(conf, encoding='utf-8') as stream:
+    conf = pathlib.Path(WORKING_DIRECTORY, "docs", "source", "conf.py")
+    with open(conf, encoding="utf-8") as stream:
         lines = stream.readlines()
 
-    pattern = re.compile(r'(\w+)\s+=\s+(.*)')
+    pattern = re.compile(r"(\w+)\s+=\s+(.*)")
     for idx, line in enumerate(lines):
         match = pattern.search(line)
         if match is not None:
-            if match.group(1) == 'version':
-                lines[idx] = f'version = {version!r}\n'
-            elif match.group(1) == 'release':
-                lines[idx] = f'release = {version!r}\n'
-            elif match.group(1) == 'copyright':
+            if match.group(1) == "version":
+                lines[idx] = f"version = {version!r}\n"
+            elif match.group(1) == "release":
+                lines[idx] = f"release = {version!r}\n"
+            elif match.group(1) == "copyright":
                 lines[idx] = f"copyright = '({date.year}, CNES/CLS)'\n"
 
-    with open(conf, 'w', encoding='utf-8') as stream:
-        stream.write(''.join(lines))
+    with open(conf, "w", encoding="utf-8") as stream:
+        stream.write("".join(lines))
 
 
-def write_version_module(module: pathlib.Path, version: str,
-                         date: datetime.datetime) -> None:
+def write_version_module(
+    module: pathlib.Path, version: str, date: datetime.datetime
+) -> None:
     """Write the version.py module with version and date information."""
-    with open(module, 'w', encoding='utf-8') as handler:
+    with open(module, "w", encoding="utf-8") as handler:
         handler.write(f'''# Copyright (c) {date.year} CNES
 #
 # All rights reserved. Use of this source code is governed by a
@@ -206,11 +217,11 @@ def date() -> str:
 def revision() -> str:
     """Return the software version."""
     os.chdir(WORKING_DIRECTORY)
-    module = pathlib.Path(WORKING_DIRECTORY, 'pyinterp', 'version.py')
+    module = pathlib.Path(WORKING_DIRECTORY, "pyinterp", "version.py")
 
     # If the ".git" directory exists, this function is executed in the
     # development environment, otherwise it's a release.
-    if not pathlib.Path(WORKING_DIRECTORY, '.git').exists():
+    if not pathlib.Path(WORKING_DIRECTORY, ".git").exists():
         return get_version_from_file(module)
 
     version, sha1 = parse_git_version()
@@ -234,29 +245,55 @@ class CMakeExtension(setuptools.Extension):
     # pylint: enable=too-few-public-methods
 
 
+def get_parallel_jobs() -> int:
+    """Calculate optimal number of parallel jobs based on available memory.
+
+    C++ compilation is memory-intensive. Each compilation unit can use
+    500MB-2GB depending on template usage. This function estimates a safe
+    parallelism level to avoid memory exhaustion.
+
+    Users can override this with the CMAKE_BUILD_PARALLEL_LEVEL environment
+    variable.
+
+    Returns:
+        Number of parallel jobs to use
+
+    """
+    # Allow user override via environment variable
+    if "CMAKE_BUILD_PARALLEL_LEVEL" in os.environ:
+        try:
+            user_jobs = int(os.environ["CMAKE_BUILD_PARALLEL_LEVEL"])
+            if user_jobs > 0:
+                return user_jobs
+        except ValueError:
+            pass
+
+    return os.cpu_count() or 4
+
+
 def prepare_cmake_arguments(
     is_windows: bool,
-    code_coverage: bool,
     config: str,
     extdir: str,
     cmake_args: list[str],
     build_args: list[str],
 ) -> None:
     """Update cmake and build arguments based on the platform."""
+    # Calculate memory-aware parallel jobs
+    parallel_jobs = get_parallel_jobs()
+
     if not is_windows:
-        build_args += ['--', f'-j{os.cpu_count()}']
-        if platform.system() == 'Darwin':
+        build_args += ["--", f"-j{parallel_jobs}"]
+        if platform.system() == "Darwin":
             cmake_args += [
-                f'-DCMAKE_OSX_DEPLOYMENT_TARGET={OSX_DEPLOYMENT_TARGET}'
+                f"-DCMAKE_OSX_DEPLOYMENT_TARGET={OSX_DEPLOYMENT_TARGET}"
             ]
-        if code_coverage:
-            cmake_args += ['-DCODE_COVERAGE=ON']
     else:
         cmake_args += [
-            '-DCMAKE_GENERATOR_PLATFORM=x64',
-            f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={extdir}',
+            "-DCMAKE_GENERATOR_PLATFORM=x64",
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={extdir}",
         ]
-        build_args += ['--', '/m']
+        build_args += ["--", f"/m:{parallel_jobs}"]
 
 
 # pylint: disable=too-many-instance-attributes
@@ -265,32 +302,67 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     user_options = setuptools.command.build_ext.build_ext.user_options
     user_options += [
-        ('build-unittests', None, 'Build the unit tests of the C++ extension'),
-        ('c-compiler=', None, 'Preferred C compiler'),
-        ('fft=', None, 'Select FFT library: pocketfft or MKL'),
-        ('cmake-args=', None, 'Additional arguments for CMake'),
-        ('code-coverage', None, 'Enable coverage reporting'),
-        ('cxx-compiler=', None, 'Preferred C++ compiler'),
-        ('generator=', None, 'Selected CMake generator'),
-        ('mkl=', None, 'Using MKL as BLAS library'),
-        ('reconfigure', None, 'Forces CMake to reconfigure this project')
+        (
+            "build-unittests",
+            None,
+            "Build the unit tests of the C++ extension",
+        ),
+        (
+            "enable-coverage",
+            None,
+            "Enable coverage reporting",
+        ),
+        (
+            "export-compile-commands",
+            None,
+            "Export compile commands for tooling",
+        ),
+        (
+            "fft=",
+            None,
+            "Select FFT library: pocketfft or MKL",
+        ),
+        (
+            "cmake-args=",
+            None,
+            "Additional arguments for CMake",
+        ),
+        (
+            "cxx-compiler=",
+            None,
+            "Preferred C++ compiler",
+        ),
+        (
+            "generator=",
+            None,
+            "Selected CMake generator",
+        ),
+        (
+            "mkl=",
+            None,
+            "Using MKL as BLAS library",
+        ),
+        (
+            "reconfigure",
+            None,
+            "Forces CMake to reconfigure this project",
+        ),
     ]
 
     boolean_options = setuptools.command.build_ext.build_ext.boolean_options
     boolean_options += [
-        'build_unittests',
-        'code_coverage',
-        'mkl',
-        'reconfigure',
+        "enable_coverage",
+        "export_compile_commands",
+        "mkl",
+        "reconfigure",
     ]
 
     def initialize_options(self) -> None:
         """Set the default values of the options."""
         super().initialize_options()
-        self.build_unittests = None
-        self.code_coverage = None
+        self.export_compile_commands = None
+        self.enable_coverage = None
         self.c_compiler = None
-        self.cmake_args = None
         self.cxx_compiler = None
         self.fft = None
         self.generator = None
@@ -300,12 +372,13 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     def finalize_options(self) -> None:
         """Set final values for all the options that this command supports."""
         super().finalize_options()
-        if self.code_coverage is not None and platform.system() == 'Windows':
-            raise RuntimeError('Code coverage is not supported on Windows')
+        if self.enable_coverage is not None and platform.system() == "Windows":
+            raise RuntimeError("Code coverage is not supported on Windows")
         if self.fft is not None and self.fft not in FFT_CHOICES:
             raise ValueError(
                 f"Invalid value for option 'fft'. "
-                f"Choose one of: {', '.join(FFT_CHOICES)}", )
+                f"Choose one of: {', '.join(FFT_CHOICES)}",
+            )
 
     def run(self) -> None:
         """Carry out the action."""
@@ -330,19 +403,20 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     @staticmethod
     def set_conda_mklroot() -> None:
         """Set the default MKL path in Anaconda's environment."""
-        mkl_header = pathlib.Path(sys.prefix, 'include', 'mkl.h')
+        mkl_header = pathlib.Path(sys.prefix, "include", "mkl.h")
         if not mkl_header.exists():
-            mkl_header = pathlib.Path(sys.prefix, 'Library', 'include',
-                                      'mkl.h')
+            mkl_header = pathlib.Path(
+                sys.prefix, "Library", "include", "mkl.h"
+            )
 
         if mkl_header.exists():
-            os.environ['MKLROOT'] = sys.prefix
+            os.environ["MKLROOT"] = sys.prefix
 
     @staticmethod
     def conda_prefix() -> str | None:
         """Return the conda prefix."""
-        if 'CONDA_PREFIX' in os.environ:
-            return os.environ['CONDA_PREFIX']
+        if "CONDA_PREFIX" in os.environ:
+            return os.environ["CONDA_PREFIX"]
         return None
 
     def set_cmake_user_options(self) -> list[str]:
@@ -351,17 +425,20 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         conda_prefix = self.conda_prefix()
 
-        if self.c_compiler is not None:
-            result.append('-DCMAKE_C_COMPILER=' + self.c_compiler)
-
         if self.cxx_compiler is not None:
-            result.append('-DCMAKE_CXX_COMPILER=' + self.cxx_compiler)
+            result.append("-DCMAKE_CXX_COMPILER=" + self.cxx_compiler)
+
+        if self.enable_coverage:
+            result.append("-DENABLE_COVERAGE=ON")
+
+        if self.export_compile_commands:
+            result.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
 
         if self.fft is not None:
             result.append(f"-DFFT_IMPLEMENTATION={self.fft}")
 
         if conda_prefix is not None:
-            result.append('-DCMAKE_PREFIX_PATH=' + conda_prefix)
+            result.append("-DCMAKE_PREFIX_PATH=" + conda_prefix)
 
         if self.mkl or self.fft == MKL_FFT:
             self.set_conda_mklroot()
@@ -372,28 +449,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         """Return the configuration to use."""
         cfg: str
         if self.debug:
-            cfg = 'Debug'
-        elif self.code_coverage:
-            cfg = 'RelWithDebInfo'
+            cfg = "Debug"
+        elif self.enable_coverage:
+            cfg = "RelWithDebInfo"
         else:
-            cfg = 'Release'
+            cfg = "Release"
         return cfg
-
-    def cmake_arguments(self, cfg: str, extdir: str) -> list[str]:
-        """Return the cmake arguments."""
-        cmake_args: list[str] = [
-            '-DCMAKE_BUILD_TYPE=' + cfg,
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-            '-DPython3_EXECUTABLE=' + sys.executable,
-            *self.set_cmake_user_options()
-        ]
-
-        if platform.python_implementation() == 'PyPy':
-            cmake_args.append('-DPython3_FIND_IMPLEMENTATIONS=PyPy')
-        elif 'Pyston' in sys.version:
-            cmake_args.append('-DPython3_INCLUDE_DIR=' +
-                              sysconfig.get_path('include'))
-        return cmake_args
 
     def get_extdir(self, ext: CMakeExtension) -> pathlib.Path:
         """Detect if the build is in editable mode."""
@@ -401,8 +462,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         # If the extension is built in the "root/build/lib.*" directory,
         # then it is not an editable install.
         if distutils_dirname().resolve() != extdir.parent:
-            return pathlib.Path(
-                self.build_lib).joinpath(*ext.name.split('.')[:-1])
+            return pathlib.Path(self.build_lib).joinpath(
+                *ext.name.split(".")[:-1]
+            )
         return extdir
 
     def build_cmake(self, ext: CMakeExtension) -> None:
@@ -414,46 +476,54 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         extdir = str(self.get_extdir(ext))
 
         cfg = self.get_config()
-        cmake_args = self.cmake_arguments(cfg, extdir)
-        build_args = ['--config', cfg]
+        cmake_args: list[str] = [
+            "-DCMAKE_BUILD_TYPE=" + cfg,
+            "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
+            "-DPython3_EXECUTABLE=" + sys.executable,
+            *self.set_cmake_user_options(),
+        ]
+        build_args = ["--config", cfg]
 
-        is_windows = platform.system() == 'Windows'
+        is_windows = platform.system() == "Windows"
 
+        # Determine the generator to use
+        generator = None
         if self.generator is not None:
-            cmake_args.append('-G' + self.generator)
+            generator = self.generator
+            cmake_args.append("-G" + generator)
         elif is_windows:
-            cmake_args.append(
-                '-G' + os.environ.get('CMAKE_GEN', 'Visual Studio 16 2019'))
+            if "CMAKE_GEN" in os.environ:
+                generator = os.environ["CMAKE_GEN"]
+            else:
+                generator = "Visual Studio 17 2022"
+            cmake_args.append("-G" + generator)
 
         prepare_cmake_arguments(
             is_windows,
-            self.code_coverage is not None,
             cfg,
             extdir,
             cmake_args,
             build_args,
         )
 
-        if self.cmake_args:
-            cmake_args.extend(self.cmake_args.split())
-
         os.chdir(str(build_temp))
 
-        # Has CMake ever been executed?
-        if pathlib.Path(build_temp, 'CMakeFiles',
-                        'TargetDirectories.txt').exists():
-            # The user must force the reconfiguration
-            configure = self.reconfigure is not None
-        else:
-            configure = True
+        # Configure CMake if needed or requested
+        configure = (
+            (self.reconfigure is not None)
+            if pathlib.Path(
+                build_temp,
+                "CMakeFiles",
+                "TargetDirectories.txt",
+            ).exists()
+            else True
+        )
 
         if configure:
-            self.spawn(['cmake', str(WORKING_DIRECTORY), *cmake_args])
+            self.spawn(["cmake", str(WORKING_DIRECTORY), *cmake_args])
         if not self.dry_run:
-            cmake_cmd = ['cmake', '--build', '.']
-            if self.build_unittests is None:
-                cmake_cmd += ['--target', 'core']
-            self.spawn(cmake_cmd + build_args)
+            cmake_cmd = ["cmake", "--build", ".", "--target", "core"]
+            self.spawn(cmake_cmd + build_args)  # type: ignore[arg-type]
         os.chdir(str(WORKING_DIRECTORY))
 
     # pylint: enable=too-many-instance-attributes
@@ -462,13 +532,13 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 class CxxTestRunner(setuptools.Command):
     """Compile and launch the C++ tests."""
 
-    description: ClassVar[str] = 'run the C++ tests'
-    user_options: ClassVar[list[tuple[str, str | None, str]]] = []
+    description: ClassVar[str] = "run the C++ tests"
+    user_options: ClassVar[USER_OPTIONS] = []
 
     def initialize_options(self) -> None:
         """Set the default values of the options."""
-        if platform.system() == 'Windows':
-            raise RuntimeError('Code coverage is not supported on Windows')
+        if platform.system() == "Windows":
+            raise RuntimeError("Code coverage is not supported on Windows")
 
     def finalize_options(self) -> None:
         """Set final values for all the options that this command supports."""
@@ -476,77 +546,86 @@ class CxxTestRunner(setuptools.Command):
     def run(self) -> None:
         """Run tests."""
         # Directory used during the generating the C++ extension.
-        tempdir = distutils_dirname('temp')
+        tempdir = distutils_dirname("temp")
 
         # Navigate to the directory containing the C++ tests and run them.
-        os.chdir(str(tempdir / 'cxx' / 'tests'))
-        self.spawn(['ctest', '--output-on-failure'])
+        os.chdir(str(tempdir / "cxx" / "tests"))
+        self.spawn(["ctest", "--output-on-failure"])
 
         # File containing the coverage report.
         coverage_lcov = str(
-            pathlib.Path(tempdir.parent.parent, 'coverage_cpp.lcov'))
+            pathlib.Path(tempdir.parent.parent, "coverage_cpp.lcov")
+        )
 
         # Collect coverage data from python/C++ unit tests
-        self.spawn([
-            'lcov', '--capture', '--directory',
-            str(tempdir), '--output-file', coverage_lcov
-        ])
+        self.spawn(
+            [
+                "lcov",
+                "--capture",
+                "--directory",
+                str(tempdir),
+                "--output-file",
+                coverage_lcov,
+            ]
+        )
 
 
 def long_description() -> str:
     """Read the README file."""
-    with pathlib.Path(WORKING_DIRECTORY,
-                      'README.rst').open(encoding='utf-8') as stream:
+    with pathlib.Path(WORKING_DIRECTORY, "README.rst").open(
+        encoding="utf-8"
+    ) as stream:
         return stream.read()
 
 
 def main() -> None:
     """Set up module."""
-    install_requires = ['dask', 'numpy', 'xarray >= 0.13']
+    install_requires = ["dask", "numpy", "xarray >= 0.13"]
     setuptools.setup(
-        author='CNES/CLS',
-        author_email='fbriol@gmail.com',
+        author="CNES/CLS",
+        author_email="fbriol@gmail.com",
         classifiers=[
-            'Development Status :: 5 - Production/Stable',
-            'Topic :: Scientific/Engineering :: Physics',
-            'Natural Language :: English',
-            'Operating System :: POSIX',
-            'Operating System :: MacOS',
-            'Operating System :: Microsoft :: Windows',
-            'Programming Language :: Python :: 3.11',
-            'Programming Language :: Python :: 3.12',
-            'Programming Language :: Python :: 3.13',
+            "Development Status :: 5 - Production/Stable",
+            "Topic :: Scientific/Engineering :: Physics",
+            "Natural Language :: English",
+            "Operating System :: POSIX",
+            "Operating System :: MacOS",
+            "Operating System :: Microsoft :: Windows",
+            "Programming Language :: Python :: 3.11",
+            "Programming Language :: Python :: 3.12",
+            "Programming Language :: Python :: 3.13",
         ],
         cmdclass={
-            'build_ext': BuildExt,
-            'gtest': CxxTestRunner,
+            "build_ext": BuildExt,
+            "gtest": CxxTestRunner,
         },
-        description='Interpolation of geo-referenced data for Python.',
-        ext_modules=[CMakeExtension(name='pyinterp.core')],
+        description="Interpolation of geo-referenced data for Python.",
+        ext_modules=[CMakeExtension(name="pyinterp.core")],
         install_requires=install_requires,
         include_package_data=True,
-        keywords='interpolation, geospatial, geohash, geodetic',
-        license='BSD-3-Clause',
-        license_files=('LICENSE', ),
+        keywords="interpolation, geospatial, geohash, geodetic",
+        license="BSD-3-Clause",
+        license_files=("LICENSE",),
         long_description=long_description(),
-        long_description_content_type='text/x-rst',
-        name='pyinterp',
+        long_description_content_type="text/x-rst",
+        name="pyinterp",
         package_data={
-            'pyinterp': ['py.typed', '*.pyi'],
-            'pyinterp.tests': ['dataset/*'],
+            "pyinterp": ["py.typed", "*.pyi"],
+            "pyinterp.tests": ["dataset/*"],
         },
-        package_dir={'pyinterp': 'pyinterp'},
+        package_dir={"pyinterp": "pyinterp"},
         packages=setuptools.find_namespace_packages(
-            include=['pyinterp', 'pyinterp.*'], ),
-        platforms=['POSIX', 'MacOS', 'Windows'],
-        python_requires='>=3.11',
-        url='https://github.com/CNES/pangeo-pyinterp',
+            include=["pyinterp", "pyinterp.*"],
+        ),
+        platforms=["POSIX", "MacOS", "Windows"],
+        python_requires=">=3.11",
+        url="https://github.com/CNES/pangeo-pyinterp",
         version=revision(),
         zip_safe=False,
     )
 
 
-if __name__ == '__main__':
-    if platform.system() == 'Darwin':
-        os.environ['MACOSX_DEPLOYMENT_TARGET'] = OSX_DEPLOYMENT_TARGET
+if __name__ == "__main__":
+    if platform.system() == "Darwin":
+        os.environ["MACOSX_DEPLOYMENT_TARGET"] = OSX_DEPLOYMENT_TARGET
     main()

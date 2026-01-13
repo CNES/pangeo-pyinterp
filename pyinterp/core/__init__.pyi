@@ -1,2492 +1,794 @@
+import typing
 from typing import (
     Any,
-    ClassVar,
+    Generic,
     Iterator,
-    List,
-    Optional,
+    Literal,
     Self,
-    Tuple,
     TypeAlias,
+    TypeVar,
     overload,
 )
 
-import numpy
-import numpy.typing
+import numpy as np
+from numpy.typing import NDArray
 
-from . import fill, geodetic
-
-__all__ = [
-    "Axis",
-    "AxisBoundary",
-    "AxisInt64",
-    "Bilinear2D",
-    "Bilinear3D",
-    "Binning1DFloat32",
-    "Binning1DFloat64",
-    "Binning2DFloat32",
-    "Binning2DFloat64",
-    "CovarianceFunction",
-    "DescriptiveStatisticsFloat32",
-    "DescriptiveStatisticsFloat64",
-    "GeoHash",
-    "Grid2DFloat32",
-    "Grid2DFloat64",
-    "Grid2DInt8",
-    "Grid2DUInt8",
-    "Grid3DFloat32",
-    "Grid3DFloat64",
-    "Grid3DInt8",
-    "Grid3DUInt8",
-    "Grid4DFloat32",
-    "Grid4DFloat64",
-    "Grid4DInt8",
-    "Grid4DUInt8",
-    "Histogram2DFloat32",
-    "Histogram2DFloat64",
-    "fill",
-    "geodetic",
-]
-
-from ..typing import (
-    NDArray1DBool,
+from ..type_hints import (
+    FourDims,
+    NDArray1DNumeric,
+    NDArray1DDateTime64,
     NDArray1DFloat32,
     NDArray1DFloat64,
     NDArray1DInt64,
-    NDArray2DFloat32,
-    NDArray2DFloat64,
-    NDArray2DInt8,
-    NDArray2DUInt8,
+    NDArray1DNumericWithTime,
+    NDArray1DTimeDelta64,
+    NDArray1DUInt32,
+    NDArray2DInt64,
     NDArray2DUInt64,
-    NDArray3DFloat32,
-    NDArray3DFloat64,
-    NDArray3DInt8,
-    NDArray3DUInt8,
-    NDArray4DFloat32,
-    NDArray4DFloat64,
-    NDArray4DInt8,
-    NDArray4DUInt8,
-    NDArrayFloat32,
-    NDArrayFloat64,
-    NDArrayInt64,
-    NDArrayUInt64,
+    OneDim,
+    ThreeDims,
+    TwoDims,
 )
-
-class Axis:
-
-    def __init__(self,
-                 values: NDArray1DFloat64,
-                 epsilon: float = ...,
-                 is_circle: bool = ...) -> None:
-        ...
-
-    def back(self) -> float:
-        ...
-
-    def find_index(self,
-                   coordinates: NDArray1DFloat64,
-                   bounded: bool = ...) -> NDArray1DInt64:
-        ...
-
-    def find_indexes(self, coordinates: NDArray1DFloat64) -> NDArray1DInt64:
-        ...
-
-    def flip(self, inplace: bool = ...) -> Axis:
-        ...
-
-    def front(self) -> float:
-        ...
-
-    def increment(self) -> float:
-        ...
-
-    def is_ascending(self) -> bool:
-        ...
-
-    def is_regular(self) -> bool:
-        ...
-
-    def max_value(self) -> float:
-        ...
-
-    def min_value(self) -> float:
-        ...
-
-    def __copy__(self) -> Axis:
-        ...
-
-    def __eq__(self, other: Axis) -> bool:  # type: ignore[override]
-        ...
-
-    @overload
-    def __getitem__(self, index: int) -> float:
-        ...
-
-    @overload
-    def __getitem__(self, indices: slice) -> NDArray1DFloat64:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iter__(self) -> Iterator[float]:
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __ne__(self, other: Axis) -> bool:  # type: ignore[override]
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def is_circle(self) -> bool:
-        ...
-
-
-class AxisBoundary:
-    __members__: ClassVar[dict] = ...  # read-only
-    Expand: ClassVar[AxisBoundary] = ...
-    Sym: ClassVar[AxisBoundary] = ...
-    Undef: ClassVar[AxisBoundary] = ...
-    Wrap: ClassVar[AxisBoundary] = ...
-    __entries: ClassVar[dict] = ...
-
-    def __init__(self, value: int) -> None:
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        ...
-
-    def __getstate__(self) -> int:
-        ...
-
-    def __hash__(self) -> int:
-        ...
-
-    def __index__(self) -> int:
-        ...
-
-    def __int__(self) -> int:
-        ...
-
-    def __ne__(self, other: object) -> bool:
-        ...
-
-    def __setstate__(self, state: int) -> None:
-        ...
-
-    @property
-    def name(self) -> str:
-        ...
-
-    @property
-    def value(self) -> int:
-        ...
-
-
-class AxisInt64:
-
-    def __init__(self, values: NDArray1DInt64) -> None:
-        ...
-
-    def back(self) -> int:
-        ...
-
-    def find_index(self,
-                   coordinates: NDArray1DInt64,
-                   bounded: bool = ...) -> NDArray1DInt64:
-        ...
-
-    def find_indexes(self, coordinates: NDArray1DInt64) -> NDArray1DInt64:
-        ...
-
-    def flip(self, inplace: bool = ...) -> AxisInt64:
-        ...
-
-    def front(self) -> int:
-        ...
-
-    def increment(self) -> int:
-        ...
-
-    def is_ascending(self) -> bool:
-        ...
-
-    def is_regular(self) -> bool:
-        ...
-
-    def max_value(self) -> int:
-        ...
-
-    def min_value(self) -> int:
-        ...
-
-    def __copy__(self) -> AxisInt64:
-        ...
-
-    def __eq__(self, other: AxisInt64) -> bool:  # type: ignore[override]
-        ...
-
-    @overload
-    def __getitem__(self, index: int) -> int:
-        ...
-
-    @overload
-    def __getitem__(self, indices: slice) -> NDArray1DInt64:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iter__(self) -> Iterator[int]:
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __ne__(self, other: AxisInt64) -> bool:  # type: ignore[override]
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Bilinear2D(BivariateInterpolator2D):
-
-    def __init__(self) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Bilinear3D(BivariateInterpolator3D):
-
-    def __init__(self) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Binning1DFloat32(Binning2DFloat32):
-
-    def __init__(self,
-                 x: Axis,
-                 range: Optional[Tuple[float, float]] = None) -> None:
-        ...
-
-    def push(  # type: ignore[override]
-        self,
-        x: NDArray1DFloat32,
-        z: NDArray1DFloat32,
-        weights: NDArray1DFloat32 | None = ...,
-    ) -> None:
-        ...
-
-    def range(self) -> Tuple[float, float]:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Binning1DFloat64(Binning2DFloat64):
-
-    def __init__(self,
-                 x: Axis,
-                 range: Optional[Tuple[float, float]] = None) -> None:
-        ...
-
-    def push(  # type: ignore[override]
-        self,
-        x: NDArray1DFloat64,
-        z: NDArray1DFloat64,
-        weights: NDArray1DFloat64 | None = ...,
-    ) -> None:
-        ...
-
-    def range(self) -> Tuple[float, float]:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Binning2DFloat32:
-
-    def __init__(self,
-                 x: Axis,
-                 y: Axis,
-                 wgs: Optional[geodetic.Spheroid] = ...) -> None:
-        ...
-
-    def clear(self) -> None:
-        ...
-
-    def count(self) -> NDArray2DUInt64:
-        ...
-
-    def kurtosis(self) -> NDArray2DFloat32:
-        ...
-
-    def max(self) -> NDArray2DFloat32:
-        ...
-
-    def mean(self) -> NDArray2DFloat32:
-        ...
-
-    def min(self) -> NDArray2DFloat32:
-        ...
-
-    def push(self,
-             x: NDArray1DFloat32,
-             y: NDArray1DFloat32,
-             z: NDArray1DFloat32,
-             simple: bool = ...) -> None:
-        ...
-
-    def skewness(self) -> NDArray2DFloat32:
-        ...
-
-    def sum(self) -> NDArray2DFloat32:
-        ...
-
-    def sum_of_weights(self) -> NDArray2DFloat32:
-        ...
-
-    def variance(self, ddof: int = ...) -> NDArray2DFloat32:
-        ...
-
-    def __copy__(self) -> Binning2DFloat32:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iadd__(
-        self,
-        other: Binning2DFloat32,
-    ) -> Self:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def wgs(self) -> Optional[geodetic.Spheroid]:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-
-class Binning2DFloat64:
-
-    def __init__(self,
-                 x: Axis,
-                 y: Axis,
-                 wgs: Optional[geodetic.Spheroid] = ...) -> None:
-        ...
-
-    def clear(self) -> None:
-        ...
-
-    def count(self) -> NDArray2DUInt64:
-        ...
-
-    def kurtosis(self) -> NDArray2DFloat64:
-        ...
-
-    def max(self) -> NDArray2DFloat64:
-        ...
-
-    def mean(self) -> NDArray2DFloat64:
-        ...
-
-    def min(self) -> NDArray2DFloat64:
-        ...
-
-    def push(self,
-             x: NDArray1DFloat64,
-             y: NDArray1DFloat64,
-             z: NDArray1DFloat64,
-             simple: bool = ...) -> None:
-        ...
-
-    def skewness(self) -> NDArray2DFloat64:
-        ...
-
-    def sum(self) -> NDArray2DFloat64:
-        ...
-
-    def sum_of_weights(self) -> NDArray2DFloat64:
-        ...
-
-    def variance(self, ddof: int = ...) -> NDArray2DFloat64:
-        ...
-
-    def __copy__(self) -> Binning2DFloat64:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iadd__(self, other: Binning2DFloat64) -> Self:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def wgs(self) -> Optional[geodetic.Spheroid]:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-
-class BivariateInterpolator2D:
-
-    def __init__(self, *args, **kwargs) -> None:
-        ...
-
-
-class BivariateInterpolator3D:
-
-    def __init__(self, *args, **kwargs) -> None:
-        ...
-
-
-class CovarianceFunction:
-    __members__: ClassVar[dict] = ...  # read-only
-    Cauchy: ClassVar[CovarianceFunction] = ...
-    Gaussian: ClassVar[CovarianceFunction] = ...
-    Linear: ClassVar[CovarianceFunction] = ...
-    Matern_12: ClassVar[CovarianceFunction] = ...
-    Matern_32: ClassVar[CovarianceFunction] = ...
-    Matern_52: ClassVar[CovarianceFunction] = ...
-    Spherical: ClassVar[CovarianceFunction] = ...
-    __entries: ClassVar[dict] = ...
-
-    def __init__(self, value: int) -> None:
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        ...
-
-    def __getstate__(self) -> int:
-        ...
-
-    def __hash__(self) -> int:
-        ...
-
-    def __index__(self) -> int:
-        ...
-
-    def __int__(self) -> int:
-        ...
-
-    def __ne__(self, other: object) -> bool:
-        ...
-
-    def __setstate__(self, state: int) -> None:
-        ...
-
-    @property
-    def name(self) -> str:
-        ...
-
-    @property
-    def value(self) -> int:
-        ...
-
-
-class DescriptiveStatisticsFloat32:
-
-    def __init__(self,
-                 values: NDArrayFloat32,
-                 weights: Optional[NDArrayFloat32] = ...,
-                 axis: Optional[List[int]] = ...) -> None:
-        ...
-
-    def count(self) -> NDArrayInt64:
-        ...
-
-    def kurtosis(self) -> NDArrayFloat32:
-        ...
-
-    def max(self) -> NDArrayFloat32:
-        ...
-
-    def mean(self) -> NDArrayFloat32:
-        ...
-
-    def min(self) -> NDArrayFloat32:
-        ...
-
-    def skewness(self) -> NDArrayFloat32:
-        ...
-
-    def sum(self) -> NDArrayFloat32:
-        ...
-
-    def sum_of_weights(self) -> NDArrayFloat32:
-        ...
-
-    def variance(self, ddof: int = ...) -> NDArrayFloat32:
-        ...
-
-    def __add__(
-            self, other: DescriptiveStatisticsFloat32
-    ) -> DescriptiveStatisticsFloat32:
-        ...
-
-    def __copy__(self) -> DescriptiveStatisticsFloat32:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iadd__(self, other: DescriptiveStatisticsFloat32) -> Self:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class DescriptiveStatisticsFloat64:
-
-    def __init__(self,
-                 values: NDArrayFloat64,
-                 weights: Optional[NDArrayFloat64] = ...,
-                 axis: Optional[List[int]] = ...) -> None:
-        ...
-
-    def count(self) -> NDArrayInt64:
-        ...
-
-    def kurtosis(self) -> NDArrayFloat64:
-        ...
-
-    def max(self) -> NDArrayFloat64:
-        ...
-
-    def mean(self) -> NDArrayFloat64:
-        ...
-
-    def min(self) -> NDArrayFloat64:
-        ...
-
-    def skewness(self) -> NDArrayFloat64:
-        ...
-
-    def sum(self) -> NDArrayFloat64:
-        ...
-
-    def sum_of_weights(self) -> NDArrayFloat64:
-        ...
-
-    def variance(self, ddof: int = ...) -> NDArrayFloat64:
-        ...
-
-    def __add__(
-            self, other: DescriptiveStatisticsFloat64
-    ) -> DescriptiveStatisticsFloat64:
-        ...
-
-    def __copy__(self) -> DescriptiveStatisticsFloat64:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iadd__(self, other: DescriptiveStatisticsFloat64) -> Self:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class DriftFunction:
-    __members__: ClassVar[dict] = ...  # read-only
-    Linear: ClassVar[DriftFunction] = ...
-    Quadratic: ClassVar[DriftFunction] = ...
-    __entries: ClassVar[dict] = ...
-
-    def __init__(self, value: int) -> None:
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        ...
-
-    def __getstate__(self) -> int:
-        ...
-
-    def __hash__(self) -> int:
-        ...
-
-    def __index__(self) -> int:
-        ...
-
-    def __int__(self) -> int:
-        ...
-
-    def __ne__(self, other: object) -> bool:
-        ...
-
-    def __setstate__(self, state: int) -> None:
-        ...
-
-    @property
-    def name(self) -> str:
-        ...
-
-    @property
-    def value(self) -> int:
-        ...
-
-
-
-class GeoHash:
-
-    def __init__(self,
-                 longitude: float,
-                 latitude: float,
-                 precision: int = ...) -> None:
-        ...
-
-    def area(self, wgs: Optional[geodetic.Spheroid] = ...) -> float:
-        ...
-
-    def bounding_box(self) -> geodetic.Box:
-        ...
-
-    def center(self) -> geodetic.Point:
-        ...
-
-    @staticmethod
-    def error_with_precision(precision: int = 1) -> Tuple[float, float]:
-        ...
-
-    @staticmethod
-    def from_string(code: str, round: bool = False) -> GeoHash:
-        ...
-
-    @staticmethod
-    def grid_properties(box: geodetic.Box,
-                        precision: int = 1) -> Tuple[GeoHash, int, int]:
-        ...
-
-    def neighbors(self) -> List[GeoHash]:
-        ...
-
-    def number_of_bits(self) -> int:
-        ...
-
-    def precision(self) -> int:
-        ...
-
-    def reduce(self) -> Tuple[float, float, int]:
-        ...
-
-
-class Grid2DFloat32:
-
-    def __init__(self, x: Axis, y: Axis, array: NDArray2DFloat32) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray2DFloat32:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-
-class Grid2DFloat64:
-
-    def __init__(self, x: Axis, y: Axis, array: NDArray2DFloat64) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray2DFloat64:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-
-class Grid2DInt8:
-
-    def __init__(self, x: Axis, y: Axis, array: NDArray2DInt8) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray2DInt8:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-
-class Grid2DUInt8:
-
-    def __init__(self, x: Axis, y: Axis, array: NDArray2DUInt8) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray2DUInt8:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-
-class Grid3DFloat32:
-
-    def __init__(self, x: Axis, y: Axis, z: Axis,
-                 array: NDArray3DFloat32) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray3DFloat32:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> Axis:
-        ...
-
-
-class Grid3DFloat64:
-
-    def __init__(self, x: Axis, y: Axis, z: Axis,
-                 array: NDArray3DFloat64) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray3DFloat64:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> Axis:
-        ...
-
-
-class Grid3DInt8:
-
-    def __init__(self, x: Axis, y: Axis, z: Axis, array: NDArray3DInt8) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray3DInt8:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> Axis:
-        ...
-
-
-class Grid3DUInt8:
-
-    def __init__(self, x: Axis, y: Axis, z: Axis, array: NDArray3DUInt8) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray3DInt8:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> Axis:
-        ...
-
-
-class Grid4DFloat32:
-
-    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
-                 array: NDArray4DFloat32) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray4DFloat32:
-        ...
-
-    @property
-    def u(self) -> Axis:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> Axis:
-        ...
-
-
-class Grid4DFloat64:
-
-    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
-                 array: NDArray4DFloat64) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray4DFloat64:
-        ...
-
-    @property
-    def u(self) -> Axis:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> Axis:
-        ...
-
-
-class Grid4DInt8:
-
-    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
-                 array: NDArray4DInt8) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray4DInt8:
-        ...
-
-    @property
-    def u(self) -> Axis:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> Axis:
-        ...
-
-
-class Grid4DUInt8:
-
-    def __init__(self, x: Axis, y: Axis, z: Axis, u: Axis,
-                 array: NDArray4DUInt8) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray4DUInt8:
-        ...
-
-    @property
-    def u(self) -> Axis:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> Axis:
-        ...
-
-
-class Histogram2DFloat32:
-
-    def __init__(self, x: Axis, y: Axis, bins: Optional[int] = ...) -> None:
-        ...
-
-    def clear(self) -> None:
-        ...
-
-    def count(self) -> NDArray2DUInt64:
-        ...
-
-    def histograms(self, *args, **kwargs) -> Any:
-        ...
-
-    def kurtosis(self) -> NDArray2DFloat32:
-        ...
-
-    def max(self) -> NDArray2DFloat32:
-        ...
-
-    def mean(self) -> NDArray2DFloat32:
-        ...
-
-    def min(self) -> NDArray2DFloat32:
-        ...
-
-    def push(self, x: NDArray1DFloat32, y: NDArray1DFloat32,
-             z: NDArray1DFloat32) -> None:
-        ...
-
-    def quantile(self, q: float = ...) -> NDArray2DFloat32:
-        ...
-
-    def skewness(self) -> NDArray2DFloat32:
-        ...
-
-    def sum_of_weights(self) -> NDArray2DFloat32:
-        ...
-
-    def variance(self) -> NDArray2DFloat32:
-        ...
-
-    def __copy__(self) -> Histogram2DFloat32:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iadd__(self, other: Histogram2DFloat32) -> Self:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-
-class Histogram2DFloat64:
-
-    def __init__(self, x: Axis, y: Axis, bins: Optional[int] = ...) -> None:
-        ...
-
-    def clear(self) -> None:
-        ...
-
-    def count(self) -> NDArray2DUInt64:
-        ...
-
-    def histograms(self, *args, **kwargs) -> Any:
-        ...
-
-    def kurtosis(self) -> NDArray2DFloat64:
-        ...
-
-    def max(self) -> NDArray2DFloat64:
-        ...
-
-    def mean(self) -> NDArray2DFloat64:
-        ...
-
-    def min(self) -> NDArray2DFloat64:
-        ...
-
-    def push(self, x: NDArray1DFloat64, y: NDArray1DFloat64,
-             z: NDArray1DFloat64) -> None:
-        ...
-
-    def quantile(self, q: float = ...) -> NDArray2DFloat64:
-        ...
-
-    def skewness(self) -> NDArray2DFloat64:
-        ...
-
-    def sum_of_weights(self) -> NDArray2DFloat64:
-        ...
-
-    def variance(self) -> NDArray2DFloat64:
-        ...
-
-    def __copy__(self) -> Histogram2DFloat64:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iadd__(self, other: Histogram2DFloat64) -> Self:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-
-class InverseDistanceWeighting2D(BivariateInterpolator2D):
-
-    def __init__(self, p: int = ...) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class InverseDistanceWeighting3D(BivariateInterpolator3D):
-
-    def __init__(self, p: int = ...) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Nearest2D(BivariateInterpolator2D):
-
-    def __init__(self) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Nearest3D(BivariateInterpolator3D):
-
-    def __init__(self) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class Period:
-
-    def __init__(self, begin: int, last: int, within: bool = ...) -> None:
-        ...
-
-    @overload
-    def contains(self, point: int) -> bool:
-        ...
-
-    @overload
-    def contains(self, other: Period) -> bool:
-        ...
-
-    def duration(self) -> int:
-        ...
-
-    def end(self) -> int:
-        ...
-
-    def intersection(self, other: Period) -> Period:
-        ...
-
-    def intersects(self, other: Period) -> bool:
-        ...
-
-    def is_adjacent(self, other: Period) -> bool:
-        ...
-
-    def is_after(self, point: int) -> bool:
-        ...
-
-    def is_before(self, point: int) -> bool:
-        ...
-
-    def is_null(self) -> bool:
-        ...
-
-    def merge(self, merge: Period) -> Period:
-        ...
-
-    def __eq__(self, other: Period) -> bool:  # type: ignore[override]
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __lt__(self, other: Period) -> bool:
-        ...
-
-    def __ne__(self, other: Period) -> bool:  # type: ignore[override]
-        ...
-
-    @property
-    def begin(self) -> int:
-        ...
-
-    @property
-    def last(self) -> int:
-        ...
-
-
-Array1DPeriod: TypeAlias = numpy.ndarray[
-    tuple[int],
-    numpy.dtype[Period]  # type: ignore[type-var]
+from . import fill, geometry, period
+from .config import geometric, rtree, windowed
+
+__all__ = [
+    "Axis",
+    "Binning1D",
+    "Binning1DFloat32",
+    "Binning1DFloat64",
+    "Binning2D",
+    "Binning2DFloat32",
+    "Binning2DFloat64",
+    "DescriptiveStatistics",
+    "DescriptiveStatisticsFloat32",
+    "DescriptiveStatisticsFloat64",
+    "Grid",
+    "Grid1D",
+    "Grid2D",
+    "Grid3D",
+    "Grid4D",
+    "Histogram2D",
+    "Histogram2DFloat32",
+    "Histogram2DFloat64",
+    "RTree3D",
+    "RTree3DFloat32",
+    "RTree3DFloat64",
+    "TDigest",
+    "TDigestFloat32",
+    "TDigestFloat64",
+    "bivariate",
+    "fill",
+    "geometry",
+    "period",
+    "quadrivariate",
+    "trivariate",
 ]
 
+_DType = TypeVar("_DType", bound=np.generic)
 
-class PeriodList:
+# Type alias for temporal coordinate arrays
+TemporalArray: TypeAlias = NDArray1DDateTime64 | NDArray1DTimeDelta64
 
-    def __init__(self,
-                 periods: Array1DPeriod) -> None:  # type: ignore[type-var]
-        ...
+def univariate(
+    grid: GridHolder, x: NDArray1DNumeric, config: windowed.Univariate
+) -> NDArray1DFloat64 | NDArray1DFloat32: ...
+def univariate_derivative(
+    grid: GridHolder, x: NDArray1DNumeric, config: windowed.Univariate
+) -> NDArray1DFloat64 | NDArray1DFloat32: ...
+def bivariate(
+    grid: GridHolder,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    config: geometric.Bivariate | windowed.Bivariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
+def trivariate(
+    grid: GridHolder,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
+    config: geometric.Trivariate | windowed.Trivariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
+def quadrivariate(
+    grid: GridHolder,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
+    u: NDArray1DNumeric,
+    config: geometric.Quadrivariate | windowed.Quadrivariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 
-    def are_periods_sorted_and_disjointed(self) -> bool:
-        ...
-
-    def belong_to_a_period(self, dates: NDArray1DInt64) -> NDArray1DBool:
-        ...
-
-    def cross_a_period(self, dates: NDArray1DInt64) -> NDArray1DBool:
-        ...
-
-    def filter(self, min_duration: int) -> PeriodList:
-        ...
-
-    def intersection(self, period: Period) -> PeriodList:
-        ...
-
-    def is_it_close(self, period: int, epsilon: int) -> bool:
-        ...
-
-    def join_adjacent_periods(self, epsilon: int) -> PeriodList:
-        ...
-
-    def merge(self, other: PeriodList) -> None:
-        ...
-
-    def sort(self) -> None:
-        ...
-
-    def within(self, period: Period) -> PeriodList:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def periods(self) -> Array1DPeriod:
-        ...
-
-
-class RTree3DFloat32:
-
-    def __init__(self,
-                 spheroid: Optional[geodetic.Spheroid] = ...,
-                 ecef: bool = ...) -> None:
-        ...
-
-    def bounds(self) -> tuple:
-        ...
-
-    def clear(self) -> None:
-        ...
-
-    def insert(self, coordinates: NDArrayFloat32, values: NDArrayFloat32) -> None:
-        ...
-
-    def inverse_distance_weighting(self,
-                                   coordinates: NDArrayFloat32,
-                                   radius: Optional[float] = ...,
-                                   k: int = ...,
-                                   p: int = ...,
-                                   within: bool = ...,
-                                   num_threads: int = ...) -> tuple:
-        ...
-
+class Axis:
+    def __init__(
+        self,
+        values: NDArray1DNumeric,
+        epsilon: float = ...,
+        period: float | None = ...,
+    ) -> None: ...
+    def back(self) -> float: ...
+    def find_index(
+        self, coordinates: NDArray1DFloat64, bounded: bool = ...
+    ) -> NDArray1DInt64: ...
+    def find_indexes(
+        self, coordinates: NDArray1DNumeric
+    ) -> NDArray2DInt64: ...
+    def flip(self, inplace: bool = ...) -> Axis: ...
+    def front(self) -> float: ...
+    def increment(self) -> float: ...
+    def is_ascending(self) -> bool: ...
+    def is_regular(self) -> bool: ...
+    def max_value(self) -> float: ...
+    def min_value(self) -> float: ...
+    def __copy__(self) -> Axis: ...
+    def __eq__(self, other: object) -> bool: ...
     @overload
-    def packing(self, coordinates: NDArray2DFloat32, values: NDArray1DFloat32) -> None:
-        ...
-
+    def __getitem__(self, index: int) -> float: ...
     @overload
-    def packing(self, coordinates: NDArray3DFloat32, values: NDArray1DFloat32) -> None:
-        ...
+    def __getitem__(self, axis_slice: slice) -> NDArray1DFloat64: ...
+    def __iter__(self) -> Iterator[float]: ...
+    def __len__(self) -> int: ...
+    def __ne__(self, other: object) -> bool: ...
+    @property
+    def is_periodic(self) -> bool: ...
+    @property
+    def period(self) -> float | None: ...
 
-    def query(self,
-              coordinates: NDArrayFloat32,
-              k: int = ...,
-              within: bool = ...,
-              num_threads: int = ...) -> tuple:
-        ...
+_FloatDType = TypeVar("_FloatDType", np.float32, np.float64)
 
-    def radial_basis_function(self,
-                              coordinates: NDArrayFloat32,
-                              radius: Optional[float] = ...,
-                              k: int = ...,
-                              rbf: RadialBasisFunction = ...,
-                              epsilon: Optional[float] = ...,
-                              smooth: float = ...,
-                              within: bool = ...,
-                              num_threads: int = ...) -> tuple:
-        ...
+class Binning2DHolder(Generic[_FloatDType]):
+    def __init__(
+        self,
+        x: Axis,
+        y: Axis,
+        spheroid: geometry.geographic.Spheroid | None = ...,
+    ) -> None: ...
+    def clear(self) -> None: ...
+    def count(self) -> NDArray2DUInt64: ...
+    def kurtosis(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def max(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def mean(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def min(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def push(
+        self,
+        x: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        y: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        z: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        simple: bool = ...,
+    ) -> None: ...
+    def skewness(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def sum(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def sum_of_weights(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def variance(
+        self, ddof: int = ...
+    ) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def __copy__(self) -> Binning2DHolder[_FloatDType]: ...
+    def __iadd__(self, other: Binning2DHolder[Any]) -> Self: ...
+    @property
+    def spheroid(self) -> geometry.geographic.Spheroid | None: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
 
-    def kriging(self,
-                          coordinates: NDArrayFloat32,
-                          radius: Optional[float] = ...,
-                          k: int = ...,
-                          covariance: CovarianceFunction = ...,
-                          drift: DriftFunction | None = ...,
-                          sigma: float = ...,
-                          alpha: float = ...,
-                          nugget: float = ...,
-                          within: bool = ...,
-                          num_threads: int = ...) -> tuple:
-        ...
+class Binning1DHolder(Generic[_FloatDType]):
+    def __init__(
+        self, x: Axis, range: tuple[float, float] | None = ...
+    ) -> None: ...
+    def clear(self) -> None: ...
+    def push(
+        self,
+        x: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        z: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        weights: np.ndarray[OneDim, np.dtype[np.floating[Any]]] | None = ...,
+    ) -> None: ...
+    def count(self) -> np.ndarray[OneDim, np.dtype[np.uint64]]: ...
+    def kurtosis(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def max(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def mean(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def min(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def skewness(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def sum(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def sum_of_weights(self) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def variance(
+        self, ddof: int = ...
+    ) -> np.ndarray[OneDim, np.dtype[_FloatDType]]: ...
+    def range(self) -> tuple[float, float]: ...
+    def __copy__(self) -> Binning1DHolder[_FloatDType]: ...
+    def __iadd__(self, other: Binning1DHolder[Any]) -> Self: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
+    @property
+    def spheroid(self) -> geometry.geographic.Spheroid | None: ...
 
-    def value(self,
-              coordinates: NDArrayFloat32,
-              radius: Optional[float] = ...,
-              k: int = ...,
-              within: bool = ...,
-              num_threads: int = ...) -> tuple:
-        ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: None = None,
+) -> Binning2DHolder[np.float64]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: Literal["float32"],
+) -> Binning2DHolder[np.float32]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: Literal["float64"],
+) -> Binning2DHolder[np.float64]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> Binning2DHolder[_FloatDType]: ...
+@overload
+def Binning2D(
+    x: Axis,
+    y: Axis,
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: str,
+) -> Binning2DHolder[np.float32] | Binning2DHolder[np.float64]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    range: tuple[float, float] | None = None,
+    *,
+    dtype: None = None,
+) -> Binning1DHolder[np.float64]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    range: tuple[float, float] | None = None,
+    *,
+    dtype: Literal["float32"],
+) -> Binning1DHolder[np.float32]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    range: tuple[float, float] | None = None,
+    *,
+    dtype: Literal["float64"],
+) -> Binning1DHolder[np.float64]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    range: tuple[float, float] | None = None,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> Binning1DHolder[_FloatDType]: ...
+@overload
+def Binning1D(
+    x: Axis,
+    range: tuple[float, float] | None = None,
+    *,
+    dtype: str,
+) -> Binning1DHolder[np.float32] | Binning1DHolder[np.float64]: ...
 
-    def window_function(self,
-                        coordinates: NDArrayFloat32,
-                        radius: Optional[float] = ...,
-                        k: int = ...,
-                        wf: WindowFunction = ...,
-                        arg: Optional[float] = ...,
-                        within: bool = ...,
-                        num_threads: int = ...) -> tuple:
-        ...
+Binning2DFloat32: TypeAlias = Binning2DHolder[np.float32]
+Binning2DFloat64: TypeAlias = Binning2DHolder[np.float64]
+Binning1DFloat32: TypeAlias = Binning1DHolder[np.float32]
+Binning1DFloat64: TypeAlias = Binning1DHolder[np.float64]
 
-    def __bool__(self) -> bool:
-        ...
+class DescriptiveStatisticsHolder(Generic[_FloatDType]):
+    def __init__(
+        self,
+        values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+        weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = ...,
+        axis: list[int] | None = ...,
+    ) -> None: ...
+    def count(self) -> np.ndarray[Any, np.dtype[np.uint64]]: ...
+    def min(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def max(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def mean(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def variance(
+        self,
+        ddof: int = ...,
+    ) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def skewness(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def kurtosis(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def sum(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def sum_of_weights(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def __copy__(self) -> DescriptiveStatisticsHolder[_FloatDType]: ...
+    def __iadd__(self, other: DescriptiveStatisticsHolder[Any]) -> Self: ...
 
-    def __copy__(self) -> RTree3DFloat32:
-        ...
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: None = None,
+) -> DescriptiveStatisticsHolder[np.float64]: ...
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: Literal["float32"],
+) -> DescriptiveStatisticsHolder[np.float32]: ...
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: Literal["float64"],
+) -> DescriptiveStatisticsHolder[np.float64]: ...
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> DescriptiveStatisticsHolder[_FloatDType]: ...
+@overload
+def DescriptiveStatistics(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    *,
+    dtype: str,
+) -> (
+    DescriptiveStatisticsHolder[np.float32]
+    | DescriptiveStatisticsHolder[np.float64]
+): ...
 
-    def __getstate__(self) -> tuple:
-        ...
+DescriptiveStatisticsFloat32: TypeAlias = DescriptiveStatisticsHolder[
+    np.float32
+]
+DescriptiveStatisticsFloat64: TypeAlias = DescriptiveStatisticsHolder[
+    np.float64
+]
 
-    def __len__(self) -> int:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class RTree3DFloat64:
-
-    def __init__(self,
-                 spheroid: Optional[geodetic.Spheroid] = ...,
-                 ecef: bool = ...) -> None:
-        ...
-
-    def bounds(self) -> tuple:
-        ...
-
-    def clear(self) -> None:
-        ...
-
-    def insert(self, coordinates: NDArrayFloat64, values: NDArrayFloat64) -> None:
-        ...
-
-    def inverse_distance_weighting(self,
-                                   coordinates: NDArrayFloat64,
-                                   radius: Optional[float] = ...,
-                                   k: int = ...,
-                                   p: int = ...,
-                                   within: bool = ...,
-                                   num_threads: int = ...) -> tuple:
-        ...
-
+class TDigestHolder(Generic[_FloatDType]):
+    def __init__(
+        self,
+        values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+        weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = ...,
+        axis: list[int] | None = ...,
+        compression: int = ...,
+    ) -> None: ...
+    def count(self) -> np.ndarray[Any, np.dtype[np.uint64]]: ...
+    def min(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def max(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def mean(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def sum_of_weights(self) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
     @overload
-    def packing(self, coordinates: NDArray2DFloat64, values: NDArray1DFloat64) -> None:
-        ...
-
+    def quantile(self, q: float) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
     @overload
-    def packing(self, coordinates: NDArray3DFloat64, values: NDArray1DFloat64) -> None:
-        ...
-
-    def query(self,
-              coordinates: NDArrayFloat64,
-              k: int = ...,
-              within: bool = ...,
-              num_threads: int = ...) -> tuple:
-        ...
-
-    def radial_basis_function(self,
-                              coordinates: NDArrayFloat64,
-                              radius: Optional[float] = ...,
-                              k: int = ...,
-                              rbf: RadialBasisFunction = ...,
-                              epsilon: Optional[float] = ...,
-                              smooth: float = ...,
-                              within: bool = ...,
-                              num_threads: int = ...) -> tuple:
-        ...
-
-    def kriging(self,
-                          coordinates: NDArrayFloat64,
-                          radius: Optional[float] = ...,
-                          k: int = ...,
-                          covariance: CovarianceFunction = ...,
-                          drift: DriftFunction | None = ...,
-                          sigma: float = ...,
-                          alpha: float = ...,
-                          nugget: float = ...,
-                          within: bool = ...,
-                          num_threads: int = ...) -> tuple:
-        ...
-
-    def value(self,
-              coordinates: NDArrayFloat64,
-              radius: Optional[float] = ...,
-              k: int = ...,
-              within: bool = ...,
-              num_threads: int = ...) -> tuple:
-        ...
-
-    def window_function(self,
-                        coordinates: NDArrayFloat64,
-                        radius: Optional[float] = ...,
-                        k: int = ...,
-                        wf: WindowFunction = ...,
-                        arg: Optional[float] = ...,
-                        within: bool = ...,
-                        num_threads: int = ...) -> tuple:
-        ...
-
-    def __bool__(self) -> bool:
-        ...
-
-    def __copy__(self) -> RTree3DFloat64:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class RadialBasisFunction:
-    __members__: ClassVar[dict] = ...  # read-only
-    Cubic: ClassVar[RadialBasisFunction] = ...
-    Gaussian: ClassVar[RadialBasisFunction] = ...
-    InverseMultiquadric: ClassVar[RadialBasisFunction] = ...
-    Linear: ClassVar[RadialBasisFunction] = ...
-    Multiquadric: ClassVar[RadialBasisFunction] = ...
-    ThinPlate: ClassVar[RadialBasisFunction] = ...
-    __entries: ClassVar[dict] = ...
-
-    def __init__(self, value: int) -> None:
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        ...
-
-    def __getstate__(self) -> int:
-        ...
-
-    def __hash__(self) -> int:
-        ...
-
-    def __index__(self) -> int:
-        ...
-
-    def __int__(self) -> int:
-        ...
-
-    def __ne__(self, other: object) -> bool:
-        ...
-
-    def __setstate__(self, state: int) -> None:
-        ...
-
-    @property
-    def name(self) -> str:
-        ...
-
-    @property
-    def value(self) -> int:
-        ...
-
-
-class StreamingHistogramFloat32:
-
-    def __init__(self,
-                 values: NDArrayFloat32,
-                 weights: Optional[NDArrayFloat32] = ...,
-                 axis: Optional[List[int]] = ...,
-                 bin_count: Optional[int] = ...) -> None:
-        ...
-
-    def bins(self, *args, **kwargs) -> Any:
-        ...
-
-    def count(self) -> NDArrayUInt64:
-        ...
-
-    def kurtosis(self) -> NDArrayFloat32:
-        ...
-
-    def max(self) -> NDArrayFloat32:
-        ...
-
-    def mean(self) -> NDArrayFloat32:
-        ...
-
-    def min(self) -> NDArrayFloat32:
-        ...
-
-    def quantile(self, q: float = ...) -> NDArrayFloat32:
-        ...
-
-    def resize(self, arg0: int) -> None:
-        ...
-
-    def size(self) -> NDArrayUInt64:
-        ...
-
-    def skewness(self) -> NDArrayFloat32:
-        ...
-
-    def sum_of_weights(self) -> NDArrayFloat32:
-        ...
-
-    def variance(self) -> NDArrayFloat32:
-        ...
-
-    def __add__(self,
-                other: StreamingHistogramFloat32) -> StreamingHistogramFloat32:
-        ...
-
-    def __copy__(self) -> StreamingHistogramFloat32:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iadd__(self, other: StreamingHistogramFloat32) -> Self:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class StreamingHistogramFloat64:
-
-    def __init__(self,
-                 values: NDArrayFloat64,
-                 weights: Optional[NDArrayFloat64] = ...,
-                 axis: Optional[List[int]] = ...,
-                 bin_count: Optional[int] = ...) -> None:
-        ...
-
-    def bins(self, *args, **kwargs) -> Any:
-        ...
-
-    def count(self) -> NDArrayUInt64:
-        ...
-
-    def kurtosis(self) -> NDArrayFloat64:
-        ...
-
-    def max(self) -> NDArrayFloat64:
-        ...
-
-    def mean(self) -> NDArrayFloat64:
-        ...
-
-    def min(self) -> NDArrayFloat64:
-        ...
-
-    def quantile(self, q: float = ...) -> NDArrayFloat64:
-        ...
-
-    def resize(self, arg0: int) -> None:
-        ...
-
-    def size(self) -> NDArrayUInt64:
-        ...
-
-    def skewness(self) -> NDArrayFloat64:
-        ...
-
-    def sum_of_weights(self) -> NDArrayFloat64:
-        ...
-
-    def variance(self) -> NDArrayFloat64:
-        ...
-
-    def __add__(self,
-                other: StreamingHistogramFloat64) -> StreamingHistogramFloat64:
-        ...
-
-    def __copy__(self) -> StreamingHistogramFloat64:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iadd__(self, other: StreamingHistogramFloat64) -> Self:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class TemporalAxis(AxisInt64):
-
-    def __init__(self, values: numpy.ndarray) -> None:
-        ...
-
-    def back(self) -> numpy.ndarray:  # type: ignore[override]
-        ...
-
-    def dtype(self) -> numpy.dtype:
-        ...
-
-    def find_index(self,
-                   coordinates: numpy.ndarray,
-                   bounded: bool = ...) -> NDArray1DInt64:
-        ...
-
-    def find_indexes(self, coordinates: numpy.ndarray) -> NDArray1DInt64:
-        ...
-
-    def flip(self, inplace: bool = ...) -> TemporalAxis:
-        ...
-
-    def front(self) -> numpy.ndarray:  # type: ignore[override]
-        ...
-
-    def increment(self) -> numpy.ndarray:  # type: ignore[override]
-        ...
-
-    def is_ascending(self) -> bool:
-        ...
-
-    def is_regular(self) -> bool:
-        ...
-
-    def max_value(self) -> numpy.ndarray:  # type: ignore[override]
-        ...
-
-    def min_value(self) -> numpy.ndarray:  # type: ignore[override]
-        ...
-
-    def safe_cast(self, values: numpy.ndarray) -> numpy.ndarray:
-        ...
-
-    def __copy__(self) -> TemporalAxis:
-        ...
-
-    def __eq__(self, other: TemporalAxis) -> bool:  # type: ignore[override]
-        ...
-
-    @overload  # type: ignore[override]
-    def __getitem__(self, index: int) -> numpy.ndarray:
-        ...
-
-    @overload  # type: ignore[override]
-    def __getitem__(self, indices: slice) -> numpy.ndarray:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __iter__(self) -> Iterator[numpy.ndarray]:  # type: ignore[override]
-        ...
-
-    def __len__(self) -> int:
-        ...
-
-    def __ne__(self, other: TemporalAxis) -> bool:  # type: ignore[override]
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class TemporalBilinear3D(TemporalBivariateInterpolator3D):
-
-    def __init__(self) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class TemporalBivariateInterpolator3D:
-
-    def __init__(self, *args, **kwargs) -> None:
-        ...
-
-
-class TemporalGrid3DFloat32:
-
-    def __init__(self, x: Axis, y: Axis, z: AxisInt64,
-                 array: NDArray3DFloat64) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray3DFloat64:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> AxisInt64:
-        ...
-
-
-class TemporalGrid3DFloat64:
-
-    def __init__(self, x: Axis, y: Axis, z: AxisInt64,
-                 array: NDArray3DFloat64) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray3DFloat64:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> AxisInt64:
-        ...
-
-
-class TemporalGrid3DInt8:
-
-    def __init__(self, x: Axis, y: Axis, z: AxisInt64,
-                 array: NDArray3DInt8) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray3DInt8:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> AxisInt64:
-        ...
-
-
-class TemporalGrid4DFloat32:
-
-    def __init__(self, x: Axis, y: Axis, z: AxisInt64, u: Axis,
-                 array: NDArray4DFloat32) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray4DFloat32:
-        ...
-
-    @property
-    def u(self) -> Axis:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> AxisInt64:
-        ...
-
-
-class TemporalGrid4DFloat64:
-
-    def __init__(self, x: Axis, y: Axis, z: AxisInt64, u: Axis,
-                 array: NDArray4DFloat64) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray4DFloat64:
-        ...
-
-    @property
-    def u(self) -> Axis:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> AxisInt64:
-        ...
-
-
-class TemporalGrid4DInt8:
-
-    def __init__(self, x: Axis, y: Axis, z: AxisInt64, u: Axis,
-                 array: NDArray4DInt8) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-    @property
-    def array(self) -> NDArray4DInt8:
-        ...
-
-    @property
-    def u(self) -> Axis:
-        ...
-
-    @property
-    def x(self) -> Axis:
-        ...
-
-    @property
-    def y(self) -> Axis:
-        ...
-
-    @property
-    def z(self) -> AxisInt64:
-        ...
-
-
-class TemporalInverseDistanceWeighting3D(TemporalBivariateInterpolator3D):
-
-    def __init__(self, p: int = ...) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class TemporalNearest3D(TemporalBivariateInterpolator3D):
-
-    def __init__(self) -> None:
-        ...
-
-    def __getstate__(self) -> tuple:
-        ...
-
-    def __setstate__(self, state: tuple) -> None:
-        ...
-
-
-class WindowFunction:
-    __members__: ClassVar[dict] = ...  # read-only
-    Blackman: ClassVar[WindowFunction] = ...
-    BlackmanHarris: ClassVar[WindowFunction] = ...
-    Boxcar: ClassVar[WindowFunction] = ...
-    FlatTop: ClassVar[WindowFunction] = ...
-    Gaussian: ClassVar[WindowFunction] = ...
-    Hamming: ClassVar[WindowFunction] = ...
-    Lanczos: ClassVar[WindowFunction] = ...
-    Nuttall: ClassVar[WindowFunction] = ...
-    Parzen: ClassVar[WindowFunction] = ...
-    ParzenSWOT: ClassVar[WindowFunction] = ...
-    __entries: ClassVar[dict] = ...
-
-    def __init__(self, value: int) -> None:
-        ...
-
-    def __eq__(self, other: object) -> bool:
-        ...
-
-    def __getstate__(self) -> int:
-        ...
-
-    def __hash__(self) -> int:
-        ...
-
-    def __index__(self) -> int:
-        ...
-
-    def __int__(self) -> int:
-        ...
-
-    def __ne__(self, other: object) -> bool:
-        ...
-
-    def __setstate__(self, state: int) -> None:
-        ...
-
-    @property
-    def name(self) -> str:
-        ...
-
-    @property
-    def value(self) -> int:
-        ...
-
+    def quantile(
+        self, quantiles: np.ndarray[OneDim, np.dtype[np.floating[Any]]]
+    ) -> np.ndarray[Any, np.dtype[_FloatDType]]: ...
+    def __copy__(self) -> TDigestHolder[_FloatDType]: ...
+    def __iadd__(self, other: TDigestHolder[Any]) -> Self: ...
 
 @overload
-def bicubic_float32(grid: Grid2DFloat32,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: None = None,
+) -> TDigestHolder[np.float64]: ...
+@overload
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: Literal["float32"],
+) -> TDigestHolder[np.float32]: ...
+@overload
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: Literal["float64"],
+) -> TDigestHolder[np.float64]: ...
+@overload
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> TDigestHolder[_FloatDType]: ...
+@overload
+def TDigest(
+    values: np.ndarray[Any, np.dtype[np.floating[Any]]],
+    weights: np.ndarray[Any, np.dtype[np.floating[Any]]] | None = None,
+    axis: list[int] | None = None,
+    compression: int = 100,
+    *,
+    dtype: str,
+) -> TDigestHolder[np.float32] | TDigestHolder[np.float64]: ...
 
+TDigestFloat32: TypeAlias = TDigestHolder[np.float32]
+TDigestFloat64: TypeAlias = TDigestHolder[np.float64]
+
+class GridHolder(Generic[_DType]):
+    def __getstate__(self) -> tuple: ...
+    @property
+    def array(self) -> NDArray[_DType]: ...
+    @property
+    def dtype(self) -> np.dtype[_DType]: ...
+    @property
+    def has_temporal_axis(self) -> bool: ...
+    @property
+    def ndim(self) -> int: ...
+    @property
+    def shape(self) -> tuple[int, ...]: ...
+    @property
+    def temporal_axis_index(self) -> int: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis | None: ...
+    @property
+    def z(self) -> Axis | TemporalAxis | None: ...
+    @property
+    def u(self) -> Axis | None: ...
+
+class Grid1D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[OneDim, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> OneDim: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> None: ...
+    @property
+    def z(self) -> None: ...
+    @property
+    def u(self) -> None: ...
+
+class Grid2D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[TwoDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> TwoDims: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
+    @property
+    def z(self) -> None: ...
+    @property
+    def u(self) -> None: ...
+
+class Grid3D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[ThreeDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> ThreeDims: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
+    @property
+    def z(self) -> Axis: ...
+    @property
+    def u(self) -> None: ...
+
+class TemporalGrid3D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[ThreeDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> ThreeDims: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
+    @property
+    def z(self) -> TemporalAxis: ...
+    @property
+    def u(self) -> None: ...
+
+class Grid4D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[FourDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> FourDims: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
+    @property
+    def z(self) -> Axis: ...
+    @property
+    def u(self) -> Axis: ...
+
+class Histogram2DHolder(Generic[_FloatDType]):
+    def __init__(
+        self,
+        x: Axis,
+        y: Axis,
+        compression: int | None = ...,
+    ) -> None: ...
+    def clear(self) -> None: ...
+    def count(self) -> NDArray2DInt64: ...
+    def max(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def mean(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def min(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def push(
+        self,
+        x: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        y: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+        z: np.ndarray[OneDim, np.dtype[np.floating[Any]]],
+    ) -> None: ...
+    def quantile(self, q: float) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def sum_of_weights(self) -> np.ndarray[TwoDims, np.dtype[_FloatDType]]: ...
+    def __copy__(self) -> Histogram2DHolder[_FloatDType]: ...
+    def __iadd__(
+        self, other: Histogram2DHolder[_FloatDType]
+    ) -> Histogram2DHolder[_FloatDType]: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
 
 @overload
-def bicubic_float32(grid: Grid3DFloat32,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    z: NDArray1DFloat64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: None = None,
+) -> Histogram2DHolder[np.float64]: ...
+@overload
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: Literal["float32"],
+) -> Histogram2DHolder[np.float32]: ...
+@overload
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: Literal["float64"],
+) -> Histogram2DHolder[np.float64]: ...
+@overload
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> Histogram2DHolder[_FloatDType]: ...
+@overload
+def Histogram2D(
+    x: Axis,
+    y: Axis,
+    compression: int | None = None,
+    *,
+    dtype: str,
+) -> Histogram2DHolder[np.float32] | Histogram2DHolder[np.float64]: ...
 
+Histogram2DFloat32: TypeAlias = Histogram2DHolder[np.float32]
+Histogram2DFloat64: TypeAlias = Histogram2DHolder[np.float64]
+
+class TemporalGrid4D(GridHolder[_DType]):
+    @property
+    def array(self) -> np.ndarray[FourDims, np.dtype[_DType]]: ...
+    @property
+    def shape(self) -> FourDims: ...
+    @property
+    def x(self) -> Axis: ...
+    @property
+    def y(self) -> Axis: ...
+    @property
+    def z(self) -> TemporalAxis: ...
+    @property
+    def u(self) -> Axis: ...
+
+class RTree3DHolder(Generic[_FloatDType]):
+    def __init__(
+        self, spheroid: geometry.geographic.Spheroid | None = ...
+    ) -> None: ...
+    def bounds(
+        self,
+    ) -> (
+        tuple[
+            np.ndarray[tuple[Literal[3]], np.dtype[Any]],
+            np.ndarray[tuple[Literal[3]], np.dtype[Any]],
+        ]
+        | None
+    ): ...
+    def clear(self) -> None: ...
+    def empty(self) -> bool: ...
+    def insert(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        values: np.ndarray[OneDim, np.dtype[Any]],
+    ) -> None: ...
+    def inverse_distance_weighting(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        config: rtree.InverseDistanceWeighting | None = ...,
+    ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
+    def kriging(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        config: rtree.Kriging | None = ...,
+    ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
+    def packing(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        values: np.ndarray[OneDim, np.dtype[Any]],
+    ) -> None: ...
+    def query(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        config: rtree.Query | None = ...,
+    ) -> tuple[
+        np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        np.ndarray[TwoDims, np.dtype[_FloatDType]],
+    ]: ...
+    def radial_basis_function(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        config: rtree.RadialBasisFunction | None = ...,
+    ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
+    def size(self) -> int: ...
+    def window_function(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        config: rtree.InterpolationWindow | None = ...,
+    ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
+    @property
+    def spheroid(self) -> geometry.geographic.Spheroid | None: ...
 
 @overload
-def bicubic_float32(grid: TemporalGrid3DFloat32,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    z: NDArray1DInt64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
+def RTree3D(
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: None = None,
+) -> RTree3DHolder[np.float64]: ...
+@overload
+def RTree3D(
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: Literal["float32"],
+) -> RTree3DHolder[np.float32]: ...
+@overload
+def RTree3D(
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: Literal["float64"],
+) -> RTree3DHolder[np.float64]: ...
+@overload
+def RTree3D(
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: type[_FloatDType] | np.dtype[_FloatDType],
+) -> RTree3DHolder[_FloatDType]: ...
+@overload
+def RTree3D(
+    spheroid: geometry.geographic.Spheroid | None = None,
+    *,
+    dtype: str,
+) -> RTree3DHolder[np.float32] | RTree3DHolder[np.float64]: ...
 
+RTree3DFloat64: TypeAlias = RTree3DHolder[np.float64]
+RTree3DFloat32: TypeAlias = RTree3DHolder[np.float32]
+
+_TemporalScalar = TypeVar("_TemporalScalar", np.datetime64, np.timedelta64)
+_TemporalArray = TypeVar(
+    "_TemporalArray", NDArray1DDateTime64, NDArray1DTimeDelta64
+)
+
+class TemporalAxis(Generic[_TemporalScalar, _TemporalArray]):
+    @overload
+    def __init__(
+        self: TemporalAxis[np.datetime64, NDArray1DDateTime64],
+        points: NDArray1DDateTime64,
+        epsilon: np.timedelta64 | None = ...,
+        period: np.timedelta64 | None = ...,
+    ) -> None: ...
+    @overload
+    def __init__(
+        self: TemporalAxis[np.timedelta64, NDArray1DTimeDelta64],
+        points: NDArray1DTimeDelta64,
+        epsilon: np.timedelta64 | None = ...,
+        period: np.timedelta64 | None = ...,
+    ) -> None: ...
+    def back(self) -> _TemporalScalar: ...
+    def cast_to_temporal_axis(
+        self, array: _TemporalArray
+    ) -> _TemporalArray: ...
+    def find_index(
+        self, array: _TemporalArray, bounded: bool = ...
+    ) -> NDArray1DInt64: ...
+    def find_indexes(self, array: _TemporalArray) -> NDArray2DInt64: ...
+    def flip(
+        self, inplace: bool = ...
+    ) -> TemporalAxis[_TemporalScalar, _TemporalArray]: ...
+    def front(self) -> _TemporalScalar: ...
+    def increment(self, step: int = ...) -> np.timedelta64: ...
+    def is_ascending(self) -> bool: ...
+    def is_regular(self) -> bool: ...
+    def max_value(self) -> _TemporalScalar: ...
+    def min_value(self) -> _TemporalScalar: ...
+    def __copy__(self) -> TemporalAxis[_TemporalScalar, _TemporalArray]: ...
+    def __eq__(self, other: object) -> bool: ...
+    @overload
+    def __getitem__(self, index: int) -> _TemporalScalar: ...
+    @overload
+    def __getitem__(self, axis_slice: slice) -> _TemporalArray: ...
+    def __iter__(self) -> typing.Iterator[_TemporalScalar]: ...
+    def __len__(self) -> int: ...
+    def __ne__(self, other: object) -> bool: ...
+    @property
+    def dtype(self) -> np.dtype: ...
+    @property
+    def is_periodic(self) -> bool: ...
+    @property
+    def period(self) -> np.timedelta64 | None: ...
 
 @overload
-def bicubic_float32(grid: Grid4DFloat32,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    z: NDArray1DFloat64,
-                    u: NDArray1DFloat64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
+def Grid(
+    x: Axis,
+    array: np.ndarray[OneDim, np.dtype[_DType]],
+) -> Grid1D[_DType]: ...
 @overload
-def bicubic_float32(grid: TemporalGrid4DFloat32,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    z: NDArray1DInt64,
-                    u: NDArray1DFloat64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
+def Grid(
+    x: Axis,
+    y: Axis,
+    array: np.ndarray[TwoDims, np.dtype[_DType]],
+) -> Grid2D[_DType]: ...
 @overload
-def bicubic_float64(grid: Grid2DFloat64,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
+def Grid(
+    x: Axis,
+    y: Axis,
+    z: Axis,
+    array: np.ndarray[ThreeDims, np.dtype[_DType]],
+) -> Grid3D[_DType]: ...
 @overload
-def bicubic_float64(grid: Grid3DFloat64,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    z: NDArray1DFloat64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
+def Grid(
+    x: Axis,
+    y: Axis,
+    z: TemporalAxis,
+    array: np.ndarray[ThreeDims, np.dtype[_DType]],
+) -> TemporalGrid3D[_DType]: ...
 @overload
-def bicubic_float64(grid: TemporalGrid3DFloat64,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    z: NDArray1DInt64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
+def Grid(
+    x: Axis,
+    y: Axis,
+    z: Axis,
+    u: Axis,
+    array: np.ndarray[FourDims, np.dtype[_DType]],
+) -> Grid4D[_DType]: ...
 @overload
-def bicubic_float64(grid: Grid4DFloat64,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    z: NDArray1DFloat64,
-                    u: NDArray1DFloat64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def bicubic_float64(grid: TemporalGrid4DFloat64,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    z: NDArray1DInt64,
-                    u: NDArray1DFloat64,
-                    nx: int = ...,
-                    ny: int = ...,
-                    fitting_model: str = ...,
-                    boundary: str = ...,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-def bivariate_float32(grid: Grid2DFloat32,
-                      x: NDArray1DFloat64,
-                      y: NDArray1DFloat64,
-                      interpolator: BivariateInterpolator2D,
-                      bounds_error: bool = ...,
-                      num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-def bivariate_float64(grid: Grid2DFloat64,
-                      x: NDArray1DFloat64,
-                      y: NDArray1DFloat64,
-                      interpolator: BivariateInterpolator2D,
-                      bounds_error: bool = ...,
-                      num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-def bivariate_int8(grid: Grid2DInt8,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   interpolator: BivariateInterpolator2D,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-def bivariate_uint8(grid: Grid2DUInt8,
-                    x: NDArray1DFloat64,
-                    y: NDArray1DFloat64,
-                    interpolator: BivariateInterpolator2D,
-                    bounds_error: bool = ...,
-                    num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-def interpolate1d(x: Axis,
-                  y: NDArray1DFloat64,
-                  xi: NDArray1DFloat64,
-                  half_window_size: int = ...,
-                  bounds_error: bool = ...,
-                  kind: str = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def quadrivariate_float32(grid: TemporalGrid4DFloat32,
-                          x: NDArray1DFloat64,
-                          y: NDArray1DFloat64,
-                          z: NDArray1DInt64,
-                          u: NDArray1DFloat64,
-                          interpolator: TemporalBivariateInterpolator3D,
-                          z_method: Optional[str] = ...,
-                          u_method: Optional[str] = ...,
-                          bounds_error: bool = ...,
-                          num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def quadrivariate_float32(grid: Grid4DFloat32,
-                          x: NDArray1DFloat64,
-                          y: NDArray1DFloat64,
-                          z: NDArray1DFloat64,
-                          u: NDArray1DFloat64,
-                          interpolator: BivariateInterpolator3D,
-                          z_method: Optional[str] = ...,
-                          u_method: Optional[str] = ...,
-                          bounds_error: bool = ...,
-                          num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def quadrivariate_float64(grid: TemporalGrid4DFloat64,
-                          x: NDArray1DFloat64,
-                          y: NDArray1DFloat64,
-                          z: NDArray1DInt64,
-                          u: NDArray1DFloat64,
-                          interpolator: TemporalBivariateInterpolator3D,
-                          z_method: Optional[str] = ...,
-                          u_method: Optional[str] = ...,
-                          bounds_error: bool = ...,
-                          num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def quadrivariate_float64(grid: Grid4DFloat64,
-                          x: NDArray1DFloat64,
-                          y: NDArray1DFloat64,
-                          z: NDArray1DFloat64,
-                          u: NDArray1DFloat64,
-                          interpolator: BivariateInterpolator3D,
-                          z_method: Optional[str] = ...,
-                          u_method: Optional[str] = ...,
-                          bounds_error: bool = ...,
-                          num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float32(grid: Grid2DFloat32,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float32(grid: Grid3DFloat32,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   z: NDArray1DFloat64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float32(grid: TemporalGrid3DFloat32,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   z: NDArray1DInt64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float32(grid: Grid4DFloat32,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   z: NDArray1DFloat64,
-                   u: NDArray1DFloat64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float32(grid: TemporalGrid4DFloat32,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   z: NDArray1DInt64,
-                   u: NDArray1DFloat64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float64(grid: Grid2DFloat64,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float64(grid: Grid3DFloat64,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   z: NDArray1DFloat64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float64(grid: TemporalGrid3DFloat64,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   z: NDArray1DInt64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float64(grid: Grid4DFloat64,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   z: NDArray1DFloat64,
-                   u: NDArray1DFloat64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def spline_float64(grid: TemporalGrid4DFloat64,
-                   x: NDArray1DFloat64,
-                   y: NDArray1DFloat64,
-                   z: NDArray1DInt64,
-                   u: NDArray1DFloat64,
-                   nx: int = ...,
-                   ny: int = ...,
-                   fitting_model: str = ...,
-                   boundary: str = ...,
-                   bounds_error: bool = ...,
-                   num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def trivariate_float32(grid: Grid3DFloat32,
-                       x: NDArray1DFloat64,
-                       y: NDArray1DFloat64,
-                       z: NDArray1DFloat64,
-                       interpolator: BivariateInterpolator3D,
-                       z_method: Optional[str] = ...,
-                       bounds_error: bool = ...,
-                       num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def trivariate_float32(grid: TemporalGrid3DFloat32,
-                       x: NDArray1DFloat64,
-                       y: NDArray1DFloat64,
-                       z: NDArray1DInt64,
-                       interpolator: TemporalBivariateInterpolator3D,
-                       z_method: Optional[str] = ...,
-                       bounds_error: bool = ...,
-                       num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def trivariate_float64(grid: Grid3DFloat64,
-                       x: NDArray1DFloat64,
-                       y: NDArray1DFloat64,
-                       z: NDArray1DFloat64,
-                       interpolator: BivariateInterpolator3D,
-                       z_method: Optional[str] = ...,
-                       bounds_error: bool = ...,
-                       num_threads: int = ...) -> NDArray1DFloat64:
-    ...
-
-
-@overload
-def trivariate_float64(grid: TemporalGrid3DFloat64,
-                       x: NDArray1DFloat64,
-                       y: NDArray1DFloat64,
-                       z: NDArray1DInt64,
-                       interpolator: TemporalBivariateInterpolator3D,
-                       z_method: Optional[str] = ...,
-                       bounds_error: bool = ...,
-                       num_threads: int = ...) -> NDArray1DFloat64:
-    ...
+def Grid(
+    x: Axis,
+    y: Axis,
+    z: TemporalAxis,
+    u: Axis,
+    array: np.ndarray[FourDims, np.dtype[_DType]],
+) -> TemporalGrid4D[_DType]: ...

@@ -1,28 +1,20 @@
-from typing import SupportsInt
+from ..type_hints import (
+    NDArray1DDateTime64,
+    NDArray1DInt32,
+    NDArray1DTimeDelta64,
+    NDArray1DUInt8,
+)
 
-from ..typing import NDArray, NDArrayInt64, NDArrayStructured, NDArrayTimeDelta
-
-def date(array: NDArray) -> NDArrayStructured:
-    ...
-
-
-def datetime(array: NDArray) -> NDArray:
-    ...
-
-def datetime64_to_str(value: SupportsInt, resolution: str) -> str: ...
-
-
-def timedelta_since_january(array: NDArray) -> NDArrayTimeDelta:
-    ...
-
-
-def isocalendar(array: NDArray) -> NDArrayStructured:
-    ...
-
-
-def time(array: NDArray) -> NDArrayStructured:
-    ...
-
-
-def weekday(array: NDArray) -> NDArrayInt64:
-    ...
+def date(
+    array: NDArray1DDateTime64,
+) -> tuple[NDArray1DInt32, NDArray1DUInt8, NDArray1DUInt8]: ...
+def isocalendar(
+    array: NDArray1DDateTime64,
+) -> tuple[NDArray1DInt32, NDArray1DUInt8, NDArray1DUInt8]: ...
+def time(
+    array: NDArray1DDateTime64,
+) -> tuple[NDArray1DUInt8, NDArray1DUInt8, NDArray1DUInt8]: ...
+def timedelta_since_january(
+    array: NDArray1DDateTime64,
+) -> NDArray1DTimeDelta64: ...
+def weekday(array: NDArray1DDateTime64) -> NDArray1DUInt8: ...

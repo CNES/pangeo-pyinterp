@@ -1,77 +1,100 @@
-// Copyright (c) 2025 CNES
+// Copyright (c) 2026 CNES.
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+
 #pragma once
 #include <array>
 #include <cstdint>
-#include <cstdlib>
+#include <format>
 #include <limits>
+#include <ranges>
+#include <span>
 #include <stdexcept>
-#include <string>
+#include <string_view>
 #include <tuple>
 
 namespace pyinterp::geohash {
 
-// Encoding encapsulates an encoding defined by a given base32 alphabet.
+/// @brief Encoding encapsulates an encoding defined by a given base32 alphabet.
 class Base32 {
  public:
-  // Default constructor
-  Base32() noexcept {
-    decode_.fill(Base32::kInvalid_);
-    for (size_t ix = 0; ix < encode_.size(); ++ix) {
-      decode_[static_cast<unsigned char>(encode_[ix])] = static_cast<char>(ix);
+  /// Default constructor.
+  constexpr Base32() noexcept : decode_{} {
+    decode_.fill(kInvalid);
+    for (std::size_t ix = 0; ix < kEncode.size(); ++ix) {
+      decode_[static_cast<unsigned char>(kEncode[ix])] = static_cast<char>(ix);
     }
   }
 
-  // Returns true if the buffer contains a valid definition of this encoding.
-  [[nodiscard]] constexpr auto validate(const char *hash,
-                                        const size_t count) const -> bool {
-    const auto *end = hash + count;
-    while (hash != end && *hash != 0) {
-      if (!validate_byte(*(hash++))) {
+  /// @brief Validates that all characters of the hash are part of the encoding.
+  /// @param[in] hash Geohash to validate.
+  [[nodiscard]] constexpr auto validate(
+      std::span<const char> hash) const noexcept -> bool {
+    for (const auto byte : hash) {
+      if (byte == '\0') {
+        break;
+      }
+      if (!validate_byte(byte)) {
         return false;
       }
     }
     return true;
   }
 
-  // Returns the string decoded into bits of a 64-bit word and the the number of
-  // characters other than the null character.
-  [[nodiscard]] constexpr auto decode(const char *const buffer,
-                                      const size_t count) const
-      -> std::tuple<uint64_t, uint32_t> {
-    auto hash = static_cast<uint64_t>(0);
-    const auto *it = buffer;
-    while (it != buffer + count && *it != 0) {
-      if (!validate_byte(*it)) {
-        throw std::invalid_argument("Invalid character in hash: " +
-                                    std::string(buffer, count));
+  /// @brief Decodes the string into bits of a 64-bit word and returns the
+  /// number of characters other than the null character.
+  /// @param[in] buffer Buffer containing the geohash to decode.
+  /// @return A tuple containing the decoded 64-bit word and the number of
+  /// characters.
+  [[nodiscard]] constexpr auto decode(std::span<const char> buffer) const
+      -> std::tuple<std::uint64_t, std::uint32_t> {
+    std::uint64_t hash{};
+    std::uint32_t count{};
+
+    for (const auto byte : buffer) {
+      if (byte == '\0') {
+        break;
       }
-      hash = (hash << 5U) | static_cast<uint64_t>(
-                                decode_[static_cast<unsigned char>(*(it++))]);
+      if (!validate_byte(byte)) {
+        throw std::invalid_argument(
+            std::format("Invalid character in hash: {}",
+                        std::string_view{buffer.data(), buffer.size()}));
+      }
+      hash = (hash << 5U) | static_cast<std::uint64_t>(
+                                decode_[static_cast<unsigned char>(byte)]);
+      ++count;
     }
-    return std::make_tuple(hash, static_cast<uint32_t>(it - buffer));
+    return {hash, count};
   }
 
-  // Encode bits of 64-bit word into a string.
-  constexpr static auto encode(uint64_t hash, char *const buffer,
-                               const size_t count) -> void {
-    auto *it = buffer + count - 1;
-    while (it >= buffer) {
-      *(it--) = encode_[hash & 0x1fU];
+  /// @brief Encodes the 64-bit word into a string using the base32 encoding.
+  /// @param[in] hash 64-bit word to encode.
+  /// @param[out] buffer Buffer to store the encoded string.
+  static constexpr auto encode(std::uint64_t hash,
+                               std::span<char> buffer) noexcept -> void {
+    for (char& it : std::ranges::reverse_view(buffer)) {
+      it = kEncode[hash & 0x1FU];
       hash >>= 5U;
     }
   }
 
  private:
-  static const char kInvalid_;
-  static const std::array<char, 32> encode_;
-  std::array<char, std::numeric_limits<uint8_t>::max() + 1> decode_{};
+  /// Invalid character in the decoding table.
+  static constexpr char kInvalid{static_cast<char>(0xFF)};
+  /// Base32 encoding table.
+  static constexpr std::array<char, 32> kEncode{
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'b',
+      'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'p',
+      'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+  /// Decoding table.
+  std::array<char, std::numeric_limits<std::uint8_t>::max() + 1> decode_{};
 
-  // Reports whether byte is part of the encoding.
-  [[nodiscard]] constexpr auto validate_byte(const char byte) const -> bool {
-    return decode_[static_cast<unsigned char>(byte)] != Base32::kInvalid_;
+  /// @brief Validates that the byte is part of the encoding.
+  /// @param[in] byte Byte to validate.
+  [[nodiscard]] constexpr auto validate_byte(const char byte) const noexcept
+      -> bool {
+    return decode_[static_cast<unsigned char>(byte)] != kInvalid;
   }
 };
 

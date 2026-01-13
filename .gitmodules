@@ -1,9 +1,12 @@
-[submodule "third_party/pybind11"]
-	path = third_party/pybind11
-	url = https://github.com/pybind/pybind11.git
 [submodule "third_party/eigen"]
 	path = third_party/eigen
 	url = https://gitlab.com/libeigen/eigen.git
+[submodule "third_party/nanobind"]
+	path = third_party/nanobind
+	url = https://github.com/wjakob/nanobind
 [submodule "third_party/pocketfft"]
 	path = third_party/pocketfft
 	url = https://github.com/mreineck/pocketfft.git
+[submodule "third_party/CMake-codecov"]
+	path = third_party/CMake-codecov
+	url = https://github.com/RWTH-HPC/CMake-codecov.git

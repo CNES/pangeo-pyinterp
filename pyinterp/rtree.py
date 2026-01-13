@@ -1,599 +1,503 @@
-# Copyright (c) 2025 CNES
+# Copyright (c) 2026 CNES.
 #
 # All rights reserved. Use of this source code is governed by a
 # BSD-style license that can be found in the LICENSE file.
-"""RTree spatial index."""
+"""RTree3D Interpolation Wrapper.
+
+This module provides convenient wrapper functions around pyinterp.core.RTree3D
+interpolation methods that accept both configuration objects and simplified
+keyword arguments.
+
+For most use cases, you can simply pass keyword arguments:
+>>> result, counts = inverse_distance_weighting(tree, coords, k=10, p=2)
+
+For advanced configuration, pass a config object:
+>>> from pyinterp.config import rtree
+>>> config = rtree.InverseDistanceWeighting().with_k(10).with_p(2)
+>>> result, counts = inverse_distance_weighting(tree, coords, config)
+"""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
-import warnings
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
-import numpy
+from .core.config import rtree
 
-from . import core, geodetic, interface
 
 if TYPE_CHECKING:
-    from .typing import (
-        NDArray1DFloat32,
-        NDArray1DFloat64,
-        NDArray2DFloat32,
-        NDArray2DFloat64,
-        NDArray3DFloat32,
-        NDArray3DFloat64,
-    )
+    import numpy as np
+
+    from . import core
+    from .type_hints import NDArray1DUInt32, OneDim, TwoDims
+
+__all__ = [
+    "inverse_distance_weighting",
+    "kriging",
+    "query",
+    "radial_basis_function",
+    "window_function",
+]
+
+#: Boundary check modes
+BoundaryCheck = Literal["convex_hull", "envelope", "none"]
+
+#: RBF kernel types
+RBFKernel = Literal[
+    "cubic",
+    "gaussian",
+    "inverse_multiquadric",
+    "linear",
+    "multiquadric",
+    "thin_plate",
+]
+
+#: Window kernel types
+WindowKernel = Literal[
+    "blackman",
+    "blackman_harris",
+    "boxcar",
+    "flat_top",
+    "gaussian",
+    "hamming",
+    "lanczos",
+    "nuttall",
+    "parzen",
+    "parzen_swot",
+]
+
+#: Covariance function types
+CovarianceFunction = Literal[
+    "cauchy",
+    "gaussian",
+    "matern_12",
+    "matern_32",
+    "matern_52",
+    "spherical",
+    "wendland",
+]
+
+#: Drift function types
+DriftFunction = Literal["linear", "quadratic"]
+
+# Boundary check mapping
+_BOUNDARY_MAP = {
+    "convex_hull": rtree.BoundaryCheck.CONVEX_HULL,
+    "envelope": rtree.BoundaryCheck.ENVELOPE,
+    "none": rtree.BoundaryCheck.NONE,
+}
+
+# RBF kernel mapping
+_RBF_MAP = {
+    "cubic": rtree.RBFKernel.CUBIC,
+    "gaussian": rtree.RBFKernel.GAUSSIAN,
+    "inverse_multiquadric": rtree.RBFKernel.INVERSE_MULTIQUADRIC,
+    "linear": rtree.RBFKernel.LINEAR,
+    "multiquadric": rtree.RBFKernel.MULTIQUADRIC,
+    "thin_plate": rtree.RBFKernel.THIN_PLATE,
+}
+
+# Window kernel mapping
+_WINDOW_MAP = {
+    "blackman": rtree.WindowKernel.BLACKMAN,
+    "blackman_harris": rtree.WindowKernel.BLACKMAN_HARRIS,
+    "boxcar": rtree.WindowKernel.BOXCAR,
+    "flat_top": rtree.WindowKernel.FLAT_TOP,
+    "gaussian": rtree.WindowKernel.GAUSSIAN,
+    "hamming": rtree.WindowKernel.HAMMING,
+    "lanczos": rtree.WindowKernel.LANCZOS,
+    "nuttall": rtree.WindowKernel.NUTTALL,
+    "parzen": rtree.WindowKernel.PARZEN,
+    "parzen_swot": rtree.WindowKernel.PARZEN_SWOT,
+}
+
+# Covariance function mapping
+_COVARIANCE_MAP = {
+    "cauchy": rtree.CovarianceFunction.CAUCHY,
+    "gaussian": rtree.CovarianceFunction.GAUSSIAN,
+    "matern_12": rtree.CovarianceFunction.MATERN_12,
+    "matern_32": rtree.CovarianceFunction.MATERN_32,
+    "matern_52": rtree.CovarianceFunction.MATERN_52,
+    "spherical": rtree.CovarianceFunction.SPHERICAL,
+    "wendland": rtree.CovarianceFunction.WENDLAND,
+}
+
+# Drift function mapping
+_DRIFT_MAP = {
+    "linear": rtree.DriftFunction.LINEAR,
+    "quadratic": rtree.DriftFunction.QUADRATIC,
+}
 
 
-class RTree:
-    """R*Tree spatial index for geodetic scalar values.
+def _apply_common_config(
+    cfg: _RTreeConfig,
+    radius: float | None = None,
+    boundary_check: BoundaryCheck | None = None,
+    num_threads: int | None = None,
+) -> _RTreeConfig:
+    """Apply common configuration parameters to a config object.
 
     Args:
-        system: WGS of the coordinate system used to transform equatorial
-            spherical positions (longitudes, latitudes, altitude) into ECEF
-            coordinates. If not set the geodetic system used is WGS-84.
-            Default to ``None``.
-        dtype: Data type of the instance to create.
-        ecef: If true, the coordinates are provided in the ECEF system,
-            otherwise the coordinates are provided in the geodetic system.
-            Default to ``False``.
+        cfg: Configuration object to modify
+        radius: Search radius (None = no limit)
+        boundary_check: Boundary checking mode
+        num_threads: Number of threads (0 = auto)
 
-    Raises:
-        ValueError: if the data type is not handled by the object, or if the
-            a geodetic system is provided and the coordinates system is ECEF
-            (ecef keyword is set to True).
+    Returns:
+        Updated configuration object
 
     """
-
-    def __init__(self,
-                 system: geodetic.Spheroid | None = None,
-                 dtype: numpy.dtype | None = None,
-                 ecef: bool = False) -> None:
-        """Initialize a new R*Tree."""
-        self._instance: core.RTree3DFloat32 | core.RTree3DFloat64
-        dtype = dtype or numpy.dtype('float64')
-        if dtype == numpy.dtype('float64'):
-            self._instance = core.RTree3DFloat64(system, ecef)
-        elif dtype == numpy.dtype('float32'):
-            self._instance = core.RTree3DFloat32(system, ecef)
-        else:
-            raise ValueError(f'dtype {dtype} not handled by the object')
-        self.dtype = dtype
-
-    def bounds(
-            self
-    ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
-        """Get the bounding box containing all stored values.
-
-        Returns:
-            A tuple containing the coordinates of the minimum and maximum
-            corners of the box able to contain all values stored in the
-            container, or an empty tuple if the container is empty.
-
-        """
-        return self._instance.bounds()
-
-    def clear(self) -> None:
-        """Remove all values stored in the container."""
-        return self._instance.clear()
-
-    def __len__(self) -> int:
-        """Get the number of values stored in the tree.
-
-        Returns:
-            The number of values in the tree.
-
-        """
-        return self._instance.__len__()
-
-    def __bool__(self) -> bool:
-        """Check if the tree is not empty.
-
-        Returns:
-            True if the tree contains values, False otherwise.
-
-        """
-        return self._instance.__bool__()
-
-    @overload
-    def packing(self, coordinates: NDArray2DFloat32,
-                values: NDArray1DFloat32) -> None:
-        ...
-
-    @overload
-    def packing(self, coordinates: NDArray3DFloat32,
-                values: NDArray1DFloat32) -> None:
-        ...
-
-    @overload
-    def packing(self, coordinates: NDArray2DFloat64,
-                values: NDArray1DFloat64) -> None:
-        ...
-
-    @overload
-    def packing(self, coordinates: NDArray3DFloat64,
-                values: NDArray1DFloat64) -> None:
-        ...
-
-    def packing(
-        self,
-        coordinates: NDArray2DFloat32 | NDArray3DFloat32 | NDArray2DFloat64
-        | NDArray3DFloat64,
-        values: NDArray1DFloat32 | NDArray1DFloat64,
-    ) -> None:
-        """Create the tree using packing algorithm.
-
-        The old data is erased before construction.
-
-        Args:
-            coordinates: Array of shape ``(n, 3)`` or ``(n, 2)`` containing
-                observation coordinates. Here n is the number of observations
-                and each row represents a coordinate in the order x, y, and
-                optionally z. If the matrix shape is ``(n, 2)``, the
-                z-coordinate is assumed to be zero. The coordinate system
-                depends on the instance configuration: If ``ecef=True``,
-                coordinates are in the Cartesian coordinate system (ECEF).
-                Otherwise, coordinates are in the geodetic system
-                (longitude, latitude, altitude) in degrees, degrees, and
-                meters, respectively.
-            values: An array of size ``(n)`` containing the values associated
-                with the coordinates provided.
-
-        """
-        self._instance.packing(coordinates, values)  # type: ignore[arg-type]
-
-    def insert(self, coordinates: numpy.ndarray,
-               values: numpy.ndarray) -> None:
-        """Insert new data into the search tree.
-
-        Args:
-            coordinates: Array of shape ``(n, 3)`` or ``(n, 2)`` containing
-                observation coordinates. Here n is the number of observations
-                and each row represents a coordinate in the order x, y, and
-                optionally z. If the matrix shape is ``(n, 2)``, the
-                z-coordinate is assumed to be zero. The coordinate system
-                depends on the instance configuration: If ``ecef=True``,
-                coordinates are in the Cartesian coordinate system (ECEF).
-                Otherwise, coordinates are in the geodetic system
-                (longitude, latitude, altitude) in degrees, degrees, and
-                meters, respectively.
-            values: An array of size ``(n)`` containing the values associated
-                with the coordinates provided.
-
-        """
-        self._instance.insert(coordinates, values)
-
-    def value(self,
-              coordinates: numpy.ndarray,
-              radius: float | None = None,
-              k: int = 4,
-              within: bool = True,
-              num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Get the coordinates and values for the K-nearest neighbors.
-
-        Args:
-            coordinates: Array of shape ``(n, 3)`` or ``(n, 2)`` containing
-                observation coordinates. Here n is the number of observations
-                and each row represents a coordinate in the order x, y, and
-                optionally z. If the matrix shape is ``(n, 2)``, the
-                z-coordinate is assumed to be zero. The coordinate system
-                depends on the instance configuration: If ``ecef=True``,
-                coordinates are in the Cartesian coordinate system (ECEF).
-                Otherwise, coordinates are in the geodetic system
-                (longitude, latitude, altitude) in degrees, degrees, and
-                meters, respectively.
-            radius (optional): The maximum distance in meters to search for
-                neighbors. If not set, the search is performed on all the
-                neighbors.
-            k: The number of nearest neighbors to return.
-            within: if true, the method returns the k nearest neighbors if the
-                point is within by its neighbors.
-            num_threads: The number of threads to use for the computation. If 0
-                all CPUs are used. If 1 is given, no parallel computing code is
-                used at all, which is useful for debugging. Defaults to ``0``.
-
-        Returns:
-            A tuple containing the coordinates and values of the K-nearest
-            neighbors of the given point.
-
-        .. note::
-            The matrix containing the coordinates of the neighbors is a matrix
-            of dimension ``(k, n)`` where ``n`` is equal to 2 if the provided
-            coordinates matrix defines only x and y, and 3 if the defines x, y,
-            and z.
-
-        """
-        return self._instance.value(coordinates, radius, k, within,
-                                    num_threads)
-
-    def query(self,
-              coordinates: numpy.ndarray,
-              k: int = 4,
-              within: bool = True,
-              num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Search for the nearest K nearest neighbors of a given point.
-
-        Args:
-            coordinates: Array of shape ``(n, 3)`` or ``(n, 2)`` containing
-                observation coordinates. Here n is the number of observations
-                and each row represents a coordinate in the order x, y, and
-                optionally z. If the matrix shape is ``(n, 2)``, the
-                z-coordinate is assumed to be zero. The coordinate system
-                depends on the instance configuration: If ``ecef=True``,
-                coordinates are in the Cartesian coordinate system (ECEF).
-                Otherwise, coordinates are in the geodetic system
-                (longitude, latitude, altitude) in degrees, degrees, and
-                meters, respectively.
-            k: The number of nearest neighbors to be searched. Defaults to
-                ``4``.
-            within: If true, the method ensures that the neighbors found are
-                located within the point of interest. Defaults to ``false``.
-            num_threads: The number of threads to use for the computation. If 0
-                all CPUs are used. If 1 is given, no parallel computing code is
-                used at all, which is useful for debugging. Defaults to ``0``.
-
-        Returns:
-            A tuple containing a matrix describing for each provided position,
-            the distance between the provided position and the found neighbors
-            (in meters if the RTree handles LLA coordinates, otherwise in
-            Cartesian units) and a matrix containing the value of the different
-            neighbors found for all provided positions.
-            If no neighbors are found, the distance and the value are set to
-            ``-1``.
-
-        """
-        return self._instance.query(coordinates, k, within, num_threads)
-
-    def inverse_distance_weighting(
-            self,
-            coordinates: numpy.ndarray,
-            radius: float | None = None,
-            k: int = 9,
-            p: int = 2,
-            within: bool = True,
-            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Interpolate values using inverse distance weighting method.
-
-        Args:
-            coordinates: Array of shape ``(n, 3)`` or ``(n, 2)`` containing
-                observation coordinates. Here n is the number of observations
-                and each row represents a coordinate in the order x, y, and
-                optionally z. If the matrix shape is ``(n, 2)``, the
-                z-coordinate is assumed to be zero. The coordinate system
-                depends on the instance configuration: If ``ecef=True``,
-                coordinates are in the Cartesian coordinate system (ECEF).
-                Otherwise, coordinates are in the geodetic system
-                (longitude, latitude, altitude) in degrees, degrees, and
-                meters, respectively.
-            radius: The maximum radius of the search (m). Defaults to the
-                maximum distance between two points.
-            k: The number of nearest neighbors to be used for calculating the
-                interpolated value. Defaults to ``9``.
-            p: The power parameters. Defaults to ``2``.
-            within: If true, the method ensures that the neighbors found are
-                located around the point of interest. In other words, this
-                parameter ensures that the calculated values will not be
-                extrapolated. Defaults to ``true``.
-            num_threads: The number of threads to use for the computation. If 0
-                all CPUs are used. If 1 is given, no parallel computing code is
-                used at all, which is useful for debugging. Defaults to ``0``.
-
-        Returns:
-            The interpolated value and the number of neighbors used in
-            the calculation.
-
-        """
-        return self._instance.inverse_distance_weighting(
-            coordinates, radius, k, p, within, num_threads)
-
-    def radial_basis_function(
-            self,
-            coordinates: numpy.ndarray,
-            radius: float | None = None,
-            k: int = 9,
-            rbf: str | None = None,
-            epsilon: float | None = None,
-            smooth: float = 0,
-            within: bool = True,
-            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        r"""Interpolate values using radial basis function interpolation.
-
-        Args:
-            coordinates: Array of shape ``(n, 3)`` or ``(n, 2)`` containing
-                observation coordinates. Here n is the number of observations
-                and each row represents a coordinate in the order x, y, and
-                optionally z. If the matrix shape is ``(n, 2)``, the
-                z-coordinate is assumed to be zero. The coordinate system
-                depends on the instance configuration: If ``ecef=True``,
-                coordinates are in the Cartesian coordinate system (ECEF).
-                Otherwise, coordinates are in the geodetic system
-                (longitude, latitude, altitude) in degrees, degrees, and
-                meters, respectively.
-            radius: The maximum radius of the search (m). Defaults to the
-                maximum distance between two points.
-            k: The number of nearest neighbors to be used for calculating the
-                interpolated value. Defaults to ``9``.
-            rbf: The radial basis function, based on the radius, :math:`r`
-                given by the distance between points. This parameter can take
-                one of the following values:
-
-                * ``cubic``: :math:`\varphi(r) = r^3`
-                * ``gaussian``: :math:`\varphi(r) = e^{-(\dfrac{r}
-                  {\varepsilon})^2}`
-                * ``inverse_multiquadric``: :math:`\varphi(r) = \dfrac{1}
-                  {\sqrt{1+(\dfrac{r}{\varepsilon})^2}}`
-                * ``linear``: :math:`\varphi(r) = r`
-                * ``multiquadric``: :math:`\varphi(r) = \sqrt{1+(
-                  \dfrac{r}{\varepsilon})^2}`
-                * ``thin_plate``: :math:`\varphi(r) = r^2 \ln(r)`
-
-                Defaults to ``multiquadric``.
-            epsilon: adjustable constant for gaussian or multiquadrics
-                functions. Default to the average distance between nodes.
-            smooth: values greater than zero increase the smoothness of the
-                approximation. Default to 0 (interpolation).
-            within: If true, the method ensures that the neighbors found are
-                located around the point of interest. In other words, this
-                parameter ensures that the calculated values will not be
-                extrapolated. Defaults to ``true``.
-            num_threads: The number of threads to use for the computation. If 0
-                all CPUs are used. If 1 is given, no parallel computing code is
-                used at all, which is useful for debugging. Defaults to ``0``.
-
-        Returns:
-            The interpolated value and the number of neighbors used in the
-            calculation.
-
-        """
-        return self._instance.radial_basis_function(
-            coordinates, radius, k,
-            interface._core_radial_basis_function(rbf, epsilon), epsilon,
-            smooth, within, num_threads)
-
-    def window_function(
-            self,
-            coordinates: numpy.ndarray,
-            radius: float | None = None,
-            k: int = 9,
-            wf: str | None = None,
-            arg: float | None = None,
-            within: bool = True,
-            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        r"""Interpolate values using a window function.
-
-        The interpolated value will be equal to the expression:
-
-        .. math::
-
-            \frac{\sum_{i=1}^{k} \omega(d_i,r)x_i}
-            {\sum_{i=1}^{k} \omega(d_i,r)}
-
-        where :math:`d_i` is the distance between the point of interest and
-        the :math:`i`-th neighbor, :math:`r` is the radius of the search,
-        :math:`x_i` is the value of the :math:`i`-th neighbor, and
-        :math:`\omega(d_i,r)` is weight calculated by the window function
-        describe above.
-
-        Args:
-            coordinates: Array of shape ``(n, 3)`` or ``(n, 2)`` containing
-                observation coordinates. Here n is the number of observations
-                and each row represents a coordinate in the order x, y, and
-                optionally z. If the matrix shape is ``(n, 2)``, the
-                z-coordinate is assumed to be zero. The coordinate system
-                depends on the instance configuration: If ``ecef=True``,
-                coordinates are in the Cartesian coordinate system (ECEF).
-                Otherwise, coordinates are in the geodetic system
-                (longitude, latitude, altitude) in degrees, degrees, and
-                meters, respectively.
-            radius: The maximum radius of the search (m).
-            k: The number of nearest neighbors to be used for calculating the
-                interpolated value. Defaults to ``9``.
-            wf: The window function, based on the distance the distance between
-                points (:math:`d`) and the radius (:math:`r`). This parameter
-                can take one of the following values:
-
-                * ``blackman``: :math:`w(d) = 0.42659 - 0.49656 \cos(
-                  \frac{\pi (d + r)}{r}) + 0.076849 \cos(
-                  \frac{2 \pi (d + r)}{r})`
-                * ``blackman_harris``: :math:`w(d) = 0.35875 - 0.48829
-                  \cos(\frac{\pi (d + r)}{r}) + 0.14128
-                  \cos(\frac{2 \pi (d + r)}{r}) - 0.01168
-                  \cos(\frac{3 \pi (d + r)}{r})`
-                * ``boxcar``: :math:`w(d) = 1`
-                * ``flat_top``: :math:`w(d) = 0.21557895 -
-                  0.41663158 \cos(\frac{\pi (d + r)}{r}) +
-                  0.277263158 \cos(\frac{2 \pi (d + r)}{r}) -
-                  0.083578947 \cos(\frac{3 \pi (d + r)}{r}) +
-                  0.006947368 \cos(\frac{4 \pi (d + r)}{r})`
-                * ``lanczos``: :math:`w(d) = \left\{\begin{array}{ll}
-                  sinc(\frac{d}{r}) \times sinc(\frac{d}{arg \times r}),
-                  & d \le arg \times r \\ 0,
-                  & d \gt arg \times r \end{array} \right\}`
-                * ``gaussian``: :math:`w(d) = e^{ -\frac{1}{2}\left(
-                  \frac{d}{\sigma}\right)^2 }`
-                * ``hamming``: :math:`w(d) = 0.53836 - 0.46164
-                  \cos(\frac{\pi (d + r)}{r})`
-                * ``nuttall``: :math:`w(d) = 0.3635819 - 0.4891775
-                  \cos(\frac{\pi (d + r)}{r}) + 0.1365995
-                  \cos(\frac{2 \pi (d + r)}{r})`
-                * ``parzen``: :math:`w(d) = \left\{ \begin{array}{ll} 1 - 6
-                  \left(\frac{2*d}{2*r}\right)^2
-                  \left(1 - \frac{2*d}{2*r}\right),
-                  & d \le \frac{2r + arg}{4} \\
-                  2\left(1 - \frac{2*d}{2*r}\right)^3
-                  & \frac{2r + arg}{2} \le d \lt \frac{2r +arg}{4}
-                  \end{array} \right\}`
-                * ``parzen_swot``: :math:`w(d) = \left\{\begin{array}{ll}
-                  1 - 6\left(\frac{2 * d}{2 * r}\right)^2
-                  + 6\left(1 - \frac{2 * d}{2 * r}\right), &
-                  d \le \frac{2r}{4} \\
-                  2\left(1 - \frac{2 * d}{2 * r}\right)^3 &
-                  \frac{2r}{2} \ge d \gt \frac{2r}{4} \end{array}
-                  \right\}`
-            arg: The optional argument of the window function. Defaults to
-                ``1`` for ``lanczos``, to ``0`` for ``parzen`` and for all
-                other functions is ``None``.
-            within: If true, the method ensures that the neighbors found are
-                located around the point of interest. In other words, this
-                parameter ensures that the calculated values will not be
-                extrapolated. Defaults to ``true``.
-            num_threads: The number of threads to use for the computation. If 0
-                all CPUs are used. If 1 is given, no parallel computing code is
-                used at all, which is useful for debugging. Defaults to ``0``.
-
-        Returns:
-            The interpolated value and the number of neighbors used in the
-            calculation.
-
-        """
-        return self._instance.window_function(
-            coordinates, radius, k, interface._core_window_function(wf, arg),
-            arg, within, num_threads)
-
-    def universal_kriging(
-            self,
-            coordinates: numpy.ndarray,
-            radius: float | None = None,
-            k: int = 9,
-            covariance: str | None = None,
-            sigma: float = 1.0,
-            alpha: float = 1_000_000.0,
-            within: bool = True,
-            num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        """Interpolate the values of a point using universal kriging.
-
-        See the :meth:`kriging` method for the description of the parameters.
-
-        .. deprecated:: 2025.9.0
-
-            universal_kriging method is deprecated, use :meth:`kriging` method
-            instead.
-        """
-        warnings.warn(
-            'universal_kriging method is deprecated, '
-            'use kriging method instead',
-            DeprecationWarning,
-            stacklevel=2)
-        return self.kriging(
-            coordinates,
-            radius=radius,
-            k=k,
-            covariance=covariance,
-            sigma=sigma,
-            alpha=alpha,
-            within=within,
-            num_threads=num_threads,
-        )
-
-    def kriging(self,
-                coordinates: numpy.ndarray,
-                *,
-                radius: float | None = None,
-                k: int = 9,
-                covariance: str | None = None,
-                drift_function: str | None = None,
-                sigma: float = 1.0,
-                alpha: float = 1_000_000.0,
-                nugget: float = 0.0,
-                within: bool = True,
-                num_threads: int = 0) -> tuple[numpy.ndarray, numpy.ndarray]:
-        r"""Interpolate the values of a point using kriging.
-
-        Args:
-            coordinates: Array of shape ``(n, 3)`` or ``(n, 2)`` containing
-                observation coordinates. Here n is the number of observations
-                and each row represents a coordinate in the order x, y, and
-                optionally z. If the matrix shape is ``(n, 2)``, the
-                z-coordinate is assumed to be zero. The coordinate system
-                depends on the instance configuration: If ``ecef=True``,
-                coordinates are in the Cartesian coordinate system (ECEF).
-                Otherwise, coordinates are in the geodetic system
-                (longitude, latitude, altitude) in degrees, degrees, and
-                meters, respectively.
-            radius: The maximum radius of the search (m).
-            k: The number of nearest neighbors to be used for calculating the
-                interpolated value. Defaults to ``9``.
-            covariance: The covariance function, based on the distance between
-                points. This parameter can take one of the following values:
-
-                * ``matern_12``: :math:`\sigma^2\exp\left(-\frac{d}{\rho}
-                  \right)`
-                * ``matern_32``: :math:`\sigma^2\left(1+\frac{\sqrt{3}d}{
-                  \rho}\right)\exp\left(-\frac{\sqrt{3}d}{\rho}
-                  \right)`
-                * ``matern_52``: :math:`\sigma^2\left(1+\frac{\sqrt{5}d}{
-                  \rho}+\frac{5d^2}{3\rho^2}\right) \exp\left(-\frac{
-                  \sqrt{5}d}{\rho} \right)`
-                * ``cauchy``: :math:`\sigma^2 \left(1 + \frac{d}{\rho}
-                  \right)^{-1}`
-                * ``gaussian``: :math:`\sigma^2 \exp \left(-\frac{d^2}{
-                  \rho^2} \right)`
-                * ``spherical``: :math:`\sigma^2 \left(1 - \frac{3d}{2r}
-                  + \frac{3d^3}{2r^3} \right) \left(\frac{d}{r} \le 1
-                  \right)`
-                * ``linear``: :math:`\sigma^2 \left(1 - \frac{d}{r}
-                  \right) \left(\frac{d}{r} \le 1 \right)`
-            drift_function: The drift (trend) function to be used for universal
-                kriging. This parameter can take one of the following values:
-
-                * ``linear``: :math:`m(x,y,z) = \beta_0 + \beta_1 x +
-                  \beta_2 y + \beta_3 z`
-                * ``quadratic``: :math:`m(x,y,z) = \beta_0 + \beta_1 x +
-                  \beta_2 y + \beta_3 z + \beta_4 x^2 + \beta_5 y^2 +
-                  \beta_6 z^2 + \beta_7 xy + \beta_8 xz + \beta_9 yz`
-
-                Defaults to ``None`` (simple kriging with known mean 0).
-            sigma: The sill (magnitude) parameter :math:`\sigma` of the
-                covariance function. Determines the overall scale (maximum
-                covariance).
-            alpha: The range parameter :math:`\rho`. Determines how quickly
-                the covariance decays with distance. Units must match the
-                distance units used internally (geodetic/ECEF -> meters,
-                pure Cartesian -> user units).
-            nugget: Nugget effect (added to the covariance matrix diagonal).
-                Accounts for measurement error or unresolved microscale
-                variability. Must be :math:`\ge 0`.
-            within: If true, the method ensures that the neighbors found are
-                located around the point of interest (prevents extrapolation).
-            num_threads: Number of threads to use. ``0`` uses all available,
-                ``1`` disables parallelism (useful for debugging).
-
-        Returns:
-            The interpolated value and the number of neighbors used in the
-            calculation.
-
-        .. note::
-            * If ``drift_function`` is ``None``, simple kriging with known mean
-              0 is applied.
-            * If ``drift_function`` is provided, universal kriging augments the
-              system with the corresponding trend basis functions.
-            * ``alpha`` corresponds to the range parameter :math:`\rho`
-              controlling spatial correlation extent.
-
-        """
-        return self._instance.kriging(
-            coordinates, radius, k,
-            interface._core_covariance_function(covariance),
-            interface._core_drift_function(drift_function), sigma, alpha,
-            nugget, within, num_threads)
-
-    def __getstate__(self) -> tuple:
-        """Get the state of the object for pickling.
-
-        Returns:
-            The state of the object for pickling purposes.
-
-        """
-        return (self.dtype, self._instance.__getstate__())
-
-    def __setstate__(self, state: tuple) -> None:
-        """Set the state of the object from pickling.
-
-        Args:
-            state: The state of the object for pickling purposes.
-
-        """
-        if len(state) != 2:  # noqa: PLR2004
-            raise ValueError('invalid state')
-        _class = RTree(None, state[0])
-        self.dtype = _class.dtype
-        _class._instance.__setstate__(state[1])
-        self._instance = _class._instance
+    if radius is not None:
+        cfg = cfg.with_radius(radius)
+    if boundary_check is not None:
+        cfg = cfg.with_boundary_check(_BOUNDARY_MAP[boundary_check])
+    if num_threads is not None:
+        cfg = cfg.with_num_threads(num_threads)
+    return cast("_RTreeConfig", cfg)
+
+
+# TypeVars for generic config builder
+_RTreeConfig = TypeVar(
+    "_RTreeConfig",
+    rtree.InverseDistanceWeighting,
+    rtree.RadialBasisFunction,
+    rtree.Kriging,
+    rtree.InterpolationWindow,
+    rtree.Query,
+)
+
+
+def _build_config(
+    config_class: type[_RTreeConfig],
+    method_map: dict | None = None,
+    **kwargs: Any,  # noqa: ANN401
+) -> _RTreeConfig:
+    """Build a configuration object from keyword arguments.
+
+    Args:
+        config_class: The configuration class to instantiate
+        method_map: Dict mapping parameter names to method names and optional
+            value maps
+        **kwargs: Keyword arguments to apply
+
+    Returns:
+        Configured object
+
+    """
+    cfg = config_class()
+    method_map = method_map or {}
+
+    for param_name, value in kwargs.items():
+        if value is None or param_name not in method_map:
+            continue
+
+        method_name, value_map = method_map[param_name]
+        method = getattr(cfg, method_name)
+        cfg = method(value_map[value] if value_map else value)
+
+    return cast("_RTreeConfig", cfg)
+
+
+def inverse_distance_weighting(
+    tree: core.RTree3DHolder | core.geometry.geographic.RTree,
+    coordinates: np.ndarray[TwoDims, np.dtype],
+    config: rtree.InverseDistanceWeighting | None = None,
+    *,
+    k: int | None = None,
+    p: int | None = None,
+    radius: float | None = None,
+    boundary_check: BoundaryCheck | None = None,
+    num_threads: int | None = None,
+) -> tuple[np.ndarray[OneDim, np.dtype], NDArray1DUInt32]:
+    """Inverse Distance Weighting interpolation.
+
+    Args:
+        tree: R*Tree containing the scattered data.
+        coordinates: Query coordinates as a NumPy array with shape:
+
+            * (N, 2): For geographic.RTree, representing (longitude, latitude).
+            * (N, 2) or (N, 3): For RTree3DHolder, representing
+              (longitude, latitude[, altitude]).
+
+        config: Configuration object (if provided, keyword args are ignored)
+        k: Number of nearest neighbors to use
+        p: Power parameter for IDW
+        radius: Search radius (None = no limit)
+        boundary_check: Boundary checking mode
+        num_threads: Number of threads (0 = auto)
+
+    Returns:
+        Tuple of (interpolated values, neighbor counts)
+
+    Examples:
+        Simple usage with keyword arguments:
+
+        >>> result, counts = inverse_distance_weighting(
+        ....    tree,
+        ....    coords,
+        ....    k=10,
+        ....    p=2,
+        .... )
+
+        Advanced usage with config object:
+
+        >>> from pyinterp.core.config import rtree
+        >>> config = rtree.InverseDistanceWeighting().with_k(10).with_p(2)
+        >>> result, counts = inverse_distance_weighting(tree, coords, config)
+
+    """
+    # If config is provided, use it directly
+    if config is not None:
+        return tree.inverse_distance_weighting(coordinates, config)
+
+    # Create config from keyword arguments
+    method_map = {
+        "k": ("with_k", None),
+        "p": ("with_p", None),
+    }
+    cfg = _build_config(rtree.InverseDistanceWeighting, method_map, k=k, p=p)
+    cfg = _apply_common_config(cfg, radius, boundary_check, num_threads)
+
+    return tree.inverse_distance_weighting(coordinates, cfg)
+
+
+def radial_basis_function(
+    tree: core.RTree3DHolder | core.geometry.geographic.RTree,
+    coordinates: np.ndarray[TwoDims, np.dtype],
+    config: rtree.RadialBasisFunction | None = None,
+    *,
+    k: int | None = None,
+    rbf: RBFKernel | None = None,
+    epsilon: float | None = None,
+    smooth: float | None = None,
+    radius: float | None = None,
+    boundary_check: BoundaryCheck | None = None,
+    num_threads: int | None = None,
+) -> tuple[np.ndarray[OneDim, np.dtype], NDArray1DUInt32]:
+    """Radial Basis Function interpolation.
+
+    Args:
+        tree: R*Tree containing the scattered data.
+        coordinates: Query coordinates as a NumPy array with shape:
+
+            * (N, 2): For geographic.RTree, representing (longitude, latitude).
+            * (N, 2) or (N, 3): For RTree3DHolder, representing
+              (longitude, latitude[, altitude]).
+
+        config: Configuration object (if provided, keyword args are ignored)
+        k: Number of nearest neighbors to use
+        rbf: RBF kernel type
+        epsilon: Shape parameter (None = auto)
+        smooth: Smoothing parameter
+        radius: Search radius (None = no limit)
+        boundary_check: Boundary checking mode
+        num_threads: Number of threads (0 = auto)
+
+    Returns:
+        Tuple of (interpolated values, neighbor counts)
+
+    Examples:
+        >>> result, counts = radial_basis_function(
+        ...     tree, coords, k=10, rbf="thin_plate"
+        ... )
+
+    """
+    # If config is provided, use it directly
+    if config is not None:
+        return tree.radial_basis_function(coordinates, config)
+
+    # Create config from keyword arguments
+    method_map = {
+        "k": ("with_k", None),
+        "rbf": ("with_rbf", _RBF_MAP),
+        "epsilon": ("with_epsilon", None),
+        "smooth": ("with_smooth", None),
+    }
+    cfg = _build_config(
+        rtree.RadialBasisFunction,
+        method_map,
+        k=k,
+        rbf=rbf,
+        epsilon=epsilon,
+        smooth=smooth,
+    )
+    cfg = _apply_common_config(cfg, radius, boundary_check, num_threads)
+
+    return tree.radial_basis_function(coordinates, cfg)
+
+
+def kriging(
+    tree: core.RTree3DHolder | core.geometry.geographic.RTree,
+    coordinates: np.ndarray[TwoDims, np.dtype],
+    config: rtree.Kriging | None = None,
+    *,
+    k: int | None = None,
+    covariance_model: CovarianceFunction | None = None,
+    sigma: float | None = None,
+    lambda_: float | None = None,
+    nugget: float | None = None,
+    drift_function: DriftFunction | None = None,
+    radius: float | None = None,
+    boundary_check: BoundaryCheck | None = None,
+    num_threads: int | None = None,
+) -> tuple[np.ndarray[OneDim, np.dtype], NDArray1DUInt32]:
+    """Kriging interpolation.
+
+    Args:
+        tree: R*Tree containing the scattered data.
+        coordinates: Query coordinates as a NumPy array with shape:
+
+            * (N, 2): For geographic.RTree, representing (longitude, latitude).
+            * (N, 2) or (N, 3): For RTree3DHolder, representing
+              (longitude, latitude[, altitude]).
+
+        config: Configuration object (if provided, keyword args are ignored)
+        k: Number of nearest neighbors to use
+        covariance_model: Covariance function type
+        sigma: Variance parameter
+        lambda_: Length scale parameter
+        nugget: Nugget effect
+        drift_function: Drift/trend function
+        radius: Search radius (None = no limit)
+        boundary_check: Boundary checking mode
+        num_threads: Number of threads (0 = auto)
+
+    Returns:
+        Tuple of (interpolated values, neighbor counts)
+
+    Examples:
+        >>> result, counts = kriging(
+        ...     tree, coords, k=10, covariance_model="matern_32"
+        ... )
+
+    """
+    # If config is provided, use it directly
+    if config is not None:
+        return tree.kriging(coordinates, config)
+
+    # Create config from keyword arguments
+    method_map = {
+        "k": ("with_k", None),
+        "covariance_model": ("with_covariance_model", _COVARIANCE_MAP),
+        "sigma": ("with_sigma", None),
+        "lambda_": ("with_lambda", None),
+        "nugget": ("with_nugget", None),
+        "drift_function": ("with_drift_function", _DRIFT_MAP),
+    }
+    cfg = _build_config(
+        rtree.Kriging,
+        method_map,
+        k=k,
+        covariance_model=covariance_model,
+        sigma=sigma,
+        lambda_=lambda_,
+        nugget=nugget,
+        drift_function=drift_function,
+    )
+    cfg = _apply_common_config(cfg, radius, boundary_check, num_threads)
+
+    return tree.kriging(coordinates, cfg)
+
+
+def window_function(
+    tree: core.RTree3DHolder | core.geometry.geographic.RTree,
+    coordinates: np.ndarray[TwoDims, np.dtype],
+    config: rtree.InterpolationWindow | None = None,
+    *,
+    k: int | None = None,
+    wf: WindowKernel | None = None,
+    arg: float | None = None,
+    radius: float | None = None,
+    boundary_check: BoundaryCheck | None = None,
+    num_threads: int | None = None,
+) -> tuple[np.ndarray[OneDim, np.dtype], NDArray1DUInt32]:
+    """Window function interpolation.
+
+    Args:
+        tree: R*Tree containing the scattered data.
+        coordinates: Query coordinates as a NumPy array with shape:
+
+            * (N, 2): For geographic.RTree, representing (longitude, latitude).
+            * (N, 2) or (N, 3): For RTree3DHolder, representing
+              (longitude, latitude[, altitude]).
+
+        config: Configuration object (if provided, keyword args are ignored)
+        k: Number of nearest neighbors to use
+        wf: Window kernel type
+        arg: Window function parameter (kernel-specific)
+        radius: Search radius (None = no limit)
+        boundary_check: Boundary checking mode
+        num_threads: Number of threads (0 = auto)
+
+    Returns:
+        Tuple of (interpolated values, neighbor counts)
+
+    Examples:
+        >>> result, counts = window_function(tree, coords, k=10, wf="gaussian")
+
+    """
+    # If config is provided, use it directly
+    if config is not None:
+        return tree.window_function(coordinates, config)
+
+    # Create config from keyword arguments
+    method_map = {
+        "k": ("with_k", None),
+        "wf": ("with_wf", _WINDOW_MAP),
+        "arg": ("with_arg", None),
+    }
+    cfg = _build_config(
+        rtree.InterpolationWindow, method_map, k=k, wf=wf, arg=arg
+    )
+    cfg = _apply_common_config(cfg, radius, boundary_check, num_threads)
+
+    return tree.window_function(coordinates, cfg)
+
+
+def query(
+    tree: core.RTree3DHolder | core.geometry.geographic.RTree,
+    coordinates: np.ndarray[TwoDims, np.dtype],
+    config: rtree.Query | None = None,
+    *,
+    k: int | None = None,
+    radius: float | None = None,
+    boundary_check: BoundaryCheck | None = None,
+    num_threads: int | None = None,
+) -> tuple[
+    np.ndarray[TwoDims, np.dtype],
+    np.ndarray[TwoDims, np.dtype],
+]:
+    """Query nearest neighbors.
+
+    Args:
+        tree: R*Tree containing the scattered data.
+        coordinates: Query coordinates as a NumPy array with shape:
+
+            * (N, 2): For geographic.RTree, representing (longitude, latitude).
+            * (N, 2) or (N, 3): For RTree3DHolder, representing
+              (longitude, latitude[, altitude]).
+
+        config: Configuration object (if provided, keyword args are ignored)
+        k: Number of nearest neighbors to return
+        radius: Search radius (None = no limit)
+        boundary_check: Boundary checking mode
+        num_threads: Number of threads (0 = auto)
+
+    Returns:
+        Tuple of (distances, values) arrays
+
+    Examples:
+        >>> distances, values = query(tree, coords, k=5)
+
+    """
+    # If config is provided, use it directly
+    if config is not None:
+        return tree.query(coordinates, config)
+
+    # Create config from keyword arguments
+    method_map = {
+        "k": ("with_k", None),
+    }
+    cfg = _build_config(rtree.Query, method_map, k=k)
+    cfg = _apply_common_config(cfg, radius, boundary_check, num_threads)
+
+    return tree.query(coordinates, cfg)

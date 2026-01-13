@@ -1,448 +1,493 @@
+// Copyright (c) 2026 CNES.
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
+
 #pragma once
-#include <pybind11/pybind11.h>
 
 #include <Eigen/Core>
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
-#include <optional>
+#include <utility>
+#include <vector>
+
+#include "pyinterp/eigen.hpp"
 
 namespace pyinterp {
 
-/// Represents a period of time.
+/// @brief Represents a half-open time period [begin, end).
 struct Period {
-  /// Create a period from begin to last eg: [begin,end)
-  constexpr Period(const int64_t begin, const int64_t end,
-                   const bool within = true)
-      : begin(begin), last(end - (within ? 0 : 1)) {}
+  int64_t begin{0};  ///< Start of the period (inclusive).
+  int64_t last{-1};  ///< Last value in the period (inclusive).
 
-  /// Create a null period.
+  /// @brief Create a null/default period.
   constexpr Period() = default;
 
-  /// Return one past the last element.
-  constexpr auto end() const -> int64_t { return last + 1; }
+  /// @brief Create a period from begin to end.
+  /// @param[in] begin Start of the period (inclusive).
+  /// @param[in] end End of the period.
+  /// @param[in] within If true, 'end' is treated as the last inclusive value
+  /// [begin, end]. If false, 'end' is treated as exclusive [begin, end).
+  constexpr Period(int64_t begin, int64_t end, bool within = true) noexcept
+      : begin(begin), last(end - (within ? 0 : 1)) {}
 
-  /// Return the length of the period.
-  constexpr auto length() const -> int64_t {
-    if (last < begin) {  // invalid period
-      return last + 1 - begin;
-    } else {
-      return end() - begin;  // normal case
-    }
+  /// @brief Return one past the last element (exclusive end).
+  [[nodiscard]] constexpr auto end() const noexcept -> int64_t {
+    return last + 1;
   }
 
-  constexpr auto duration() const -> int64_t { return end() - begin; }
-
-  /// True if period is ill formed (length is zero or less)
-  constexpr auto is_null() const -> bool { return end() <= begin; }
-
-  /// Equality operator.
-  constexpr auto operator==(const Period &rhs) const -> bool {
-    return ((begin == rhs.begin) && (last == rhs.last));
+  /// @brief Return the duration.
+  [[nodiscard]] constexpr auto duration() const noexcept -> int64_t {
+    return end() - begin;
   }
 
-  /// Strict as defined by rhs.last <= lhs.last.
-  constexpr auto operator<(const Period &rhs) const -> bool {
-    return (last < rhs.begin);
+  /// @brief True if period is ill-formed (length is zero or negative).
+  [[nodiscard]] constexpr auto is_null() const noexcept -> bool {
+    return last < begin;
   }
 
-  /// True if the point is inside the period, zero length periods contain no
-  /// points
-  constexpr auto contains(const int64_t point) const -> bool {
-    return ((point >= begin) && (point <= last));
+  /// @brief Default equality and ordering (lexicographic on begin, then last).
+  [[nodiscard]] constexpr auto operator<=>(const Period&) const noexcept =
+      default;
+
+  /// @brief True if the point is inside the period [begin, last].
+  [[nodiscard]] constexpr auto contains(int64_t point) const noexcept -> bool {
+    return (point >= begin) && (point <= last);
   }
 
-  /// True if this period fully contains (or equals) the other period
-  constexpr auto contains(const Period &other) const -> bool {
-    return ((begin <= other.begin) && (last >= other.last));
+  /// @brief True if this period fully contains (or equals) the other period.
+  [[nodiscard]] constexpr auto contains(const Period& other) const noexcept
+      -> bool {
+    return (begin <= other.begin) && (last >= other.last);
   }
 
-  /// True if periods are next to each other without a gap.
-  ///
-  /// In the example below, p1 and p2 are adjacent, but p3 is not adjacent
-  /// with either of p1 or p2.
-  /// @code
-  ///    [-p1-)
-  ///         [-p2-)
-  ///           [-p3-)
-  /// @endcode
-  constexpr auto is_adjacent(const Period &other) const -> bool {
-    return (other.begin == end() || begin == other.end());
-  }
-  /// True if all of the period is prior or point < start
-  /// In the example below only point 1 would evaluate to true.
-  /// @code
-  ///      [---------])
-  ///  ^   ^    ^     ^   ^
-  ///  1   2    3     4   5
-  ///
-  /// @endcode
-  constexpr auto is_after(const int64_t point) const -> bool {
-    if (is_null()) {
-      return false;  // null period isn't after
-    }
-
-    return point < begin;
+  /// @brief True if periods are adjacent without a gap.
+  [[nodiscard]] constexpr auto is_adjacent(const Period& other) const noexcept
+      -> bool {
+    return (other.begin == end()) || (begin == other.end());
   }
 
-  /// True if all of the period is prior to the passed point or end <= t
-  /// In the example below points 4 and 5 return true.
-  ///@code
-  ///     [---------])
-  /// ^   ^    ^     ^   ^
-  /// 1   2    3     4   5
-  ///
-  ///@endcode
-  constexpr auto is_before(const int64_t point) const -> bool {
-    if (is_null()) {
-      return false;  // null period isn't before anything
-    }
-
-    return last < point;
+  /// @brief True if the entire period is after the given point (point < begin).
+  [[nodiscard]] constexpr auto is_after(int64_t point) const noexcept -> bool {
+    return !is_null() && (point < begin);
   }
 
-  /// True if the periods overlap in any way
-  ///  In the example below p1 intersects with p2, p4, and p6.
-  /// @code
-  ///        [---p1---)
-  ///              [---p2---)
-  ///                 [---p3---)
-  ///   [---p4---)
-  ///  [-p5-)
-  ///          [-p6-)
-  /// @endcode
-  constexpr auto intersects(const Period &other) const -> bool {
-    return (contains(other.begin) || other.contains(begin) ||
-            ((other.begin < begin) && (other.last >= begin)));
+  /// @brief True if the entire period is before the given point (last < point).
+  [[nodiscard]] constexpr auto is_before(int64_t point) const noexcept -> bool {
+    return !is_null() && (last < point);
   }
 
-  /// Return the intersection of two periods.
-  ///
-  /// If the periods do not intersect, the result is a null period.
-  /// @param other is the other period to intersect with.
-  /// @returns the intersection of the two periods.
-  inline auto intersection(const Period &other) const -> Period {
-    if (begin > other.begin) {
-      if (last <= other.last) {
-        return *this;
-      }
-      return Period(begin, other.last);
-    }
-
-    if (last <= other.last) {
-      return Period(other.begin, last);
-    }
-    return other;
+  /// @brief True if the periods overlap in any way.
+  [[nodiscard]] constexpr auto intersects(const Period& other) const noexcept
+      -> bool {
+    return (begin <= other.last) && (other.begin <= last);
   }
 
-  /// Returns the union of intersecting periods -- or null period
-  ///
-  /// @param other is the other period to union with.
-  /// @returns the union of the two periods.
-  auto merge(const Period &other) const -> Period {
-    if (intersects(other)) {
-      if (begin < other.begin) {
-        return Period(begin, last > other.last ? last : other.last);
-      }
-      return Period(other.begin, last > other.last ? last : other.last);
-    }
-    // no intersect return null
-    return Period(begin, begin, false);
-  }
-
-  /// Return true if the given date is close to the period.
-  ///
-  /// @param date is the date to check.
-  /// @param tolerance The maximum distance from the period to consider the date
-  /// close.
-  /// @returns true if the date is close to the period.
-  constexpr auto is_close(const int64_t date, const int64_t tolerance) const
+  /// @brief True if the given date is within tolerance of the period.
+  /// @param date The date to check.
+  /// @param tolerance The tolerance margin (inclusive).
+  [[nodiscard]] constexpr auto is_close(int64_t date,
+                                        int64_t tolerance) const noexcept
       -> bool {
     return (date >= begin - tolerance) && (date <= last + tolerance);
   }
 
-  /// The start time of the period.
-  int64_t begin{0};
-  /// The last time in the period.
-  int64_t last{0};
+  /// @brief Return the intersection of two periods.
+  /// @return A new Period representing the intersection. If disjoint, returns
+  /// a null period.
+  [[nodiscard]] constexpr auto intersection(const Period& other) const noexcept
+      -> Period {
+    if (!intersects(other)) {
+      return Period{};
+    }
+    return Period{std::max(begin, other.begin), std::min(last, other.last)};
+  }
+
+  /// @brief Returns the union of intersecting or adjacent periods.
+  /// @return A new Period representing the union. If disjoint (and not
+  /// adjacent), returns a null period.
+  [[nodiscard]] constexpr auto merge(const Period& other) const noexcept
+      -> Period {
+    if (!intersects(other) && !is_adjacent(other)) {
+      return Period{};
+    }
+    return Period{std::min(begin, other.begin), std::max(last, other.last)};
+  }
+
+  /// @brief Extend the period to include the given point.
+  [[nodiscard]] constexpr auto extend(int64_t point) const noexcept -> Period {
+    return Period{std::min(begin, point), std::max(last, point)};
+  }
+
+  /// @brief Shift the period by an offset.
+  [[nodiscard]] constexpr auto shift(int64_t offset) const noexcept -> Period {
+    return Period{begin + offset, last + offset};
+  }
 };
 
-/// The list of periods.
-class PeriodList {
+/// @brief A list of periods stored in a std::vector.
+///
+/// All periods in the list share the same resolution, managed at the
+/// container level. This avoids redundant storage and simplifies operations.
+class PeriodList : public std::vector<Period> {
  public:
-  /// Default constructor.
-  PeriodList(Eigen::Matrix<Period, -1, 1> periods)
-      : periods_(std::move(periods)) {}
+  using std::vector<Period>::vector;
 
-  /// Return the number of periods in the list.
-  constexpr auto size() const -> int64_t { return periods_.size(); }
+  /// @brief Create a PeriodList from a vector of periods.
+  /// @param[in,out] periods The vector of periods.
+  explicit constexpr PeriodList(std::vector<Period>&& periods) noexcept
+      : std::vector<Period>(std::move(periods)) {}
 
-  /// Return true if the list is empty.
-  constexpr auto empty() const -> bool { return size() == 0; }
-
-  /// Check that the periods are sorted in ascending order and disjoint from
-  /// each other.
-  auto are_periods_sorted_and_disjointed() const -> bool {
-    auto size = periods_.size();
-    if (size > 1) {
-      auto begin = periods_.array().begin();
-      auto previous = begin;
-      for (auto next = begin + 1; next < begin + size; ++next) {
-        if (previous->intersects(*next) || next->last < previous->begin) {
-          return false;
-        }
-        previous = next;
-      }
+  /// @brief Check that periods are sorted and non-overlapping.
+  [[nodiscard]] auto is_sorted_and_disjoint() const noexcept -> bool {
+    if (size() <= 1) {
+      return true;
     }
-    return true;
+    // Check if any adjacent periods intersect or are out of order
+    return std::ranges::adjacent_find(
+               *this, [](const Period& a, const Period& b) {
+                 return a.intersects(b) || b.begin < a.begin;
+               }) == end();
   }
 
-  /// Sort the periods in ascending order.
-  inline auto sort() -> void {
-    std::sort(periods_.array().begin(), periods_.array().end(),
-              [](auto &lhs, auto &rhs) { return lhs.begin < rhs.begin; });
+  /// @brief Sort periods by begin time.
+  auto sort() -> void {
+    std::ranges::sort(*this, {}, [](const Period& p) { return p.begin; });
   }
 
-  //// Merge two list of periods.
-  auto merge(const PeriodList &other) -> void {
-    auto periods =
-        Eigen::Matrix<Period, -1, 1>(periods_.size() + other.periods_.size());
-    auto ix = int64_t(0);
-    auto jx = int64_t(0);
-    auto kx = int64_t(0);
+  /// @brief Merge two lists of periods.
+  /// @param[in] other The other PeriodList to merge with.
+  /// @return A new PeriodList with merged periods.
+  inline auto merge(const PeriodList& other) -> void;
 
-    auto insert_or_merge = [&kx, &periods](const Period &period) -> void {
-      if (kx == 0) {
-        periods(kx++) = period;
-      } else {
-        auto overlap = periods(kx - 1).merge(period);
-        if (overlap.is_null()) {
-          periods(kx++) = period;
-        } else {
-          periods(kx - 1) = overlap;
-        }
-      }
-    };
-
-    while (ix < periods_.size() && jx < other.periods_.size()) {
-      insert_or_merge(other.periods_[jx].is_after(periods_[ix].begin)
-                          ? periods_[ix++]
-                          : other.periods_[jx++]);
-    }
-
-    while (ix < periods_.size()) {
-      insert_or_merge(periods_[ix++]);
-    }
-
-    while (jx < other.periods_.size()) {
-      insert_or_merge(other.periods_[jx++]);
-    }
-
-    periods.conservativeResize(kx);
-    periods_ = std::move(periods);
+  /// @brief Check if a date is within tolerance of any period.
+  [[nodiscard]] auto is_close(int64_t date, int64_t tolerance) const noexcept
+      -> bool {
+    return std::ranges::any_of(
+        *this, [=](const auto& p) { return p.is_close(date, tolerance); });
   }
 
-  /// Inspects the dates provided to determine if they belong to one of the
-  /// given periods. Returns a boolean vector of same size as the input vectors.
-  /// True if the date belongs to the period.
-  ///
-  /// The vectors provided should be sorted in chronological order.
-  auto cross_a_period(
-      const Eigen::Ref<const Eigen::Matrix<int64_t, -1, 1>> &dates) const
-      -> Eigen::Matrix<bool, -1, 1> {
-    // The index of the closest period of the current date processed.
-    auto first_index = int64_t(0);
-
-    // Flag equal to 1 if the date belongs to a period, 0 otherwise.
-    auto flags = Eigen::Matrix<bool, -1, 1>(dates.size());
-    flags.setConstant(false);
-
-    // Index of the traversed date.
-    auto ix = int64_t(0);
-
-    // The last date processed.
-    const auto last_date = dates[dates.size() - 1];
-
-    // Searches for the period containing or after the provided date.
-    auto lookup =
-        [this](const int64_t first_index,
-               const int64_t date) -> std::tuple<int64_t, const Period *> {
-      for (auto index = first_index; index < periods_.size(); ++index) {
-        const auto *period = &periods_[index];
-        if (period->contains(date) || period->is_after(date)) {
-          return {index, period};
-        }
-      }
-      return {-1, nullptr};
-    };
-
-    // The index of the first period that is located after the last date
-    // provided.
-    auto [last_index, period] = lookup(0, last_date);
-    if (last_index != -1 && period->contains(last_date)) {
-      // If the last date processed belongs to a period, no dates are valid.
-      flags.setConstant(true);
-      return flags;
+  /// @brief Get the duration covered by all periods.
+  /// @note This algorithm assumes that periods are sorted.
+  /// @return The total duration.
+  [[nodiscard]] auto duration() const noexcept -> int64_t {
+    if (empty()) {
+      return 0;
     }
 
-    while (ix < dates.size()) {
-      const auto date = dates(ix);
-
-      std::tie(first_index, period) = lookup(first_index, date);
-      if (first_index == -1 || first_index == last_index) {
-        // If the date is not in any period, or if the period is the last one
-        // after the last date processed, the inspection is over.
-        break;
-      }
-
-      // If the date belongs to a period or if there is a period after this date
-      // which is not the first period after the last supplied date, then a
-      // period is traversed.
-      if (period->contains(date) || period->is_after(date)) {
-        flags(ix) = true;
-      }
-      ++ix;
+    if (size() == 1) {
+      return front().duration();
     }
-    return flags;
+
+    return back().end() - front().begin;
   }
 
-  /// Masks the dates provided to determine if they belong to one of the given
-  /// periods. Returns a boolean vector of same size as the input vectors. True
-  /// if the date belongs to the period.
-  ///
-  /// The vectors provided should be sorted in chronological order.
-  auto belong_to_a_period(
-      const Eigen::Ref<const Eigen::Matrix<int64_t, -1, 1>> &dates) const
-      -> Eigen::Matrix<bool, -1, 1> {
-    // Flag equal to 1 if the date belongs to a period, 0 otherwise.
-    auto flags = Eigen::Matrix<bool, -1, 1>(dates.size());
+  /// @brief Get the aggregate duration of all periods.
+  /// @note This algorithm assumes that periods are sorted and disjoint.
+  /// @return The aggregate duration.
+  [[nodiscard]] inline auto aggregate_duration() const noexcept -> int64_t;
 
-    {
-      auto gil = pybind11::gil_scoped_release();
-      flags.setConstant(false);
+  /// @brief Find the period containing a date using binary search.
+  /// @param date The date (must be in list's resolution)
+  /// @return Pointer to the containing period, or nullptr if not found
+  [[nodiscard]] inline auto find_containing(int64_t date) const noexcept
+      -> const Period*;
 
-      // Index of the traversed date.
-      auto ix = int64_t(0);
-      auto it = periods_.array().begin();
-      auto end = periods_.array().end();
-
-      while (ix < dates.size()) {
-        const auto date = dates(ix);
-        while (!it->contains(date) && !it->is_after(date) && it != end) {
-          ++it;
-        }
-        if (it == end) {
-          break;
-        }
-        if (it->contains(date)) {
-          flags(ix) = true;
-        }
-        ++ix;
-      }
+  /// @brief Find the index of the period containing a date.
+  /// @param date The date (must be in list's resolution)
+  /// @return Index of the containing period, or -1 if not found
+  [[nodiscard]] inline auto find_containing_index(int64_t date) const noexcept
+      -> int64_t {
+    if (const auto* p = find_containing(date)) {
+      return std::distance(data(), p);
     }
-    return flags;
+    return -1;
   }
 
-  /// Get the periods.
-  auto periods() const -> const Eigen::Matrix<Period, -1, 1> & {
-    return periods_;
-  }
-
-  /// Determines whether the date, given in parameter, is close to a period in
-  /// the list.
-  ///
-  /// @arg date The date to check.
-  /// @arg epsilon The maximum distance from the period to consider the date
-  /// close.
-  /// @return True if the date is close to a period in the list.
-  auto is_close(const int64_t date, const int64_t epsilon) const -> bool {
-    for (const auto &period : periods_) {
-      if (period.is_close(date, epsilon)) {
-        return true;
+  /// @brief Filter to only periods within the given period.
+  /// @param period The period to filter against.
+  /// @return A new PeriodList with periods fully contained in 'period'.
+  [[nodiscard]] inline auto filter_contained(
+      const Period& period) const noexcept -> PeriodList {
+    PeriodList result;
+    result.reserve(size());
+    for (const auto& p : *this) {
+      if (period.contains(p)) {
+        result.push_back(p);
       }
     }
-    return false;
-  }
-
-  /// Join the periods together if they are adjacent.
-  ///
-  /// @arg epsilon The maximum gap between periods to join.
-  /// @return A new PeriodList with the joined periods.
-  auto join_adjacent_periods(const int64_t epsilon) const -> PeriodList {
-    auto result = PeriodList(periods_);
-    if (result.size() <= 1) {
-      return result;
-    }
-
-    auto ix = int64_t(1);
-    for (auto jx = int64_t(1); jx < result.periods_.size(); ++jx) {
-      auto dt = periods_[jx].begin - periods_[jx - 1].last;
-      if (dt <= epsilon) {
-        result.periods_(ix - 1).last = periods_[jx].last;
-      } else {
-        result.periods_(ix) = periods_[jx];
-        ++ix;
-      }
-    }
-    result.periods_.conservativeResize(ix);
+    result.shrink_to_fit();
     return result;
   }
 
-  /// Returns the list of periods that are within the given period.
+  /// @brief Filter to only periods longer than the given duration.
+  /// @param min_duration The minimum duration.
+  /// @return A new PeriodList with periods longer than 'min_duration'.
+  [[nodiscard]] inline auto filter_min_duration(
+      int64_t min_duration) const noexcept -> PeriodList {
+    PeriodList result;
+    result.reserve(size());
+    for (const auto& p : *this) {
+      if (p.duration() >= min_duration) {
+        result.push_back(p);
+      }
+    }
+    result.shrink_to_fit();
+    return result;
+  }
+
+  /// @brief Identify dates that cross (enter or are within) any managed period.
   ///
-  /// @arg period The period to search for.
-  /// @return A new PeriodList with the periods that are within the given
+  /// For each input date, determines whether it either:
+  /// - Falls inside one of the periods, OR
+  /// - Has at least one period beginning at or after it (before the last input
+  ///   date)
+  ///
+  /// This effectively identifies dates that "encounter" a period in the
+  /// temporal sequence, excluding only those dates that come after all periods
+  /// have ended.
+  ///
+  /// @param dates Vector of dates to check (should be sorted for optimal
+  /// performance).
+  /// @return A vector of booleans where true indicates the date crosses a
   /// period.
-  auto within(const Period &period) const -> PeriodList {
-    auto result = PeriodList(periods_);
-    auto ix = int64_t(0);
-    for (auto jx = int64_t(0); jx < result.periods_.size(); ++jx) {
-      if (period.intersects(result.periods_(jx))) {
-        result.periods_(ix) = result.periods_(jx);
-        ++ix;
-      }
-    }
-    result.periods_.conservativeResize(ix);
-    return result;
-  }
-
-  /// Returns the intersection of the list of periods with the given period.
   ///
-  /// @arg other The period list to intersect with.
-  /// @return A new PeriodList that intersects with the given period list.
-  auto intersection(const Period &period) const -> PeriodList {
-    auto result = PeriodList(periods_);
-    auto ix = int64_t(0);
-    for (auto jx = int64_t(0); jx < result.periods_.size(); ++jx) {
-      auto intersection = result.periods_(jx).intersection(period);
-      if (!intersection.is_null()) {
-        result.periods_(ix) = intersection;
-        ++ix;
-      }
-    }
-    result.periods_.conservativeResize(ix);
-    return result;
-  }
+  /// @note If the last date in the input falls within a period, all dates are
+  /// marked as true since they all precede or coincide with a period.
+  [[nodiscard]] inline auto cross_a_period(
+      const Eigen::Ref<const Vector<int64_t>>& dates) const -> Vector<bool>;
 
-  /// Returns the list of periods  whose minimum period is greater than or
-  /// equal to the given period.
+  /// @brief Test which dates fall within any of the managed periods.
   ///
-  /// @arg period The period to search for.
-  /// @return A new PeriodList with the periods whose minimum period is greater
-  /// than or equal to the given period.
-  auto filter(int64_t min_duration) const -> PeriodList {
-    auto result = PeriodList(periods_);
-    auto ix = int64_t(0);
-    for (auto jx = int64_t(0); jx < result.periods_.size(); ++jx) {
-      if (periods_(jx).duration() >= min_duration) {
-        result.periods_(ix) = result.periods_(jx);
-        ++ix;
-      }
-    }
-    result.periods_.conservativeResize(ix);
-    return result;
-  }
+  /// Efficiently checks each input date to determine if it is contained within
+  /// at least one period in the list. Uses a single-pass algorithm that
+  /// advances through the periods as dates are processed.
+  ///
+  /// @param dates Vector of dates to check (should be sorted for optimal
+  /// performance).
+  /// @return Boolean vector where true indicates the date is contained in a
+  /// period.
+  ///
+  /// @note This is a simple membership test - returns true only if the date
+  /// falls within [begin, last] of some period. Compare with cross_a_period()
+  /// which has more complex "look-ahead" semantics.
+  [[nodiscard]] inline auto belong_to_a_period(
+      const Eigen::Ref<const Vector<int64_t>>& dates) const -> Vector<bool>;
 
- private:
-  Eigen::Matrix<Period, -1, 1> periods_;
+  /// @brief Join adjacent periods together.
+  /// @param epsilon The maximum gap between periods to join.
+  /// @return A new PeriodList with adjacent periods joined.
+  [[nodiscard]] inline auto join_adjacent_periods(int64_t epsilon) const
+      -> PeriodList;
 };
+
+// ============================================================================
+// Implementation
+// ============================================================================
+
+auto PeriodList::merge(const PeriodList& other) -> void {
+  auto periods = PeriodList();
+  periods.reserve(size() + other.size());
+
+  size_t ix = 0;
+  size_t jx = 0;
+
+  auto insert_or_merge = [&periods](const Period& period) -> void {
+    if (periods.empty()) {
+      periods.push_back(period);
+      return;
+    }
+    auto& last_period = periods.back();
+    auto overlap = last_period.merge(period);
+    if (overlap.is_null()) {
+      periods.push_back(period);
+    } else {
+      last_period = overlap;
+    }
+  };
+
+  while (ix < size() && jx < other.size()) {
+    insert_or_merge(other[jx].is_after((*this)[ix].begin) ? (*this)[ix++]
+                                                          : other[jx++]);
+  }
+
+  while (ix < size()) {
+    insert_or_merge((*this)[ix++]);
+  }
+
+  while (jx < other.size()) {
+    insert_or_merge(other[jx++]);
+  }
+
+  periods.shrink_to_fit();
+  *this = std::move(periods);
+}
+
+// ============================================================================
+
+auto PeriodList::aggregate_duration() const noexcept -> int64_t {
+  if (empty()) {
+    return 0;
+  }
+
+  int64_t total = 0;
+  auto current_begin = front().begin;
+  auto current_end = front().end();
+
+  for (size_t i = 1; i < size(); ++i) {
+    const auto& p = (*this)[i];
+    if (p.begin <= current_end) {
+      // Overlapping or adjacent: extend coverage
+      current_end = std::max(current_end, p.end());
+    } else {
+      // Gap: accumulate current segment and start new
+      total += (current_end - current_begin);
+      current_begin = p.begin;
+      current_end = p.end();
+    }
+  }
+
+  // Don't forget to add the last segment
+  total += (current_end - current_begin);
+
+  return total;
+}
+
+// ============================================================================
+
+auto PeriodList::find_containing(int64_t date) const noexcept -> const Period* {
+  auto it = std::ranges::lower_bound(*this, date, {},
+                                     [](const Period& p) { return p.begin; });
+
+  // Check the previous period (date might be inside it, since lower_bound
+  // returns first element >= date)
+  if (it != begin()) {
+    if (auto prev = std::prev(it); prev->contains(date)) {
+      return &(*prev);
+    }
+  }
+
+  // Check the current period (if date == begin)
+  if (it != end() && it->contains(date)) {
+    return &(*it);
+  }
+
+  return nullptr;
+}
+
+// ============================================================================
+
+auto PeriodList::cross_a_period(
+    const Eigen::Ref<const Vector<int64_t>>& dates) const -> Vector<bool> {
+  // The index of the closest period of the current date processed.
+  int64_t first_index = 0;
+
+  // Flag equal to 1 if the date belongs to a period, 0 otherwise.
+  auto flags = Vector<bool>(dates.size());
+  flags.setConstant(false);
+
+  // Index of the traversed date.
+  int64_t ix = 0;
+  // The last date processed.
+  const auto last_date = dates[dates.size() - 1];
+
+  // Searches for the period containing or after the provided date.
+  auto lookup = [this](
+                    const int64_t first_index,
+                    const int64_t date) -> std::tuple<int64_t, const Period*> {
+    for (auto index = first_index; std::cmp_less(index, size()); ++index) {
+      const auto* period = &(*this)[index];
+      if (period->contains(date) || period->is_after(date)) {
+        return {index, period};
+      }
+    }
+    return {-1, nullptr};
+  };
+
+  // The index of the first period that is located after the last date
+  // provided.
+  auto [last_index, period] = lookup(0, last_date);
+  if (period != nullptr && period->contains(last_date)) {
+    // If the last date processed belongs to a period, no other date can be
+    // outside the periods.
+    flags.setConstant(true);
+    return flags;
+  }
+
+  while (ix < dates.size()) {
+    const auto date = dates(ix);
+
+    std::tie(first_index, period) = lookup(first_index, date);
+    if (period == nullptr || first_index == last_index) {
+      // If the date is not in any period, or if the period is the last one
+      // after the last date processed, the inspection is over.
+      break;
+    }
+
+    // If the date belongs to a period or if there is a period after this date
+    // which is not the first period after the last supplied date, then a
+    // period is traversed.
+    if (period->contains(date) || period->is_after(date)) {
+      flags(ix) = true;
+    }
+    // Move to the next date.
+    ++ix;
+  }
+  return flags;
+}
+
+// ============================================================================
+
+auto PeriodList::belong_to_a_period(
+    const Eigen::Ref<const Vector<int64_t>>& dates) const -> Vector<bool> {
+  // Flag equal to 1 if the date belongs to a period, 0 otherwise.
+  auto flags = Vector<bool>(dates.size());
+  flags.setConstant(false);
+
+  // Index of the traversed date.
+  int64_t ix = 0;
+  auto it = begin();
+  auto it_end = end();
+
+  while (ix < dates.size()) {
+    const auto date = dates(ix);
+    while (it != it_end && !it->contains(date) && !it->is_after(date)) {
+      ++it;
+    }
+    if (it == it_end) {
+      break;
+    }
+    if (it->contains(date)) {
+      flags(ix) = true;
+    }
+    ++ix;
+  }
+
+  return flags;
+}
+
+// ============================================================================
+
+auto PeriodList::join_adjacent_periods(int64_t epsilon) const -> PeriodList {
+  if (size() <= 1) {
+    return *this;
+  }
+
+  auto result = PeriodList();
+  result.reserve(size());
+  result.push_back(front());
+
+  for (auto it = begin() + 1; it != end(); ++it) {
+    auto dt = it->begin - (it - 1)->last;
+    if (dt <= epsilon) {
+      result.back().last = it->last;
+    } else {
+      result.push_back(*it);
+    }
+  }
+  result.shrink_to_fit();
+  return result;
+}
 
 }  // namespace pyinterp

@@ -1,91 +1,88 @@
+// Copyright (c) 2026 CNES.
+//
+// All rights reserved. Use of this source code is governed by a
+// BSD-style license that can be found in the LICENSE file.
 #pragma once
 
-#include "pyinterp/detail/math.hpp"
+#include <cmath>
+#include <concepts>
+
 #include "pyinterp/eigen.hpp"
 
-namespace pyinterp {
+namespace pyinterp::fill {
 namespace detail {
 
 /// Fills in the gaps between defined values in a line with interpolated
 /// values.
 ///
 /// @tparam T The type of the coordinates.
-/// @param x The values of the points defining the line.
-/// @param is_undefined A boolean vector indicating which points are undefined.
-template <typename T>
+/// @param[in,out] x The values of the points defining the line.
+/// @param[in,out] is_undefined A boolean vector indicating which points are
+/// undefined.
+template <std::floating_point T>
 void fill_line(EigenRefBlock<T> x, EigenRefBlock<bool> is_undefined) {
-  T x0;
-  T x1;
-  T dx;
-  Eigen::Index di;
-  Eigen::Index last_valid = -1;
-  Eigen::Index first_valid = -1;
   const auto size = x.size();
+  Eigen::Index first_valid = -1;
+  Eigen::Index last_valid = -1;
 
-  for (Eigen::Index ix = 0; ix < size; ++ix) {
-    // If the point is undefined, then we can't interpolate it.
+  // Find first and last valid points, interpolate interior gaps
+  for (int64_t ix = 0; ix < size; ++ix) {
     if (!is_undefined[ix]) {
-      // If there is a gap between the last valid point and this one, then
-      // interpolate the gap.
-      if (last_valid != -1 && (ix - last_valid) > 1) {
-        x0 = x[last_valid];
-        x1 = x[ix];
-        di = ix - last_valid;
-        dx = (x1 - x0) / di;
-        for (Eigen::Index jx = last_valid + 1; jx < ix; ++jx) {
-          di = jx - last_valid;
-          x[jx] = dx * di + x0;
-        }
-      } else if (first_valid == -1) {
-        // If this is the first valid point, then we can't interpolate the
-        // undefined points before it.
+      if (first_valid == -1) {
         first_valid = ix;
       }
-      // Update the last valid point.
+      // Interpolate gap if there's one
+      if (last_valid != -1 && (ix - last_valid) > 1) {
+        const T x0 = x[last_valid];
+        const T x1 = x[ix];
+        const auto di = ix - last_valid;
+        const T dx = (x1 - x0) / di;
+        for (int64_t jx = last_valid + 1; jx < ix; ++jx) {
+          x[jx] = x0 + dx * (jx - last_valid);
+        }
+      }
       last_valid = ix;
     }
   }
 
-  // If there are no valid points, then we can't interpolate anything.
-  if (last_valid == first_valid) {
-    is_undefined.setOnes();
+  // No valid points at all
+  if (first_valid == -1) {
+    return;  // Leave is_undefined as-is
+  }
+
+  // Single valid point: fill everything with that constant
+  if (first_valid == last_valid) {
+    x.setConstant(x[first_valid]);
+    is_undefined.setZero();
     return;
   }
 
-  // If the last valid point is not the last point, then we can't interpolate
-  x0 = x[first_valid];
-  x1 = x[last_valid];
-  dx = (x1 - x0) / (last_valid - first_valid);
+  // Extrapolate edges using overall slope
+  const T x0 = x[first_valid];
+  const T x1 = x[last_valid];
+  const T dx = (x1 - x0) / (last_valid - first_valid);
 
-  // If there is a gap between the last valid point and the end of the line,
-  // then interpolate the gap.
-  if (last_valid < (size - 1)) {
-    for (Eigen::Index jx = last_valid + 1; jx < size; ++jx) {
-      di = jx - last_valid;
-      x[jx] = dx * di + x1;
-    }
+  // Extrapolate beyond last valid point
+  for (int64_t jx = last_valid + 1; jx < size; ++jx) {
+    x[jx] = x1 + dx * (jx - last_valid);
   }
-  // If there is a gap between the first valid point and the beginning of the
-  // line, then interpolate the gap.
-  if (first_valid > 0) {
-    for (Eigen::Index jx = 0; jx < first_valid; ++jx) {
-      di = first_valid - jx;
-      x[jx] = x0 - dx * di;
-    }
+
+  // Extrapolate before first valid point
+  for (int64_t jx = 0; jx < first_valid; ++jx) {
+    x[jx] = x0 - dx * (first_valid - jx);
   }
-  // Mark all points as defined.
+
   is_undefined.setZero();
 }
 
 }  // namespace detail
 
-namespace fill {
-
 /// Fills in the gaps between defined values in a matrix with interpolated
 /// values.
 ///
-/// @param x The data to be processed.
-template <typename T>
+/// @param[in,out] x The data to be processed.
+/// @param[in] fill_value Value to use for missing data.
+template <std::floating_point T>
 void matrix(EigenDRef<Matrix<T>> x, const T &fill_value) {
   Matrix<bool> mask;
   if (std::isnan(fill_value)) {
@@ -113,18 +110,11 @@ void matrix(EigenDRef<Matrix<T>> x, const T &fill_value) {
 ///
 /// The data is assumed to be monotonically increasing or decreasing.
 ///
-/// @param array Array of dates.
-/// @param fill_value Value to use for missing data.
-template <typename T>
-auto vector(Eigen::Ref<Vector<T>> array, const T &fill_value) {
-  Vector<bool> mask;
-  if (detail::math::Fill<T>::is(fill_value)) {
-    mask = Eigen::isnan(array.array());
-  } else {
-    mask = array.array() == fill_value;
-  }
-  detail::fill_line<T>(array, mask);
+/// @param[in,out] array Array of dates.
+/// @param[in] fill_value Value to use for missing data.
+template <std::floating_point T>
+inline auto vector(Eigen::Ref<Vector<T>> array, const T &fill_value) {
+  matrix(EigenDRef<Matrix<T>>(array), fill_value);
 }
 
-}  // namespace fill
-}  // namespace pyinterp
+}  // namespace pyinterp::fill
