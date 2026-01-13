@@ -50,22 +50,24 @@ cd ${BUILD_TEMP_DIR}
 
 # C++ build & test
 make test_all -j ${THREADS}
-make lcov -j ${THREADS}
-lcov --extract  lcov/data/capture/all_targets.info.raw  "*" -o ../coverage_cpp.info
+
+# Generate C++ coverage using gcovr (supports newer gcov formats)
+gcovr --root ${ROOT} \
+      --filter "${ROOT}/cxx/" \
+      --exclude "${ROOT}/cxx/tests/" \
+      --exclude "${ROOT}/third_party/" \
+      --lcov ../coverage_cpp.info
 
 # Go back to the build directory ${ROOT}/build
 cd ..
 
-# Merge the two coverage reports
+# Merge the two coverage reports (still needs lcov for merging)
 lcov -a coverage_cpp.info -a coverage_python.info -o coverage.info
 
 # Clean the source file paths in the coverage report
 sed -i 's|SF:build/lib\.[^/]*/|SF:|g' coverage.info
 
-# Remove unwanted paths from the final coverage (tests, third_party)
-lcov --remove coverage.info "${ROOT}/cxx/tests/*" "${ROOT}/third_party/*" "pyinterp/tests/*" -o coverage.info
-
-# Generate the html report
+# Generate the html report (genhtml is part of lcov package)
 cd ${ROOT}
 genhtml build/coverage.info --output-directory build/htmllcov --prefix "${ROOT}"
 

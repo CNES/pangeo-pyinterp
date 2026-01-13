@@ -12,6 +12,7 @@ dependencies:
   - pip
   - pytest
   - lcov
+  - gcovr
   - pytest-cov
   - setuptools
   - xarray
