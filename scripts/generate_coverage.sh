@@ -22,7 +22,7 @@ CONDA_GCOV=$(which x86_64-conda-linux-gnu-gcov 2>/dev/null)
 if [[ -n "${CONDA_GCOV}" ]]; then
     CONDA_BIN_DIR=$(dirname "${CONDA_GCOV}")
     GCC_MAJOR=$(x86_64-conda-linux-gnu-gcc -dumpversion | cut -d. -f1)
-    
+
     # Create symlinks if they don't exist
     if [[ ! -e "${CONDA_BIN_DIR}/gcov-${GCC_MAJOR}" ]]; then
         ln -s "${CONDA_GCOV}" "${CONDA_BIN_DIR}/gcov-${GCC_MAJOR}"
