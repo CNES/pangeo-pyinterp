@@ -133,7 +133,9 @@ TEST_F(CommonTest, InheritanceFromThreadConfig) {
 // ============================================================================
 
 // Test helper struct to verify Base class functionality
-struct TestFittingModel {};
+struct TestFittingModel {
+  int dummy_field = 0;
+};
 
 struct DerivedConfig : Base<TestFittingModel, DerivedConfig> {
   TestFittingModel spatial_;
@@ -156,9 +158,9 @@ TEST_F(BaseTest, WithNumThreads) {
 
 TEST_F(BaseTest, WithSpatial) {
   DerivedConfig config;
-  TestFittingModel model;
+  TestFittingModel model{.dummy_field = 42};
   auto updated = config.with_spatial(model);
-  // Just verify it compiles and returns the correct type
+  EXPECT_EQ(updated.spatial_.dummy_field, model.dummy_field);
   static_assert(std::is_same_v<decltype(updated), DerivedConfig>);
 }
 
