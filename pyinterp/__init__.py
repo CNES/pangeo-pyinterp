@@ -11,6 +11,13 @@ geospatial operations, and statistical analysis tools.
 import copyreg
 from typing import Any
 
+
+try:
+    from ._version import version as __version__
+except ImportError:
+    # Package is not installed, use a development version
+    __version__ = "0.0.0.dev0"
+
 from . import core, fill, geohash, geometry
 from .core import (
     Axis,

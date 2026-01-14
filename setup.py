@@ -6,15 +6,12 @@
 
 from __future__ import annotations
 
-import datetime
 import os
 import pathlib
 import platform
-import re
-import subprocess
 import sys
 import sysconfig
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import setuptools
 import setuptools.command.build_ext
@@ -70,168 +67,6 @@ def distutils_dirname(
         f"{prefix}.{sysconfig.get_platform()}-{MAJOR}.{MINOR}",
         extname,
     )
-
-
-def execute(cmd: str) -> str:
-    """Execute a command and return its standard output as a string."""
-    with subprocess.Popen(
-        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    ) as process:
-        assert process.stdout is not None
-        return process.stdout.read().decode()
-
-
-def update_meta(path: pathlib.Path, version: str) -> None:
-    """Update the version number description in conda/meta.yaml."""
-    with open(path, encoding="utf-8") as stream:
-        lines = stream.readlines()
-    pattern = re.compile(r'{% set version = ".*" %}')
-
-    for idx, line in enumerate(lines):
-        match = pattern.search(line)
-        if match is not None:
-            lines[idx] = f'{{% set version = "{version}" %}}\n'
-
-    with open(path, "w", encoding="utf-8") as stream:
-        stream.write("".join(lines))
-
-
-def update_environment(path: pathlib.Path, version: str) -> None:
-    """Update the version number description in conda environment."""
-    with open(path, encoding="utf-8") as stream:
-        lines = stream.readlines()
-    pattern = re.compile(r"(\s+-\s+pyinterp)\s*>=\s*(.+)")
-
-    for idx, line in enumerate(lines):
-        match = pattern.search(line)
-        if match is not None:
-            lines[idx] = f"{match.group(1)}>={version}\n"
-
-    with open(path, "w", encoding="utf-8") as stream:
-        stream.write("".join(lines))
-
-
-def get_version_from_file(module: pathlib.Path) -> str:
-    """Extract version from existing version.py file."""
-    pattern = re.compile(r'return "(\d+\.\d+\.\d+)"')
-    with open(module, encoding="utf-8") as stream:
-        for line in stream:
-            match = pattern.search(line)
-            if match:
-                return match.group(1)
-    raise AssertionError("Version not found in version.py")
-
-
-def parse_git_version() -> tuple[str, str]:
-    """Parse git describe output to get version and sha1.
-
-    Returns:
-        A tuple of (version, sha1)
-
-    """
-    stdout: Any = execute(
-        "git describe --tags --dirty --long --always"
-    ).strip()
-    pattern = re.compile(r"([\w\d\.]+)-(\d+)-g([\w\d]+)(?:-(dirty))?")
-    match = pattern.search(stdout)
-
-    if match is None:
-        # No tag found, use the last commit
-        pattern = re.compile(r"([\w\d]+)(?:-(dirty))?")
-        match = pattern.search(stdout)
-        assert match is not None, f"Unable to parse git output {stdout!r}"
-        return "0.0", match.group(1)
-
-    version = match.group(1)
-    commits = int(match.group(2))
-    sha1 = match.group(3)
-
-    if commits != 0:
-        version += f".dev{commits}"
-
-    return version, sha1
-
-
-def get_commit_date(sha1: str) -> datetime.datetime:
-    """Get the commit date for a given SHA1."""
-    stdout = execute(f'git log  {sha1} -1 --format="%H %at"')
-    lines = stdout.strip().split()
-    return datetime.datetime.fromtimestamp(int(lines[1]))
-
-
-def update_conda_files(version: str) -> None:
-    """Update conda configuration files with the new version."""
-    meta = pathlib.Path(WORKING_DIRECTORY, "conda", "meta.yaml")
-    if meta.exists():
-        update_meta(meta, version)
-        update_environment(
-            pathlib.Path(WORKING_DIRECTORY, "binder", "environment.yml"),
-            version,
-        )
-
-
-def update_sphinx_conf(version: str, date: datetime.datetime) -> None:
-    """Update the sphinx configuration file with version and date."""
-    conf = pathlib.Path(WORKING_DIRECTORY, "docs", "source", "conf.py")
-    with open(conf, encoding="utf-8") as stream:
-        lines = stream.readlines()
-
-    pattern = re.compile(r"(\w+)\s+=\s+(.*)")
-    for idx, line in enumerate(lines):
-        match = pattern.search(line)
-        if match is not None:
-            if match.group(1) == "version":
-                lines[idx] = f"version = {version!r}\n"
-            elif match.group(1) == "release":
-                lines[idx] = f"release = {version!r}\n"
-            elif match.group(1) == "copyright":
-                lines[idx] = f"copyright = '({date.year}, CNES/CLS)'\n"
-
-    with open(conf, "w", encoding="utf-8") as stream:
-        stream.write("".join(lines))
-
-
-def write_version_module(
-    module: pathlib.Path, version: str, date: datetime.datetime
-) -> None:
-    """Write the version.py module with version and date information."""
-    with open(module, "w", encoding="utf-8") as handler:
-        handler.write(f'''# Copyright (c) {date.year} CNES
-#
-# All rights reserved. Use of this source code is governed by a
-# BSD-style license that can be found in the LICENSE file.
-"""Get software version information"""
-
-
-def release() -> str:
-    """Return the software version number"""
-    return "{version}"
-
-
-def date() -> str:
-    """Return the creation date of this release"""
-    return "{date:%d %B %Y}"
-''')
-
-
-def revision() -> str:
-    """Return the software version."""
-    os.chdir(WORKING_DIRECTORY)
-    module = pathlib.Path(WORKING_DIRECTORY, "pyinterp", "version.py")
-
-    # If the ".git" directory exists, this function is executed in the
-    # development environment, otherwise it's a release.
-    if not pathlib.Path(WORKING_DIRECTORY, ".git").exists():
-        return get_version_from_file(module)
-
-    version, sha1 = parse_git_version()
-    date = get_commit_date(sha1)
-
-    update_conda_files(version)
-    update_sphinx_conf(version, date)
-    write_version_module(module, version, date)
-
-    return version
 
 
 # pylint: disable=too-few-public-methods
@@ -620,7 +455,6 @@ def main() -> None:
         platforms=["POSIX", "MacOS", "Windows"],
         python_requires=">=3.11",
         url="https://github.com/CNES/pangeo-pyinterp",
-        version=revision(),
         zip_safe=False,
     )
 

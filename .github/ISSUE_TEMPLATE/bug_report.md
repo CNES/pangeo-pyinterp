@@ -24,7 +24,7 @@ A clear and concise description of what you expected to happen.
 **Pyinterp/Numpy/Python version information**
 Output from
 ```python
-import sys, numpy, pyinterp.version
+import sys, numpy, pyinterp
 print(pyinterp.__version__)
 print(numpy.__version__)
 print(sys.version)

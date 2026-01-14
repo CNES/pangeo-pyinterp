@@ -10,11 +10,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v3
-    - run: |
-        cat <<EOF > pyinterp/version.py
-        def release():
-          return "0.0.0"
-        def date():
-          return "01 January 2000"
-        EOF
     - uses: pre-commit/action@v3.0.1

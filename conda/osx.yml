@@ -18,6 +18,7 @@ dependencies:
   - pytest
   - pytest-cov
   - setuptools
+  - setuptools-scm
   - sphinx-book-theme
   - sphinx-gallery
   - sphinx-inline-tabs

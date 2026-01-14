@@ -13,5 +13,6 @@ dist
 docs/build
 docs/source/auto_examples
 docs/source/generated
+docs/source/README.rst
 docs/source/sg_execution_times.rst
-pyinterp/version.py
+pyinterp/_version.py

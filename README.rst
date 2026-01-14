@@ -122,8 +122,22 @@ coordinate conversion is managed to use the `Vermeille, H.
 <https://doi.org/10.1007/s00190-002-0273-6>`_ algorithm. It has an excellent
 performance with the accuracy of 1e-8 meters for altitude.
 
+Geohash
+-------
+
+Geohashing is a geocoding method used to encode geographic coordinates
+(latitude and longitude) into a short string of digits and letters delineating
+an area on a map, which is called a cell, with varying resolutions. The more
+characters in the string, the more precise the location.
+
+Geohashes use Base-32 alphabet encoding (characters can be ``0`` to ``9`` and
+``A`` to ``Z``, excl ``A``, ``I``, ``L`` and ``O``).
+
+The geohash is a compact way of representing a location, and is useful for
+storing a location in a database, or for indexing a location in a database.
+
 Geometry
---------
+========
 
 This library provides Python bindings to `Boost Geometry
 <https://www.boost.org/doc/libs/release/libs/geometry/doc/html/index.html>`_
@@ -143,21 +157,6 @@ In the geographic space, additional features include support for multiple
 geodetic strategies (Andoyer, Karney, Thomas, Vincenty) for precise calculations
 on a spheroid, and coordinate transformations (LLA/ECEF, geographic to Cartesian
 conversions).
-
-Geohash
--------
-
-Geohashing is a geocoding method used to encode geographic coordinates
-(latitude and longitude) into a short string of digits and letters delineating
-an area on a map, which is called a cell, with varying resolutions. The more
-characters in the string, the more precise the location.
-
-Geohashes use Base-32 alphabet encoding (characters can be ``0`` to ``9`` and
-``A`` to ``Z``, excl ``A``, ``I``, ``L`` and ``O``).
-
-The geohash is a compact way of representing a location, and is useful for
-storing a location in a database, or for indexing a location in a database.
-
 
 .. |Build Status| image:: https://github.com/CNES/pangeo-pyinterp/actions/workflows/ci.yaml/badge.svg
     :target: https://github.com/CNES/pangeo-pyinterp/actions
