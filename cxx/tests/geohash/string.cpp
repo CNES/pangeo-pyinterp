@@ -62,8 +62,7 @@ class GeoHashStringTest : public ::testing::Test {
   // Helper: Compare encoded hash with expected string (span version)
   static auto hash_equals(std::span<const char> hash,
                           std::span<const char> expected) -> bool {
-    return std::equal(hash.begin(), hash.end(), expected.begin(),
-                      expected.end());
+    return std::ranges::equal(hash, expected);
   }
 
   // Helper: Compare array with array
