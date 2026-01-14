@@ -1,6 +1,148 @@
 Changelog
 #########
 
+2026.1.0
+--------
+
+This release represents a **major architectural rewrite** of pyinterp with significant
+breaking changes. Please refer to the :doc:`migration` guide for detailed upgrade
+instructions.
+
+Architecture & Framework
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Binding Framework Migration**: Migrated from pybind11 to nanobind for Python
+  bindings, providing improved performance and reduced binary size.
+* **C++ Directory Restructuring**: Reorganized C++ source code with new directory
+  structure (``cxx/src/pybind/`` for bindings, ``cxx/src/library/`` for core
+  implementations).
+* **Namespace Reorganization**: Refactored C++ namespaces from ``pyinterp::detail::*``
+  to organized modules: ``pyinterp::math::``, ``pyinterp::geometry::``,
+  ``pyinterp::config::``, and ``pyinterp::pybind::``.
+* **Modern C++ Features**: Adopted C++20/C++23 features including concepts,
+  ``constexpr``, ``std::format``, ``std::ranges``, three-way comparison operator
+  (``<=>``), and ``[[nodiscard]]`` attributes.
+
+New Configuration System
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Type-Safe Configuration Objects**: Introduced a new ``config`` module with
+  builder-pattern configuration objects replacing keyword arguments.
+* **Configuration Submodules**: Added ``config.fill``, ``config.geometric``,
+  ``config.rtree``, and ``config.windowed`` for domain-specific configurations.
+* **Fluent API**: Configuration objects support method chaining with
+  ``.with_max_iterations()``, ``.with_epsilon()``, ``.with_num_threads()``, etc.
+
+Geometry Module
+~~~~~~~~~~~~~~~
+
+* **Module Restructuring**: Replaced the ``geodetic`` module with a unified
+  ``geometry`` module supporting multiple coordinate systems.
+* **Geographic Coordinates**: The ``geometry.geographic`` submodule replaces the
+  former ``geodetic`` module with all geodetic operations.
+* **Cartesian Coordinates**: Added new ``geometry.cartesian`` submodule for
+  Cartesian coordinate system operations.
+* **Satellite Operations**: Added new ``geometry.satellite`` submodule with
+  satellite-specific algorithms (rotation, swath transforms).
+* **Algorithm Submodules**: Geometric algorithms are now organized in
+  ``algorithms`` submodules for each coordinate system (40+ algorithms available).
+
+Math & Interpolation
+~~~~~~~~~~~~~~~~~~~~
+
+* **Math Module Reorganization**: New ``math`` namespace with organized submodules
+  for interpolation, statistics, FFT, and DCT operations.
+* **Interpolation Architecture**: Redesigned interpolation system with clear
+  separation into univariate, bivariate, and geometric interpolation.
+* **Interpolation Caching**: Added caching layer for improved interpolation
+  performance.
+* **Window Functions**: Added window function support for localized interpolation.
+
+New Features
+~~~~~~~~~~~~
+
+* **T-Digest**: Added ``TDigest`` class for streaming quantile estimation with
+  typed variants (``TDigestFloat32``, ``TDigestFloat64``).
+* **Dask Integration**: Added ``dask`` module with distributed computation support
+  for ``binning1d()``, ``binning2d()``, ``descriptive_statistics()``,
+  ``histogram2d()``, and ``tdigest()``.
+* **Regular Grid Interpolator**: New ``regular_grid_interpolator`` module with
+  string-based method selection (``"bilinear"``, ``"bicubic"``, ``"nearest"``,
+  ``"akima"``, etc.) and configuration object support.
+* **Typed Class Variants**: Added Float32/Float64 typed variants for ``Binning1D``,
+  ``Binning2D``, ``Histogram2D``, ``RTree3D``, and ``TDigest``.
+* **Enhanced Pickle Support**: Added proper pickle serialization for ``Grid``
+  objects via ``GridHolder``.
+* **Parallel Processing**: Added parallel-for utilities for multi-threaded
+  operations.
+
+Xarray Backend
+~~~~~~~~~~~~~~
+
+* **Simplified API**: The ``backends.xarray`` module has been significantly
+  simplified with automatic detection of geodetic and temporal axes using CF
+  conventions.
+* **Automatic Axis Detection**: Longitude/latitude axes are automatically detected
+  from CF-compliant ``units`` attributes; temporal axes are detected from
+  ``datetime64`` dtypes.
+* **Removed Parameters**: The ``increasing_axes`` and ``geodetic`` parameters have
+  been removed from ``RegularGridInterpolator``; axis detection is now automatic.
+* **Unified Method Parameter**: The ``bicubic()`` method is removed; use the
+  ``method="bicubic"`` parameter in the interpolation call instead.
+* **Simplified Keyword Arguments**: The ``bicubic_kwargs`` parameter is removed;
+  bicubic options are now passed directly as keyword arguments.
+
+Breaking Changes - Removed Modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following Python modules have been removed and their functionality relocated:
+
+* ``pyinterp.geodetic`` → Use ``pyinterp.geometry.geographic``
+* ``pyinterp.statistics`` → Use ``pyinterp.DescriptiveStatistics``
+* ``pyinterp.interpolator`` → Use ``pyinterp.regular_grid_interpolator``
+* ``pyinterp.grid`` → Use ``pyinterp.Grid`` (with aliases ``Grid2D``, ``Grid3D``,
+  ``Grid4D``)
+* ``pyinterp.histogram2d`` → Use ``pyinterp.Histogram2D``
+* ``pyinterp.period`` → Use ``pyinterp.period`` (re-exported from core)
+* ``pyinterp.binning`` → Use ``pyinterp.Binning1D``, ``pyinterp.Binning2D``
+* ``pyinterp.interface`` → Removed
+
+Breaking Changes - Removed Classes & Functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* ``AxisInt64`` → Use ``TemporalAxis`` for datetime axes
+* ``RadialBasisFunction`` enum → Use ``config.rtree.RBFKernel``
+* ``WindowFunction`` enum → Use ``config.rtree.WindowKernel``
+* ``GeoHash`` (top-level) → Use ``pyinterp.geohash.GeoHash``
+* Orbit classes (``EquatorCoordinates``, ``Orbit``, ``Pass``, ``Swath``) → Removed
+* Orbit functions (``calculate_orbit``, ``calculate_pass``, ``calculate_swath``) →
+  Removed
+* ``bicubic()`` function → Use ``regular_grid_interpolator.bivariate()``
+* ``interpolate1d()`` function → Use ``regular_grid_interpolator.univariate()``
+* ``__version__``, ``__date__`` attributes → Removed
+
+Breaking Changes - API Changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **orbit.interpolate()**: Parameter ``wgs`` renamed to ``coordinates``, default
+  ``half_window_size`` changed from 10 to 3.
+* **Axis class**: Parameter ``is_circle`` replaced with ``period``, property
+  ``is_circle`` renamed to ``is_periodic``.
+* **Enum Values**: All enum values now use UPPERCASE (e.g., ``FirstGuess.ZERO``,
+  ``RBFKernel.GAUSSIAN``).
+* **Fill Functions**: Now use configuration objects instead of keyword arguments.
+* **RTree Methods**: Now use configuration objects instead of keyword arguments.
+
+Build System & Tooling
+~~~~~~~~~~~~~~~~~~~~~~
+
+* **Platform-Specific Conda Files**: Added separate conda environment files for
+  each platform (``conda/linux.yml``, ``conda/win.yml``, ``conda/osx.yml``).
+* **Updated CI Workflows**: Enhanced GitHub Actions workflows for testing and
+  coverage.
+* **Test Suite Reorganization**: Tests reorganized into categorical subdirectories
+  (``tests/config/``, ``tests/geometry/``, ``tests/math/``, etc.).
+
 2025.11.0
 ---------
 * Deprecated the ``universal_kriging`` method in favor of the more versatile
