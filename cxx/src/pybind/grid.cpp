@@ -97,16 +97,6 @@ N-dimensional Cartesian grid with runtime dtype detection.
 This class represents a grid of values defined on N spatial or temporal axes.
 The grid automatically detects the data type from the input array and creates
 the appropriate internal representation.
-
-Attributes:
-    ndim: Number of dimensions (1-4).
-    dtype: Data type of the grid values as a string.
-    x: X-axis (first axis).
-    y: Y-axis (second axis, if ndim >= 2).
-    z: Z-axis (third axis, if ndim >= 3).
-    u: U-axis (fourth axis, if ndim >= 4).
-    array: The underlying data array.
-    shape: Shape of the grid as a tuple.
 )doc";
 
 }  // namespace

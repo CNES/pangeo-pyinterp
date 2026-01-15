@@ -18,7 +18,7 @@ except ImportError:
     # Package is not installed, use a development version
     __version__ = "0.0.0.dev0"
 
-from . import core, fill, geohash, geometry
+from . import core, fill, geohash
 from .core import (
     Axis,
     Binning1D,
@@ -39,6 +39,7 @@ from .core import (
     TemporalAxis,
     config,
     dateutils,
+    geometry,
     period,
 )
 from .regular_grid_interpolator import (
@@ -46,6 +47,7 @@ from .regular_grid_interpolator import (
     quadrivariate,
     trivariate,
     univariate,
+    univariate_derivative,
 )
 from .rtree import (
     inverse_distance_weighting,
@@ -106,6 +108,7 @@ __all__ = [
     "radial_basis_function",
     "trivariate",
     "univariate",
+    "univariate_derivative",
     "window_function",
 ]
 

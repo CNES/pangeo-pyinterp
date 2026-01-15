@@ -244,6 +244,7 @@ html_theme_options = {
     },
     "repository_url": "https://github.com/CNES/pangeo-pyinterp",
     "use_repository_button": True,
+    "max_navbar_depth": 2,  # Maximum depth of navigation tree
 }
 
 # Output file base name for HTML help builder.

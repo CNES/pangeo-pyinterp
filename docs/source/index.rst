@@ -11,4 +11,3 @@
    setup
    auto_examples/index.rst
    api
-   core_api
