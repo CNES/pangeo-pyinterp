@@ -9,6 +9,7 @@ geospatial operations, and statistical analysis tools.
 """
 
 import copyreg
+import sys
 from typing import Any
 
 
@@ -39,7 +40,6 @@ from .core import (
     TemporalAxis,
     config,
     dateutils,
-    geometry,
     period,
 )
 from .regular_grid_interpolator import (
@@ -70,6 +70,42 @@ core.Grid1D = Grid1D  # type: ignore[assignment,misc]
 core.Grid2D = Grid2D  # type: ignore[assignment,misc]
 core.Grid3D = Grid3D  # type: ignore[assignment,misc]
 core.Grid4D = Grid4D  # type: ignore[assignment,misc]
+
+# Set up geometry module with flexible import patterns.
+#
+# Instead of having a separate geometry/ directory, we directly expose
+# core.geometry and register submodules in sys.modules to enable:
+# - from pyinterp.geometry import cartesian
+# - from pyinterp.geometry.geographic import Point
+# - from pyinterp.geometry.geographic.algorithms import area.
+sys.modules.update(
+    (
+        (
+            f"{__name__}.geometry",
+            core.geometry,
+        ),
+        (
+            f"{__name__}.geometry.cartesian",
+            core.geometry.cartesian,
+        ),
+        (
+            f"{__name__}.geometry.geographic",
+            core.geometry.geographic,
+        ),
+        (
+            f"{__name__}.geometry.satellite",
+            core.geometry.satellite,
+        ),
+        (
+            f"{__name__}.geometry.cartesian.algorithms",
+            core.geometry.cartesian.algorithms,
+        ),
+        (
+            f"{__name__}.geometry.geographic.algorithms",
+            core.geometry.geographic.algorithms,
+        ),
+    )
+)
 
 
 __all__ = [
