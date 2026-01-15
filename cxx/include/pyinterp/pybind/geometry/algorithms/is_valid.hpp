@@ -29,11 +29,13 @@ Args:
     geometry: Geometric object to check.
 
 Returns:
-    * If called without return_reason:
-      * bool: True if the geometry is valid, false otherwise.
-    * If called with return_reason=True:
-      * tuple: (is_valid, reason) where reason is a string describing why
-        the geometry is invalid (empty string if valid).
+   bool
+      If called without return_reason (``True`` if the geometry is valid, false
+      otherwise.).
+   tuple[bool, str]
+      If called with ``return_reason=True``, returns a tuple where the first
+      element is a boolean indicating validity, and the second element is a
+      string describing the reason for invalidity (empty string if valid).
 )doc";
 
 /// @brief Define is_valid algorithm for the specified geometry types.
