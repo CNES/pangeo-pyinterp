@@ -2,7 +2,7 @@ Geometric Primitives
 ====================
 Geometric primitives and spatial algorithms.
 
-.. currentmodule:: pyinterp.core.geometry
+.. currentmodule:: pyinterp.geometry
 
 This module provides a comprehensive set of geometric primitives (points,
 lines, polygons) and spatial algorithms. It is built on the Boost.Geometry
@@ -23,7 +23,7 @@ Geographic System
 -----------------
 Geographic (spherical/ellipsoidal) geometry.
 
-.. currentmodule:: pyinterp.core.geometry.geographic
+.. currentmodule:: pyinterp.geometry.geographic
 
 Primitives
 ^^^^^^^^^^
@@ -35,6 +35,7 @@ Data structures for representing spatial features defined by Longitude and Latit
    Point
    Segment
    LineString
+   Ring
    Box
    Polygon
    MultiPoint
@@ -101,7 +102,7 @@ Cartesian System
 ----------------
 Cartesian (planar) geometry.
 
-.. currentmodule:: pyinterp.core.geometry.cartesian
+.. currentmodule:: pyinterp.geometry.cartesian
 
 Primitives
 ^^^^^^^^^^
@@ -113,6 +114,7 @@ Data structures for representing spatial features defined by X and Y coordinates
    Point
    Segment
    LineString
+   Ring
    Box
    Polygon
    MultiPoint
