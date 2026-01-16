@@ -263,26 +263,10 @@ endif()
 
 # Python
 find_package(
-  Python3
+  Python
   COMPONENTS Interpreter Development.Module
   REQUIRED)
-include_directories(SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
-
-# Ensure Python::Module target exists (needed for nanobind on Windows)
-if(NOT TARGET Python::Module)
-  if(NOT TARGET Python::Python)
-    add_library(Python::Python INTERFACE IMPORTED)
-    set_target_properties(
-      Python::Python
-      PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${Python3_INCLUDE_DIRS}"
-                 INTERFACE_LINK_LIBRARIES "${Python3_LIBRARIES}")
-  endif()
-  add_library(Python::Module INTERFACE IMPORTED)
-  # cmake-format: off
-  set_target_properties(
-    Python::Module PROPERTIES INTERFACE_LINK_LIBRARIES "Python::Python")
-  # cmake-format: on
-endif()
+include_directories(SYSTEM PRIVATE ${Python_INCLUDE_DIRS})
 
 # BLAS
 #
