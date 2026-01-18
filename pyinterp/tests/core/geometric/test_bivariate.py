@@ -83,6 +83,9 @@ class TestBivariateGeometric:
 
         assert result.shape == (3,)
         assert np.all(np.isfinite(result))
+        # Replace espilon values in both arrays to avoid comparison issues
+        result = np.where(np.abs(result) < 1e-12, 0.0, result)
+        expected = np.where(np.abs(expected) < 1e-12, 0.0, expected)
         # Validate against analytical values
         np.testing.assert_allclose(result, expected, rtol=0.05)
 
