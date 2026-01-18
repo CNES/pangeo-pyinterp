@@ -9,7 +9,6 @@ The API is organized by functionality:
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
    :caption: Core Objects
 
    api/axis
