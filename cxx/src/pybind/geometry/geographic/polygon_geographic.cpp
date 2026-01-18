@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -13,6 +14,7 @@
 #include <format>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include "pyinterp/geometry/geographic/polygon.hpp"
 #include "pyinterp/geometry/geographic/ring.hpp"
@@ -88,13 +90,20 @@ class InnerRingsView : public ContainerView<Polygon, Ring, InnerRingsTraits> {
 
 auto init_polygon(nb::module_& m) -> void {
   nb::class_<Polygon>(m, "Polygon", kPolygonClassDoc)
-      .def(nb::init<>(), "Construct an empty polygon.")
-
       .def(
           "__init__",
-          [](Polygon* self, Ring exterior,
-             std::vector<Ring> interiors) -> void {
-            new (self) Polygon(std::move(exterior), std::move(interiors));
+          [](Polygon* self, std::optional<Ring> exterior,
+             std::optional<std::vector<Ring>>& interiors) -> void {
+            auto exteriog_ring = Ring{};
+            auto interior_rings = std::vector<Ring>{};
+            if (exterior) {
+              exteriog_ring = std::move(*exterior);
+            }
+            if (interiors) {
+              interior_rings = std::move(*interiors);
+            }
+            new (self)
+                Polygon(std::move(exteriog_ring), std::move(interior_rings));
           },
           "exterior"_a, "interiors"_a = std::vector<Ring>{}, kPolygonInitDoc)
 
@@ -124,8 +133,8 @@ auto init_polygon(nb::module_& m) -> void {
 
       .def(
           "append",
-          [](Polygon& self, const Ring& ring) -> void {
-            self.inners().push_back(ring);
+          [](Polygon& self, Ring&& ring) -> void {
+            self.inners().push_back(std::move(ring));
           },
           "ring"_a, "Append an interior ring (hole).")
 
