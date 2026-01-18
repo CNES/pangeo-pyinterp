@@ -16,17 +16,17 @@ problem, but written entirely in Python, the performance of these projects was
 not quite sufficient for our needs. That is why this project started.
 
 With this library, you can interpolate `2D
-<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.grid.Grid2D.html#pyinterp.grid.Grid2D>`_,
+<https://cnes.github.io/pangeo-pyinterp/api/grids.html#core-grids-aliases>`_,
 `3D
-<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.grid.Grid3D.html#pyinterp.grid.Grid3D>`_,
+<https://cnes.github.io/pangeo-pyinterp/api/grids.html#core-grids-aliases>`_,
 or `4D
-<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.grid.Grid4D.html#pyinterp.grid.Grid4D>`_
+<https://cnes.github.io/pangeo-pyinterp/api/grids.html#core-grids-aliases>`_
 fields using ``n-variate`` and ``bicubic`` `interpolators
-<https://cnes.github.io/pangeo-pyinterp/api.html#cartesian-interpolators>`_
+<https://cnes.github.io/pangeo-pyinterp/api/regular_grid.html>`_
 and `unstructured grids
-<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.RTree.html>`_.
+<https://cnes.github.io/pangeo-pyinterp/api/unstructured_grid.html>`_.
 You can also apply for a data `binning
-<https://cnes.github.io/pangeo-pyinterp/api.html#binning>`_ on the
+<https://cnes.github.io/pangeo-pyinterp/api/statistics.html#binning-containers>`_ on the
 bivariate area by simple or linear binning.
 
 The library core is written in C++ using the `Boost C++ Libraries
@@ -45,15 +45,15 @@ in the neighborhood. This behavior is a concern when you need to interpolate
 values near the mask of some fields. The library provides utilities to fill the
 undefined values:
 
-* `fft_inpaint <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.fft_inpaint.html>`_
+* `fft_inpaint <https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.fill.fft_inpaint.html#pyinterp.fill.fft_inpaint>`_
   to fill all undefined values in a grid using the FFT Inpainting method.
-* `loess <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.loess.html>`_
+* `loess <https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.fill.loess.html#pyinterp.fill.loess>`_
   to fill the undefined values on the boundary between the defined/undefined
   values using local regression.
-* `gauss_seidel <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.gauss_seidel.html>`_
+* `gauss_seidel <https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.fill.gauss_seidel.html#pyinterp.fill.gauss_seidel>`_
   to fill all undefined values in a grid using the Gauss-Seidel method by
   relaxation.
-* `multi_grid <https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.fill.multi_grid.html>`_
+* `multi_grid <https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.fill.multigrid.html#pyinterp.fill.multigrid>`_
   to fill all undefined values in a grid using the Multi-Grid method.
 
 Geographic indexers
@@ -72,7 +72,7 @@ grid from the coordinates of a point. These axes are either:
   89.940374 degrees.
 
 These objects are manipulated by the class `pyinterp.Axis
-<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.Axis.html>`_,
+<https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.Axis.html#pyinterp.Axis>`_,
 which will choose, according to Axis definition, the best implementation. This
 object will allow you to find the two indexes framing a given value. This
 operating mode allows better performance when searching for a regular axis (a
@@ -88,7 +88,7 @@ Temporal Axes
 -------------
 
 The `pyinterp.TemporalAxis
-<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.TemporalAxis.html>`_
+<https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.TemporalAxis.html#pyinterp.TemporalAxis>`_
 class handles temporal axes, i.e., axes defined by 64-bit integer vectors, which
 is the encoding used by `numpy
 <https://docs.scipy.org/doc/numpy/reference/arrays.datetime.html>`_ to control
@@ -116,8 +116,8 @@ disadvantage of this implementation is that it requires fairly more memory, as
 one more element gets used to index the value of the Cartesian space.
 
 The management of the `LLA
-<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.geodetic.Coordinates.ecef_to_lla.html>`_/`ECEF
-<https://cnes.github.io/pangeo-pyinterp/generated/pyinterp.geodetic.Coordinates.lla_to_ecef.html>`_
+<https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.geometry.geographic.Coordinates.ecef_to_lla.html#pyinterp.geometry.geographic.Coordinates.ecef_to_lla>`_/`ECEF
+<https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.geometry.geographic.Coordinates.lla_to_ecef.html#pyinterp.geometry.geographic.Coordinates.lla_to_ecef>`_
 coordinate conversion is managed to use the `Vermeille, H.
 <https://doi.org/10.1007/s00190-002-0273-6>`_ algorithm. It has an excellent
 performance with the accuracy of 1e-8 meters for altitude.
@@ -141,11 +141,14 @@ Geometry
 
 This library provides Python bindings to `Boost Geometry
 <https://www.boost.org/doc/libs/release/libs/geometry/doc/html/index.html>`_
-concepts and algorithms for both geographic and Cartesian coordinate spaces.
-The geometry module offers a comprehensive set of geometric primitives including
-points, linestrings, polygons, rings, segments, and bounding boxes. For each
-coordinate space (``cartesian`` and ``geographic``), dedicated algorithms are
-provided for common geometric operations such as:
+concepts and algorithms for both `geographic
+<https://cnes.github.io/pangeo-pyinterp/api/geometry.html#geographic-system>`_
+and `Cartesian
+<https://cnes.github.io/pangeo-pyinterp/api/geometry.html#cartesian-system>`_
+coordinate spaces. The geometry module offers a comprehensive set of geometric
+primitives including points, linestrings, polygons, rings, segments, and
+bounding boxes. For each coordinate space (``cartesian`` and ``geographic``),
+dedicated algorithms are provided for common geometric operations such as:
 
 * Computing areas and perimeters of geometries
 * Calculating distances and azimuths between points
