@@ -4,8 +4,11 @@
 # BSD-style license that can be found in the LICENSE file.
 """Module implementing geohash utilities."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import numpy as np
-import xarray as xr
 
 from .core import Axis
 from .core.geohash import (
@@ -16,8 +19,12 @@ from .core.geohash import (
     encode,
     transform,
 )
-from .type_hints import NDArray1D, NDArray1DStr
 
+
+if TYPE_CHECKING:
+    import xarray as xr
+
+    from .type_hints import NDArray1D, NDArray1DStr
 
 __all__ = [
     "GeoHash",
@@ -41,6 +48,12 @@ def to_xarray(hashes: NDArray1DStr, data: NDArray1D) -> xr.DataArray:
         The XArray grid representing the GeoHash grid.
 
     """
+    # Import xarray locally to avoid slowing down pyinterp module
+    # initialization. xarray has a long import time, and since this module is
+    # loaded directly by pyinterp, we delay the import until this function is
+    # actually called.
+    import xarray as xr  # noqa: PLC0415
+
     if hashes.shape != data.shape:
         raise ValueError(
             "hashes, data could not be broadcast together with shape "
