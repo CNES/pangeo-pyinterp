@@ -209,6 +209,9 @@ autodoc_typehints_description_target = "documented"
 # Don't fail on missing type hints
 autodoc_type_aliases: dict[str, str] = {}
 
+# Concatenate class and __init__ docstrings
+autoclass_content = "both"
+
 numpydoc_class_members_toctree = True
 numpydoc_show_class_members = False
 
