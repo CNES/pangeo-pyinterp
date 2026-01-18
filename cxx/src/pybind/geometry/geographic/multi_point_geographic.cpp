@@ -5,6 +5,7 @@
 
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -82,13 +83,17 @@ class PointsView : public ContainerView<MultiPoint, Point, PointsTraits> {
 
 auto init_multipoint(nb::module_& m) -> void {
   nb::class_<MultiPoint>(m, "MultiPoint", kMultiPointClassDoc)
-      .def(nb::init<>(), "Construct an empty multipoint.")
       .def(
           "__init__",
-          [](MultiPoint* self, std::vector<Point> points) -> void {
-            new (self) MultiPoint(std::move(points));
+          [](MultiPoint* self,
+             std::optional<std::vector<Point>> points) -> void {
+            if (points) {
+              new (self) MultiPoint(std::move(*points));
+            } else {
+              new (self) MultiPoint();
+            }
           },
-          "points"_a = std::vector<Point>{}, kMultiPointInitDoc)
+          "points"_a = std::nullopt, kMultiPointInitDoc)
       .def(
           "__init__",
           [](MultiPoint* self, const Eigen::Ref<const Vector<double>>& lons,
@@ -166,49 +171,61 @@ auto init_multipoint(nb::module_& m) -> void {
           "View over points bound to multipoint lifetime.")
 
       // Equality via boost geometry
-      .def("__eq__",
-           [](const MultiPoint& a, const MultiPoint& b) -> bool {
-             return boost::geometry::equals(a, b);
-           })
-      .def("__ne__",
-           [](const MultiPoint& a, const MultiPoint& b) -> bool {
-             return !boost::geometry::equals(a, b);
-           })
+      .def(
+          "__eq__",
+          [](const MultiPoint& a, const MultiPoint& b) -> bool {
+            return boost::geometry::equals(a, b);
+          },
+          "other"_a, "Check if two multipoints are equal.")
+      .def(
+          "__ne__",
+          [](const MultiPoint& a, const MultiPoint& b) -> bool {
+            return !boost::geometry::equals(a, b);
+          },
+          "other"_a, "Check if two multipoints are not equal.")
 
       // Repr/str
-      .def("__repr__",
-           [](const MultiPoint& self) -> std::string {
-             return std::format("MultiPoint({} points)", self.size());
-           })
-      .def("__str__",
-           [](const MultiPoint& self) -> std::string {
-             std::ostringstream oss;
-             oss << "MultiPoint[n=" << self.size() << "]";
-             return oss.str();
-           })
+      .def(
+          "__repr__",
+          [](const MultiPoint& self) -> std::string {
+            return std::format("MultiPoint({} points)", self.size());
+          },
+          "Return the official string representation of the multipoint.")
+      .def(
+          "__str__",
+          [](const MultiPoint& self) -> std::string {
+            std::ostringstream oss;
+            oss << "MultiPoint[n=" << self.size() << "]";
+            return oss.str();
+          },
+          "Return the string representation of the multipoint.")
 
       // Pickle support
-      .def("__getstate__",
-           [](const MultiPoint& self) -> nb::tuple {
-             serialization::Writer state;
-             {
-               nb::gil_scoped_release release;
-               state = self.pack();
-             }
-             return nb::make_tuple(writer_to_ndarray(std::move(state)));
-           })
-      .def("__setstate__",
-           [](MultiPoint* self, const nb::tuple& state) -> void {
-             if (state.size() != 1) {
-               throw std::invalid_argument("Invalid state");
-             }
-             auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-             auto reader = reader_from_ndarray(array);
-             {
-               nb::gil_scoped_release release;
-               new (self) MultiPoint(MultiPoint::unpack(reader));
-             }
-           });
+      .def(
+          "__getstate__",
+          [](const MultiPoint& self) -> nb::tuple {
+            serialization::Writer state;
+            {
+              nb::gil_scoped_release release;
+              state = self.pack();
+            }
+            return nb::make_tuple(writer_to_ndarray(std::move(state)));
+          },
+          "Return the serialized state for pickling.")
+      .def(
+          "__setstate__",
+          [](MultiPoint* self, const nb::tuple& state) -> void {
+            if (state.size() != 1) {
+              throw std::invalid_argument("Invalid state");
+            }
+            auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+            auto reader = reader_from_ndarray(array);
+            {
+              nb::gil_scoped_release release;
+              new (self) MultiPoint(MultiPoint::unpack(reader));
+            }
+          },
+          "state"_a, "Restore the multipoint from the serialized state.");
 
   // Bind view class
   bind_container_view<PointsView, Point>(m, "_PointsView", "point");

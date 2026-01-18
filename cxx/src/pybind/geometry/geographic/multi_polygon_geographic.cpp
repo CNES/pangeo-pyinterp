@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -76,13 +77,17 @@ class PolygonsView
 
 auto init_multipolygon(nb::module_& m) -> void {
   nb::class_<MultiPolygon>(m, "MultiPolygon", kMultiPolygonClassDoc)
-      .def(nb::init<>(), "Construct an empty multipolygon.")
       .def(
           "__init__",
-          [](MultiPolygon* self, std::vector<Polygon> polygons) -> void {
-            new (self) MultiPolygon(std::move(polygons));
+          [](MultiPolygon* self,
+             std::optional<std::vector<Polygon>> polygons) -> void {
+            if (polygons) {
+              new (self) MultiPolygon(std::move(*polygons));
+            } else {
+              new (self) MultiPolygon();
+            }
           },
-          "polygons"_a = std::vector<Polygon>{}, kMultiPolygonInitDoc)
+          "polygons"_a = std::nullopt, kMultiPolygonInitDoc)
 
       // Container-like operations
       .def("__len__", &MultiPolygon::size, "Number of polygons.")
@@ -153,49 +158,60 @@ auto init_multipolygon(nb::module_& m) -> void {
           "View over polygons bound to multipolygon lifetime.")
 
       // Equality via boost geometry
-      .def("__eq__",
-           [](const MultiPolygon& a, const MultiPolygon& b) -> bool {
-             return boost::geometry::equals(a, b);
-           })
-      .def("__ne__",
-           [](const MultiPolygon& a, const MultiPolygon& b) -> bool {
-             return !boost::geometry::equals(a, b);
-           })
-
+      .def(
+          "__eq__",
+          [](const MultiPolygon& a, const MultiPolygon& b) -> bool {
+            return boost::geometry::equals(a, b);
+          },
+          "other"_a, "Check if two multipolygons are equal.")
+      .def(
+          "__ne__",
+          [](const MultiPolygon& a, const MultiPolygon& b) -> bool {
+            return !boost::geometry::equals(a, b);
+          },
+          "other"_a, "Check if two multipolygons are not equal.")
       // Repr/str
-      .def("__repr__",
-           [](const MultiPolygon& self) -> std::string {
-             return std::format("MultiPolygon({} polygons)", self.size());
-           })
-      .def("__str__",
-           [](const MultiPolygon& self) -> std::string {
-             std::ostringstream oss;
-             oss << "MultiPolygon[n=" << self.size() << "]";
-             return oss.str();
-           })
+      .def(
+          "__repr__",
+          [](const MultiPolygon& self) -> std::string {
+            return std::format("MultiPolygon({} polygons)", self.size());
+          },
+          "Return the official string representation of the multipolygon.")
+      .def(
+          "__str__",
+          [](const MultiPolygon& self) -> std::string {
+            std::ostringstream oss;
+            oss << "MultiPolygon[n=" << self.size() << "]";
+            return oss.str();
+          },
+          "Return the string representation of the multipolygon.")
 
       // Pickle support
-      .def("__getstate__",
-           [](const MultiPolygon& self) -> nb::tuple {
-             serialization::Writer state;
-             {
-               nb::gil_scoped_release release;
-               state = self.pack();
-             }
-             return nb::make_tuple(writer_to_ndarray(std::move(state)));
-           })
-      .def("__setstate__",
-           [](MultiPolygon* self, const nb::tuple& state) -> void {
-             if (state.size() != 1) {
-               throw std::invalid_argument("Invalid state");
-             }
-             auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-             auto reader = reader_from_ndarray(array);
-             {
-               nb::gil_scoped_release release;
-               new (self) MultiPolygon(MultiPolygon::unpack(reader));
-             }
-           });
+      .def(
+          "__getstate__",
+          [](const MultiPolygon& self) -> nb::tuple {
+            serialization::Writer state;
+            {
+              nb::gil_scoped_release release;
+              state = self.pack();
+            }
+            return nb::make_tuple(writer_to_ndarray(std::move(state)));
+          },
+          "Return the serialized state for pickling.")
+      .def(
+          "__setstate__",
+          [](MultiPolygon* self, const nb::tuple& state) -> void {
+            if (state.size() != 1) {
+              throw std::invalid_argument("Invalid state");
+            }
+            auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+            auto reader = reader_from_ndarray(array);
+            {
+              nb::gil_scoped_release release;
+              new (self) MultiPolygon(MultiPolygon::unpack(reader));
+            }
+          },
+          "state"_a, "Restore the multipolygon from the serialized state.");
 
   // Bind view class
   bind_container_view<PolygonsView, Polygon>(m, "_PolygonsView", "polygon");

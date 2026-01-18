@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -77,13 +78,17 @@ class LinesView
 
 auto init_multilinestring(nb::module_& m) -> void {
   nb::class_<MultiLineString>(m, "MultiLineString", kMultiLineStringClassDoc)
-      .def(nb::init<>(), "Construct an empty multilinestring.")
       .def(
           "__init__",
-          [](MultiLineString* self, std::vector<LineString> lines) -> void {
-            new (self) MultiLineString(std::move(lines));
+          [](MultiLineString* self,
+             std::optional<std::vector<LineString>> lines) -> void {
+            if (lines) {
+              new (self) MultiLineString(std::move(*lines));
+            } else {
+              new (self) MultiLineString();
+            }
           },
-          "lines"_a = std::vector<LineString>{}, kMultiLineStringInitDoc)
+          "lines"_a = std::nullopt, kMultiLineStringInitDoc)
 
       // Container-like operations
       .def("__len__", &MultiLineString::size, "Number of linestrings.")
@@ -150,49 +155,60 @@ auto init_multilinestring(nb::module_& m) -> void {
           "View over lines bound to multilinestring lifetime.")
 
       // Equality via boost geometry
-      .def("__eq__",
-           [](const MultiLineString& a, const MultiLineString& b) -> bool {
-             return boost::geometry::equals(a, b);
-           })
-      .def("__ne__",
-           [](const MultiLineString& a, const MultiLineString& b) -> bool {
-             return !boost::geometry::equals(a, b);
-           })
-
+      .def(
+          "__eq__",
+          [](const MultiLineString& a, const MultiLineString& b) -> bool {
+            return boost::geometry::equals(a, b);
+          },
+          "other"_a, "Check if two multilinestrings are equal.")
+      .def(
+          "__ne__",
+          [](const MultiLineString& a, const MultiLineString& b) -> bool {
+            return !boost::geometry::equals(a, b);
+          },
+          "other"_a, "Check if two multilinestrings are not equal.")
       // Repr/str
-      .def("__repr__",
-           [](const MultiLineString& self) -> std::string {
-             return std::format("MultiLineString({} lines)", self.size());
-           })
-      .def("__str__",
-           [](const MultiLineString& self) -> std::string {
-             std::ostringstream oss;
-             oss << "MultiLineString[n=" << self.size() << "]";
-             return oss.str();
-           })
+      .def(
+          "__repr__",
+          [](const MultiLineString& self) -> std::string {
+            return std::format("MultiLineString({} lines)", self.size());
+          },
+          "Return the official string representation of the multilinestring.")
+      .def(
+          "__str__",
+          [](const MultiLineString& self) -> std::string {
+            std::ostringstream oss;
+            oss << "MultiLineString[n=" << self.size() << "]";
+            return oss.str();
+          },
+          "Return the string representation of the multilinestring.")
 
       // Pickle support
-      .def("__getstate__",
-           [](const MultiLineString& self) -> nb::tuple {
-             serialization::Writer state;
-             {
-               nb::gil_scoped_release release;
-               state = self.pack();
-             }
-             return nb::make_tuple(writer_to_ndarray(std::move(state)));
-           })
-      .def("__setstate__",
-           [](MultiLineString* self, const nb::tuple& state) -> void {
-             if (state.size() != 1) {
-               throw std::invalid_argument("Invalid state");
-             }
-             auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-             auto reader = reader_from_ndarray(array);
-             {
-               nb::gil_scoped_release release;
-               new (self) MultiLineString(MultiLineString::unpack(reader));
-             }
-           });
+      .def(
+          "__getstate__",
+          [](const MultiLineString& self) -> nb::tuple {
+            serialization::Writer state;
+            {
+              nb::gil_scoped_release release;
+              state = self.pack();
+            }
+            return nb::make_tuple(writer_to_ndarray(std::move(state)));
+          },
+          "Return the serialized state for pickling.")
+      .def(
+          "__setstate__",
+          [](MultiLineString* self, const nb::tuple& state) -> void {
+            if (state.size() != 1) {
+              throw std::invalid_argument("Invalid state");
+            }
+            auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+            auto reader = reader_from_ndarray(array);
+            {
+              nb::gil_scoped_release release;
+              new (self) MultiLineString(MultiLineString::unpack(reader));
+            }
+          },
+          "state"_a, "Restore the multilinestring from the serialized state.");
 
   // Bind view class
   bind_container_view<LinesView, LineString>(m, "_LinesView", "linestring");

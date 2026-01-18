@@ -36,7 +36,7 @@ automatically closes itself (the last point connects back to the first).
 
 Examples:
     >>> import numpy as np
-    >>> from pyinterp.geodetic import Ring
+    >>> from pyinterp.geometry.geographic import Ring
     >>> # Create a square ring
     >>> lon = np.array([0.0, 10.0, 10.0, 0.0, 0.0])
     >>> lat = np.array([0.0, 0.0, 10.0, 10.0, 0.0])
@@ -107,70 +107,85 @@ auto init_ring(nb::module_& m) -> void {
           "Return True if the ring is not empty.")
 
       // Iteration support - return list of points
-      .def("__iter__",
-           [](const Ring& self) -> nb::object {
-             nb::list result;
-             for (auto i : self) {
-               result.append(i);
-             }
-             return result.attr("__iter__")();
-           })
+      .def(
+          "__iter__",
+          [](const Ring& self) -> nb::object {
+            nb::list result;
+            for (auto i : self) {
+              result.append(i);
+            }
+            return result.attr("__iter__")();
+          },
+          "Return an iterator over the points in the ring.")
 
       // Comparison operators
-      .def("__eq__",
-           [](const Ring& self, const Ring& other) -> bool {
-             return boost::geometry::equals(self, other);
-           })
+      .def(
+          "__eq__",
+          [](const Ring& self, const Ring& other) -> bool {
+            return boost::geometry::equals(self, other);
+          },
+          "other"_a, "Check if two rings are equal.")
 
-      .def("__ne__",
-           [](const Ring& self, const Ring& other) -> bool {
-             return !boost::geometry::equals(self, other);
-           })
+      .def(
+          "__ne__",
+          [](const Ring& self, const Ring& other) -> bool {
+            return !boost::geometry::equals(self, other);
+          },
+          "other"_a, "Check if two rings are not equal.")
 
       // String representation
-      .def("__repr__",
-           [](const Ring& self) -> std::string {
-             return std::format("Ring({} points)", self.size());
-           })
+      .def(
+          "__repr__",
+          [](const Ring& self) -> std::string {
+            return std::format("Ring({} points)", self.size());
+          },
+          "Return the official string representation of the ring.")
 
-      .def("__str__",
-           [](const Ring& self) -> std::string {
-             std::ostringstream oss;
-             oss << "Ring[";
-             for (size_t i = 0; i < self.size(); ++i) {
-               if (i > 0) oss << ", ";
-               oss << "(" << self[i].lon() << ", " << self[i].lat() << ")";
-               if (i >= 3 && self.size() > 5) {
-                 oss << ", ...";
-                 break;
-               }
-             }
-             oss << "]";
-             return oss.str();
-           })
+      .def(
+          "__str__",
+          [](const Ring& self) -> std::string {
+            std::ostringstream oss;
+            oss << "Ring[";
+            for (size_t i = 0; i < self.size(); ++i) {
+              if (i > 0) oss << ", ";
+              oss << "(" << self[i].lon() << ", " << self[i].lat() << ")";
+              if (i >= 3 && self.size() > 5) {
+                oss << ", ...";
+                break;
+              }
+            }
+            oss << "]";
+            return oss.str();
+          },
+          "Return the string representation of the ring.")
 
       // Pickle support
-      .def("__getstate__",
-           [](const Ring& self) -> nb::tuple {
-             serialization::Writer state;
-             {
-               nb::gil_scoped_release release;
-               state = self.pack();
-             }
-             return nb::make_tuple(writer_to_ndarray(std::move(state)));
-           })
+      .def(
+          "__getstate__",
+          [](const Ring& self) -> nb::tuple {
+            serialization::Writer state;
+            {
+              nb::gil_scoped_release release;
+              state = self.pack();
+            }
+            return nb::make_tuple(writer_to_ndarray(std::move(state)));
+          },
+          "Return the serialized state for pickling.")
 
-      .def("__setstate__", [](Ring* self, const nb::tuple& state) -> void {
-        if (state.size() != 1) {
-          throw std::invalid_argument("Invalid state");
-        }
-        auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-        auto reader = reader_from_ndarray(array);
-        {
-          nb::gil_scoped_release release;
-          new (self) Ring(Ring::unpack(reader));
-        }
-      });
+      .def(
+          "__setstate__",
+          [](Ring* self, const nb::tuple& state) -> void {
+            if (state.size() != 1) {
+              throw std::invalid_argument("Invalid state");
+            }
+            auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+            auto reader = reader_from_ndarray(array);
+            {
+              nb::gil_scoped_release release;
+              new (self) Ring(Ring::unpack(reader));
+            }
+          },
+          "state"_a, "Restore the ring from the serialized state.");
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind

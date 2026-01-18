@@ -39,7 +39,7 @@ index 1.
 
 Examples:
   >>> import numpy as np
-  >>> from pyinterp.geodetic import Ring, Polygon
+  >>> from pyinterp.geometry.geographic import Polygon, Ring
   >>> outer = Ring(np.array([0.0, 10.0, 10.0, 0.0, 0.0]),
   ...              np.array([0.0, 0.0, 10.0, 10.0, 0.0]))
   >>> poly = Polygon(outer)
@@ -138,54 +138,67 @@ auto init_polygon(nb::module_& m) -> void {
           "Remove the exterior and all interior rings.")
 
       // Comparison operators
-      .def("__eq__",
-           [](const Polygon& self, const Polygon& other) -> bool {
-             return boost::geometry::equals(self, other);
-           })
+      .def(
+          "__eq__",
+          [](const Polygon& self, const Polygon& other) -> bool {
+            return boost::geometry::equals(self, other);
+          },
+          "other"_a, "Check if two polygons are equal.")
 
-      .def("__ne__",
-           [](const Polygon& self, const Polygon& other) -> bool {
-             return !boost::geometry::equals(self, other);
-           })
+      .def(
+          "__ne__",
+          [](const Polygon& self, const Polygon& other) -> bool {
+            return !boost::geometry::equals(self, other);
+          },
+          "other"_a, "Check if two polygons are not equal.")
 
       // String representation
-      .def("__repr__",
-           [](const Polygon& self) -> std::string {
-             const auto count =
-                 self.outer().empty() ? 0 : 1 + self.inners().size();
-             return std::format("Polygon({} rings)", count);
-           })
+      .def(
+          "__repr__",
+          [](const Polygon& self) -> std::string {
+            const auto count =
+                self.outer().empty() ? 0 : 1 + self.inners().size();
+            return std::format("Polygon({} rings)", count);
+          },
+          "Return the official string representation of the polygon.")
 
-      .def("__str__",
-           [](const Polygon& self) -> std::string {
-             std::ostringstream oss;
-             oss << "Polygon[outer=" << self.outer().size()
-                 << " points, inners=" << self.inners().size() << "]";
-             return oss.str();
-           })
+      .def(
+          "__str__",
+          [](const Polygon& self) -> std::string {
+            std::ostringstream oss;
+            oss << "Polygon[outer=" << self.outer().size()
+                << " points, inners=" << self.inners().size() << "]";
+            return oss.str();
+          },
+          "Return the string representation of the polygon.")
 
       // Pickle support
-      .def("__getstate__",
-           [](const Polygon& self) -> nb::tuple {
-             serialization::Writer state;
-             {
-               nb::gil_scoped_release release;
-               state = self.pack();
-             }
-             return nb::make_tuple(writer_to_ndarray(std::move(state)));
-           })
+      .def(
+          "__getstate__",
+          [](const Polygon& self) -> nb::tuple {
+            serialization::Writer state;
+            {
+              nb::gil_scoped_release release;
+              state = self.pack();
+            }
+            return nb::make_tuple(writer_to_ndarray(std::move(state)));
+          },
+          "Return the serialized state for pickling.")
 
-      .def("__setstate__", [](Polygon* self, const nb::tuple& state) -> void {
-        if (state.size() != 1) {
-          throw std::invalid_argument("Invalid state");
-        }
-        auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-        auto reader = reader_from_ndarray(array);
-        {
-          nb::gil_scoped_release release;
-          new (self) Polygon(Polygon::unpack(reader));
-        }
-      });
+      .def(
+          "__setstate__",
+          [](Polygon* self, const nb::tuple& state) -> void {
+            if (state.size() != 1) {
+              throw std::invalid_argument("Invalid state");
+            }
+            auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+            auto reader = reader_from_ndarray(array);
+            {
+              nb::gil_scoped_release release;
+              new (self) Polygon(Polygon::unpack(reader));
+            }
+          },
+          "state"_a, "Restore the polygon from the serialized state.");
 
   // Bind the view class
   bind_container_view<InnerRingsView, Ring>(m, "_InnerRingsView",

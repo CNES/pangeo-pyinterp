@@ -37,7 +37,7 @@ ellipsoid surface. Unlike a Ring, the linestring is not automatically closed.
 
 Examples:
     >>> import numpy as np
-    >>> from pyinterp.geodetic import LineString
+    >>> from pyinterp.geometry.geographic import LineString
     >>> lon = np.array([0.0, 5.0, 10.0])
     >>> lat = np.array([0.0, 5.0, 0.0])
     >>> line = LineString(lon, lat)
@@ -113,73 +113,87 @@ auto init_linestring(nb::module_& m) -> void {
           "Return True if the linestring is not empty.")
 
       // Iteration support - return list of points
-      .def("__iter__",
-           [](const LineString& self) -> nb::object {
-             nb::list result;
-             for (auto i : self) {
-               result.append(i);
-             }
-             return result.attr("__iter__")();
-           })
+      .def(
+          "__iter__",
+          [](const LineString& self) -> nb::object {
+            nb::list result;
+            for (auto i : self) {
+              result.append(i);
+            }
+            return result.attr("__iter__")();
+          },
+          "Return an iterator over the points in the linestring.")
 
       // Comparison operators
-      .def("__eq__",
-           [](const LineString& self, const LineString& other) -> bool {
-             return boost::geometry::equals(self, other);
-           })
+      .def(
+          "__eq__",
+          [](const LineString& self, const LineString& other) -> bool {
+            return boost::geometry::equals(self, other);
+          },
+          "other"_a, "Check if two linestrings are equal.")
 
-      .def("__ne__",
-           [](const LineString& self, const LineString& other) -> bool {
-             return !boost::geometry::equals(self, other);
-           })
+      .def(
+          "__ne__",
+          [](const LineString& self, const LineString& other) -> bool {
+            return !boost::geometry::equals(self, other);
+          },
+          "other"_a, "Check if two linestrings are not equal.")
 
       // String representation
-      .def("__repr__",
-           [](const LineString& self) -> std::string {
-             return std::format("LineString({} points)", self.size());
-           })
+      .def(
+          "__repr__",
+          [](const LineString& self) -> std::string {
+            return std::format("LineString({} points)", self.size());
+          },
+          "Return a string representation of the linestring.")
 
-      .def("__str__",
-           [](const LineString& self) -> std::string {
-             std::ostringstream oss;
-             oss << "LineString[";
-             for (size_t i = 0; i < self.size(); ++i) {
-               if (i > 0) {
-                 oss << ", ";
-               }
-               oss << "(" << self[i].lon() << ", " << self[i].lat() << ")";
-               if (i >= 3 && self.size() > 5) {
-                 oss << ", ...";
-                 break;
-               }
-             }
-             oss << "]";
-             return oss.str();
-           })
+      .def(
+          "__str__",
+          [](const LineString& self) -> std::string {
+            std::ostringstream oss;
+            oss << "LineString[";
+            for (size_t i = 0; i < self.size(); ++i) {
+              if (i > 0) {
+                oss << ", ";
+              }
+              oss << "(" << self[i].lon() << ", " << self[i].lat() << ")";
+              if (i >= 3 && self.size() > 5) {
+                oss << ", ...";
+                break;
+              }
+            }
+            oss << "]";
+            return oss.str();
+          },
+          "Return an informal string representation of the linestring.")
 
       // Pickle support
-      .def("__getstate__",
-           [](const LineString& self) -> nb::tuple {
-             serialization::Writer state;
-             {
-               nb::gil_scoped_release release;
-               state = self.pack();
-             }
-             return nb::make_tuple(writer_to_ndarray(std::move(state)));
-           })
+      .def(
+          "__getstate__",
+          [](const LineString& self) -> nb::tuple {
+            serialization::Writer state;
+            {
+              nb::gil_scoped_release release;
+              state = self.pack();
+            }
+            return nb::make_tuple(writer_to_ndarray(std::move(state)));
+          },
+          "Return the serialized state for pickling.")
 
-      .def("__setstate__",
-           [](LineString* self, const nb::tuple& state) -> void {
-             if (state.size() != 1) {
-               throw std::invalid_argument("Invalid state");
-             }
-             auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-             auto reader = reader_from_ndarray(array);
-             {
-               nb::gil_scoped_release release;
-               new (self) LineString(LineString::unpack(reader));
-             }
-           });
+      .def(
+          "__setstate__",
+          [](LineString* self, const nb::tuple& state) -> void {
+            if (state.size() != 1) {
+              throw std::invalid_argument("Invalid state");
+            }
+            auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+            auto reader = reader_from_ndarray(array);
+            {
+              nb::gil_scoped_release release;
+              new (self) LineString(LineString::unpack(reader));
+            }
+          },
+          "state"_a, "Restore the linestring from the serialized state.");
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind
