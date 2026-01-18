@@ -12,6 +12,7 @@
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
 #include <format>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -105,7 +106,8 @@ auto init_polygon(nb::module_& m) -> void {
             new (self)
                 Polygon(std::move(exteriog_ring), std::move(interior_rings));
           },
-          "exterior"_a, "interiors"_a = std::vector<Ring>{}, kPolygonInitDoc)
+          "exterior"_a = std::nullopt, "interiors"_a = std::nullopt,
+          kPolygonInitDoc)
 
       // Accessors
       .def_prop_rw(
@@ -133,7 +135,7 @@ auto init_polygon(nb::module_& m) -> void {
 
       .def(
           "append",
-          [](Polygon& self, Ring&& ring) -> void {
+          [](Polygon& self, Ring ring) -> void {
             self.inners().push_back(std::move(ring));
           },
           "ring"_a, "Append an interior ring (hole).")

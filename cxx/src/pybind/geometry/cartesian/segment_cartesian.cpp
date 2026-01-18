@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 
@@ -31,7 +32,7 @@ A segment in Cartesian coordinates.
 A Segment is defined by two endpoints (points) on a flat plane.
 
 Examples:
-    >>> from pyinterp.cartesian import Point, Segment
+    >>> from pyinterp.geometry.cartesian import Segment
     >>> s = Segment((0.0, 0.0), (10.0, 5.0))
     >>> len(s)
     2
@@ -52,15 +53,16 @@ auto init_segment(nb::module_& m) -> void {
       // Construct from two Points
       .def(
           "__init__",
-          [](Segment* self, const std::tuple<double, double>& a,
-             const std::tuple<double, double>& b) -> void {
-            new (self) Segment(Point(std::get<0>(a), std::get<1>(a)),
-                               Point(std::get<0>(b), std::get<1>(b)));
+          [](Segment* self, const std::optional<std::tuple<double, double>>& a,
+             const std::optional<std::tuple<double, double>>& b) -> void {
+            auto default_point = std::make_tuple(0.0, 0.0);
+            const auto& a_tuple = a.value_or(default_point);
+            const auto& b_tuple = b.value_or(default_point);
+            new (self)
+                Segment(Point(std::get<0>(a_tuple), std::get<1>(a_tuple)),
+                        Point(std::get<0>(b_tuple), std::get<1>(b_tuple)));
           },
-          "a"_a, "b"_a, kSegmentInitDoc)
-
-      .def(nb::init<const Point&, const Point&>(), "a"_a, "b"_a,
-           kSegmentInitDoc)
+          "a"_a = std::nullopt, "b"_a = std::nullopt, kSegmentInitDoc)
 
       // Length is fixed to 2 endpoints
       .def(
@@ -115,55 +117,67 @@ auto init_segment(nb::module_& m) -> void {
           "Return True if the segment has non-default endpoints.")
 
       // Equality via boost geometry
-      .def("__eq__",
-           [](const Segment& s1, const Segment& s2) -> bool {
-             return boost::geometry::equals(s1, s2);
-           })
-      .def("__ne__",
-           [](const Segment& s1, const Segment& s2) -> bool {
-             return !boost::geometry::equals(s1, s2);
-           })
-
+      .def(
+          "__eq__",
+          [](const Segment& s1, const Segment& s2) -> bool {
+            return boost::geometry::equals(s1, s2);
+          },
+          "other"_a, "Check if two segments are equal.")
+      .def(
+          "__ne__",
+          [](const Segment& s1, const Segment& s2) -> bool {
+            return !boost::geometry::equals(s1, s2);
+          },
+          "other"_a, "Check if two segments are not equal.")
       // String representation
-      .def("__repr__",
-           [](const Segment& self) -> std::string {
-             const auto& a = self.a();
-             const auto& b = self.b();
-             return std::format("Segment(a=({}, {}), b=({}, {}))", a.x(), a.y(),
-                                b.x(), b.y());
-           })
-      .def("__str__",
-           [](const Segment& self) -> std::string {
-             std::ostringstream oss;
-             const auto& a = self.a();
-             const auto& b = self.b();
-             oss << "Segment[('" << a.x() << ", " << a.y() << "') -> ('"
-                 << b.x() << ", " << b.y() << "')]";
-             return oss.str();
-           })
+      .def(
+          "__repr__",
+          [](const Segment& self) -> std::string {
+            const auto& a = self.a();
+            const auto& b = self.b();
+            return std::format("Segment(a=({}, {}), b=({}, {}))", a.x(), a.y(),
+                               b.x(), b.y());
+          },
+          "Return the official string representation of the segment.")
+      .def(
+          "__str__",
+          [](const Segment& self) -> std::string {
+            std::ostringstream oss;
+            const auto& a = self.a();
+            const auto& b = self.b();
+            oss << "Segment[('" << a.x() << ", " << a.y() << "') -> ('" << b.x()
+                << ", " << b.y() << "')]";
+            return oss.str();
+          },
+          "Return the informal string representation of the segment.")
 
       // Pickle support
-      .def("__getstate__",
-           [](const Segment& self) -> nb::tuple {
-             serialization::Writer state;
-             {
-               nb::gil_scoped_release release;
-               state = self.pack();
-             }
-             return nb::make_tuple(writer_to_ndarray(std::move(state)));
-           })
+      .def(
+          "__getstate__",
+          [](const Segment& self) -> nb::tuple {
+            serialization::Writer state;
+            {
+              nb::gil_scoped_release release;
+              state = self.pack();
+            }
+            return nb::make_tuple(writer_to_ndarray(std::move(state)));
+          },
+          "Return the state of the segment for pickling.")
 
-      .def("__setstate__", [](Segment* self, const nb::tuple& state) -> void {
-        if (state.size() != 1) {
-          throw std::invalid_argument("Invalid state");
-        }
-        auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-        auto reader = reader_from_ndarray(array);
-        {
-          nb::gil_scoped_release release;
-          new (self) Segment(Segment::unpack(reader));
-        }
-      });
+      .def(
+          "__setstate__",
+          [](Segment* self, const nb::tuple& state) -> void {
+            if (state.size() != 1) {
+              throw std::invalid_argument("Invalid state");
+            }
+            auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+            auto reader = reader_from_ndarray(array);
+            {
+              nb::gil_scoped_release release;
+              new (self) Segment(Segment::unpack(reader));
+            }
+          },
+          "state"_a, "Restore the state of the segment from pickling.");
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

@@ -115,7 +115,7 @@ auto init_point(nb::module_& m) -> void {
           [](Point* self, const std::tuple<double, double>& state) -> void {
             new (self) Point(std::get<0>(state), std::get<1>(state));
           },
-          "Restore the state of the Point from pickling.");
+          "state"_a, "Restore the state of the Point from pickling.");
 }
 
 }  // namespace pyinterp::geometry::geographic::pybind

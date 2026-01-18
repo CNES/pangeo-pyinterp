@@ -4,6 +4,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -11,6 +12,7 @@
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
 #include <format>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 
@@ -39,7 +41,7 @@ index 1.
 
 Examples:
   >>> import numpy as np
-  >>> from pyinterp.cartesian import Ring, Polygon
+  >>> from pyinterp.geometry.cartesian import Polygon, Ring
   >>> outer = Ring(np.array([0.0, 10.0, 10.0, 0.0, 0.0]),
   ...              np.array([0.0, 0.0, 10.0, 10.0, 0.0]))
   >>> poly = Polygon(outer)
@@ -92,12 +94,21 @@ auto init_polygon(nb::module_& m) -> void {
 
       .def(
           "__init__",
-          [](Polygon* self, Ring exterior,
-             std::vector<Ring> interiors) -> void {
-            new (self) Polygon(std::move(exterior), std::move(interiors));
+          [](Polygon* self, std::optional<Ring> exterior,
+             std::optional<std::vector<Ring>> interiors) -> void {
+            auto exteriog_ring = Ring{};
+            auto interior_rings = std::vector<Ring>{};
+            if (exterior) {
+              exteriog_ring = std::move(*exterior);
+            }
+            if (interiors) {
+              interior_rings = std::move(*interiors);
+            }
+            new (self)
+                Polygon(std::move(exteriog_ring), std::move(interior_rings));
           },
-          "exterior"_a, "interiors"_a = std::vector<Ring>{}, kPolygonInitDoc)
-
+          "exterior"_a = std::nullopt, "interiors"_a = std::nullopt,
+          kPolygonInitDoc)
       // Accessors
       .def_prop_rw(
           "outer", [](Polygon& self) -> Ring& { return self.outer(); },
@@ -124,8 +135,8 @@ auto init_polygon(nb::module_& m) -> void {
 
       .def(
           "append",
-          [](Polygon& self, const Ring& ring) -> void {
-            self.inners().push_back(ring);
+          [](Polygon& self, Ring ring) -> void {
+            self.inners().push_back(std::move(ring));
           },
           "ring"_a, "Append an interior ring (hole).")
 
@@ -138,53 +149,66 @@ auto init_polygon(nb::module_& m) -> void {
           "Remove the exterior and all interior rings.")
 
       // Comparison operators
-      .def("__eq__",
-           [](const Polygon& self, const Polygon& other) -> bool {
-             return boost::geometry::equals(self, other);
-           })
+      .def(
+          "__eq__",
+          [](const Polygon& self, const Polygon& other) -> bool {
+            return boost::geometry::equals(self, other);
+          },
+          "other"_a, "Check if two polygons are equal.")
 
-      .def("__ne__",
-           [](const Polygon& self, const Polygon& other) -> bool {
-             return !boost::geometry::equals(self, other);
-           })
+      .def(
+          "__ne__",
+          [](const Polygon& self, const Polygon& other) -> bool {
+            return !boost::geometry::equals(self, other);
+          },
+          "other"_a, "Check if two polygons are not equal.")
 
       // String representation
-      .def("__repr__",
-           [](const Polygon& self) -> std::string {
-             return std::format("Polygon(exterior={} points, {} holes)",
-                                self.outer().size(), self.inners().size());
-           })
+      .def(
+          "__repr__",
+          [](const Polygon& self) -> std::string {
+            return std::format("Polygon(exterior={} points, {} holes)",
+                               self.outer().size(), self.inners().size());
+          },
+          "Return the official string representation of the polygon.")
 
-      .def("__str__",
-           [](const Polygon& self) -> std::string {
-             std::ostringstream oss;
-             oss << "Polygon(exterior=" << self.outer().size()
-                 << " points, holes=" << self.inners().size() << ")";
-             return oss.str();
-           })
+      .def(
+          "__str__",
+          [](const Polygon& self) -> std::string {
+            std::ostringstream oss;
+            oss << "Polygon(exterior=" << self.outer().size()
+                << " points, holes=" << self.inners().size() << ")";
+            return oss.str();
+          },
+          "Return the informal string representation of the polygon.")
 
       // Pickle support
-      .def("__getstate__",
-           [](const Polygon& self) -> nb::tuple {
-             serialization::Writer state;
-             {
-               nb::gil_scoped_release release;
-               state = self.pack();
-             }
-             return nb::make_tuple(writer_to_ndarray(std::move(state)));
-           })
+      .def(
+          "__getstate__",
+          [](const Polygon& self) -> nb::tuple {
+            serialization::Writer state;
+            {
+              nb::gil_scoped_release release;
+              state = self.pack();
+            }
+            return nb::make_tuple(writer_to_ndarray(std::move(state)));
+          },
+          "Return the state of the Polygon for pickling.")
 
-      .def("__setstate__", [](Polygon* self, const nb::tuple& state) -> void {
-        if (state.size() != 1) {
-          throw std::invalid_argument("Invalid state");
-        }
-        auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
-        auto reader = reader_from_ndarray(array);
-        {
-          nb::gil_scoped_release release;
-          new (self) Polygon(Polygon::unpack(reader));
-        }
-      });
+      .def(
+          "__setstate__",
+          [](Polygon* self, const nb::tuple& state) -> void {
+            if (state.size() != 1) {
+              throw std::invalid_argument("Invalid state");
+            }
+            auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
+            auto reader = reader_from_ndarray(array);
+            {
+              nb::gil_scoped_release release;
+              new (self) Polygon(Polygon::unpack(reader));
+            }
+          },
+          "state"_a, "Restore the state of the Polygon from pickling.");
 
   // Bind the InnerRingsView helper
   bind_container_view<InnerRingsView, Ring>(m, "InnerRingsView",
