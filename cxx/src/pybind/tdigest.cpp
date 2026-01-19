@@ -50,10 +50,14 @@ Example:
     >>> tdigest = pyinterp.TDigest(data)
     >>> median = tdigest.quantile(0.5)
     >>> print(f"Median: {median}")
-    >>> # Compute multiple quantiles
+
+    Compute multiple quantiles
+
     >>> quantiles = tdigest.quantile(np.array([0.25, 0.5, 0.75]))
     >>> print(f"Q25, Q50, Q75: {quantiles}")
-    >>> # Compute along axis
+
+    Compute along axis
+
     >>> data_2d = np.random.randn(100, 50)
     >>> tdigest_axis = pyinterp.TDigest(data_2d, axis=[0])
     >>> medians = tdigest_axis.quantile(0.5)

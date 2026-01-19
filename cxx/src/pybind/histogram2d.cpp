@@ -52,22 +52,26 @@ Examples:
     >>> x = pyinterp.Axis(np.arange(0, 360, 1), period=360)
     >>> y = pyinterp.Axis(np.arange(-90, 90, 1))
     >>> hist = pyinterp.Histogram2D(x, y)
-    >>>
-    >>> # Add some sample data
+
+    Add some sample data
+
     >>> x_data = np.random.uniform(0, 360, 10000)
     >>> y_data = np.random.uniform(-90, 90, 10000)
     >>> z_data = np.random.normal(0, 1, 10000)
     >>> hist.push(x_data, y_data, z_data)
-    >>>
-    >>> # Compute statistics
+
+    Compute statistics
+
     >>> mean_grid = hist.mean()
     >>> median_grid = hist.quantile(0.5)
     >>> p95_grid = hist.quantile(0.95)
-    >>>
-    >>> # Create with custom compression for better accuracy
+
+    Create with custom compression for better accuracy
+
     >>> hist_accurate = pyinterp.Histogram2D(x, y, compression=500)
-    >>>
-    >>> # Create with float32 for reduced memory usage
+
+    Create with float32 for reduced memory usage
+
     >>> hist_compact = pyinterp.Histogram2D(x, y, dtype='float32')
 
 Notes:
@@ -104,14 +108,16 @@ Examples:
     >>> x_axis = pyinterp.Axis(np.arange(0, 10, 1))
     >>> y_axis = pyinterp.Axis(np.arange(0, 10, 1))
     >>> hist = pyinterp.Histogram2D(x_axis, y_axis)
-    >>>
-    >>> # Add single batch of data
+
+    Add single batch of data
+
     >>> x = np.array([1.5, 2.3, 3.7])
     >>> y = np.array([4.2, 5.1, 6.8])
     >>> z = np.array([10.0, 20.0, 30.0])
     >>> hist.push(x, y, z)
-    >>>
-    >>> # Add more data incrementally
+
+    Add more data incrementally
+
     >>> x2 = np.array([1.8, 2.9])
     >>> y2 = np.array([4.5, 5.5])
     >>> z2 = np.array([15.0, 25.0])
@@ -142,15 +148,17 @@ Raises:
 Examples:
     >>> hist = pyinterp.Histogram2D(x_axis, y_axis)
     >>> hist.push(x_data, y_data, z_data)
-    >>>
-    >>> # Compute various percentiles
+
+    Compute various percentiles
+
     >>> min_grid = hist.quantile(0.0)
     >>> q1_grid = hist.quantile(0.25)
     >>> median_grid = hist.quantile(0.5)
     >>> q3_grid = hist.quantile(0.75)
     >>> max_grid = hist.quantile(1.0)
-    >>>
-    >>> # Compute 95th percentile
+
+    Compute 95th percentile
+
     >>> p95 = hist.quantile(0.95)
 )";
 
@@ -315,11 +323,13 @@ Examples:
     >>> x = pyinterp.Axis(np.arange(0, 360, 1), period=360)
     >>> y = pyinterp.Axis(np.arange(-90, 90, 1))
     >>> hist = pyinterp.Histogram2D(x, y)
-    >>>
-    >>> # Create with custom compression for better accuracy
+
+    Create with custom compression for better accuracy
+
     >>> hist = pyinterp.Histogram2D(x, y, compression=500)
-    >>>
-    >>> # Create with float32 for reduced memory usage
+
+    Create with float32 for reduced memory usage
+
     >>> hist = pyinterp.Histogram2D(x, y, dtype='float32')
 
 Returns:

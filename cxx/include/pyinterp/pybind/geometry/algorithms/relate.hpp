@@ -37,7 +37,9 @@ Returns:
 Examples:
     >>> point = Point(4.0, 1.0)
     >>> polygon = Polygon(...)
-    >>> # Check if point is within polygon
+
+    Check if point is within polygon
+
     >>> is_within = relate(point, polygon, "T*F**F***")
     >>> # Returns True if point is inside polygon
 )doc";

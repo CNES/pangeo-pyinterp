@@ -13,15 +13,18 @@ Example usage:
     >>> import numpy as np
     >>> import pyinterp
     >>> import pyinterp.dask as dask_stats
-    >>>
-    >>> # Create a dask array
+
+    Create a dask array
+
     >>> x = da.random.random((10000,), chunks=1000)
-    >>>
-    >>> # Compute descriptive statistics
+
+    Compute descriptive statistics
+
     >>> stats = dask_stats.descriptive_statistics(x)
     >>> print(stats.mean())
-    >>>
-    >>> # Compute quantiles using TDigest
+
+    Compute quantiles using TDigest
+
     >>> digest = dask_stats.tdigest(x)
     >>> print(digest.quantile(0.5))
 """
@@ -344,16 +347,19 @@ def binning1d(
         >>> import numpy as np
         >>> import pyinterp
         >>> import pyinterp.dask as dask_stats
-        >>>
-        >>> # Create bins and data
+
+        Create bins and data
+
         >>> axis = pyinterp.Axis(np.linspace(0, 10, 11))
         >>> binning = pyinterp.Binning1D(axis)
-        >>>
-        >>> # Create dask arrays
+
+        Create dask arrays
+
         >>> x = da.random.uniform(0, 10, size=(10000,), chunks=1000)
         >>> z = da.random.random((10000,), chunks=1000)
-        >>>
-        >>> # Compute binned statistics
+
+        Compute binned statistics
+
         >>> result = dask_stats.binning1d(x, z, binning)
         >>> print(result.mean())
 
@@ -472,18 +478,21 @@ def binning2d(
         >>> import numpy as np
         >>> import pyinterp
         >>> import pyinterp.dask as dask_stats
-        >>>
-        >>> # Create bins and data
+
+        Create bins and data
+
         >>> x_axis = pyinterp.Axis(np.linspace(0, 10, 11))
         >>> y_axis = pyinterp.Axis(np.linspace(0, 10, 11))
         >>> binning = pyinterp.Binning2D(x_axis, y_axis)
-        >>>
-        >>> # Create dask arrays
+
+        Create dask arrays
+
         >>> x = da.random.uniform(0, 10, size=(10000,), chunks=1000)
         >>> y = da.random.uniform(0, 10, size=(10000,), chunks=1000)
         >>> z = da.random.random((10000,), chunks=1000)
-        >>>
-        >>> # Compute binned statistics
+
+        Compute binned statistics
+
         >>> result = dask_stats.binning2d(x, y, z, binning)
         >>> print(result.mean())
 
@@ -591,18 +600,21 @@ def histogram2d(
         >>> import numpy as np
         >>> import pyinterp
         >>> import pyinterp.dask as dask_stats
-        >>>
-        >>> # Create histogram and data
+
+        Create histogram and data
+
         >>> x_axis = pyinterp.Axis(np.linspace(0, 10, 11))
         >>> y_axis = pyinterp.Axis(np.linspace(0, 10, 11))
         >>> hist = pyinterp.Histogram2D(x_axis, y_axis)
-        >>>
-        >>> # Create dask arrays
+
+        Create dask arrays
+
         >>> x = da.random.uniform(0, 10, size=(10000,), chunks=1000)
         >>> y = da.random.uniform(0, 10, size=(10000,), chunks=1000)
         >>> z = da.random.random((10000,), chunks=1000)
-        >>>
-        >>> # Compute histogram
+
+        Compute histogram
+
         >>> result = dask_stats.histogram2d(x, y, z, hist)
         >>> print(result.mean())
         >>> print(result.quantile(0.5))

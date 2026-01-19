@@ -37,7 +37,9 @@ automatically closes itself (the last point connects back to the first).
 Examples:
     >>> import numpy as np
     >>> from pyinterp.geometry.cartesian import Ring
-    >>> # Create a square ring
+
+    Create a square ring
+
     >>> x = np.array([0.0, 10.0, 10.0, 0.0, 0.0])
     >>> y = np.array([0.0, 0.0, 10.0, 10.0, 0.0])
     >>> ring = Ring(x, y)

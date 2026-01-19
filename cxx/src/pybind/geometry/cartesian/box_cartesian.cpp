@@ -28,7 +28,9 @@ and the maximum corner (top-right).
 
 Examples:
     >>> from pyinterp.geometry.cartesian import Box
-    >>> # Create box from (0, 0) to (100, 100)
+
+    Create box from (0, 0) to (100, 100)
+
     >>> x = (0.0, 100.0)
     >>> y = (0.0, 100.0)
     >>> box = Box(x, y)

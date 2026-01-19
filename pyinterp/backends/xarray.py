@@ -359,8 +359,7 @@ class Grid2D(_GridHolder):
             coords: Mapping from dimension names to the
                 coordinates to interpolate. Coordinates must be array-like.
             method: Interpolation method. See
-                :py:func:`pyinterp.regular_grid_interpolator.bivariate`
-                for more details.
+                :py:func:`pyinterp.bivariate` for more details.
             **kwargs: Additional keyword arguments provided to the
                 interpolation method.
 
@@ -431,8 +430,7 @@ class Grid3D(_GridHolder):
                 coordinates to interpolate. Coordinates must be array-like.
                 If the third axis is temporal, provide datetime64 array.
             method: Interpolation method. See
-                :py:func:`pyinterp.regular_grid_interpolator.trivariate`
-                for more details.
+                :py:func:`pyinterp.trivariate` for more details.
             **kwargs: Additional keyword arguments provided to the
                 interpolation method.
 
@@ -508,8 +506,7 @@ class Grid4D(_GridHolder):
                 coordinates to interpolate. Coordinates must be array-like.
                 If the third axis is temporal, provide datetime64 array.
             method: Interpolation method. See
-                :py:func:`pyinterp.regular_grid_interpolator.quadrivariate`
-                for more details.
+                :py:func:`pyinterp.quadrivariate` for more details.
             **kwargs: Additional keyword arguments provided to the
                 interpolation method.
 
@@ -578,14 +575,16 @@ class RegularGridInterpolator:
         treated as a temporal axis.
 
     Examples:
-        >>> # 2D sea surface temperature
+        2D sea surface temperature
+
         >>> sst = xr.open_dataarray("sst.nc")  # (lon, lat)
         >>> interp = RegularGridInterpolator(sst)
         >>> result = interp(
         ...     {"lon": [10.5, 20.3], "lat": [45.2, -30.1]}, method="bilinear"
         ... )
 
-        >>> # 3D ocean temperature with depth
+        3D ocean temperature with depth
+
         >>> temp = xr.open_dataarray("temp.nc")  # (lon, lat, depth)
         >>> interp = RegularGridInterpolator(temp)
         >>> result = interp(
@@ -593,7 +592,8 @@ class RegularGridInterpolator:
         ...     method="bilinear",
         ... )
 
-        >>> # 3D SST time series (automatic temporal handling)
+        3D SST time series (automatic temporal handling)
+
         >>> sst_time = xr.open_dataarray("sst_time.nc")  # (lon, lat, time)
         >>> interp = RegularGridInterpolator(sst_time)
         >>> result = interp(
@@ -675,11 +675,11 @@ class RegularGridInterpolator:
             method: The method of interpolation to perform. Supported methods
                 depend on the grid type. Common methods include:
 
-                - Geometric methods: ``nearest``, ``bilinear``, `ìdw``
+                - Geometric methods: ``nearest``, ``bilinear``, ``idw``
                 - Windowed methods: ``akima``, ``akima_periodic``, ``bicubic``,
-                    ``bilinear``, ``c_spline``, ``c_spline_not_a_knot``,
-                    ``c_spline_periodic``, ``linear``, ``polynomial``,
-                    ``steffen``.
+                  ``bilinear``, ``c_spline``, ``c_spline_not_a_knot``,
+                  ``c_spline_periodic``, ``linear``, ``polynomial``,
+                  ``steffen``.
 
             **kwargs: Additional keyword arguments passed to the interpolation
                 function. Common options include:
@@ -713,12 +713,14 @@ class RegularGridInterpolator:
             IndexError: If coordinate dimensions don't match grid dimensions.
 
         Examples:
-            >>> # Simple bilinear interpolation
+            Simple bilinear interpolation
+
             >>> result = interp(
             ...     {"lon": [10.5], "lat": [45.2]}, method="bilinear"
             ... )
 
-            >>> # Bicubic with custom window size
+            Bicubic with custom window size
+
             >>> result = interp(
             ...     {"lon": [10.5], "lat": [45.2]},
             ...     method="bicubic",
@@ -726,21 +728,24 @@ class RegularGridInterpolator:
             ...     half_window_size_y=10,
             ... )
 
-            >>> # With bounds checking
+            With bounds checking
+
             >>> result = interp(
             ...     {"lon": [10.5], "lat": [45.2]},
             ...     method="bilinear",
             ...     bounds_error=True,
             ... )
 
-            >>> # Multi-threaded
+            Multi-threaded
+
             >>> result = interp(
             ...     {"lon": lon_array, "lat": lat_array},
             ...     method="bilinear",
             ...     num_threads=4,
             ... )
 
-            >>> # 3D with temporal axis
+            3D with temporal axis
+
             >>> result = interp(
             ...     {
             ...         "lon": [10.5],

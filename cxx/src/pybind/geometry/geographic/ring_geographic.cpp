@@ -37,7 +37,8 @@ automatically closes itself (the last point connects back to the first).
 Examples:
     >>> import numpy as np
     >>> from pyinterp.geometry.geographic import Ring
-    >>> # Create a square ring
+    Create a square ring
+
     >>> lon = np.array([0.0, 10.0, 10.0, 0.0, 0.0])
     >>> lat = np.array([0.0, 0.0, 10.0, 10.0, 0.0])
     >>> ring = Ring(lon, lat)

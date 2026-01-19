@@ -389,7 +389,8 @@ Examples:
     >>> import numpy as np
     >>> import pyinterp
 
-    >>> # Create RTree for Cartesian coordinates with float64 (default)
+    Create RTree for Cartesian coordinates with float64 (default)
+
     >>> coords = np.array([
     ...     [0.0, 0.0, 0.0],
     ...     [1.0, 1.0, 0.0]
@@ -398,17 +399,20 @@ Examples:
     >>> tree = pyinterp.RTree3D()
     >>> tree.packing(coords, values)
 
-    >>> # Create RTree with float32 for reduced memory usage
+    Create RTree with float32 for reduced memory usage
+
     >>> coords_f32 = coords.astype('float32')
     >>> values_f32 = values.astype('float32')
     >>> tree_f32 = pyinterp.RTree3D(dtype='float32')
     >>> tree_f32.packing(coords_f32, values_f32)
 
-    >>> # Query k-nearest neighbors
+    Query k-nearest neighbors
+
     >>> query_coords = np.array([[0.5, 0.5, 0.0]])
     >>> distances, values = tree.query(query_coords, k=2)
 
-    >>> # Create RTree with geodetic coordinates (lon, lat, alt)
+    Create RTree with geodetic coordinates (lon, lat, alt)
+
     >>> geodetic_coords = np.array([
     ...     [0.0, 45.0, 100.0],
     ...     [1.0, 46.0, 200.0]

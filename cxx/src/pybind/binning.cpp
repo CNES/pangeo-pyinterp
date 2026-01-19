@@ -304,7 +304,8 @@ Examples:
     >>> y = pyinterp.Axis(np.arange(-90, 90, 1))
     >>> binning = pyinterp.Binning2D(x, y)
 
-    >>> # Create with float32 for reduced memory usage
+    Create with float32 for reduced memory usage
+
     >>> binning = pyinterp.Binning2D(x, y, dtype='float32')
 
 Returns:
@@ -330,7 +331,8 @@ Examples:
     >>> x = pyinterp.Axis(np.arange(0, 10, 0.1))
     >>> binning = pyinterp.Binning1D(x)
 
-    >>> # Create with float32 for reduced memory usage
+    Create with float32 for reduced memory usage
+
     >>> binning = pyinterp.Binning1D(x, dtype='float32')
 
 Returns:

@@ -29,7 +29,9 @@ and the maximum corner (northeast). Coordinates are in degrees.
 Examples:
     >>> import numpy as np
     >>> from pyinterp.geometry.geographic import Box
-    >>> # Create box from (-10, 40) to (10, 50)
+
+    Create box from (-10, 40) to (10, 50)
+
     >>> lon = (-10.0, 40.0)
     >>> lat = (10.0, 50.0)
     >>> box = Box(lon, lat)

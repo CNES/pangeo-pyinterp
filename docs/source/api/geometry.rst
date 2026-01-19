@@ -52,6 +52,15 @@ Classes for managing coordinate conversions and defining the Earth's shape.
    Coordinates
    Spheroid
 
+Spatial Indexing
+^^^^^^^^^^^^^^^^
+R-Tree spatial index implementation for geographic coordinates.
+
+.. autosummary::
+   :toctree: _generated/
+
+   RTree
+
 Algorithms
 ^^^^^^^^^^
 Spatial operations and predicates.

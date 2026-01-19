@@ -35,13 +35,15 @@ Examples:
     >>> import numpy as np
     >>> import pyinterp
 
-    >>> # Create a regular axis from 0 to 10 with step of 1
+    Create a regular axis from 0 to 10 with step of 1
+
     >>> values = np.arange(0, 11, dtype='float64')
     >>> axis = pyinterp.Axis(values)
 
-    >>> # Create a regular periodic axis from 0° to 350° with a 10° increment.
-    >>> # Since 360 is equivalent to 0, it is intentionally omitted from the
-    >>> # array.
+    Create a regular periodic axis from 0° to 350° with a 10° increment.
+    Since 360 is equivalent to 0, it is intentionally omitted from the
+    array.
+
     >>> values = np.arange(0, 351, 10, dtype='float64')
     >>> axis_periodic = pyinterp.Axis(
     ...     values,
@@ -49,7 +51,7 @@ Examples:
     ...     period=360.0   # Period of the axis
     ... )
 
-    >>> # Create an irregular axis with tolerance
+    Create an irregular axis with tolerance
 
     >>> values = np.array([0.0, 1.1, 2.5, 4.0, 7.3], dtype='float64')
     >>> axis_irregular = pyinterp.Axis(
@@ -126,18 +128,21 @@ Examples:
     >>> import numpy as np
     >>> import pyinterp
 
-    # Create a regular hourly axis over one day
+    Create a regular hourly axis over one day
+
     >>> times = np.arange('2024-01-01', '2024-01-02', dtype='datetime64[h]')
     >>> axis = pyinterp.TemporalAxis(times)
 
-    # Create a daily periodic axis (24-hour cycle)
+    Create a daily periodic axis (24-hour cycle)
+
     >>> axis_periodic = pyinterp.TemporalAxis(
     ...     times,
     ...     epsilon=np.timedelta64(1, 'm'),  # 1 minute tolerance
     ...     period=np.timedelta64(24, 'h')   # 24-hour period
     ... )
 
-    # Create an irregular axis with tolerance
+    Create an irregular axis with tolerance
+
     >>> irregular_times = np.array([
     ...     '2024-01-01T00:00',
     ...     '2024-01-01T06:15',
@@ -149,7 +154,8 @@ Examples:
     ...     epsilon=np.timedelta64(5, 'm')  # 5 minute tolerance
     ... )
 
-    # Create a timedelta64 axis for durations
+    Create a timedelta64 axis for durations
+
     >>> durations = np.array([0, 3600, 7200, 10800], dtype='timedelta64[s]')
     >>> axis_duration = pyinterp.TemporalAxis(durations)
 )";
@@ -195,14 +201,14 @@ auto implement_axis(nanobind::class_<Axis, T...> &axis,
           [](const Axis &self, size_t index) -> auto {
             return self.coordinate_value(index);
           },
-          "index"_a)
+          "index"_a, "Get the coordinate value at the given index.")
 
       .def(
           "__getitem__",
           [](const Axis &self, const nb::slice &axis_slice) -> auto {
             return self.coordinate_values(axis_slice);
           },
-          "axis_slice"_a)
+          "axis_slice"_a, "Get the coordinate values for the given slice.")
 
       .def(
           "__len__", [](const Axis &self) -> int64_t { return self.size(); },

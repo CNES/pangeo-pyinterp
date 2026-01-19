@@ -44,7 +44,9 @@ Example:
     >>> data = np.random.randn(100, 50)
     >>> stats = pyinterp.DescriptiveStatistics(data)
     >>> print(f"Mean: {stats.mean()}")
-    >>> # Compute along axis
+
+    Compute along axis
+
     >>> stats_axis = pyinterp.DescriptiveStatistics(data, axis=0)
     >>> print(f"Means shape: {stats_axis.mean().shape}")
 )doc";
@@ -324,21 +326,25 @@ Examples:
     >>> import numpy as np
     >>> import pyinterp
 
-    # Compute statistics for a 1D array with float64 (default)
+    Compute statistics for a 1D array with float64 (default)
+
     >>> data = np.random.randn(100)
     >>> stats = pyinterp.DescriptiveStatistics(data)
     >>> print(f"Mean: {stats.mean()}, Std: {np.sqrt(stats.variance())}")
 
-    # Compute statistics with float32 for reduced memory usage
+    Compute statistics with float32 for reduced memory usage
+
     >>> data = data.astype('float32')
     >>> stats = pyinterp.DescriptiveStatistics(data, dtype='float32')
 
-    # Compute along a specific axis
+    Compute along a specific axis
+
     >>> data = np.random.randn(100, 50)
     >>> stats_axis = pyinterp.DescriptiveStatistics(data, axis=[0])
     >>> print(f"Means shape: {stats_axis.mean().shape}")
 
-    # Compute with weights
+    Compute with weights
+
     >>> weights = np.random.rand(100, 50)
     >>> stats_weighted = pyinterp.DescriptiveStatistics(data, weights=weights)
 )doc";

@@ -31,7 +31,6 @@ Returns:
     A simplified version of the input geometry (same type).
 
 Examples:
-    >>> # LineString with many points
     >>> ls = LineString(np.array([0.0, 0.1, 0.2, 0.3, 1.0]),
     ...                 np.array([0.0, 0.05, 0.0, 0.05, 0.0]))
     >>> simplified = simplify(ls, distance=0.1)
