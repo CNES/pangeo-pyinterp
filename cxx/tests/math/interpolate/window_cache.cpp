@@ -2,14 +2,12 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/math/interpolate/cache.hpp"
+#include "pyinterp/math/interpolate/window_cache.hpp"
 
 #include <gtest/gtest.h>
 
 #include <chrono>
 #include <utility>
-
-#include "pyinterp/math/interpolate/cache.hpp"
 
 namespace pyinterp::math::interpolate {
 

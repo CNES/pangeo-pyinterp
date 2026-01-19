@@ -11,19 +11,10 @@
 
 #include "pyinterp/math.hpp"
 #include "pyinterp/math/axis.hpp"
-#include "pyinterp/math/interpolate/cache.hpp"
+#include "pyinterp/math/interpolate/cache_fwd.hpp"
+#include "pyinterp/math/interpolate/window_cache.hpp"
 
 namespace pyinterp::math::interpolate {
-
-/// @brief Result of a cache loading operation
-struct CacheLoadResult {
-  /// @brief True if the cache was loaded successfully
-  bool success{false};
-  /// @brief True if the cache was updated
-  bool was_updated{false};
-  /// @brief Error message if loading failed
-  std::optional<std::string> error_message;
-};
 
 namespace detail {
 

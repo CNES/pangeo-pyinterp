@@ -2,7 +2,7 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
-#include "pyinterp/math/interpolate/cache_loader.hpp"
+#include "pyinterp/math/interpolate/window_cache_loader.hpp"
 
 #include <gtest/gtest.h>
 #include <sys/types.h>

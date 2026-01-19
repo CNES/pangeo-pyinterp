@@ -12,11 +12,14 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <stdexcept>
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/config/geometric.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/math/interpolate/geometric/bivariate.hpp"
+#include "pyinterp/math/interpolate/geometric_cache.hpp"
+#include "pyinterp/math/interpolate/geometric_cache_loader.hpp"
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/parallel_for.hpp"
 #include "pyinterp/pybind/grid.hpp"
@@ -28,13 +31,18 @@ namespace pyinterp::geometric::pybind {
 template <typename DataType>
 using Grid2D = pyinterp::pybind::Grid2D<DataType>;
 
+/// @brief Alias for the geometric interpolation cache for 2D
+/// @tparam ResultType Result type of the interpolation
+template <typename ResultType>
+using InterpolationCache2D = math::interpolate::geometric::Cache2D<ResultType>;
+
 namespace detail {
 
 /// @brief Alias for the interpolation result type
 template <typename T>
 using InterpolationResult = math::interpolate::InterpolationResult<T>;
 
-/// @brief Single-point bivariate interpolation
+/// @brief Single-point bivariate interpolation using cache
 /// @tparam Point Point type (e.g., Point2D)
 /// @tparam DataType Data type stored in the grid
 /// @tparam ResultType Result type of the interpolation
@@ -42,6 +50,7 @@ using InterpolationResult = math::interpolate::InterpolationResult<T>;
 /// @param[in] x X coordinate of the point to interpolate
 /// @param[in] y Y coordinate of the point to interpolate
 /// @param[in] interpolator Bivariate interpolator
+/// @param[in,out] cache Interpolation cache (updated if needed)
 /// @param[in] bounds_error Whether to raise an error for out-of-bounds points
 /// @return Interpolated value at the specified point
 template <template <class> class Point, typename DataType, typename ResultType>
@@ -49,37 +58,39 @@ template <template <class> class Point, typename DataType, typename ResultType>
     const Grid2D<DataType>& grid, const double x, const double y,
     const math::interpolate::geometric::Bivariate<Point, ResultType>*
         interpolator,
-    const bool bounds_error) -> InterpolationResult<ResultType> {
-  // Early exit if out of bounds
-  auto x_indexes = grid.template find_indexes<0>(x, bounds_error);
-  if (!x_indexes.has_value()) {
+    InterpolationCache2D<ResultType>& cache, const bool bounds_error)
+    -> InterpolationResult<ResultType> {
+  // Update cache if query point is outside current cached cell
+  auto cache_result = math::interpolate::geometric::update_cache_if_needed(
+      cache, grid, std::make_tuple(x, y), bounds_error);
+
+  if (!cache_result.success) {
+    // Cache loading failed
+    if (cache_result.error_message.has_value()) {
+      throw std::out_of_range(cache_result.error_message.value());
+    }
     return {std::nullopt};
   }
 
-  auto y_indexes = grid.template find_indexes<1>(y, bounds_error);
-  if (!y_indexes.has_value()) {
+  if (!cache.is_valid()) {
+    // Cache contains NaN values
     return {std::nullopt};
   }
 
-  auto [ix0, ix1] = *x_indexes;
-  auto [iy0, iy1] = *y_indexes;
+  // Get cached coordinates
+  const auto x0 = static_cast<ResultType>(cache.template coord_lower<0>());
+  const auto x1 = static_cast<ResultType>(cache.template coord_upper<0>());
+  const auto y0 = static_cast<ResultType>(cache.template coord_lower<1>());
+  const auto y1 = static_cast<ResultType>(cache.template coord_upper<1>());
 
-  // Cache axis references (micro-optimization)
-  const auto& x_axis = grid.template axis<0>();
-  const auto& y_axis = grid.template axis<1>();
-
-  // Fetch grid values once (avoid repeated calls)
-  const auto v00 = static_cast<ResultType>(grid.value(ix0, iy0));
-  const auto v01 = static_cast<ResultType>(grid.value(ix0, iy1));
-  const auto v10 = static_cast<ResultType>(grid.value(ix1, iy0));
-  const auto v11 = static_cast<ResultType>(grid.value(ix1, iy1));
+  // Get cached values (corner indices: 00=0, 01=1, 10=2, 11=3)
+  const auto v00 = static_cast<ResultType>(cache.value(0));
+  const auto v01 = static_cast<ResultType>(cache.value(1));
+  const auto v10 = static_cast<ResultType>(cache.value(2));
+  const auto v11 = static_cast<ResultType>(cache.value(3));
 
   // Construct points
-  const auto x0 = static_cast<ResultType>(x_axis.coordinate_value(ix0));
-  const auto x1 = static_cast<ResultType>(x_axis.coordinate_value(ix1));
-  const auto y0 = static_cast<ResultType>(y_axis.coordinate_value(iy0));
-  const auto y1 = static_cast<ResultType>(y_axis.coordinate_value(iy1));
-
+  const auto& x_axis = grid.template axis<0>();
   const auto p = Point<ResultType>(
       static_cast<ResultType>(x_axis.normalize_coordinate(x, x0)),
       static_cast<ResultType>(y));
@@ -140,10 +151,13 @@ template <template <class> class Point, typename DataType, typename ResultType>
   parallel_for(
       x.size(),
       [&](const int64_t start, const int64_t end) {
+        // Create per-thread cache for efficient cell reuse
+        auto cache = InterpolationCache2D<ResultType>();
+
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
               detail::bivariate_single<Point, DataType, ResultType>(
-                  grid, x[ix], y[ix], interpolator_ptr,
+                  grid, x[ix], y[ix], interpolator_ptr, cache,
                   config.common().bounds_error());
 
           if (interpolated_value.has_value()) {

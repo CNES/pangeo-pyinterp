@@ -14,10 +14,10 @@
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/config/windowed.hpp"
 #include "pyinterp/eigen.hpp"
-#include "pyinterp/math/interpolate/cache.hpp"
-#include "pyinterp/math/interpolate/cache_loader.hpp"
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/math/interpolate/univariate.hpp"
+#include "pyinterp/math/interpolate/window_cache.hpp"
+#include "pyinterp/math/interpolate/window_cache_loader.hpp"
 #include "pyinterp/parallel_for.hpp"
 #include "pyinterp/pybind/grid.hpp"
 
