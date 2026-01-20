@@ -219,13 +219,13 @@ jobs:
           channels:
             - conda-forge
         create-args: |
-          python=3.13
+          python=3.14
         environment-name: pyinterp
         environment-file: conda/win.yml
 
     - name: Building Testing Python Package
       shell: bash -l {0}
       run: |
-        python setup.py build_ext
+        python setup.py build_ext --cmake-args="-DBoost_INCLUDE_DIRS=$CONDA_PREFIX/Library/include"
         python setup.py build
         pytest -v -ra
