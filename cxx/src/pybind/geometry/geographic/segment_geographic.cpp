@@ -71,9 +71,16 @@ auto init_segment(nb::module_& m) -> void {
       // Indexing support: 0 -> a, 1 -> b
       .def(
           "__getitem__",
-          [](const Segment& self, int idx) -> Point {
-            if (idx == 0) return self.a();
-            if (idx == 1) return self.b();
+          [](const Segment& self, int64_t idx) -> Point {
+            if (idx < 0) {
+              idx += 2;
+            }
+            if (idx == 0) {
+              return self.a();
+            }
+            if (idx == 1) {
+              return self.b();
+            }
             throw std::out_of_range("Segment index out of range");
           },
           "idx"_a, "Get endpoint at index (0 or 1).")

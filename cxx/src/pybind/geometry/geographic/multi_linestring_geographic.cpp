@@ -95,7 +95,10 @@ auto init_multilinestring(nb::module_& m) -> void {
 
       .def(
           "__getitem__",
-          [](MultiLineString& self, Eigen::Index idx) -> LineString& {
+          [](MultiLineString& self, int64_t idx) -> LineString& {
+            if (idx < 0) {
+              idx += self.size();
+            }
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiLineString index out of range");
             }
@@ -105,8 +108,7 @@ auto init_multilinestring(nb::module_& m) -> void {
 
       .def(
           "__setitem__",
-          [](MultiLineString& self, Eigen::Index idx,
-             const LineString& ls) -> void {
+          [](MultiLineString& self, int64_t idx, const LineString& ls) -> void {
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiLineString index out of range");
             }

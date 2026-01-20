@@ -75,7 +75,10 @@ auto init_linestring(nb::module_& m) -> void {
 
       .def(
           "__getitem__",
-          [](const LineString& self, Eigen::Index idx) -> Point {
+          [](const LineString& self, int64_t idx) -> Point {
+            if (idx < 0) {
+              idx += self.size();
+            }
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("LineString index out of range");
             }
@@ -85,7 +88,7 @@ auto init_linestring(nb::module_& m) -> void {
 
       .def(
           "__setitem__",
-          [](LineString& self, Eigen::Index idx, const Point& point) -> void {
+          [](LineString& self, int64_t idx, const Point& point) -> void {
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("LineString index out of range");
             }

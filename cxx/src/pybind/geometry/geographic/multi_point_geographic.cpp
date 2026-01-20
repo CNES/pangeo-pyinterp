@@ -112,7 +112,10 @@ auto init_multipoint(nb::module_& m) -> void {
 
       .def(
           "__getitem__",
-          [](MultiPoint& self, Eigen::Index idx) -> Point& {
+          [](MultiPoint& self, int64_t idx) -> Point& {
+            if (idx < 0) {
+              idx += self.size();
+            }
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiPoint index out of range");
             }
@@ -122,7 +125,7 @@ auto init_multipoint(nb::module_& m) -> void {
 
       .def(
           "__setitem__",
-          [](MultiPoint& self, Eigen::Index idx, const Point& pt) -> void {
+          [](MultiPoint& self, int64_t idx, const Point& pt) -> void {
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiPoint index out of range");
             }

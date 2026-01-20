@@ -76,7 +76,10 @@ auto init_ring(nb::module_& m) -> void {
 
       .def(
           "__getitem__",
-          [](const Ring& self, Eigen::Index idx) -> Point {
+          [](const Ring& self, int64_t idx) -> Point {
+            if (idx < 0) {
+              idx += self.size();
+            }
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("Ring index out of range");
             }
@@ -86,7 +89,7 @@ auto init_ring(nb::module_& m) -> void {
 
       .def(
           "__setitem__",
-          [](Ring& self, Eigen::Index idx, const Point& point) -> void {
+          [](Ring& self, int64_t idx, const Point& point) -> void {
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("Ring index out of range");
             }

@@ -94,7 +94,10 @@ auto init_multipolygon(nb::module_& m) -> void {
 
       .def(
           "__getitem__",
-          [](MultiPolygon& self, Eigen::Index idx) -> Polygon& {
+          [](MultiPolygon& self, int64_t idx) -> Polygon& {
+            if (idx < 0) {
+              idx += self.size();
+            }
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiPolygon index out of range");
             }
@@ -104,8 +107,7 @@ auto init_multipolygon(nb::module_& m) -> void {
 
       .def(
           "__setitem__",
-          [](MultiPolygon& self, Eigen::Index idx,
-             const Polygon& poly) -> void {
+          [](MultiPolygon& self, int64_t idx, const Polygon& poly) -> void {
             if (idx < 0 || std::cmp_greater_equal(idx, self.size())) {
               throw std::out_of_range("MultiPolygon index out of range");
             }
