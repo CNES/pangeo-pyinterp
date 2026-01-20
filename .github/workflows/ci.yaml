@@ -219,7 +219,7 @@ jobs:
           channels:
             - conda-forge
         create-args: |
-          python=3.12
+          python=3.14
         environment-name: pyinterp
         environment-file: conda/win.yml
 
