@@ -5,6 +5,7 @@
 
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/pair.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -109,6 +110,10 @@ auto init_linestring(nb::module_& m) -> void {
 
       .def("clear", &LineString::clear,
            "Remove all points from the linestring.")
+
+      .def("to_arrays", &LineString::to_arrays,
+           "Get the coordinate arrays of the linestring points.",
+           nb::call_guard<nb::gil_scoped_release>())
 
       .def(
           "__bool__",

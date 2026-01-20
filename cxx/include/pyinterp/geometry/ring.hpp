@@ -5,6 +5,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <boost/geometry.hpp>
 #include <ranges>
 #include <stdexcept>
 #include <vector>
@@ -99,6 +100,19 @@ class Ring {
   [[nodiscard]] constexpr auto operator[](std::size_t ix) const
       -> const Point& {
     return points_[ix];
+  }
+
+  /// @brief Get the coordinate arrays of the ring points.
+  /// @returns Pair of coordinate arrays (X, Y).
+  [[nodiscard]] inline auto to_arrays() const
+      -> std::pair<Vector<double>, Vector<double>> {
+    Vector<double> xs(static_cast<int64_t>(points_.size()));
+    Vector<double> ys(static_cast<int64_t>(points_.size()));
+    for (size_t ix = 0; ix < points_.size(); ++ix) {
+      xs(static_cast<int64_t>(ix)) = boost::geometry::get<0>(points_[ix]);
+      ys(static_cast<int64_t>(ix)) = boost::geometry::get<1>(points_[ix]);
+    }
+    return {xs, ys};
   }
 
   /// @brief Return a mutable iterator to the first point.

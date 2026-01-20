@@ -146,3 +146,37 @@ def test_linestring_getstate_setstate() -> None:
 
     new_line = pickle.loads(pickle.dumps(original))
     assert new_line == original
+
+
+def test_linestring_to_arrays() -> None:
+    """Test LineString to_arrays method."""
+    # Test with populated linestring
+    lon = np.array([0.0, 5.0, 10.0, 15.0])
+    lat = np.array([0.0, 5.0, 10.0, 15.0])
+    line = LineString(lon, lat)
+
+    lon_result, lat_result = line.to_arrays()
+
+    # Verify returned arrays match input
+    np.testing.assert_array_equal(lon_result, lon)
+    np.testing.assert_array_equal(lat_result, lat)
+
+    # Verify returned arrays are numpy arrays
+    assert isinstance(lon_result, np.ndarray)
+    assert isinstance(lat_result, np.ndarray)
+
+    # Verify array shapes
+    assert lon_result.shape == (4,)
+    assert lat_result.shape == (4,)
+
+    # Test with empty linestring
+    empty_line = LineString()
+    lon_empty, lat_empty = empty_line.to_arrays()
+    assert len(lon_empty) == 0
+    assert len(lat_empty) == 0
+
+    # Test with single point
+    line_single = LineString(np.array([1.0]), np.array([2.0]))
+    lon_single, lat_single = line_single.to_arrays()
+    np.testing.assert_array_equal(lon_single, np.array([1.0]))
+    np.testing.assert_array_equal(lat_single, np.array([2.0]))

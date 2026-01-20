@@ -6,6 +6,8 @@
 
 import pickle
 
+import numpy as np
+
 from .....core.geometry.cartesian import Point, Segment
 
 
@@ -114,3 +116,37 @@ def test_segment_pickle() -> None:
     assert restored == original
     assert restored.a == original.a
     assert restored.b == original.b
+
+
+def test_segment_to_arrays() -> None:
+    """Test Segment to_arrays method."""
+    # Test with populated segment
+    s = Segment((0.0, 0.0), (10.0, 20.0))
+
+    x_result, y_result = s.to_arrays()
+
+    # Verify returned arrays contain both endpoints
+    expected_x = np.array([0.0, 10.0])
+    expected_y = np.array([0.0, 20.0])
+    np.testing.assert_array_equal(x_result, expected_x)
+    np.testing.assert_array_equal(y_result, expected_y)
+
+    # Verify returned arrays are numpy arrays
+    assert isinstance(x_result, np.ndarray)
+    assert isinstance(y_result, np.ndarray)
+
+    # Verify array shapes (should always be 2 elements)
+    assert x_result.shape == (2,)
+    assert y_result.shape == (2,)
+
+    # Test with different coordinates
+    s2 = Segment((-5.0, 10.0), (15.0, -20.0))
+    x2, y2 = s2.to_arrays()
+    np.testing.assert_array_equal(x2, np.array([-5.0, 15.0]))
+    np.testing.assert_array_equal(y2, np.array([10.0, -20.0]))
+
+    # Test with default constructed segment (both points at origin)
+    s_empty = Segment()
+    x_empty, y_empty = s_empty.to_arrays()
+    np.testing.assert_array_equal(x_empty, np.array([0.0, 0.0]))
+    np.testing.assert_array_equal(y_empty, np.array([0.0, 0.0]))

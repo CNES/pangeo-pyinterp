@@ -6,6 +6,7 @@
 
 import pickle
 
+import numpy as np
 import pytest
 
 from .....core.geometry.geographic import Point, Segment
@@ -103,3 +104,37 @@ def test_segment_index_out_of_range() -> None:
         _ = s[2]
     with pytest.raises(IndexError):
         s[2] = Point(0.0, 0.0)
+
+
+def test_segment_to_arrays() -> None:
+    """Test Segment to_arrays method."""
+    # Test with populated segment
+    s = Segment((0.0, 0.0), (10.0, 5.0))
+
+    lon_result, lat_result = s.to_arrays()
+
+    # Verify returned arrays contain both endpoints
+    expected_lon = np.array([0.0, 10.0])
+    expected_lat = np.array([0.0, 5.0])
+    np.testing.assert_array_equal(lon_result, expected_lon)
+    np.testing.assert_array_equal(lat_result, expected_lat)
+
+    # Verify returned arrays are numpy arrays
+    assert isinstance(lon_result, np.ndarray)
+    assert isinstance(lat_result, np.ndarray)
+
+    # Verify array shapes (should always be 2 elements)
+    assert lon_result.shape == (2,)
+    assert lat_result.shape == (2,)
+
+    # Test with different coordinates
+    s2 = Segment((-5.0, 10.0), (15.0, -20.0))
+    lon2, lat2 = s2.to_arrays()
+    np.testing.assert_array_equal(lon2, np.array([-5.0, 15.0]))
+    np.testing.assert_array_equal(lat2, np.array([10.0, -20.0]))
+
+    # Test with default constructed segment (both points at origin)
+    s_empty = Segment()
+    lon_empty, lat_empty = s_empty.to_arrays()
+    np.testing.assert_array_equal(lon_empty, np.array([0.0, 0.0]))
+    np.testing.assert_array_equal(lat_empty, np.array([0.0, 0.0]))

@@ -5,6 +5,7 @@
 
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/pair.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -101,6 +102,10 @@ auto init_ring(nb::module_& m) -> void {
           "append",
           [](Ring& self, const Point& point) -> void { self.push_back(point); },
           "point"_a, "Append a point to the ring.")
+
+      .def("to_arrays", &Ring::to_arrays,
+           "Get the coordinate arrays of the ring points.",
+           nb::call_guard<nb::gil_scoped_release>())
 
       .def("clear", &Ring::clear, "Remove all points from the ring.")
 

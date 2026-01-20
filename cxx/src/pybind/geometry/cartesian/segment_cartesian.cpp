@@ -3,8 +3,10 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+#include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/pair.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 
@@ -99,6 +101,11 @@ auto init_segment(nb::module_& m) -> void {
             }
           },
           "idx"_a, "point"_a, "Set endpoint at index (0 or 1).")
+
+      // Get the coordinate arrays of the segment endpoints
+      .def("to_arrays", &Segment::to_arrays,
+           "Get the coordinate arrays of the segment endpoints.",
+           nb::call_guard<nb::gil_scoped_release>())
 
       // Accessors
       .def_prop_rw(

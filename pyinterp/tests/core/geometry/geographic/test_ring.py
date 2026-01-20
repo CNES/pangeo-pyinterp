@@ -154,3 +154,39 @@ def test_ring_getstate_setstate() -> None:
 
     new_ring = pickle.loads(pickle.dumps(original))
     assert new_ring == original
+
+
+def test_ring_to_arrays() -> None:
+    """Test Ring to_arrays method."""
+    # Test with populated ring
+    lon = np.array([0.0, 10.0, 10.0, 0.0, 0.0])
+    lat = np.array([0.0, 0.0, 10.0, 10.0, 0.0])
+    ring = Ring(lon, lat)
+
+    lon_result, lat_result = ring.to_arrays()
+
+    # Verify returned arrays match input
+    np.testing.assert_array_equal(lon_result, lon)
+    np.testing.assert_array_equal(lat_result, lat)
+
+    # Verify returned arrays are numpy arrays
+    assert isinstance(lon_result, np.ndarray)
+    assert isinstance(lat_result, np.ndarray)
+
+    # Verify array shapes
+    assert lon_result.shape == (5,)
+    assert lat_result.shape == (5,)
+
+    # Test with empty ring
+    empty_ring = Ring()
+    lon_empty, lat_empty = empty_ring.to_arrays()
+    assert len(lon_empty) == 0
+    assert len(lat_empty) == 0
+
+    # Test with triangular ring
+    lon_tri = np.array([0.0, 5.0, 2.5])
+    lat_tri = np.array([0.0, 0.0, 5.0])
+    ring_tri = Ring(lon_tri, lat_tri)
+    lon_tri_result, lat_tri_result = ring_tri.to_arrays()
+    np.testing.assert_array_equal(lon_tri_result, lon_tri)
+    np.testing.assert_array_equal(lat_tri_result, lat_tri)

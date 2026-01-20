@@ -144,3 +144,37 @@ def test_linestring_pickle() -> None:
     assert len(restored) == len(original)
     for i in range(len(original)):
         assert restored[i] == original[i]
+
+
+def test_linestring_to_arrays() -> None:
+    """Test LineString to_arrays method."""
+    # Test with populated linestring
+    x = np.array([0.0, 5.0, 10.0, 15.0])
+    y = np.array([0.0, 5.0, 10.0, 15.0])
+    ls = LineString(x, y)
+
+    x_result, y_result = ls.to_arrays()
+
+    # Verify returned arrays match input
+    np.testing.assert_array_equal(x_result, x)
+    np.testing.assert_array_equal(y_result, y)
+
+    # Verify returned arrays are numpy arrays
+    assert isinstance(x_result, np.ndarray)
+    assert isinstance(y_result, np.ndarray)
+
+    # Verify array shapes
+    assert x_result.shape == (4,)
+    assert y_result.shape == (4,)
+
+    # Test with empty linestring
+    empty_ls = LineString()
+    x_empty, y_empty = empty_ls.to_arrays()
+    assert len(x_empty) == 0
+    assert len(y_empty) == 0
+
+    # Test with single point
+    ls_single = LineString(np.array([1.0]), np.array([2.0]))
+    x_single, y_single = ls_single.to_arrays()
+    np.testing.assert_array_equal(x_single, np.array([1.0]))
+    np.testing.assert_array_equal(y_single, np.array([2.0]))

@@ -5,6 +5,7 @@
 
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/pair.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
@@ -70,6 +71,10 @@ auto init_linestring(nb::module_& m) -> void {
           "xs"_a, "ys"_a, kLineStringInitDoc)
 
       // Container operations
+      .def("to_arrays", &LineString::to_arrays,
+           "Get the coordinate arrays of the linestring points.",
+           nb::call_guard<nb::gil_scoped_release>())
+
       .def("__len__", &LineString::size,
            "Return the number of points in the linestring.")
 

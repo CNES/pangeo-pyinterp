@@ -144,3 +144,39 @@ def test_ring_pickle() -> None:
     assert len(restored) == len(original)
     for i in range(len(original)):
         assert restored[i] == original[i]
+
+
+def test_ring_to_arrays() -> None:
+    """Test Ring to_arrays method."""
+    # Test with populated ring
+    x = np.array([0.0, 10.0, 10.0, 0.0, 0.0])
+    y = np.array([0.0, 0.0, 10.0, 10.0, 0.0])
+    ring = Ring(x, y)
+
+    x_result, y_result = ring.to_arrays()
+
+    # Verify returned arrays match input
+    np.testing.assert_array_equal(x_result, x)
+    np.testing.assert_array_equal(y_result, y)
+
+    # Verify returned arrays are numpy arrays
+    assert isinstance(x_result, np.ndarray)
+    assert isinstance(y_result, np.ndarray)
+
+    # Verify array shapes
+    assert x_result.shape == (5,)
+    assert y_result.shape == (5,)
+
+    # Test with empty ring
+    empty_ring = Ring()
+    x_empty, y_empty = empty_ring.to_arrays()
+    assert len(x_empty) == 0
+    assert len(y_empty) == 0
+
+    # Test with triangular ring
+    x_tri = np.array([0.0, 5.0, 2.5])
+    y_tri = np.array([0.0, 0.0, 5.0])
+    ring_tri = Ring(x_tri, y_tri)
+    x_tri_result, y_tri_result = ring_tri.to_arrays()
+    np.testing.assert_array_equal(x_tri_result, x_tri)
+    np.testing.assert_array_equal(y_tri_result, y_tri)

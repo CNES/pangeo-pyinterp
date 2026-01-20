@@ -32,6 +32,19 @@ class Segment {
   /// @brief Get the second endpoint (mutable)
   [[nodiscard]] constexpr auto b() noexcept -> Point& { return b_; }
 
+  /// @brief  Get the coordinate arrays of the segment endpoints
+  /// @returns Pair of coordinate arrays (X, Y)
+  [[nodiscard]] inline auto to_arrays() const
+      -> std::pair<Eigen::Vector<double, 2>, Eigen::Vector<double, 2>> {
+    Eigen::Vector<double, 2> xs;
+    Eigen::Vector<double, 2> ys;
+    xs(0) = boost::geometry::get<0>(a_);
+    xs(1) = boost::geometry::get<0>(b_);
+    ys(0) = boost::geometry::get<1>(a_);
+    ys(1) = boost::geometry::get<1>(b_);
+    return {xs, ys};
+  }
+
   /// @brief Templated access for Boost.Geometry traits
   /// @tparam Index Endpoint index (0 for a, 1 for b)
   /// @tparam Dim Coordinate index (0 for lon, 1 for lat)
