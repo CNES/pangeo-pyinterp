@@ -64,6 +64,10 @@ auto init_centroid(nanobind::module_& m) -> void;
 /// @param[in,out] m Python module
 auto init_convert(nanobind::module_& m) -> void;
 
+/// @brief Initialize transform algorithm binding
+/// @param[in,out] m Python module
+auto init_transform(nanobind::module_& m) -> void;
+
 /// @brief Initialize closest_points algorithm bindings
 /// @param[in,out] m Python module
 auto init_closest_points(nanobind::module_& m) -> void;
@@ -228,6 +232,7 @@ inline void init_algorithms(nanobind::module_& m) {
   init_buffer(m);
   init_centroid(m);
   init_convert(m);
+  init_transform(m);
 
   init_clear(m);
   init_closest_points(m);

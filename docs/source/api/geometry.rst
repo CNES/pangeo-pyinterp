@@ -99,6 +99,15 @@ Spatial operations and predicates.
    algorithms.reverse
    algorithms.simplify
    algorithms.touches
+   algorithms.transform_to_box
+   algorithms.transform_to_linestring
+   algorithms.transform_to_multilinestring
+   algorithms.transform_to_multipoint
+   algorithms.transform_to_multipolygon
+   algorithms.transform_to_point
+   algorithms.transform_to_polygon
+   algorithms.transform_to_ring
+   algorithms.transform_to_segment
    algorithms.union
    algorithms.unique
    algorithms.within
@@ -188,6 +197,15 @@ Spatial operations and predicates in Euclidean space.
    algorithms.reverse
    algorithms.simplify
    algorithms.touches
+   algorithms.transform_to_box
+   algorithms.transform_to_linestring
+   algorithms.transform_to_multilinestring
+   algorithms.transform_to_multipoint
+   algorithms.transform_to_multipolygon
+   algorithms.transform_to_point
+   algorithms.transform_to_polygon
+   algorithms.transform_to_ring
+   algorithms.transform_to_segment
    algorithms.union
    algorithms.unique
    algorithms.within
