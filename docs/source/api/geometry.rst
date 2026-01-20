@@ -71,11 +71,14 @@ Spatial operations and predicates.
    algorithms.area
    algorithms.azimuth
    algorithms.centroid
+   algorithms.clear
    algorithms.closest_points
    algorithms.convert_to_cartesian
    algorithms.convex_hull
+   algorithms.correct
    algorithms.covered_by
    algorithms.crosses
+   algorithms.curvilinear_distance
    algorithms.densify
    algorithms.difference
    algorithms.disjoint
@@ -88,11 +91,28 @@ Spatial operations and predicates.
    algorithms.is_simple
    algorithms.is_valid
    algorithms.length
+   algorithms.line_interpolate
+   algorithms.overlaps
    algorithms.perimeter
+   algorithms.relate
+   algorithms.relation
+   algorithms.reverse
    algorithms.simplify
    algorithms.touches
    algorithms.union
+   algorithms.unique
    algorithms.within
+
+Vectorized Predicates
+^^^^^^^^^^^^^^^^^^^^^
+Vectorized spatial predicates for geographic geometries.
+
+.. autosummary::
+   :toctree: _generated/
+
+   algorithms.for_each_point_within
+   algorithms.for_each_point_covered_by
+   algorithms.for_each_point_distance
 
 Distance Strategies
 ^^^^^^^^^^^^^^^^^^^
@@ -141,9 +161,11 @@ Spatial operations and predicates in Euclidean space.
    algorithms.azimuth
    algorithms.buffer
    algorithms.centroid
+   algorithms.clear
    algorithms.closest_points
    algorithms.convert_to_geographic
    algorithms.convex_hull
+   algorithms.correct
    algorithms.covered_by
    algorithms.crosses
    algorithms.densify
@@ -158,11 +180,28 @@ Spatial operations and predicates in Euclidean space.
    algorithms.is_simple
    algorithms.is_valid
    algorithms.length
+   algorithms.line_interpolate
+   algorithms.overlaps
    algorithms.perimeter
+   algorithms.relate
+   algorithms.relation
+   algorithms.reverse
    algorithms.simplify
    algorithms.touches
    algorithms.union
+   algorithms.unique
    algorithms.within
+
+Vectorized Predicates
+^^^^^^^^^^^^^^^^^^^^^
+Vectorized spatial predicates for Cartesian geometries.
+
+.. autosummary::
+   :toctree: _generated/
+
+   algorithms.for_each_point_within
+   algorithms.for_each_point_covered_by
+   algorithms.for_each_point_distance
 
 Buffer Strategies
 ^^^^^^^^^^^^^^^^^
@@ -180,3 +219,17 @@ Configuration for the buffering algorithm (Cartesian only).
    algorithms.PointCircle
    algorithms.PointSquare
    algorithms.SideStraight
+
+
+Satellite-Specific
+==================
+Satellite-specific geometric operations such as swath calculation and
+crossover finding.
+
+.. currentmodule:: pyinterp.geometry.satellite
+
+.. autosummary::
+   :toctree: _generated/
+
+   calculate_swath
+   find_crossovers
