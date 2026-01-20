@@ -134,8 +134,8 @@ def test_transform_box_to_multipoint(box_10x10: Box) -> None:
     result = transform_to_multipoint(box_10x10)
 
     assert isinstance(result, MultiPoint)
-    # Box has 2 corners (min and max)
-    assert len(result) == 2
+    # Box has 4 points (4 corners)
+    assert len(result) == 4
 
 
 def test_transform_box_to_polygon(box_10x10: Box) -> None:
