@@ -195,10 +195,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     def initialize_options(self) -> None:
         """Set the default values of the options."""
         super().initialize_options()
-        self.export_compile_commands = None
-        self.enable_coverage = None
         self.c_compiler = None
+        self.cmake_args = None
         self.cxx_compiler = None
+        self.enable_coverage = None
+        self.export_compile_commands = None
         self.fft = None
         self.generator = None
         self.mkl = None
@@ -274,6 +275,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         if conda_prefix is not None:
             result.append("-DCMAKE_PREFIX_PATH=" + conda_prefix)
+
+        if self.cmake_args is not None:
+            result.extend(self.cmake_args.split(" "))
 
         if self.mkl or self.fft == MKL_FFT:
             self.set_conda_mklroot()

@@ -422,7 +422,30 @@ include_directories(SYSTEM
 # ##############################################################################
 # External dependencies
 # ##############################################################################
-find_package(Boost 1.80 REQUIRED)
+if(NOT Boost_INCLUDE_DIRS)
+  find_package(Boost 1.90 REQUIRED)
+else()
+  # If the user provides a Boost include directory, we still need to check the
+  # version.
+  if(EXISTS "${Boost_INCLUDE_DIRS}/boost/version.hpp")
+    file(READ "${Boost_INCLUDE_DIRS}/boost/version.hpp" BOOST_VERSION_CONTENT)
+    string(REGEX MATCH "BOOST_LIB_VERSION \"([0-9_]+)\"" _
+                 "${BOOST_VERSION_CONTENT}")
+    set(BOOST_VERSION_STRING "${CMAKE_MATCH_1}")
+    message(STATUS "Boost version: ${BOOST_VERSION_STRING}")
+
+    # Parse version: e.g., "1_90_0" -> 1.90.0
+    string(REPLACE "_" "." BOOST_VERSION_FORMATTED "${BOOST_VERSION_STRING}")
+    # Check if version is at least 1.90.0
+    if(BOOST_VERSION_FORMATTED VERSION_LESS "1.90.0")
+      message(FATAL_ERROR "Boost version must be at least 1.90.0, "
+                          "found ${BOOST_VERSION_FORMATTED}")
+    endif()
+  else()
+    message(FATAL_ERROR "Boost version.hpp not found at "
+                        "${Boost_INCLUDE_DIRS}/boost/version.hpp")
+  endif()
+endif()
 include_directories(SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 add_subdirectory(cxx)
