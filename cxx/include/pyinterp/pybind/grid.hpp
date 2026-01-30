@@ -211,11 +211,11 @@ class Grid {
   using math_axis_value_t = typename math_axis_t<I>::value_type;
 
   /// N-dimensional array type.
-  using array_t = nanobind::ndarray<nanobind::numpy, DataType,
+  using array_t = nanobind::ndarray<nanobind::numpy, nanobind::ro, DataType,
                                     nanobind::ndim<kNDim>, nanobind::c_contig>;
 
   /// N-dimensional array view type.
-  using view_t = nanobind::ndarray_view<DataType, kNDim, 'C'>;
+  using view_t = nanobind::ndarray_view<const DataType, kNDim, 'C'>;
 
   /// Constructor.
   /// @param[in] axes Axes of the grid.
@@ -823,7 +823,7 @@ auto grid_factory(detail::pybind_axes_tuple_t<MathAxes...>&& axes,
   // Helper to create the grid with the correct DataType
   auto create_grid = [&]<typename DataType>() -> GridHolder {
     // Cast the Python object to the specific DataType array
-    using array_t = nanobind::ndarray<nanobind::numpy, DataType,
+    using array_t = nanobind::ndarray<nanobind::numpy, nanobind::ro, DataType,
                                       nanobind::ndim<sizeof...(MathAxes)>,
                                       nanobind::c_contig>;
 
