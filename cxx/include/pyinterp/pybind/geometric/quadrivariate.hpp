@@ -50,7 +50,7 @@ template <template <class> class Point, typename GridType, typename ResultType,
 [[nodiscard]] auto quadrivariate_single(
     const GridType& grid, const double x, const double y, const ZType z,
     const double u,
-    const math::interpolate::geometric::Bivariate<Point, ResultType>*
+    const math::interpolate::geometric::Bivariate<Point, ResultType>&
         spatial_interpolator,
     const math::interpolate::geometric::AxisInterpolator<ZType, ResultType>&
         z_axis_interpolator,
@@ -167,10 +167,10 @@ template <template <class> class Point, typename GridType, typename ResultType,
   broadcast::check_eigen_shape("x", x, "y", y, "z", z, "u", u);
 
   // Create spatial interpolator once (outside parallel region)
-  auto spatial_interpolator =
+  auto spatial_interpolator_ptr =
       math::interpolate::geometric::make_interpolator<Point, ResultType>(
           config.spatial().method(), config.spatial().exponent());
-  const auto* spatial_interpolator_ptr = spatial_interpolator.get();
+  const auto& spatial_interpolator = *spatial_interpolator_ptr;
 
   // Create z-axis interpolator
   const auto z_axis_method =
@@ -199,7 +199,7 @@ template <template <class> class Point, typename GridType, typename ResultType,
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
               detail::quadrivariate_single<Point, GridType, ResultType, ZType>(
-                  grid, x[ix], y[ix], z[ix], u[ix], spatial_interpolator_ptr,
+                  grid, x[ix], y[ix], z[ix], u[ix], spatial_interpolator,
                   z_axis_interpolator, u_axis_interpolator,
                   config.common().bounds_error());
 

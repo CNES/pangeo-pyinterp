@@ -47,7 +47,7 @@ using InterpolationResult = math::interpolate::InterpolationResult<T>;
 template <template <class> class Point, typename DataType, typename ResultType>
 [[nodiscard]] auto bivariate_single(
     const Grid2D<DataType>& grid, const double x, const double y,
-    const math::interpolate::geometric::Bivariate<Point, ResultType>*
+    const math::interpolate::geometric::Bivariate<Point, ResultType>&
         interpolator,
     const bool bounds_error) -> InterpolationResult<ResultType> {
   // Early exit if out of bounds
@@ -87,7 +87,7 @@ template <template <class> class Point, typename DataType, typename ResultType>
   const auto p1 = Point<ResultType>(x1, y1);
 
   // Interpolate
-  const auto result = interpolator->evaluate(p, p0, p1, v00, v01, v10, v11);
+  const auto result = interpolator.evaluate(p, p0, p1, v00, v01, v10, v11);
 
   return {static_cast<ResultType>(result)};
 }
@@ -129,10 +129,10 @@ template <template <class> class Point, typename DataType, typename ResultType>
   broadcast::check_eigen_shape("x", x, "y", y);
 
   // Create interpolator once (outside parallel region)
-  auto interpolator =
+  auto interpolator_ptr =
       math::interpolate::geometric::make_interpolator<Point, ResultType>(
           config.spatial().method(), config.spatial().exponent());
-  const auto* interpolator_ptr = interpolator.get();
+  const auto& interpolator = *interpolator_ptr;
 
   Vector<ResultType> result(x.size());
   result.setConstant(std::numeric_limits<ResultType>::quiet_NaN());
@@ -143,7 +143,7 @@ template <template <class> class Point, typename DataType, typename ResultType>
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
               detail::bivariate_single<Point, DataType, ResultType>(
-                  grid, x[ix], y[ix], interpolator_ptr,
+                  grid, x[ix], y[ix], interpolator,
                   config.common().bounds_error());
 
           if (interpolated_value.has_value()) {

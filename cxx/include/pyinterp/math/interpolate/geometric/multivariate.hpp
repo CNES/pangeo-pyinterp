@@ -134,16 +134,16 @@ template <template <class> class Point, typename T, typename Z = T>
                               const SpatialPoint3D<Point, T, Z> &bounds_lower,
                               const SpatialPoint3D<Point, T, Z> &bounds_upper,
                               const DataCube<T> &data,
-                              const Bivariate<Point, T> *spatial_interpolator,
+                              const Bivariate<Point, T> &spatial_interpolator,
                               const AxisInterpolator<Z, T> &axis_interpolator)
     -> T {
   // Step 1: Interpolate spatially at z0 level
-  const auto z0 = spatial_interpolator->evaluate(
+  const auto z0 = spatial_interpolator.evaluate(
       query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q000,
       data.q010, data.q100, data.q110);
 
   // Step 2: Interpolate spatially at z1 level
-  const auto z1 = spatial_interpolator->evaluate(
+  const auto z1 = spatial_interpolator.evaluate(
       query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q001,
       data.q011, data.q101, data.q111);
 
@@ -273,15 +273,15 @@ template <template <class> class Point, typename T, typename Z = T,
     const SpatialPoint4D<Point, T, Z, U> &bounds_lower,
     const SpatialPoint4D<Point, T, Z, U> &bounds_upper,
     const DataHypercube<T> &data,
-    const Bivariate<Point, T> *spatial_interpolator,
+    const Bivariate<Point, T> &spatial_interpolator,
     const AxisInterpolator<Z, T> &z_axis_interpolator,
     const AxisInterpolator<U, T> &u_axis_interpolator) -> T {
   // At u=0: Interpolate in (x, y, z) space
-  const auto z0_u0 = spatial_interpolator->evaluate(
+  const auto z0_u0 = spatial_interpolator.evaluate(
       query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q0000,
       data.q0100, data.q1000, data.q1100);
 
-  const auto z1_u0 = spatial_interpolator->evaluate(
+  const auto z1_u0 = spatial_interpolator.evaluate(
       query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q0010,
       data.q0110, data.q1010, data.q1110);
 
@@ -289,11 +289,11 @@ template <template <class> class Point, typename T, typename Z = T,
                                       bounds_upper.z_axis, z0_u0, z1_u0);
 
   // At u=1: Interpolate in (x, y, z) space
-  const auto z0_u1 = spatial_interpolator->evaluate(
+  const auto z0_u1 = spatial_interpolator.evaluate(
       query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q0001,
       data.q0101, data.q1001, data.q1101);
 
-  const auto z1_u1 = spatial_interpolator->evaluate(
+  const auto z1_u1 = spatial_interpolator.evaluate(
       query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q0011,
       data.q0111, data.q1011, data.q1111);
 
