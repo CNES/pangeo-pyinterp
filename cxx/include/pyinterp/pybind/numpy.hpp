@@ -53,8 +53,9 @@ inline auto retrieve_dtype(const std::string &name,
 /// @param[in] array Numpy array to convert
 /// @return Eigen vector of int64_t values
 inline auto numpy_to_vector(const nanobind::object &array) -> Vector<int64_t> {
+  // Accept read-only arrays (e.g., from xarray) by specifying nanobind::ro
   auto viewed =
-      nanobind::cast<nanobind::ndarray<nanobind::numpy, int64_t,
+      nanobind::cast<nanobind::ndarray<nanobind::numpy, nanobind::ro, int64_t,
                                        nanobind::ndim<1>, nanobind::c_contig>>(
           array.attr("view")("int64"));
   return Eigen::Map<const Vector<int64_t>>(
@@ -66,8 +67,9 @@ inline auto numpy_to_vector(const nanobind::object &array) -> Vector<int64_t> {
 /// @param[in] array Numpy array to convert
 /// @return Eigen matrix of int64_t values
 inline auto numpy_to_matrix(const nanobind::object &array) -> Matrix<int64_t> {
+  // Accept read-only arrays (e.g., from xarray) by specifying nanobind::ro
   auto viewed =
-      nanobind::cast<nanobind::ndarray<nanobind::numpy, int64_t,
+      nanobind::cast<nanobind::ndarray<nanobind::numpy, nanobind::ro, int64_t,
                                        nanobind::ndim<2>, nanobind::c_contig>>(
           array.attr("view")("int64"));
   return Eigen::Map<const Matrix<int64_t>>(
