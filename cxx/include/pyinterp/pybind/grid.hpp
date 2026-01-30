@@ -339,7 +339,7 @@ class Grid {
   /// @return Reference to the data value.
   template <typename... Index>
     requires(sizeof...(Index) == kNDim)
-  [[nodiscard]] auto value(Index&&... indices) const noexcept
+  [[nodiscard]] constexpr auto value(Index&&... indices) const noexcept
       -> const DataType& {
     return ptr_(std::forward<Index>(indices)...);
   }
@@ -349,8 +349,8 @@ class Grid {
   /// @param[in] coordinate Value to check.
   /// @return True if the value is within bounds, false otherwise.
   template <size_t I>
-  [[nodiscard]] auto is_within_bounds(
-      const math_axis_value_t<I>& coordinate) const -> bool {
+  [[nodiscard]] constexpr auto is_within_bounds(
+      const math_axis_value_t<I>& coordinate) const noexcept -> bool {
     const auto& ax = axis<I>();
     return coordinate >= ax.min_value() && coordinate <= ax.max_value();
   }
@@ -386,8 +386,8 @@ class Grid {
   /// @param[in] bounds_error Whether to raise an error if out of bounds.
   /// @return Pair of surrounding indexes, or `std::nullopt` if out of bounds.
   template <size_t I>
-  [[nodiscard]] auto find_indexes(const math_axis_value_t<I>& coordinate,
-                                  const bool bounds_error) const
+  [[nodiscard]] constexpr auto find_indexes(
+      const math_axis_value_t<I>& coordinate, const bool bounds_error) const
       -> std::optional<std::pair<size_t, size_t>> {
     const auto& ax = axis<I>();
     auto indexes = ax.find_indexes(coordinate);
