@@ -97,8 +97,13 @@ class Bivariate : public BivariateBase<T>, public BracketFinder<T> {
                                 const Eigen::Ref<const Vector<T>>& ya,
                                 const Eigen::Ref<const Matrix<T>>& za,
                                 const T& x, const T& y) -> T final {
-    if (!compute_coefficients(xa, ya, za)) {
-      return Fill<T>::value();
+    if (is_cache_stale(xa.data(), xa.size(), ya.data(), ya.size(), za.data(),
+                       za.size())) {
+      if (!compute_coefficients(xa, ya, za)) {
+        return Fill<T>::value();
+      }
+      update_cache_state(xa.data(), xa.size(), ya.data(), ya.size(), za.data(),
+                         za.size());
     }
     return interpolate_(xa, ya, za, x, y);
   }
@@ -119,8 +124,13 @@ class Bivariate : public BivariateBase<T>, public BracketFinder<T> {
                                 const Eigen::Ref<const Vector<T>>& x,
                                 const Eigen::Ref<const Vector<T>>& y)
       -> Vector<T> override {
-    if (!compute_coefficients(xa, ya, za)) {
-      return Vector<T>::Constant(x.size(), Fill<T>::value());
+    if (is_cache_stale(xa.data(), xa.size(), ya.data(), ya.size(), za.data(),
+                       za.size())) {
+      if (!compute_coefficients(xa, ya, za)) {
+        return Vector<T>::Constant(x.size(), Fill<T>::value());
+      }
+      update_cache_state(xa.data(), xa.size(), ya.data(), ya.size(), za.data(),
+                         za.size());
     }
 
     auto z = Vector<T>(x.size());
@@ -157,6 +167,39 @@ class Bivariate : public BivariateBase<T>, public BracketFinder<T> {
     }
     return (xa.size() >= min_size() && ya.size() >= min_size());
   }
+
+ private:
+  /// @brief Check if coefficients need to be recomputed
+  [[nodiscard]] constexpr auto is_cache_stale(const T* xa_ptr, int64_t xa_size,
+                                              const T* ya_ptr, int64_t ya_size,
+                                              const T* za_ptr,
+                                              int64_t za_size) const noexcept
+      -> bool {
+    return cached_xa_ptr_ != xa_ptr || cached_xa_size_ != xa_size ||
+           cached_ya_ptr_ != ya_ptr || cached_ya_size_ != ya_size ||
+           cached_za_ptr_ != za_ptr || cached_za_size_ != za_size;
+  }
+
+  /// @brief Update the cache state
+  constexpr auto update_cache_state(const T* xa_ptr, int64_t xa_size,
+                                    const T* ya_ptr, int64_t ya_size,
+                                    const T* za_ptr, int64_t za_size) noexcept
+      -> void {
+    cached_xa_ptr_ = xa_ptr;
+    cached_ya_ptr_ = ya_ptr;
+    cached_za_ptr_ = za_ptr;
+    cached_xa_size_ = xa_size;
+    cached_ya_size_ = ya_size;
+    cached_za_size_ = za_size;
+  }
+
+  /// Cached state for detecting when coefficients need recomputation
+  const T* cached_xa_ptr_{nullptr};
+  const T* cached_ya_ptr_{nullptr};
+  const T* cached_za_ptr_{nullptr};
+  int64_t cached_xa_size_{-1};
+  int64_t cached_ya_size_{-1};
+  int64_t cached_za_size_{-1};
 };
 
 }  // namespace pyinterp::math::interpolate
