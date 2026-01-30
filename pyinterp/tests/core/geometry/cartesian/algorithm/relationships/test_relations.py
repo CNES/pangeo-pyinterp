@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for DE-9IM relation functions."""
 
+from __future__ import annotations
+
 import numpy as np
 
 from .......core.geometry.cartesian import LineString, Point, Polygon, Ring

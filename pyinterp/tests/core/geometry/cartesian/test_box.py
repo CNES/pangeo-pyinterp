@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Test Box class."""
 
+from __future__ import annotations
+
 import pickle
 
 from .....core.geometry.cartesian import Box, Point

@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Unit tests for Grid."""
 
+from __future__ import annotations
+
 import numpy as np
 import pytest
 

@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for GeoJSON serialization and deserialization."""
 
+from __future__ import annotations
+
 import json
 
 import numpy as np

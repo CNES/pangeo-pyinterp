@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for WKT serialization and deserialization (geographic)."""
 
+from __future__ import annotations
+
 import numpy as np
 
 from .......core.geometry.geographic import (

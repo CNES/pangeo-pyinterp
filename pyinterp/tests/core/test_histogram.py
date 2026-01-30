@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Unit tests for Histogram2DHolder and related classes."""
 
+from __future__ import annotations
+
 import copy
 import pickle
 

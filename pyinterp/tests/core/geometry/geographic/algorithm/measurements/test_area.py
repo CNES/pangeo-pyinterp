@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for area algorithm."""
 
+from __future__ import annotations
+
 from .......core.geometry.geographic import (
     Box,
     LineString,

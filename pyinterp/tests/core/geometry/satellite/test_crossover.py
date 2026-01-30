@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Test satellite crossover detection functions."""
 
+from __future__ import annotations
+
 import numpy as np
 import pytest
 

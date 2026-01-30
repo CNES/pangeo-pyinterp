@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Test MultiLineString class."""
 
+from __future__ import annotations
+
 import pickle
 
 import numpy as np

@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for azimuth algorithm."""
 
+from __future__ import annotations
+
 import math
 
 from .......core.geometry.cartesian import Segment

@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for is_empty algorithm."""
 
+from __future__ import annotations
+
 from .......core.geometry.cartesian import (
     Box,
     LineString,

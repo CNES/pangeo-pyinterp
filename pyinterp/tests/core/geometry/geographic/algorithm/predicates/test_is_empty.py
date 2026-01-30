@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Test is_empty algorithm."""
 
+from __future__ import annotations
+
 from .......core.geometry.geographic import (
     Box,
     LineString,

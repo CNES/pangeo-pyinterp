@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for centroid algorithm."""
 
+from __future__ import annotations
+
 from .......core.geometry.geographic import Box, Point, Segment
 from .......core.geometry.geographic.algorithms import centroid
 

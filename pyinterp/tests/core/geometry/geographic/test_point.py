@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Test Point class."""
 
+from __future__ import annotations
+
 import pickle
 
 from .....core.geometry.geographic import Point

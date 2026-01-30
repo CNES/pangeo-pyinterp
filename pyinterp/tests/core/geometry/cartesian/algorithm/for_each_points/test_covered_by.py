@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for for_each_point_X algorithms (Cartesian)."""
 
+from __future__ import annotations
+
 import numpy as np
 
 from .......core.geometry.cartesian import (

@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for buffer algorithm and strategy classes."""
 
+from __future__ import annotations
+
 import numpy as np
 
 from .......core.geometry.cartesian import LineString, Point, Polygon, Ring

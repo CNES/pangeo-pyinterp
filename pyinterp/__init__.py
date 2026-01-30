@@ -8,6 +8,8 @@ This package provides efficient interpolation methods for gridded data,
 geospatial operations, and statistical analysis tools.
 """
 
+from __future__ import annotations
+
 import copyreg
 import sys
 from typing import Any

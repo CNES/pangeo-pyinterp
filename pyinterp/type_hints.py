@@ -4,6 +4,8 @@
 # BSD-style license that can be found in the LICENSE file.
 """Type hints for pyinterp package."""
 
+from __future__ import annotations
+
 from types import GenericAlias
 from typing import TYPE_CHECKING, Any, TypeAlias, TypeVar
 
