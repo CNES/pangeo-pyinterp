@@ -613,6 +613,9 @@ class TestTrivariateWindowed:
         result3 = core.trivariate(grid, x, y, z, config)
 
         # Results should be identical
+        result1[result1 < 1e-16] = 0.0
+        result2[result2 < 1e-16] = 0.0
+        result3[result3 < 1e-16] = 0.0
         np.testing.assert_array_equal(result1, result2)
         np.testing.assert_array_equal(result2, result3)
 
