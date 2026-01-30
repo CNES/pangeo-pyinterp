@@ -15,13 +15,25 @@
 #include <utility>
 #include <vector>
 
-#include "pyinterp/math/interpolate/cache_fwd.hpp"
-
 namespace pyinterp::math::interpolate {
 
 /// Concept for numeric types suitable for interpolation
 template <typename T>
 concept Numeric = std::floating_point<T> || std::integral<T>;
+
+/// Domain bounds for a single dimension
+struct DomainBounds {
+  double min{};       /// Minimum bound
+  double max{};       /// Maximum bound
+  bool valid{false};  /// Indicates if bounds are valid
+
+  /// Check if a value is within bounds (inclusive)
+  /// @param[in] value The value to check
+  /// @return True if value is within bounds
+  [[nodiscard]] constexpr auto contains(double value) const noexcept -> bool {
+    return valid && value >= min && value <= max;
+  }
+};
 
 /// Unified N-Dimensional Interpolation Cache
 /// Stores a local window of the grid (coordinates and values)
@@ -139,8 +151,7 @@ class InterpolationCache {
   /// Check if the cache has a valid domain
   /// @return True if the cache has a valid domain
   [[nodiscard]] auto has_domain() const noexcept -> bool {
-    return std::apply([](const auto&... args) { return (args.valid && ...); },
-                      domains_);
+    return std::ranges::all_of(domains_, [](const auto& d) { return d.valid; });
   }
 
   /// Finalize the cache by updating domain bounds
@@ -246,7 +257,7 @@ class InterpolationCache {
   /// Coordinate vectors for each dimension
   std::tuple<std::vector<AxisTypes>...> coords_;
   /// Domain bounds for each dimension
-  std::tuple<DomainBounds<AxisTypes>...> domains_;
+  std::array<DomainBounds, kNDim> domains_;
   /// Flat buffer of values
   std::vector<DataType> values_;
   /// Pre-calculated strides for each dimension
@@ -273,7 +284,7 @@ class InterpolationCache {
   [[nodiscard]] auto contains_impl(std::index_sequence<Is...>,
                                    Coords... coords) const -> bool {
     // Fold expression to check all domains
-    return ((std::get<Is>(domains_).contains(coords)) && ...);
+    return ((domains_[Is].contains(static_cast<double>(coords))) && ...);
   }
 
   // Update domain bounds for all dimensions
@@ -361,17 +372,16 @@ void InterpolationCache<DataType, AxisTypes...>::update_domain_for_axis(
   assert(window_size >= 2);
 
   const auto& [left_idx, right_idx] = bracketing_indices;
-  auto& domain = std::get<I>(domains_);
 
-  domain.valid = left_idx >= 0 && right_idx >= 0 &&
-                 std::cmp_less(left_idx, window_size) &&
-                 std::cmp_less(right_idx, window_size);
-  if (!domain.valid) {
+  domains_[I].valid = left_idx >= 0 && right_idx >= 0 &&
+                      std::cmp_less(left_idx, window_size) &&
+                      std::cmp_less(right_idx, window_size);
+  if (!domains_[I].valid) {
     return;
   }
 
-  domain.min = vec[left_idx];
-  domain.max = vec[right_idx];
+  domains_[I].min = static_cast<double>(vec[left_idx]);
+  domains_[I].max = static_cast<double>(vec[right_idx]);
 }
 
 // ============================================================================

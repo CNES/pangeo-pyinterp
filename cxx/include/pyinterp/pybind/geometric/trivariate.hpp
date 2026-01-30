@@ -11,27 +11,16 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
-#include <stdexcept>
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/config/geometric.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/math/interpolate/geometric/bivariate.hpp"
 #include "pyinterp/math/interpolate/geometric/multivariate.hpp"
-#include "pyinterp/math/interpolate/geometric_cache.hpp"
-#include "pyinterp/math/interpolate/geometric_cache_loader.hpp"
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/parallel_for.hpp"
 
 namespace pyinterp::geometric::pybind {
-
-/// @brief Alias for the geometric interpolation cache for 3D
-/// @tparam ResultType Result type of the interpolation
-/// @tparam ZType Type of the third axis coordinate
-template <typename ResultType, typename ZType>
-using InterpolationCache3D =
-    math::interpolate::geometric::Cache3D<ResultType, ZType>;
-
 namespace detail {
 
 /// @brief Result type for single-point trivariate interpolation.
@@ -39,7 +28,7 @@ template <typename T>
 using TrivariateInterpolationResult =
     pyinterp::math::interpolate::InterpolationResult<T>;
 
-/// @brief Single-point trivariate interpolation using cache.
+/// @brief Single-point trivariate interpolation.
 /// @tparam Point Point template class.
 /// @tparam GridType Type of the grid.
 /// @tparam ResultType Type of the interpolation result.
@@ -50,7 +39,6 @@ using TrivariateInterpolationResult =
 /// @param[in] z Z coordinate of the query point.
 /// @param[in] spatial_interpolator Spatial interpolator for the (X,Y) plane.
 /// @param[in] z_axis_interpolator Interpolator for the Z axis.
-/// @param[in,out] cache Interpolation cache (updated if needed)
 /// @param[in] bounds_error Whether to raise an error if the point is out of
 /// bounds.
 /// @return The interpolation result.
@@ -62,47 +50,49 @@ template <template <class> class Point, typename GridType, typename ResultType,
         spatial_interpolator,
     const math::interpolate::geometric::AxisInterpolator<ZType, ResultType>&
         z_axis_interpolator,
-    InterpolationCache3D<ResultType, ZType>& cache, const bool bounds_error)
-    -> TrivariateInterpolationResult<ResultType> {
-  // Update cache if query point is outside current cached cell
-  auto cache_result = math::interpolate::geometric::update_cache_if_needed(
-      cache, grid, std::make_tuple(x, y, z), bounds_error);
-
-  if (!cache_result.success) {
-    // Cache loading failed
-    if (cache_result.error_message.has_value()) {
-      throw std::out_of_range(cache_result.error_message.value());
-    }
+    const bool bounds_error) -> TrivariateInterpolationResult<ResultType> {
+  // Early exit if out of bounds
+  auto x_indexes = grid.template find_indexes<0>(x, bounds_error);
+  if (!x_indexes.has_value()) {
     return {std::nullopt};
   }
 
-  if (!cache.is_valid()) {
-    // Cache contains NaN values
+  auto y_indexes = grid.template find_indexes<1>(y, bounds_error);
+  if (!y_indexes.has_value()) {
     return {std::nullopt};
   }
 
-  // Get cached coordinates
-  const auto x0 = static_cast<ResultType>(cache.template coord_lower<0>());
-  const auto x1 = static_cast<ResultType>(cache.template coord_upper<0>());
-  const auto y0 = static_cast<ResultType>(cache.template coord_lower<1>());
-  const auto y1 = static_cast<ResultType>(cache.template coord_upper<1>());
-  const auto z0 = static_cast<ZType>(cache.template coord_lower<2>());
-  const auto z1 = static_cast<ZType>(cache.template coord_upper<2>());
+  auto z_indexes = grid.template find_indexes<2>(z, bounds_error);
+  if (!z_indexes.has_value()) {
+    return {std::nullopt};
+  }
 
-  // Get cached values for the 8 corners of the 3D cell
-  // Corner indices (x,y,z): 000=0, 001=1, 010=2, 011=3, 100=4, 101=5, 110=6,
-  // 111=7
-  const auto v000 = static_cast<ResultType>(cache.value(0));
-  const auto v001 = static_cast<ResultType>(cache.value(1));
-  const auto v010 = static_cast<ResultType>(cache.value(2));
-  const auto v011 = static_cast<ResultType>(cache.value(3));
-  const auto v100 = static_cast<ResultType>(cache.value(4));
-  const auto v101 = static_cast<ResultType>(cache.value(5));
-  const auto v110 = static_cast<ResultType>(cache.value(6));
-  const auto v111 = static_cast<ResultType>(cache.value(7));
+  auto [ix0, ix1] = *x_indexes;
+  auto [iy0, iy1] = *y_indexes;
+  auto [iz0, iz1] = *z_indexes;
 
-  // Cache axis reference for coordinate normalization
+  // Cache axis references
   const auto& x_axis = grid.template axis<0>();
+  const auto& y_axis = grid.template axis<1>();
+  const auto& z_axis = grid.template axis<2>();
+
+  // Fetch grid values for the 8 corners of the 3D cell
+  const auto v000 = static_cast<ResultType>(grid.value(ix0, iy0, iz0));
+  const auto v010 = static_cast<ResultType>(grid.value(ix0, iy1, iz0));
+  const auto v100 = static_cast<ResultType>(grid.value(ix1, iy0, iz0));
+  const auto v110 = static_cast<ResultType>(grid.value(ix1, iy1, iz0));
+  const auto v001 = static_cast<ResultType>(grid.value(ix0, iy0, iz1));
+  const auto v011 = static_cast<ResultType>(grid.value(ix0, iy1, iz1));
+  const auto v101 = static_cast<ResultType>(grid.value(ix1, iy0, iz1));
+  const auto v111 = static_cast<ResultType>(grid.value(ix1, iy1, iz1));
+
+  // Construct spatial points and bounds
+  const auto x0 = static_cast<ResultType>(x_axis.coordinate_value(ix0));
+  const auto x1 = static_cast<ResultType>(x_axis.coordinate_value(ix1));
+  const auto y0 = static_cast<ResultType>(y_axis.coordinate_value(iy0));
+  const auto y1 = static_cast<ResultType>(y_axis.coordinate_value(iy1));
+  const auto z0 = static_cast<ZType>(z_axis.coordinate_value(iz0));
+  const auto z1 = static_cast<ZType>(z_axis.coordinate_value(iz1));
 
   // Create query point and bounding box
   using SpatialPoint3D =
@@ -170,14 +160,11 @@ template <template <class> class Point, typename GridType, typename ResultType,
   parallel_for(
       x.size(),
       [&](const int64_t start, const int64_t end) {
-        // Create per-thread cache for efficient cell reuse
-        auto cache = InterpolationCache3D<ResultType, ZType>();
-
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
               detail::trivariate_single<Point, GridType, ResultType, ZType>(
                   grid, x[ix], y[ix], z[ix], spatial_interpolator_ptr,
-                  z_axis_interpolator, cache, config.common().bounds_error());
+                  z_axis_interpolator, config.common().bounds_error());
 
           if (interpolated_value.has_value()) {
             result[ix] = *interpolated_value.value;

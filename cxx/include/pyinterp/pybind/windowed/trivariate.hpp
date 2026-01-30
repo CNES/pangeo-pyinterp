@@ -10,11 +10,11 @@
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/config/windowed.hpp"
 #include "pyinterp/math/interpolate/bivariate.hpp"
+#include "pyinterp/math/interpolate/cache.hpp"
+#include "pyinterp/math/interpolate/cache_loader.hpp"
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/math/interpolate/linear.hpp"
 #include "pyinterp/math/interpolate/nearest.hpp"
-#include "pyinterp/math/interpolate/window_cache.hpp"
-#include "pyinterp/math/interpolate/window_cache_loader.hpp"
 #include "pyinterp/parallel_for.hpp"
 
 namespace pyinterp::windowed::pybind {
