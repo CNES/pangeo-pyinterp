@@ -32,6 +32,35 @@ using InterpolationCache4D =
     pyinterp::math::interpolate::InterpolationCache<double, double, double,
                                                     ZType, double>;
 
+/// @brief Container for spatial interpolators needed for quadrivariate
+/// interpolation
+/// @tparam T Value type
+struct SpatialInterpolators {
+  /// @brief Interpolator for the (z, u) plane at the spatial corner (x0, y0)
+  /// This interpolator provides values on the (z, u) axes for the lower-left
+  /// corner of the (x, y) plane used in the 4D interpolation.
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x0y0;
+  /// @brief Interpolator for the (z, u) plane at the spatial corner (x0, y1)
+  /// This interpolator provides values on the (z, u) axes for the upper-left
+  /// corner of the (x, y) plane used in the 4D interpolation.
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x0y1;
+  /// @brief Interpolator for the (z, u) plane at the spatial corner (x1, y0)
+  /// This interpolator provides values on the (z, u) axes for the lower-right
+  /// corner of the (x, y) plane used in the 4D interpolation.
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x1y0;
+  /// @brief Interpolator for the (z, u) plane at the spatial corner (x1, y1)
+  /// This interpolator provides values on the (z, u) axes for the upper-right
+  /// corner of the (x, y) plane used in the 4D interpolation.
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x1y1;
+
+  /// @brief Constructor
+  explicit SpatialInterpolators(const config::windowed::Quadrivariate& cfg)
+      : interpolator_x0y0(cfg.spatial().factory<double>()),
+        interpolator_x0y1(cfg.spatial().factory<double>()),
+        interpolator_x1y0(cfg.spatial().factory<double>()),
+        interpolator_x1y1(cfg.spatial().factory<double>()) {}
+};
+
 /// @brief Perform quadrivariate interpolation for a single point
 /// @tparam GridType Type of the grid
 /// @tparam ResultType Result type of the interpolation
@@ -49,8 +78,8 @@ template <typename GridType, typename ResultType, typename ZType>
 [[nodiscard]] auto quadrivariate_single(
     const GridType& grid, const double x, const double y, const ZType z,
     const double u, const config::windowed::Quadrivariate& cfg,
-    math::interpolate::BivariateBase<double>* interpolator,
-    InterpolationCache4D<ZType>& cache) -> InterpolationResult<ResultType> {
+    SpatialInterpolators& interpolators, InterpolationCache4D<ZType>& cache)
+    -> InterpolationResult<ResultType> {
   auto cache_load_result = math::interpolate::update_cache_if_needed(
       cache, grid, std::make_tuple(x, y, z, u), cfg.spatial().boundary_mode(),
       cfg.common().bounds_error());
@@ -70,23 +99,30 @@ template <typename GridType, typename ResultType, typename ZType>
     // Cache contains only NaN values, interpolation cannot proceed
     return {};
   }
+  if (cache_load_result.was_updated) {
+    // Cache was updated, prepare the interpolators with new data
+    const auto x_coords = cache.template coords_as_eigen<0>();
+    const auto y_coords = cache.template coords_as_eigen<1>();
+
+    interpolators.interpolator_x0y0->prepare(x_coords, y_coords,
+                                             cache.matrix(0, 0));
+    interpolators.interpolator_x0y1->prepare(x_coords, y_coords,
+                                             cache.matrix(0, 1));
+    interpolators.interpolator_x1y0->prepare(x_coords, y_coords,
+                                             cache.matrix(1, 0));
+    interpolators.interpolator_x1y1->prepare(x_coords, y_coords,
+                                             cache.matrix(1, 1));
+  }
   const auto z0 = cache.template coord<2>(0);
   const auto z1 = cache.template coord<2>(1);
   const auto u0 = cache.template coord<3>(0);
   const auto u1 = cache.template coord<3>(1);
 
-  const auto f00 = (*interpolator)(cache.template coords_as_eigen<0>(),
-                                   cache.template coords_as_eigen<1>(),
-                                   cache.matrix(0, 0), x, y);
-  const auto f01 = (*interpolator)(cache.template coords_as_eigen<0>(),
-                                   cache.template coords_as_eigen<1>(),
-                                   cache.matrix(0, 1), x, y);
-  const auto f10 = (*interpolator)(cache.template coords_as_eigen<0>(),
-                                   cache.template coords_as_eigen<1>(),
-                                   cache.matrix(1, 0), x, y);
-  const auto f11 = (*interpolator)(cache.template coords_as_eigen<0>(),
-                                   cache.template coords_as_eigen<1>(),
-                                   cache.matrix(1, 1), x, y);
+  const auto f00 = (*interpolators.interpolator_x0y0)(x, y);
+  const auto f01 = (*interpolators.interpolator_x0y1)(x, y);
+  const auto f10 = (*interpolators.interpolator_x1y0)(x, y);
+  const auto f11 = (*interpolators.interpolator_x1y1)(x, y);
+
   ResultType f0;
   ResultType f1;
 
@@ -142,13 +178,12 @@ template <typename GridType, typename ResultType, typename ZType>
         auto cache =
             InterpolationCache4D<ZType>(cfg.spatial().half_window_size_x(),
                                         cfg.spatial().half_window_size_y());
-        auto interpolator = cfg.spatial().factory<double>();
+        auto interpolators = SpatialInterpolators(cfg);
 
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
               quadrivariate_single<GridType, ResultType, ZType>(
-                  grid, x[ix], y[ix], z[ix], u[ix], cfg, interpolator.get(),
-                  cache);
+                  grid, x[ix], y[ix], z[ix], u[ix], cfg, interpolators, cache);
           if (interpolated_value.has_value()) {
             result[ix] = *interpolated_value.value;
           }

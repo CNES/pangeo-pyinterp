@@ -10,7 +10,6 @@
 #include <memory>
 #include <stdexcept>
 
-#include "Eigen/Core"
 #include "pyinterp/math/interpolate/bivariate.hpp"
 #include "pyinterp/math/interpolate/univariate.hpp"
 
@@ -38,87 +37,39 @@ class Spline : public BivariateBase<T> {
     interp_values_.resize(initial_capacity_);
   }
 
+  /// @brief The minimum size of the arrays to be interpolated.
+  /// @return Minimum size of the arrays
+  [[nodiscard]] constexpr auto min_size() const -> int64_t final {
+    return interpolator_->min_size();
+  }
+
   /// @brief Return the interpolated value at point (x, y)
   ///
-  /// Performs separable 2D interpolation by interpolating along one axis
-  /// first, then along the other. The order is chosen based on the grid's
-  /// storage order for optimal cache performance.
+  /// Performs separable 2D interpolation by interpolating along the Y-axis
+  /// first, then X-axis (optimal for column-major storage, which is the
+  /// internal storage format after prepare()).
   ///
-  /// @param[in] xa X-axis coordinates
-  /// @param[in] ya Y-axis coordinates
-  /// @param[in] za Grid data
   /// @param[in] x X-coordinate for interpolation
   /// @param[in] y Y-coordinate for interpolation
   /// @return Interpolated value at (x, y)
   ///
   /// @throws std::runtime_error if grid is empty
-  [[nodiscard]] auto operator()(const Eigen::Ref<const Vector<T>>& xa,
-                                const Eigen::Ref<const Vector<T>>& ya,
-                                const Eigen::Ref<const Matrix<T>>& za,
-                                const T& x, const T& y) -> T final {
+  [[nodiscard]] auto operator()(const T& x, const T& y) -> T final {
+    const auto& xa = this->xa();
+    const auto& ya = this->ya();
+    const auto& za = this->za();
+
     // Validate grid dimensions
     if (za.size() == 0) {
       throw std::runtime_error("Cannot interpolate on empty grid");
     }
-
-    // Choose interpolation order based on memory layout for better cache
-    // performance. When the last dimension is contiguous (row-major), we
-    // interpolate along X first. When the first dimension is contiguous
-    // (column-major), we interpolate along Y first.
-    static_assert(Matrix<T>::RowsAtCompileTime == Eigen::Dynamic &&
-                      Matrix<T>::ColsAtCompileTime == Eigen::Dynamic,
-                  "This method assumes dynamic-size Eigen matrices");
-
-    return za.IsRowMajor ? interpolate_x_then_y(xa, ya, za, x, y)
-                         : interpolate_y_then_x(xa, ya, za, x, y);
+    return interpolate_y_then_x(xa, ya, za, x, y);
   }
 
   // Batch interpolation is inherited from BivariateBase<T>
   using BivariateBase<T>::operator();
 
  private:
-  /// @brief Interpolate along X-axis first, then Y-axis
-  ///
-  /// Optimal when the last dimension (columns) is contiguous in memory
-  /// (row-major storage). This minimizes cache misses during the first
-  /// interpolation pass.
-  ///
-  /// Algorithm:
-  /// 1. For each column j, interpolate f(x, y_j) along X at position y
-  ///    → produces n_cols intermediate values
-  /// 2. Interpolate those intermediate values along Y at position x
-  ///    → produces final result
-  ///
-  /// @param[in] xa X-axis coordinates
-  /// @param[in] ya Y-axis coordinates
-  /// @param[in] za Grid data
-  /// @param[in] x X-coordinate
-  /// @param[in] y Y-coordinate
-  /// @return Interpolated value
-  auto interpolate_x_then_y(const Eigen::Ref<const Vector<T>>& xa,
-                            const Eigen::Ref<const Vector<T>>& ya,
-                            const Eigen::Ref<const Matrix<T>>& za, const T x,
-                            const T y) -> T {
-    const auto n_cols = za.cols();
-
-    // Ensure temporary storage has sufficient capacity
-    ensure_capacity(n_cols);
-
-    // Step 1: For each column, interpolate along X-axis at the given Y
-    // coordinate. This produces a 1D array of values, one per column.
-    for (int64_t ix = 0; ix < n_cols; ++ix) {
-      // Extract column (all X values at this Y coordinate)
-      const auto column = za.col(ix);
-      // Interpolate along X at position y
-      interp_values_(ix) = (*interpolator_)(xa, column, x);
-    }
-
-    // Step 2: Interpolate the intermediate values along Y-axis
-    // interp_values_ may have extra capacity beyond n_cols; only use the first
-    // n_cols elements
-    return (*interpolator_)(ya, interp_values_.head(n_cols), y);
-  }
-
   /// @brief Interpolate along Y-axis first, then X-axis
   ///
   /// Optimal when the first dimension (rows) is contiguous in memory
@@ -183,7 +134,7 @@ class Spline : public BivariateBase<T> {
   std::unique_ptr<interpolate::Univariate<T>> interpolator_;
 
   /// Temporary storage for intermediate interpolation results
-  /// Stores one value per row or column, depending on interpolation order
+  /// Stores one value per row, used during interpolation.
   /// Size grows dynamically but never shrinks to amortize allocation costs
   Vector<T> interp_values_;
 

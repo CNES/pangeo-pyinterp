@@ -27,7 +27,8 @@ TEST(Bicubic, CaseOne) {
   yp << 1.0, 1.5, 2.0;
   zp << 1.2, 1.3, 1.4;
   auto bicubic = Bicubic<double>();
-  auto z = bicubic(xa, ya, za, xp, yp);
+  bicubic.prepare(xa, ya, za);
+  auto z = bicubic(xp, yp);
   for (int64_t i = 0; i < z.size(); ++i) {
     EXPECT_NEAR(z(i), zp(i), 1.0e-12);
   }
@@ -52,7 +53,8 @@ TEST(Bicubic, NonLinear) {
   zp << 1.4, 3.11183531264736, 8.27114315792559, 5.03218982537718,
       22.13230634702637, 23.63206834997871, 17.28553080971182;
   auto bicubic = Bicubic<double>();
-  auto z = bicubic(xa, ya, za, xp, yp);
+  bicubic.prepare(xa, ya, za);
+  auto z = bicubic(xp, yp);
   for (int64_t i = 0; i < z.size(); ++i) {
     EXPECT_NEAR(z(i), zp(i), 1.0e-12);
   }
@@ -78,7 +80,8 @@ TEST(Bicubic, NonSquare) {
       11.6747032398627297, 11.2619968682970111, 9.00168877916872567;
 
   auto bicubic = Bicubic<double>();
-  auto z = bicubic(xa, ya, za, xp, yp);
+  bicubic.prepare(xa, ya, za);
+  auto z = bicubic(xp, yp);
   for (int64_t i = 0; i < z.size(); ++i) {
     EXPECT_NEAR(z(i), zp(i), 1.0e-12);
   }

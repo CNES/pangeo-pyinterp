@@ -66,9 +66,12 @@ template <typename DataType, typename ResultType>
     // Cache contains only NaN values, interpolation cannot proceed
     return {};
   }
-  auto result = (*interpolator)(cache.template coords_as_eigen<0>(),
-                                cache.template coords_as_eigen<1>(),
-                                cache.matrix(), x, y);
+  if (cache_load_result.was_updated) {
+    // Cache was updated, prepare the interpolator with new data
+    interpolator->prepare(cache.template coords_as_eigen<0>(),
+                          cache.template coords_as_eigen<1>(), cache.matrix());
+  }
+  auto result = (*interpolator)(x, y);
   return InterpolationResult<ResultType>{static_cast<ResultType>(result)};
 }
 

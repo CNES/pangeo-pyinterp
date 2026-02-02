@@ -28,29 +28,17 @@ class Bicubic : public Bivariate<T> {
   /// Returns the minimum number of points required for the interpolation.
   [[nodiscard]] constexpr auto min_size() const -> int64_t final { return 2; }
 
+  /// @brief Compute the coefficients of the bicubic interpolation
+  /// @return True if coefficients computed successfully
+  [[nodiscard]] constexpr auto compute_coefficients() -> bool final;
+
  private:
   /// @brief Interpolation using bicubic polynomials
-  /// @param[in] xa X-coordinates of the data points.
-  /// @param[in] ya Y-coordinates of the data points.
-  /// @param[in] za Z-values of the data points (2D grid).
   /// @param[in] x The x-coordinate where the interpolation must be calculated.
   /// @param[in] y The y-coordinate where the interpolation must be calculated.
   /// @return The interpolated value at point (x, y).
-  [[nodiscard]] constexpr auto interpolate_(
-      const Eigen::Ref<const Vector<T>>& xa,
-      const Eigen::Ref<const Vector<T>>& ya,
-      const Eigen::Ref<const Matrix<T>>& za, const T& x, const T& y) const
+  [[nodiscard]] constexpr auto interpolate_(const T& x, const T& y) const
       -> T final;
-
-  /// @brief Compute the coefficients of the bicubic interpolation
-  /// @param[in] xa X-coordinates of the data points.
-  /// @param[in] ya Y-coordinates of the data points.
-  /// @param[in] za Z-values of the data points (2D grid).
-  /// @return True if coefficients computed successfully
-  [[nodiscard]] constexpr auto compute_coefficients(
-      const Eigen::Ref<const Vector<T>>& xa,
-      const Eigen::Ref<const Vector<T>>& ya,
-      const Eigen::Ref<const Matrix<T>>& za) -> bool final;
 
   /// Partial derivatives needed for bicubic interpolation
   Matrix<T> zx_{};   // ∂z/∂x at grid points
@@ -66,36 +54,32 @@ class Bicubic : public Bivariate<T> {
 // ============================================================================
 
 template <std::floating_point T>
-constexpr auto Bicubic<T>::compute_coefficients(
-    const Eigen::Ref<const Vector<T>>& xa,
-    const Eigen::Ref<const Vector<T>>& ya,
-    const Eigen::Ref<const Matrix<T>>& za) -> bool {
-  if (!Bivariate<T>::compute_coefficients(xa, ya, za)) [[unlikely]] {
-    return false;
-  }
-
-  const auto xsize = xa.size();
-  const auto ysize = ya.size();
+constexpr auto Bicubic<T>::compute_coefficients() -> bool {
+  const auto xa = this->xa();
+  const auto ya = this->ya();
+  const auto za = this->za();
+  const auto xa_size = xa.size();
+  const auto ya_size = ya.size();
 
   // Resize derivative matrices if needed
-  if (zx_.rows() != xsize || zx_.cols() != ysize) {
-    zx_.resize(xsize, ysize);
-    zy_.resize(xsize, ysize);
-    zxy_.resize(xsize, ysize);
+  if (zx_.rows() != xa_size || zx_.cols() != ya_size) {
+    zx_.resize(xa_size, ya_size);
+    zy_.resize(xa_size, ya_size);
+    zxy_.resize(xa_size, ya_size);
   }
 
   // Compute ∂z/∂x at each grid point (derivative along x for each y)
-  for (const auto j : std::views::iota(int64_t{0}, ysize)) {
+  for (const auto j : std::views::iota(int64_t{0}, ya_size)) {
     zx_.col(j) = spline_.derivative(xa, za.col(j), xa);
   }
 
   // Compute ∂z/∂y at each grid point (derivative along y for each x)
-  for (const auto i : std::views::iota(int64_t{0}, xsize)) {
+  for (const auto i : std::views::iota(int64_t{0}, xa_size)) {
     zy_.row(i) = spline_.derivative(ya, za.row(i), ya);
   }
 
   // Compute ∂²z/∂x∂y (cross derivatives)
-  for (const auto j : std::views::iota(int64_t{0}, ysize)) {
+  for (const auto j : std::views::iota(int64_t{0}, ya_size)) {
     zxy_.col(j) = spline_.derivative(xa, zy_.col(j), xa);
   }
 
@@ -103,10 +87,10 @@ constexpr auto Bicubic<T>::compute_coefficients(
 }
 
 template <std::floating_point T>
-constexpr auto Bicubic<T>::interpolate_(const Eigen::Ref<const Vector<T>>& xa,
-                                        const Eigen::Ref<const Vector<T>>& ya,
-                                        const Eigen::Ref<const Matrix<T>>& za,
-                                        const T& x, const T& y) const -> T {
+constexpr auto Bicubic<T>::interpolate_(const T& x, const T& y) const -> T {
+  const auto xa = this->xa();
+  const auto ya = this->ya();
+  const auto za = this->za();
   const auto search_x = this->search(xa, x);
   const auto search_y = this->search(ya, y);
 

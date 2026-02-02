@@ -28,7 +28,8 @@ TEST(Bilinear, Symmetric) {
   zp << 1.0, 1.1, 1.2, 1.3, 1.5, 1.6;
 
   auto bilinear = Bilinear<double>();
-  auto z = bilinear(xa, ya, za, xp, yp);
+  bilinear.prepare(xa, ya, za);
+  auto z = bilinear(xp, yp);
   for (int64_t i = 0; i < z.size(); ++i) {
     EXPECT_NEAR(z(i), zp(i), 1.0e-12);
   }
@@ -54,7 +55,8 @@ TEST(Bilinear, Asymmetric) {
       1.626612, 1.6146423, 1.15436761;
 
   auto bilinear = Bilinear<double>();
-  auto z = bilinear(xa, ya, za, xp, yp);
+  bilinear.prepare(xa, ya, za);
+  auto z = bilinear(xp, yp);
   for (int64_t i = 0; i < z.size(); ++i) {
     EXPECT_NEAR(z(i), zp(i), 1.0e-12);
   }

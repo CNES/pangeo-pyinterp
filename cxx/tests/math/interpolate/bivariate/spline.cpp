@@ -33,7 +33,8 @@ TEST(Spline, LinearSymmetric) {
   zp << 1.0, 1.1, 1.2, 1.3, 1.5, 1.6;
 
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
-  auto z = spline(xa, ya, za, xp, yp);
+  spline.prepare(xa, ya, za);
+  auto z = spline(xp, yp);
   for (int64_t i = 0; i < z.size(); ++i) {
     EXPECT_NEAR(z(i), zp(i), 1.0e-12);
   }
@@ -60,7 +61,8 @@ TEST(Spline, LinearAsymmetric) {
       1.626612, 1.6146423, 1.15436761;
 
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
-  auto z = spline(xa, ya, za, xp, yp);
+  spline.prepare(xa, ya, za);
+  auto z = spline(xp, yp);
   for (int64_t i = 0; i < z.size(); ++i) {
     EXPECT_NEAR(z(i), zp(i), 1.0e-12);
   }
@@ -89,7 +91,8 @@ TEST(Spline, AkimaSmooth) {
   yp << 0.5, 1.5, 2.5, 3.5, 4.5;
 
   auto spline = Spline<double>(std::make_unique<univariate::Akima<double>>());
-  auto z = spline(xa, ya, za, xp, yp);
+  spline.prepare(xa, ya, za);
+  auto z = spline(xp, yp);
 
   // Check that interpolated values are reasonable for f(x,y) = x^2 + y^2
   for (int64_t i = 0; i < z.size(); ++i) {
@@ -113,11 +116,12 @@ TEST(Spline, ExactOnGridPoints) {
       15.0, 4.0, 8.0, 12.0, 16.0, 20.0, 5.0, 10.0, 15.0, 20.0, 25.0;
 
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
+  spline.prepare(xa, ya, za);
 
   // Test exact values at grid points
   for (int64_t i = 0; i < 5; ++i) {
     for (int64_t j = 0; j < 5; ++j) {
-      double z = spline(xa, ya, za, xa(i), ya(j));
+      double z = spline(xa(i), ya(j));
       EXPECT_NEAR(z, za(i, j), 1.0e-12);
     }
   }
@@ -145,7 +149,8 @@ TEST(Spline, NonSquareGrid) {
   yp << 1.0, 2.0, 3.0, 4.0, 5.0;
 
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
-  auto z = spline(xa, ya, za, xp, yp);
+  spline.prepare(xa, ya, za);
+  auto z = spline(xp, yp);
 
   // For linear function with linear interpolation, should be exact
   for (int64_t i = 0; i < z.size(); ++i) {
@@ -172,7 +177,8 @@ TEST(Spline, ColumnMajorStorage) {
   yp << 1.0, 1.5, 2.0;
 
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
-  auto z = spline(xa, ya, za, xp, yp);
+  spline.prepare(xa, ya, za);
+  auto z = spline(xp, yp);
 
   // Expected values for linear interpolation
   Eigen::Matrix<double, Eigen::Dynamic, 1> zp(3);
@@ -199,9 +205,9 @@ TEST(Spline, RowMajorStorage) {
       1.5, 1.6;
   xp << 1.0, 1.5, 2.0;
   yp << 1.0, 1.5, 2.0;
-
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
-  auto z = spline(xa, ya, za, xp, yp);
+  spline.prepare(xa, ya, za);
+  auto z = spline(xp, yp);
 
   // Expected values for linear interpolation
   Eigen::Matrix<double, Eigen::Dynamic, 1> zp(3);
@@ -219,9 +225,8 @@ TEST(Spline, EmptyGrid) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(0);
 
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
-
-  EXPECT_THROW(static_cast<void>(spline(xa, ya, za, 1.0, 1.0)),
-               std::runtime_error);
+  spline.prepare(xa, ya, za);
+  EXPECT_THROW(static_cast<void>(spline(1.0, 1.0)), std::runtime_error);
 }
 
 // Test with larger grid to verify capacity management
@@ -247,19 +252,19 @@ TEST(Spline, LargeGrid) {
   }
 
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
-
+  spline.prepare(xa, ya, za);
   // Test multiple interpolations on a large grid
   // This verifies that internal storage resizes correctly
-  double z1 = spline(xa, ya, za, 10.0, 20.0);
+  double z1 = spline(10.0, 20.0);
   EXPECT_NEAR(z1, 2.0 * 10.0 + 3.0 * 20.0, 1.0e-10);
 
-  double z2 = spline(xa, ya, za, 10.5, 20.0);
+  double z2 = spline(10.5, 20.0);
   EXPECT_NEAR(z2, 2.0 * 10.5 + 3.0 * 20.0, 1.0e-10);
 
-  double z3 = spline(xa, ya, za, 10.0, 20.5);
+  double z3 = spline(10.0, 20.5);
   EXPECT_NEAR(z3, 2.0 * 10.0 + 3.0 * 20.5, 1.0e-10);
 
-  double z4 = spline(xa, ya, za, 25.5, 35.5);
+  double z4 = spline(25.5, 35.5);
   EXPECT_NEAR(z4, 2.0 * 25.5 + 3.0 * 35.5, 1.0e-10);
 }
 
@@ -285,8 +290,8 @@ TEST(Spline, BatchInterpolation) {
   yp << 0.5, 1.5, 2.5, 3.5, 0.7, 1.3, 2.9, 3.1, 0.0, 4.0;
 
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
-  auto z = spline(xa, ya, za, xp, yp);
-
+  spline.prepare(xa, ya, za);
+  auto z = spline(xp, yp);
   // For linear function with linear interpolation, should be exact
   for (int64_t i = 0; i < z.size(); ++i) {
     double expected = 2.0 * xp(i) + 3.0 * yp(i);

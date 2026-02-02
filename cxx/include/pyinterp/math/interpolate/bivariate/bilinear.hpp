@@ -26,16 +26,10 @@ class Bilinear : public Bivariate<T> {
 
  private:
   /// Interpolation using bilinear weighting
-  /// @param xa X-coordinates of the data points.
-  /// @param ya Y-coordinates of the data points.
-  /// @param za Z-values of the data points (2D grid).
   /// @param x The x-coordinate where the interpolation must be calculated.
   /// @param y The y-coordinate where the interpolation must be calculated.
   /// @return The interpolated value at point (x, y).
-  [[nodiscard]] constexpr auto interpolate_(
-      const Eigen::Ref<const Vector<T>>& xa,
-      const Eigen::Ref<const Vector<T>>& ya,
-      const Eigen::Ref<const Matrix<T>>& za, const T& x, const T& y) const
+  [[nodiscard]] constexpr auto interpolate_(const T& x, const T& y) const
       -> T final;
 };
 
@@ -44,10 +38,10 @@ class Bilinear : public Bivariate<T> {
 // ============================================================================
 
 template <std::floating_point T>
-constexpr auto Bilinear<T>::interpolate_(const Eigen::Ref<const Vector<T>>& xa,
-                                         const Eigen::Ref<const Vector<T>>& ya,
-                                         const Eigen::Ref<const Matrix<T>>& za,
-                                         const T& x, const T& y) const -> T {
+constexpr auto Bilinear<T>::interpolate_(const T& x, const T& y) const -> T {
+  const auto xa = this->xa();
+  const auto ya = this->ya();
+  const auto za = this->za();
   const auto search_x = this->search(xa, x);
   const auto search_y = this->search(ya, y);
 
