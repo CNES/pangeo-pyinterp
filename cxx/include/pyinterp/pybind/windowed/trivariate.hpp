@@ -33,16 +33,19 @@ using InterpolationCache3D =
 /// @brief Container for spatial interpolators needed for trivariate
 /// interpolation
 /// @tparam T Value type
-struct SpatialInterpolators {
+struct TrivariateSpatialInterpolators {
   /// @brief Spatial interpolator on the plane at z0 (first plane along the
   /// third axis)
-  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x0;
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x0{
+      nullptr};
   /// @brief Spatial interpolator on the plane at z1 (second plane along the
   /// third axis)
-  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x1;
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x1{
+      nullptr};
 
   /// @brief Constructor
-  explicit SpatialInterpolators(const config::windowed::Trivariate& cfg)
+  explicit TrivariateSpatialInterpolators(
+      const config::windowed::Trivariate& cfg)
       : interpolator_x0(cfg.spatial().factory<double>()),
         interpolator_x1(cfg.spatial().factory<double>()) {}
 };
@@ -60,12 +63,11 @@ struct SpatialInterpolators {
 /// @param cache Interpolation cache
 /// @return Interpolated value
 template <typename GridType, typename ResultType, typename ZType>
-[[nodiscard]] auto trivariate_single(const GridType& grid, const double x,
-                                     const double y, const ZType z,
-                                     const config::windowed::Trivariate& cfg,
-                                     SpatialInterpolators& interpolators,
-                                     InterpolationCache3D<ZType>& cache)
-    -> InterpolationResult<ResultType> {
+[[nodiscard]] auto trivariate_single(
+    const GridType& grid, const double x, const double y, const ZType z,
+    const config::windowed::Trivariate& cfg,
+    TrivariateSpatialInterpolators& interpolators,
+    InterpolationCache3D<ZType>& cache) -> InterpolationResult<ResultType> {
   auto cache_load_result = math::interpolate::update_cache_if_needed(
       cache, grid, std::make_tuple(x, y, z), cfg.spatial().boundary_mode(),
       cfg.common().bounds_error());
@@ -101,6 +103,7 @@ template <typename GridType, typename ResultType, typename ZType>
 
   if (cfg.third_axis().method() == config::AxisMethod::kLinear) {
     // Linear interpolation along Z axis
+
     return {
         static_cast<ResultType>(math::interpolate::linear(z, z0, z1, f0, f1))};
   }
@@ -136,7 +139,7 @@ template <typename GridType, typename ResultType, typename ZType>
         auto cache =
             InterpolationCache3D<ZType>(cfg.spatial().half_window_size_x(),
                                         cfg.spatial().half_window_size_y());
-        auto interpolator = SpatialInterpolators(cfg);
+        auto interpolator = TrivariateSpatialInterpolators(cfg);
 
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =

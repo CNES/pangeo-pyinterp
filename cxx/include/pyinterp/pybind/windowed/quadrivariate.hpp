@@ -35,26 +35,30 @@ using InterpolationCache4D =
 /// @brief Container for spatial interpolators needed for quadrivariate
 /// interpolation
 /// @tparam T Value type
-struct SpatialInterpolators {
+struct QuadrvariateSpatialInterpolators {
   /// @brief Interpolator for the (z, u) plane at the spatial corner (x0, y0)
   /// This interpolator provides values on the (z, u) axes for the lower-left
   /// corner of the (x, y) plane used in the 4D interpolation.
-  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x0y0;
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x0y0{
+      nullptr};
   /// @brief Interpolator for the (z, u) plane at the spatial corner (x0, y1)
   /// This interpolator provides values on the (z, u) axes for the upper-left
   /// corner of the (x, y) plane used in the 4D interpolation.
-  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x0y1;
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x0y1{
+      nullptr};
   /// @brief Interpolator for the (z, u) plane at the spatial corner (x1, y0)
   /// This interpolator provides values on the (z, u) axes for the lower-right
   /// corner of the (x, y) plane used in the 4D interpolation.
-  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x1y0;
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x1y0{
+      nullptr};
   /// @brief Interpolator for the (z, u) plane at the spatial corner (x1, y1)
   /// This interpolator provides values on the (z, u) axes for the upper-right
   /// corner of the (x, y) plane used in the 4D interpolation.
-  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x1y1;
-
+  std::unique_ptr<math::interpolate::BivariateBase<double>> interpolator_x1y1{
+      nullptr};
   /// @brief Constructor
-  explicit SpatialInterpolators(const config::windowed::Quadrivariate& cfg)
+  explicit QuadrvariateSpatialInterpolators(
+      const config::windowed::Quadrivariate& cfg)
       : interpolator_x0y0(cfg.spatial().factory<double>()),
         interpolator_x0y1(cfg.spatial().factory<double>()),
         interpolator_x1y0(cfg.spatial().factory<double>()),
@@ -78,8 +82,8 @@ template <typename GridType, typename ResultType, typename ZType>
 [[nodiscard]] auto quadrivariate_single(
     const GridType& grid, const double x, const double y, const ZType z,
     const double u, const config::windowed::Quadrivariate& cfg,
-    SpatialInterpolators& interpolators, InterpolationCache4D<ZType>& cache)
-    -> InterpolationResult<ResultType> {
+    QuadrvariateSpatialInterpolators& interpolators,
+    InterpolationCache4D<ZType>& cache) -> InterpolationResult<ResultType> {
   auto cache_load_result = math::interpolate::update_cache_if_needed(
       cache, grid, std::make_tuple(x, y, z, u), cfg.spatial().boundary_mode(),
       cfg.common().bounds_error());
@@ -178,7 +182,7 @@ template <typename GridType, typename ResultType, typename ZType>
         auto cache =
             InterpolationCache4D<ZType>(cfg.spatial().half_window_size_x(),
                                         cfg.spatial().half_window_size_y());
-        auto interpolators = SpatialInterpolators(cfg);
+        auto interpolators = QuadrvariateSpatialInterpolators(cfg);
 
         for (int64_t ix = start; ix < end; ++ix) {
           auto interpolated_value =
