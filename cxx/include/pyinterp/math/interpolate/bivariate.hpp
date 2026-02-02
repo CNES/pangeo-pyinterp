@@ -92,6 +92,12 @@ class BivariateBase {
     return z;
   }
 
+  /// @brief Check if the interpolator is valid (coefficients computed)
+  /// @return True if the interpolator is valid, false otherwise.
+  [[nodiscard]] constexpr auto is_valid() const noexcept -> bool {
+    return is_valid_;
+  }
+
  protected:
   /// @brief Compute coefficients from stored data
   /// @return true if successful, false otherwise.
@@ -108,12 +114,6 @@ class BivariateBase {
   /// @brief Return the Z-values of the data points.
   /// @return Z-values of the data points.
   [[nodiscard]] constexpr auto za() const -> const Matrix<T>& { return za_; }
-
-  /// @brief Check if the interpolator is valid (coefficients computed)
-  /// @return True if the interpolator is valid, false otherwise.
-  [[nodiscard]] constexpr auto is_valid() const noexcept -> bool {
-    return is_valid_;
-  }
 
  private:
   /// Stored X-coordinates of the data points

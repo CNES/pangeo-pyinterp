@@ -225,8 +225,9 @@ TEST(Spline, EmptyGrid) {
   Eigen::Matrix<double, Eigen::Dynamic, 1> ya(0);
 
   auto spline = Spline<double>(std::make_unique<univariate::Linear<double>>());
+  EXPECT_TRUE(std::isnan(spline(1.0, 1.0)));
   spline.prepare(xa, ya, za);
-  EXPECT_THROW(static_cast<void>(spline(1.0, 1.0)), std::runtime_error);
+  EXPECT_TRUE(std::isnan(spline(1.0, 1.0)));
 }
 
 // Test with larger grid to verify capacity management

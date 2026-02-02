@@ -10,6 +10,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "pyinterp/math/fill.hpp"
 #include "pyinterp/math/interpolate/bivariate.hpp"
 #include "pyinterp/math/interpolate/univariate.hpp"
 
@@ -59,10 +60,11 @@ class Spline : public BivariateBase<T> {
     const auto& ya = this->ya();
     const auto& za = this->za();
 
-    // Validate grid dimensions
-    if (za.size() == 0) {
-      throw std::runtime_error("Cannot interpolate on empty grid");
+    // Check if interpolator was properly initialized
+    if (!this->is_valid()) [[unlikely]] {
+      return math::Fill<T>::value();
     }
+
     return interpolate_y_then_x(xa, ya, za, x, y);
   }
 
