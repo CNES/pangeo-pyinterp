@@ -56,14 +56,14 @@ class Spline : public BivariateBase<T> {
   ///
   /// @throws std::runtime_error if grid is empty
   [[nodiscard]] auto operator()(const T& x, const T& y) -> T final {
-    const auto& xa = this->xa();
-    const auto& ya = this->ya();
-    const auto& za = this->za();
-
-    // Check if interpolator was properly initialized
+    // Check if interpolator was properly initialized BEFORE accessing data
     if (!this->is_valid()) [[unlikely]] {
       return math::Fill<T>::value();
     }
+
+    const auto& xa = this->xa();
+    const auto& ya = this->ya();
+    const auto& za = this->za();
 
     return interpolate_y_then_x(xa, ya, za, x, y);
   }
