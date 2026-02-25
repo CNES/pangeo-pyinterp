@@ -23,7 +23,7 @@ if(MSVC)
 endif()
 
 file(GLOB_RECURSE NB_SRC "src/pybind/*.cpp")
-nanobind_add_module(core ${NB_SRC})
+nanobind_add_module(core FREE_THREADED ${NB_SRC})
 target_link_libraries(
   core
   PRIVATE BLAS::BLAS pyinterp
