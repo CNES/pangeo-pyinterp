@@ -1,0 +1,16 @@
+recursive-include _custom_build *
+recursive-include docs *
+recursive-include cxx *
+recursive-include pyinterp *.pyi
+recursive-include third_party *
+recursive-exclude scripts *
+include CMakeLists.txt
+include CODE_OF_CONDUCT.md
+include LICENSE
+include README.rst
+include setup.py
+global-exclude *.py[dco]
+global-exclude *.so
+global-exclude __pycache__
+prune docs/build
+prune build
