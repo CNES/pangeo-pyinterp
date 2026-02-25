@@ -7,10 +7,8 @@
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
 
-#include "pyinterp/eigen.hpp"
 #include "pyinterp/geometry/geographic/algorithms/distance.hpp"
 #include "pyinterp/geometry/geographic/algorithms/strategy.hpp"
-#include "pyinterp/geometry/geographic/multi_point.hpp"
 #include "pyinterp/geometry/geographic/spheroid.hpp"
 
 namespace pyinterp::geometry::geographic {

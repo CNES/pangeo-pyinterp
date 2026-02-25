@@ -8,7 +8,6 @@
 #include <concepts>
 #include <cstdint>
 #include <memory>
-#include <stdexcept>
 
 #include "pyinterp/math/fill.hpp"
 #include "pyinterp/math/interpolate/bivariate.hpp"

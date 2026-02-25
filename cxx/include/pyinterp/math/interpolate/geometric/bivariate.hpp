@@ -313,7 +313,7 @@ template <template <class> class Point, typename T>
 }
 
 /// Interpolation method selection helper
-enum class InterpolationMethod {
+enum class InterpolationMethod : uint8_t {
   kBilinear,                  ///< Bilinear interpolation
   kInverseDistanceWeighting,  ///< IDW interpolation
   kNearest                    ///< Nearest neighbor

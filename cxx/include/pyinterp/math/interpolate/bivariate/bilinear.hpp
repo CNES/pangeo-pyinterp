@@ -6,7 +6,6 @@
 #include <concepts>
 #include <cstdint>
 
-#include "pyinterp/eigen.hpp"
 #include "pyinterp/math/fill.hpp"
 #include "pyinterp/math/interpolate/bivariate.hpp"
 

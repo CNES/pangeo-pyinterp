@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <limits>
 
-#include "pyinterp/broadcast.hpp"
 #include "pyinterp/config/windowed.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/math/interpolate/cache.hpp"

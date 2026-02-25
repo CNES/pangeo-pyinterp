@@ -5,7 +5,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <limits>
 #include <optional>
 #include <type_traits>
 #include <vector>
@@ -123,16 +122,16 @@ inline auto find_crossovers_geographic(
   std::vector<CrossoverResult> result;
   if (allow_multiple) {
     for (auto point : xover.find_all(spheroid, strategy)) {
-      if (auto filtered = filter_crossover(xover, std::move(point), predicate,
-                                           strategy, spheroid)) {
-        result.push_back(std::move(*filtered));
+      if (auto filtered =
+              filter_crossover(xover, point, predicate, strategy, spheroid)) {
+        result.push_back(*filtered);
       }
     }
   } else {
     if (auto point = xover.find_unique(spheroid, strategy)) {
-      if (auto filtered = filter_crossover(xover, std::move(*point), predicate,
-                                           strategy, spheroid)) {
-        result.push_back(std::move(*filtered));
+      if (auto filtered =
+              filter_crossover(xover, *point, predicate, strategy, spheroid)) {
+        result.push_back(*filtered);
       }
     }
   }
@@ -153,16 +152,16 @@ inline auto find_crossovers_cartesian(
   std::vector<CrossoverResult> result;
   if (allow_multiple) {
     for (auto point : xover.find_all()) {
-      if (auto filtered = filter_crossover(xover, std::move(point), predicate,
-                                           strategy, spheroid)) {
-        result.push_back(std::move(*filtered));
+      if (auto filtered =
+              filter_crossover(xover, point, predicate, strategy, spheroid)) {
+        result.push_back(*filtered);
       }
     }
   } else {
     if (auto point = xover.find_unique()) {
-      if (auto filtered = filter_crossover(xover, std::move(*point), predicate,
-                                           strategy, spheroid)) {
-        result.push_back(std::move(*filtered));
+      if (auto filtered =
+              filter_crossover(xover, *point, predicate, strategy, spheroid)) {
+        result.push_back(*filtered);
       }
     }
   }
