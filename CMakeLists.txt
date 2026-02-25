@@ -94,6 +94,15 @@ set_property(
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
+if(ENV{CONDA_BUILD})
+  # Workaround for macOS SDK compatibility: Disables availability checks for the
+  # "to_chars" function, which requires macOS 13.4+. This allows compilation in
+  # conda-forge CI environments with older SDKs. Reference:
+  # https://conda-forge.org/docs/maintainer/knowledge_base, Newer C++ features
+  # with old SDK.
+  add_definitions(-D_LIBCPP_DISABLE_AVAILABILITY)
+endif()
+
 # The library must be built using C++23 compiler.
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
