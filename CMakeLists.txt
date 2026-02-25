@@ -431,30 +431,69 @@ include_directories(SYSTEM
 # ##############################################################################
 # External dependencies
 # ##############################################################################
-if(NOT Boost_INCLUDE_DIRS)
-  find_package(Boost 1.90 REQUIRED)
-else()
-  # If the user provides a Boost include directory, we still need to check the
-  # version.
-  if(EXISTS "${Boost_INCLUDE_DIRS}/boost/version.hpp")
-    file(READ "${Boost_INCLUDE_DIRS}/boost/version.hpp" BOOST_VERSION_CONTENT)
-    string(REGEX MATCH "BOOST_LIB_VERSION \"([0-9_]+)\"" _
-                 "${BOOST_VERSION_CONTENT}")
-    set(BOOST_VERSION_STRING "${CMAKE_MATCH_1}")
-    message(STATUS "Boost version: ${BOOST_VERSION_STRING}")
 
-    # Parse version: e.g., "1_90_0" -> 1.90.0
-    string(REPLACE "_" "." BOOST_VERSION_FORMATTED "${BOOST_VERSION_STRING}")
-    # Check if version is at least 1.90.0
-    if(BOOST_VERSION_FORMATTED VERSION_LESS "1.90.0")
-      message(FATAL_ERROR "Boost version must be at least 1.90.0, "
-                          "found ${BOOST_VERSION_FORMATTED}")
-    endif()
-  else()
-    message(FATAL_ERROR "Boost version.hpp not found at "
-                        "${Boost_INCLUDE_DIRS}/boost/version.hpp")
+# Helper function to resolve the Boost include directory if find_package fails.
+# It looks for boost/version.hpp in the Boost include directories and in the
+# CMAKE_PREFIX_PATH.
+function(resolve_boost_include_dir out_var)
+  set(boost_search_hints)
+  if(Boost_INCLUDE_DIRS)
+    list(APPEND boost_search_hints "${Boost_INCLUDE_DIRS}")
   endif()
+  foreach(prefix IN LISTS CMAKE_PREFIX_PATH)
+    list(APPEND boost_search_hints "${prefix}/include" "${prefix}")
+  endforeach()
+
+  find_path(
+    _BOOST_INCLUDE_DIR
+    NAMES boost/version.hpp
+    HINTS ${boost_search_hints})
+
+  set(${out_var}
+      "${_BOOST_INCLUDE_DIR}"
+      PARENT_SCOPE)
+endfunction()
+
+# Helper function to check the Boost version by reading the boost/version.hpp
+# file
+function(check_boost_version boost_include_dir min_version)
+  if(NOT EXISTS "${boost_include_dir}/boost/version.hpp")
+    message(FATAL_ERROR "Boost version.hpp not found at "
+                        "${boost_include_dir}/boost/version.hpp")
+  endif()
+
+  file(READ "${boost_include_dir}/boost/version.hpp" BOOST_VERSION_CONTENT)
+  string(REGEX MATCH "BOOST_LIB_VERSION \"([0-9_]+)\"" _
+               "${BOOST_VERSION_CONTENT}")
+  set(boost_version_string "${CMAKE_MATCH_1}")
+  message(STATUS "Boost version: ${boost_version_string}")
+
+  # Parse version: e.g., "1_90_0" -> 1.90.0
+  string(REPLACE "_" "." BOOST_VERSION_FORMATTED "${boost_version_string}")
+  if(BOOST_VERSION_FORMATTED VERSION_LESS "${min_version}")
+    message(FATAL_ERROR "Boost version must be at least ${min_version}, "
+                        "found ${BOOST_VERSION_FORMATTED}")
+  endif()
+endfunction()
+
+# Search for Boost using find_package. If it fails, try to resolve the include
+# directory manually and check the version.
+find_package(Boost 1.90 QUIET)
+
+if(NOT Boost_FOUND)
+  resolve_boost_include_dir(Boost_INCLUDE_DIRS)
+
+  if(NOT Boost_INCLUDE_DIRS)
+    message(
+      FATAL_ERROR
+        "Boost not found with find_package, and boost/version.hpp was not "
+        "found in Boost_INCLUDE_DIRS/CMAKE_PREFIX_PATH.")
+  endif()
+
+  message(STATUS "Boost headers: ${Boost_INCLUDE_DIRS}")
+  check_boost_version("${Boost_INCLUDE_DIRS}" "1.90.0")
 endif()
+
 include_directories(SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 add_subdirectory(cxx)
