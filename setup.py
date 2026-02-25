@@ -28,7 +28,7 @@ MINOR = sys.version_info[1]
 WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 # OSX deployment target
-OSX_DEPLOYMENT_TARGET = "13.3"
+OSX_DEPLOYMENT_TARGET = "13.4"
 
 # MKL-FFT library
 MKL_FFT = "mkl"
