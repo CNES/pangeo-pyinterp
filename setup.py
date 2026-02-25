@@ -360,9 +360,6 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         if configure:
             self.spawn(["cmake", str(WORKING_DIRECTORY), *cmake_args])
-        if not self.dry_run:
-            cmake_cmd = ["cmake", "--build", ".", "--target", "core"]
-            self.spawn(cmake_cmd + build_args)  # type: ignore[arg-type]
         os.chdir(str(WORKING_DIRECTORY))
 
     # pylint: enable=too-many-instance-attributes
