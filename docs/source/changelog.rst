@@ -1,7 +1,7 @@
 Changelog
 #########
 
-2026.1.0
+2026.2.0
 --------
 
 This release represents a **major architectural rewrite** of pyinterp with significant
