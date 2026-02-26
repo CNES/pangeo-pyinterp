@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import pathlib
 import platform
+import shlex
 import sys
 import sysconfig
 from typing import ClassVar
@@ -255,6 +256,23 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             return os.environ["CONDA_PREFIX"]
         return None
 
+    @staticmethod
+    def split_cmake_args(value: str | None) -> list[str]:
+        """Split CMake arguments preserving quoted values."""
+        if not value:
+            return []
+        return shlex.split(value)
+
+    @staticmethod
+    def has_cmake_prefix_path(args: list[str]) -> bool:
+        """Return whether CMake args already define CMAKE_PREFIX_PATH."""
+        return any(arg.startswith("-DCMAKE_PREFIX_PATH=") for arg in args)
+
+    @staticmethod
+    def preferred_cmake_prefix_path(conda_prefix: str | None) -> str | None:
+        """Get preferred CMAKE_PREFIX_PATH from environment or conda."""
+        return os.environ.get("CMAKE_PREFIX_PATH") or conda_prefix
+
     def set_cmake_user_options(self) -> list[str]:
         """Set the options defined by the user."""
         result = []
@@ -273,11 +291,16 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         if self.fft is not None:
             result.append(f"-DFFT_IMPLEMENTATION={self.fft}")
 
-        if conda_prefix is not None:
-            result.append("-DCMAKE_PREFIX_PATH=" + conda_prefix)
+        # Preserve cross-compilation/toolchain arguments injected by
+        # conda-forge (e.g. CMAKE_SYSTEM_PROCESSOR, sysroot, emulator).
+        result.extend(self.split_cmake_args(os.environ.get("CMAKE_ARGS")))
 
-        if self.cmake_args is not None:
-            result.extend(self.cmake_args.split(" "))
+        result.extend(self.split_cmake_args(self.cmake_args))
+
+        if not self.has_cmake_prefix_path(result):
+            prefix_path = self.preferred_cmake_prefix_path(conda_prefix)
+            if prefix_path:
+                result.append(f"-DCMAKE_PREFIX_PATH={prefix_path}")
 
         if self.mkl or self.fft == MKL_FFT:
             self.set_conda_mklroot()
