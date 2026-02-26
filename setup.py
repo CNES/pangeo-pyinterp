@@ -264,6 +264,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         return shlex.split(value)
 
     @staticmethod
+    def filter_cmake_definitions(args: list[str], *names: str) -> list[str]:
+        """Filter out ``-D<name>=...`` CMake cache definitions."""
+        prefixes = tuple(f"-D{name}=" for name in names)
+        return [arg for arg in args if not arg.startswith(prefixes)]
+
+    @staticmethod
     def has_cmake_prefix_path(args: list[str]) -> bool:
         """Return whether CMake args already define CMAKE_PREFIX_PATH."""
         return any(arg.startswith("-DCMAKE_PREFIX_PATH=") for arg in args)
@@ -296,6 +302,10 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         result.extend(self.split_cmake_args(os.environ.get("CMAKE_ARGS")))
 
         result.extend(self.split_cmake_args(self.cmake_args))
+
+        # Keep host-interpreter execution stable for build-time tools
+        # (e.g. nanobind stub generation).
+        result = self.filter_cmake_definitions(result, "Python_EXECUTABLE")
 
         if not self.has_cmake_prefix_path(result):
             prefix_path = self.preferred_cmake_prefix_path(conda_prefix)

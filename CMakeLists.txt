@@ -271,11 +271,31 @@ if(NOT WIN32)
 endif()
 
 # Python
-find_package(
-  Python
-  COMPONENTS Interpreter Development.Module
-  OPTIONAL_COMPONENTS Development.SABIModule
-  REQUIRED)
+if(CMAKE_CROSSCOMPILING OR DEFINED ENV{CONDA_BUILD_CROSS_COMPILATION})
+  # Cross-compiling: resolve target Python development artifacts without
+  # coupling them to the host interpreter architecture.
+  find_package(
+    Python
+    COMPONENTS Development.Module
+    OPTIONAL_COMPONENTS Development.SABIModule
+    REQUIRED)
+
+  # nanobind requires Python::Interpreter for helper commands (stubgen, etc.).
+  # Use the host interpreter passed from setup.py via -DPython_EXECUTABLE.
+  if(NOT TARGET Python::Interpreter)
+    add_executable(Python::Interpreter IMPORTED)
+    # cmake-format: off
+    set_target_properties(Python::Interpreter PROPERTIES
+                          IMPORTED_LOCATION "${Python_EXECUTABLE}")
+    # cmake-format: on
+  endif()
+else()
+  find_package(
+    Python
+    COMPONENTS Interpreter Development.Module
+    OPTIONAL_COMPONENTS Development.SABIModule
+    REQUIRED)
+endif()
 include_directories(SYSTEM PRIVATE ${Python_INCLUDE_DIRS})
 
 # BLAS
