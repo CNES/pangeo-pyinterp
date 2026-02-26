@@ -277,6 +277,16 @@ find_package(
   REQUIRED)
 include_directories(SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 
+# Ensure Python::Interpreter target exists (needed by nanobind to avoid
+# re-resolving a different Python interpreter).
+if(NOT TARGET Python::Interpreter)
+  add_executable(Python::Interpreter IMPORTED)
+  # cmake-format: off
+  set_target_properties(Python::Interpreter PROPERTIES
+                        IMPORTED_LOCATION "${Python3_EXECUTABLE}")
+  # cmake-format: on
+endif()
+
 # Ensure Python::Module target exists (needed for nanobind on Windows)
 if(NOT TARGET Python::Module)
   if(NOT TARGET Python::Python)
