@@ -343,7 +343,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         cmake_args: list[str] = [
             "-DCMAKE_BUILD_TYPE=" + cfg,
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
-            "-DPython3_EXECUTABLE=" + sys.executable,
+            "-DPython_EXECUTABLE=" + sys.executable,
             *self.set_cmake_user_options(),
         ]
         build_args = ["--config", cfg]
