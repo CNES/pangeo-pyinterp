@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.19)
 # Import CMake modules
 # ##############################################################################
 include(CheckFunctionExists)
+include(CheckCXXSourceCompiles)
 include(CheckCXXSourceRuns)
 
 # ##############################################################################
@@ -197,21 +198,21 @@ endif()
 # standard
 macro(CHECK_FLOATING_POINT_IS_IEC559)
   message(STATUS "Performing Test HAVE_IEC559")
-  file(
-    WRITE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/is_iec559.cpp"
+  check_cxx_source_compiles(
     "#include <limits>
 int main() {
-  return std::numeric_limits<double>::is_iec559 ? 1 : 0;
-}")
-  try_run(IS_IEC559 _UNUSED "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}"
-          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/is_iec559.cpp")
-  if(IS_IEC559)
+  static_assert(std::numeric_limits<double>::is_iec559,
+                \"double must satisfy IEC 559\");
+  return 0;
+}"
+    HAVE_IEC559)
+  if(HAVE_IEC559)
     message(STATUS "Performing Test HAVE_IEC559 - Success")
     add_definitions(-DHAVE_IEC559)
   else()
     message(STATUS "Performing Test HAVE_IEC559 - Failed")
   endif()
-  unset(_UNUSED)
+  unset(HAVE_IEC559)
 endmacro()
 
 check_floating_point_is_iec559()
