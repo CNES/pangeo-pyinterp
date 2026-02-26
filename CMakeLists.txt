@@ -272,16 +272,56 @@ endif()
 
 # Python
 if(CMAKE_CROSSCOMPILING OR DEFINED ENV{CONDA_BUILD_CROSS_COMPILATION})
+  if(NOT DEFINED PYTHON_ROOT_DIR AND DEFINED ENV{PREFIX})
+    set(PYTHON_ROOT_DIR "$ENV{PREFIX}")
+  endif()
+  set(Python_FIND_STRATEGY LOCATION) # cmake-lint: disable=C0103
+
   # Cross-compiling: resolve target Python development artifacts without
   # coupling them to the host interpreter architecture.
   find_package(
     Python
     COMPONENTS Development.Module
     OPTIONAL_COMPONENTS Development.SABIModule
-    REQUIRED)
+    QUIET)
+
+  if(NOT TARGET Python::Module)
+    find_path(
+      Python_INCLUDE_DIRS
+      NAMES Python.h
+      HINTS "${PYTHON_ROOT_DIR}/include" "$ENV{PREFIX}/include")
+    if(NOT Python_INCLUDE_DIRS)
+      message(FATAL_ERROR "Could not locate target Python headers (Python.h) "
+                          "for cross-compilation.")
+    endif()
+    add_library(Python::Module INTERFACE IMPORTED)
+    # cmake-format: off
+    set_target_properties(
+      Python::Module
+      PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES
+        "${Python_INCLUDE_DIRS}"
+    )
+    # cmake-format: on
+  endif()
+
+  if(DEFINED PYINTERP_HOST_PYTHON_EXECUTABLE
+     AND NOT "${PYINTERP_HOST_PYTHON_EXECUTABLE}" STREQUAL "")
+    set(Python_EXECUTABLE # cmake-lint: disable=C0103
+        "${PYINTERP_HOST_PYTHON_EXECUTABLE}"
+        CACHE FILEPATH "Host Python executable for nanobind tools" FORCE)
+  endif()
+
+  if(NOT DEFINED Python_VERSION AND DEFINED Python_EXECUTABLE)
+    execute_process(
+      COMMAND "${Python_EXECUTABLE}" -c "import sys; vinfo = sys.version_info;"
+              "print(f'{vinfo[0]}.{vinfo[1]}.{vinfo[2]}')"
+      OUTPUT_VARIABLE Python_VERSION
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+  endif()
 
   # nanobind requires Python::Interpreter for helper commands (stubgen, etc.).
-  # Use the host interpreter passed from setup.py via -DPython_EXECUTABLE.
+  # Use the host interpreter passed from setup.py.
   if(NOT TARGET Python::Interpreter)
     add_executable(Python::Interpreter IMPORTED)
     # cmake-format: off

@@ -317,6 +317,28 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         return result
 
+    @staticmethod
+    def is_cross_compiling() -> bool:
+        """Return whether conda build cross-compilation is active."""
+        return os.environ.get("CONDA_BUILD_CROSS_COMPILATION") == "1"
+
+    @staticmethod
+    def host_python_executable() -> str:
+        """Return a host-runnable Python executable for build-time tooling."""
+        candidates = [
+            os.environ.get("PYTHON_FOR_BUILD"),
+            (
+                str(pathlib.Path(os.environ["BUILD_PREFIX"], "bin", "python"))
+                if "BUILD_PREFIX" in os.environ
+                else None
+            ),
+            sys.executable,
+        ]
+        for item in candidates:
+            if item and pathlib.Path(item).exists():
+                return item
+        return sys.executable
+
     def get_config(self) -> str:
         """Return the configuration to use."""
         cfg: str
@@ -350,12 +372,20 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         extdir = str(self.get_extdir(ext))
 
         cfg = self.get_config()
+        is_cross = self.is_cross_compiling()
+        host_python = self.host_python_executable()
         cmake_args: list[str] = [
             "-DCMAKE_BUILD_TYPE=" + cfg,
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
-            "-DPython_EXECUTABLE=" + sys.executable,
+            "-DPYINTERP_HOST_PYTHON_EXECUTABLE=" + host_python,
             *self.set_cmake_user_options(),
         ]
+        if is_cross:
+            prefix = os.environ.get("PREFIX")
+            if prefix:
+                cmake_args.append("-DPython_ROOT_DIR=" + prefix)
+        else:
+            cmake_args.append("-DPython_EXECUTABLE=" + host_python)
         build_args = ["--config", cfg]
 
         is_windows = platform.system() == "Windows"
