@@ -125,8 +125,13 @@ macro(CHECK_CXX_COMPILER_AND_linker_flags result cxx_flags linker_flags)
   set(CMAKE_REQUIRED_FLAGS ${cxx_flags})
   set(CMAKE_REQUIRED_LIBRARIES ${linker_flags})
   set(CMAKE_REQUIRED_QUIET FALSE)
-  check_cxx_source_runs("int main(int argc, char **argv) { return 0; }"
-                        ${result})
+  if(CMAKE_CROSSCOMPILING OR DEFINED ENV{CONDA_BUILD_CROSS_COMPILATION})
+    check_cxx_source_compiles("int main(int argc, char **argv) { return 0; }"
+                              ${result})
+  else()
+    check_cxx_source_runs("int main(int argc, char **argv) { return 0; }"
+                          ${result})
+  endif()
   set(CMAKE_REQUIRED_FLAGS "")
   set(CMAKE_REQUIRED_LIBRARIES "")
   unset(result)
