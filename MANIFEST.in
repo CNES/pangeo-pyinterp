@@ -4,6 +4,7 @@ recursive-include cxx *
 recursive-include pyinterp *.pyi
 recursive-include third_party *
 recursive-exclude scripts *
+include pyinterp/_version.py
 include CMakeLists.txt
 include CODE_OF_CONDUCT.md
 include LICENSE
