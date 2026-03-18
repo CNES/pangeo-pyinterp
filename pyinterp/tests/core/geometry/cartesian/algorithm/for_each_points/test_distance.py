@@ -16,7 +16,10 @@ from .......core.geometry.cartesian import (
     Polygon,
     Ring,
 )
-from .......core.geometry.cartesian.algorithms import for_each_point_distance
+from .......core.geometry.cartesian.algorithms import (
+    for_each_point_distance,
+    for_each_point_pairwise_distance,
+)
 
 
 class TestForEachPointDistance:
@@ -141,3 +144,65 @@ class TestForEachPointDistance:
         assert len(result) == 4
         # All distances should be 0
         assert np.allclose(result, 0.0)
+
+
+class TestForEachPointPairwiseDistance:
+    """Tests for for_each_point_pairwise_distance algorithm."""
+
+    def test_for_each_point_pairwise_distance_multipoint(self) -> None:
+        """Test pairwise distances for multipoints."""
+        geometry1 = MultiPoint(
+            np.array([0.0, 1.0, 4.0]), np.array([0.0, 1.0, 4.0])
+        )
+        geometry2 = MultiPoint(
+            np.array([0.0, 2.0, 4.0]), np.array([0.0, 2.0, 7.0])
+        )
+
+        result = for_each_point_pairwise_distance(geometry1, geometry2)
+
+        assert isinstance(result, np.ndarray)
+        assert result.dtype == np.float64
+        assert len(result) == 3
+        assert np.allclose(result, np.array([0.0, np.sqrt(2.0), 3.0]))
+
+    def test_for_each_point_pairwise_distance_linestring(self) -> None:
+        """Test pairwise distances for linestrings."""
+        geometry1 = LineString(np.array([0.0, 2.0]), np.array([0.0, 2.0]))
+        geometry2 = LineString(np.array([0.0, 2.0]), np.array([0.0, 5.0]))
+
+        result = for_each_point_pairwise_distance(geometry1, geometry2)
+
+        assert isinstance(result, np.ndarray)
+        assert result.dtype == np.float64
+        assert len(result) == 2
+        assert np.allclose(result, np.array([0.0, 3.0]))
+
+    def test_for_each_point_pairwise_distance_ring(self) -> None:
+        """Test pairwise distances for rings."""
+        geometry1 = Ring(
+            np.array([0.0, 0.0, 1.0, 1.0, 0.0]),
+            np.array([0.0, 1.0, 1.0, 0.0, 0.0]),
+        )
+        geometry2 = Ring(
+            np.array([0.0, 0.0, 2.0, 2.0, 0.0]),
+            np.array([0.0, 1.0, 1.0, 0.0, 0.0]),
+        )
+
+        result = for_each_point_pairwise_distance(geometry1, geometry2)
+
+        assert isinstance(result, np.ndarray)
+        assert result.dtype == np.float64
+        assert len(result) == 5
+        assert np.allclose(result, np.array([0.0, 0.0, 1.0, 1.0, 0.0]))
+
+    def test_for_each_point_pairwise_distance_size_mismatch(self) -> None:
+        """Test pairwise distances with different number of points."""
+        geometry1 = MultiPoint(np.array([0.0, 1.0]), np.array([0.0, 1.0]))
+        geometry2 = MultiPoint(np.array([0.0]), np.array([0.0]))
+
+        with pytest.raises(
+            ValueError,
+            match="Source and target geometries must have the same "
+            "number of points",
+        ):
+            for_each_point_pairwise_distance(geometry1, geometry2)

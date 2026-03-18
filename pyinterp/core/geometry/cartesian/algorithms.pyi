@@ -334,6 +334,18 @@ def for_each_point_distance(
     source: MultiPoint | LineString | Ring,
     container: Box | Ring | Polygon | MultiPolygon,
 ) -> NDArray1DFloat64: ...
+@overload
+def for_each_point_pairwise_distance(
+    geometry1: Ring, geometry2: Ring
+) -> NDArray1DFloat64: ...
+@overload
+def for_each_point_pairwise_distance(
+    geometry1: MultiPoint, geometry2: MultiPoint
+) -> NDArray1DFloat64: ...
+@overload
+def for_each_point_pairwise_distance(
+    geometry1: LineString, geometry2: LineString
+) -> NDArray1DFloat64: ...
 def for_each_point_within(
     source: MultiPoint | LineString | Ring,
     container: Box | Ring | Polygon | MultiPolygon,

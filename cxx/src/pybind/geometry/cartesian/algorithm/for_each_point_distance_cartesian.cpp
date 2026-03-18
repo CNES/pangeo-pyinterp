@@ -6,6 +6,11 @@
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 
+#include <utility>
+
+#include "pyinterp/geometry/cartesian/linestring.hpp"
+#include "pyinterp/geometry/cartesian/multi_point.hpp"
+#include "pyinterp/geometry/cartesian/ring.hpp"
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
 
 namespace nb = nanobind;
@@ -24,6 +29,19 @@ Returns:
     Array of distances in coordinate units.
 )doc";
 
+constexpr auto kForEachPointPairwiseDistanceDoc = R"doc(
+Calculate pairwise distances between points of two geometries.
+
+Args:
+    geometry1: Source geometry containing points (MultiPoint, LineString, or
+      Ring).
+    geometry2: Target geometry containing points (must have the same number of
+      points as geometry1).
+
+Returns:
+    Array of distances in coordinate units.
+)doc";
+
 // Calculate distance from each point in source to target geometry
 template <typename SourceGeometry, typename TargetGeometry>
 [[nodiscard]] inline auto for_each_point_distance(const SourceGeometry& source,
@@ -36,11 +54,32 @@ template <typename SourceGeometry, typename TargetGeometry>
   return result;
 }
 
+// Calculate pairwise distances for geometries of the same type.
+template <typename Geometry>
+[[nodiscard]] inline auto for_each_point_pairwise_distance(
+    const Geometry& source, const Geometry& target) -> Eigen::VectorXd {
+  if (source.size() != target.size()) {
+    throw std::invalid_argument(
+        "Source and target geometries must have the same number of points.");
+  }
+  Eigen::VectorXd result(source.size());
+  for (std::size_t i = 0; i < source.size(); ++i) {
+    result(i) = boost::geometry::distance(source[i], target[i]);
+  }
+  return result;
+}
+
 auto init_for_each_point_distance(nb::module_& m) -> void {
   auto distance_impl = [](const auto& source,
                           const auto& target) -> Eigen::VectorXd {
     nb::gil_scoped_release release;
     return for_each_point_distance(source, target);
+  };
+
+  auto pairwise_distance_impl = [](const auto& source,
+                                   const auto& target) -> Eigen::VectorXd {
+    nb::gil_scoped_release release;
+    return for_each_point_pairwise_distance(source, target);
   };
 
   // Bind for MultiPoint
@@ -57,6 +96,15 @@ auto init_for_each_point_distance(nb::module_& m) -> void {
   geometry::pybind::define_for_each_point_single_source<
       decltype(distance_impl), Ring, CONTAINER_TYPES(cartesian)>(
       m, "for_each_point_distance", kForEachPointDistanceDoc, distance_impl);
+
+  // Bind pairwise distances for same-type geometries
+  geometry::pybind::define_binary_predicate<
+      decltype(pairwise_distance_impl),
+      std::pair<cartesian::MultiPoint, cartesian::MultiPoint>,
+      std::pair<cartesian::Ring, cartesian::Ring>,
+      std::pair<cartesian::LineString, cartesian::LineString>>(
+      m, "for_each_point_pairwise_distance", kForEachPointPairwiseDistanceDoc,
+      std::move(pairwise_distance_impl));
 }
 
 }  // namespace pyinterp::geometry::cartesian::pybind

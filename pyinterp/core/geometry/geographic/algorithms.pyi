@@ -651,6 +651,27 @@ def for_each_point_distance(
     spheroid: Spheroid | None = None,
     strategy: Strategy = ...,
 ) -> NDArray1DFloat64: ...
+@overload
+def for_each_point_pairwise_distance(
+    geometry1: Ring,
+    geometry2: Ring,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> NDArray1DFloat64: ...
+@overload
+def for_each_point_pairwise_distance(
+    geometry1: MultiPoint,
+    geometry2: MultiPoint,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> NDArray1DFloat64: ...
+@overload
+def for_each_point_pairwise_distance(
+    geometry1: LineString,
+    geometry2: LineString,
+    spheroid: Spheroid | None = None,
+    strategy: Strategy = Strategy.ANDOYER,
+) -> NDArray1DFloat64: ...
 def for_each_point_within(
     source: MultiPoint | LineString | Ring,
     container: Box | Ring | Polygon | MultiPolygon,

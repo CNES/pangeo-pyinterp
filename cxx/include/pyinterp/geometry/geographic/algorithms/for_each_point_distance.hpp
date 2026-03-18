@@ -35,6 +35,31 @@ template <typename SourceGeometry, typename TargetGeometry,
   return result;
 }
 
+/// @brief Calculate distance from each point to target using compile-time
+/// strategy for multi-point target
+/// @tparam Geometry Geometry type (MultiPoint, LineString, Ring)
+/// @tparam Method Strategy method to use
+/// @param[in] source Source geometry containing points
+/// @param[in] target Target geometry containing points (must have the same
+/// number of points as source)
+/// @param[in] spheroid Optional Spheroid for geodetic calculations
+/// @return Vector of distances for each point in meters
+template <typename Geometry, StrategyMethod Method>
+[[nodiscard]] inline auto for_each_point_pairwise_distance(
+    const Geometry& source, const Geometry& target,
+    const std::optional<Spheroid>& spheroid) -> Eigen::VectorXd {
+  if (source.size() != target.size()) {
+    throw std::invalid_argument(
+        "Source and target geometries must have the same number of points.");
+  }
+  Eigen::VectorXd result(source.size());
+  auto strategy = make_distance_strategy<Method>(make_spheroid(spheroid));
+  for (std::size_t i = 0; i < source.size(); ++i) {
+    result(i) = boost::geometry::distance(source[i], target[i], strategy);
+  }
+  return result;
+}
+
 /// @brief Calculate distance from each point to target using runtime strategy
 /// @tparam SourceGeometry Source geometry type (MultiPoint, LineString, Ring)
 /// @tparam TargetGeometry Target geometry type
@@ -61,6 +86,38 @@ template <typename SourceGeometry, typename TargetGeometry>
           source, target, spheroid);
     case kVincenty:
       return for_each_point_distance<SourceGeometry, TargetGeometry, kVincenty>(
+          source, target, spheroid);
+  }
+  std::unreachable();
+}
+
+/// @brief Calculate distance from each point to target using runtime strategy
+/// for multi-point target
+/// @tparam Geometry Geometry type (MultiPoint, LineString, Ring)
+/// @param[in] source Source geometry containing points
+/// @param[in] target Target geometry containing points (must have the same
+/// number of points as source)
+/// @param[in] spheroid Optional Spheroid for geodetic calculations
+/// @param[in] strategy Strategy method to use
+/// @return Vector of distances for each point in meters
+template <typename Geometry>
+[[nodiscard]] inline auto for_each_point_pairwise_distance(
+    const Geometry& source, const Geometry& target,
+    const std::optional<Spheroid>& spheroid, const StrategyMethod strategy)
+    -> Eigen::VectorXd {
+  using enum StrategyMethod;
+  switch (strategy) {
+    case kAndoyer:
+      return for_each_point_pairwise_distance<Geometry, kAndoyer>(
+          source, target, spheroid);
+    case kKarney:
+      return for_each_point_pairwise_distance<Geometry, kKarney>(source, target,
+                                                                 spheroid);
+    case kThomas:
+      return for_each_point_pairwise_distance<Geometry, kThomas>(source, target,
+                                                                 spheroid);
+    case kVincenty:
+      return for_each_point_pairwise_distance<Geometry, kVincenty>(
           source, target, spheroid);
   }
   std::unreachable();

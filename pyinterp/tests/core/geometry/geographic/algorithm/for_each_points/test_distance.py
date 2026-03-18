@@ -17,7 +17,11 @@ from .......core.geometry.geographic import (
     Ring,
     Spheroid,
 )
-from .......core.geometry.geographic.algorithms import for_each_point_distance
+from .......core.geometry.geographic.algorithms import (
+    Strategy,
+    for_each_point_distance,
+    for_each_point_pairwise_distance,
+)
 
 
 class TestForEachPointDistance:
@@ -166,3 +170,86 @@ class TestForEachPointDistance:
         assert isinstance(result_wgs84, np.ndarray)
         # Results should be similar
         assert np.allclose(result_default, result_wgs84)
+
+
+class TestForEachPointPairwiseDistance:
+    """Tests for for_each_point_pairwise_distance algorithm (geographic)."""
+
+    def test_for_each_point_pairwise_distance_multipoint(self) -> None:
+        """Test pairwise distances for multipoints."""
+        geometry1 = MultiPoint(
+            np.array([0.0, 0.0, 2.0]), np.array([0.0, 1.0, 2.0])
+        )
+        geometry2 = MultiPoint(
+            np.array([0.0, 1.0, 2.0]), np.array([0.0, 1.0, 3.0])
+        )
+
+        result = for_each_point_pairwise_distance(geometry1, geometry2)
+
+        assert isinstance(result, np.ndarray)
+        assert result.dtype == np.float64
+        assert len(result) == 3
+        assert result[0] == pytest.approx(0.0)
+        assert np.all(result[1:] > 0.0)
+
+    def test_for_each_point_pairwise_distance_linestring_with_strategy(
+        self,
+    ) -> None:
+        """Test pairwise distances for linestrings with explicit strategy."""
+        geometry1 = LineString(np.array([0.0, 0.0]), np.array([0.0, 1.0]))
+        geometry2 = LineString(np.array([0.0, 1.0]), np.array([0.0, 1.0]))
+
+        result_andoyer = for_each_point_pairwise_distance(
+            geometry1, geometry2, strategy=Strategy.ANDOYER
+        )
+        result_vincenty = for_each_point_pairwise_distance(
+            geometry1, geometry2, strategy=Strategy.VINCENTY
+        )
+
+        assert isinstance(result_andoyer, np.ndarray)
+        assert isinstance(result_vincenty, np.ndarray)
+        assert result_andoyer.dtype == np.float64
+        assert result_vincenty.dtype == np.float64
+        assert len(result_andoyer) == 2
+        assert len(result_vincenty) == 2
+        assert result_andoyer[0] == pytest.approx(0.0)
+        assert result_vincenty[0] == pytest.approx(0.0)
+        assert result_andoyer[1] > 100000.0
+        assert result_vincenty[1] > 100000.0
+
+    def test_for_each_point_pairwise_distance_ring_with_spheroid(self) -> None:
+        """Test pairwise distances for rings with explicit spheroid."""
+        geometry1 = Ring(
+            np.array([0.0, 0.0, 1.0, 1.0, 0.0]),
+            np.array([0.0, 1.0, 1.0, 0.0, 0.0]),
+        )
+        geometry2 = Ring(
+            np.array([0.0, 0.0, 2.0, 2.0, 0.0]),
+            np.array([0.0, 1.0, 1.0, 0.0, 0.0]),
+        )
+
+        result = for_each_point_pairwise_distance(
+            geometry1,
+            geometry2,
+            spheroid=Spheroid(),
+            strategy=Strategy.KARNEY,
+        )
+
+        assert isinstance(result, np.ndarray)
+        assert result.dtype == np.float64
+        assert len(result) == 5
+        assert np.all(result >= 0.0)
+        assert result[2] > 100000.0
+        assert result[3] > 100000.0
+
+    def test_for_each_point_pairwise_distance_size_mismatch(self) -> None:
+        """Test pairwise distances with different number of points."""
+        geometry1 = MultiPoint(np.array([0.0, 1.0]), np.array([0.0, 1.0]))
+        geometry2 = MultiPoint(np.array([0.0]), np.array([0.0]))
+
+        with pytest.raises(
+            ValueError,
+            match="Source and target geometries must have the same "
+            "number of points",
+        ):
+            for_each_point_pairwise_distance(geometry1, geometry2)

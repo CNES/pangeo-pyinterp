@@ -122,6 +122,7 @@ Vectorized spatial predicates for geographic geometries.
    algorithms.for_each_point_within
    algorithms.for_each_point_covered_by
    algorithms.for_each_point_distance
+   algorithms.for_each_point_pairwise_distance
 
 Distance Strategies
 ^^^^^^^^^^^^^^^^^^^
@@ -220,6 +221,7 @@ Vectorized spatial predicates for Cartesian geometries.
    algorithms.for_each_point_within
    algorithms.for_each_point_covered_by
    algorithms.for_each_point_distance
+   algorithms.for_each_point_pairwise_distance
 
 Buffer Strategies
 ^^^^^^^^^^^^^^^^^
