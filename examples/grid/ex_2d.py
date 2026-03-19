@@ -69,7 +69,7 @@ pcm = ax1.pcolormesh(
     vmin=-0.1,
     vmax=0.1,
 )
-ax1.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax1.set_global()
 ax1.coastlines()
 ax1.set_title("Original MSS")
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
@@ -83,7 +83,7 @@ pcm = ax2.pcolormesh(
     vmin=-0.1,
     vmax=0.1,
 )
-ax2.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax2.set_global()
 ax2.coastlines()
 ax2.set_title("Bilinear Interpolated MSS")
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
@@ -158,7 +158,7 @@ pcm = ax1.pcolormesh(
     vmin=-0.1,
     vmax=0.1,
 )
-ax1.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax1.set_global()
 ax1.coastlines()
 ax1.set_title("Original MSS")
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
@@ -172,7 +172,7 @@ pcm = ax2.pcolormesh(
     vmin=-0.1,
     vmax=0.1,
 )
-ax2.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax2.set_global()
 ax2.coastlines()
 ax2.set_title("Bicubic Interpolated MSS")
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
@@ -206,7 +206,7 @@ pcm = ax1.pcolormesh(
     vmin=-0.1,
     vmax=0.1,
 )
-ax1.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax1.set_global()
 ax1.coastlines()
 ax1.set_title("Original MSS")
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
@@ -220,6 +220,6 @@ pcm = ax2.pcolormesh(
     vmin=-0.1,
     vmax=0.1,
 )
-ax2.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax2.set_global()
 ax2.coastlines()
 ax2.set_title("Bicubic Interpolated MSS")

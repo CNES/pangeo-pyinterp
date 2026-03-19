@@ -81,7 +81,7 @@ fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
 ax1 = fig.add_subplot(
     211, projection=cartopy.crs.PlateCarree(central_longitude=180)
 )
-ax1.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax1.set_global()
 pcm = ax1.pcolormesh(
     lons,
     lats,
@@ -95,7 +95,7 @@ ax1.set_title("Trivariate Interpolation")
 ax2 = fig.add_subplot(
     212, projection=cartopy.crs.PlateCarree(central_longitude=180)
 )
-ax2.set_extent([-180, 180, -90, 90], crs=cartopy.crs.PlateCarree())
+ax2.set_global()
 pcm = ax2.pcolormesh(
     lons,
     lats,
