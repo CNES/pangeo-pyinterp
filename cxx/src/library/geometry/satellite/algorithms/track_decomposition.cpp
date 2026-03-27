@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <cstdint>
+#include <span>
 
 #include "pyinterp/geometry/geographic/point.hpp"
 #include "pyinterp/math.hpp"

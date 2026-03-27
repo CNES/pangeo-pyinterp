@@ -7,6 +7,7 @@
 #include <nanobind/eigen/dense.h>
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/string.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/vector.h>
 
@@ -151,20 +152,22 @@ inline auto init_transforms(nanobind::module_& m) -> void {
 inline auto init_track_decomposition(nanobind::module_& m) -> void {
   nb::enum_<algorithms::LatitudeZone>(
       m, "LatitudeZone", "Latitude-band classification of a track segment.")
-      .value("south", algorithms::LatitudeZone::kSouth, "lat <= south_limit")
-      .value("mid", algorithms::LatitudeZone::kMid,
+      .value("SOUTH", algorithms::LatitudeZone::kSouth, "lat <= south_limit")
+      .value("MID", algorithms::LatitudeZone::kMid,
              "south_limit < lat < north_limit")
-      .value("north", algorithms::LatitudeZone::kNorth, "lat >= north_limit");
+      .value("NORTH", algorithms::LatitudeZone::kNorth, "lat >= north_limit");
 
   nb::enum_<algorithms::OrbitDirection>(
       m, "OrbitDirection", "Orbital direction inferred from longitude.")
-      .value("prograde", algorithms::OrbitDirection::kPrograde,
+      .value("PROGRADE", algorithms::OrbitDirection::kPrograde,
              "Predominantly eastward.")
-      .value("retrograde", algorithms::OrbitDirection::kRetrograde,
+      .value("RETROGRADE", algorithms::OrbitDirection::kRetrograde,
              "Predominantly westward (also tie case).");
 
   nb::class_<algorithms::DecompositionOptions>(
       m, "DecompositionOptions", "Options for track decomposition")
+      .def(nb::init<>(),
+           "Create a DecompositionOptions instance with default values.")
       .def_prop_ro(
           "swath_width_km",
           [](const algorithms::DecompositionOptions& self) {
@@ -280,15 +283,15 @@ inline auto init_track_decomposition(nanobind::module_& m) -> void {
       [](const Eigen::Ref<const Eigen::VectorXd>& lon,
          const Eigen::Ref<const Eigen::VectorXd>& lat,
          const std::optional<std::string>& strategy,
-         const algorithms::DecompositionOptions& opts)
+         const std::optional<algorithms::DecompositionOptions>& opts)
           -> std::vector<algorithms::TrackSegment> {
         return algorithms::decompose_track(
             lon, lat,
             strategy ? parse_strategy(*strategy)
                      : algorithms::DecompositionStrategy::kLatitudeBands,
-            opts);
+            opts ? *opts : algorithms::DecompositionOptions{});
       },
-      "lon"_a, "lat"_a, "strategy"_a = std::nullopt, "opts"_a,
+      "lon"_a, "lat"_a, "strategy"_a = std::nullopt, "opts"_a = std::nullopt,
       R"doc(Decompose a satellite track into segments with tight bounding boxes.
 
 Args:
@@ -353,6 +356,7 @@ namespace pybind {
 auto init_satellite(nanobind::module_& m) -> void {
   auto submodule = m.def_submodule("satellite", "Satellite geometry");
   satellite::pybind::init_crossover(submodule);
+  satellite::pybind::init_track_decomposition(submodule);
   satellite::pybind::init_transforms(submodule);
 }
 
