@@ -67,12 +67,13 @@ class SubsectionSorter:
             "ex_4d.py": 12,
             "ex_unstructured.py": 13,
             "ex_orbit.py": 14,
-            "pangeo_unstructured_grid.py": 15,
-            "pangeo_time_series.py": 16,
-            "ex_descriptive_statistics.py": 17,
-            "ex_binning.py": 18,
-            "ex_dateutils.py": 19,
-            "ex_fill_undef.py": 20,
+            "ex_decompose_track.py": 15,
+            "pangeo_unstructured_grid.py": 16,
+            "pangeo_time_series.py": 17,
+            "ex_descriptive_statistics.py": 18,
+            "ex_binning.py": 19,
+            "ex_dateutils.py": 20,
+            "ex_fill_undef.py": 21,
         }
         return order[pathlib.Path(fname).name]
 
