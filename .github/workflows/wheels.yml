@@ -60,10 +60,7 @@ jobs:
           # Windows: point CMake at the conda-forge Boost headers
           CIBW_ENVIRONMENT_WINDOWS: >-
             CMAKE_PREFIX_PATH="${{ env.BOOST_PREFIX }}"
-          # macOS: arm64 only (free Intel runners are gone and Python.org 3.11
-          # bakes deployment target 10.9 into sysconfig, which prevents the
-          # libc++ availability macros from exposing std::jthread under
-          # cross-compilation).
+          # macOS: arm64 only (free Intel runners are deprecated).
           CIBW_ARCHS_MACOS: ${{ matrix.cibw_archs_macos }}
           # Sanity-check every built wheel imports and exposes its version.
           CIBW_TEST_COMMAND: >-

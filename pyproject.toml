@@ -105,7 +105,7 @@ environment = {CMAKE_PREFIX_PATH = "/opt/conda"}
 # ------------------------------------------------------------------
 [tool.cibuildwheel.macos]
 before-all = "brew install boost || true"
-environment = {MACOSX_DEPLOYMENT_TARGET = "14.0", CMAKE_PREFIX_PATH = "$(brew --prefix boost)"}
+environment = {MACOSX_DEPLOYMENT_TARGET = "13.4", CMAKE_PREFIX_PATH = "$(brew --prefix boost)"}
 
 # ------------------------------------------------------------------
 # Windows

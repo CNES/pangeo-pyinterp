@@ -46,7 +46,7 @@ void parallel_for(int64_t size, Worker&& worker, int64_t num_threads = 0) {
   const int64_t chunk_size = size / num_threads;
   const int64_t remainder = size % num_threads;
 
-  std::vector<std::jthread> threads;
+  std::vector<std::thread> threads;
   std::vector<std::exception_ptr> exceptions(num_threads);
   threads.reserve(num_threads);
 
@@ -65,7 +65,9 @@ void parallel_for(int64_t size, Worker&& worker, int64_t num_threads = 0) {
     start = end;
   }
 
-  threads.clear();
+  for (auto& t : threads) {
+    t.join();
+  }
 
   // Rethrow first exception encountered
   for (const auto& eptr : exceptions) {
