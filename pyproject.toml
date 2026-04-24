@@ -68,3 +68,47 @@ minversion = "3.0"
 norecursedirs = "third_party"
 testpaths = "build"
 addopts = "--import-mode=importlib"
+
+# ---------------------------------------------------------------------------
+# cibuildwheel — binary wheel configuration
+# Run with: pipx run cibuildwheel --platform linux  (local test)
+# Triggered by: .github/workflows/wheels.yml
+# ---------------------------------------------------------------------------
+[tool.cibuildwheel]
+# Build CPython 3.11–3.14 only; skip 32-bit and musl builds
+build = "cp311-* cp312-* cp313-* cp314-*"
+skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
+build-verbosity = 1
+
+# ------------------------------------------------------------------
+# Linux (manylinux_2_28 — AlmaLinux 8, glibc ≥ 2.28, gcc ≥ 12)
+# Boost headers are installed via miniforge inside the container
+# because the default AlmaLinux repos only ship Boost < 1.90.
+# ------------------------------------------------------------------
+[tool.cibuildwheel.linux]
+before-all = """
+curl -fsSL \
+  "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-$(uname -m).sh" \
+  -o /tmp/miniforge.sh \
+  && bash /tmp/miniforge.sh -b -p /opt/conda \
+  && /opt/conda/bin/conda install -y -c conda-forge 'libboost-headers>=1.90'
+"""
+environment = {CMAKE_PREFIX_PATH = "/opt/conda"}
+
+# ------------------------------------------------------------------
+# macOS (Intel macos-13 and ARM macos-latest runners)
+# std::to_chars for floating-point requires macOS ≥ 13.4.
+# brew --prefix boost resolves to the correct path on both archs.
+# ------------------------------------------------------------------
+[tool.cibuildwheel.macos]
+before-all = "brew install boost || true"
+environment = {MACOSX_DEPLOYMENT_TARGET = "13.4", CMAKE_PREFIX_PATH = "$(brew --prefix boost)"}
+
+# ------------------------------------------------------------------
+# Windows
+# Boost headers are installed via mamba-org/setup-micromamba before
+# cibuildwheel runs (see wheels.yml).  The conda prefix is forwarded
+# via CIBW_ENVIRONMENT_WINDOWS in the workflow env block.
+# ------------------------------------------------------------------
+# No extra [tool.cibuildwheel.windows] table needed here; the workflow
+# injects CMAKE_PREFIX_PATH at runtime.
