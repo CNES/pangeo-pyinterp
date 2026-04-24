@@ -67,23 +67,59 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
-  publish:
-    name: Publish wheels to PyPI
+  # Pre-release tags (e.g. v1.2.3rc1, v1.2.3.dev1, v1.2.3a1, v1.2.3b1) go to
+  # TestPyPI; plain stable tags (vX.Y.Z) go to real PyPI.
+  detect-target:
+    name: Detect publish target
     needs: build_wheels
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    # Only run on version tags, not on workflow_dispatch
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    environment:
-      name: pypi
-      url: https://pypi.org/p/pyinterp
-    permissions:
-      id-token: write   # required for OIDC Trusted Publishing
+    outputs:
+      prerelease: ${{ steps.check.outputs.prerelease }}
+    steps:
+      - id: check
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=true"  >> "$GITHUB_OUTPUT"
+          fi
 
+  publish-testpypi:
+    name: Publish wheels to TestPyPI
+    needs: detect-target
+    if: needs.detect-target.outputs.prerelease == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/pyinterp
+    permissions:
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           pattern: cibw-wheels-*
           path: dist
           merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
 
+  publish-pypi:
+    name: Publish wheels to PyPI
+    needs: detect-target
+    if: needs.detect-target.outputs.prerelease == 'false'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pyinterp
+    permissions:
+      id-token: write   # required for OIDC Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-*
+          path: dist
+          merge-multiple: true
       - uses: pypa/gh-action-pypi-publish@release/v1
