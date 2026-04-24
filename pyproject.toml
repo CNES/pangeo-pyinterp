@@ -78,8 +78,8 @@ addopts = "--import-mode=importlib"
 # Build CPython 3.12–3.14 (+ 3.14 free-threaded); skip 32-bit and musl builds
 build = "cp312-* cp313-* cp314-* cp314t-*"
 skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
-# Required to opt into free-threaded (cp*t-*) builds with cibuildwheel >= 2.21.
-enable = ["cpython-freethreading"]
+# Opt into free-threaded (cp*t-*) builds and still-pre-release cp314 matrix.
+enable = ["cpython-freethreading", "cpython-prerelease"]
 build-verbosity = 1
 
 # ------------------------------------------------------------------
