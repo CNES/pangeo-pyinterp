@@ -86,6 +86,9 @@ build-verbosity = 1
 # because the default AlmaLinux repos only ship Boost < 1.90.
 # ------------------------------------------------------------------
 [tool.cibuildwheel.linux]
+# manylinux2014 ships GCC 10 — too old for C++23. manylinux_2_28 ships GCC 14.
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 before-all = """
 curl -fsSL \
   "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-$(uname -m).sh" \
@@ -102,7 +105,7 @@ environment = {CMAKE_PREFIX_PATH = "/opt/conda"}
 # ------------------------------------------------------------------
 [tool.cibuildwheel.macos]
 before-all = "brew install boost || true"
-environment = {MACOSX_DEPLOYMENT_TARGET = "13.4", CMAKE_PREFIX_PATH = "$(brew --prefix boost)"}
+environment = {MACOSX_DEPLOYMENT_TARGET = "14.0", CMAKE_PREFIX_PATH = "$(brew --prefix boost)"}
 
 # ------------------------------------------------------------------
 # Windows

@@ -13,12 +13,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest       # Linux x86_64 (manylinux)
-          - ubuntu-24.04-arm    # Linux aarch64 (manylinux)
-          - macos-13            # macOS Intel x86_64
-          - macos-latest        # macOS ARM arm64
-          - windows-2025        # Windows x86_64
+        include:
+          - os: ubuntu-latest       # Linux x86_64 (manylinux_2_28)
+          - os: ubuntu-24.04-arm    # Linux aarch64 (manylinux_2_28)
+          - os: macos-latest        # macOS arm64 + cross-built x86_64
+            cibw_archs_macos: "arm64 x86_64"
+          - os: windows-2025        # Windows x86_64
 
     steps:
       - uses: actions/checkout@v4
@@ -49,8 +49,10 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          echo "BOOST_PREFIX=$MAMBA_ROOT_PREFIX/envs/boost-deps/Library" \
-            >> "$GITHUB_ENV"
+          # Use forward slashes: cibuildwheel runs CIBW_ENVIRONMENT_WINDOWS
+          # through shlex, which would eat Windows backslashes.
+          prefix="${MAMBA_ROOT_PREFIX//\\//}/envs/boost-deps/Library"
+          echo "BOOST_PREFIX=${prefix}" >> "$GITHUB_ENV"
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.23
@@ -58,6 +60,10 @@ jobs:
           # Windows: point CMake at the conda-forge Boost headers
           CIBW_ENVIRONMENT_WINDOWS: >-
             CMAKE_PREFIX_PATH="${{ env.BOOST_PREFIX }}"
+          # macOS: cross-build both arches from the arm64 runner.
+          CIBW_ARCHS_MACOS: ${{ matrix.cibw_archs_macos }}
+          # Cross-built x86_64 wheels cannot be executed on an arm64 host.
+          CIBW_TEST_SKIP: "*-macosx_x86_64"
           # Sanity-check every built wheel imports and exposes its version.
           CIBW_TEST_COMMAND: >-
             python -c "import pyinterp; print(pyinterp.__version__)"
