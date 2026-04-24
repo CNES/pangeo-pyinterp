@@ -255,7 +255,7 @@ auto apply_edge_merge(std::vector<RawBlock> raw, size_t min_edge_size)
 
 // Geodetic area estimate on the sphere (km²).
 // Uses the spherical cap formula: A = R² |sin(φ2) - sin(φ1)| |Δλ|.
-[[nodiscard]] constexpr auto area_km2(const BoundingBox& box) noexcept
+[[nodiscard]] __CONSTEXPR auto area_km2(const BoundingBox& box) noexcept
     -> double {
   auto const dlam =
       math::radians(box.max_corner().lon() - box.min_corner().lon());
