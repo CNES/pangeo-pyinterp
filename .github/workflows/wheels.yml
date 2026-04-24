@@ -55,7 +55,7 @@ jobs:
           echo "BOOST_PREFIX=${prefix}" >> "$GITHUB_ENV"
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.23
+        uses: pypa/cibuildwheel@v3.0
         env:
           # Windows: point CMake at the conda-forge Boost headers
           CIBW_ENVIRONMENT_WINDOWS: >-
