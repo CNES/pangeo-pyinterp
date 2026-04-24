@@ -16,8 +16,8 @@ jobs:
         include:
           - os: ubuntu-latest       # Linux x86_64 (manylinux_2_28)
           - os: ubuntu-24.04-arm    # Linux aarch64 (manylinux_2_28)
-          - os: macos-latest        # macOS arm64 + cross-built x86_64
-            cibw_archs_macos: "arm64 x86_64"
+          - os: macos-latest        # macOS arm64 only
+            cibw_archs_macos: "arm64"
           - os: windows-2025        # Windows x86_64
 
     steps:
@@ -60,10 +60,11 @@ jobs:
           # Windows: point CMake at the conda-forge Boost headers
           CIBW_ENVIRONMENT_WINDOWS: >-
             CMAKE_PREFIX_PATH="${{ env.BOOST_PREFIX }}"
-          # macOS: cross-build both arches from the arm64 runner.
+          # macOS: arm64 only (free Intel runners are gone and Python.org 3.11
+          # bakes deployment target 10.9 into sysconfig, which prevents the
+          # libc++ availability macros from exposing std::jthread under
+          # cross-compilation).
           CIBW_ARCHS_MACOS: ${{ matrix.cibw_archs_macos }}
-          # Cross-built x86_64 wheels cannot be executed on an arm64 host.
-          CIBW_TEST_SKIP: "*-macosx_x86_64"
           # Sanity-check every built wheel imports and exposes its version.
           CIBW_TEST_COMMAND: >-
             python -c "import pyinterp; print(pyinterp.__version__)"
