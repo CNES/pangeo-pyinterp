@@ -1,6 +1,75 @@
 Changelog
 #########
 
+2026.4.0
+--------
+
+This release adds satellite ground-track decomposition, ships official PyPI
+wheels for the first time, and refreshes the supported Python matrix.
+
+New Features
+~~~~~~~~~~~~
+
+* **Satellite Track Decomposition**: Added decomposition algorithms in
+  ``geometry.satellite`` that segment a satellite ground track into ascending
+  and descending passes, with new ``DecompositionOption`` and related enums to
+  control the algorithm. An accompanying example
+  (``examples/orbit/ex_decompose_track.py``) demonstrates typical usage.
+* **Pairwise Distances**: Added the ``for_each_point_pairwise_distance``
+  algorithm to compute pairwise distances between points in both the
+  ``geometry.cartesian`` and ``geometry.geographic`` algorithm submodules.
+
+Examples & Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* 2D and 3D map examples now use ``set_global()`` instead of ``set_extent()``
+  for clearer global visualizations.
+
+Packaging & Distribution
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **PyPI Wheels**: pyinterp is now distributed as binary wheels on PyPI in
+  addition to conda-forge. Linux ``x86_64``/``aarch64`` (manylinux_2_28),
+  macOS ``arm64`` (deployment target 13.4), and Windows ``x86_64`` are built
+  via cibuildwheel.
+* **Free-Threaded Python**: A free-threaded CPython 3.14 wheel
+  (``cp314t``) is now produced alongside the GIL-enabled build.
+* **Cross-Compilation Support**: ``setup.py`` and the CMake configuration
+  honour a host Python executable and propagate cross-compilation hints,
+  enabling reliable builds in restricted toolchain environments
+  (e.g. conda-build sysroots).
+
+Supported Python Versions
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Dropped**: Python 3.11.
+* **Supported**: CPython 3.12, 3.13, 3.14, and 3.14 free-threaded.
+
+Build System
+~~~~~~~~~~~~
+
+* **C++ Standard Library**: Replaced ``std::jthread`` with ``std::thread`` plus
+  explicit ``join()`` in the parallel-for utility for compatibility with
+  Apple libc++ availability gating.
+* **Boost ≥ 1.90**: CMake now enforces a minimum Boost version of 1.90 with
+  improved detection logic and clearer error reporting.
+* **CMake Minimum Version**: Bumped CMake minimum required version and updated
+  Python target handling for nanobind compatibility.
+* **Compiler Checks**: Added an explicit IEC 559 (IEEE 754) compliance check
+  and additional cross-compilation-aware compiler probes.
+* **Windows**: Worked around a ``constexpr``/MSVC issue in the ``area_km2``
+  helper using the ``__CONSTEXPR`` macro.
+* **Packaging**: Added ``MANIFEST.in`` and ensured ``pyinterp/_version.py``
+  is included in source distributions.
+
+Continuous Integration
+~~~~~~~~~~~~~~~~~~~~~~
+
+* Reworked the release workflows to build and publish wheels via
+  ``cibuildwheel`` and the source distribution via ``pypa/build``.
+* Pre-release tags (``X.Y.Z<suffix>``) are routed to TestPyPI; plain
+  ``X.Y.Z`` tags publish to PyPI. Both use OIDC trusted publishing.
+
 2026.2.0
 --------
 
