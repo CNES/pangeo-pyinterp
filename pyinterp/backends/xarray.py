@@ -348,6 +348,7 @@ class Grid2D(_GridHolder):
 
     def __init__(self, data_array: xr.DataArray) -> None:
         """Initialize the 2D grid from an Xarray data array."""
+        object.__setattr__(self, "_data_array", data_array)
         canonical_dimensions = _get_canonical_dimensions(
             data_array, ndims=TWO_DIMENSIONS
         )
@@ -357,7 +358,6 @@ class Grid2D(_GridHolder):
             canonical_dimensions.data_array.values,
         )
         super().__init__(grid, canonical_dimensions.dims)
-        self._data_array = data_array
 
     def __reduce__(self) -> tuple:
         """Support pickle serialization (e.g. for Dask scatter/multiprocessing).
@@ -420,6 +420,7 @@ class Grid3D(_GridHolder):
 
     def __init__(self, data_array: xr.DataArray) -> None:
         """Initialize the 3D grid from an Xarray data array."""
+        object.__setattr__(self, "_data_array", data_array)
         canonical_dimensions = _get_canonical_dimensions(
             data_array, ndims=THREE_DIMENSIONS
         )
@@ -440,6 +441,18 @@ class Grid3D(_GridHolder):
             canonical_dimensions.data_array.values,
         )
         super().__init__(grid, canonical_dimensions.dims)
+
+    def __reduce__(self) -> tuple:
+        """Support pickle serialization (e.g. for Dask scatter/multiprocessing).
+
+        Returns:
+            Tuple of (callable, args) allowing reconstruction of this instance.
+
+        """
+        return (
+            self.__class__,
+            (object.__getattribute__(self, "_data_array"),),
+        )
 
     def trivariate(
         self,
@@ -492,6 +505,7 @@ class Grid4D(_GridHolder):
 
     def __init__(self, data_array: xr.DataArray) -> None:
         """Initialize the 4D grid from an Xarray data array."""
+        object.__setattr__(self, "_data_array", data_array)
         canonical_dimensions = _get_canonical_dimensions(
             data_array, ndims=FOUR_DIMENSIONS
         )
@@ -516,6 +530,18 @@ class Grid4D(_GridHolder):
             canonical_dimensions.data_array.values,
         )
         super().__init__(grid, canonical_dimensions.dims)
+
+    def __reduce__(self) -> tuple:
+        """Support pickle serialization (e.g. for Dask scatter/multiprocessing).
+
+        Returns:
+            Tuple of (callable, args) allowing reconstruction of this instance.
+
+        """
+        return (
+            self.__class__,
+            (object.__getattribute__(self, "_data_array"),),
+        )
 
     def quadrivariate(
         self,

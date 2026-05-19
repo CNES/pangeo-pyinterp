@@ -288,6 +288,23 @@ class TestGrid2D:
         assert np.array_equal(grid_restored.y, grid.y)
         assert np.array_equal(grid_restored.array, grid.array)
 
+    def test_pickle_serialization_cartesian(
+        self, cartesian_2d_data: xr.DataArray
+    ) -> None:
+        """Test pickle serialization/deserialization.
+
+        Uses Cartesian data.
+        """
+        grid = Grid2D(cartesian_2d_data)
+
+        blob = pickle.dumps(grid)
+        grid_restored = pickle.loads(blob)
+
+        assert grid_restored.ndim == 2
+        assert np.array_equal(grid_restored.x, grid.x)
+        assert np.array_equal(grid_restored.y, grid.y)
+        assert np.array_equal(grid_restored.array, grid.array)
+
 
 class TestGrid3D:
     """Test Grid3D class."""
@@ -325,6 +342,35 @@ class TestGrid3D:
         result = grid.trivariate(coords, method="bilinear")
         assert result.shape == (1,)
 
+    def test_pickle_serialization(
+        self, geodetic_3d_data: xr.DataArray
+    ) -> None:
+        """Test pickle serialization/deserialization."""
+        grid = Grid3D(geodetic_3d_data)
+
+        blob = pickle.dumps(grid)
+        grid_restored = pickle.loads(blob)
+
+        assert grid_restored.ndim == 3
+        assert np.array_equal(grid_restored.x, grid.x)
+        assert np.array_equal(grid_restored.y, grid.y)
+        assert np.array_equal(grid_restored.array, grid.array)
+
+    def test_pickle_serialization_temporal(
+        self, geodetic_3d_temporal_data: xr.DataArray
+    ) -> None:
+        """Test pickle serialization/deserialization with temporal axis."""
+        grid = Grid3D(geodetic_3d_temporal_data)
+
+        blob = pickle.dumps(grid)
+        grid_restored = pickle.loads(blob)
+
+        assert grid_restored.ndim == 3
+        assert grid_restored._datetime64 is not None
+        assert np.array_equal(grid_restored.x, grid.x)
+        assert np.array_equal(grid_restored.y, grid.y)
+        assert np.array_equal(grid_restored.array, grid.array)
+
 
 class TestGrid4D:
     """Test Grid4D class."""
@@ -340,6 +386,20 @@ class TestGrid4D:
         """Test Grid4D initialization fails with 2D data."""
         with pytest.raises(ValueError, match="number of dimensions"):
             Grid4D(geodetic_2d_data)
+
+    def test_pickle_serialization(
+        self, geodetic_4d_data: xr.DataArray
+    ) -> None:
+        """Test pickle serialization/deserialization."""
+        grid = Grid4D(geodetic_4d_data)
+
+        blob = pickle.dumps(grid)
+        grid_restored = pickle.loads(blob)
+
+        assert grid_restored.ndim == 4
+        assert np.array_equal(grid_restored.x, grid.x)
+        assert np.array_equal(grid_restored.y, grid.y)
+        assert np.array_equal(grid_restored.array, grid.array)
 
 
 class TestRegularGridInterpolator:
