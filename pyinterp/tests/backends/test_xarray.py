@@ -4,6 +4,7 @@
 # BSD-style license that can be found in the LICENSE file.
 """Tests for the xarray backend module."""
 
+import pickle
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -272,6 +273,20 @@ class TestGrid2D:
         }
         result = grid.bivariate(coords, method="bilinear")
         assert result.shape == (1,)
+
+    def test_pickle_serialization(
+        self, geodetic_2d_data: xr.DataArray
+    ) -> None:
+        """Test Grid2D pickle serialization/deserialization."""
+        grid = Grid2D(geodetic_2d_data)
+
+        blob = pickle.dumps(grid)
+        grid_restored = pickle.loads(blob)
+
+        assert grid_restored.ndim == 2
+        assert np.array_equal(grid_restored.x, grid.x)
+        assert np.array_equal(grid_restored.y, grid.y)
+        assert np.array_equal(grid_restored.array, grid.array)
 
 
 class TestGrid3D:

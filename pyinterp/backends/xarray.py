@@ -320,6 +320,17 @@ class _GridHolder:
     def __repr__(self) -> str:
         return repr(self._instance)
 
+    def __reduce__(self) -> tuple:
+        """Support pickle serialization (e.g. for Dask scatter/multiprocessing).
+
+        Returns:
+            Tuple of (callable, args) allowing reconstruction of this instance.
+
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement __reduce__"
+        )
+
 
 class Grid2D(_GridHolder):
     """Build a Grid2D from Xarray data.
@@ -346,6 +357,19 @@ class Grid2D(_GridHolder):
             canonical_dimensions.data_array.values,
         )
         super().__init__(grid, canonical_dimensions.dims)
+        self._data_array = data_array
+
+    def __reduce__(self) -> tuple:
+        """Support pickle serialization (e.g. for Dask scatter/multiprocessing).
+
+        Returns:
+            Tuple of (callable, args) allowing reconstruction of this instance.
+
+        """
+        return (
+            self.__class__,
+            (self._data_array,),
+        )
 
     def bivariate(
         self,
