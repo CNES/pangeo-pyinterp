@@ -523,6 +523,17 @@ def main() -> None:
         ),
         platforms=["POSIX", "MacOS", "Windows"],
         python_requires=">=3.11",
+        # Explicitly opt in to setuptools_scm so PEP 517 sdist builds always
+        # (a) compute the real version from the git tag and (b) write
+        # pyinterp/_version.py before the archive is packed. Without this the
+        # [tool.setuptools_scm] table alone is not enough to trigger the hook
+        # (no [project] table / no dynamic = ["version"]) and the sdist ends
+        # up shipping PKG-INFO with version "0.0.0".
+        use_scm_version={
+            "write_to": "pyinterp/_version.py",
+            "version_scheme": "guess-next-dev",
+            "local_scheme": "no-local-version",
+        },
         url="https://github.com/CNES/pangeo-pyinterp",
         zip_safe=False,
     )
