@@ -31,3 +31,9 @@ The API is organized by functionality:
    api/geohash
    api/orbit
    api/cf
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Parallel Computation
+
+   api/dask

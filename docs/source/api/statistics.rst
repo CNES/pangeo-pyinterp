@@ -2,6 +2,12 @@ Statistics & Binning
 ====================
 Statistical tools and binning containers.
 
+.. note::
+
+   All the containers documented here can be populated in parallel from
+   `Dask <https://docs.dask.org/>`_ arrays using the helpers in
+   :doc:`dask`.
+
 .. currentmodule:: pyinterp
 
 Descriptive Statistics
@@ -34,3 +40,13 @@ Histograms
    Histogram2D
    Histogram2DFloat32
    Histogram2DFloat64
+
+Quantile Estimation
+-------------------
+
+.. autosummary::
+   :toctree: _generated/
+
+   TDigest
+   TDigestFloat32
+   TDigestFloat64
