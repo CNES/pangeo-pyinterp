@@ -2,18 +2,14 @@ name: CI
 
 on:
   push:
-    branches: "*"
+    branches: "**"
   pull_request:
-    branches: main
+    branches: master
 
 permissions:
   contents: read
   pages: write
   id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
   geometry-stubs-sync:
@@ -34,10 +30,9 @@ jobs:
 
   coverage:
     name: coverage
+    needs: geometry-stubs-sync
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    strategy:
-      fail-fast: false
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -72,6 +67,7 @@ jobs:
 
   linux:
     name: ${{ matrix.python-version }}-posix
+    needs: geometry-stubs-sync
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -114,6 +110,7 @@ jobs:
 
   linux_arm64:
     name: ${{ matrix.python-version }}-arm64
+    needs: geometry-stubs-sync
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
     strategy:
@@ -162,8 +159,14 @@ jobs:
 
   macos:
     name: macos
+    needs: geometry-stubs-sync
     runs-on: macos-latest
     timeout-minutes: 45
+    # Serialize only the Pages deploy across runs (deploy steps below are
+    # gated to refs/heads/master); tests still run in parallel on other refs.
+    concurrency:
+      group: pages-${{ github.ref }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       max-parallel: 5
@@ -206,20 +209,25 @@ jobs:
         sphinx-build -b html docs/source docs/build
 
     - name: Setup Pages
+      if: github.ref == 'refs/heads/master'
       uses: actions/configure-pages@v5
 
     - name: Upload artifact
+      if: github.ref == 'refs/heads/master'
       uses: actions/upload-pages-artifact@v3
       with:
         path: docs/build
 
     - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/master'
       id: deployment
       uses: actions/deploy-pages@v4
 
   win:
     name: win
+    needs: geometry-stubs-sync
     runs-on: windows-2025
+    timeout-minutes: 45
 
     steps:
     - name: Checkout
