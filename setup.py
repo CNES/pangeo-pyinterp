@@ -16,6 +16,16 @@ from typing import ClassVar
 
 import setuptools
 import setuptools.command.build_ext
+import setuptools.command.build_py
+
+
+# Import the geometry stub generator from scripts/ at module load time so
+# the BuildPy command can call it without an in-function import.
+sys.path.insert(0, str(pathlib.Path(__file__).parent.absolute() / "scripts"))
+import generate_geometry_stubs  # type: ignore[import-not-found]
+
+
+sys.path.pop(0)
 
 
 # Type alias for user options
@@ -432,6 +442,22 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     # pylint: enable=too-many-instance-attributes
 
 
+class BuildPy(setuptools.command.build_py.build_py):
+    """Regenerate the ``pyinterp.geometry`` stub tree before packaging.
+
+    The shims under ``pyinterp/geometry/`` mirror ``pyinterp/core/geometry/``
+    so that IDEs and type checkers can resolve the import path that
+    ``pyinterp/__init__.py`` registers dynamically via ``sys.modules``.
+    Regenerating here means sdists and wheels always ship a tree in sync
+    with the core stubs, even if a contributor forgot to run the script.
+    """
+
+    def run(self) -> None:
+        """Regenerate the geometry stub tree, then run the normal build."""
+        generate_geometry_stubs.generate()
+        super().run()
+
+
 class CxxTestRunner(setuptools.Command):
     """Compile and launch the C++ tests."""
 
@@ -501,6 +527,7 @@ def main() -> None:
         ],
         cmdclass={
             "build_ext": BuildExt,
+            "build_py": BuildPy,
             "gtest": CxxTestRunner,
         },
         description="Interpolation of geo-referenced data for Python.",
@@ -515,6 +542,9 @@ def main() -> None:
         name="pyinterp",
         package_data={
             "pyinterp": ["py.typed", "*.pyi"],
+            "pyinterp.geometry": ["*.pyi"],
+            "pyinterp.geometry.cartesian": ["*.pyi"],
+            "pyinterp.geometry.geographic": ["*.pyi"],
             "pyinterp.tests": ["dataset/*"],
         },
         package_dir={"pyinterp": "pyinterp"},
