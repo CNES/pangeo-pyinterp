@@ -26,6 +26,18 @@ template <std::floating_point T>
 using ECEF =
     boost::geometry::model::point<T, 3, boost::geometry::cs::cartesian>;
 
+/// @brief 4D point in Cartesian coordinates.
+///
+/// Used as the spatial index of the Optimal Interpolation estimator: the
+/// four components are typically @c (x, y, z, t) or @c (x, y, t, payload)
+/// in user-defined units. No coordinate transformation is applied — distances
+/// between such points are pure Euclidean in @f$\mathbb{R}^4@f$.
+///
+/// @tparam T Floating-point type
+template <std::floating_point T>
+using Cartesian4D =
+    boost::geometry::model::point<T, 4, boost::geometry::cs::cartesian>;
+
 /// @brief 2D point in geodetic coordinates (longitude, latitude)
 /// projected onto a spheroidal model for enhanced accuracy
 /// Longitude and latitude are expressed in degrees
