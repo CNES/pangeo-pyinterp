@@ -54,6 +54,9 @@ __all__ = [
     "RTree3D",
     "RTree3DFloat32",
     "RTree3DFloat64",
+    "RTree4D",
+    "RTree4DFloat32",
+    "RTree4DFloat64",
     "TDigest",
     "TDigestFloat32",
     "TDigestFloat64",
@@ -697,6 +700,60 @@ def RTree3D(
 
 RTree3DFloat64: TypeAlias = RTree3DHolder[np.float64]
 RTree3DFloat32: TypeAlias = RTree3DHolder[np.float32]
+
+class RTree4DHolder(Generic[_FloatDType]):
+    def __init__(self) -> None: ...
+    def bounds(
+        self,
+    ) -> (
+        tuple[
+            np.ndarray[tuple[Literal[4]], np.dtype[Any]],
+            np.ndarray[tuple[Literal[4]], np.dtype[Any]],
+        ]
+        | None
+    ): ...
+    def clear(self) -> None: ...
+    def empty(self) -> bool: ...
+    def insert(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        values: np.ndarray[OneDim, np.dtype[Any]],
+        sigma2: np.ndarray[OneDim, np.dtype[Any]],
+    ) -> None: ...
+    def packing(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        values: np.ndarray[OneDim, np.dtype[Any]],
+        sigma2: np.ndarray[OneDim, np.dtype[Any]],
+    ) -> None: ...
+    def query(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        config: rtree.Query | None = ...,
+    ) -> tuple[
+        np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        np.ndarray[TwoDims, np.dtype[_FloatDType]],
+        np.ndarray[TwoDims, np.dtype[_FloatDType]],
+    ]: ...
+    def size(self) -> int: ...
+
+@overload
+def RTree4D(*, dtype: None = None) -> RTree4DHolder[np.float64]: ...
+@overload
+def RTree4D(*, dtype: Literal["float32"]) -> RTree4DHolder[np.float32]: ...
+@overload
+def RTree4D(*, dtype: Literal["float64"]) -> RTree4DHolder[np.float64]: ...
+@overload
+def RTree4D(
+    *, dtype: type[_FloatDType] | np.dtype[_FloatDType]
+) -> RTree4DHolder[_FloatDType]: ...
+@overload
+def RTree4D(
+    *, dtype: str
+) -> RTree4DHolder[np.float32] | RTree4DHolder[np.float64]: ...
+
+RTree4DFloat64: TypeAlias = RTree4DHolder[np.float64]
+RTree4DFloat32: TypeAlias = RTree4DHolder[np.float32]
 
 _TemporalScalar = TypeVar("_TemporalScalar", np.datetime64, np.timedelta64)
 _TemporalArray = TypeVar(
