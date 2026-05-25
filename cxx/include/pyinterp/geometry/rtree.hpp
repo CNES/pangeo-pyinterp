@@ -24,6 +24,7 @@
 
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geometry/point_traits.hpp"
+#include "pyinterp/geometry/rtree_value_traits.hpp"
 #include "pyinterp/math/interpolate/kriging.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
@@ -46,8 +47,13 @@ enum class BoundaryCheck : uint8_t {
 /// Spatial index for point data with various interpolation methods.
 ///
 /// @tparam Point Boost.Geometry point type
-/// @tparam Type Value type associated with each point
-template <typename Point, std::floating_point Type>
+/// @tparam Type Value type associated with each point. Arithmetic types
+///   (e.g. @c double) enable IDW / kriging / RBF / window-function
+///   interpolation; composite value types (e.g.
+///   @ref math::interpolate::Observation) only support indexing and queries
+///   — math methods are disabled by @c requires constraints. Specialize
+///   @ref pyinterp::geometry::value_traits to plug in a new value type.
+template <typename Point, typename Type>
 class RTree {
  public:
   using dimension_t = typename boost::geometry::traits::dimension<Point>;
@@ -75,9 +81,15 @@ class RTree {
   using rtree_t =
       boost::geometry::index::rtree<value_t, boost::geometry::index::rstar<16>>;
 
-  /// Type promotion for mixed coordinate/value arithmetic
+  /// Type promotion for mixed coordinate/value arithmetic.
+  ///
+  /// Resolved via @ref value_traits so that composite value types (which
+  /// cannot be combined arithmetically with @c coordinate_t) can still be
+  /// stored — the alias falls back to @c Type itself in that case. Methods
+  /// that actually perform the promotion are gated by
+  /// @c requires std::floating_point<Type>.
   using promotion_t =
-      decltype(std::declval<coordinate_t>() + std::declval<Type>());
+      typename value_traits<Type>::template promotion_type<coordinate_t>;
 
   /// Default constructor
   RTree() = default;
@@ -178,6 +190,7 @@ class RTree {
   /// @param[in] strategy Strategy to calculate distances
   /// @return Pair of (interpolated value, number of neighbors used)
   template <typename Strategy = default_strategy_t>
+    requires std::floating_point<Type>
   [[nodiscard]] auto inverse_distance_weighting(
       const Point& point, const coordinate_t& radius, const uint32_t k,
       const uint32_t p, const BoundaryCheck check,
@@ -192,6 +205,7 @@ class RTree {
   /// @param[in] check Type of boundary verification to apply
   /// @return Pair of (interpolated value, number of neighbors used)
   template <typename Strategy = default_strategy_t>
+    requires std::floating_point<Type>
   [[nodiscard]] auto kriging(
       const math::interpolate::Kriging<promotion_t>& model, const Point& point,
       const coordinate_t& radius, const uint32_t k, const BoundaryCheck check,
@@ -208,6 +222,7 @@ class RTree {
   /// @param[in] check Type of boundary verification to apply
   /// @return Pair of (interpolated value, number of neighbors used)
   template <typename Strategy = default_strategy_t>
+    requires std::floating_point<Type>
   [[nodiscard]] auto radial_basis_function(
       const math::interpolate::RBF<promotion_t>& model, const Point& point,
       const coordinate_t& radius, const uint32_t k, const BoundaryCheck check,
@@ -224,6 +239,7 @@ class RTree {
   /// @param[in] check Type of boundary verification to apply
   /// @return Pair of (interpolated value, number of neighbors used)
   template <typename Strategy = default_strategy_t>
+    requires std::floating_point<Type>
   [[nodiscard]] auto window_function(
       const math::interpolate::InterpolationWindow<coordinate_t>& model,
       const Point& point, const coordinate_t& radius, const uint32_t k,
@@ -239,6 +255,7 @@ class RTree {
   /// @param[in] check Type of boundary verification to apply
   /// @return Pair of (coordinates matrix, values vector)
   template <typename Strategy = default_strategy_t>
+    requires std::floating_point<Type>
   [[nodiscard]] auto nearest(const Point& point, const coordinate_t& radius,
                              const uint32_t k, const BoundaryCheck check,
                              const Strategy& strategy = Strategy()) const
@@ -259,8 +276,13 @@ class RTree {
   rtree_t tree_;
 
  private:
-  /// Magic number for RTree serialization
-  static constexpr uint32_t kMagicNumber = 0x52545452 + dimension_t::value;
+  /// Magic number for RTree serialization. Includes the dimension and the
+  /// value-type's @c serialization_tag so that pickles of different
+  /// `(Point, Type)` combinations cannot be cross-loaded silently. The tag
+  /// is `0` for scalar `Type`, preserving compatibility with existing
+  /// pickles.
+  static constexpr uint32_t kMagicNumber =
+      0x52545452 + dimension_t::value + value_traits<Type>::serialization_tag;
 
   /// Verifies if the point satisfies the requested boundary condition.
   [[nodiscard]] auto is_boundary_valid(
@@ -273,7 +295,7 @@ class RTree {
 // Implementation
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 template <typename Strategy>
 auto RTree<Point, Type>::query(const Point& point, const uint32_t k,
                                const coordinate_t& radius,
@@ -307,7 +329,7 @@ auto RTree<Point, Type>::query(const Point& point, const uint32_t k,
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 template <typename Strategy>
 auto RTree<Point, Type>::query_ball(const Point& point,
                                     const coordinate_t radius,
@@ -333,7 +355,7 @@ auto RTree<Point, Type>::query_ball(const Point& point,
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 template <typename Strategy>
 auto RTree<Point, Type>::value(const Point& point, const coordinate_t& radius,
                                const uint32_t k, const BoundaryCheck check,
@@ -365,8 +387,9 @@ auto RTree<Point, Type>::value(const Point& point, const coordinate_t& radius,
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 template <typename Strategy>
+  requires std::floating_point<Type>
 auto RTree<Point, Type>::inverse_distance_weighting(
     const Point& point, const coordinate_t& radius, const uint32_t k,
     const uint32_t p, const BoundaryCheck check, const Strategy& strategy) const
@@ -399,8 +422,9 @@ auto RTree<Point, Type>::inverse_distance_weighting(
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 template <typename Strategy>
+  requires std::floating_point<Type>
 auto RTree<Point, Type>::kriging(
     const math::interpolate::Kriging<promotion_t>& model, const Point& point,
     const coordinate_t& radius, const uint32_t k, const BoundaryCheck check,
@@ -433,8 +457,9 @@ auto RTree<Point, Type>::kriging(
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 template <typename Strategy>
+  requires std::floating_point<Type>
 auto RTree<Point, Type>::radial_basis_function(
     const math::interpolate::RBF<promotion_t>& model, const Point& point,
     const coordinate_t& radius, const uint32_t k, const BoundaryCheck check,
@@ -456,8 +481,9 @@ auto RTree<Point, Type>::radial_basis_function(
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 template <typename Strategy>
+  requires std::floating_point<Type>
 auto RTree<Point, Type>::window_function(
     const math::interpolate::InterpolationWindow<coordinate_t>& model,
     const Point& point, const coordinate_t& radius, const uint32_t k,
@@ -494,8 +520,9 @@ auto RTree<Point, Type>::window_function(
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 template <typename Strategy>
+  requires std::floating_point<Type>
 auto RTree<Point, Type>::nearest(const Point& point, const coordinate_t& radius,
                                  const uint32_t k, const BoundaryCheck check,
                                  const Strategy& strategy) const
@@ -535,7 +562,7 @@ auto RTree<Point, Type>::nearest(const Point& point, const coordinate_t& radius,
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 auto RTree<Point, Type>::is_boundary_valid(
     const Point& point,
     const boost::geometry::model::multi_point<Point>& points,
@@ -567,7 +594,7 @@ auto RTree<Point, Type>::is_boundary_valid(
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 auto RTree<Point, Type>::pack() const -> serialization::Writer {
   serialization::Writer buffer;
   // Write magic number for validation
@@ -581,8 +608,10 @@ auto RTree<Point, Type>::pack() const -> serialization::Writer {
     for (size_t dim = 0; dim < dimension_t::value; ++dim) {
       buffer.write(geometry::point::get(item.first, dim));
     }
-    // Serialize the associated value
-    buffer.write(item.second);
+    // Serialize the associated value (trait-driven: defaults to a direct
+    // scalar write, custom value types — like Observation — write multiple
+    // fields).
+    value_traits<Type>::write(buffer, item.second);
   }
 
   return buffer;
@@ -590,7 +619,7 @@ auto RTree<Point, Type>::pack() const -> serialization::Writer {
 
 // ============================================================================
 
-template <typename Point, std::floating_point Type>
+template <typename Point, typename Type>
 auto RTree<Point, Type>::unpack(serialization::Reader& state)
     -> RTree<Point, Type> {
   if (state.size() < sizeof(uint32_t) + sizeof(size_t)) {
@@ -612,8 +641,8 @@ auto RTree<Point, Type>::unpack(serialization::Reader& state)
       const auto coord = state.read<coordinate_t>();
       geometry::point::set(point, coord, dim);
     }
-    const auto value = state.read<Type>();
-    points.emplace_back(point, value);
+    auto value = value_traits<Type>::read(state);
+    points.emplace_back(point, std::move(value));
   }
   RTree<Point, Type> rtree;
   rtree.packing(points);

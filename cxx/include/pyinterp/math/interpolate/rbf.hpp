@@ -37,8 +37,18 @@ enum class RBFKernel : uint8_t {
 /// c, called a center, so that φ(x) = φ(‖x - c‖). Any function φ that
 /// satisfies the property φ(x) = φ(‖x‖) is a radial function.
 /// @tparam T Floating point type
-template <std::floating_point T>
+///
+/// The class template parameter is intentionally unconstrained at the
+/// declaration level so that an unrelated container (e.g. an R-tree storing
+/// composite values) can mention `RBF<promotion_t>` in a function signature
+/// it never instantiates. The actual constraint is enforced via a
+/// `static_assert` in the class body, which fires only when the class is
+/// instantiated.
+template <typename T>
 class RBF {
+  static_assert(std::floating_point<T>,
+                "RBF requires a floating-point template parameter");
+
  public:
   /// Pointer to the Radial basis function
   using PtrRadialBasisFunction =

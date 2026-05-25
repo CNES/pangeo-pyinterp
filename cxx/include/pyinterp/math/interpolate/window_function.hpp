@@ -232,8 +232,16 @@ template <std::floating_point T>
 /// "multiplied" by a window function, the product is also zero-valued outside
 /// the interval: all that is left is the part where they overlap, the "view
 /// through the window"
-template <std::floating_point T>
+/// The class template parameter is intentionally unconstrained at the
+/// declaration level so that an unrelated container can mention
+/// `InterpolationWindow<coordinate_t>` in a function signature it never
+/// instantiates. The actual constraint is enforced via a `static_assert` in
+/// the class body, which fires only when the class is instantiated.
+template <typename T>
 class InterpolationWindow {
+  static_assert(std::floating_point<T>,
+                "InterpolationWindow requires a floating-point parameter");
+
  public:
   /// Pointer to window function
   using WindowFunctionPtr = T (*)(T, T, T) noexcept;

@@ -198,8 +198,18 @@ enum class DriftFunction : uint8_t {
 /// universal kriging (with polynomial drift for non-stationary data).
 ///
 /// @tparam T Floating-point type for calculations (float or double)
-template <std::floating_point T>
+///
+/// The class template parameter is intentionally unconstrained at the
+/// declaration level so that an unrelated container (e.g. an R-tree storing
+/// composite values) can mention `Kriging<promotion_t>` in a function
+/// signature it never instantiates. The actual constraint is enforced via a
+/// `static_assert` in the class body, which fires only when the class is
+/// instantiated.
+template <typename T>
 class Kriging {
+  static_assert(std::floating_point<T>,
+                "Kriging requires a floating-point template parameter");
+
  public:
   /// Pointer to the covariance function
   using CovarianceFunctionPtr =
