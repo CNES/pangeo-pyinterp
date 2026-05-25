@@ -57,9 +57,9 @@ TEST(RTreeObservation, QueryReturnsObservations) {
   };
   tree.packing(data);
 
-  auto results = tree.query(Point3D(0.1, 0.1, 0.0), 2,
-                            std::numeric_limits<double>::max(),
-                            BoundaryCheck::kNone);
+  auto results =
+      tree.query(Point3D(0.1, 0.1, 0.0), 2, std::numeric_limits<double>::max(),
+                 BoundaryCheck::kNone);
   ASSERT_EQ(results.size(), 2U);
   // Closest is (0,0,0).
   EXPECT_DOUBLE_EQ(results[0].second.value, 10.0);
@@ -86,9 +86,9 @@ TEST(RTreeObservation, SerializationRoundTrip) {
   auto sorted = [](auto& t) {
     std::vector<std::pair<Point3D, Obs>> v;
     v.reserve(t.size());
-    auto results = t.query(Point3D(0.0, 0.0, 0.0), 10,
-                           std::numeric_limits<double>::max(),
-                           BoundaryCheck::kNone);
+    auto results =
+        t.query(Point3D(0.0, 0.0, 0.0), 10, std::numeric_limits<double>::max(),
+                BoundaryCheck::kNone);
     return results;
   };
   auto original = sorted(tree);
@@ -110,7 +110,8 @@ TEST(RTreeObservation, CrossLoadingRejected) {
   auto reader = serialization::Reader(writer.data(), writer.size());
 
   using ScalarTree = RTree<Point3D, double>;
-  EXPECT_THROW(ScalarTree::unpack(reader), std::invalid_argument);
+  EXPECT_THROW(static_cast<void>(ScalarTree::unpack(reader)),
+               std::invalid_argument);
 }
 
 // Conversely, the scalar serialization layout is unchanged — existing
@@ -123,8 +124,7 @@ TEST(RTreeObservation, ScalarMagicNumberUnchanged) {
                 "Scalar magic number must remain 0x52545455 in 3D");
 
   ScalarTree tree;
-  tree.packing({{Point3D(1.0, 2.0, 3.0), 4.0},
-                {Point3D(4.0, 5.0, 6.0), 7.0}});
+  tree.packing({{Point3D(1.0, 2.0, 3.0), 4.0}, {Point3D(4.0, 5.0, 6.0), 7.0}});
   auto writer = tree.pack();
   auto reader = serialization::Reader(writer.data(), writer.size());
   auto restored = ScalarTree::unpack(reader);
