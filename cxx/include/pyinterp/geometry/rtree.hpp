@@ -18,6 +18,7 @@
 #include <concepts>
 #include <limits>
 #include <optional>
+#include <stdexcept>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -57,8 +58,8 @@ template <typename Point, typename Type>
 class RTree {
  public:
   using dimension_t = typename boost::geometry::traits::dimension<Point>;
-  static_assert(dimension_t::value == 2 || dimension_t::value == 3,
-                "Only 2D and 3D points are supported");
+  static_assert(dimension_t::value >= 2 && dimension_t::value <= 4,
+                "Only 2D, 3D and 4D points are supported");
 
   /// Type of point coordinates
   using coordinate_t =
@@ -435,14 +436,17 @@ auto RTree<Point, Type>::kriging(
     return {std::numeric_limits<promotion_t>::quiet_NaN(), uint32_t{0}};
   }
 
-  // Kriging requires 3D coordinates
+  // Kriging is defined on 3D Eigen vectors; 2D points are padded with z = 0
+  // and 4D points have no natural projection — use the OptimalInterpolation
+  // estimator instead, which works directly in 4D with an anisotropic
+  // kernel and a per-observation error model.
   if constexpr (dimension_t::value == 3) {
     const Eigen::Vector3<promotion_t> point_3d(boost::geometry::get<0>(point),
                                                boost::geometry::get<1>(point),
                                                boost::geometry::get<2>(point));
     return {model(coords, values, point_3d),
             static_cast<uint32_t>(coords.cols())};
-  } else {
+  } else if constexpr (dimension_t::value == 2) {
     Eigen::Matrix<promotion_t, 3, Eigen::Dynamic> coords_3d(3, coords.cols());
     coords_3d.template topRows<2>() = coords;
     coords_3d.row(2).setZero();
@@ -452,6 +456,11 @@ auto RTree<Point, Type>::kriging(
                                                promotion_t{0});
     return {model(coords_3d, values, point_3d),
             static_cast<uint32_t>(coords_3d.cols())};
+  } else {
+    // 4D — defer to OptimalInterpolation (Phase 4) instead.
+    throw std::logic_error(
+        "Kriging is not defined on 4D RTrees; use Optimal Interpolation "
+        "instead");
   }
 }
 
@@ -576,17 +585,24 @@ auto RTree<Point, Type>::is_boundary_valid(
   }
 
   if (check == BoundaryCheck::kEnvelope) {
-    // Fast: Axis Aligned Bounding Box
+    // Fast: Axis Aligned Bounding Box (well-defined in any dimension).
     auto box =
         boost::geometry::return_envelope<boost::geometry::model::box<Point>>(
             points);
     return boost::geometry::covered_by(point, box);
 
   } else if (check == BoundaryCheck::kConvexHull) {
-    // Slow but accurate: Convex Hull
-    boost::geometry::model::polygon<Point> hull;
-    boost::geometry::convex_hull(points, hull);
-    return boost::geometry::covered_by(point, hull);
+    // Slow but accurate: Convex Hull. Boost.Geometry only implements the
+    // convex hull in 2D / 3D, so reject this option for 4D containers.
+    if constexpr (dimension_t::value == 4) {
+      throw std::invalid_argument(
+          "BoundaryCheck::kConvexHull is not supported on 4D RTrees; use "
+          "kEnvelope or kNone");
+    } else {
+      boost::geometry::model::polygon<Point> hull;
+      boost::geometry::convex_hull(points, hull);
+      return boost::geometry::covered_by(point, hull);
+    }
   }
 
   return true;
