@@ -31,8 +31,9 @@ struct Observation {
   T sigma2;
 
   /// @brief Equality is defined for testability and serialization round-trips.
-  [[nodiscard]] friend constexpr auto operator==(
-      const Observation& a, const Observation& b) noexcept -> bool {
+  [[nodiscard]] friend constexpr auto operator==(const Observation& a,
+                                                 const Observation& b) noexcept
+      -> bool {
     return a.value == b.value && a.sigma2 == b.sigma2;
   }
 };
