@@ -387,10 +387,16 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         cmake_args: list[str] = [
             "-DCMAKE_BUILD_TYPE=" + cfg,
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
-            "-DPYINTERP_HOST_PYTHON_EXECUTABLE=" + host_python,
             *self.set_cmake_user_options(),
         ]
         if is_cross:
+            # The host interpreter cannot be discovered by CMake when
+            # cross-compiling (it would pick up the target arch). Pass it
+            # explicitly; CMakeLists.txt reads PYINTERP_HOST_PYTHON_EXECUTABLE
+            # inside its cross-compile branch.
+            cmake_args.append(
+                "-DPYINTERP_HOST_PYTHON_EXECUTABLE=" + host_python
+            )
             prefix = os.environ.get("PREFIX")
             if prefix:
                 cmake_args.append("-DPython_ROOT_DIR=" + prefix)
