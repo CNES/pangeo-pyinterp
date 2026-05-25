@@ -17,13 +17,6 @@ repos:
     hooks:
     - id: pyupgrade
       args: [--py311-plus]
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.3.0
-    hooks:
-      - id: flake8
-        exclude: tests
-        args:
-          - --extend-ignore=E203
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.10
     hooks:
