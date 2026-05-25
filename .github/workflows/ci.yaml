@@ -16,6 +16,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  geometry-stubs-sync:
+    name: geometry-stubs-sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Check pyinterp/geometry stubs are in sync
+      run: python scripts/generate_geometry_stubs.py --check
+
   coverage:
     name: coverage
     runs-on: ubuntu-latest
