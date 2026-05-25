@@ -19,14 +19,102 @@
 
 namespace pyinterp::math::interpolate {
 
+// ===========================================================================
+// Radial covariance forms.
+//
+// Each `*_covariance_from_r2(r2, sigma, lambda)` evaluates the covariance
+// kernel given the SQUARED distance between two points. These factored forms
+// serve two purposes:
+//
+// 1. The existing 3D isotropic `*_covariance(p1, p2, sigma, lambda)` functions
+//    are now thin wrappers that compute `(p1 - p2).squaredNorm()` once and
+//    delegate to the `_from_r2` form. Behavior is bit-identical to the
+//    pre-refactor implementation.
+//
+// 2. The anisotropic Optimal Interpolation path (see anisotropic.hpp) computes
+//    `r2 = Σ((Δᵢ / Lᵢ)²)` with per-axis decorrelation scales, then evaluates
+//    the kernel with `lambda = 1` — the length scales are already absorbed
+//    into `r2`.
+// ===========================================================================
+
+/// Matérn ν = 1/2 (exponential) covariance from squared distance.
+template <std::floating_point T>
+[[nodiscard]] auto matern_covariance_12_from_r2(const T r2, const T sigma,
+                                                const T lambda) noexcept -> T {
+  return math::sqr(sigma) * std::exp(-std::sqrt(r2) / lambda);
+}
+
+/// Matérn ν = 3/2 covariance from squared distance.
+template <std::floating_point T>
+[[nodiscard]] auto matern_covariance_32_from_r2(const T r2, const T sigma,
+                                                const T lambda) noexcept -> T {
+  const T d = std::sqrt(r2) / lambda;
+  constexpr T sqrt3 = std::numbers::sqrt3_v<T>;
+  return math::sqr(sigma) * std::fma(sqrt3, d, T{1}) * std::exp(-sqrt3 * d);
+}
+
+/// Matérn ν = 5/2 covariance from squared distance.
+template <std::floating_point T>
+[[nodiscard]] auto matern_covariance_52_from_r2(const T r2, const T sigma,
+                                                const T lambda) noexcept -> T {
+  const T d2 = r2 / math::sqr(lambda);
+  const T d = std::sqrt(d2);
+  // sqrt(5) [https://oeis.org/A002163]
+  constexpr T sqrt5 =
+      T{2.23606797749978969640917366873127623544061835961152572427089724};
+  const T term = std::fma(T{5} / T{3}, d2, std::fma(sqrt5, d, T{1}));
+  return math::sqr(sigma) * term * std::exp(-sqrt5 * d);
+}
+
+/// Cauchy covariance (heavy-tailed) from squared distance.
+template <std::floating_point T>
+[[nodiscard]] auto cauchy_covariance_from_r2(const T r2, const T sigma,
+                                             const T lambda) noexcept -> T {
+  return math::sqr(sigma) / (T{1} + r2 / math::sqr(lambda));
+}
+
+/// Spherical covariance (compact support, C⁰) from squared distance.
+template <std::floating_point T>
+[[nodiscard]] auto spherical_covariance_from_r2(const T r2, const T sigma,
+                                                const T lambda) noexcept -> T {
+  if (r2 >= math::sqr(lambda)) [[unlikely]] {
+    return T{0};
+  }
+  const T t = std::sqrt(r2) / lambda;
+  return math::sqr(sigma) *
+         std::fma(T{0.5}, t * t * t, std::fma(T{-1.5}, t, T{1}));
+}
+
+/// Gaussian covariance (C∞) from squared distance.
+template <std::floating_point T>
+[[nodiscard]] auto gaussian_covariance_from_r2(const T r2, const T sigma,
+                                               const T lambda) noexcept -> T {
+  return math::sqr(sigma) * std::exp(-r2 / math::sqr(lambda));
+}
+
+/// Wendland φ_{3,0} covariance (compact support) from squared distance.
+template <std::floating_point T>
+[[nodiscard]] auto wendland_covariance_from_r2(const T r2, const T sigma,
+                                               const T lambda) noexcept -> T {
+  if (r2 >= math::sqr(lambda)) [[unlikely]] {
+    return T{0};
+  }
+  const T t = T{1} - std::sqrt(r2) / lambda;
+  return math::sqr(sigma) * math::sqr(t);
+}
+
+// ===========================================================================
+// Isotropic 3D wrappers — preserved for backward compatibility.
+// ===========================================================================
+
 /// Matérn covariance function for ν = 0.5 (exponential covariance)
 template <std::floating_point T>
 [[nodiscard]] auto matern_covariance_12(
     const Eigen::Ref<const Eigen::Vector3<T>>& p1,
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T sigma,
     const T lambda) noexcept -> T {
-  const T r = (p1 - p2).norm();
-  return math::sqr(sigma) * std::exp(-r / lambda);
+  return matern_covariance_12_from_r2<T>((p1 - p2).squaredNorm(), sigma,
+                                         lambda);
 }
 
 /// Matérn covariance function for ν = 1.5
@@ -35,10 +123,8 @@ template <std::floating_point T>
     const Eigen::Ref<const Eigen::Vector3<T>>& p1,
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T sigma,
     const T lambda) noexcept -> T {
-  const T r = (p1 - p2).norm();
-  const T d = r / lambda;
-  constexpr T sqrt3 = std::numbers::sqrt3_v<T>;
-  return math::sqr(sigma) * std::fma(sqrt3, d, T{1}) * std::exp(-sqrt3 * d);
+  return matern_covariance_32_from_r2<T>((p1 - p2).squaredNorm(), sigma,
+                                         lambda);
 }
 
 /// Matérn covariance function for ν = 2.5
@@ -47,15 +133,8 @@ template <std::floating_point T>
     const Eigen::Ref<const Eigen::Vector3<T>>& p1,
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T sigma,
     const T lambda) noexcept -> T {
-  const T r = (p1 - p2).norm();
-  const T d = r / lambda;
-  // sqrt(5) [https://oeis.org/A002163]
-  constexpr T sqrt5 =
-      T{2.23606797749978969640917366873127623544061835961152572427089724};
-  const T sqrt5_d = sqrt5 * d;
-  // C(r) = σ² (1 + √5·d + 5/3·d²) exp(-√5·d)
-  const T term = std::fma(T{5} / T{3}, math::sqr(d), std::fma(sqrt5, d, T{1}));
-  return math::sqr(sigma) * term * std::exp(-sqrt5_d);
+  return matern_covariance_52_from_r2<T>((p1 - p2).squaredNorm(), sigma,
+                                         lambda);
 }
 
 /// Cauchy covariance function (heavy-tailed, long-range correlations)
@@ -64,8 +143,7 @@ template <std::floating_point T>
     const Eigen::Ref<const Eigen::Vector3<T>>& p1,
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T sigma,
     const T lambda) noexcept -> T {
-  const T r = (p1 - p2).norm();
-  return math::sqr(sigma) / (T{1} + math::sqr(r / lambda));
+  return cauchy_covariance_from_r2<T>((p1 - p2).squaredNorm(), sigma, lambda);
 }
 
 /// Spherical covariance function (compact support, C⁰ continuous)
@@ -74,16 +152,8 @@ template <std::floating_point T>
     const Eigen::Ref<const Eigen::Vector3<T>>& p1,
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T sigma,
     const T lambda) noexcept -> T {
-  const T r = (p1 - p2).norm();
-
-  if (r >= lambda) [[unlikely]] {
-    return T{0};
-  }
-
-  const T t = r / lambda;
-  // C(r) = σ² (1 - 1.5t + 0.5t³)
-  return math::sqr(sigma) *
-         std::fma(T{0.5}, t * t * t, std::fma(T{-1.5}, t, T{1}));
+  return spherical_covariance_from_r2<T>((p1 - p2).squaredNorm(), sigma,
+                                         lambda);
 }
 
 /// Gaussian covariance function (infinitely smooth, C∞)
@@ -92,8 +162,7 @@ template <std::floating_point T>
     const Eigen::Ref<const Eigen::Vector3<T>>& p1,
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T sigma,
     const T lambda) noexcept -> T {
-  const T r = (p1 - p2).norm();
-  return math::sqr(sigma) * std::exp(-math::sqr(r / lambda));
+  return gaussian_covariance_from_r2<T>((p1 - p2).squaredNorm(), sigma, lambda);
 }
 
 /// Wendland φ_{3,0} covariance function (compact support, positive definite in
@@ -103,14 +172,7 @@ template <std::floating_point T>
     const Eigen::Ref<const Eigen::Vector3<T>>& p1,
     const Eigen::Ref<const Eigen::Vector3<T>>& p2, const T sigma,
     const T lambda) noexcept -> T {
-  const T r = (p1 - p2).norm();
-
-  if (r >= lambda) [[unlikely]] {
-    return T{0};
-  }
-
-  const T t = T{1} - r / lambda;
-  return math::sqr(sigma) * math::sqr(t);
+  return wendland_covariance_from_r2<T>((p1 - p2).squaredNorm(), sigma, lambda);
 }
 
 /// Known covariance functions
