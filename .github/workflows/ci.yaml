@@ -247,9 +247,19 @@ jobs:
         environment-name: pyinterp
         environment-file: conda/win.yml
 
+    # windows-2025 no longer exposes the Visual Studio instance to a bare CMake
+    # invocation, so the "Visual Studio 17 2022" generator fails to find it.
+    # Initialise the MSVC developer environment explicitly before building.
+    - name: Set up MSVC toolchain
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
     - name: Building Testing Python Package
       shell: bash -l {0}
       run: |
-        python setup.py build_ext --cmake-args="-DBoost_INCLUDE_DIRS=$CONDA_PREFIX/Library/include"
+        # Convert the backslashes in $CONDA_PREFIX to forward slashes; otherwise
+        # they are stripped when the argument is forwarded to CMake.
+        python setup.py build_ext --cmake-args="-DBoost_INCLUDE_DIRS=${CONDA_PREFIX//\\//}/Library/include"
         python setup.py build
         pytest -v -ra

@@ -54,6 +54,16 @@ jobs:
           prefix="${MAMBA_ROOT_PREFIX//\\//}/envs/boost-deps/Library"
           echo "BOOST_PREFIX=${prefix}" >> "$GITHUB_ENV"
 
+      # windows-2025 no longer exposes the Visual Studio instance to a bare
+      # CMake invocation, so the "Visual Studio 17 2022" generator fails to find
+      # it. Initialise the MSVC developer environment before cibuildwheel runs;
+      # the exported variables propagate to its isolated build subprocesses.
+      - name: Set up MSVC toolchain (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.0
         env:
