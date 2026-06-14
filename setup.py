@@ -123,10 +123,17 @@ def prepare_cmake_arguments(
     extdir: str,
     cmake_args: list[str],
     build_args: list[str],
+    generator: str | None = None,
 ) -> None:
     """Update cmake and build arguments based on the platform."""
     # Calculate memory-aware parallel jobs
     parallel_jobs = get_parallel_jobs()
+
+    # The multi-config Visual Studio generators need the platform flag and
+    # MSBuild-style parallel switch; single-config generators (e.g. Ninja) do
+    # not understand them and rely on the active toolchain for the target
+    # architecture instead.
+    is_msbuild = generator is None or generator.startswith("Visual Studio")
 
     if not is_windows:
         build_args += ["--", f"-j{parallel_jobs}"]
@@ -134,12 +141,14 @@ def prepare_cmake_arguments(
             cmake_args += [
                 f"-DCMAKE_OSX_DEPLOYMENT_TARGET={OSX_DEPLOYMENT_TARGET}"
             ]
-    else:
+    elif is_msbuild:
         cmake_args += [
             "-DCMAKE_GENERATOR_PLATFORM=x64",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={extdir}",
         ]
         build_args += ["--", f"/m:{parallel_jobs}"]
+    else:
+        build_args += ["--", f"-j{parallel_jobs}"]
 
 
 # pylint: disable=too-many-instance-attributes
@@ -424,6 +433,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             extdir,
             cmake_args,
             build_args,
+            generator,
         )
 
         os.chdir(str(build_temp))

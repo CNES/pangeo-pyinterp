@@ -247,9 +247,10 @@ jobs:
         environment-name: pyinterp
         environment-file: conda/win.yml
 
-    # windows-2025 no longer exposes the Visual Studio instance to a bare CMake
-    # invocation, so the "Visual Studio 17 2022" generator fails to find it.
-    # Initialise the MSVC developer environment explicitly before building.
+    # The windows-2025 image now ships Visual Studio 18 (2026), so the pinned
+    # "Visual Studio 17 2022" CMake generator no longer finds an instance.
+    # Activate the MSVC developer environment (cl.exe + Ninja on PATH) and build
+    # with the version-independent Ninja generator instead (see CMAKE_GEN).
     - name: Set up MSVC toolchain
       uses: ilammy/msvc-dev-cmd@v1
       with:
@@ -257,6 +258,8 @@ jobs:
 
     - name: Building Testing Python Package
       shell: bash -l {0}
+      env:
+        CMAKE_GEN: Ninja
       run: |
         # Convert the backslashes in $CONDA_PREFIX to forward slashes; otherwise
         # they are stripped when the argument is forwarded to CMake.
