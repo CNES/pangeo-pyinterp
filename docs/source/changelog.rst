@@ -1,6 +1,24 @@
 Changelog
 #########
 
+2026.6.0
+--------
+
+Bug Fixes
+~~~~~~~~~
+
+* **Periodic axis interpolation across the 0/360 seam**: Fixed the geometric
+  interpolators (``bivariate``, ``trivariate`` and ``quadrivariate`` with the
+  ``bilinear``, ``nearest`` and ``idw`` methods) so that points falling in the
+  wrap-around cell of a periodic axis are interpolated correctly. The upper
+  bracketing node was read with its raw coordinate (e.g. ``0`` instead of
+  ``360``), collapsing the interpolation weight across the seam: values stayed
+  pinned to the lower node and then jumped discontinuously at the period
+  boundary. The upper node coordinate is now normalised relative to the lower
+  node, restoring a smooth, monotonic interpolation across the boundary. The
+  windowed interpolators (``bicubic`` and the spline family) were unaffected.
+
+
 2026.4.0
 --------
 
