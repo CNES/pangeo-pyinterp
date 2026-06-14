@@ -32,8 +32,9 @@ the diagonal of the matrix ``R`` in ``(C_oo + R) w = c_og``.
 
 Compared to :class:`RTree3D`, this tree does **not** provide
 inverse-distance-weighting, kriging, RBF or window-function methods. Use it
-for k-nearest-neighbour lookups in 4D space-time, and feed the results to
-the OI estimator (added in a later phase).
+for k-nearest-neighbour lookups in 4D space-time, or call its built-in
+``optimal_interpolation`` method (the estimator behind
+:class:`pyinterp.OptimalInterpolation`).
 
 Parameters:
     dtype: Data type for internal storage, either ``'float32'`` or
@@ -76,6 +77,31 @@ Args:
 Returns:
     Tuple ``(distances, values, sigma2)`` of shape ``(n, k)``. Cells
     beyond the actual neighbour count are filled with ``NaN``.
+)";
+
+constexpr const char* const kOptimalInterpolationDoc =
+    R"(Optimal Interpolation (BLUE) at many query points.
+
+For each query point this method retrieves up to ``config.k()`` neighbours
+from the 4D tree, builds the anisotropic covariance system with per-query
+length scales and field standard deviation, solves it via Cholesky (LDLT
+fallback) and returns the analysed value, the formal error standard
+deviation, and the number of neighbours actually used.
+
+Args:
+    coordinates: Query points, shape ``(m, 4)``.
+    lx: Decorrelation length along axis 0, shape ``(m,)``.
+    ly: Decorrelation length along axis 1, shape ``(m,)``.
+    lz: Decorrelation length along axis 2, shape ``(m,)``.
+    lt: Decorrelation length along axis 3, shape ``(m,)``.
+    sigma: Field standard deviation, shape ``(m,)``.
+    config: Optional :class:`...config.rtree.OptimalInterpolation` instance
+        (``covariance_model``, ``k``, ``radius``, ``num_threads``).
+
+Returns:
+    Tuple ``(values, errors, neighbors)`` of shape ``(m,)`` — analysed
+    value, formal error standard deviation, and neighbour count. Cells
+    with no neighbour return ``NaN`` / ``0``.
 )";
 
 template <typename T>
@@ -145,6 +171,24 @@ void implement_rtree_4d_methods(nb::class_<RTree4D<T>>& cls) {
           },
           nb::arg("coordinates"), nb::arg("config") = std::nullopt, kQueryDoc,
           nb::call_guard<nb::gil_scoped_release>())
+      .def(
+          "optimal_interpolation",
+          [](const RTree4D<T>& self,
+             const Eigen::Ref<const typename RTree4D<T>::CoordinateMatrix>&
+                 coordinates,
+             const Eigen::Ref<const typename RTree4D<T>::ValueVector>& lx,
+             const Eigen::Ref<const typename RTree4D<T>::ValueVector>& ly,
+             const Eigen::Ref<const typename RTree4D<T>::ValueVector>& lz,
+             const Eigen::Ref<const typename RTree4D<T>::ValueVector>& lt,
+             const Eigen::Ref<const typename RTree4D<T>::ValueVector>& sigma,
+             const std::optional<config::rtree::OptimalInterpolation>& config) {
+            return self.optimal_interpolation(
+                coordinates, lx, ly, lz, lt, sigma,
+                config.value_or(config::rtree::OptimalInterpolation{}));
+          },
+          nb::arg("coordinates"), nb::arg("lx"), nb::arg("ly"), nb::arg("lz"),
+          nb::arg("lt"), nb::arg("sigma"), nb::arg("config") = std::nullopt,
+          kOptimalInterpolationDoc, nb::call_guard<nb::gil_scoped_release>())
       .def("__getstate__", &RTree4D<T>::getstate, "Get the state for pickling.")
       .def(
           "__setstate__",
@@ -195,8 +239,9 @@ Examples:
     ...     np.array([10.0, 20.0]),
     ...     np.array([0.01, 0.02]),
     ... )
+    >>> from pyinterp.core.config.rtree import Query
     >>> distances, values, sigma2 = tree.query(
-    ...     np.array([[0.5, 0.0, 0.0, 0.0]]), k=2,
+    ...     np.array([[0.5, 0.0, 0.0, 0.0]]), Query().with_k(2),
     ... )
 )";
 

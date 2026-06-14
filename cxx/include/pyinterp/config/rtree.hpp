@@ -11,6 +11,7 @@
 #include "pyinterp/geometry/rtree.hpp"
 #include "pyinterp/math.hpp"
 #include "pyinterp/math/interpolate/kriging.hpp"
+#include "pyinterp/math/interpolate/optimal_interpolation.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
 
@@ -363,6 +364,41 @@ class InterpolationWindow : public RTreeBase<InterpolationWindow> {
 
   /// Optional window function argument
   double arg_{std::numeric_limits<double>::quiet_NaN()};
+};
+
+// ////////////////////////////////////////////////////////////////////////////
+
+/// Configuration for Optimal Interpolation (BLUE) on a 4D R-tree.
+///
+/// Unlike @ref Kriging, the field standard deviation @c sigma and the
+/// decorrelation length scales @c (Lx, Ly, Lz, Lt) are NOT carried by the
+/// config — they are passed per query point (as arrays) to the
+/// @c optimal_interpolation method, so that they can vary geographically
+/// (sampled from a @c Grid2D in the Python layer).
+class OptimalInterpolation : public RTreeBase<OptimalInterpolation> {
+ public:
+  /// @brief Default constructor.
+  constexpr OptimalInterpolation() noexcept = default;
+
+  /// @brief Get the covariance function type.
+  [[nodiscard]] constexpr auto covariance_model() const noexcept
+      -> math::interpolate::CovarianceFunction {
+    return covariance_model_;
+  }
+
+  /// @brief Set the covariance model.
+  [[nodiscard]] constexpr auto with_covariance_model(
+      this OptimalInterpolation self,
+      math::interpolate::CovarianceFunction value) noexcept
+      -> OptimalInterpolation {
+    self.covariance_model_ = value;
+    return self;
+  }
+
+ private:
+  /// Anisotropic covariance kernel.
+  math::interpolate::CovarianceFunction covariance_model_{
+      math::interpolate::CovarianceFunction::kGaussian};
 };
 
 }  // namespace pyinterp::config::rtree

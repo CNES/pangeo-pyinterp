@@ -318,29 +318,31 @@ Parameters:
 Examples:
     >>> import numpy as np
     >>> import pyinterp
-
-    # Compute t-digest for a 1D array with float64 (default)
     >>> data = np.random.randn(10000)
     >>> tdigest = pyinterp.TDigest(data)
     >>> median = tdigest.quantile(0.5)
     >>> print(f"Median: {median}")
 
-    # Compute t-digest with float32 for reduced memory usage
-    >>> data = data.astype('float32')
-    >>> tdigest = pyinterp.TDigest(data, dtype='float32')
+    Compute t-digest with float32 for reduced memory usage
 
-    # Compute along a specific axis
+    >>> data = data.astype("float32")
+    >>> tdigest = pyinterp.TDigest(data, dtype="float32")
+
+    Compute along a specific axis
+
     >>> data_2d = np.random.randn(100, 50)
     >>> tdigest_axis = pyinterp.TDigest(data_2d, axis=[0])
     >>> medians = tdigest_axis.quantile(0.5)
     >>> print(f"Medians shape: {medians.shape}")
 
-    # Compute with weights and higher compression for better accuracy
+    Compute with weights and higher compression for better accuracy
+
     >>> weights = np.random.rand(100, 50)
-    >>> tdigest_weighted = pyinterp.TDigest(data_2d,
-        weights=weights,
-        compression=500,
-    )
+    >>> tdigest_weighted = pyinterp.TDigest(
+    ...     data_2d,
+    ...     weights=weights,
+    ...     compression=500,
+    ... )
     >>> weighted_median = tdigest_weighted.quantile(0.5)
 )doc";
 

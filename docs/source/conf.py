@@ -66,14 +66,16 @@ class SubsectionSorter:
             "ex_3d.py": 11,
             "ex_4d.py": 12,
             "ex_unstructured.py": 13,
-            "ex_orbit.py": 14,
-            "ex_decompose_track.py": 15,
-            "pangeo_unstructured_grid.py": 16,
-            "pangeo_time_series.py": 17,
-            "ex_descriptive_statistics.py": 18,
-            "ex_binning.py": 19,
-            "ex_dateutils.py": 20,
-            "ex_fill_undef.py": 21,
+            "ex_optimal_interpolation_2d_time.py": 14,
+            "ex_optimal_interpolation_geographic.py": 15,
+            "ex_orbit.py": 16,
+            "ex_decompose_track.py": 17,
+            "pangeo_unstructured_grid.py": 18,
+            "pangeo_time_series.py": 19,
+            "ex_descriptive_statistics.py": 20,
+            "ex_binning.py": 21,
+            "ex_dateutils.py": 22,
+            "ex_fill_undef.py": 23,
         }
         return order[pathlib.Path(fname).name]
 
@@ -83,11 +85,12 @@ def section_sorter(dirname: str) -> int:
     order = {
         "core": 0,
         "grid": 1,
-        "stats": 2,
-        "geo": 3,
-        "utilities": 4,
-        "orbit": 5,
-        "pangeo": 6,
+        "oi": 2,
+        "stats": 3,
+        "geo": 4,
+        "utilities": 5,
+        "orbit": 6,
+        "pangeo": 7,
     }
     return order[pathlib.Path(dirname).name]
 

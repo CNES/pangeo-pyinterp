@@ -39,6 +39,9 @@ from .core import (
     RTree3D,
     RTree3DFloat32,
     RTree3DFloat64,
+    RTree4D,
+    RTree4DFloat32,
+    RTree4DFloat64,
     TDigest,
     TDigestFloat32,
     TDigestFloat64,
@@ -47,6 +50,7 @@ from .core import (
     dateutils,
     period,
 )
+from .optimal_interpolation import OIResult, OptimalInterpolation
 from .regular_grid_interpolator import (
     bivariate,
     quadrivariate,
@@ -131,9 +135,14 @@ __all__ = [
     "Histogram2D",
     "Histogram2DFloat32",
     "Histogram2DFloat64",
+    "OIResult",
+    "OptimalInterpolation",
     "RTree3D",
     "RTree3DFloat32",
     "RTree3DFloat64",
+    "RTree4D",
+    "RTree4DFloat32",
+    "RTree4DFloat64",
     "TDigest",
     "TDigestFloat32",
     "TDigestFloat64",

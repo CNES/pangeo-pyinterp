@@ -384,6 +384,19 @@ auto bind(nb::module_& m) -> void {
                              nb::arg("value") = std::nullopt,
                              "Set the window function argument.",
                              nb::call_guard<nb::gil_scoped_release>()));
+
+  // Bind OptimalInterpolation configuration (4D, anisotropic, per-obs σ²).
+  add_rtree_methods(
+      nb::class_<OptimalInterpolation>(
+          m, "OptimalInterpolation",
+          "Configuration for 4D Optimal Interpolation (BLUE) with an "
+          "anisotropic covariance kernel and per-observation error variance.")
+          .def(nb::init<>(), "Default constructor.",
+               nb::call_guard<nb::gil_scoped_release>())
+          .def("with_covariance_model",
+               &OptimalInterpolation::with_covariance_model, nb::arg("value"),
+               "Set the anisotropic covariance kernel.",
+               nb::call_guard<nb::gil_scoped_release>()));
 }
 
 }  // namespace rtree::pybind

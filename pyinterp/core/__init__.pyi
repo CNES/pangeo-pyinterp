@@ -735,6 +735,20 @@ class RTree4DHolder(Generic[_FloatDType]):
         np.ndarray[TwoDims, np.dtype[_FloatDType]],
         np.ndarray[TwoDims, np.dtype[_FloatDType]],
     ]: ...
+    def optimal_interpolation(
+        self,
+        coordinates: np.ndarray[TwoDims, np.dtype[Any]],
+        lx: np.ndarray[OneDim, np.dtype[Any]],
+        ly: np.ndarray[OneDim, np.dtype[Any]],
+        lz: np.ndarray[OneDim, np.dtype[Any]],
+        lt: np.ndarray[OneDim, np.dtype[Any]],
+        sigma: np.ndarray[OneDim, np.dtype[Any]],
+        config: rtree.OptimalInterpolation | None = ...,
+    ) -> tuple[
+        np.ndarray[OneDim, np.dtype[_FloatDType]],
+        np.ndarray[OneDim, np.dtype[_FloatDType]],
+        NDArray1DUInt32,
+    ]: ...
     def size(self) -> int: ...
 
 @overload
