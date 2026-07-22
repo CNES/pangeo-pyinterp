@@ -166,10 +166,61 @@ After (New API)::
     config = Bivariate().with_window_size(3, 3)
     result = regular_grid_interpolator.bivariate(grid, x, y, config=config)
 
+Binning and Histogram Statistics
+================================
+
+The ``variable()`` accessor of ``Binning1D``, ``Binning2D`` and ``Histogram2D``
+has been **removed**. Each statistic is now a method of its own, so a typo is
+caught at call time instead of raising at run time, and the return type is known
+statically:
+
+Before (Old API)::
+
+    mean = binning.variable("mean")
+    count = binning.variable("count")
+
+After (New API)::
+
+    mean = binning.mean()
+    count = binning.count()
+
+``Binning1D`` and ``Binning2D`` expose ``count()``, ``kurtosis()``, ``max()``,
+``mean()``, ``min()``, ``skewness()``, ``sum()``, ``sum_of_weights()`` and
+``variance()`` -- the exact set of names ``variable()`` used to accept.
+``Histogram2D`` exposes the subset that applies to it: ``count()``, ``max()``,
+``mean()``, ``min()``, ``sum_of_weights()``, plus ``quantile()``.
+
 Dask Integration
 ================
 
-A new ``dask`` module provides distributed computation support:
+Distributed computation has been gathered into a dedicated ``pyinterp.dask``
+module. Previously, the classes that supported it carried their own
+``push_delayed()`` method, which imported Dask at class level and therefore tied
+the whole library to it. Concentrating the Dask code in one module keeps that
+dependency optional: ``pyinterp`` no longer imports Dask unless you explicitly
+use ``pyinterp.dask``.
+
+As a consequence, the ``push_delayed()`` methods have been **removed**. Use the
+corresponding module-level function instead:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 40 20
+
+   * - Old
+     - New
+     - Notes
+   * - ``Binning1D.push_delayed()``
+     - ``pyinterp.dask.binning1d()``
+     - Method removed
+   * - ``Binning2D.push_delayed()``
+     - ``pyinterp.dask.binning2d()``
+     - Method removed
+   * - ``Histogram2D.push_delayed()``
+     - ``pyinterp.dask.histogram2d()``
+     - Method removed
+
+The module also covers computations that had no delayed equivalent before:
 
 .. list-table::
    :header-rows: 1
@@ -177,20 +228,28 @@ A new ``dask`` module provides distributed computation support:
 
    * - Function
      - Description
-   * - ``pyinterp.dask.binning1d()``
-     - Distributed 1D binning
-   * - ``pyinterp.dask.binning2d()``
-     - Distributed 2D binning
    * - ``pyinterp.dask.descriptive_statistics()``
      - Distributed statistics computation
-   * - ``pyinterp.dask.histogram2d()``
-     - Distributed 2D histogram
    * - ``pyinterp.dask.tdigest()``
      - Distributed T-Digest quantile estimation
 
-**Example Usage:**
+Two differences matter when porting existing code:
 
-::
+* The new functions are **eager**. ``push_delayed()`` returned a Dask graph that
+  you had to ``.compute()``; the module-level functions run the graph themselves
+  and return the populated object directly.
+* Their array arguments must be **actual Dask arrays**. ``push_delayed()``
+  accepted NumPy arrays and converted them silently; passing a NumPy array now
+  raises ``TypeError: x must be a dask array, got ndarray``. Wrap it with
+  ``dask.array.from_array()``, or simply call ``push()`` for in-memory data.
+
+**Example Migration:**
+
+Before (Old API)::
+
+    binning = binning.push_delayed(lon, lat, data).compute()
+
+After (New API)::
 
     import dask.array as da
     from pyinterp.dask import binning2d
@@ -200,8 +259,13 @@ A new ``dask`` module provides distributed computation support:
     y = da.from_array(lat_data, chunks=1000)
     z = da.from_array(values, chunks=1000)
 
-    # Perform distributed binning
-    result = binning2d(x, y, z, x_axis, y_axis)
+    # The bins are described by a Binning2D instance, which is copied
+    # internally: the one you pass in is left untouched.
+    binning = pyinterp.Binning2D(x_axis, y_axis)
+
+    # Perform distributed binning; the result is a new Binning2D instance
+    result = binning2d(x, y, z, binning, simple=True)
+    print(result.mean())
 
 T-Digest for Streaming Quantiles
 ================================
