@@ -429,7 +429,7 @@ print(f"  Number of points: {cartesian.algorithms.num_points(cart_polygon)}")
 # ---------------------------------
 # Let's visualize some of the primitives we've created
 
-fig = matplotlib.pyplot.figure(figsize=(15, 10))
+fig = matplotlib.pyplot.figure(figsize=(15, 10), layout="constrained")
 
 # Plot 1: Points and MultiPoint
 ax1 = fig.add_subplot(2, 3, 1, projection=cartopy.crs.PlateCarree())
@@ -545,7 +545,5 @@ ax6.set_xlabel("Longitude")
 ax6.set_ylabel("Latitude")
 ax6.set_title("MultiLineString")
 ax6.legend()
-
-matplotlib.pyplot.tight_layout()
 
 # %%
