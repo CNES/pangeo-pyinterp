@@ -5,7 +5,7 @@ repos:
       - id: check-case-conflict
       - id: check-docstring-first
       - id: check-yaml
-        exclude: "(conda/meta.yaml|.clang\\-format)$"
+        exclude: "\\.clang\\-format$"
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
@@ -46,7 +46,9 @@ repos:
     rev: v22.1.5
     hooks:
       - id: clang-format
-        exclude: "(dataset.*json)$"
+        # *.hpp.in templates hold @VAR@ placeholders that clang-format, which
+        # parses its input as C++, cannot handle.
+        exclude: "(dataset.*json|\\.in)$"
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v2.1.0
     hooks:

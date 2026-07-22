@@ -19,10 +19,12 @@ import setuptools.command.build_ext
 import setuptools.command.build_py
 
 
-# Import the geometry stub generator from scripts/ at module load time so
-# the BuildPy command can call it without an in-function import.
+# Import the geometry stub generator and the version resolver from scripts/ at
+# module load time so the commands below can use them without an in-function
+# import.
 sys.path.insert(0, str(pathlib.Path(__file__).parent.absolute() / "scripts"))
 import generate_geometry_stubs  # type: ignore[import-not-found]
+import resolve_version  # type: ignore[import-not-found]
 
 
 sys.path.pop(0)
@@ -49,6 +51,10 @@ POCKETFFT = "pocketfft"
 
 # FFT choices
 FFT_CHOICES = [MKL_FFT, POCKETFFT]
+
+# Project version and the source it was read from. Resolved once here so that
+# the metadata, the generated _version.py and the CMake configuration all agree.
+VERSION, VERSION_SOURCE = resolve_version.resolve_version(WORKING_DIRECTORY)
 
 
 def compare_setuptools_version(required: tuple[int, ...]) -> bool:
@@ -396,6 +402,10 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         cmake_args: list[str] = [
             "-DCMAKE_BUILD_TYPE=" + cfg,
             "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=" + extdir,
+            # Hand CMake the version resolved here rather than letting it run
+            # its own detection: the extension must report the same version as
+            # the Python package that ships it.
+            "-DPYINTERP_VERSION=" + VERSION,
             *self.set_cmake_user_options(),
         ]
         if is_cross:
@@ -523,6 +533,50 @@ def long_description() -> str:
         return stream.read()
 
 
+def version_keywords() -> dict[str, object]:
+    """Return the version-related keyword arguments for ``setup()``.
+
+    ``setuptools_scm`` stays in charge of the packaging side whenever it is
+    available: it writes ``pyinterp/_version.py`` and stamps the sdist
+    ``PKG-INFO``. Declaring ``use_scm_version`` explicitly is required because
+    the ``[tool.setuptools_scm]`` table alone does not trigger the hook (there
+    is no ``[project]`` table declaring a dynamic version).
+
+    Outside a git checkout it cannot discover a version on its own and aborts
+    the build with ``LookupError``. ``SETUPTOOLS_SCM_PRETEND_VERSION_FOR_*`` is
+    its supported way of being handed one, so the version resolved from the
+    other sources is passed through it -- which keeps a single code path and
+    avoids the "version already set" warning that setting ``version=`` on top
+    of it would raise.
+    """
+    if VERSION_SOURCE == "fallback":
+        print(
+            "WARNING: could not determine the pyinterp version (no git "
+            "checkout, VERSION.txt, pyinterp/_version.py or PKG-INFO found). "
+            f"Building as {VERSION}. Set the PYINTERP_VERSION environment "
+            "variable to pin it explicitly.",
+            file=sys.stderr,
+        )
+
+    if resolve_version.has_setuptools_scm():
+        if VERSION_SOURCE != "git":
+            os.environ.setdefault(
+                "SETUPTOOLS_SCM_PRETEND_VERSION_FOR_PYINTERP", VERSION
+            )
+        return {
+            "use_scm_version": {
+                "write_to": "pyinterp/_version.py",
+                "version_scheme": "guess-next-dev",
+                "local_scheme": "no-local-version",
+            }
+        }
+
+    # No setuptools_scm at all: do its job by hand. pyinterp/__init__.py reads
+    # its version from _version.py at import time, so the module has to exist.
+    resolve_version.write_version_module(WORKING_DIRECTORY, VERSION)
+    return {"version": VERSION}
+
+
 def main() -> None:
     """Set up module."""
     install_requires = ["dask", "numpy", "xarray >= 0.13"]
@@ -569,19 +623,9 @@ def main() -> None:
         ),
         platforms=["POSIX", "MacOS", "Windows"],
         python_requires=">=3.11",
-        # Explicitly opt in to setuptools_scm so PEP 517 sdist builds always
-        # (a) compute the real version from the git tag and (b) write
-        # pyinterp/_version.py before the archive is packed. Without this the
-        # [tool.setuptools_scm] table alone is not enough to trigger the hook
-        # (no [project] table / no dynamic = ["version"]) and the sdist ends
-        # up shipping PKG-INFO with version "0.0.0".
-        use_scm_version={
-            "write_to": "pyinterp/_version.py",
-            "version_scheme": "guess-next-dev",
-            "local_scheme": "no-local-version",
-        },
         url="https://github.com/CNES/pangeo-pyinterp",
         zip_safe=False,
+        **version_keywords(),  # type: ignore[arg-type]
     )
 
 

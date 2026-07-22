@@ -18,10 +18,30 @@ from typing import Any
 try:
     from ._version import version as __version__
 except ImportError:
-    # Package is not installed, use a development version
-    __version__ = "0.0.0.dev0"
+    # _version.py is written by the build. When it is missing, the package was
+    # assembled outside the supported build path; fall back to the metadata
+    # recorded at install time before giving up.
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _distribution_version
+
+    try:
+        __version__ = _distribution_version("pyinterp")
+    except PackageNotFoundError:
+        # Report an obviously invalid version rather than a plausible one, so
+        # a broken install cannot be mistaken for a real release.
+        __version__ = "0.0.0"
+
+    del PackageNotFoundError, _distribution_version
 
 from . import core, fill, geohash
+
+
+#: Version the compiled extension was built with. It should match
+#: :data:`__version__`; a difference means the binary is stale with respect to
+#: the Python sources, which happens in an editable install that was not
+#: rebuilt.
+__core_version__: str = getattr(core, "__version__", "0.0.0")
+
 from .core import (
     Axis,
     Binning1D,

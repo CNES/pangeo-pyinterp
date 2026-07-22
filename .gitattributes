@@ -1,0 +1,5 @@
+# VERSION.txt holds a `$Format:...$` placeholder that stays literal in a working
+# tree and is expanded by `git archive`. This is what gives a version to source
+# tarballs (GitHub "Download ZIP", release tarballs, CMake FetchContent URL
+# downloads), which carry no .git directory and no sdist metadata.
+VERSION.txt export-subst

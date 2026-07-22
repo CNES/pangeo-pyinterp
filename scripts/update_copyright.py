@@ -73,7 +73,8 @@ def main() -> None:
     """Execute the main script logic."""
     year = datetime.date.today().year
     for comment_delimiter, ext, dir in [
-        ("//", (".hpp", ".cpp"), "cxx"),
+        # ".in" covers the version.hpp.in template configured by CMake.
+        ("//", (".hpp", ".cpp", ".in"), "cxx"),
         ("#", (".txt",), "cxx"),
         ("#", (".py",), "pyinterp"),
         ("#", (".py", ".sh"), "scripts"),

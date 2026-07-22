@@ -3,6 +3,7 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/string_view.h>
 
 #include "pyinterp/pybind/axis.hpp"
 #include "pyinterp/pybind/binning.hpp"
@@ -19,8 +20,15 @@
 #include "pyinterp/pybind/rtree.hpp"
 #include "pyinterp/pybind/tdigest.hpp"
 #include "pyinterp/pybind/windowed.hpp"
+#include "pyinterp/version.hpp"
 
 NB_MODULE(core, m) {
+  // Version the extension was compiled with. Exposed as pyinterp.core
+  // .__version__, and re-exported as pyinterp.__core_version__: comparing it
+  // against pyinterp.__version__ tells a stale binary from a current one.
+  m.attr("__version__") = pyinterp::version;
+  m.attr("__version_source__") = pyinterp::version_source;
+
   pyinterp::pybind::init_config(m);
   pyinterp::pybind::init_axis(m);
   pyinterp::pybind::init_grids(m);
