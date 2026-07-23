@@ -16,7 +16,8 @@ import numpy as np
 import pytest
 
 import pyinterp
-from pyinterp.optimal_interpolation import _kernel_from_r2
+from pyinterp.core.geometry.geographic import Coordinates, Spheroid
+from pyinterp.optimal_interpolation import CovarianceFunction, _kernel_from_r2
 
 
 _KERNELS = (
@@ -39,7 +40,7 @@ def _reference_oi(
     ly: float,
     lt: float,
     sigma: float,
-    kernel: str,
+    kernel: CovarianceFunction,
 ) -> tuple[float, float]:
     """Direct numpy OI on a single query point (no R-tree)."""
     dx_oo = (obs_coords[:, 0, None] - obs_coords[None, :, 0]) / lx
@@ -70,18 +71,14 @@ def _make_dataset(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
     coords = rng.uniform([0.0, 0.0, 0.0], [10.0, 10.0, 10.0], size=(n, 3))
-    values = (
-        np.sin(coords[:, 0])
-        * np.cos(coords[:, 1])
-        + 0.2 * coords[:, 2]
-    )
+    values = np.sin(coords[:, 0]) * np.cos(coords[:, 1]) + 0.2 * coords[:, 2]
     # Slight noise that varies across observations (mimics multi-mission σ²).
     sigma2 = 0.01 + 0.005 * rng.random(n)
     return coords, values, sigma2
 
 
 @pytest.mark.parametrize("kernel", _KERNELS)
-def test_matches_reference(kernel: str) -> None:
+def test_matches_reference(kernel: CovarianceFunction) -> None:
     """For each kernel, OI matches the numpy reference within tolerance."""
     coords, values, sigma2 = _make_dataset(n=40)
     oi = pyinterp.OptimalInterpolation(
@@ -114,9 +111,7 @@ def test_zero_noise_recovers_observations() -> None:
     oi = pyinterp.OptimalInterpolation(coords, values, tiny)
 
     # Query at the obs locations themselves.
-    result = oi(
-        coords, lx=1.0, ly=1.0, lt=1.0, sigma=1.0, k=coords.shape[0]
-    )
+    result = oi(coords, lx=1.0, ly=1.0, lt=1.0, sigma=1.0, k=coords.shape[0])
     np.testing.assert_allclose(result.value, values, atol=1e-6)
     # Formal error should be close to zero at the observation locations.
     np.testing.assert_allclose(result.error, 0.0, atol=1e-5)
@@ -131,7 +126,7 @@ def test_infinite_noise_returns_zero() -> None:
     q = np.array([[5.0, 5.0, 5.0]])
     result = oi(q, lx=1.0, ly=1.0, lt=1.0, sigma=1.0, k=20)
     np.testing.assert_allclose(result.value, 0.0, atol=1e-6)
-    # Formal error tends to σ since no information is gained.
+    # Formal error tends to sigma since no information is gained.
     np.testing.assert_allclose(result.error, 1.0, atol=1e-3)
 
 
@@ -186,9 +181,7 @@ def test_invalid_inputs() -> None:
     with pytest.raises(ValueError, match="strictly positive"):
         pyinterp.OptimalInterpolation(coords, values, np.zeros(5))
     with pytest.raises(ValueError, match="time_scale"):
-        pyinterp.OptimalInterpolation(
-            coords, values, sigma2, time_scale=-1.0
-        )
+        pyinterp.OptimalInterpolation(coords, values, sigma2, time_scale=-1.0)
 
     oi = pyinterp.OptimalInterpolation(coords, values, sigma2)
     with pytest.raises(ValueError, match="query_coords"):
@@ -237,7 +230,7 @@ def test_knn_subset_matches_reference_when_k_less_than_n() -> None:
     the reference from exactly those ``k`` observations.
     """
     coords, values, sigma2 = _make_dataset(n=200, seed=11)
-    kernel = "gaussian"
+    kernel: CovarianceFunction = "gaussian"
     lx = ly = lt = 2.0
     sigma = 1.0
     k = 20
@@ -254,8 +247,15 @@ def test_knn_subset_matches_reference_when_k_less_than_n() -> None:
         d2 = np.sum((coords - q[i]) ** 2, axis=1)
         idx = np.argsort(d2, kind="stable")[:k]
         ref_v, ref_e = _reference_oi(
-            coords[idx], values[idx], sigma2[idx], q[i],
-            lx, ly, lt, sigma, kernel,
+            coords[idx],
+            values[idx],
+            sigma2[idx],
+            q[i],
+            lx,
+            ly,
+            lt,
+            sigma,
+            kernel,
         )
         assert result.neighbors[i] == k
         np.testing.assert_allclose(
@@ -291,21 +291,20 @@ def test_time_scale_changes_knn_selection_when_k_less_than_n() -> None:
     sigma2 = np.full(20, 1e-3)
     q = np.array([[0.0, 0.0, 0.0]])
     # L = 200 on every axis: |Δt| = 100 and |Δx| = 100 both give r² = 0.25.
-    kw = {"lx": 200.0, "ly": 200.0, "lt": 200.0, "sigma": 1.0, "k": 5}
 
     # Small time_scale compresses the time axis: group A (spatially nearest)
     # is retrieved, so the +1 observations dominate → positive analysis.
     oi_small = pyinterp.OptimalInterpolation(
         coords, values, sigma2, time_scale=1e-3
     )
-    res_small = oi_small(q, **kw)
+    res_small = oi_small(q, lx=200.0, ly=200.0, lt=200.0, sigma=1.0, k=5)
 
     # Large time_scale stretches the time axis: group B (temporally nearest)
     # is retrieved, so the -1 observations dominate → negative analysis.
     oi_large = pyinterp.OptimalInterpolation(
         coords, values, sigma2, time_scale=1e3
     )
-    res_large = oi_large(q, **kw)
+    res_large = oi_large(q, lx=200.0, ly=200.0, lt=200.0, sigma=1.0, k=5)
 
     assert res_small.neighbors[0] == 5
     assert res_large.neighbors[0] == 5
@@ -317,13 +316,23 @@ def test_time_scale_changes_knn_selection_when_k_less_than_n() -> None:
 
 def test_kernel_from_r2_known_values() -> None:
     """Spot-check kernel formulas at r²=0 and r²=1."""
-    np.testing.assert_allclose(_kernel_from_r2(np.array([0.0]), "gaussian"), 1.0)
+    np.testing.assert_allclose(
+        _kernel_from_r2(np.array([0.0]), "gaussian"), 1.0
+    )
     np.testing.assert_allclose(_kernel_from_r2(np.array([0.0]), "cauchy"), 1.0)
-    np.testing.assert_allclose(_kernel_from_r2(np.array([0.0]), "wendland"), 1.0)
-    np.testing.assert_allclose(_kernel_from_r2(np.array([1.0]), "gaussian"), np.exp(-1))
+    np.testing.assert_allclose(
+        _kernel_from_r2(np.array([0.0]), "wendland"), 1.0
+    )
+    np.testing.assert_allclose(
+        _kernel_from_r2(np.array([1.0]), "gaussian"), np.exp(-1)
+    )
     np.testing.assert_allclose(_kernel_from_r2(np.array([1.0]), "cauchy"), 0.5)
-    np.testing.assert_allclose(_kernel_from_r2(np.array([1.0]), "wendland"), 0.0)
-    np.testing.assert_allclose(_kernel_from_r2(np.array([1.0]), "spherical"), 0.0)
+    np.testing.assert_allclose(
+        _kernel_from_r2(np.array([1.0]), "wendland"), 0.0
+    )
+    np.testing.assert_allclose(
+        _kernel_from_r2(np.array([1.0]), "spherical"), 0.0
+    )
 
     with pytest.raises(ValueError, match="Unknown covariance kernel"):
         _kernel_from_r2(np.array([0.0]), "not_a_kernel")  # type: ignore[arg-type]
@@ -348,14 +357,9 @@ def _ecef_reference_oi(
     l_spatial: float,
     lt: float,
     sigma: float,
-    kernel: str,
+    kernel: CovarianceFunction,
 ) -> tuple[float, float]:
     """Numpy reference: convert to ECEF, run anisotropic OI in (x, y, z, t)."""
-    from pyinterp.core.geometry.geographic import (
-        Coordinates,
-        Spheroid,
-    )
-
     sph = Spheroid()
     coords = Coordinates(sph)
 
@@ -371,7 +375,7 @@ def _ecef_reference_oi(
     )
     q4d = np.array([q_x[0], q_y[0], q_z[0], query_lonlat[2]])
 
-    dx = (obs4d[:, None, :] - obs4d[None, :, :])
+    dx = obs4d[:, None, :] - obs4d[None, :, :]
     scale = np.array([l_spatial, l_spatial, l_spatial, lt])
     r2_oo = np.sum((dx / scale) ** 2, axis=-1)
     diff_og = q4d - obs4d
@@ -389,7 +393,9 @@ def _ecef_reference_oi(
     return value, np.sqrt(max(err2, 0.0))
 
 
-def _geographic_dataset(n: int = 30, seed: int = 0):
+def _geographic_dataset(
+    n: int = 30, seed: int = 0
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Random (lon, lat, t) observations in a small mid-latitude region."""
     rng = np.random.default_rng(seed)
     lon = rng.uniform(-5.0, 5.0, n)
@@ -402,11 +408,15 @@ def _geographic_dataset(n: int = 30, seed: int = 0):
 
 
 @pytest.mark.parametrize("kernel", _KERNELS)
-def test_geographic_matches_ecef_reference(kernel: str) -> None:
+def test_geographic_matches_ecef_reference(
+    kernel: CovarianceFunction,
+) -> None:
     """Geographic-mode OI matches a hand-rolled ECEF-space reference."""
     obs, values, sigma2 = _geographic_dataset(n=20, seed=1)
     oi = pyinterp.OptimalInterpolation(
-        obs, values, sigma2,
+        obs,
+        values,
+        sigma2,
         covariance=kernel,
         coordinate_system="geographic",
     )
@@ -416,8 +426,14 @@ def test_geographic_matches_ecef_reference(kernel: str) -> None:
     result = oi(q, l_spatial=150e3, lt=6 * 3600.0, sigma=1.0, k=20)
 
     ref_v, ref_e = _ecef_reference_oi(
-        obs, values, sigma2, q[0],
-        l_spatial=150e3, lt=6 * 3600.0, sigma=1.0, kernel=kernel,
+        obs,
+        values,
+        sigma2,
+        q[0],
+        l_spatial=150e3,
+        lt=6 * 3600.0,
+        sigma=1.0,
+        kernel=kernel,
     )
     np.testing.assert_allclose(result.value[0], ref_v, rtol=1e-9, atol=1e-12)
     np.testing.assert_allclose(result.error[0], ref_e, rtol=1e-7, atol=1e-10)
@@ -438,9 +454,7 @@ def test_geographic_grid2d_sampled_at_lon_lat() -> None:
     # Constant Grid2D over the lon/lat domain that overlaps our data.
     ax_lon = pyinterp.Axis(np.linspace(-10.0, 10.0, 21))
     ax_lat = pyinterp.Axis(np.linspace(35.0, 55.0, 21))
-    grid_ls = pyinterp.Grid2D(
-        ax_lon, ax_lat, np.full((21, 21), 200e3)
-    )
+    grid_ls = pyinterp.Grid2D(ax_lon, ax_lat, np.full((21, 21), 200e3))
 
     q = np.array([[1.0, 44.0, 43200.0]])
     res_scalar = oi(q, l_spatial=200e3, lt=6 * 3600.0, sigma=1.0, k=20)
@@ -465,21 +479,22 @@ def test_geographic_grid2d_varying_values() -> None:
     # To make L_spatial increase with latitude (small in the south, large in
     # the north), the second axis (lat) must carry the contrast.
     grid_ls = pyinterp.Grid2D(
-        ax_lon, ax_lat,
+        ax_lon,
+        ax_lat,
         np.array([[50e3, 500e3], [50e3, 500e3]]),  # increases with latitude
     )
 
     # Two queries: south (small L) and north (large L).
-    q = np.array([
-        [0.0, 41.0, 43200.0],  # south → ~50 km
-        [0.0, 49.0, 43200.0],  # north → ~500 km
-    ])
+    q = np.array(
+        [
+            [0.0, 41.0, 43200.0],  # south → ~50 km
+            [0.0, 49.0, 43200.0],  # north → ~500 km
+        ]
+    )
     res = oi(q, l_spatial=grid_ls, lt=6 * 3600.0, sigma=1.0, k=20)
 
     # Compute the manually sampled values for cross-checking.
-    expected_ls = pyinterp.bivariate(
-        grid_ls, q[:, 0], q[:, 1], "bilinear"
-    )
+    expected_ls = pyinterp.bivariate(grid_ls, q[:, 0], q[:, 1], "bilinear")
     assert expected_ls[0] < expected_ls[1]  # increasing northward
 
     # And confirm the OI uses the right ``l_spatial`` per query: a one-shot
@@ -488,7 +503,9 @@ def test_geographic_grid2d_varying_values() -> None:
         ref = oi(
             q[i : i + 1],
             l_spatial=float(expected_ls[i]),
-            lt=6 * 3600.0, sigma=1.0, k=20,
+            lt=6 * 3600.0,
+            sigma=1.0,
+            k=20,
         )
         np.testing.assert_allclose(res.value[i], ref.value[0], rtol=1e-12)
         np.testing.assert_allclose(res.error[i], ref.error[0], rtol=1e-12)
@@ -520,7 +537,7 @@ def test_geographic_rejects_cartesian_kwargs() -> None:
 
 
 def test_cartesian_rejects_l_spatial() -> None:
-    """In cartesian mode, ``l_spatial`` is rejected to avoid silent confusion."""
+    """Reject ``l_spatial`` in cartesian mode to avoid silent confusion."""
     obs, values, sigma2 = _make_dataset(n=10)
     oi = pyinterp.OptimalInterpolation(obs, values, sigma2)
     q = np.array([[1.0, 2.0, 3.0]])
@@ -538,7 +555,12 @@ def test_geographic_time_scale_invariant_with_all_neighbors() -> None:
     """
     obs, values, sigma2 = _geographic_dataset(n=20, seed=5)
     q = np.array([[0.0, 45.0, 43200.0]])
-    kw = {"l_spatial": 150e3, "lt": 6 * 3600.0, "sigma": 1.0, "k": obs.shape[0]}
+    kw = {
+        "l_spatial": 150e3,
+        "lt": 6 * 3600.0,
+        "sigma": 1.0,
+        "k": obs.shape[0],
+    }
 
     oi_ref = pyinterp.OptimalInterpolation(
         obs, values, sigma2, coordinate_system="geographic"
@@ -561,5 +583,8 @@ def test_invalid_coordinate_system() -> None:
     obs, values, sigma2 = _make_dataset(n=5)
     with pytest.raises(ValueError, match="coordinate_system"):
         pyinterp.OptimalInterpolation(
-            obs, values, sigma2, coordinate_system="polar"  # type: ignore[arg-type]
+            obs,
+            values,
+            sigma2,
+            coordinate_system="polar",  # type: ignore[arg-type]
         )

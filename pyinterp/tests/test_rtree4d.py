@@ -21,7 +21,9 @@ import pyinterp
 from pyinterp.core.config.rtree import Query
 
 
-def _make_dataset(n: int = 50, seed: int = 0):
+def _make_dataset(
+    n: int = 50, seed: int = 0
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
     coords = rng.uniform(0.0, 10.0, size=(n, 4))
     values = rng.uniform(-1.0, 1.0, size=n)
@@ -75,7 +77,7 @@ def test_query_returns_value_and_sigma2() -> None:
 
 
 def test_query_fills_nan_when_fewer_neighbors() -> None:
-    """If fewer than k neighbors are found (e.g. via radius), trailing cells are NaN."""
+    """If fewer than k neighbors found (via radius), trailing cells are NaN."""
     tree = pyinterp.RTree4D()
     coords, values, sigma2 = _make_dataset(n=5)
     tree.packing(coords, values, sigma2)
@@ -105,13 +107,13 @@ def test_input_shape_validation() -> None:
     tree = pyinterp.RTree4D()
     with pytest.raises(ValueError, match="\\(n, 4\\)"):
         tree.packing(
-            np.zeros((3, 3)), np.array([1.0, 2.0, 3.0]),
-            np.array([0.1, 0.2, 0.3])
+            np.zeros((3, 3)),
+            np.array([1.0, 2.0, 3.0]),
+            np.array([0.1, 0.2, 0.3]),
         )
     with pytest.raises(ValueError, match="same length"):
         tree.packing(
-            np.zeros((3, 4)), np.array([1.0, 2.0]),
-            np.array([0.1, 0.2, 0.3])
+            np.zeros((3, 4)), np.array([1.0, 2.0]), np.array([0.1, 0.2, 0.3])
         )
 
 

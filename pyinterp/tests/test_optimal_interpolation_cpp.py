@@ -24,6 +24,9 @@ import pytest
 import pyinterp
 from pyinterp.core.config.rtree import CovarianceFunction
 from pyinterp.core.config.rtree import OptimalInterpolation as OIConfig
+from pyinterp.optimal_interpolation import (
+    CovarianceFunction as CovarianceKernel,
+)
 from pyinterp.optimal_interpolation import _kernel_from_r2
 
 
@@ -48,7 +51,7 @@ def _numpy_oi_4d(
     lz: float,
     lt: float,
     sigma: float,
-    kernel: str,
+    kernel: CovarianceKernel,
 ) -> tuple[float, float]:
     """Direct 4D OI on a single query point — no R-tree, no scratch reuse."""
     inv_l = np.array([1.0 / lx, 1.0 / ly, 1.0 / lz, 1.0 / lt])
@@ -69,12 +72,13 @@ def _numpy_oi_4d(
     return value, np.sqrt(max(err2, 0.0))
 
 
-def _make_dataset(n: int = 40, seed: int = 0):
+def _make_dataset(
+    n: int = 40, seed: int = 0
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
     obs = rng.uniform([0, 0, 0, 0], [10, 10, 10, 10], size=(n, 4))
     values = (
-        np.sin(obs[:, 0])
-        * np.cos(obs[:, 1])
+        np.sin(obs[:, 0]) * np.cos(obs[:, 1])
         + 0.2 * obs[:, 2]
         - 0.1 * obs[:, 3]
     )
@@ -83,7 +87,7 @@ def _make_dataset(n: int = 40, seed: int = 0):
 
 
 @pytest.mark.parametrize("kernel", list(_KERNEL_NAME_TO_ENUM))
-def test_cpp_matches_numpy_reference(kernel: str) -> None:
+def test_cpp_matches_numpy_reference(kernel: CovarianceKernel) -> None:
     """For each kernel, the C++ OI must match the numpy reference."""
     obs, values, sigma2 = _make_dataset(n=30, seed=1)
     tree = pyinterp.RTree4D()
@@ -99,9 +103,11 @@ def test_cpp_matches_numpy_reference(kernel: str) -> None:
     sig = np.full(m, 1.0)
 
     # k = N guarantees that every neighbour is used → no k-NN artefact.
-    cfg = OIConfig().with_covariance_model(
-        _KERNEL_NAME_TO_ENUM[kernel]
-    ).with_k(30)
+    cfg = (
+        OIConfig()
+        .with_covariance_model(_KERNEL_NAME_TO_ENUM[kernel])
+        .with_k(30)
+    )
     cpp_v, cpp_e, cpp_n = tree.optimal_interpolation(
         q, lx, ly, lz, lt, sig, cfg
     )
@@ -124,7 +130,9 @@ def test_cpp_4d_matches_python_3d_when_lz_infinite() -> None:
     sigma2 = np.full(n, 0.02)
 
     # Pad to 4D with z = 0 everywhere; we will neutralise z via Lz → ∞.
-    obs4d = np.column_stack([obs3d[:, 0], obs3d[:, 1], np.zeros(n), obs3d[:, 2]])
+    obs4d = np.column_stack(
+        [obs3d[:, 0], obs3d[:, 1], np.zeros(n), obs3d[:, 2]]
+    )
 
     # Python 3D OI: (x, y, t) → use Phase-0 API.
     py_oi = pyinterp.OptimalInterpolation(obs3d, values, sigma2)
@@ -134,13 +142,15 @@ def test_cpp_4d_matches_python_3d_when_lz_infinite() -> None:
     # C++ 4D OI: same point, padded to (x, y, z=0, t), Lz huge.
     tree = pyinterp.RTree4D()
     tree.packing(obs4d, values, sigma2)
-    cfg = OIConfig().with_covariance_model(CovarianceFunction.GAUSSIAN).with_k(n)
+    cfg = (
+        OIConfig().with_covariance_model(CovarianceFunction.GAUSSIAN).with_k(n)
+    )
     q4d = np.array([[5.0, 5.0, 0.0, 5.0]])
     cpp_v, cpp_e, _ = tree.optimal_interpolation(
         q4d,
         np.full(1, 2.0),
         np.full(1, 2.0),
-        np.full(1, 1e12),   # Lz → ∞ : z contribution vanishes
+        np.full(1, 1e12),  # Lz → ∞ : z contribution vanishes
         np.full(1, 2.0),
         np.full(1, 1.0),
         cfg,
@@ -156,8 +166,10 @@ def test_zero_noise_recovers_observation() -> None:
     tree = pyinterp.RTree4D()
     tree.packing(obs, values, tiny)
 
-    cfg = OIConfig().with_covariance_model(CovarianceFunction.GAUSSIAN).with_k(
-        obs.shape[0]
+    cfg = (
+        OIConfig()
+        .with_covariance_model(CovarianceFunction.GAUSSIAN)
+        .with_k(obs.shape[0])
     )
     n = obs.shape[0]
     lx = np.full(n, 1.0)
@@ -177,14 +189,23 @@ def test_infinite_noise_collapses_to_prior() -> None:
     tree = pyinterp.RTree4D()
     tree.packing(obs, values, huge)
 
-    cfg = OIConfig().with_covariance_model(CovarianceFunction.GAUSSIAN).with_k(15)
+    cfg = (
+        OIConfig()
+        .with_covariance_model(CovarianceFunction.GAUSSIAN)
+        .with_k(15)
+    )
     q = np.array([[5.0, 5.0, 5.0, 5.0]])
     v, e, _ = tree.optimal_interpolation(
-        q, np.full(1, 1.0), np.full(1, 1.0), np.full(1, 1.0), np.full(1, 1.0),
-        np.full(1, 1.0), cfg,
+        q,
+        np.full(1, 1.0),
+        np.full(1, 1.0),
+        np.full(1, 1.0),
+        np.full(1, 1.0),
+        np.full(1, 1.0),
+        cfg,
     )
     np.testing.assert_allclose(v, 0.0, atol=1e-6)
-    np.testing.assert_allclose(e, 1.0, atol=1e-3)  # error → σ
+    np.testing.assert_allclose(e, 1.0, atol=1e-3)  # error → sigma
 
 
 def test_no_neighbor_returns_nan() -> None:
@@ -201,8 +222,13 @@ def test_no_neighbor_returns_nan() -> None:
     )
     q = np.array([[1e6, 1e6, 1e6, 1e6]])
     v, e, n = tree.optimal_interpolation(
-        q, np.full(1, 1.0), np.full(1, 1.0), np.full(1, 1.0), np.full(1, 1.0),
-        np.full(1, 1.0), cfg,
+        q,
+        np.full(1, 1.0),
+        np.full(1, 1.0),
+        np.full(1, 1.0),
+        np.full(1, 1.0),
+        np.full(1, 1.0),
+        cfg,
     )
     assert np.isnan(v[0])
     assert np.isnan(e[0])
@@ -251,13 +277,22 @@ def test_input_shape_validation() -> None:
     cfg = OIConfig().with_k(3)
     with pytest.raises(ValueError, match="same length"):
         tree.optimal_interpolation(
-            q, bad, np.full(1, 1.0), np.full(1, 1.0), np.full(1, 1.0),
-            np.full(1, 1.0), cfg,
+            q,
+            bad,
+            np.full(1, 1.0),
+            np.full(1, 1.0),
+            np.full(1, 1.0),
+            np.full(1, 1.0),
+            cfg,
         )
 
     with pytest.raises(ValueError, match="\\(m, 4\\)"):
         tree.optimal_interpolation(
             np.zeros((1, 3)),
-            np.full(1, 1.0), np.full(1, 1.0), np.full(1, 1.0),
-            np.full(1, 1.0), np.full(1, 1.0), cfg,
+            np.full(1, 1.0),
+            np.full(1, 1.0),
+            np.full(1, 1.0),
+            np.full(1, 1.0),
+            np.full(1, 1.0),
+            cfg,
         )

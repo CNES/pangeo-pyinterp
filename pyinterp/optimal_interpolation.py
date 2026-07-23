@@ -113,6 +113,11 @@ _KERNEL_NAME_TO_ENUM = {
 # z axis in 4D ⟵ 3D padding.
 _HUGE_LENGTH = 1.0e30
 
+# Public coordinate arrays are 2-D with three columns: ``(x, y, t)`` in
+# cartesian mode, ``(lon, lat, t)`` in geographic mode.
+_COORDS_NDIM = 2
+_COORDS_NCOLS = 3
+
 
 def _kernel_from_r2(r2: np.ndarray, kernel: CovarianceFunction) -> np.ndarray:
     """Evaluate an anisotropic covariance kernel from squared scaled distance.
@@ -127,26 +132,25 @@ def _kernel_from_r2(r2: np.ndarray, kernel: CovarianceFunction) -> np.ndarray:
         Covariance values with the same shape as ``r2``.
 
     """
+    d = np.sqrt(r2)
     if kernel == "gaussian":
-        return np.exp(-r2)
-    if kernel == "cauchy":
-        return 1.0 / (1.0 + r2)
-    if kernel == "matern_12":
-        return np.exp(-np.sqrt(r2))
-    if kernel == "matern_32":
-        d = np.sqrt(r2)
-        return (1.0 + _SQRT3 * d) * np.exp(-_SQRT3 * d)
-    if kernel == "matern_52":
-        d = np.sqrt(r2)
-        return (1.0 + _SQRT5 * d + (5.0 / 3.0) * r2) * np.exp(-_SQRT5 * d)
-    if kernel == "spherical":
-        d = np.sqrt(r2)
-        return np.where(d < 1.0, 1.0 - 1.5 * d + 0.5 * d**3, 0.0)
-    if kernel == "wendland":
-        d = np.sqrt(r2)
-        return np.where(d < 1.0, (1.0 - d) ** 2, 0.0)
-    msg = f"Unknown covariance kernel: {kernel!r}"
-    raise ValueError(msg)
+        result = np.exp(-r2)
+    elif kernel == "cauchy":
+        result = 1.0 / (1.0 + r2)
+    elif kernel == "matern_12":
+        result = np.exp(-d)
+    elif kernel == "matern_32":
+        result = (1.0 + _SQRT3 * d) * np.exp(-_SQRT3 * d)
+    elif kernel == "matern_52":
+        result = (1.0 + _SQRT5 * d + (5.0 / 3.0) * r2) * np.exp(-_SQRT5 * d)
+    elif kernel == "spherical":
+        result = np.where(d < 1.0, 1.0 - 1.5 * d + 0.5 * d**3, 0.0)
+    elif kernel == "wendland":
+        result = np.where(d < 1.0, (1.0 - d) ** 2, 0.0)
+    else:
+        msg = f"Unknown covariance kernel: {kernel!r}"
+        raise ValueError(msg)
+    return result
 
 
 def _sample_scalar_or_grid(
@@ -200,7 +204,6 @@ def _lla_to_ecef(
     lon: np.ndarray, lat: np.ndarray, spheroid: Spheroid | None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Convert (lon, lat, alt=0) → (x, y, z) ECEF in meters."""
-
     sph = spheroid if spheroid is not None else _S()
     coords = Coordinates(sph)
     alt = np.zeros_like(lon)
@@ -320,15 +323,16 @@ class OptimalInterpolation:
         spheroid: Spheroid | None = None,
         time_scale: float = 1.0,
     ) -> None:
+        """Index the observations and build the internal 4D R-tree."""
         obs_coords = np.ascontiguousarray(obs_coords, dtype=np.float64)
         obs_values = np.ascontiguousarray(obs_values, dtype=np.float64)
         obs_sigma2 = np.ascontiguousarray(obs_sigma2, dtype=np.float64)
 
-        if obs_coords.ndim != 2 or obs_coords.shape[1] != 3:
-            msg = (
-                "obs_coords must have shape (N, 3); got "
-                f"{obs_coords.shape}"
-            )
+        if (
+            obs_coords.ndim != _COORDS_NDIM
+            or obs_coords.shape[1] != _COORDS_NCOLS
+        ):
+            msg = f"obs_coords must have shape (N, 3); got {obs_coords.shape}"
             raise ValueError(msg)
         n = obs_coords.shape[0]
         if obs_values.shape != (n,):
@@ -407,7 +411,7 @@ class OptimalInterpolation:
         """Number of indexed observations."""
         return self._obs_coords.shape[0]
 
-    def __call__(
+    def __call__(  # noqa: PLR0915
         self,
         query_coords: NDArray2DFloat64,
         *,
@@ -452,7 +456,10 @@ class OptimalInterpolation:
 
         """
         query_coords = np.ascontiguousarray(query_coords, dtype=np.float64)
-        if query_coords.ndim != 2 or query_coords.shape[1] != 3:
+        if (
+            query_coords.ndim != _COORDS_NDIM
+            or query_coords.shape[1] != _COORDS_NCOLS
+        ):
             msg = (
                 "query_coords must have shape (M, 3); got "
                 f"{query_coords.shape}"
