@@ -1,6 +1,64 @@
 Changelog
 #########
 
+2026.7.0
+--------
+
+This release overhauls version resolution across the build, refreshes the
+vendored dependencies, and improves the documentation around Dask-backed
+binning.
+
+Build System
+~~~~~~~~~~~~
+
+* **Unified version resolution**: Added a CMake-based version resolution
+  mechanism (``cmake/PyinterpVersion.cmake``) that derives the project version
+  consistently for both the Python and C++ components. A ``VERSION.txt`` file
+  (expandable by ``git archive``) and a companion ``scripts/resolve_version.py``
+  mirror the same logic in Python, keeping ``setup.py`` and ``setuptools_scm``
+  in sync. ``CMakeLists.txt`` now conditionally builds the Python bindings and
+  tests. Stale conda ``meta.yaml``/``conda_build_config.yaml`` files were
+  removed and the CI environment configurations moved under
+  ``.github/environments``.
+* **Include directories**: Dropped the ``PRIVATE`` keyword from
+  ``include_directories`` in ``CMakeLists.txt`` for broader CMake
+  compatibility.
+
+Dependencies
+~~~~~~~~~~~~
+
+* **nanobind**: Updated the vendored submodule to v2.13.0.
+* **pocketfft**: Updated the vendored submodule to the latest commit.
+
+Examples & Documentation
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Expanded the Dask usage notes in the binning example
+  (``examples/stats/ex_binning.py``) with additional statistics, and updated
+  the migration guide to reflect the changes to the ``Binning`` and Dask
+  integration APIs.
+* Geometry examples now use the ``constrained`` figure layout for clearer
+  visualizations.
+
+
+2026.6.0
+--------
+
+Bug Fixes
+~~~~~~~~~
+
+* **Periodic axis interpolation across the 0/360 seam**: Fixed the geometric
+  interpolators (``bivariate``, ``trivariate`` and ``quadrivariate`` with the
+  ``bilinear``, ``nearest`` and ``idw`` methods) so that points falling in the
+  wrap-around cell of a periodic axis are interpolated correctly. The upper
+  bracketing node was read with its raw coordinate (e.g. ``0`` instead of
+  ``360``), collapsing the interpolation weight across the seam: values stayed
+  pinned to the lower node and then jumped discontinuously at the period
+  boundary. The upper node coordinate is now normalised relative to the lower
+  node, restoring a smooth, monotonic interpolation across the boundary. The
+  windowed interpolators (``bicubic`` and the spline family) were unaffected.
+
+
 2026.4.0
 --------
 

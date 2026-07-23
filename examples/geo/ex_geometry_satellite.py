@@ -315,7 +315,7 @@ if orbit_crossovers:
 # Visualization: Satellite Track Crossovers
 # ------------------------------------------
 
-fig = matplotlib.pyplot.figure(figsize=(16, 12))
+fig = matplotlib.pyplot.figure(figsize=(16, 12), layout="constrained")
 
 # Plot 1: Basic crossover detection
 ax1 = fig.add_subplot(2, 3, 1, projection=cartopy.crs.PlateCarree())
@@ -550,12 +550,10 @@ ax6.set_ylabel("Latitude (°)")
 ax6.set_title("Crossover Density Map")
 ax6.grid(True, alpha=0.3)
 
-matplotlib.pyplot.tight_layout()
 matplotlib.pyplot.suptitle(
     "Satellite Geometric Operations",
     fontsize=16,
     fontweight="bold",
-    y=1.00,
 )
 
 # %%

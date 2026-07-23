@@ -23,9 +23,40 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake"
                       "${CMAKE_MODULE_PATH}")
 
 # ##############################################################################
+# Resolve the project version
+# ##############################################################################
+# Must run before project(), which needs the numeric version up front. See
+# cmake/PyinterpVersion.cmake for the list of sources and their precedence.
+include(PyinterpVersion)
+pyinterp_resolve_version("${CMAKE_CURRENT_SOURCE_DIR}")
+
+# ##############################################################################
 # Project settings
 # ##############################################################################
-project(pyinterp LANGUAGES CXX)
+project(
+  pyinterp
+  VERSION ${PYINTERP_VERSION_STRING}
+  LANGUAGES CXX)
+
+# Export the version to a parent project (add_subdirectory, FetchContent).
+pyinterp_publish_version()
+
+# ##############################################################################
+# Sub-project detection
+# ##############################################################################
+# When pyinterp is consumed as a CMake sub-project, the caller wants the C++
+# library, not the Python extension: building the bindings would drag in Python,
+# nanobind and the stub generation for nothing. PROJECT_IS_TOP_LEVEL needs CMake
+# 3.21, so derive it by hand to keep the 3.19 requirement.
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+  set(PYINTERP_IS_TOP_LEVEL ON)
+else()
+  set(PYINTERP_IS_TOP_LEVEL OFF)
+endif()
+
+option(PYINTERP_BUILD_PYTHON_BINDINGS
+       "Build the pyinterp.core Python extension" ${PYINTERP_IS_TOP_LEVEL})
+option(PYINTERP_BUILD_TESTS "Build the C++ unit tests" ${PYINTERP_IS_TOP_LEVEL})
 
 # ##############################################################################
 # CMake policies
@@ -277,7 +308,9 @@ if(NOT WIN32)
 endif()
 
 # Python
-if(CMAKE_CROSSCOMPILING OR DEFINED ENV{CONDA_BUILD_CROSS_COMPILATION})
+if(NOT PYINTERP_BUILD_PYTHON_BINDINGS)
+  # Nothing to do: the Python extension is not being built.
+elseif(CMAKE_CROSSCOMPILING OR DEFINED ENV{CONDA_BUILD_CROSS_COMPILATION})
   if(NOT DEFINED PYTHON_ROOT_DIR AND DEFINED ENV{PREFIX})
     set(PYTHON_ROOT_DIR "$ENV{PREFIX}")
   endif()
@@ -342,7 +375,9 @@ else()
     OPTIONAL_COMPONENTS Development.SABIModule
     REQUIRED)
 endif()
-include_directories(SYSTEM PRIVATE ${Python_INCLUDE_DIRS})
+if(PYINTERP_BUILD_PYTHON_BINDINGS)
+  include_directories(SYSTEM ${Python_INCLUDE_DIRS})
+endif()
 
 # BLAS
 #
@@ -372,7 +407,7 @@ if(BLAS_FOUND)
     if(MKL_INCLUDE_DIR)
       add_definitions(-DEIGEN_USE_MKL_ALL)
       add_definitions(-DMKL_LP64)
-      include_directories(SYSTEM PRIVATE ${MKL_INCLUDE_DIR})
+      include_directories(SYSTEM ${MKL_INCLUDE_DIR})
     endif()
   endif()
 else()
@@ -398,12 +433,13 @@ else()
 endif()
 
 # Eigen3
-include_directories(SYSTEM PRIVATE
-                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen)
 
 # GoogleTest
-include(CTest)
-find_package(GTest)
+if(PYINTERP_BUILD_TESTS)
+  include(CTest)
+  find_package(GTest)
+endif()
 
 # ##############################################################################
 # Parse FFT implementation configuration
@@ -431,8 +467,7 @@ endif()
 
 # MKL does not provide a Discrete Cosine Transform (DCT). Always use pocketfft
 # for DCTs even when MKL is chosen as the FFT backend.
-include_directories(SYSTEM PRIVATE
-                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/pocketfft)
 if(FFT_IMPLEMENTATION STREQUAL "pocketfft")
   set(FFT_LIBRARIES)
 endif()
@@ -475,9 +510,11 @@ endif()
 # ##############################################################################
 # Add subdirectories
 # ##############################################################################
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind)
-include_directories(SYSTEM
-                    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind/include)
+if(PYINTERP_BUILD_PYTHON_BINDINGS)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind)
+  include_directories(SYSTEM
+                      ${CMAKE_CURRENT_SOURCE_DIR}/third_party/nanobind/include)
+endif()
 
 # ##############################################################################
 # External dependencies
@@ -545,14 +582,14 @@ if(NOT Boost_FOUND)
   check_boost_version("${Boost_INCLUDE_DIRS}" "1.90.0")
 endif()
 
-include_directories(SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 add_subdirectory(cxx)
 
 # ##############################################################################
 # Disable clang-tidy for third-party targets (after add_subdirectory)
 # ##############################################################################
-if(ENABLE_CLANG_TIDY)
+if(ENABLE_CLANG_TIDY AND TARGET nanobind-static)
   set_target_properties(nanobind-static PROPERTIES CXX_CLANG_TIDY "")
 endif()
 
@@ -587,6 +624,8 @@ format_enabled(ENABLE_CLANG_TIDY CLANG_TIDY_LINE)
 
 set(CONFIG_LINES
     "==================[ PyInterp Configuration Summary ]=================="
+    "Version:                ${PYINTERP_VERSION_FULL}"
+    "Version source:         ${PYINTERP_VERSION_SOURCE}"
     "Platform:               ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR}"
     "Build type:             ${CMAKE_BUILD_TYPE}"
     "CMake Version:          ${CMAKE_VERSION}"

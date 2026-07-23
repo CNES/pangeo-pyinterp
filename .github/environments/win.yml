@@ -2,6 +2,7 @@ name: pyinterp
 dependencies:
   - libboost-headers >= 1.90
   - cmake
+  - ninja
   - dask
   - numcodecs
   - numpy

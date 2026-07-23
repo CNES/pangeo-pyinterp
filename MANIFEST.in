@@ -3,8 +3,12 @@ recursive-include docs *
 recursive-include cxx *
 recursive-include pyinterp *.pyi
 recursive-include third_party *
+recursive-include cmake *.cmake
 recursive-exclude scripts *
+include scripts/generate_geometry_stubs.py
+include scripts/resolve_version.py
 include pyinterp/_version.py
+include VERSION.txt
 include CMakeLists.txt
 include CODE_OF_CONDUCT.md
 include LICENSE

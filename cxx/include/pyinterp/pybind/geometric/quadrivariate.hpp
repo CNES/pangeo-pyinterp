@@ -109,7 +109,11 @@ template <template <class> class Point, typename GridType, typename ResultType,
 
   // Construct spatial points and bounds
   const auto x0 = static_cast<ResultType>(x_axis.coordinate_value(ix0));
-  const auto x1 = static_cast<ResultType>(x_axis.coordinate_value(ix1));
+  // Normalize x1 relative to x0 so that, on a periodic axis, the upper bracket
+  // wrapped past the period boundary (e.g. 0 read as 360) keeps the cell
+  // monotonic; otherwise the interpolation weight collapses across the seam.
+  const auto x1 = static_cast<ResultType>(
+      x_axis.normalize_coordinate(x_axis.coordinate_value(ix1), x0));
   const auto y0 = static_cast<ResultType>(y_axis.coordinate_value(iy0));
   const auto y1 = static_cast<ResultType>(y_axis.coordinate_value(iy1));
   const auto z0 = static_cast<ZType>(z_axis.coordinate_value(iz0));

@@ -55,15 +55,28 @@ simple_mean = binning.mean()
 # .. note::
 #
 #   For datasets larger than the available RAM, you can use Dask for parallel
-#   computation. The :py:meth:`push_delayed <pyinterp.Binning2D.push_delayed>`
-#   method returns a Dask graph, which can be computed to get the result.
+#   computation with :py:func:`pyinterp.dask.binning2d`. It takes Dask arrays and
+#   a :py:class:`pyinterp.Binning2D` instance describing the bins, and returns a
+#   new instance holding the accumulated statistics. The instance you pass in is
+#   copied internally and left untouched.
 #
 #   .. code:: python
 #
-#       binning = binning.push_delayed(lon, lat, data).compute()
+#       import dask.array as da
+#       import pyinterp.dask
 #
-# You can also compute other statistical variables like variance, minimum, and
-# maximum using the :py:meth:`variable <pyinterp.Binning2D.variable>` method.
+#       result = pyinterp.dask.binning2d(
+#           da.from_array(lon, chunks=100_000),
+#           da.from_array(lat, chunks=100_000),
+#           da.from_array(data, chunks=100_000),
+#           binning)
+#       simple_mean = result.mean()
+#
+# You can also compute other statistics with the dedicated methods:
+# :py:meth:`variance <pyinterp.Binning2D.variance>`,
+# :py:meth:`min <pyinterp.Binning2D.min>`,
+# :py:meth:`max <pyinterp.Binning2D.max>`,
+# :py:meth:`count <pyinterp.Binning2D.count>`, and so on.
 
 # %%
 # Linear Binning

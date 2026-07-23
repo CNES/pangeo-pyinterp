@@ -236,7 +236,7 @@ print(f"  Is empty: {is_empty}")
 # Visualization: Common Workflows
 # --------------------------------
 
-fig = matplotlib.pyplot.figure(figsize=(16, 10))
+fig = matplotlib.pyplot.figure(figsize=(16, 10), layout="constrained")
 
 # Plot 1: Study area and cities
 ax1 = fig.add_subplot(2, 3, 1, projection=cartopy.crs.PlateCarree())
@@ -429,8 +429,6 @@ ax6.legend()
 ax6.set_title("Geometry Simplification")
 ax6.set_xlabel("Longitude (°)")
 ax6.set_ylabel("Latitude (°)")
-
-matplotlib.pyplot.tight_layout()
 
 # %%
 # Next Steps

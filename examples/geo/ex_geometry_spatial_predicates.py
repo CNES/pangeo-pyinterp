@@ -443,7 +443,7 @@ print(f"  Max distance to Gulf: {distances_to_gulf.max() * 1e-3:.2f} km")
 # Visualization: Spatial Predicates in Action
 # --------------------------------------------
 
-fig = matplotlib.pyplot.figure(figsize=(16, 12))
+fig = matplotlib.pyplot.figure(figsize=(16, 12), layout="constrained")
 
 # Plot 1: Basic Predicates (Within, Covered By, Intersects)
 ax1 = fig.add_subplot(2, 3, 1)
@@ -622,12 +622,10 @@ ax6.scatter(
 ax6.legend()
 ax6.set_title("Gulf of Mexico Selection")
 
-matplotlib.pyplot.tight_layout()
 matplotlib.pyplot.suptitle(
     "Spatial Predicates and Relationships",
     fontsize=16,
     fontweight="bold",
-    y=1.00,
 )
 
 # %%

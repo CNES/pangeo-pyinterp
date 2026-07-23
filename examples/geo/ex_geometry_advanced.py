@@ -404,7 +404,7 @@ for prop_name, prop_func in properties:
 # Visualization: Advanced Features
 # ---------------------------------
 
-fig = matplotlib.pyplot.figure(figsize=(16, 12))
+fig = matplotlib.pyplot.figure(figsize=(16, 12), layout="constrained")
 
 # Plot 1: Line interpolation waypoints
 ax1 = fig.add_subplot(2, 3, 1, projection=cartopy.crs.PlateCarree())
@@ -611,7 +611,5 @@ ax6.set_title("LLA ↔ ECEF Round-Trip Errors")
 ax6.legend()
 ax6.grid(True, alpha=0.3)
 ax6.set_yscale("log")
-
-matplotlib.pyplot.tight_layout()
 
 # %%

@@ -60,6 +60,81 @@ You can specify, among other things, the following options:
 Run the ``python setup.py build_ext --help`` command to view all the options
 available for building the library.
 
+Project version
+===============
+
+The version is never stored in the sources: it is resolved at build time from
+whichever of the following is available, the first one winning.
+
+1. The ``PYINTERP_VERSION`` environment variable (``-DPYINTERP_VERSION=`` for a
+   direct CMake invocation). Use it to pin the version explicitly.
+2. ``git describe`` against the release tags. This is the normal case in a
+   checkout.
+3. ``VERSION.txt``. The file holds a ``$Format:...$`` placeholder that
+   ``git archive`` expands, so source tarballs — including the ones GitHub
+   generates — carry their version even though they have no ``.git``
+   directory.
+4. ``pyinterp/_version.py``, written by ``setuptools_scm`` into the sdist.
+5. ``PKG-INFO``, the sdist metadata.
+
+If every source fails, the build does not stop: it falls back to ``0.0.0`` and
+warns. A version of ``0.0.0`` therefore means the version could not be
+determined, not that a release is numbered that way.
+
+``setup.py`` resolves the version once and passes it on to CMake, so the Python
+package and the compiled extension always report the same value. Which source
+was used is printed in the CMake configuration summary, and is available at
+runtime:
+
+.. code-block:: python
+
+    import pyinterp
+
+    pyinterp.__version__        # version of the Python package
+    pyinterp.__core_version__   # version the C++ extension was compiled with
+    pyinterp.core.__version_source__
+
+A mismatch between the first two means the compiled extension is stale with
+respect to the Python sources, which happens in an editable install that has
+not been rebuilt.
+
+Using the C++ library from CMake
+================================
+
+The C++ kernel can be consumed on its own, without the Python bindings. When
+pyinterp is pulled in as a sub-project, the Python extension, nanobind and the
+tests are skipped automatically:
+
+.. code-block:: cmake
+
+    include(FetchContent)
+    FetchContent_Declare(
+      pyinterp
+      GIT_REPOSITORY https://github.com/CNES/pangeo-pyinterp.git
+      GIT_TAG        2026.6.0
+      GIT_SUBMODULES_RECURSE TRUE)
+    FetchContent_MakeAvailable(pyinterp)
+
+    target_link_libraries(my_target PRIVATE pyinterp::pyinterp)
+    message(STATUS "Using pyinterp ${pyinterp_VERSION}")
+
+``pyinterp_VERSION`` holds the normalized ``major.minor.patch`` version and
+``pyinterp_VERSION_FULL`` the full descriptive string. Note that ``project()``
+does not export ``<name>_VERSION`` to a parent scope on its own, so these two
+cache variables are the supported way to read the version of an embedded copy.
+The same information is available to the compiler through
+``pyinterp/version.hpp``:
+
+.. code-block:: cpp
+
+    #include "pyinterp/version.hpp"
+
+    static_assert(pyinterp::version_major >= 2026);
+
+The behaviour can be overridden with the ``PYINTERP_BUILD_PYTHON_BINDINGS`` and
+``PYINTERP_BUILD_TESTS`` options, which default to ``ON`` only when pyinterp is
+the top-level project.
+
 Testing
 =======
 

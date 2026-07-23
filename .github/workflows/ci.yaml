@@ -51,7 +51,7 @@ jobs:
         create-args: |
           python=3.12
         environment-name: pyinterp
-        environment-file: conda/linux.yml
+        environment-file: .github/environments/linux.yml
         init-shell: bash
 
     - name: Generate coverage data
@@ -94,7 +94,7 @@ jobs:
         create-args: |
           python=${{ matrix.python-version }}
         environment-name: pyinterp
-        environment-file: conda/linux.yml
+        environment-file: .github/environments/linux.yml
         init-shell: bash
 
     - name: Build extension
@@ -189,7 +189,7 @@ jobs:
         create-args: |
           python=3.14
         environment-name: pyinterp
-        environment-file: conda/osx.yml
+        environment-file: .github/environments/osx.yml
         init-shell: bash
 
     - name: Build extension
@@ -245,11 +245,24 @@ jobs:
         create-args: |
           python=3.14
         environment-name: pyinterp
-        environment-file: conda/win.yml
+        environment-file: .github/environments/win.yml
+
+    # The windows-2025 image now ships Visual Studio 18 (2026), so the pinned
+    # "Visual Studio 17 2022" CMake generator no longer finds an instance.
+    # Activate the MSVC developer environment (cl.exe + Ninja on PATH) and build
+    # with the version-independent Ninja generator instead (see CMAKE_GEN).
+    - name: Set up MSVC toolchain
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
 
     - name: Building Testing Python Package
       shell: bash -l {0}
+      env:
+        CMAKE_GEN: Ninja
       run: |
-        python setup.py build_ext --cmake-args="-DBoost_INCLUDE_DIRS=$CONDA_PREFIX/Library/include"
+        # Convert the backslashes in $CONDA_PREFIX to forward slashes; otherwise
+        # they are stripped when the argument is forwarded to CMake.
+        python setup.py build_ext --cmake-args="-DBoost_INCLUDE_DIRS=${CONDA_PREFIX//\\//}/Library/include"
         python setup.py build
         pytest -v -ra

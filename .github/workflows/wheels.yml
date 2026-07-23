@@ -54,12 +54,25 @@ jobs:
           prefix="${MAMBA_ROOT_PREFIX//\\//}/envs/boost-deps/Library"
           echo "BOOST_PREFIX=${prefix}" >> "$GITHUB_ENV"
 
+      # The windows-2025 image now ships Visual Studio 18 (2026), so the pinned
+      # "Visual Studio 17 2022" CMake generator no longer finds an instance.
+      # Activate the MSVC developer environment (cl.exe + Ninja on PATH) before
+      # cibuildwheel runs; its exported variables propagate to the isolated
+      # build subprocesses, which build with the Ninja generator (CMAKE_GEN).
+      - name: Set up MSVC toolchain (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.0
         env:
-          # Windows: point CMake at the conda-forge Boost headers
+          # Windows: point CMake at the conda-forge Boost headers and build with
+          # the version-independent Ninja generator (VS 18 broke the VS 17 one).
           CIBW_ENVIRONMENT_WINDOWS: >-
             CMAKE_PREFIX_PATH="${{ env.BOOST_PREFIX }}"
+            CMAKE_GEN="Ninja"
           # macOS: arm64 only (free Intel runners are deprecated).
           CIBW_ARCHS_MACOS: ${{ matrix.cibw_archs_macos }}
           # Sanity-check every built wheel imports and exposes its version.
