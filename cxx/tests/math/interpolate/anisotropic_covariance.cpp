@@ -35,8 +35,11 @@ const std::array<Sample, 4> kSamples = {{
 
 }  // namespace
 
-// Each existing 3D wrapper must agree bit-for-bit with the matching _from_r2
-// form evaluated on (p1 - p2).squaredNorm(). This is the refactor invariant.
+// Each 3D wrapper must delegate to its matching _from_r2 form evaluated on
+// (p1 - p2).squaredNorm(). This pins the delegation (the wrapper computes the
+// squared distance and forwards it), not equivalence to the pre-refactor
+// direct forms — those differ by a few ULP for some kernels (see the note in
+// kriging.hpp). Hence EXPECT_DOUBLE_EQ (4-ULP), not a bit-exact comparison.
 TEST(AnisotropicCovariance, WrapperEqualsFromR2) {
   constexpr double sigma = 2.0;
   constexpr double lambda = 3.0;
