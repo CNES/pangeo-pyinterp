@@ -266,6 +266,55 @@ def test_knn_subset_matches_reference_when_k_less_than_n() -> None:
         )
 
 
+def test_time_scale_changes_knn_selection_when_k_less_than_n() -> None:
+    """``time_scale`` rebalances k-NN selection — its only observable effect.
+
+    ``time_scale`` cancels out of the covariance (packed time and ``lt`` are
+    scaled identically), so its sole job is to reweight the space/time mix in
+    the packed Euclidean metric used to pick the ``k`` nearest neighbours.
+    That is only visible when ``k < N``; the other tests use ``k = N`` where
+    it provably cancels, so a regression turning ``time_scale`` into a no-op
+    would pass them all. This test pins the behaviour with a deterministic
+    (seed-free) layout of two disjoint, oppositely-signed observation groups:
+
+    * group A — spatially at the query, but far in time (t = 100);
+    * group B — far in space (x = 100), but at the query in time (t = 0).
+
+    The length scales are chosen so BOTH groups are *equally* correlated with
+    the query (scaled r² = 0.25 each), so which group is retrieved — and hence
+    the sign of the analysis — is decided purely by ``time_scale``.
+    """
+    group_a = np.array([[0.1 * i, 0.0, 100.0] for i in range(10)])
+    group_b = np.array([[100.0 + 0.1 * i, 0.0, 0.0] for i in range(10)])
+    coords = np.vstack([group_a, group_b])
+    values = np.concatenate([np.full(10, 1.0), np.full(10, -1.0)])
+    sigma2 = np.full(20, 1e-3)
+    q = np.array([[0.0, 0.0, 0.0]])
+    # L = 200 on every axis: |Δt| = 100 and |Δx| = 100 both give r² = 0.25.
+    kw = {"lx": 200.0, "ly": 200.0, "lt": 200.0, "sigma": 1.0, "k": 5}
+
+    # Small time_scale compresses the time axis: group A (spatially nearest)
+    # is retrieved, so the +1 observations dominate → positive analysis.
+    oi_small = pyinterp.OptimalInterpolation(
+        coords, values, sigma2, time_scale=1e-3
+    )
+    res_small = oi_small(q, **kw)
+
+    # Large time_scale stretches the time axis: group B (temporally nearest)
+    # is retrieved, so the -1 observations dominate → negative analysis.
+    oi_large = pyinterp.OptimalInterpolation(
+        coords, values, sigma2, time_scale=1e3
+    )
+    res_large = oi_large(q, **kw)
+
+    assert res_small.neighbors[0] == 5
+    assert res_large.neighbors[0] == 5
+    # Opposite signs prove time_scale changed which neighbours were used; a
+    # no-op regression would retrieve the same set and give identical results.
+    assert res_small.value[0] > 0.0
+    assert res_large.value[0] < 0.0
+
+
 def test_kernel_from_r2_known_values() -> None:
     """Spot-check kernel formulas at r²=0 and r²=1."""
     np.testing.assert_allclose(_kernel_from_r2(np.array([0.0]), "gaussian"), 1.0)

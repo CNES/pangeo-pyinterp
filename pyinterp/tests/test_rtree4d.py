@@ -116,15 +116,36 @@ def test_input_shape_validation() -> None:
 
 
 def test_insert_appends_to_existing_tree() -> None:
-    """`insert` adds points without erasing the existing index."""
+    """`insert` grows the index and inserted observations are retrievable.
+
+    Beyond checking ``size()``, this reads an inserted point back through the
+    k-NN query to guard the insert path's ``value``/``sigma2`` pairing and its
+    interaction with an already STR-packed tree (the retrieval path also feeds
+    ``optimal_interpolation``).
+    """
     tree = pyinterp.RTree4D()
     coords1, values1, sigma2_1 = _make_dataset(n=10, seed=0)
     tree.packing(coords1, values1, sigma2_1)
     assert tree.size() == 10
 
+    # Insert a uniquely-located observation (the packed dataset lives in
+    # [0, 10]^4, so this point is isolated) and read it back.
+    extra_coords = np.array([[100.0, 100.0, 100.0, 100.0]])
+    extra_value = np.array([42.0])
+    extra_sigma2 = np.array([0.25])
+    tree.insert(extra_coords, extra_value, extra_sigma2)
+    assert tree.size() == 11
+
+    _, vals, sig2 = tree.query(
+        np.array([[100.1, 100.0, 100.0, 100.0]]), Query().with_k(1)
+    )
+    np.testing.assert_allclose(vals[0, 0], 42.0)
+    np.testing.assert_allclose(sig2[0, 0], 0.25)
+
+    # A bulk insert of several observations still appends.
     coords2, values2, sigma2_2 = _make_dataset(n=5, seed=1)
     tree.insert(coords2, values2, sigma2_2)
-    assert tree.size() == 15
+    assert tree.size() == 16
 
 
 def test_pickle_round_trip() -> None:
