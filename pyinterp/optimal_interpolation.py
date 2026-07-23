@@ -256,7 +256,12 @@ class OptimalInterpolation:
         obs_sigma2: Per-observation error variance, shape ``(N,)``. Must
             be strictly positive.
         covariance: Anisotropic covariance kernel name. Defaults to
-            ``"gaussian"``.
+            ``"gaussian"``. Note that ``"spherical"`` and ``"wendland"`` are
+            positive-definite only in up to three dimensions; in
+            ``geographic`` mode the analysis runs over three ECEF axes plus
+            time, so for large decorrelation scales the covariance matrix is
+            not guaranteed positive-definite with those two kernels — prefer
+            ``"gaussian"``, ``"matern_12/32/52"`` or ``"cauchy"`` there.
         coordinate_system: ``"cartesian"`` (default) or ``"geographic"``.
             See module docstring for the trade-offs.
         spheroid: Optional :class:`pyinterp.geometry.geographic.Spheroid`
