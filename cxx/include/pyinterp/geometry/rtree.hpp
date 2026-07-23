@@ -278,10 +278,17 @@ class RTree {
 
  private:
   /// Magic number for RTree serialization. Includes the dimension and the
-  /// value-type's @c serialization_tag so that pickles of different
-  /// `(Point, Type)` combinations cannot be cross-loaded silently. The tag
-  /// is `0` for scalar `Type`, preserving compatibility with existing
-  /// pickles.
+  /// value-type's @c serialization_tag so that pickles of a different
+  /// dimensionality or a different value *category* (e.g. scalar vs
+  /// @c Observation) cannot be cross-loaded silently. The tag is `0` for
+  /// scalar `Type`, preserving compatibility with existing pickles.
+  ///
+  /// @warning The scalar *width* is NOT encoded, so states of the same shape
+  ///   and category but different precision (e.g. @c float vs @c double) share
+  ///   the same magic number. This is safe for the normal pickle round-trip
+  ///   (which preserves the concrete Python class), but feeding a @c double
+  ///   state to a @c float `__setstate__` by hand would be accepted and
+  ///   reinterpreted rather than rejected.
   static constexpr uint32_t kMagicNumber =
       0x52545452 + dimension_t::value + value_traits<Type>::serialization_tag;
 
