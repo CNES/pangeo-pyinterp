@@ -18,7 +18,7 @@ repos:
     - id: pyupgrade
       args: [--py311-plus]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.14
+    rev: v0.15.22
     hooks:
       - id: ruff
         args: [--fix]
@@ -37,20 +37,20 @@ repos:
       types: [file]
       files: CMakeLists.txt
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.4.2"
+    rev: "v2.4.3"
     hooks:
     - id: codespell
       exclude: "(cf.py|pyinterp/.*json)$"
       args: [--ignore-words-list, "degreee"] # degreeE is a valid axis unit
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v22.1.5
+    rev: v22.1.8
     hooks:
       - id: clang-format
         # *.hpp.in templates hold @VAR@ placeholders that clang-format, which
         # parses its input as C++, cannot handle.
         exclude: "(dataset.*json|\\.in)$"
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.1.0
+    rev: v2.3.0
     hooks:
       - id: mypy
         exclude: (examples|docs)/
