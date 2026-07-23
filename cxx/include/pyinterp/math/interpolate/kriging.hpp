@@ -28,8 +28,13 @@ namespace pyinterp::math::interpolate {
 //
 // 1. The existing 3D isotropic `*_covariance(p1, p2, sigma, lambda)` functions
 //    are now thin wrappers that compute `(p1 - p2).squaredNorm()` once and
-//    delegate to the `_from_r2` form. Behavior is bit-identical to the
-//    pre-refactor implementation.
+//    delegate to the `_from_r2` form. Results are numerically equivalent to
+//    the pre-refactor implementation, and bit-identical for the ν = 1/2 and
+//    ν = 3/2 Matérn kernels (Eigen's `norm()` is `sqrt(squaredNorm())`). For
+//    the others the algebra is re-associated (`sqr(r/λ)` becomes `r²/sqr(λ)`,
+//    and the compact-support cutoff `r >= λ` becomes `r² >= λ²`), so a
+//    handful of last-ULP differences — and a boundary reclassification within
+//    one ULP of `r == λ` for the compact kernels — are possible.
 //
 // 2. The anisotropic Optimal Interpolation path (see anisotropic.hpp) computes
 //    `r2 = Σ((Δᵢ / Lᵢ)²)` with per-axis decorrelation scales, then evaluates
