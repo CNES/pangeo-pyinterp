@@ -20,6 +20,7 @@ The API is organized by functionality:
 
    api/regular_grid
    api/unstructured_grid
+   api/optimal_interpolation
    api/fill
    api/statistics
 
