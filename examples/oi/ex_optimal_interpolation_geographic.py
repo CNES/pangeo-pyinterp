@@ -39,7 +39,7 @@ import pyinterp
 # works at planetary scale).
 def true_field(lon, lat, t_seconds):
     """Toy SLA: sinusoidal, slowly drifting eastward with time."""
-    lon_phase = np.deg2rad(lon) - 1.0e-6 * t_seconds  # ~0.1 deg / day
+    lon_phase = np.deg2rad(lon) - 1.0e-6 * t_seconds  # ~5 deg / day
     lat_phase = np.deg2rad(lat)
     return 0.2 * np.sin(3.0 * lon_phase) * np.cos(2.0 * lat_phase)
 
