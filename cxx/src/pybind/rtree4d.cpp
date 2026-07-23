@@ -146,8 +146,9 @@ void implement_rtree_4d_methods(nb::class_<RTree4D<T>>& cls) {
              const Eigen::Ref<const typename RTree4D<T>::CoordinateMatrix>&
                  coordinates,
              const Eigen::Ref<const typename RTree4D<T>::ValueVector>& values,
-             const Eigen::Ref<const typename RTree4D<T>::ValueVector>&
-                 sigma2) { self.packing(coordinates, values, sigma2); },
+             const Eigen::Ref<const typename RTree4D<T>::ValueVector>& sigma2) {
+            self.packing(coordinates, values, sigma2);
+          },
           nb::arg("coordinates"), nb::arg("values"), nb::arg("sigma2"),
           kPackingDoc, nb::call_guard<nb::gil_scoped_release>())
       .def(
@@ -156,8 +157,9 @@ void implement_rtree_4d_methods(nb::class_<RTree4D<T>>& cls) {
              const Eigen::Ref<const typename RTree4D<T>::CoordinateMatrix>&
                  coordinates,
              const Eigen::Ref<const typename RTree4D<T>::ValueVector>& values,
-             const Eigen::Ref<const typename RTree4D<T>::ValueVector>&
-                 sigma2) { self.insert(coordinates, values, sigma2); },
+             const Eigen::Ref<const typename RTree4D<T>::ValueVector>& sigma2) {
+            self.insert(coordinates, values, sigma2);
+          },
           nb::arg("coordinates"), nb::arg("values"), nb::arg("sigma2"),
           kInsertDoc, nb::call_guard<nb::gil_scoped_release>())
       .def(
@@ -200,8 +202,8 @@ void implement_rtree_4d_methods(nb::class_<RTree4D<T>>& cls) {
 
 template <typename T>
 void init_rtree_4d_impl(nb::module_& m, std::string_view suffix) {
-  auto cls = nb::class_<RTree4D<T>>(
-      m, std::format("RTree4D{}", suffix).c_str(), kRTree4DDoc);
+  auto cls = nb::class_<RTree4D<T>>(m, std::format("RTree4D{}", suffix).c_str(),
+                                    kRTree4DDoc);
   cls.def(nb::init<>(), "Initialize a fresh 4D Cartesian R-tree.",
           nb::call_guard<nb::gil_scoped_release>());
   implement_rtree_4d_methods(cls);
