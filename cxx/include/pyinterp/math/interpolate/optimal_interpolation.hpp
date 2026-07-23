@@ -64,7 +64,8 @@ class OptimalInterpolation {
   ///
   /// @param[in] obs_coords Observations, shape @c (n, 4).
   /// @param[in] obs_values Observed values, shape @c (n,).
-  /// @param[in] obs_sigma2 Per-observation error variance @f$\sigma^2_\mathrm{obs}@f$,
+  /// @param[in] obs_sigma2 Per-observation error variance
+  /// @f$\sigma^2_\mathrm{obs}@f$,
   ///   shape @c (n,). Must be strictly positive.
   /// @param[in] query Query point, shape @c (4,).
   /// @param[in] inv_L Element-wise inverse of the anisotropic decorrelation

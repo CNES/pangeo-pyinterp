@@ -45,9 +45,8 @@ namespace pyinterp::pybind {
 ///   (matches @ref pyinterp::math::interpolate::Observation::value /
 ///   @ref ...::sigma2).
 template <std::floating_point T>
-class RTree4D
-    : public geometry::RTree<geometry::Cartesian4D<T>,
-                             math::interpolate::Observation<T>> {
+class RTree4D : public geometry::RTree<geometry::Cartesian4D<T>,
+                                       math::interpolate::Observation<T>> {
  public:
   /// Scalar type
   using value_type = T;
@@ -213,10 +212,9 @@ void RTree4D<T>::validate_inputs(
 }
 
 template <std::floating_point T>
-void RTree4D<T>::packing(
-    const Eigen::Ref<const CoordinateMatrix>& coordinates,
-    const Eigen::Ref<const ValueVector>& values,
-    const Eigen::Ref<const ValueVector>& sigma2) {
+void RTree4D<T>::packing(const Eigen::Ref<const CoordinateMatrix>& coordinates,
+                         const Eigen::Ref<const ValueVector>& values,
+                         const Eigen::Ref<const ValueVector>& sigma2) {
   validate_inputs(coordinates, values, sigma2);
 
   std::vector<typename base_t::value_t> items;
@@ -229,10 +227,9 @@ void RTree4D<T>::packing(
 }
 
 template <std::floating_point T>
-void RTree4D<T>::insert(
-    const Eigen::Ref<const CoordinateMatrix>& coordinates,
-    const Eigen::Ref<const ValueVector>& values,
-    const Eigen::Ref<const ValueVector>& sigma2) {
+void RTree4D<T>::insert(const Eigen::Ref<const CoordinateMatrix>& coordinates,
+                        const Eigen::Ref<const ValueVector>& values,
+                        const Eigen::Ref<const ValueVector>& sigma2) {
   validate_inputs(coordinates, values, sigma2);
 
   for (Eigen::Index i = 0; i < coordinates.rows(); ++i) {
@@ -304,7 +301,8 @@ auto RTree4D<T>::optimal_interpolation(
 
   // Build a single estimator — its only state is the kernel pointer, safe to
   // share across worker threads.
-  const math::interpolate::OptimalInterpolation<T> oi(config.covariance_model());
+  const math::interpolate::OptimalInterpolation<T> oi(
+      config.covariance_model());
 
   ValueVector values(m);
   ValueVector errors(m);
@@ -330,8 +328,8 @@ auto RTree4D<T>::optimal_interpolation(
 
           // `value()` returns (point, observation) pairs filtered by radius
           // — exactly what the OI math needs (coordinates + value + σ²).
-          const auto pairs = base_t::value(pt, radius, k,
-                                           config.boundary_check());
+          const auto pairs =
+              base_t::value(pt, radius, k, config.boundary_check());
           const auto np = static_cast<Eigen::Index>(pairs.size());
           if (np == 0) {
             continue;  // values/errors stay NaN, neighbors stays 0.
