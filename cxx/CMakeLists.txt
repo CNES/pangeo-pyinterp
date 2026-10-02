@@ -38,7 +38,16 @@ endif()
 
 if(PYINTERP_BUILD_PYTHON_BINDINGS)
   file(GLOB_RECURSE NB_SRC "src/pybind/*.cpp")
-  nanobind_add_module(core FREE_THREADED ${NB_SRC})
+  if(PYINTERP_NANOBIND_BACKEND_MODULE)
+    # Split mode: no nanobind library is linked in, the backend module supplies
+    # it at import time and the extension targets the stable ABI. A
+    # free-threaded build needs the abi3t variant of Python 3.15 (nanobind
+    # rejects the combination on older interpreters).
+    nanobind_add_module(core FREE_THREADED BACKEND_MODULE
+                        ${PYINTERP_NANOBIND_BACKEND_MODULE} ${NB_SRC})
+  else()
+    nanobind_add_module(core FREE_THREADED ${NB_SRC})
+  endif()
   target_link_libraries(
     core
     PRIVATE BLAS::BLAS pyinterp

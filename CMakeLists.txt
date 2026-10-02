@@ -58,6 +58,18 @@ option(PYINTERP_BUILD_PYTHON_BINDINGS
        "Build the pyinterp.core Python extension" ${PYINTERP_IS_TOP_LEVEL})
 option(PYINTERP_BUILD_TESTS "Build the C++ unit tests" ${PYINTERP_IS_TOP_LEVEL})
 
+# nanobind "split mode": when set, pyinterp.core is compiled against the
+# prebuilt nanobind backend named here (``nanobind_backend`` is the module
+# shipped by the nanobind-backend wheel) instead of linking a copy of the
+# nanobind library. The extension then targets the Python 3.10 stable ABI, so a
+# single binary serves every later CPython. Left empty on purpose: source builds
+# (conda-forge, distributions, users compiling from the sdist) have no backend
+# to bind to, and only the wheel jobs should opt in.
+set(PYINTERP_NANOBIND_BACKEND_MODULE
+    ""
+    CACHE STRING
+          "nanobind backend module to build pyinterp.core against (split mode)")
+
 # ##############################################################################
 # CMake policies
 # ##############################################################################
@@ -622,6 +634,12 @@ endfunction()
 format_enabled(ENABLE_COVERAGE CODE_COVERAGE_LINE)
 format_enabled(ENABLE_CLANG_TIDY CLANG_TIDY_LINE)
 
+if(PYINTERP_NANOBIND_BACKEND_MODULE)
+  set(NANOBIND_MODE_LINE "split (backend: ${PYINTERP_NANOBIND_BACKEND_MODULE})")
+else()
+  set(NANOBIND_MODE_LINE "linked")
+endif()
+
 set(CONFIG_LINES
     "==================[ PyInterp Configuration Summary ]=================="
     "Version:                ${PYINTERP_VERSION_FULL}"
@@ -641,6 +659,7 @@ set(CONFIG_LINES
     "Code Coverage:          ${CODE_COVERAGE_LINE}"
     "Clang-Tidy:             ${CLANG_TIDY_LINE}"
     "Python:                 ${Python_VERSION}"
+    "nanobind mode:          ${NANOBIND_MODE_LINE}"
     "======================================================================")
 
 foreach(line ${CONFIG_LINES})
@@ -649,4 +668,5 @@ endforeach()
 
 unset(CODE_COVERAGE_LINE)
 unset(CLANG_TIDY_LINE)
+unset(NANOBIND_MODE_LINE)
 unset(CONFIG_LINES)
