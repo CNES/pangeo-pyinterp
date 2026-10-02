@@ -19,7 +19,8 @@ from .....core.config.rtree import (
     RadialBasisFunction,
     WindowKernel,
 )
-from .....core.geometry.geographic import RTree
+from .....core.geometry.geographic import Point, RTree
+from .....core.geometry.geographic.algorithms import distance
 
 
 class TestRTreeInitialization:
@@ -563,3 +564,46 @@ class TestRTreeEdgeCases:
         assert neighbor_values.shape == (1, 10)
         # Distances should be sorted
         assert np.all(distances[0, :-1] <= distances[0, 1:])
+
+    @pytest.mark.parametrize("far_lon", [-174.0, -175.0])
+    def test_wide_longitude_span(self, far_lon: float) -> None:
+        """Test nearest neighbors when longitudes span more than 180°.
+
+        Regression test for GitHub issue #38: the nodes of the tree crossing
+        the antimeridian were pruned, so that farther neighbors were returned.
+        """
+        lon, lat = np.meshgrid(
+            np.arange(5.0, 6.0, 0.05), np.arange(43.0, 44.0, 0.05)
+        )
+        lons = np.append(lon.ravel(), far_lon)
+        lats = np.append(lat.ravel(), 45.0)
+        values = np.arange(lons.size, dtype=np.float64)
+
+        rng = np.random.default_rng(0)
+        query_coords = np.vstack(
+            [
+                [[4.97, 43.52]],
+                rng.uniform([4.5, 42.5], [6.5, 44.5], size=(50, 2)),
+            ]
+        )
+        config = Query().with_k(3)
+
+        for _ in range(5):
+            perm = rng.permutation(lons.size)
+            coordinates = np.column_stack((lons[perm], lats[perm]))
+            for method in ("packing", "insert"):
+                tree = RTree()
+                getattr(tree, method)(coordinates, values[perm])
+                distances, _ = tree.query(query_coords, config)
+
+                for ix, (x, y) in enumerate(query_coords):
+                    query = Point(x, y)
+                    expected = np.sort(
+                        [
+                            distance(query, Point(a, b))
+                            for a, b in zip(lons, lats, strict=True)
+                        ]
+                    )[:3]
+                    np.testing.assert_allclose(
+                        distances[ix], expected, rtol=0, atol=1e-6
+                    )

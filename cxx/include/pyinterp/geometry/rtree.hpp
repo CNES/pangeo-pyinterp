@@ -25,6 +25,7 @@
 
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geometry/point_traits.hpp"
+#include "pyinterp/geometry/rtree_strategy.hpp"
 #include "pyinterp/geometry/rtree_value_traits.hpp"
 #include "pyinterp/math/interpolate/kriging.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
@@ -79,8 +80,9 @@ class RTree {
   using value_t = std::pair<Point, Type>;
 
   // R*-tree with fanout 16
-  using rtree_t =
-      boost::geometry::index::rtree<value_t, boost::geometry::index::rstar<16>>;
+  using rtree_t = boost::geometry::index::rtree<
+      value_t, typename rtree_parameters<
+                   Point, boost::geometry::index::rstar<16>>::type>;
 
   /// Type promotion for mixed coordinate/value arithmetic.
   ///

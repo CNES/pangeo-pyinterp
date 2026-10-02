@@ -52,8 +52,9 @@ Examples:
 
     Query k-nearest neighbors
 
+    >>> from pyinterp.core.config.rtree import Query
     >>> query_coords = np.array([[0.5, 0.5, 0.0]])
-    >>> distances, values = tree.query(query_coords, k=2)
+    >>> distances, values = tree.query(query_coords, Query().with_k(2))
 
     Create RTree with geodetic coordinates (lon, lat, alt)
 
@@ -408,8 +409,9 @@ Examples:
 
     Query k-nearest neighbors
 
+    >>> from pyinterp.core.config.rtree import Query
     >>> query_coords = np.array([[0.5, 0.5, 0.0]])
-    >>> distances, values = tree.query(query_coords, k=2)
+    >>> distances, values = tree.query(query_coords, Query().with_k(2))
 
     Create RTree with geodetic coordinates (lon, lat, alt)
 

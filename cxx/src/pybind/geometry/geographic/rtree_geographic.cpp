@@ -36,8 +36,9 @@ Examples:
 	>>> tree = RTree()
 	>>> tree.packing(coords, values)
 
+	>>> from pyinterp.core.config.rtree import Query
 	>>> query = np.array([[2.5, 48.5]])
-	>>> distances, neighbors = tree.query(query, k=2)
+	>>> distances, neighbors = tree.query(query, Query().with_k(2))
 )doc";
 
 constexpr auto kPackingDoc = R"doc(
