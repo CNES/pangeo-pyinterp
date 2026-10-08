@@ -48,8 +48,11 @@ jobs:
         condarc: |
           channels:
             - conda-forge
+        # JSON::XS, only packaged by bioconda, makes LCOV several times faster
+        # than with the JSON module shipped with Perl.
         create-args: |
           python=3.12
+          bioconda::perl-json-xs
         environment-name: pyinterp
         environment-file: .github/environments/linux.yml
         init-shell: bash

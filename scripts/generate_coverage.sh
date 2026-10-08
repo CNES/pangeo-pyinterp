@@ -34,14 +34,18 @@ if [[ -n "${CONDA_GCOV}" ]]; then
     fi
 fi
 
-# LCOV 2.x rejects the end lines that gcov reports for the GoogleTest test
-# bodies ("mismatched end line"). Downgrade this error to a warning; the option
-# does not exist in LCOV 1.x.
-LCOV_FLAGS=""
+# The capture below relies on options introduced by LCOV 2.0.
 LCOV_MAJOR=$(lcov --version | sed -n 's/.*LCOV version \([0-9]*\).*/\1/p')
-if [[ "${LCOV_MAJOR:-1}" -ge 2 ]]; then
-    LCOV_FLAGS="--ignore-errors inconsistent"
+if [[ "${LCOV_MAJOR:-0}" -lt 2 ]]; then
+    echo "LCOV 2.0 or later is required." >&2
+    exit 1
 fi
+
+# LCOV 2.x rejects the end lines that gcov reports for some functions
+# ("mismatched end line"), and the function records of the Python coverage
+# ("function is not hit but line is"). Ignore these inconsistencies; the option
+# is repeated to also silence the warnings.
+LCOV_FLAGS="--ignore-errors inconsistent,inconsistent"
 
 # Generate the coverage report
 echo "Generating coverage report"
@@ -71,8 +75,15 @@ cd ${BUILD_TEMP_DIR}
 
 # C++ build & test
 make test_all -j ${THREADS}
-make lcov-geninfo -j ${THREADS}
-lcov ${LCOV_FLAGS} --extract  lcov/data/capture/all_targets.info.raw  "*" -o ../coverage_cpp.info
+
+# Capture the C++ coverage data of all the targets at once. The unit tests and
+# the third-party libraries are excluded from the capture: they are not part of
+# the report, and they account for most of the data to process. The files that
+# were never executed (.gcno without .gcda) are reported with no coverage.
+lcov ${LCOV_FLAGS} --capture --all --directory . --base-directory "${ROOT}" \
+    --no-external --parallel ${THREADS} \
+    --exclude "${ROOT}/cxx/tests/*" --exclude "${ROOT}/third_party/*" \
+    -o ../coverage_cpp.info
 
 # Go back to the build directory ${ROOT}/build
 cd ..
@@ -83,8 +94,8 @@ lcov ${LCOV_FLAGS} -a coverage_cpp.info -a coverage_python.info -o coverage.info
 # Clean the source file paths in the coverage report
 sed -i 's|SF:build/lib\.[^/]*/|SF:|g' coverage.info
 
-# Remove unwanted paths from the final coverage (tests, third_party)
-lcov ${LCOV_FLAGS} --remove coverage.info "${ROOT}/cxx/tests/*" "${ROOT}/third_party/*" "pyinterp/tests/*" -o coverage.info
+# Remove the Python unit tests from the final coverage
+lcov ${LCOV_FLAGS} --remove coverage.info "pyinterp/tests/*" -o coverage.info
 
 # Generate the html report
 cd ${ROOT}
