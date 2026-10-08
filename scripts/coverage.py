@@ -6,7 +6,6 @@
 """Summarizes the code coverage."""
 
 import argparse
-import re
 
 
 def usage() -> argparse.Namespace:
@@ -15,8 +14,8 @@ def usage() -> argparse.Namespace:
         description="Summarizes the code coverage",
     )
     parser.add_argument(
-        "index",
-        help="LCOV index page",
+        "tracefile",
+        help="LCOV tracefile",
     )
     return parser.parse_args()
 
@@ -25,21 +24,20 @@ def main() -> None:
     """Execute the main logic."""
     args = usage()
 
-    # First match is the line coverage, second match is the function coverage.
-    # We only want the line coverage.
-    line_coverage = True
+    # Sum the number of lines hit (LH) and found (LF) of each source file.
+    # These records do not depend on the LCOV version, unlike the HTML report.
+    samples = 0
+    total = 0
 
-    pattern = re.compile(r"(\d+)\s*\/\s*(\d+)").search
-    samples: float = 0
-    total: float = 0
+    with open(args.tracefile) as stream:
+        for line in stream:
+            if line.startswith("LH:"):
+                samples += int(line[3:])
+            elif line.startswith("LF:"):
+                total += int(line[3:])
 
-    for line in open(args.index):
-        match = pattern(line)
-        if match is not None:
-            if line_coverage:
-                samples += float(match.group(1))
-                total += float(match.group(2))
-            line_coverage = not line_coverage
+    if total == 0:
+        raise SystemExit(f"no line coverage data found in {args.tracefile}")
 
     print("-" * 80)
     print("{:^80}".format("Code Coverage Report"))

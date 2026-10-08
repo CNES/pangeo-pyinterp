@@ -295,8 +295,31 @@ if(ENABLE_COVERAGE)
     set(CMAKE_MODULE_PATH
         "${CMAKE_CURRENT_SOURCE_DIR}/third_party/CMake-codecov/cmake"
         "${CMAKE_MODULE_PATH}")
+    # LCOV 2.x rejects the end lines that gcov reports for the GoogleTest test
+    # bodies ("mismatched end line"). Downgrade this error to a warning; the
+    # option does not exist in LCOV 1.x.
+    find_program(LCOV_BIN lcov)
+    if(LCOV_BIN)
+      execute_process(
+        COMMAND ${LCOV_BIN} --version
+        OUTPUT_VARIABLE LCOV_VERSION_OUTPUT
+        ERROR_QUIET)
+      if(LCOV_VERSION_OUTPUT MATCHES "LCOV version ([0-9]+)"
+         AND CMAKE_MATCH_1 GREATER_EQUAL 2)
+        set(GENINFO_EXTRA_FLAGS
+            "--ignore-errors inconsistent"
+            CACHE STRING "Additional flags to pass to geninfo.")
+        set(LCOV_EXTRA_FLAGS
+            "--ignore-errors inconsistent"
+            CACHE STRING "Additional flags to pass to lcov.")
+      endif()
+    endif()
     find_package(codecov)
-    target_compile_options(cpp_coverage INTERFACE -O0 -g --coverage)
+    # The counters are updated atomically: the code under test is
+    # multi-threaded, and lost updates lead to negative hit counts that geninfo
+    # rejects.
+    target_compile_options(cpp_coverage INTERFACE -O0 -g --coverage
+                                                  -fprofile-update=atomic)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
       target_link_options(cpp_coverage INTERFACE --coverage)
     else()

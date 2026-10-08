@@ -34,6 +34,15 @@ if [[ -n "${CONDA_GCOV}" ]]; then
     fi
 fi
 
+# LCOV 2.x rejects the end lines that gcov reports for the GoogleTest test
+# bodies ("mismatched end line"). Downgrade this error to a warning; the option
+# does not exist in LCOV 1.x.
+LCOV_FLAGS=""
+LCOV_MAJOR=$(lcov --version | sed -n 's/.*LCOV version \([0-9]*\).*/\1/p')
+if [[ "${LCOV_MAJOR:-1}" -ge 2 ]]; then
+    LCOV_FLAGS="--ignore-errors inconsistent"
+fi
+
 # Generate the coverage report
 echo "Generating coverage report"
 echo "-------------------------------------------------------------------------"
@@ -62,24 +71,24 @@ cd ${BUILD_TEMP_DIR}
 
 # C++ build & test
 make test_all -j ${THREADS}
-make lcov -j ${THREADS}
-lcov --extract  lcov/data/capture/all_targets.info.raw  "*" -o ../coverage_cpp.info
+make lcov-geninfo -j ${THREADS}
+lcov ${LCOV_FLAGS} --extract  lcov/data/capture/all_targets.info.raw  "*" -o ../coverage_cpp.info
 
 # Go back to the build directory ${ROOT}/build
 cd ..
 
 # Merge the two coverage reports
-lcov -a coverage_cpp.info -a coverage_python.info -o coverage.info
+lcov ${LCOV_FLAGS} -a coverage_cpp.info -a coverage_python.info -o coverage.info
 
 # Clean the source file paths in the coverage report
 sed -i 's|SF:build/lib\.[^/]*/|SF:|g' coverage.info
 
 # Remove unwanted paths from the final coverage (tests, third_party)
-lcov --remove coverage.info "${ROOT}/cxx/tests/*" "${ROOT}/third_party/*" "pyinterp/tests/*" -o coverage.info
+lcov ${LCOV_FLAGS} --remove coverage.info "${ROOT}/cxx/tests/*" "${ROOT}/third_party/*" "pyinterp/tests/*" -o coverage.info
 
 # Generate the html report
 cd ${ROOT}
-genhtml build/coverage.info --output-directory build/htmllcov --prefix "${ROOT}"
+genhtml ${LCOV_FLAGS} build/coverage.info --output-directory build/htmllcov --prefix "${ROOT}"
 
 # Show the coverage
-python scripts/coverage.py build/htmllcov/index.html
+python scripts/coverage.py build/coverage.info
