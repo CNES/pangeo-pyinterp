@@ -18,6 +18,23 @@ Bug Fixes
   ``predicate``, a valid crossover could be rejected. The crossover location
   itself was not affected. All the vertices are now examined by default, as
   ``geodetic.calculate_crossover`` did in 2025.11.0.
+* **Geohash ``where``**
+  (`#40 <https://github.com/CNES/pangeo-pyinterp/issues/40>`_): Fixed three
+  defects of ``geohash.where``:
+
+  * The codes were read with a length equal to the number of columns of the
+    array instead of the size of its items, so the keys returned were
+    truncated or straddled neighboring codes, and arrays with more than 12
+    columns were rejected. This regression was introduced in 2026.2.0.
+  * A code occurring exactly twice was reported with the bounds of its first
+    occurrence only. The bounds now cover all the occurrences of a code,
+    whether they are adjacent or not; isolated occurrences were previously
+    ignored.
+  * The function is exported again from ``pyinterp.geohash``; since 2026.2.0
+    it was only reachable as ``pyinterp.core.geohash.where``.
+
+  Arrays that are not C-contiguous, such as transposed arrays, are now
+  accepted.
 
 New Features
 ~~~~~~~~~~~~

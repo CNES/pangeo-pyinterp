@@ -18,6 +18,7 @@ from .core.geohash import (
     decode,
     encode,
     transform,
+    where,
 )
 
 
@@ -34,6 +35,7 @@ __all__ = [
     "encode",
     "to_xarray",
     "transform",
+    "where",
 ]
 
 

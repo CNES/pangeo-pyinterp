@@ -72,6 +72,78 @@ def test_string_numpy() -> None:
         )
 
 
+def test_where_keys() -> None:
+    """Test that where() returns the full geohash codes as keys.
+
+    Regression test for https://github.com/CNES/pangeo-pyinterp/issues/40
+    """
+    # The number of columns differs from the length of the codes.
+    codes = np.array([[b"xyz", b"xyz"], [b"abc", b"abc"]], dtype="S3")
+    assert geohash.where(codes) == {
+        b"xyz": ((0, 0), (0, 1)),
+        b"abc": ((1, 1), (0, 1)),
+    }
+
+    # More columns than the maximum length of a code.
+    codes = np.full((2, 20), b"s", dtype="S1")
+    assert geohash.where(codes) == {b"s": ((0, 1), (0, 19))}
+
+    # Codes generated from a regular grid.
+    lon, lat = np.meshgrid(
+        np.arange(-180.0, 180.0, 5.0) + 2.5, np.arange(-90.0, 90.0, 5.0) + 2.5
+    )
+    codes = geohash.encode(lon.ravel(), lat.ravel(), precision=2)
+    codes = codes.reshape(lon.shape)
+    indexes = geohash.where(codes)
+    assert set(indexes) == set(np.unique(codes).tolist())
+    for code, ((row_min, row_max), (col_min, col_max)) in indexes.items():
+        rows, cols = np.nonzero(codes == code)
+        assert (row_min, row_max) == (rows.min(), rows.max())
+        assert (col_min, col_max) == (cols.min(), cols.max())
+        assert np.all(
+            codes[row_min : row_max + 1, col_min : col_max + 1] == code
+        )
+
+
+def test_where_bounds() -> None:
+    """Test that where() bounds cover all the occurrences of a code.
+
+    Regression test for https://github.com/CNES/pangeo-pyinterp/issues/40
+    """
+    # Two occurrences only
+    codes = np.array([[b"s"], [b"s"]], dtype="S1")
+    assert geohash.where(codes) == {b"s": ((0, 1), (0, 0))}
+    assert geohash.where(codes.T) == {b"s": ((0, 0), (0, 1))}
+
+    # Arrays that are not C-contiguous
+    codes = np.array(
+        [[b"s0", b"s0", b"e1"], [b"e1", b"e1", b"e1"]], dtype="S2"
+    )
+    expected = {b"s0": ((0, 1), (0, 0)), b"e1": ((0, 2), (0, 1))}
+    assert geohash.where(codes.T) == expected
+    assert geohash.where(np.asfortranarray(codes.T)) == expected
+    assert geohash.where(codes[:, ::2]) == {
+        b"s0": ((0, 0), (0, 0)),
+        b"e1": ((0, 1), (0, 1)),
+    }
+
+    # Disconnected occurrences
+    codes = np.array([[b"s"], [b"e"], [b"s"]], dtype="S1")
+    assert geohash.where(codes) == {
+        b"s": ((0, 2), (0, 0)),
+        b"e": ((1, 1), (0, 0)),
+    }
+
+    codes = np.array(
+        [[b"s0", b"e1", b"e1"], [b"e1", b"e1", b"e1"], [b"e1", b"e1", b"s0"]],
+        dtype="S2",
+    )
+    assert geohash.where(codes) == {
+        b"s0": ((0, 2), (0, 2)),
+        b"e1": ((0, 2), (0, 2)),
+    }
+
+
 def test_bounding_zoom() -> None:
     """Test the transform function."""
     bboxes = geohash.bounding_boxes(precision=1)

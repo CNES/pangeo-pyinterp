@@ -495,24 +495,24 @@ using HashRegionBounds =
     std::unordered_map<std::string, std::tuple<std::tuple<int64_t, int64_t>,
                                                std::tuple<int64_t, int64_t>>>;
 
-/// @brief Find bounding regions for contiguous geohash areas in a 2D grid
+/// @brief Find the bounds of the region covered by each geohash in a 2D grid
 /// @param hash EncodedHashes containing a 2D grid of geohashes with shape
-/// (rows, cols)
+/// (rows, cols), stored in row-major order
 /// @param rows Number of rows in the grid
 /// @param cols Number of columns in the grid
 /// @return Map from geohash string to tuple of ((min_row, max_row), (min_col,
-/// max_col))
+/// max_col)), the bounds covering all the occurrences of the geohash
 [[nodiscard]] auto where(const EncodedHashes& hash, size_t rows, size_t cols)
     -> HashRegionBounds;
 
-/// @brief Find bounding regions for contiguous geohash areas in a 2D grid
+/// @brief Find the bounds of the region covered by each geohash in a 2D grid
 /// (view overload)
 /// @param hash EncodedHashesView providing a non-owning view over geohash
-/// strings
+/// strings, stored in row-major order
 /// @param rows Number of rows in the grid
 /// @param cols Number of columns in the grid
 /// @return Map from geohash string to tuple of ((min_row, max_row), (min_col,
-/// max_col))
+/// max_col)), the bounds covering all the occurrences of the geohash
 [[nodiscard]] auto where(const EncodedHashesView& hash, size_t rows,
                          size_t cols) -> HashRegionBounds;
 

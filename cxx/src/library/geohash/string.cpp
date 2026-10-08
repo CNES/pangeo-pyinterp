@@ -119,49 +119,25 @@ auto bounding_boxes(const geometry::geographic::MultiPolygon& multipolygon,
 template <typename HashContainer>
 auto where_impl(const HashContainer& hash, size_t rows, size_t cols)
     -> HashRegionBounds {
-  // Index shifts of neighboring pixels
-  static constexpr auto shift_row =
-      std::array<int64_t, 8>{-1, -1, -1, 0, 1, 0, 1, 1};
-  static constexpr auto shift_col =
-      std::array<int64_t, 8>{-1, 1, 0, -1, -1, 1, 0, 1};
-
-  auto result = std::unordered_map<
-      std::string,
-      std::tuple<std::tuple<int64_t, int64_t>, std::tuple<int64_t, int64_t>>>();
+  auto result = HashRegionBounds();
 
   for (int64_t ix = 0; std::cmp_less(ix, rows); ++ix) {
     for (int64_t jx = 0; std::cmp_less(jx, cols); ++jx) {
       auto current_span = hash.get(ix * cols + jx);
-      auto current_code = std::string(current_span.begin(), current_span.end());
-
-      auto it = result.find(current_code);
-      if (it == result.end()) {
-        result.emplace(current_code, std::make_tuple(std::make_tuple(ix, ix),
-                                                     std::make_tuple(jx, jx)));
+      auto [it, inserted] = result.try_emplace(
+          std::string(current_span.begin(), current_span.end()),
+          std::make_tuple(ix, ix), std::make_tuple(jx, jx));
+      if (inserted) {
         continue;
       }
 
-      for (int64_t kx = 0; kx < 8; ++kx) {
-        const auto i = ix + shift_row[kx];
-        const auto j = jx + shift_col[kx];
+      auto& [row_min, row_max] = std::get<0>(it->second);
+      row_min = std::min(row_min, ix);
+      row_max = std::max(row_max, ix);
 
-        if (i >= 0 && std::cmp_less(i, rows) && j >= 0 &&
-            std::cmp_less(j, cols)) {
-          auto neighboring_span = hash.get(i * cols + j);
-          auto neighboring_code =
-              std::string(neighboring_span.begin(), neighboring_span.end());
-
-          if (current_code == neighboring_code) {
-            auto& first = std::get<0>(it->second);
-            std::get<0>(first) = std::min(std::get<0>(first), i);
-            std::get<1>(first) = std::max(std::get<1>(first), i);
-
-            auto& second = std::get<1>(it->second);
-            std::get<0>(second) = std::min(std::get<0>(second), j);
-            std::get<1>(second) = std::max(std::get<1>(second), j);
-          }
-        }
-      }
+      auto& [col_min, col_max] = std::get<1>(it->second);
+      col_min = std::min(col_min, jx);
+      col_max = std::max(col_max, jx);
     }
   }
 

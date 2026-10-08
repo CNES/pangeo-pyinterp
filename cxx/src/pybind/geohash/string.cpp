@@ -111,22 +111,23 @@ static auto from_numpy(const nb::object& hash) -> EncodedHashesView {
         .count = info.shape[0],
     };
   } else if constexpr (NDIM == 2) {
-    if (std::cmp_not_equal(info.strides[0], info.shape[1] * info.strides[1])) {
-      throw std::invalid_argument("hash must be an array of strings");
-    }
-    auto precision = static_cast<uint32_t>(info.shape[1]);
+    // 2D string array - precision is the size of an item, not the number of
+    // columns.
+    auto precision = nb::cast<size_t>(hash.attr("dtype").attr("itemsize"));
     if (precision == 0 || precision > 12) {
       throw std::invalid_argument("string length must be within [1, 12]");
     }
 
+    // View as uint8 and cast to typed ndarray; shape is (rows, cols *
+    // precision).
     auto viewed =
         nb::cast<nb::ndarray<nb::numpy, uint8_t, nb::ndim<2>, nb::c_contig>>(
             hash.attr("view")("uint8"));
 
     return EncodedHashesView{
         .data = reinterpret_cast<const char*>(viewed.data()),
-        .precision = precision,
-        .count = static_cast<size_t>(info.shape[0]),
+        .precision = static_cast<uint32_t>(precision),
+        .count = info.shape[0] * info.shape[1],
     };
   }
 }
@@ -244,13 +245,14 @@ Raises:
 )__doc__";
 
 constexpr const char* const kWhereDoc = R"__doc__(
-Get the start and end indexes for successive geohash codes.
+Get the bounds of the region covered by each geohash code in a 2D array.
 
-Returns a dictionary mapping successive identical geohash codes to their
-start and end positions in the input numpy string array.
+Returns a dictionary mapping each distinct geohash code to the smallest and
+largest row and column indexes at which it occurs in the input array. The
+bounds cover all the occurrences of a code, whether they are adjacent or not.
 
 Args:
-    hash: Array of GeoHash codes (numpy string array).
+    hash: 2D array of GeoHash codes (numpy string array).
 
 Returns:
     Dictionary where keys are geohash codes (as bytes) and values are tuples
@@ -364,11 +366,17 @@ auto init_string(nb::module_& m) -> void {
   m.def(
       "where",
       [](const nb::object& hash) -> nb::dict {
-        auto hashes = from_numpy<2>(hash);
+        // The codes are read in row-major order; the array returned keeps the
+        // data alive if a copy was needed.
+        auto array =
+            nb::module_::import_("numpy").attr("ascontiguousarray")(hash);
+        auto hashes = from_numpy<2>(array);
+        auto rows = nb::cast<size_t>(array.attr("shape")[0]);
+        auto cols = nb::cast<size_t>(array.attr("shape")[1]);
         HashRegionBounds result_map;
         {
           nb::gil_scoped_release release;
-          result_map = where(hashes, hashes.count, hashes.precision);
+          result_map = where(hashes, rows, cols);
         }
 
         // Convert to dict with bytes keys

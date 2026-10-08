@@ -24,3 +24,4 @@ Functions
    encode
    to_xarray
    transform
+   where

@@ -554,6 +554,50 @@ TEST_F(GeoHashStringTest, WhereMultipleRegions) {
   EXPECT_TRUE(result.contains("s01"));
 }
 
+TEST_F(GeoHashStringTest, WhereTwoOccurrences) {
+  // A 2x1 grid holding the same geohash
+  EncodedHashes hashes{
+      .buffer = std::vector<char>(2 * 3),
+      .precision = 3,
+      .count = 2,
+  };
+  std::copy_n("s00", 3, hashes.get(0).begin());
+  std::copy_n("s00", 3, hashes.get(1).begin());
+
+  auto result = where(hashes, 2, 1);
+
+  ASSERT_EQ(result.size(), 1);
+  EXPECT_EQ(result["s00"],
+            std::make_tuple(std::make_tuple(0, 1), std::make_tuple(0, 0)));
+
+  // The same data seen as a 1x2 grid
+  result = where(hashes, 1, 2);
+
+  ASSERT_EQ(result.size(), 1);
+  EXPECT_EQ(result["s00"],
+            std::make_tuple(std::make_tuple(0, 0), std::make_tuple(0, 1)));
+}
+
+TEST_F(GeoHashStringTest, WhereDisconnectedOccurrences) {
+  // A 3x3 grid whose opposite corners hold the same geohash
+  EncodedHashes hashes{
+      .buffer = std::vector<char>(9 * 3),
+      .precision = 3,
+      .count = 9,
+  };
+  for (size_t ix = 0; ix < 9; ++ix) {
+    std::copy_n(ix == 0 || ix == 8 ? "s00" : "e11", 3, hashes.get(ix).begin());
+  }
+
+  auto result = where(hashes, 3, 3);
+
+  ASSERT_EQ(result.size(), 2);
+  EXPECT_EQ(result["s00"],
+            std::make_tuple(std::make_tuple(0, 2), std::make_tuple(0, 2)));
+  EXPECT_EQ(result["e11"],
+            std::make_tuple(std::make_tuple(0, 2), std::make_tuple(0, 2)));
+}
+
 // ============================================================================
 // Tests for transform(hash, precision)
 // ============================================================================
