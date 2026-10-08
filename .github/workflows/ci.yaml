@@ -49,8 +49,10 @@ jobs:
           channels:
             - conda-forge
         # JSON::XS, only packaged by bioconda, makes LCOV several times faster
-        # than with the JSON module shipped with Perl.
-        create-args: |
+        # than with the JSON module shipped with Perl. The folded style (>-) is
+        # required: setup-micromamba splits create-args on spaces, not on
+        # newlines.
+        create-args: >-
           python=3.12
           bioconda::perl-json-xs
         environment-name: pyinterp
