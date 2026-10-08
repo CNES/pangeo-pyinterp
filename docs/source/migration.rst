@@ -301,6 +301,33 @@ These replace the removed orbit classes (``EquatorCoordinates``, ``Orbit``,
 ``Pass``, ``Swath``) and functions (``calculate_orbit``, ``calculate_pass``,
 ``calculate_swath``).
 
+Crossover detection moved from ``geodetic.calculate_crossover`` to
+``geometry.satellite.find_crossovers``, which returns a list of
+``CrossoverResult`` objects instead of an optional tuple:
+
+Before (Old API)::
+
+    result = pyinterp.geodetic.calculate_crossover(
+        lon1, lat1, lon2, lat2, predicate=40_000)
+    if result is not None:
+        point, (index1, index2) = result
+
+After (New API)::
+
+    from pyinterp.geometry import satellite
+
+    for xover in satellite.find_crossovers(
+            lon1, lat1, lon2, lat2, predicate=40_000):
+        point, index1, index2 = xover.point, xover.index1, xover.index2
+
+As before, ``index1`` and ``index2`` are the indices of the vertices nearest to
+the crossover point, found by examining all the vertices of each track. Pass
+``assume_unimodal=True`` to locate them with a faster bisection search. This is
+only valid when the distance to the crossover point is strictly unimodal along
+each track, which holds for clean half-orbits: with duplicated vertices or
+tracks covering more than a half-orbit, the indices may be wrong and a valid
+crossover may be rejected by ``predicate``.
+
 Orbit Interpolation Changes
 ===========================
 

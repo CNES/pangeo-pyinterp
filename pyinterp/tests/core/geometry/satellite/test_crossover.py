@@ -167,6 +167,80 @@ class TestFindCrossovers:
             "index2 not near crossover"
         )
 
+    @pytest.mark.parametrize("use_cartesian", [True, False])
+    @pytest.mark.parametrize("assume_unimodal", [False, True])
+    def test_crossover_indices_are_nearest_vertices(
+        self, use_cartesian: bool, assume_unimodal: bool
+    ) -> None:
+        """Test that the indices are those of the nearest vertices.
+
+        Regression test for https://github.com/CNES/pangeo-pyinterp/issues/41
+        """
+        # Track along the equator, crossed by a track along a meridian whose
+        # longitude never coincides with a vertex or with the middle of a
+        # segment of the equatorial track.
+        lon_eq = np.linspace(-10.0, 10.0, 1001)
+        lat_eq = np.zeros_like(lon_eq)
+        lat_mer = np.linspace(-5.0, 5.0, 501)
+
+        for x0 in np.linspace(-9.0, 9.0, 361) + 0.003:
+            lon_mer = np.full_like(lat_mer, x0)
+            expected_mer = int(np.argmin(np.abs(lat_mer)))
+
+            # The searched track is successively the first and the second one.
+            crossovers = satellite.find_crossovers(
+                lon_eq,
+                lat_eq,
+                lon_mer,
+                lat_mer,
+                predicate=1e6,
+                use_cartesian=use_cartesian,
+                assume_unimodal=assume_unimodal,
+            )
+            assert len(crossovers) == 1
+            xover = crossovers[0]
+            expected_eq = int(np.argmin(np.abs(lon_eq - xover.point.lon)))
+            assert (xover.index1, xover.index2) == (expected_eq, expected_mer)
+
+            crossovers = satellite.find_crossovers(
+                lon_mer,
+                lat_mer,
+                lon_eq,
+                lat_eq,
+                predicate=1e6,
+                use_cartesian=use_cartesian,
+                assume_unimodal=assume_unimodal,
+            )
+            assert len(crossovers) == 1
+            xover = crossovers[0]
+            expected_eq = int(np.argmin(np.abs(lon_eq - xover.point.lon)))
+            assert (xover.index1, xover.index2) == (expected_mer, expected_eq)
+
+    @pytest.mark.parametrize("use_cartesian", [True, False])
+    def test_crossover_indices_with_duplicated_vertices(
+        self, use_cartesian: bool
+    ) -> None:
+        """Test that duplicated vertices do not mislead the default search."""
+        # Each vertex is repeated: the distance to the crossover point is no
+        # longer strictly unimodal along the tracks.
+        lon1 = np.repeat(np.linspace(-10.0, 10.0, 1001), 2)
+        lat1 = np.zeros_like(lon1)
+        lat2 = np.repeat(np.linspace(-5.0, 5.0, 501), 2)
+
+        for x0 in np.linspace(-9.0, 9.0, 37) + 0.003:
+            crossovers = satellite.find_crossovers(
+                lon1,
+                lat1,
+                np.full_like(lat2, x0),
+                lat2,
+                predicate=1e6,
+                use_cartesian=use_cartesian,
+            )
+            assert len(crossovers) == 1
+            xover = crossovers[0]
+            assert xover.index1 == np.argmin(np.abs(lon1 - xover.point.lon))
+            assert xover.index2 == np.argmin(np.abs(lat2))
+
     def test_crossover_predicate_filtering(self) -> None:
         """Test that predicate filters out distant crossovers."""
         lon1, lat1, lon2, lat2 = self.create_crossing_tracks()

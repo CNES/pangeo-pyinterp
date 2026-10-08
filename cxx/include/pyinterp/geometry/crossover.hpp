@@ -6,7 +6,6 @@
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
 #include <boost/geometry/algorithms/detail/comparable_distance/interface.hpp>
-#include <numbers>
 #include <stdexcept>
 #include <vector>
 
@@ -41,16 +40,23 @@ class Crossover {
     return line2_;
   }
 
-  /// @brief Finds the nearest vertices in both linestrings to a given point
-  /// using the golden-section search algorithm.
+  /// @brief Finds the nearest vertices in both linestrings to a given point.
   /// @param[in] point The point to which the nearest vertices are sought
+  /// @param[in] assume_unimodal If true, the distance from the point to the
+  /// vertices is assumed to be unimodal along each linestring, and the nearest
+  /// vertices are found with a bisection search; otherwise, all the vertices
+  /// are examined.
   /// @return A tuple containing the indices of the nearest vertices
   /// in both linestrings
-  [[nodiscard]] auto nearest(const Point& point) const
+  [[nodiscard]] auto nearest(const Point& point,
+                             const bool assume_unimodal = false) const
       -> std::tuple<size_t, size_t> {
-    auto p1 = Crossover::nearest_vertex_golden(point, line1_);
-    auto p2 = Crossover::nearest_vertex_golden(point, line2_);
-    return {p1.first, p2.first};
+    if (assume_unimodal) {
+      return {Crossover::nearest_vertex_bisection(point, line1_),
+              Crossover::nearest_vertex_bisection(point, line2_)};
+    }
+    return {Crossover::nearest_vertex_linear(point, line1_),
+            Crossover::nearest_vertex_linear(point, line2_)};
   }
 
   /// @brief Serialize the Crossover state for storage or transmission.
@@ -94,17 +100,36 @@ class Crossover {
   static constexpr uint32_t kMagicNumber = 0x5F585F5F;  // "_X__"
 
   /// @brief Finds the index of the nearest vertex in a linestring to a given
-  /// point using the golden-section search algorithm.
-  /// @tparam Point Type of the query point
-  /// @tparam LineString Type of the linestring
+  /// point by examining all the vertices.
   /// @param[in] query The point to which the nearest vertex is sought
   /// @param[in] line The linestring containing the vertices
-  /// @return A pair containing the index of the nearest vertex and the distance
-  /// to it
-  static auto nearest_vertex_golden(Point const& query,
-                                    LineString<Point> const& line)
-      -> std::pair<size_t, typename boost::geometry::default_distance_result<
-                               Point, Point>::type> {
+  /// @return The index of the nearest vertex
+  static auto nearest_vertex_linear(Point const& query,
+                                    LineString<Point> const& line) -> size_t {
+    size_t best_idx = 0;
+    auto best_dist = boost::geometry::comparable_distance(query, line[0]);
+    for (size_t ix = 1; ix < line.size(); ++ix) {
+      if (auto dist = boost::geometry::comparable_distance(query, line[ix]);
+          dist < best_dist) {
+        best_dist = dist;
+        best_idx = ix;
+      }
+    }
+    return best_idx;
+  }
+
+  /// @brief Finds the index of the nearest vertex in a linestring to a given
+  /// point using a bisection on the sign of the distance variation between
+  /// consecutive vertices.
+  /// @param[in] query The point to which the nearest vertex is sought
+  /// @param[in] line The linestring containing the vertices
+  /// @return The index of the nearest vertex
+  /// @note The distance from the query point to the vertices must be strictly
+  /// unimodal along the linestring: the result is undefined if the linestring
+  /// contains duplicated vertices or comes back towards the query point.
+  static auto nearest_vertex_bisection(Point const& query,
+                                       LineString<Point> const& line)
+      -> size_t {
     size_t lo = 0;
     size_t hi = line.size() - 1;
 
@@ -112,38 +137,18 @@ class Crossover {
       return boost::geometry::comparable_distance(query, line[i]);
     };
 
-    auto m1 = hi - static_cast<size_t>((hi - lo) / std::numbers::phi);
-    auto m2 = lo + static_cast<size_t>((hi - lo) / std::numbers::phi);
-    auto d1 = dist(m1);
-    auto d2 = dist(m2);
-
-    while (hi - lo > 2) {
-      if (d1 < d2) {
-        hi = m2;
-        m2 = m1;
-        d2 = d1;
-        m1 = hi - static_cast<std::size_t>((hi - lo) / std::numbers::phi);
-        d1 = dist(m1);
+    // Invariant: the nearest vertex lies in [lo, hi]. The distance decreases
+    // before the nearest vertex and increases after it.
+    while (lo < hi) {
+      const auto mid = lo + (hi - lo) / 2;
+      if (dist(mid) <= dist(mid + 1)) {
+        hi = mid;
       } else {
-        lo = m1;
-        m1 = m2;
-        d1 = d2;
-        m2 = lo + static_cast<std::size_t>((hi - lo) / std::numbers::phi);
-        d2 = dist(m2);
+        lo = mid + 1;
       }
     }
 
-    // Final linear scan
-    std::size_t best_idx = lo;
-    auto best_dist = dist(lo);
-    for (std::size_t i = lo + 1; i <= hi; ++i) {
-      if (auto d = dist(i); d < best_dist) {
-        best_dist = d;
-        best_idx = i;
-      }
-    }
-
-    return {best_idx, boost::geometry::distance(query, line[best_idx])};
+    return lo;
   }
 };
 

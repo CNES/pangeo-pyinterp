@@ -23,6 +23,7 @@ def find_crossovers(
     use_cartesian: bool = True,
     strategy: Strategy = ...,
     spheroid: Spheroid | None = None,
+    assume_unimodal: bool = False,
 ) -> list[CrossoverResult]: ...
 
 class LatitudeZone(enum.Enum):

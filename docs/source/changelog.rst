@@ -1,6 +1,37 @@
 Changelog
 #########
 
+Unreleased
+----------
+
+Bug Fixes
+~~~~~~~~~
+
+* **Crossover nearest vertex indices**
+  (`#41 <https://github.com/CNES/pangeo-pyinterp/issues/41>`_): Fixed
+  ``geometry.satellite.find_crossovers``, which could return ``index1`` and
+  ``index2`` values that were not those of the vertices nearest to the
+  crossover point. The golden-section search used to locate them worked on
+  truncated integer indices: when its two probes collapsed onto the same
+  vertex, the half of the interval holding the nearest vertex was discarded.
+  The indices could be off by several vertices and, with a tight
+  ``predicate``, a valid crossover could be rejected. The crossover location
+  itself was not affected. All the vertices are now examined by default, as
+  ``geodetic.calculate_crossover`` did in 2025.11.0.
+
+New Features
+~~~~~~~~~~~~
+
+* **Faster nearest vertex search for crossovers**: Added the
+  ``assume_unimodal`` option to ``geometry.satellite.find_crossovers``. When
+  set, the nearest vertices are located with a bisection search instead of an
+  exhaustive scan, which makes the whole call about 8 % faster on the Cartesian
+  plane and about 20 % faster with geodetic calculations. It requires the
+  distance to the crossover point to be strictly unimodal along each track,
+  which holds for clean half-orbits but not for tracks holding duplicated
+  vertices or covering more than a half-orbit.
+
+
 2026.7.0
 --------
 

@@ -68,14 +68,16 @@ inline auto check_linestring_shapes(
 /// nearest
 /// @param[in] strategy Calculation strategy
 /// @param[in] spheroid Optional spheroid for geodetic calculations
+/// @param[in] assume_unimodal If true, search the nearest vertices with a
+/// bisection instead of examining all the vertices
 /// @return The crossover point if acceptable; std::nullopt otherwise
 template <typename CrossoverType, typename PointType>
 inline auto filter_crossover(
     const CrossoverType& xover, PointType point, const double predicate,
     const geographic::StrategyMethod strategy,
-    const std::optional<geographic::Spheroid>& spheroid)
-    -> std::optional<CrossoverResult> {
-  auto [ix1, ix2] = xover.nearest(point);
+    const std::optional<geographic::Spheroid>& spheroid,
+    const bool assume_unimodal) -> std::optional<CrossoverResult> {
+  auto [ix1, ix2] = xover.nearest(point, assume_unimodal);
 
   geographic::Point geographic_point;
   if constexpr (std::is_same_v<CrossoverType, geographic::Crossover>) {
@@ -115,22 +117,22 @@ inline auto find_crossovers_geographic(
     const Eigen::Ref<const Eigen::VectorXd>& lon2,
     const Eigen::Ref<const Eigen::VectorXd>& lat2, const double predicate,
     const bool allow_multiple, const geographic::StrategyMethod strategy,
-    const std::optional<geographic::Spheroid>& spheroid)
-    -> std::vector<CrossoverResult> {
+    const std::optional<geographic::Spheroid>& spheroid,
+    const bool assume_unimodal) -> std::vector<CrossoverResult> {
   auto xover = geographic::Crossover(geographic::LineString(lon1, lat1),
                                      geographic::LineString(lon2, lat2));
   std::vector<CrossoverResult> result;
   if (allow_multiple) {
     for (auto point : xover.find_all(spheroid, strategy)) {
-      if (auto filtered =
-              filter_crossover(xover, point, predicate, strategy, spheroid)) {
+      if (auto filtered = filter_crossover(xover, point, predicate, strategy,
+                                           spheroid, assume_unimodal)) {
         result.push_back(*filtered);
       }
     }
   } else {
     if (auto point = xover.find_unique(spheroid, strategy)) {
-      if (auto filtered =
-              filter_crossover(xover, *point, predicate, strategy, spheroid)) {
+      if (auto filtered = filter_crossover(xover, *point, predicate, strategy,
+                                           spheroid, assume_unimodal)) {
         result.push_back(*filtered);
       }
     }
@@ -145,22 +147,22 @@ inline auto find_crossovers_cartesian(
     const Eigen::Ref<const Eigen::VectorXd>& lon2,
     const Eigen::Ref<const Eigen::VectorXd>& lat2, const double predicate,
     const bool allow_multiple, const geographic::StrategyMethod strategy,
-    const std::optional<geographic::Spheroid>& spheroid)
-    -> std::vector<CrossoverResult> {
+    const std::optional<geographic::Spheroid>& spheroid,
+    const bool assume_unimodal) -> std::vector<CrossoverResult> {
   auto xover = cartesian::Crossover(cartesian::LineString(lon1, lat1),
                                     cartesian::LineString(lon2, lat2));
   std::vector<CrossoverResult> result;
   if (allow_multiple) {
     for (auto point : xover.find_all()) {
-      if (auto filtered =
-              filter_crossover(xover, point, predicate, strategy, spheroid)) {
+      if (auto filtered = filter_crossover(xover, point, predicate, strategy,
+                                           spheroid, assume_unimodal)) {
         result.push_back(*filtered);
       }
     }
   } else {
     if (auto point = xover.find_unique()) {
-      if (auto filtered =
-              filter_crossover(xover, *point, predicate, strategy, spheroid)) {
+      if (auto filtered = filter_crossover(xover, *point, predicate, strategy,
+                                           spheroid, assume_unimodal)) {
         result.push_back(*filtered);
       }
     }
@@ -183,6 +185,10 @@ inline auto find_crossovers_cartesian(
 /// results; otherwise, use geographic calculations
 /// @param[in] strategy Calculation strategy
 /// @param[in] spheroid Optional spheroid for geodetic calculations
+/// @param[in] assume_unimodal If true, the distance from a crossover point to
+/// the vertices is assumed to be strictly unimodal along each half-orbit, and
+/// the nearest vertices are found with a bisection search; otherwise, all the
+/// vertices are examined
 /// @return All crossover points found that pass the predicate filter
 /// @throws std::runtime_error if allow_multiple is false and multiple crossover
 /// points are found
@@ -200,16 +206,16 @@ inline auto find_crossovers(const Eigen::Ref<const Eigen::VectorXd>& lon1,
                             const double predicate, const bool allow_multiple,
                             const bool use_cartesian,
                             const geographic::StrategyMethod strategy,
-                            const std::optional<geographic::Spheroid>& spheroid)
+                            const std::optional<geographic::Spheroid>& spheroid,
+                            const bool assume_unimodal)
     -> std::vector<CrossoverResult> {
   detail::check_linestring_shapes(lon1, lat1, lon2, lat2, predicate);
-  return use_cartesian
-             ? detail::find_crossovers_cartesian(lon1, lat1, lon2, lat2,
-                                                 predicate, allow_multiple,
-                                                 strategy, spheroid)
-             : detail::find_crossovers_geographic(lon1, lat1, lon2, lat2,
-                                                  predicate, allow_multiple,
-                                                  strategy, spheroid);
+  return use_cartesian ? detail::find_crossovers_cartesian(
+                             lon1, lat1, lon2, lat2, predicate, allow_multiple,
+                             strategy, spheroid, assume_unimodal)
+                       : detail::find_crossovers_geographic(
+                             lon1, lat1, lon2, lat2, predicate, allow_multiple,
+                             strategy, spheroid, assume_unimodal);
 }
 
 }  // namespace pyinterp::geometry::satellite::algorithms

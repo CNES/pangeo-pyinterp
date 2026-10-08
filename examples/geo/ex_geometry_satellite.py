@@ -109,6 +109,28 @@ if crossovers:
         print(f"    Distance to Track 2 point: {d2:.2f} m")
 
 # %%
+# The indices returned are those of the track vertices nearest to the crossover
+# point. By default, all the vertices of each track are examined to find them.
+# For clean half-orbits, where the distance to the crossover point only
+# increases when moving away from it along the track, ``assume_unimodal=True``
+# replaces this scan with a faster bisection search. Do not use it on tracks
+# holding duplicated vertices or covering more than a half-orbit: the indices
+# may then be wrong, and a valid crossover may be rejected by the predicate.
+crossovers_fast = satellite.find_crossovers(
+    lon1,
+    lat1,
+    lon2,
+    lat2,
+    predicate=50_000,
+    spheroid=wgs84,
+    strategy=geographic.algorithms.VINCENTY,
+    assume_unimodal=True,
+)
+indices = [(item.index1, item.index2) for item in crossovers]
+indices_fast = [(item.index1, item.index2) for item in crossovers_fast]
+print(f"\nSame indices with the bisection search: {indices == indices_fast}")
+
+# %%
 # Crossover Detection: Multiple Tracks
 # -------------------------------------
 # In real applications, you often need to find crossovers between many tracks.

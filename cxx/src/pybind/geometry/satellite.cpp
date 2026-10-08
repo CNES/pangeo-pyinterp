@@ -77,6 +77,8 @@ Args:
         plane; otherwise, geodetic calculations are used.
     strategy: Calculation strategy.
     spheroid: Optional spheroid for geodetic calculations.
+    assume_unimodal: If true, the vertices nearest to a crossover point are
+        found with a bisection search instead of examining all the vertices.
 
 Returns:
     All crossover points found that pass the predicate filter.
@@ -93,6 +95,12 @@ Note:
     being close to each other; if they are widely spaced, the determined
     geographical point may be significantly incorrect due to Cartesian
     approximation errors.
+
+    If ``assume_unimodal`` is true, the distance from a crossover point to the
+    vertices must be strictly unimodal along each line, which holds for clean
+    half-orbits. If a line contains duplicated vertices, covers more than a
+    half-orbit or comes back towards the crossover point, the indices returned
+    may be wrong and a valid crossover may be rejected by ``predicate``.
 )doc";
 
 constexpr auto kCalculateSwathDoc = R"doc(
@@ -136,8 +144,8 @@ inline auto init_crossover(nb::module_& m) -> void {
         "lon2"_a, "lat2"_a, "predicate"_a, "allow_multiple"_a = false,
         "use_cartesian"_a = true,
         "strategy"_a = geographic::StrategyMethod::kVincenty,
-        "spheroid"_a = std::nullopt, kFindCrossoverDoc,
-        nb::call_guard<nb::gil_scoped_release>());
+        "spheroid"_a = std::nullopt, "assume_unimodal"_a = false,
+        kFindCrossoverDoc, nb::call_guard<nb::gil_scoped_release>());
 }
 
 inline auto init_algorithms(nb::module_& m) -> void { init_crossover(m); }
