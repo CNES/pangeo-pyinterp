@@ -458,8 +458,13 @@ class Binning1D : public Binning2D<T> {
         if (xi >= x_min_ && xi <= x_max_) {
           const auto ix = x_axis.find_index(xi, true);
           if (ix != -1) {
-            const auto weight = weights ? (*weights)(idx) : T{1};
-            this->acc_(ix, 0)(value, weight);
+            // Without weights, the unit-weight update is cheaper than merging
+            // a single-sample accumulator.
+            if (weights) {
+              this->acc_(ix, 0)(value, (*weights)(idx));
+            } else {
+              this->acc_(ix, 0)(value);
+            }
           }
         }
       }
