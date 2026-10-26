@@ -84,6 +84,7 @@ class TDigest {
     centroids_.clear();
     unmerged_.clear();
     count_ = 0;
+    weight_ = T{0};
     min_ = std::numeric_limits<T>::max();
     max_ = std::numeric_limits<T>::lowest();
   }
@@ -97,6 +98,7 @@ class TDigest {
     }
 
     count_ += 1;
+    weight_ += weight;
     min_ = std::min(min_, value);
     max_ = std::max(max_, value);
 
@@ -125,13 +127,15 @@ class TDigest {
     }
 
     count_ += other.count_;
+    weight_ += other.weight_;
     min_ = std::min(min_, other.min_);
     max_ = std::max(max_, other.max_);
 
-    // Add all centroids from other to unmerged
-    for (const auto& centroid : other.centroids_) {
-      unmerged_.push_back(centroid);
-    }
+    // Flush the values the other digest has not merged yet, then add its
+    // centroids to the unmerged buffer.
+    other.merge_unmerged();
+    unmerged_.insert(unmerged_.end(), other.centroids_.begin(),
+                     other.centroids_.end());
 
     merge_unmerged();
   }
@@ -153,16 +157,8 @@ class TDigest {
 
   /// @brief Get total weight (same as count for uniform weights)
   /// @return The total weight
-  [[nodiscard]] auto sum_of_weights() const noexcept -> T {
-    if (!unmerged_.empty()) {
-      merge_unmerged();
-    }
-
-    T total{0};
-    for (const auto& c : centroids_) {
-      total += c.weight;
-    }
-    return total;
+  [[nodiscard]] constexpr auto sum_of_weights() const noexcept -> T {
+    return weight_;
   }
 
   /// @brief Get number of centroids
@@ -202,6 +198,8 @@ class TDigest {
   size_t compression_{100};
   /// Total count of values added
   uint64_t count_{0};
+  /// Total weight of the values added
+  T weight_{0};
   /// Minimum value added
   T min_{std::numeric_limits<T>::max()};
   /// Maximum value added
@@ -213,7 +211,8 @@ class TDigest {
   mutable std::vector<Centroid<T>> unmerged_{};
 
   /// Scale function k(q, δ) - controls cluster size distribution
-  /// Uses asin scaling for better accuracy at tails
+  /// Uses asin scaling (k1) for better accuracy at tails: k spans
+  /// compression / 2 units over [0, 1], and a cluster may cover at most one.
   [[nodiscard]] auto k_scale(const T q) const noexcept -> T {
     const T delta =
         static_cast<T>(compression_) / (T{2} * std::numbers::pi_v<T>);
@@ -224,18 +223,20 @@ class TDigest {
   [[nodiscard]] auto k_scale_inv(const T k) const noexcept -> T {
     const T delta =
         static_cast<T>(compression_) / (T{2} * std::numbers::pi_v<T>);
-    return (std::sin(k / delta) + T{1}) / T{2};
-  }
-
-  /// Compute maximum cluster weight at quantile q
-  [[nodiscard]] auto q_weight(const T q) const noexcept -> T {
-    const T min_q = std::max(q - k_scale(q) / static_cast<T>(count_), T{0});
-    const T max_q = std::min(q + k_scale(q) / static_cast<T>(count_), T{1});
-    return static_cast<T>(count_) * (max_q - min_q);
+    const T angle = k / delta;
+    // Past the end of the range, sin would decrease again.
+    if (angle >= std::numbers::pi_v<T> / T{2}) {
+      return T{1};
+    }
+    return (std::sin(angle) + T{1}) / T{2};
   }
 
   /// Merge unmerged centroids into main list
   auto merge_unmerged() const -> void;
+
+  /// Merge adjacent centroids, sorted by mean, as allowed by the scale
+  /// function
+  auto compact() const -> void;
 
   /// Force compression to target size
   auto compress() -> void;
@@ -272,7 +273,7 @@ auto TDigest<T>::quantile(const T q) const -> T {
     return max_;
   }
 
-  const T index = q * static_cast<T>(count_);
+  const T index = q * weight_;
   T weight_sum{0};
 
   // Find the centroid containing the quantile
@@ -352,45 +353,42 @@ auto TDigest<T>::merge_unmerged() const -> void {
                        return a.mean < b.mean;
                      });
 
-  // In-place compaction using two-pointer approach
-  if (centroids_.empty()) {
-    unmerged_.clear();
+  unmerged_.clear();
+  compact();
+}
+
+// ////////////////////////////////////////////////////////////////////////////
+
+template <std::floating_point T>
+auto TDigest<T>::compact() const -> void {
+  if (centroids_.size() < 2) {
     return;
   }
 
-  const T inv_count = T{1} / static_cast<T>(count_);
+  // Merging t-digest: a cluster grows while the quantile range it covers
+  // stays within one unit of the scale function, starting from the quantile
+  // of its left edge.
+  const T total = weight_;
   auto write_it = centroids_.begin();
   T weight_so_far{0};
+  T weight_limit = total * k_scale_inv(k_scale(T{0}) + T{1});
 
-  for (auto read_it = centroids_.begin(); read_it != centroids_.end();
-       ++read_it) {
-    const T q = (weight_so_far + read_it->weight / T{2}) * inv_count;
-    const T max_weight = q_weight(q);
-
-    if (write_it != read_it && read_it != centroids_.begin() &&
-        write_it->weight + read_it->weight <= max_weight) {
-      // Merge read_it into write_it
-      const T old_weight = write_it->weight;
-      const T new_weight = old_weight + read_it->weight;
+  for (auto read_it = std::next(centroids_.begin());
+       read_it != centroids_.end(); ++read_it) {
+    if (weight_so_far + write_it->weight + read_it->weight <= weight_limit) {
+      const T new_weight = write_it->weight + read_it->weight;
       write_it->mean = std::fma(read_it->weight, read_it->mean,
-                                old_weight * write_it->mean) /
+                                write_it->weight * write_it->mean) /
                        new_weight;
       write_it->weight = new_weight;
     } else {
-      // Start new centroid
-      if (read_it != centroids_.begin()) {
-        weight_so_far += write_it->weight;
-        ++write_it;
-      }
-      if (write_it != read_it) {
-        *write_it = *read_it;
-      }
+      weight_so_far += write_it->weight;
+      weight_limit = total * k_scale_inv(k_scale(weight_so_far / total) + T{1});
+      *(++write_it) = *read_it;
     }
   }
 
-  // Finalize by keeping only compacted centroids
   centroids_.erase(std::next(write_it), centroids_.end());
-  unmerged_.clear();
 }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -398,28 +396,7 @@ auto TDigest<T>::merge_unmerged() const -> void {
 template <std::floating_point T>
 auto TDigest<T>::compress() -> void {
   merge_unmerged();
-
-  while (centroids_.size() > compression_) {
-    // Simple compression: merge adjacent centroids
-    T min_diff = std::numeric_limits<T>::max();
-    size_t min_idx = 0;
-
-    for (size_t i = 0; i < centroids_.size() - 1; ++i) {
-      const T diff = centroids_[i + 1].mean - centroids_[i].mean;
-      if (diff < min_diff) {
-        min_diff = diff;
-        min_idx = i;
-      }
-    }
-
-    // Merge centroids at min_idx and min_idx + 1
-    auto& c1 = centroids_[min_idx];
-    const auto& c2 = centroids_[min_idx + 1];
-    const T new_weight = c1.weight + c2.weight;
-    c1.mean = std::fma(c2.weight, c2.mean, c1.weight * c1.mean) / new_weight;
-    c1.weight = new_weight;
-    centroids_.erase(centroids_.begin() + min_idx + 1);
-  }
+  compact();
 }
 
 // ////////////////////////////////////////////////////////////////////////////
@@ -462,6 +439,9 @@ auto TDigest<T>::unpack(serialization::Reader& state) -> TDigest<T> {
   digest.max_ = state.read<T>();
   digest.compression_ = state.read<size_t>();
   digest.centroids_ = state.read_vector<Centroid<T>>();
+  for (const auto& centroid : digest.centroids_) {
+    digest.weight_ += centroid.weight;
+  }
   return digest;
 }
 

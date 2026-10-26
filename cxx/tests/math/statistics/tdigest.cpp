@@ -661,4 +661,57 @@ TEST(MathTDigest, CentroidComparison) {
   EXPECT_FALSE(c3.mean < c1.mean);  // Same mean
 }
 
+// The number of centroids must stay bounded by the compression, whatever the
+// number of values: below the median as well as above it.
+TEST(MathTDigest, SizeBoundedByCompression) {
+  auto digest = TDigest<double>(100);
+  auto gen = std::mt19937(42);
+  auto normal = std::normal_distribution<>(0.0, 1.0);
+  auto values = std::vector<double>(200'000);
+  for (auto& value : values) {
+    value = normal(gen);
+    digest.add(value);
+  }
+  EXPECT_LE(digest.size(), 100);
+
+  std::ranges::sort(values);
+  for (const auto q : {0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 0.99}) {
+    EXPECT_NEAR(digest.quantile(q), quantile(values, q), 0.02) << "q=" << q;
+  }
+}
+
+// Quantiles are positions in the cumulative weight, not in the number of
+// values.
+TEST(MathTDigest, WeightedQuantileUsesTotalWeight) {
+  auto digest = TDigest<double>();
+  for (auto ix = 0; ix < 1000; ++ix) {
+    digest.add(static_cast<double>(ix), 2.0);
+  }
+  EXPECT_EQ(digest.count(), 1000);
+  EXPECT_EQ(digest.sum_of_weights(), 2000.0);
+  EXPECT_NEAR(digest.quantile(0.5), 500.0, 10.0);
+  EXPECT_NEAR(digest.quantile(0.9), 900.0, 10.0);
+}
+
+// Values still in the buffer of the merged digest must not be lost.
+TEST(MathTDigest, MergeFlushesUnmergedValues) {
+  auto digest1 = TDigest<double>();
+  auto digest2 = TDigest<double>();
+  for (auto ix = 0; ix < 50; ++ix) {
+    digest1.add(static_cast<double>(ix));
+    digest2.add(static_cast<double>(ix + 50));
+  }
+  digest1 += digest2;
+  EXPECT_EQ(digest1.count(), 100);
+  EXPECT_EQ(digest1.sum_of_weights(), 100.0);
+  EXPECT_NEAR(digest1.mean(), 49.5, 1e-9);
+  EXPECT_NEAR(digest1.quantile(0.75), 74.5, 2.0);
+
+  // Adding a digest to itself doubles every weight.
+  digest1 += digest1;
+  EXPECT_EQ(digest1.count(), 200);
+  EXPECT_EQ(digest1.sum_of_weights(), 200.0);
+  EXPECT_NEAR(digest1.mean(), 49.5, 1e-9);
+}
+
 }  // namespace pyinterp::math
