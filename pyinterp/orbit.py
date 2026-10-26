@@ -411,7 +411,8 @@ class EquatorCoordinates:
     @classmethod
     def undefined(cls) -> EquatorCoordinates:
         """Create an undefined instance."""
-        return cls(np.nan, np.datetime64("NaT"))
+        # An explicit unit: NaT without one has the deprecated generic unit.
+        return cls(np.nan, np.datetime64("NaT", "ns"))
 
 
 @dataclasses.dataclass(frozen=True)
