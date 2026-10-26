@@ -201,9 +201,9 @@ void smooth(GridType& grid, const RhsType& rhs, const Matrix<bool>& mask,
             const bool is_periodic, const Type relaxation,
             const size_t num_sweeps, const size_t num_threads) {
   // Use the shared red-black Gauss-Seidel implementation
+  const auto cells = detail::RedBlackCells(mask, is_periodic);
   for (size_t sweep = 0; sweep < num_sweeps; ++sweep) {
-    detail::gauss_seidel_core<Type>(grid, rhs, mask, is_periodic, relaxation,
-                                    num_threads);
+    detail::gauss_seidel_sweep<Type>(grid, rhs, cells, relaxation, num_threads);
   }
 }
 

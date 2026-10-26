@@ -4,21 +4,115 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 
+#include <algorithm>
+#include <array>
 #include <cmath>
-#include <exception>
+#include <cstddef>
+#include <cstdint>
+#include <mutex>
 #include <stdexcept>
 #include <string>
-#include <thread>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 #include "pyinterp/config/fill.hpp"
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/fill/boundary.hpp"
 #include "pyinterp/fill/helpers.hpp"
+#include "pyinterp/parallel_for.hpp"
 
 namespace pyinterp::fill {
 namespace detail {
+
+/// @brief Unknown cells of a grid, split into the red and black colours of
+/// the Gauss-Seidel ordering, with their neighbours resolved.
+///
+/// Building the list once replaces, on every sweep, a scan of the whole grid
+/// and the evaluation of the boundary conditions for each unknown cell.
+struct RedBlackCells {
+  /// An unknown cell and the indexes of its four neighbours
+  struct Cell {
+    int64_t ix;
+    int64_t iy;
+    int64_t ix0;
+    int64_t ix1;
+    int64_t iy0;
+    int64_t iy1;
+  };
+
+  /// Cells with (ix + iy) even, then odd
+  std::array<std::vector<Cell>, 2> cells;
+
+  /// @param[in] mask Boolean mask indicating which cells to update
+  /// @param[in] is_periodic True if the X axis is periodic
+  template <typename MaskType>
+  RedBlackCells(const MaskType &mask, const bool is_periodic) {
+    const auto x_size = mask.rows();
+    const auto y_size = mask.cols();
+    fill::DynamicNeighbors nbr(x_size, y_size, is_periodic, false);
+    for (int64_t ix = 0; ix < x_size; ++ix) {
+      nbr.update_x(ix);
+      for (int64_t iy = 0; iy < y_size; ++iy) {
+        if (mask(ix, iy)) {
+          nbr.update_y(iy);
+          cells[(ix + iy) % 2].push_back(
+              {ix, iy, nbr.ix0, nbr.ix1, nbr.iy0, nbr.iy1});
+        }
+      }
+    }
+  }
+};
+
+/// @brief Performs one red-black Gauss-Seidel sweep over the unknown cells.
+///
+/// The red cells are updated first, then the black ones. Cells of one colour
+/// only read cells of the other, so each colour is split between the threads
+/// without changing the result.
+///
+/// @tparam Type Data type
+/// @tparam GridType Type of the grid to be updated
+/// @tparam RhsType Type of the right-hand side, or std::nullptr_t for the
+/// homogeneous case (f = 0)
+/// @param grid The grid to be updated
+/// @param rhs The right-hand side (f in Au = f), or nullptr
+/// @param cells Unknown cells of the grid
+/// @param relaxation SOR relaxation parameter (1.0 = pure Gauss-Seidel)
+/// @param num_threads Number of threads for parallel execution
+/// @return Maximum correction applied to a cell
+template <typename Type, typename GridType, typename RhsType>
+auto gauss_seidel_sweep(GridType &grid, const RhsType &rhs,
+                        const RedBlackCells &cells, const Type relaxation,
+                        const size_t num_threads) -> Type {
+  auto max_residual = Type(0);
+  auto mutex = std::mutex();
+
+  for (const auto &colour : cells.cells) {
+    parallel_for(
+        static_cast<int64_t>(colour.size()),
+        [&](const int64_t start, const int64_t end) {
+          auto local_max = Type(0);
+          for (auto ix = start; ix < end; ++ix) {
+            const auto &item = colour[ix];
+            // For Au = f: u_new = 0.25 * (neighbors + f)
+            // residual = (u_new - u_old) is the correction applied
+            auto sum = grid(item.ix0, item.iy) + grid(item.ix1, item.iy) +
+                       grid(item.ix, item.iy0) + grid(item.ix, item.iy1);
+            if constexpr (!std::is_same_v<RhsType, std::nullptr_t>) {
+              sum += rhs(item.ix, item.iy);
+            }
+            auto &cell = grid(item.ix, item.iy);
+            const auto residual = (Type(0.25) * sum - cell) * relaxation;
+            cell += residual;
+            local_max = std::max(local_max, std::fabs(residual));
+          }
+          auto lock = std::scoped_lock(mutex);
+          max_residual = std::max(max_residual, local_max);
+        },
+        static_cast<int64_t>(num_threads));
+  }
+  return max_residual;
+}
 
 /// @brief Performs red-black Gauss-Seidel smoothing with optional RHS.
 ///
@@ -38,112 +132,8 @@ template <typename Type, typename GridType, typename RhsType, typename MaskType>
 auto gauss_seidel_core(GridType &grid, const RhsType &rhs, const MaskType &mask,
                        const bool is_periodic, const Type relaxation,
                        const size_t num_threads) -> Type {
-  // Shape of the grid
-  auto x_size = grid.rows();
-  auto y_size = grid.cols();
-
-  // Captures the detected exceptions in the calculation function
-  // (only the last exception captured is kept)
-  auto except = std::exception_ptr(nullptr);
-
-  // Thread worker responsible for processing red or black cells.
-  // @param y_start First index y of the band to be processed.
-  // @param y_end Last index y, excluded, of the band to be processed.
-  // @param red_black Whether the band is red or black.
-  // @param max_residual Maximum residual of this strip.
-  auto worker = [&](const int64_t y_start, const int64_t y_end,
-                    const int red_black, Type *max_residual) -> void {
-    // Update the cell grid[ix, iy] using the Gauss-Seidel method.
-    //
-    // @param nbr Neighbor indices structure
-    // @param ix Index x of the pixel to be modified.
-    // @param iy Index y of the pixel to be modified.
-    auto cell_fill = [&grid, &rhs, &relaxation, &max_residual](
-                         const fill::DynamicNeighbors &nbr, const int64_t ix,
-                         const int64_t iy) {
-      auto &cell = grid(ix, iy);
-      // For Au = f: u_new = 0.25 * (neighbors + f)
-      // residual = (u_new - u_old) is the correction applied
-      auto residual =
-          (Type(0.25) * (grid(nbr.ix0, iy) + grid(nbr.ix1, iy) +
-                         grid(ix, nbr.iy0) + grid(ix, nbr.iy1) + rhs(ix, iy)) -
-           cell) *
-          relaxation;
-      cell += residual;
-      *max_residual = std::max(*max_residual, std::fabs(residual));
-    };
-
-    // Initialization of the maximum value of the residuals of the processed
-    // thread.
-    *max_residual = Type(0);
-
-    try {
-      // Create boundary helper once for this thread
-      fill::DynamicNeighbors nbr(x_size, y_size, is_periodic, false);
-
-      for (auto ix = 0; ix < x_size; ++ix) {
-        // Update x-neighbors once per row
-        nbr.update_x(ix);
-
-        for (auto iy = y_start; iy < y_end; ++iy) {
-          if (mask(ix, iy) && ((ix + iy) % 2) == red_black) {
-            // Update y-neighbors for current cell
-            nbr.update_y(iy);
-            cell_fill(nbr, ix, iy);
-          }
-        }
-      }
-    } catch (...) {
-      except = std::current_exception();
-    }
-  };
-
-  if (num_threads == 1) {
-    // Single thread processing.
-    //
-    // @param red_black Whether the band is red or black.
-    // @return Maximum residual of this strip.
-    auto calculate = [&](int red_black) -> Type {
-      auto max_residual = Type(0);
-      worker(0, y_size, red_black, &max_residual);
-      if (except != nullptr) {
-        std::rethrow_exception(except);
-      }
-      return max_residual;
-    };
-    return std::max(calculate(0), calculate(1));
-  }
-
-  // Launches the threads for a red or black band.
-  //
-  // @param red_black Whether the band is red or black.
-  // @return The maximum residual of the processed band.
-  auto calculate = [&](const int red_black) -> Type {
-    int64_t start = 0;
-    int64_t shift = y_size / num_threads;
-
-    // Handled threads
-    std::vector<std::thread> threads;
-
-    // Maximum residual values for each thread.
-    std::vector<Type> max_residuals(num_threads);
-
-    for (size_t index = 0; index < num_threads - 1; ++index) {
-      threads.emplace_back(std::thread(worker, start, start + shift, red_black,
-                                       &max_residuals[index]));
-      start += shift;
-    }
-    threads.emplace_back(std::thread(worker, start, y_size, red_black,
-                                     &max_residuals[num_threads - 1]));
-    for (auto &&item : threads) {
-      item.join();
-    }
-    if (except != nullptr) {
-      std::rethrow_exception(except);
-    }
-    return *std::max_element(max_residuals.begin(), max_residuals.end());
-  };
-  return std::max(calculate(0), calculate(1));
+  return gauss_seidel_sweep<Type>(grid, rhs, RedBlackCells(mask, is_periodic),
+                                  relaxation, num_threads);
 }
 
 /// @brief Wrapper for backward compatibility: Gauss-Seidel for homogeneous case
@@ -152,10 +142,8 @@ template <typename Type>
 auto gauss_seidel(EigenDRef<RowMajorMatrix<Type>> grid, Matrix<bool> &mask,
                   const bool is_periodic, const Type relaxation,
                   const size_t num_threads) -> Type {
-  // Create zero RHS for homogeneous case
-  Matrix<Type> rhs = Matrix<Type>::Zero(grid.rows(), grid.cols());
-  return gauss_seidel_core<Type>(grid, rhs, mask, is_periodic, relaxation,
-                                 num_threads);
+  return gauss_seidel_sweep<Type>(
+      grid, nullptr, RedBlackCells(mask, is_periodic), relaxation, num_threads);
 }
 
 }  // namespace detail
@@ -198,11 +186,12 @@ template <typename Type>
   size_t iteration = 0;
   Type max_residual = 0;
 
+  const auto cells = detail::RedBlackCells(mask, config.is_periodic());
   for (size_t it = 0; it < config.max_iterations(); ++it) {
     ++iteration;
-    max_residual = detail::gauss_seidel<Type>(
-        grid, mask, config.is_periodic(),
-        static_cast<Type>(config.relaxation()), config.num_threads());
+    max_residual = detail::gauss_seidel_sweep<Type>(
+        grid, nullptr, cells, static_cast<Type>(config.relaxation()),
+        config.num_threads());
     if (max_residual < static_cast<Type>(config.epsilon())) {
       break;
     }
