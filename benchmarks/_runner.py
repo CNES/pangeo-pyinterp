@@ -127,12 +127,17 @@ class Timer:
         func = case.setup()
         func()  # Warm-up: page faults, lazy initialization, caches.
         times: list[float] = []
+        # Time spent on the case, rebuilding the inputs included: a fast
+        # operation whose inputs are slow to build would otherwise repeat up
+        # to max_repeat times, spending nearly all the time in setup.
         total = 0.0
         while len(times) < self.max_repeat and (
             len(times) < self.min_repeat or total < self.min_time
         ):
             if case.fresh:
+                start = time.perf_counter()
                 func = case.setup()
+                total += time.perf_counter() - start
             # The collector would otherwise fire at random inside the timed
             # region when an operation allocates many Python objects.
             gc.disable()
