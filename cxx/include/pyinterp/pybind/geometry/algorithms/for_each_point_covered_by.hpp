@@ -7,8 +7,10 @@
 
 #include <Eigen/Core>
 #include <boost/geometry.hpp>
+#include <type_traits>
 
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
+#include "pyinterp/pybind/geometry/algorithms/envelope_filter.hpp"
 
 namespace pyinterp::geometry::pybind {
 
@@ -38,9 +40,13 @@ inline auto init_for_each_point_covered_by(nanobind::module_& m) -> void {
       [](const auto& source,
          const auto& container) -> Eigen::Matrix<bool, Eigen::Dynamic, 1> {
     nanobind::gil_scoped_release release;
+    using Point = std::remove_cvref_t<decltype(source[0])>;
+    using Container = std::remove_cvref_t<decltype(container)>;
+    const auto filter = EnvelopeFilter<NS, Point, Container>(container);
     Eigen::Matrix<bool, Eigen::Dynamic, 1> result(source.size());
     for (std::size_t i = 0; i < source.size(); ++i) {
-      result(i) = boost::geometry::covered_by(source[i], container);
+      result(i) = filter.may_contain(source[i]) &&
+                  boost::geometry::covered_by(source[i], container);
     }
     return result;
   };
