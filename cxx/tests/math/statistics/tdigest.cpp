@@ -12,6 +12,7 @@
 #include <cstddef>
 #include <limits>
 #include <random>
+#include <span>
 #include <stdexcept>
 #include <vector>
 
@@ -712,6 +713,35 @@ TEST(MathTDigest, MergeFlushesUnmergedValues) {
   EXPECT_EQ(digest1.count(), 200);
   EXPECT_EQ(digest1.sum_of_weights(), 200.0);
   EXPECT_NEAR(digest1.mean(), 49.5, 1e-9);
+}
+
+// The single-pass quantiles return exactly what quantile() returns.
+TEST(MathTDigest, QuantilesMatchQuantile) {
+  auto digest = TDigest<double>(100);
+  auto gen = std::mt19937(7);
+  auto normal = std::normal_distribution<>(0.0, 1.0);
+  for (auto ix = 0; ix < 5000; ++ix) {
+    digest.add(normal(gen), 0.5 + (ix % 3));
+  }
+  auto sorted = std::vector<double>{0.0, 0.0,  1e-6, 0.01,       0.25, 0.25,
+                                    0.5, 0.75, 0.99, 1.0 - 1e-9, 1.0};
+  auto values = std::vector<double>(sorted.size());
+  digest.quantiles(
+      std::span<const double>(sorted),
+      [&](const size_t k, const double value) { values[k] = value; });
+  for (size_t k = 0; k < sorted.size(); ++k) {
+    EXPECT_EQ(values[k], digest.quantile(sorted[k])) << "q=" << sorted[k];
+  }
+
+  // Empty digest and out-of-range quantile
+  auto empty = TDigest<double>();
+  empty.quantiles(
+      std::span<const double>(sorted),
+      [](size_t, const double value) { EXPECT_TRUE(std::isnan(value)); });
+  auto invalid = std::vector<double>{0.5, 1.5};
+  EXPECT_THROW(
+      digest.quantiles(std::span<const double>(invalid), [](size_t, double) {}),
+      std::invalid_argument);
 }
 
 }  // namespace pyinterp::math

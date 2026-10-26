@@ -6,9 +6,11 @@
 
 #include <nanobind/nanobind.h>
 
+#include <algorithm>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <numeric>
 #include <optional>
 #include <ranges>
 #include <utility>
@@ -365,10 +367,23 @@ auto TDigest<T>::quantile(const Eigen::Ref<const Eigen::VectorX<T>>& quantiles)
   const auto n_quantiles = quantiles.size();
   Eigen::MatrixX<T> result(n_digests, n_quantiles);
 
+  // Sort the quantiles once, so that each digest computes them all in a
+  // single pass over its centroids, then scatter them back in the requested
+  // order.
+  auto order = std::vector<int64_t>(static_cast<size_t>(n_quantiles));
+  std::iota(order.begin(), order.end(), int64_t{0});
+  std::ranges::stable_sort(order, [&](const int64_t a, const int64_t b) {
+    return quantiles[a] < quantiles[b];
+  });
+  auto sorted = std::vector<T>(order.size());
+  for (size_t k = 0; k < order.size(); ++k) {
+    sorted[k] = quantiles[order[k]];
+  }
+
   for (int64_t i = 0; std::cmp_less(i, n_digests); ++i) {
-    for (int64_t j = 0; std::cmp_less(j, n_quantiles); ++j) {
-      result(i, j) = digests_[static_cast<size_t>(i)].quantile(quantiles[j]);
-    }
+    digests_[static_cast<size_t>(i)].quantiles(
+        sorted,
+        [&](const size_t k, const T value) { result(i, order[k]) = value; });
   }
   return result;
 }

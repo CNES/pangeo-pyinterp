@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <limits>
 #include <numbers>
+#include <span>
 #include <stdexcept>
 #include <vector>
 
@@ -175,6 +176,13 @@ class TDigest {
   /// @return Estimated quantile value
   [[nodiscard]] auto quantile(const T q) const -> T;
 
+  /// @brief Calculate several quantiles in a single pass over the centroids
+  /// @param[in] sorted Quantiles in range [0, 1], in increasing order
+  /// @param[in] output Called as output(k, value) for the k-th quantile; the
+  /// values are those quantile() would return
+  template <typename Output>
+  auto quantiles(std::span<const T> sorted, Output&& output) const -> void;
+
   /// @brief Calculate mean
   /// @return The mean value
   [[nodiscard]] auto mean() const -> T;
@@ -234,6 +242,11 @@ class TDigest {
   /// Merge unmerged centroids into main list
   auto merge_unmerged() const -> void;
 
+  /// Value at a cumulative weight, scanning the centroids from the position
+  /// (position, weight_so_far) left by a smaller weight, which is updated.
+  [[nodiscard]] auto locate(T index, size_t& position, T& weight_so_far) const
+      -> T;
+
   /// Merge adjacent centroids, sorted by mean, as allowed by the scale
   /// function
   auto compact() const -> void;
@@ -273,37 +286,81 @@ auto TDigest<T>::quantile(const T q) const -> T {
     return max_;
   }
 
-  const T index = q * weight_;
+  size_t position = 0;
   T weight_sum{0};
+  return locate(q * weight_, position, weight_sum);
+}
 
+// ////////////////////////////////////////////////////////////////////////////
+
+template <std::floating_point T>
+auto TDigest<T>::locate(const T index, size_t& position, T& weight_so_far) const
+    -> T {
   // Find the centroid containing the quantile
-  for (size_t i = 0; i < centroids_.size(); ++i) {
-    const T half_weight = centroids_[i].weight / T{2};
+  const auto size = centroids_.size();
+  for (; position < size; ++position) {
+    const auto& centroid = centroids_[position];
+    const T half_weight = centroid.weight / T{2};
 
-    if (weight_sum + half_weight >= index) {
+    if (weight_so_far + half_weight >= index) {
       // Interpolate within/before this centroid
-      if (i == 0) {
-        return std::fma((index - weight_sum) / half_weight,
-                        centroids_[i].mean - min_, min_);
+      if (position == 0) {
+        return std::fma((index - weight_so_far) / half_weight,
+                        centroid.mean - min_, min_);
       }
-      const auto left_mean = centroids_[i - 1].mean;
-      const auto left_weight = weight_sum - centroids_[i - 1].weight / T{2};
-      const auto right_weight = weight_sum + half_weight;
+      const auto& left = centroids_[position - 1];
+      const auto left_weight = weight_so_far - left.weight / T{2};
+      const auto right_weight = weight_so_far + half_weight;
 
       return std::fma((index - left_weight) / (right_weight - left_weight),
-                      centroids_[i].mean - left_mean, left_mean);
+                      centroid.mean - left.mean, left.mean);
     }
-
-    weight_sum += centroids_[i].weight;
-
-    if (i == centroids_.size() - 1) {
-      // Past last centroid - interpolate to max
-      return std::fma((index - weight_sum) / half_weight,
-                      max_ - centroids_[i].mean, centroids_[i].mean);
-    }
+    weight_so_far += centroid.weight;
   }
 
-  return centroids_.back().mean;
+  // Past last centroid - interpolate to max
+  const auto& last = centroids_.back();
+  return std::fma((index - weight_so_far) / (last.weight / T{2}),
+                  max_ - last.mean, last.mean);
+}
+
+// ////////////////////////////////////////////////////////////////////////////
+
+template <std::floating_point T>
+template <typename Output>
+auto TDigest<T>::quantiles(std::span<const T> sorted, Output&& output) const
+    -> void {
+  const auto nan = std::numeric_limits<T>::quiet_NaN();
+  if (centroids_.empty() && unmerged_.empty()) [[unlikely]] {
+    for (size_t ix = 0; ix < sorted.size(); ++ix) {
+      output(ix, nan);
+    }
+    return;
+  }
+  for (const auto q : sorted) {
+    if (q < T{0} || q > T{1}) [[unlikely]] {
+      throw std::invalid_argument("Quantile must be in the range [0, 1]");
+    }
+  }
+  if (!unmerged_.empty()) {
+    merge_unmerged();
+  }
+
+  // A larger quantile resumes the scan where the previous one stopped
+  size_t position = 0;
+  T weight_sum{0};
+  for (size_t ix = 0; ix < sorted.size(); ++ix) {
+    const auto q = sorted[ix];
+    if (centroids_.empty()) [[unlikely]] {
+      output(ix, nan);
+    } else if (q == T{0} || centroids_.size() == 1) {
+      output(ix, min_);
+    } else if (q == T{1}) {
+      output(ix, max_);
+    } else {
+      output(ix, locate(q * weight_, position, weight_sum));
+    }
+  }
 }
 
 // ////////////////////////////////////////////////////////////////////////////
