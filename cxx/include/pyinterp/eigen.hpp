@@ -36,6 +36,17 @@ using RowMajorComplexMatrix = Eigen::Matrix<std::complex<T>, Eigen::Dynamic,
 template <typename T>
 using EigenRefBlock = Eigen::Ref<Vector<T>, 0, Eigen::InnerStride<>>;
 
+/// @brief Read-only reference to a contiguous vector.
+///
+/// Binds to vectors, maps and contiguous blocks without copying them, unlike
+/// `const Vector<T>&`, which materializes a temporary for anything but a
+/// Vector. A strided argument is copied. The contiguous layout is kept on
+/// purpose: with a run-time stride, the loops of the spline solvers are no
+/// longer vectorized.
+/// @tparam T The data type of the vector elements.
+template <typename T>
+using ConstVectorRef = Eigen::Ref<const Vector<T>>;
+
 /// @brief Dynamic stride type
 using EigenDStride = Eigen::Stride<Eigen::Dynamic, Eigen::Dynamic>;
 
