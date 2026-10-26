@@ -16,6 +16,7 @@
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/geometry/strategies/default_strategy.hpp>
 #include <concepts>
+#include <iterator>
 #include <limits>
 #include <optional>
 #include <stdexcept>
@@ -294,6 +295,21 @@ class RTree {
   static constexpr uint32_t kMagicNumber =
       0x52545452 + dimension_t::value + value_traits<Type>::serialization_tag;
 
+  /// Searches the k nearest neighbors of a point, sorted by increasing
+  /// distance computed with the given strategy.
+  ///
+  /// Runs the non-incremental query of the tree, which returns the
+  /// neighbors in no particular order, into buffers reused by the calls of
+  /// the same thread: the incremental query is noticeably slower and
+  /// allocates for every point.
+  ///
+  /// @return The (distance, value) pairs, valid until the next call from the
+  /// same thread.
+  template <typename Strategy>
+  [[nodiscard]] auto nearest_k(const Point& point, uint32_t k,
+                               const Strategy& strategy) const
+      -> const std::vector<std::pair<distance_t, value_t>>&;
+
   /// Verifies if the point satisfies the requested boundary condition.
   [[nodiscard]] auto is_boundary_valid(
       const Point& point,
@@ -320,21 +336,42 @@ auto RTree<Point, Type>::query(const Point& point, const uint32_t k,
     points.reserve(k);
   }
 
-  auto query_range = tree_.qbegin(boost::geometry::index::nearest(point, k));
-  std::ranges::for_each(query_range, tree_.qend(), [&](const auto& item) {
-    auto distance = boost::geometry::distance(point, item.first, strategy);
+  for (const auto& [distance, item] : nearest_k(point, k, strategy)) {
     if (distance <= radius) {
       result.emplace_back(distance, item.second);
       if (check != BoundaryCheck::kNone) {
         points.emplace_back(item.first);
       }
     }
-  });
+  }
 
   if (!is_boundary_valid(point, points, check)) {
     return {};
   }
   return result;
+}
+
+// ============================================================================
+
+template <typename Point, typename Type>
+template <typename Strategy>
+auto RTree<Point, Type>::nearest_k(const Point& point, const uint32_t k,
+                                   const Strategy& strategy) const
+    -> const std::vector<std::pair<distance_t, value_t>>& {
+  thread_local std::vector<value_t> found;
+  thread_local std::vector<std::pair<distance_t, value_t>> sorted;
+  found.clear();
+  sorted.clear();
+
+  tree_.query(boost::geometry::index::nearest(point, k),
+              std::back_inserter(found));
+  for (const auto& item : found) {
+    sorted.emplace_back(static_cast<distance_t>(boost::geometry::distance(
+                            point, item.first, strategy)),
+                        item);
+  }
+  std::ranges::sort(sorted, {}, &std::pair<distance_t, value_t>::first);
+  return sorted;
 }
 
 // ============================================================================
@@ -379,15 +416,14 @@ auto RTree<Point, Type>::value(const Point& point, const coordinate_t& radius,
     points.reserve(k);
   }
 
-  auto query_range = tree_.qbegin(boost::geometry::index::nearest(point, k));
-  std::ranges::for_each(query_range, tree_.qend(), [&](const auto& item) {
-    if (boost::geometry::distance(item.first, point, strategy) <= radius) {
+  for (const auto& [distance, item] : nearest_k(point, k, strategy)) {
+    if (distance <= radius) {
       result.emplace_back(item);
       if (check != BoundaryCheck::kNone) {
         points.emplace_back(item.first);
       }
     }
-  });
+  }
 
   if (!is_boundary_valid(point, points, check)) {
     return {};
@@ -554,9 +590,8 @@ auto RTree<Point, Type>::nearest(const Point& point, const coordinate_t& radius,
   auto values = Vector<promotion_t>(k);
   uint32_t count{0};
 
-  auto query_range = tree_.qbegin(boost::geometry::index::nearest(point, k));
-  std::ranges::for_each(query_range, tree_.qend(), [&](const auto& item) {
-    if (boost::geometry::distance(point, item.first, strategy) <= radius) {
+  for (const auto& [distance, item] : nearest_k(point, k, strategy)) {
+    if (distance <= radius) {
       if (check != BoundaryCheck::kNone) {
         points.emplace_back(item.first);
       }
@@ -566,7 +601,7 @@ auto RTree<Point, Type>::nearest(const Point& point, const coordinate_t& radius,
       }
       values(count++) = item.second;
     }
-  });
+  }
 
   if (check != BoundaryCheck::kNone &&
       !is_boundary_valid(point, points, check)) {

@@ -12,6 +12,7 @@
 #include <cmath>
 #include <limits>
 #include <optional>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -544,6 +545,40 @@ TEST(RTree3D, SerializeDeserialize) {
             original_bounds->max_corner().get<1>());
   EXPECT_EQ(deserialized_bounds->max_corner().get<2>(),
             original_bounds->max_corner().get<2>());
+}
+
+// The k nearest neighbors are the k smallest distances of a brute-force
+// search, returned in increasing order.
+TEST(RTree3D, KNNQuerySortedLikeBruteForce) {
+  constexpr auto kSize = 2000;
+  constexpr uint32_t kNeighbors = 16;
+  auto gen = std::mt19937(42);
+  auto uniform = std::uniform_real_distribution<>(-100.0, 100.0);
+
+  RTree3D tree;
+  std::vector<RTree3D::value_t> data;
+  for (auto ix = 0; ix < kSize; ++ix) {
+    data.push_back({Point3D(uniform(gen), uniform(gen), uniform(gen)),
+                    static_cast<double>(ix)});
+  }
+  tree.packing(data);
+
+  for (auto iq = 0; iq < 200; ++iq) {
+    const auto point = Point3D(uniform(gen), uniform(gen), uniform(gen));
+    const auto result =
+        tree.query(point, kNeighbors, std::numeric_limits<double>::max());
+    ASSERT_EQ(result.size(), kNeighbors);
+
+    auto expected = std::vector<double>();
+    for (const auto& item : data) {
+      expected.push_back(boost::geometry::distance(point, item.first));
+    }
+    std::ranges::sort(expected);
+
+    for (uint32_t ix = 0; ix < kNeighbors; ++ix) {
+      EXPECT_DOUBLE_EQ(result[ix].first, expected[ix]) << iq << " " << ix;
+    }
+  }
 }
 
 }  // namespace pyinterp::geometry
