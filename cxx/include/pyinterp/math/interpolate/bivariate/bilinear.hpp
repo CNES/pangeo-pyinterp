@@ -38,9 +38,9 @@ class Bilinear : public Bivariate<T> {
 
 template <std::floating_point T>
 constexpr auto Bilinear<T>::interpolate_(const T& x, const T& y) const -> T {
-  const auto xa = this->xa();
-  const auto ya = this->ya();
-  const auto za = this->za();
+  const auto& xa = this->xa();
+  const auto& ya = this->ya();
+  const auto& za = this->za();
   const auto search_x = this->search(xa, x);
   const auto search_y = this->search(ya, y);
 
