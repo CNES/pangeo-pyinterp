@@ -166,21 +166,44 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
       nanobind::gil_scoped_release release;
       state = base_t::pack();
     }
-    return nanobind::make_tuple(writer_to_ndarray(std::move(state)));
+    // The coordinate system and the distance are part of the state: without
+    // them, a Cartesian tree would be restored as a geodetic one.
+    nanobind::object spheroid = nanobind::none();
+    if (spheroid_) {
+      spheroid = nanobind::make_tuple(spheroid_->semi_major_axis(),
+                                      spheroid_->flattening());
+    }
+    return nanobind::make_tuple(writer_to_ndarray(std::move(state)), spheroid,
+                                static_cast<int>(distance()));
   }
 
   /// Deserialize an RTree3D from a byte buffer
   /// @param buffer Serialized data
   /// @return Deserialized RTree3D instance
   [[nodiscard]] static auto setstate(const nanobind::tuple& state) -> RTree3D {
-    if (state.size() != 1) {
+    // States of one element come from versions that did not save the
+    // coordinate system; they are restored with the WGS84 spheroid, as then.
+    if (state.size() != 1 && state.size() != 3) {
       throw std::invalid_argument("Invalid state");
+    }
+    auto spheroid = std::optional<geometry::geographic::Spheroid>(
+        geometry::geographic::Spheroid());
+    auto distance = DistanceMetric::kEuclidean;
+    if (state.size() == 3) {
+      if (state[1].is_none()) {
+        spheroid.reset();
+      } else {
+        const auto parameters = nanobind::cast<nanobind::tuple>(state[1]);
+        spheroid.emplace(nanobind::cast<double>(parameters[0]),
+                         nanobind::cast<double>(parameters[1]));
+      }
+      distance = static_cast<DistanceMetric>(nanobind::cast<int>(state[2]));
     }
     auto array = nanobind::cast<NanobindArray1DUInt8>(state[0]);
     auto reader = reader_from_ndarray(array);
     {
       nanobind::gil_scoped_release release;
-      RTree3D<T> rtree;
+      RTree3D<T> rtree(spheroid, distance);
       static_cast<base_t&>(rtree) = base_t::unpack(reader);
       return rtree;
     }
