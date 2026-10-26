@@ -15,6 +15,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 
@@ -401,7 +402,25 @@ class FractionalSeconds {
   /// @return A tuple (days, seconds, fractional)
   [[nodiscard]] constexpr auto days_since_epoch(const int64_t datetime64)
       const noexcept -> std::tuple<int64_t, int64_t, int64_t> {
-    auto [total_seconds, fractional] = epoch(datetime64);
+    return days_since_epoch(datetime64, order_of_magnitude_);
+  }
+
+  /// @brief Get days, seconds, and fractional part elapsed since 1970
+  /// @tparam Magnitude int64_t, or std::integral_constant<int64_t, N> to let
+  /// the compiler replace the divisions by multiplications (see dispatch)
+  /// @param[in] datetime64 Date encoded in a 64-bit integer
+  /// @param[in] magnitude Order of magnitude of the resolution
+  /// @return A tuple (days, seconds, fractional)
+  template <typename Magnitude>
+  [[nodiscard]] static constexpr auto days_since_epoch(
+      const int64_t datetime64, const Magnitude magnitude) noexcept
+      -> std::tuple<int64_t, int64_t, int64_t> {
+    auto total_seconds = datetime64 / magnitude;
+    auto fractional = datetime64 % magnitude;
+    if (fractional < 0) {
+      fractional += magnitude;
+      total_seconds -= 1;
+    }
     auto days = total_seconds / kSecondsInDay;
     auto seconds = total_seconds % kSecondsInDay;
     if (seconds < 0) {
@@ -409,6 +428,34 @@ class FractionalSeconds {
       seconds += kSecondsInDay;
     }
     return {days, seconds, fractional};
+  }
+
+  /// @brief Call a function with the order of magnitude of the resolution as
+  /// a compile-time constant (std::integral_constant<int64_t, N>).
+  ///
+  /// Dividing by a runtime value costs a hardware division per date, much
+  /// slower than the multiplication the compiler uses for a constant.
+  ///
+  /// @param[in] func Function taking the magnitude
+  /// @return The result of func
+  template <typename Function>
+  constexpr auto dispatch(Function&& func) const -> decltype(auto) {
+    switch (order_of_magnitude_) {
+      case kSecond:
+        return func(std::integral_constant<int64_t, kSecond>{});
+      case kMillisecond:
+        return func(std::integral_constant<int64_t, kMillisecond>{});
+      case kMicrosecond:
+        return func(std::integral_constant<int64_t, kMicrosecond>{});
+      case kNanosecond:
+        return func(std::integral_constant<int64_t, kNanosecond>{});
+      case kPicoSecond:
+        return func(std::integral_constant<int64_t, kPicoSecond>{});
+      case kFemtoSecond:
+        return func(std::integral_constant<int64_t, kFemtoSecond>{});
+      default:
+        return func(std::integral_constant<int64_t, kAttosecond>{});
+    }
   }
 
   /// @brief Get the maximum number of digits for the fractional part
@@ -455,37 +502,6 @@ class FractionalSeconds {
  private:
   /// @brief Order of magnitude of the resolution
   int64_t order_of_magnitude_;
-
-  /// @brief Get the number of seconds elapsed since 1970
-  /// @param[in] datetime64 Date encoded in a 64-bit integer
-  /// @return Number of seconds elapsed since 1970
-  [[nodiscard]] constexpr auto seconds(const int64_t datetime64) const noexcept
-      -> int64_t {
-    return datetime64 / order_of_magnitude_;
-  }
-
-  /// @brief Get the fractional part of the date
-  /// @param[in] datetime64 Date encoded in a 64-bit integer
-  /// @return Fractional part of the date
-  [[nodiscard]] constexpr auto fractional(
-      const int64_t datetime64) const noexcept -> int64_t {
-    return datetime64 % order_of_magnitude_;
-  }
-
-  /// @brief Get the number of seconds elapsed since 1970 and the fractional
-  /// part
-  /// @param[in] datetime64 Date encoded in a 64-bit integer
-  /// @return A tuple (seconds, fractional)
-  [[nodiscard]] constexpr auto epoch(const int64_t datetime64) const noexcept
-      -> std::tuple<int64_t, int64_t> {
-    auto sec = seconds(datetime64);
-    auto frac = fractional(datetime64);
-    if (frac < 0) {
-      frac += order_of_magnitude_;
-      sec -= 1;
-    }
-    return {sec, frac};
-  }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -654,12 +670,17 @@ struct ISOCalendar {
 /// @return Number of days since the first January
 [[nodiscard]] constexpr auto days_since_january(const Date& date) noexcept
     -> unsigned {
-  unsigned result = date.day - 1;
+  // Days of a common year before the first day of each month
+  constexpr auto kDaysBeforeMonth = []() {
+    std::array<unsigned, 13> result{};
+    for (size_t ix = 2; ix < result.size(); ++ix) {
+      result[ix] = result[ix - 1] + kDaysInMonth[ix - 1];
+    }
+    return result;
+  }();
+  unsigned result = date.day - 1 + kDaysBeforeMonth[date.month];
   if (date.month > 2) {
     result += is_leap_year(date.year);
-  }
-  for (unsigned ix = 1; ix < date.month; ++ix) {
-    result += kDaysInMonth[ix];
   }
   return result;
 }

@@ -623,6 +623,19 @@ TEST_F(DateTimeFunctions, DaysSinceJanuary) {
 
   // Leap year
   EXPECT_EQ(days_since_january({1972, 3, 1}), 60);
+
+  // Every day from 1900 to 2100: the count restarts each first January and
+  // grows by one per day (2000 is a leap year, 1900 and 2100 are not).
+  unsigned expected = 0;
+  for (int64_t days = -25567; days < 47847; ++days) {
+    const auto date = date_from_days(days);
+    if (date.month == 1 && date.day == 1) {
+      expected = 0;
+    }
+    ASSERT_EQ(days_since_january(date), expected)
+        << date.year << "-" << date.month << "-" << date.day;
+    ++expected;
+  }
 }
 
 // Test weekday()

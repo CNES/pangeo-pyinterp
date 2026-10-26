@@ -57,14 +57,17 @@ inline auto date(const nb::object &array)
   {
     nb::gil_scoped_release release;
 
-    for (auto [epoch, year, month, day] : std::views::zip(
-             datetime64.mapped_integer_values, years, months, days)) {
-      auto date = dateutils::date_from_days(
-          std::get<0>(datetime64.frac.days_since_epoch(epoch)));
-      year = static_cast<int32_t>(date.year);
-      month = static_cast<uint8_t>(date.month);
-      day = static_cast<uint8_t>(date.day);
-    }
+    // The resolution as a compile-time constant: see dispatch.
+    datetime64.frac.dispatch([&](const auto magnitude) {
+      for (auto [epoch, year, month, day] : std::views::zip(
+               datetime64.mapped_integer_values, years, months, days)) {
+        auto date = dateutils::date_from_days(std::get<0>(
+            dateutils::FractionalSeconds::days_since_epoch(epoch, magnitude)));
+        year = static_cast<int32_t>(date.year);
+        month = static_cast<uint8_t>(date.month);
+        day = static_cast<uint8_t>(date.day);
+      }
+    });
   }
   return {years, months, days};
 }
@@ -79,14 +82,17 @@ inline auto time(const nb::object &array)
   {
     nb::gil_scoped_release release;
 
-    for (auto [epoch, hour, minute, second] : std::views::zip(
-             datetime64.mapped_integer_values, hours, minutes, seconds)) {
-      auto time = dateutils::time_from_seconds(
-          std::get<1>(datetime64.frac.days_since_epoch(epoch)));
-      hour = static_cast<uint8_t>(time.hour);
-      minute = static_cast<uint8_t>(time.minute);
-      second = static_cast<uint8_t>(time.second);
-    }
+    // The resolution as a compile-time constant: see dispatch.
+    datetime64.frac.dispatch([&](const auto magnitude) {
+      for (auto [epoch, hour, minute, second] : std::views::zip(
+               datetime64.mapped_integer_values, hours, minutes, seconds)) {
+        auto time = dateutils::time_from_seconds(std::get<1>(
+            dateutils::FractionalSeconds::days_since_epoch(epoch, magnitude)));
+        hour = static_cast<uint8_t>(time.hour);
+        minute = static_cast<uint8_t>(time.minute);
+        second = static_cast<uint8_t>(time.second);
+      }
+    });
   }
   return {hours, minutes, seconds};
 }
@@ -101,14 +107,17 @@ inline auto isocalendar(const nb::object &array)
   {
     nb::gil_scoped_release release;
 
-    for (auto [epoch, year, week, weekday] : std::views::zip(
-             datetime64.mapped_integer_values, years, weeks, weekdays)) {
-      auto iso_calendar = dateutils::isocalendar(
-          std::get<0>(datetime64.frac.days_since_epoch(epoch)));
-      year = static_cast<int32_t>(iso_calendar.year);
-      week = static_cast<uint8_t>(iso_calendar.week);
-      weekday = static_cast<uint8_t>(iso_calendar.weekday);
-    }
+    // The resolution as a compile-time constant: see dispatch.
+    datetime64.frac.dispatch([&](const auto magnitude) {
+      for (auto [epoch, year, week, weekday] : std::views::zip(
+               datetime64.mapped_integer_values, years, weeks, weekdays)) {
+        auto iso_calendar = dateutils::isocalendar(std::get<0>(
+            dateutils::FractionalSeconds::days_since_epoch(epoch, magnitude)));
+        year = static_cast<int32_t>(iso_calendar.year);
+        week = static_cast<uint8_t>(iso_calendar.week);
+        weekday = static_cast<uint8_t>(iso_calendar.weekday);
+      }
+    });
   }
   return {years, weeks, weekdays};
 }
@@ -119,11 +128,14 @@ auto weekday(const nb::object &array) -> Vector<uint8_t> {
   {
     nb::gil_scoped_release release;
 
-    for (auto [epoch, weekday] :
-         std::views::zip(datetime64.mapped_integer_values, weekdays)) {
-      weekday = static_cast<uint8_t>(dateutils::weekday(
-          std::get<0>(datetime64.frac.days_since_epoch(epoch))));
-    }
+    // The resolution as a compile-time constant: see dispatch.
+    datetime64.frac.dispatch([&](const auto magnitude) {
+      for (auto [epoch, weekday] :
+           std::views::zip(datetime64.mapped_integer_values, weekdays)) {
+        weekday = static_cast<uint8_t>(dateutils::weekday(std::get<0>(
+            dateutils::FractionalSeconds::days_since_epoch(epoch, magnitude))));
+      }
+    });
   }
   return weekdays;
 }
@@ -134,18 +146,21 @@ auto timedelta_since_january(const nb::object &array) -> nb::object {
   {
     nb::gil_scoped_release release;
 
-    for (auto [epoch, result] :
-         std::views::zip(datetime64.mapped_integer_values, results)) {
-      auto [days, seconds, fractional_part] =
-          datetime64.frac.days_since_epoch(epoch);
-      auto days_since_january =
-          dateutils::days_since_january(dateutils::date_from_days(days));
-      auto hms = dateutils::time_from_seconds(seconds);
-      result = (days_since_january * 86400LL + hms.hour * 3600LL +
-                hms.minute * 60LL + hms.second) *
-                   datetime64.frac.order_of_magnitude() +
-               fractional_part;
-    }
+    // The resolution as a compile-time constant: see dispatch.
+    datetime64.frac.dispatch([&](const auto magnitude) {
+      for (auto [epoch, result] :
+           std::views::zip(datetime64.mapped_integer_values, results)) {
+        auto [days, seconds, fractional_part] =
+            dateutils::FractionalSeconds::days_since_epoch(epoch, magnitude);
+        auto days_since_january =
+            dateutils::days_since_january(dateutils::date_from_days(days));
+        auto hms = dateutils::time_from_seconds(seconds);
+        result = (days_since_january * 86400LL + hms.hour * 3600LL +
+                  hms.minute * 60LL + hms.second) *
+                     magnitude +
+                 fractional_part;
+      }
+    });
   }
   return vector_to_numpy(std::move(results), datetime64.dtype.as_timedelta64());
 }
