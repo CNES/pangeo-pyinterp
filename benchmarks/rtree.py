@@ -42,11 +42,18 @@ def _scatter(
 
 
 def _tree3d(
-    rng: np.random.Generator, n: int, dtype: str = "float64"
+    rng: np.random.Generator,
+    n: int,
+    dtype: str = "float64",
+    distance: core.RTree3DDistance = "euclidean",
 ) -> tuple[core.RTree3DFloat32 | core.RTree3DFloat64, np.ndarray]:
-    """Bulk-loaded tree and the coordinates of its observations."""
+    """Bulk-loaded tree and the coordinates of its observations.
+
+    The observations are longitudes and latitudes: the tree converts them to
+    ECEF with the WGS84 spheroid.
+    """
     coordinates, values = _scatter(rng, n)
-    tree = core.RTree3D(dtype=dtype)
+    tree = core.RTree3D(geographic.Spheroid(), dtype=dtype, distance=distance)
     tree.packing(coordinates, values)
     return tree, coordinates
 
@@ -58,7 +65,7 @@ def _build(
 
     def setup() -> Callable[[], object]:
         coordinates, values = _scatter(ctx.rng(), n)
-        tree = core.RTree3D()
+        tree = core.RTree3D(geographic.Spheroid())
         return lambda: getattr(tree, method)(coordinates, values)
 
     return setup
@@ -72,12 +79,13 @@ def _estimator(
     n_query: int,
     *,
     dtype: str = "float64",
+    distance: core.RTree3DDistance = "euclidean",
 ) -> Callable[[], Callable[[], object]]:
     """Time an estimator of the 3D tree."""
 
     def setup() -> Callable[[], object]:
         rng = ctx.rng()
-        tree, _ = _tree3d(rng, n_obs, dtype)
+        tree, _ = _tree3d(rng, n_obs, dtype, distance)
         query, _ = _scatter(rng, n_query)
         return lambda: getattr(tree, method)(query, settings)
 
@@ -237,6 +245,16 @@ def cases(ctx: Context) -> list[Case]:
                 dtype="float32",
             ),
             n_query,
+        ),
+        *(
+            Case(
+                f"rtree3d/{name}/geodesic",
+                _estimator(
+                    ctx, method, settings, n_obs, n, distance="geodesic"
+                ),
+                n,
+            )
+            for name, method, settings, n in estimators[:2]
         ),
         Case("rtree4d/packing", _tree4d(ctx, "packing", n_obs, 0), n_obs),
         Case("rtree4d/query", _tree4d(ctx, "query", n_obs, n_query), n_query),
