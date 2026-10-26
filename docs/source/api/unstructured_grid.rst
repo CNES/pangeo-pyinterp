@@ -121,18 +121,25 @@ Specialized R-Tree implementation for geographic (spherical/ellipsoidal) coordin
 Choosing between the two indexes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Both accept longitude/latitude points and find the same neighbors, except
-for near-ties. They differ by the distance they measure:
+Both accept longitude/latitude points. They differ by the distance they
+measure and by their speed:
 
-* :py:func:`RTree3D(spheroid) <pyinterp.RTree3D>`, created with a
-  spheroid (without one, the coordinates are taken as Cartesian), converts
-  the points to ECEF and uses straight-line (chord) distances. It is the
-  faster index, 20 to 25 times faster to query, and also supports
-  altitudes, any spheroid and single precision.
+* :py:func:`RTree3D(spheroid) <pyinterp.RTree3D>`, created with a spheroid
+  (without one, the coordinates are taken as Cartesian), converts the points
+  to ECEF and searches them with straight-line (chord) distances. It is the
+  fastest index, 20 to 25 times faster to query than the geographic one, and
+  also supports altitudes, any spheroid and single precision.
+* ``RTree3D(spheroid, distance="geodesic")`` keeps the ECEF search but ranks
+  the neighbors by geodesic distance on the spheroid, and returns geodesic
+  distances: the same results as the geographic index, about 10 times faster.
+  The points must have no altitude. Radial basis functions and kriging keep
+  straight-line distances between the neighbors in their kernels.
 * :py:class:`geographic.RTree <pyinterp.core.geometry.geographic.RTree>`
-  uses geodesic distances on the WGS84 ellipsoid, for queries and for the
-  weights of the interpolators.
+  uses geodesic distances on the WGS84 ellipsoid, and evaluates them to
+  search its nodes, which makes it the slowest.
 
 The chord is shorter than the geodesic by about 0.001% at 100 km, 0.1% at
-1,000 km and 2.6% at 5,000 km. Prefer ``RTree3D`` unless the distances, or
-the weights derived from them, must be geodesic over long ranges.
+1,000 km and 2.6% at 5,000 km: at short range, the default ``RTree3D`` finds
+the same neighbors as the geodesic searches, except for near-ties. Use
+``distance="geodesic"`` when the distances, or the weights derived from them,
+must be geodesic over long ranges.
