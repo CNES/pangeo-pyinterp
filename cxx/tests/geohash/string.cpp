@@ -11,7 +11,9 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <random>
 #include <ranges>
+#include <set>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -181,6 +183,19 @@ TEST_F(GeoHashStringTest, EncodeVectorsLongitudeNormalization) {
   auto result2 = encode(lon2, lat, 8);
 
   EXPECT_TRUE(hash_equals(result1.get(0), result2.get(0)));
+
+  // 180 is the same meridian as -180, and in-range longitudes are kept.
+  Eigen::VectorXd lon3(3);
+  Eigen::VectorXd lon4(3);
+  Eigen::VectorXd lat3(3);
+  lon3 << 180.0, 540.0, 179.999;
+  lon4 << -180.0, -180.0, 179.999;
+  lat3 << 10.0, 10.0, 10.0;
+  auto result3 = encode(lon3, lat3, 10);
+  auto result4 = encode(lon4, lat3, 10);
+  for (size_t ix = 0; ix < 3; ++ix) {
+    EXPECT_TRUE(hash_equals(result3.get(ix), result4.get(ix))) << ix;
+  }
 }
 
 // ============================================================================
@@ -632,6 +647,32 @@ TEST_F(GeoHashStringTest, TransformZoomOut) {
   EXPECT_EQ(result.precision, 3);
   EXPECT_LE(result.count, 1);
   EXPECT_EQ(span_to_string(result.get(0)), "s00");
+}
+
+// Zooming out returns each coarser code once, in ascending order.
+TEST_F(GeoHashStringTest, TransformZoomOutUniqueSorted) {
+  constexpr auto kSize = 10'000;
+  Eigen::VectorXd lon(kSize);
+  Eigen::VectorXd lat(kSize);
+  auto gen = std::mt19937(42);
+  auto uniform = std::uniform_real_distribution<>(-1.0, 1.0);
+  for (auto ix = 0; ix < kSize; ++ix) {
+    lon(ix) = 180.0 * uniform(gen);
+    lat(ix) = 90.0 * uniform(gen);
+  }
+
+  auto encoded = encode(lon, lat, 6);
+  auto expected = std::set<std::string>();
+  for (size_t ix = 0; ix < encoded.count; ++ix) {
+    expected.insert(span_to_string(encoded.get(ix)).substr(0, 2));
+  }
+
+  auto result = transform(encoded, 2);
+  ASSERT_EQ(result.count, expected.size());
+  auto it = expected.begin();
+  for (size_t ix = 0; ix < result.count; ++ix, ++it) {
+    EXPECT_EQ(span_to_string(result.get(ix)), *it);
+  }
 }
 
 TEST_F(GeoHashStringTest, TransformZoomIn) {

@@ -8,8 +8,8 @@
 #include <boost/geometry.hpp>
 #include <ranges>
 #include <string>
-#include <unordered_set>
 #include <utility>
+#include <vector>
 
 #include "pyinterp/broadcast.hpp"
 #include "pyinterp/geohash/base32.hpp"
@@ -34,8 +34,13 @@ auto encode(const Eigen::Ref<const Eigen::VectorXd>& lon,
 
   for (auto [lon_item, lat_item, hash_span] :
        std::views::zip(lon, lat, result)) {
-    encode({math::normalize_period(lon_item, -180.0, 360.0), lat_item},
-           hash_span);
+    // std::remainder is costly: only reduce longitudes outside [-180, 180[
+    // (180 maps to -180).
+    const auto lon_normalized =
+        lon_item < -180.0 || lon_item >= 180.0
+            ? math::normalize_period(lon_item, -180.0, 360.0)
+            : lon_item;
+    encode({lon_normalized, lat_item}, hash_span);
   }
   return result;
 }
@@ -182,21 +187,22 @@ auto zoom_in(const HashContainer& hash, uint32_t to_precision)
 template <typename HashContainer>
 auto zoom_out(const HashContainer& hash, uint32_t to_precision)
     -> EncodedHashes {
-  // Use unordered_set for O(1) insertions instead of O(log n) with std::set
-  auto zoom_out_codes = std::unordered_set<uint64_t>();
-  zoom_out_codes.reserve(hash.count);  // Reserve space to avoid rehashing
-
   auto to_bits = to_precision * 5;
   auto from_bits = hash.precision * 5;
   auto shift = from_bits - to_bits;
 
+  // Decode to integer and shift right to reduce precision, then keep the
+  // unique values. Sorting a flat vector is several times faster than
+  // inserting into a hash set, and gives a deterministic (sorted) output.
+  auto zoom_out_codes = std::vector<uint64_t>();
+  zoom_out_codes.reserve(hash.count);
   for (const auto& hash_span : hash) {
-    // Decode to integer, shift right to reduce precision, and collect unique
-    // values
     auto [integer_hash, chars] = encoder.decode(hash_span);
-    auto zoomed_out = integer_hash >> shift;
-    zoom_out_codes.insert(zoomed_out);
+    zoom_out_codes.push_back(integer_hash >> shift);
   }
+  std::ranges::sort(zoom_out_codes);
+  const auto [last, end] = std::ranges::unique(zoom_out_codes);
+  zoom_out_codes.erase(last, end);
 
   auto result = EncodedHashes{
       .buffer = std::vector<char>(zoom_out_codes.size() * to_precision),
