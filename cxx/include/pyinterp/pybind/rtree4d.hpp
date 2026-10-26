@@ -20,6 +20,7 @@
 #include "pyinterp/eigen.hpp"
 #include "pyinterp/geometry/point.hpp"
 #include "pyinterp/geometry/rtree.hpp"
+#include "pyinterp/geometry/spatial_order.hpp"
 #include "pyinterp/math/interpolate/observation.hpp"
 #include "pyinterp/math/interpolate/optimal_interpolation.hpp"
 #include "pyinterp/parallel_for.hpp"
@@ -255,12 +256,21 @@ auto RTree4D<T>::query(const Eigen::Ref<const CoordinateMatrix>& coordinates,
   values.setConstant(std::numeric_limits<T>::quiet_NaN());
   sigma2.setConstant(std::numeric_limits<T>::quiet_NaN());
 
+  // Search the points in spatial order: consecutive searches then visit
+  // the same nodes of the tree. Results are written back to their rows.
+  auto points = std::vector<point_t>();
+  points.reserve(static_cast<size_t>(n));
+  for (Eigen::Index ix = 0; ix < n; ++ix) {
+    points.push_back(to_point(coordinates, ix));
+  }
+  const auto order = geometry::spatial_order(points);
+
   parallel_for(
       static_cast<size_t>(n),
       [&](size_t start, size_t end) {
         for (size_t idx = start; idx < end; ++idx) {
-          const auto ix = static_cast<Eigen::Index>(idx);
-          const auto pt = to_point(coordinates, ix);
+          const auto ix = static_cast<Eigen::Index>(order[idx]);
+          const auto& pt = points[order[idx]];
           const auto results =
               base_t::query(pt, config.k(), static_cast<T>(config.radius()),
                             config.boundary_check());
@@ -314,6 +324,15 @@ auto RTree4D<T>::optimal_interpolation(
   const T radius = static_cast<T>(config.radius());
   const uint32_t k = config.k();
 
+  // Search the points in spatial order: consecutive searches then visit
+  // the same nodes of the tree. Results are written back to their rows.
+  auto points = std::vector<point_t>();
+  points.reserve(static_cast<size_t>(m));
+  for (Eigen::Index ix = 0; ix < m; ++ix) {
+    points.push_back(to_point(coordinates, ix));
+  }
+  const auto order = geometry::spatial_order(points);
+
   parallel_for(
       static_cast<size_t>(m),
       [&](size_t start, size_t end) {
@@ -323,8 +342,8 @@ auto RTree4D<T>::optimal_interpolation(
         Vector<T> obs_sigma2(k);
 
         for (size_t idx = start; idx < end; ++idx) {
-          const auto ix = static_cast<Eigen::Index>(idx);
-          const auto pt = to_point(coordinates, ix);
+          const auto ix = static_cast<Eigen::Index>(order[idx]);
+          const auto& pt = points[order[idx]];
 
           // `value()` returns (point, observation) pairs filtered by radius
           // — exactly what the OI math needs (coordinates + value + σ²).

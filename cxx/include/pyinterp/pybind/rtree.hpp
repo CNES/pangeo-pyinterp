@@ -21,6 +21,7 @@
 #include "pyinterp/geometry/geographic/spheroid.hpp"
 #include "pyinterp/geometry/point.hpp"
 #include "pyinterp/geometry/rtree.hpp"
+#include "pyinterp/geometry/spatial_order.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
 #include "pyinterp/math/interpolate/window_function.hpp"
 #include "pyinterp/parallel_for.hpp"
@@ -321,13 +322,21 @@ auto RTree3D<T>::batch_query(
   distances.setConstant(std::numeric_limits<distance_t>::quiet_NaN());
   values.setConstant(std::numeric_limits<promotion_t>::quiet_NaN());
 
+  // Search the points in spatial order: consecutive searches then visit
+  // the same nodes of the tree. Results are written back to their rows.
+  auto points = std::vector<point_t>();
+  points.reserve(static_cast<size_t>(n));
+  for (int64_t ix = 0; ix < static_cast<int64_t>(n); ++ix) {
+    points.push_back(to_internal_point(coordinates, ix));
+  }
+  const auto order = geometry::spatial_order(points);
+
   parallel_for(
       static_cast<size_t>(n),
       [&](size_t start, size_t end) {
         for (size_t idx = start; idx < end; ++idx) {
-          const auto ix = static_cast<int64_t>(idx);
-          auto point = to_internal_point(coordinates, ix);
-          auto results = query_func(point, config.k());
+          const auto ix = order[idx];
+          auto results = query_func(points[ix], config.k());
 
           for (size_t jx = 0; jx < results.size() && jx < config.k(); ++jx) {
             distances(ix, static_cast<int64_t>(jx)) = std::get<0>(results[jx]);
@@ -357,13 +366,21 @@ auto RTree3D<T>::batch_interpolate(
   values.setConstant(std::numeric_limits<promotion_t>::quiet_NaN());
   counts.setZero();
 
+  // Search the points in spatial order: consecutive searches then visit
+  // the same nodes of the tree. Results are written back to their rows.
+  auto points = std::vector<point_t>();
+  points.reserve(static_cast<size_t>(n));
+  for (int64_t ix = 0; ix < static_cast<int64_t>(n); ++ix) {
+    points.push_back(to_internal_point(coordinates, ix));
+  }
+  const auto order = geometry::spatial_order(points);
+
   parallel_for(
       static_cast<size_t>(n),
       [&](size_t start, size_t end) {
         for (size_t idx = start; idx < end; ++idx) {
-          const auto ix = static_cast<int64_t>(idx);
-          std::tie(values[ix], counts[ix]) =
-              interpolate_func(to_internal_point(coordinates, ix));
+          const auto ix = order[idx];
+          std::tie(values[ix], counts[ix]) = interpolate_func(points[ix]);
         }
       },
       num_threads);
