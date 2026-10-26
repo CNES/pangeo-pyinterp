@@ -48,4 +48,26 @@ TEST(Polynomial, Derivative) {
   }
 }
 
+// A polynomial through n points reproduces any polynomial of degree < n.
+// With more than 4 points, the divided differences used to read values
+// already overwritten.
+TEST(Polynomial, ReproducesCubic) {
+  const auto cubic = [](const double x) {
+    return 0.3 * x * x * x - 2.0 * x * x + x - 5.0;
+  };
+  for (const auto size : {4, 5, 6, 8, 10}) {
+    Eigen::VectorXd xa(size);
+    Eigen::VectorXd ya(size);
+    for (auto ix = 0; ix < size; ++ix) {
+      xa(ix) = 0.5 * ix + 0.1 * ix * ix;  // Irregular abscissas
+      ya(ix) = cubic(xa(ix));
+    }
+    auto interpolator = Polynomial<double>();
+    for (auto x = xa(0); x <= xa(size - 1); x += 0.05) {
+      EXPECT_NEAR(interpolator(xa, ya, x), cubic(x), 1e-9)
+          << "size=" << size << " x=" << x;
+    }
+  }
+}
+
 }  // namespace pyinterp::math::interpolate::univariate

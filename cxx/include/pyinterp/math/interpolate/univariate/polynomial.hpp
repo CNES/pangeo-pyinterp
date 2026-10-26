@@ -37,32 +37,34 @@ class Polynomial : public Univariate<T> {
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
   /// @return True if coefficients were computed successfully
-  [[nodiscard]] constexpr auto compute_coefficients(const Vector<T>& xa,
-                                                    const Vector<T>& ya)
+  [[nodiscard]] constexpr auto compute_coefficients(const ConstVectorRef<T>& xa,
+                                                    const ConstVectorRef<T>& ya)
       -> bool final;
 
   /// @brief Compute Taylor series coefficients around point x
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] x The point around which to expand.
   /// @return Vector of Taylor coefficients
-  [[nodiscard]] auto taylor(const Vector<T>& xa, T x) const -> Vector<T>;
+  [[nodiscard]] auto taylor(const ConstVectorRef<T>& xa, T x) const
+      -> Vector<T>;
 
   /// @brief Interpolation using Horner's method
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  [[nodiscard]] constexpr auto interpolate_(const Vector<T>& xa,
-                                            const Vector<T>& ya, T x) const
-      -> T final;
+  [[nodiscard]] constexpr auto interpolate_(const ConstVectorRef<T>& xa,
+                                            const ConstVectorRef<T>& ya,
+                                            T x) const -> T final;
 
   /// @brief Returns the derivative of the interpolation function at point x.
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
-  [[nodiscard]] auto derivative_(const Vector<T>& xa, const Vector<T>& ya,
-                                 T x) const -> T final;
+  [[nodiscard]] auto derivative_(const ConstVectorRef<T>& xa,
+                                 const ConstVectorRef<T>& ya, T x) const
+      -> T final;
 };
 
 // ============================================================================
@@ -70,8 +72,8 @@ class Polynomial : public Univariate<T> {
 // ============================================================================
 
 template <std::floating_point T>
-constexpr auto Polynomial<T>::compute_coefficients(const Vector<T>& xa,
-                                                   const Vector<T>& ya)
+constexpr auto Polynomial<T>::compute_coefficients(const ConstVectorRef<T>& xa,
+                                                   const ConstVectorRef<T>& ya)
     -> bool {
   if (!Univariate<T>::compute_coefficients(xa, ya)) [[unlikely]] {
     return false;
@@ -95,16 +97,20 @@ constexpr auto Polynomial<T>::compute_coefficients(const Vector<T>& xa,
   // Higher order divided differences
   for (auto ix : std::views::iota(int64_t{2}, size)) {
     const auto n = size - ix;
+    // The source overlaps the destination shifted by one: evaluate it first,
+    // or the differences would read values already updated.
     work_.segment(ix, n) =
-        (work_.segment(ix, n) - work_.segment(ix - 1, n)).array() /
-        (xa.segment(ix, n) - xa.segment(0, n)).array();
+        ((work_.segment(ix, n) - work_.segment(ix - 1, n)).array() /
+         (xa.segment(ix, n) - xa.segment(0, n)).array())
+            .eval();
   }
 
   return true;
 }
 
 template <std::floating_point T>
-auto Polynomial<T>::taylor(const Vector<T>& xa, const T x) const -> Vector<T> {
+auto Polynomial<T>::taylor(const ConstVectorRef<T>& xa, const T x) const
+    -> Vector<T> {
   const auto size = xa.size();
   Vector<T> c = Vector<T>::Zero(size);
   Vector<T> w = Vector<T>::Zero(size);
@@ -133,9 +139,9 @@ auto Polynomial<T>::taylor(const Vector<T>& xa, const T x) const -> Vector<T> {
 }
 
 template <std::floating_point T>
-constexpr auto Polynomial<T>::interpolate_(const Vector<T>& xa,
-                                           [[maybe_unused]] const Vector<T>& ya,
-                                           const T x) const -> T {
+constexpr auto Polynomial<T>::interpolate_(
+    const ConstVectorRef<T>& xa, [[maybe_unused]] const ConstVectorRef<T>& ya,
+    const T x) const -> T {
   const auto search = this->search(xa, x);
   if (!search) [[unlikely]] {
     return Fill<T>::value();
@@ -153,8 +159,8 @@ constexpr auto Polynomial<T>::interpolate_(const Vector<T>& xa,
 }
 
 template <std::floating_point T>
-auto Polynomial<T>::derivative_(const Vector<T>& xa,
-                                [[maybe_unused]] const Vector<T>& ya,
+auto Polynomial<T>::derivative_(const ConstVectorRef<T>& xa,
+                                [[maybe_unused]] const ConstVectorRef<T>& ya,
                                 const T x) const -> T {
   const auto search = this->search(xa, x);
   if (!search) [[unlikely]] {
