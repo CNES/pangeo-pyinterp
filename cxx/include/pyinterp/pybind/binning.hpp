@@ -280,8 +280,13 @@ class Binning2D {
   void push_linear_cartesian(const Eigen::Ref<const Vector<T>>& x,
                              const Eigen::Ref<const Vector<T>>& y,
                              const Eigen::Ref<const Vector<T>>& z) {
-    using Strategy = boost::geometry::strategy::area::cartesian<>;
-    push_linear_impl<geometry::SphericalPoint, Strategy>(x, y, z, Strategy{});
+    push_linear_impl(
+        x, y, z,
+        [](const double x_coord, const double y_coord, const double x0,
+           const double y0, const double x1, const double y1) {
+          return math::interpolate::cartesian_bilinear_weights(x_coord, y_coord,
+                                                               x0, y0, x1, y1);
+        });
   }
 
   /// @brief Insert values using linear binning strategy (Geographic)
@@ -299,8 +304,16 @@ class Binning2D {
     using Strategy = boost::geometry::strategy::area::geographic<
         boost::geometry::strategy::vincenty, 5>;
     using Spheroid = boost::geometry::srs::spheroid<double>;
-    push_linear_impl<geometry::SphericalPoint, Strategy>(
-        x, y, z, Strategy(static_cast<Spheroid>(*spheroid_)));
+    const auto strategy = Strategy(static_cast<Spheroid>(*spheroid_));
+    push_linear_impl(
+        x, y, z,
+        [&strategy](const double x_coord, const double y_coord, const double x0,
+                    const double y0, const double x1, const double y1) {
+          using Point = geometry::SphericalPoint<double>;
+          return math::interpolate::bilinear_weights<geometry::SphericalPoint,
+                                                     Strategy, double>(
+              Point(x_coord, y_coord), Point(x0, y0), Point(x1, y1), strategy);
+        });
   }
 
   /// @brief Validate compatibility for aggregation
@@ -352,17 +365,17 @@ class Binning2D {
   }
 
   /// @brief Linear binning implementation
-  /// @tparam Point Template template parameter for point type
-  /// @tparam Strategy Binning strategy type
+  /// @tparam Weights Callable computing the bilinear weights of a point
+  /// in a cell: (x, y, x0, y0, x1, y1) -> {w00, w01, w11, w10}
   /// @param[in] x X coordinates of the input values
   /// @param[in] y Y coordinates of the input values
   /// @param[in] z Input values to be binned
-  /// @param[in] strategy Binning strategy instance
-  template <template <class> class Point, typename Strategy>
+  /// @param[in] bilinear_weights Weights function
+  template <typename Weights>
   void push_linear_impl(const Eigen::Ref<const Vector<T>>& x,
                         const Eigen::Ref<const Vector<T>>& y,
                         const Eigen::Ref<const Vector<T>>& z,
-                        const Strategy& strategy) {
+                        const Weights& bilinear_weights) {
     const auto& x_axis = static_cast<const math::Axis<double>&>(x_);
     const auto& y_axis = static_cast<const math::Axis<double>&>(y_);
 
@@ -387,10 +400,8 @@ class Binning2D {
                 ? math::normalize_period<double>(x(idx), x0, 360.0)
                 : x(idx);
 
-        const auto weights =
-            math::interpolate::bilinear_weights<Point, Strategy, double>(
-                Point<double>(x_coord, y(idx)), Point<double>(x0, y_axis(iy0)),
-                Point<double>(x_axis(ix1), y_axis(iy1)), strategy);
+        const auto weights = bilinear_weights(x_coord, y(idx), x0, y_axis(iy0),
+                                              x_axis(ix1), y_axis(iy1));
 
         update_acc(ix0, iy0, value, static_cast<T>(std::get<0>(weights)));
         update_acc(ix0, iy1, value, static_cast<T>(std::get<1>(weights)));

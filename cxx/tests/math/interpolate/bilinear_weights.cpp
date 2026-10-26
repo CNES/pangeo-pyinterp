@@ -11,6 +11,7 @@
 #include <boost/geometry/srs/spheroid.hpp>
 #include <boost/geometry/strategy/cartesian/area.hpp>
 #include <boost/geometry/strategy/geographic/area.hpp>
+#include <random>
 
 namespace bg = boost::geometry;
 namespace pyinterp::math::interpolate {
@@ -158,6 +159,44 @@ TEST(LinearBinning, Spheroid) {
   EXPECT_NEAR(std::get<1>(weights), 0, 1e-6);
   EXPECT_NEAR(std::get<2>(weights), 0, 1e-6);
   EXPECT_NEAR(std::get<3>(weights), 0.9999999999, 1e-6);
+}
+
+// The closed form must match the polygon areas of the Cartesian strategy,
+// including points on the edges and corners of the cell.
+TEST(LinearBinning, CartesianClosedForm) {
+  auto strategy = bg::strategy::area::cartesian<>();
+  auto gen = std::mt19937(42);
+  auto uniform = std::uniform_real_distribution<>(0.0, 1.0);
+
+  for (auto ix = 0; ix < 10'000; ++ix) {
+    const auto x0 = 360.0 * uniform(gen) - 180.0;
+    const auto y0 = 180.0 * uniform(gen) - 90.0;
+    const auto dx = 0.01 + 2.0 * uniform(gen);
+    const auto dy = 0.01 + 2.0 * uniform(gen);
+    // One point in four snapped to an edge or a corner
+    auto fx = uniform(gen);
+    auto fy = uniform(gen);
+    if (ix % 4 == 0) {
+      fx = static_cast<double>(ix % 3) / 2.0;
+      fy = static_cast<double>((ix / 3) % 3) / 2.0;
+    }
+    const auto x = x0 + fx * dx;
+    const auto y = y0 + fy * dy;
+
+    const auto expected =
+        bilinear_weights<CartesianPoint, bg::strategy::area::cartesian<>,
+                         double>(
+            CartesianPoint<double>{x, y}, CartesianPoint<double>{x0, y0},
+            CartesianPoint<double>{x0 + dx, y0 + dy}, strategy);
+    const auto actual =
+        cartesian_bilinear_weights(x, y, x0, y0, x0 + dx, y0 + dy);
+    // The shoelace formula of the polygon areas loses about 1e-12 to
+    // cancellation with coordinates near 180; the closed form works on
+    // differences and is the more accurate of the two.
+    for (size_t jx = 0; jx < 4; ++jx) {
+      EXPECT_NEAR(actual[jx], expected[jx], 1e-9) << ix << " " << jx;
+    }
+  }
 }
 
 }  // namespace pyinterp::math::interpolate

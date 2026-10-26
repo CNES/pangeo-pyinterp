@@ -5,6 +5,7 @@
 #include <array>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+#include <cmath>
 #include <concepts>
 
 namespace pyinterp::math::interpolate {
@@ -143,6 +144,43 @@ template <template <class> class Point, typename Strategy,
       area_c / total_area,  // w11: weight for p11
       area_a / total_area   // w10: weight for p10
   };
+}
+
+/// @brief Bilinear weights in a Cartesian plane.
+///
+/// Same result as bilinear_weights with the Cartesian area strategy: the
+/// sub-polygons are axis-aligned rectangles, whose areas are computed in
+/// closed form instead of building and measuring five polygons.
+///
+/// @param[in] x X-coordinate of the query point
+/// @param[in] y Y-coordinate of the query point
+/// @param[in] x0 X-coordinate of the corner p00
+/// @param[in] y0 Y-coordinate of the corner p00
+/// @param[in] x1 X-coordinate of the corner p11
+/// @param[in] y1 Y-coordinate of the corner p11
+/// @return The weights {w00, w01, w11, w10}, in the order of
+/// bilinear_weights.
+template <std::floating_point T>
+[[nodiscard]] constexpr auto cartesian_bilinear_weights(const T x, const T y,
+                                                        const T x0, const T y0,
+                                                        const T x1, const T y1)
+    -> std::array<T, 4> {
+  const T total_area = std::abs((x1 - x0) * (y1 - y0));
+
+  // Same filtering of numerical errors as calculate_and_normalize_area
+  const auto area = [total_area](const T dx, const T dy) -> T {
+    constexpr T epsilon = T{1e-12};
+    const T result = std::abs(dx * dy);
+    return result > total_area || result < epsilon ? T{0} : result;
+  };
+
+  const T area_a = area(x - x0, y1 - y);
+  const T area_b = area(x1 - x, y1 - y);
+  const T area_c = area(x - x0, y - y0);
+  const T area_d = area(x1 - x, y - y0);
+
+  return {area_b / total_area, area_d / total_area, area_c / total_area,
+          area_a / total_area};
 }
 
 }  // namespace pyinterp::math::interpolate
