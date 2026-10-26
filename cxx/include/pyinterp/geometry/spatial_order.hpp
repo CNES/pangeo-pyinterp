@@ -37,7 +37,7 @@ template <typename Point>
 
   const auto size = points.size();
   auto order = std::vector<int64_t>(size);
-  std::iota(order.begin(), order.end(), int64_t{0});
+  std::ranges::iota(order, int64_t{0});
   if (size < 2) {
     return order;
   }
