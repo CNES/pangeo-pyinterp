@@ -6,6 +6,7 @@
 
 #include <nanobind/nanobind.h>
 
+#include <array>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
@@ -230,20 +231,13 @@ auto DescriptiveStatistics<T>::push_all_strided(const T* values,
   auto result = std::vector<Accumulators>(1);
   auto& acc = result[0];
 
-  const auto ndim = static_cast<int64_t>(shape.size());
-  const auto total =
-      std::ranges::fold_left(shape, size_t{1}, std::multiplies{});
-
-  VectorIndex indices = VectorIndex(ndim, 0);
-
-  for (size_t ix = 0; ix < total; ++ix) {
-    const auto offset = tensor::compute_offset(indices, strides);
-    const auto value = values[offset];
-    if (!std::isnan(value)) {
-      acc(value);
-    }
-    tensor::increment_indices(indices, shape);
-  }
+  tensor::for_each_offset<1>(shape, {&strides},
+                             [&](const std::array<int64_t, 1>& offsets) {
+                               const auto value = values[offsets[0]];
+                               if (!std::isnan(value)) {
+                                 acc(value);
+                               }
+                             });
   return result;
 }
 
@@ -257,22 +251,13 @@ auto DescriptiveStatistics<T>::push_all_strided(
   auto result = std::vector<Accumulators>(1);
   auto& acc = result[0];
 
-  const auto ndim = static_cast<int64_t>(shape.size());
-  const auto total =
-      std::ranges::fold_left(shape, size_t{1}, std::multiplies{});
-
-  VectorIndex indices = VectorIndex(ndim, 0);
-
-  for (size_t ix = 0; ix < total; ++ix) {
-    const auto value_offset = tensor::compute_offset(indices, strides);
-    const auto value = values[value_offset];
-    if (!std::isnan(value)) {
-      const auto weight_offset =
-          tensor::compute_offset(indices, weight_strides);
-      acc(value, weights[weight_offset]);
-    }
-    tensor::increment_indices(indices, shape);
-  }
+  tensor::for_each_offset<2>(shape, {&strides, &weight_strides},
+                             [&](const std::array<int64_t, 2>& offsets) {
+                               const auto value = values[offsets[0]];
+                               if (!std::isnan(value)) {
+                                 acc(value, weights[offsets[1]]);
+                               }
+                             });
   return result;
 }
 
@@ -285,35 +270,25 @@ auto DescriptiveStatistics<T>::push_reduced_strided(
     const VectorIndex& adjusted_strides) -> std::vector<Accumulators> {
   auto result = std::vector<Accumulators>(size());
 
-  const auto ndim = static_cast<int64_t>(shape.size());
-  const auto total =
-      std::ranges::fold_left(shape, size_t{1}, std::multiplies{});
-
-  VectorIndex indices = VectorIndex(ndim, 0);
-  const T default_weight = T{1};
-
-  for (size_t ix = 0; ix < total; ++ix) {
-    const auto value_offset = tensor::compute_offset(indices, strides);
-    const auto value = values[value_offset];
-
-    if (!std::isnan(value)) {
-      // Compute output index using adjusted strides
-      const auto output_idx =
-          std::ranges::fold_left(std::views::zip(indices, adjusted_strides),
-                                 int64_t{0}, [](int64_t acc, auto pair) {
-                                   auto [idx, stride] = pair;
-                                   return acc + idx * stride;
-                                 });
-
-      T weight = default_weight;
-      if (weights != nullptr) {
-        const auto weight_offset =
-            tensor::compute_offset(indices, weight_strides);
-        weight = weights[weight_offset];
-      }
-      result[output_idx](value, weight);
-    }
-    tensor::increment_indices(indices, shape);
+  // The output cell of an element is its offset with the adjusted strides,
+  // which are zero along the reduced dimensions.
+  if (weights == nullptr) {
+    tensor::for_each_offset<2>(shape, {&strides, &adjusted_strides},
+                               [&](const std::array<int64_t, 2>& offsets) {
+                                 const auto value = values[offsets[0]];
+                                 if (!std::isnan(value)) {
+                                   result[offsets[1]](value);
+                                 }
+                               });
+  } else {
+    tensor::for_each_offset<3>(
+        shape, {&strides, &adjusted_strides, &weight_strides},
+        [&](const std::array<int64_t, 3>& offsets) {
+          const auto value = values[offsets[0]];
+          if (!std::isnan(value)) {
+            result[offsets[1]](value, weights[offsets[2]]);
+          }
+        });
   }
   return result;
 }

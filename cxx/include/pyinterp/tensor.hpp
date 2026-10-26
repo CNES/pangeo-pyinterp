@@ -4,10 +4,13 @@
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <format>
 #include <ranges>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace pyinterp::tensor {
@@ -108,6 +111,73 @@ constexpr void unravel_index(int64_t flat_idx, const VectorIndex& strides,
     offset += indices[ix] * strides[ix];
   }
   return offset;
+}
+
+/// @brief Visit every element of an array in row-major order.
+///
+/// Calls func(offsets) where offsets[k] is the offset of the element for the
+/// k-th set of strides (the values, the weights, the output cell...). Same
+/// order as a loop on compute_offset and increment_indices, but the last
+/// axis runs in a tight loop and the offsets are updated incrementally.
+///
+/// @tparam N Number of sets of strides
+/// @param[in] shape Shape of the array
+/// @param[in] strides Sets of strides, one per dimension of the shape
+/// @param[in] func Function called for each element
+template <size_t N, typename Function>
+void for_each_offset(const Shape& shape,
+                     const std::array<const VectorIndex*, N>& strides,
+                     Function&& func) {
+  const auto ndim = static_cast<int64_t>(shape.size());
+  if (ndim == 0) {
+    func(std::array<int64_t, N>{});
+    return;
+  }
+  for (const auto extent : shape) {
+    if (extent == 0) {
+      return;
+    }
+  }
+
+  const auto last = ndim - 1;
+  const auto inner_size = static_cast<int64_t>(shape[last]);
+  std::array<int64_t, N> inner_stride{};
+  for (size_t k = 0; k < N; ++k) {
+    inner_stride[k] = (*strides[k])[last];
+  }
+
+  // Indexes and offsets of the first element of the current row
+  auto outer = VectorIndex(last, 0);
+  std::array<int64_t, N> base{};
+
+  while (true) {
+    auto offsets = base;
+    for (int64_t ix = 0; ix < inner_size; ++ix) {
+      func(std::as_const(offsets));
+      for (size_t k = 0; k < N; ++k) {
+        offsets[k] += inner_stride[k];
+      }
+    }
+
+    // Next row: increment the outer indexes, carrying to the left
+    auto dim = last - 1;
+    for (; dim >= 0; --dim) {
+      ++outer[dim];
+      for (size_t k = 0; k < N; ++k) {
+        base[k] += (*strides[k])[dim];
+      }
+      if (outer[dim] < static_cast<int64_t>(shape[dim])) {
+        break;
+      }
+      for (size_t k = 0; k < N; ++k) {
+        base[k] -= (*strides[k])[dim] * static_cast<int64_t>(shape[dim]);
+      }
+      outer[dim] = 0;
+    }
+    if (dim < 0) {
+      return;
+    }
+  }
 }
 
 /// @brief Increment multi-dimensional indices (row-major order)
