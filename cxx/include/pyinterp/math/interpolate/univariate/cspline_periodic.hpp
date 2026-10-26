@@ -34,8 +34,8 @@ class CSplinePeriodic : public CSplineBase<T> {
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
   /// @return True if coefficients computed successfully
-  [[nodiscard]] constexpr auto compute_coefficients(const Vector<T>& xa,
-                                                    const Vector<T>& ya)
+  [[nodiscard]] constexpr auto compute_coefficients(const ConstVectorRef<T>& xa,
+                                                    const ConstVectorRef<T>& ya)
       -> bool final;
 
   /// @brief Solve a symmetric cyclic tridiagonal system using Sherman-Morrison
@@ -122,9 +122,8 @@ constexpr auto CSplinePeriodic<T>::solve_symmetric_cyclic_tridiagonal(
 }
 
 template <std::floating_point T>
-constexpr auto CSplinePeriodic<T>::compute_coefficients(const Vector<T>& xa,
-                                                        const Vector<T>& ya)
-    -> bool {
+constexpr auto CSplinePeriodic<T>::compute_coefficients(
+    const ConstVectorRef<T>& xa, const ConstVectorRef<T>& ya) -> bool {
   if (!CSplineBase<T>::compute_coefficients(xa, ya)) [[unlikely]] {
     return false;
   }

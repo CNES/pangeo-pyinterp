@@ -32,9 +32,9 @@ class Linear : public Univariate<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  [[nodiscard]] constexpr auto interpolate_(const Vector<T>& xa,
-                                            const Vector<T>& ya, T x) const
-      -> T final {
+  [[nodiscard]] constexpr auto interpolate_(const ConstVectorRef<T>& xa,
+                                            const ConstVectorRef<T>& ya,
+                                            T x) const -> T final {
     const auto where = this->search(xa, x);
     if (!where) [[unlikely]] {
       return Fill<T>::value();
@@ -54,9 +54,9 @@ class Linear : public Univariate<T> {
   /// @param ya Y-coordinates of the data points.
   /// @param x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
-  [[nodiscard]] constexpr auto derivative_(const Vector<T>& xa,
-                                           const Vector<T>& ya, T x) const
-      -> T final {
+  [[nodiscard]] constexpr auto derivative_(const ConstVectorRef<T>& xa,
+                                           const ConstVectorRef<T>& ya,
+                                           T x) const -> T final {
     const auto where = this->search(xa, x);
     if (!where) [[unlikely]] {
       return Fill<T>::value();

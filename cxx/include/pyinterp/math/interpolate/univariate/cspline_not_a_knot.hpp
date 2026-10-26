@@ -45,8 +45,8 @@ class CSplineNotAKnot : public CSplineBase<T> {
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
   /// @return True if coefficients computed successfully
-  [[nodiscard]] constexpr auto compute_coefficients(const Vector<T>& xa,
-                                                    const Vector<T>& ya)
+  [[nodiscard]] constexpr auto compute_coefficients(const ConstVectorRef<T>& xa,
+                                                    const ConstVectorRef<T>& ya)
       -> bool final;
 
  private:
@@ -108,9 +108,8 @@ constexpr auto CSplineNotAKnot<T>::solve_reduced_tridiagonal(const Vector<T>& h,
 }
 
 template <std::floating_point T>
-constexpr auto CSplineNotAKnot<T>::compute_coefficients(const Vector<T>& xa,
-                                                        const Vector<T>& ya)
-    -> bool {
+constexpr auto CSplineNotAKnot<T>::compute_coefficients(
+    const ConstVectorRef<T>& xa, const ConstVectorRef<T>& ya) -> bool {
   if (!CSplineBase<T>::compute_coefficients(xa, ya)) [[unlikely]] {
     return false;
   }

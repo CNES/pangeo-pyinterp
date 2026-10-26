@@ -33,8 +33,8 @@ class CSpline : public CSplineBase<T> {
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
   /// @return True if coefficients computed successfully
-  [[nodiscard]] constexpr auto compute_coefficients(const Vector<T>& xa,
-                                                    const Vector<T>& ya)
+  [[nodiscard]] constexpr auto compute_coefficients(const ConstVectorRef<T>& xa,
+                                                    const ConstVectorRef<T>& ya)
       -> bool final;
 
   /// @brief Solve a symmetric tridiagonal system using Thomas algorithm
@@ -81,8 +81,9 @@ constexpr auto CSpline<T>::solve_symmetric_tridiagonal(std::span<T> x) -> void {
 }
 
 template <std::floating_point T>
-constexpr auto CSpline<T>::compute_coefficients(const Vector<T>& xa,
-                                                const Vector<T>& ya) -> bool {
+constexpr auto CSpline<T>::compute_coefficients(const ConstVectorRef<T>& xa,
+                                                const ConstVectorRef<T>& ya)
+    -> bool {
   if (!CSplineBase<T>::compute_coefficients(xa, ya)) [[unlikely]] {
     return false;
   }

@@ -28,7 +28,7 @@ class BracketFinder {
   /// @param[in] xa Sorted array of coordinates
   /// @param[in] x Coordinate to locate
   /// @return Pair of indices (i, i+1) if found, std::nullopt otherwise
-  constexpr auto search(const Vector<T>& xa, const T& x) const noexcept
+  constexpr auto search(const ConstVectorRef<T>& xa, const T& x) const noexcept
       -> std::optional<std::pair<int64_t, int64_t>>;
 };
 
@@ -37,7 +37,7 @@ class BracketFinder {
 // ============================================================================
 
 template <typename T>
-constexpr auto BracketFinder<T>::search(const Vector<T>& xa,
+constexpr auto BracketFinder<T>::search(const ConstVectorRef<T>& xa,
                                         const T& x) const noexcept
     -> std::optional<std::pair<int64_t, int64_t>> {
   const auto begin = xa.begin();

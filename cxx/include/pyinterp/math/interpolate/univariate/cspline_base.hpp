@@ -65,8 +65,8 @@ class CSplineBase : public Univariate<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  [[nodiscard]] constexpr auto interpolate_(const Vector<T>& xa,
-                                            const Vector<T>& ya,
+  [[nodiscard]] constexpr auto interpolate_(const ConstVectorRef<T>& xa,
+                                            const ConstVectorRef<T>& ya,
                                             const T x) const -> T final;
 
   /// @brief Returns the derivative of the interpolation function at point x.
@@ -74,9 +74,9 @@ class CSplineBase : public Univariate<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
-  [[nodiscard]] constexpr auto derivative_(const Vector<T>& xa,
-                                           const Vector<T>& ya, const T x) const
-      -> T final;
+  [[nodiscard]] constexpr auto derivative_(const ConstVectorRef<T>& xa,
+                                           const ConstVectorRef<T>& ya,
+                                           const T x) const -> T final;
 };
 
 // ============================================================================
@@ -84,8 +84,8 @@ class CSplineBase : public Univariate<T> {
 // ============================================================================
 
 template <std::floating_point T>
-constexpr auto CSplineBase<T>::interpolate_(const Vector<T>& xa,
-                                            const Vector<T>& ya,
+constexpr auto CSplineBase<T>::interpolate_(const ConstVectorRef<T>& xa,
+                                            const ConstVectorRef<T>& ya,
                                             const T x) const -> T {
   const auto where = this->search(xa, x);
   if (!where) [[unlikely]] {
@@ -113,9 +113,9 @@ constexpr auto CSplineBase<T>::interpolate_(const Vector<T>& xa,
 }
 
 template <std::floating_point T>
-constexpr auto CSplineBase<T>::derivative_(const Vector<T>& xa,
-                                           const Vector<T>& ya, const T x) const
-    -> T {
+constexpr auto CSplineBase<T>::derivative_(const ConstVectorRef<T>& xa,
+                                           const ConstVectorRef<T>& ya,
+                                           const T x) const -> T {
   const auto where = this->search(xa, x);
   if (!where) [[unlikely]] {
     return Fill<T>::value();

@@ -50,8 +50,9 @@ auto load_cache_generic(const GridType& grid,
                         std::optional<std::string>& error_out) -> bool {
   static constexpr size_t kNDim = GridType::kNDim;
 
-  // 1. Find indices for all axes
-  std::array<std::vector<int64_t>, kNDim> grid_indices;
+  // 1. Find indices for all axes. The buffers are reused by the next calls
+  // of the thread, instead of being allocated for every point.
+  thread_local std::array<std::vector<int64_t>, kNDim> grid_indices;
   std::array<std::pair<int64_t, int64_t>, kNDim> bracketing_indices;
   std::array<size_t, kNDim> points_per_dim;
   bool success = true;
@@ -63,8 +64,8 @@ auto load_cache_generic(const GridType& grid,
     const auto& val = std::get<I>(query_coords);
     const auto& ax = grid.template axis<I>();
 
-    auto indices =
-        ax.find_indexes(val, cache.template half_window<I>(), boundary);
+    auto indices = ax.find_indexes(val, cache.template half_window<I>(),
+                                   boundary, grid_indices[I]);
 
     if (!indices) {
       // Indices may be not found for two reasons:
@@ -78,8 +79,7 @@ auto load_cache_generic(const GridType& grid,
       }
       return;
     }
-    grid_indices[I] = std::move(indices->first);
-    bracketing_indices[I] = std::move(indices->second);
+    bracketing_indices[I] = *indices;
     points_per_dim[I] = grid_indices[I].size();
   };
 

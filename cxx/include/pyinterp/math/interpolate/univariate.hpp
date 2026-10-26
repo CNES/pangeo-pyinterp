@@ -29,8 +29,8 @@ class Univariate : public BracketFinder<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  [[nodiscard]] auto operator()(const Vector<T>& xa, const Vector<T>& ya,
-                                const T x) -> T {
+  [[nodiscard]] auto operator()(const ConstVectorRef<T>& xa,
+                                const ConstVectorRef<T>& ya, const T x) -> T {
     return compute_coefficients(xa, ya) ? interpolate_(xa, ya, x)
                                         : Fill<T>::value();
   }
@@ -40,8 +40,9 @@ class Univariate : public BracketFinder<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The points where the interpolation must be calculated.
   /// @return The interpolated values at the points x.
-  [[nodiscard]] auto operator()(const Vector<T>& xa, const Vector<T>& ya,
-                                const Vector<T>& x) -> Vector<T> {
+  [[nodiscard]] auto operator()(const ConstVectorRef<T>& xa,
+                                const ConstVectorRef<T>& ya, const Vector<T>& x)
+      -> Vector<T> {
     if (!compute_coefficients(xa, ya)) {
       return Vector<T>::Constant(x.size(), Fill<T>::value());
     }
@@ -60,8 +61,8 @@ class Univariate : public BracketFinder<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
-  [[nodiscard]] auto derivative(const Vector<T>& xa, const Vector<T>& ya,
-                                const T x) -> T {
+  [[nodiscard]] auto derivative(const ConstVectorRef<T>& xa,
+                                const ConstVectorRef<T>& ya, const T x) -> T {
     return compute_coefficients(xa, ya) ? derivative_(xa, ya, x)
                                         : Fill<T>::value();
   }
@@ -71,8 +72,9 @@ class Univariate : public BracketFinder<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The points where the derivative must be calculated.
   /// @return The derivatives of the interpolation function at the points x.
-  [[nodiscard]] auto derivative(const Vector<T>& xa, const Vector<T>& ya,
-                                const Vector<T>& x) -> Vector<T> {
+  [[nodiscard]] auto derivative(const ConstVectorRef<T>& xa,
+                                const ConstVectorRef<T>& ya, const Vector<T>& x)
+      -> Vector<T> {
     if (!compute_coefficients(xa, ya)) {
       return Vector<T>::Constant(x.size(), Fill<T>::value());
     }
@@ -92,27 +94,26 @@ class Univariate : public BracketFinder<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  [[nodiscard]] virtual auto interpolate_(const Vector<T>& xa,
-                                          const Vector<T>& ya, const T x) const
-      -> T = 0;
+  [[nodiscard]] virtual auto interpolate_(const ConstVectorRef<T>& xa,
+                                          const ConstVectorRef<T>& ya,
+                                          const T x) const -> T = 0;
 
   /// @brief Calculate the derivative of y at x.
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
-  [[nodiscard]] virtual auto derivative_(const Vector<T>& xa,
-                                         const Vector<T>& ya, const T x) const
-      -> T = 0;
+  [[nodiscard]] virtual auto derivative_(const ConstVectorRef<T>& xa,
+                                         const ConstVectorRef<T>& ya,
+                                         const T x) const -> T = 0;
 
   /// @brief Check if the arrays are valid.
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
   /// @return True if the coefficients were successfully computed, false
   /// otherwise.
-  [[nodiscard]] virtual constexpr auto compute_coefficients(const Vector<T>& xa,
-                                                            const Vector<T>& ya)
-      -> bool {
+  [[nodiscard]] virtual constexpr auto compute_coefficients(
+      const ConstVectorRef<T>& xa, const ConstVectorRef<T>& ya) -> bool {
     if (xa.size() != ya.size()) [[unlikely]] {
       throw std::invalid_argument("xa and ya must have the same size");
     }

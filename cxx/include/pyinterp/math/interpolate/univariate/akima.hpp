@@ -57,8 +57,8 @@ class Akima : public Univariate<T> {
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
   /// @return True if coefficients computed successfully
-  [[nodiscard]] constexpr auto compute_coefficients(const Vector<T>& xa,
-                                                    const Vector<T>& ya)
+  [[nodiscard]] constexpr auto compute_coefficients(const ConstVectorRef<T>& xa,
+                                                    const ConstVectorRef<T>& ya)
       -> bool final;
 
   /// @brief Interpolation using Akima cubic polynomials
@@ -66,8 +66,8 @@ class Akima : public Univariate<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the interpolation must be calculated.
   /// @return The interpolated value at the point x.
-  [[nodiscard]] constexpr auto interpolate_(const Vector<T>& xa,
-                                            const Vector<T>& ya,
+  [[nodiscard]] constexpr auto interpolate_(const ConstVectorRef<T>& xa,
+                                            const ConstVectorRef<T>& ya,
                                             const T x) const -> T final;
 
   /// @brief Returns the derivative of the interpolation function at point x.
@@ -75,9 +75,9 @@ class Akima : public Univariate<T> {
   /// @param[in] ya Y-coordinates of the data points.
   /// @param[in] x The point where the derivative must be calculated.
   /// @return The derivative of the interpolation function at the point x.
-  [[nodiscard]] constexpr auto derivative_(const Vector<T>& xa,
-                                           const Vector<T>& ya, const T x) const
-      -> T final;
+  [[nodiscard]] constexpr auto derivative_(const ConstVectorRef<T>& xa,
+                                           const ConstVectorRef<T>& ya,
+                                           const T x) const -> T final;
 };
 
 // ============================================================================
@@ -85,8 +85,9 @@ class Akima : public Univariate<T> {
 // ============================================================================
 
 template <std::floating_point T>
-constexpr auto Akima<T>::compute_coefficients(const Vector<T>& xa,
-                                              const Vector<T>& ya) -> bool {
+constexpr auto Akima<T>::compute_coefficients(const ConstVectorRef<T>& xa,
+                                              const ConstVectorRef<T>& ya)
+    -> bool {
   if (!Univariate<T>::compute_coefficients(xa, ya)) [[unlikely]] {
     return false;
   }
@@ -136,7 +137,8 @@ constexpr auto Akima<T>::compute_coefficients(const Vector<T>& xa,
 }
 
 template <std::floating_point T>
-constexpr auto Akima<T>::interpolate_(const Vector<T>& xa, const Vector<T>& ya,
+constexpr auto Akima<T>::interpolate_(const ConstVectorRef<T>& xa,
+                                      const ConstVectorRef<T>& ya,
                                       const T x) const -> T {
   const auto search = this->search(xa, x);
   if (!search) [[unlikely]] {
@@ -160,9 +162,9 @@ constexpr auto Akima<T>::interpolate_(const Vector<T>& xa, const Vector<T>& ya,
 }
 
 template <std::floating_point T>
-constexpr auto Akima<T>::derivative_(const Vector<T>& xa,
-                                     [[maybe_unused]] const Vector<T>& ya,
-                                     const T x) const -> T {
+constexpr auto Akima<T>::derivative_(
+    const ConstVectorRef<T>& xa, [[maybe_unused]] const ConstVectorRef<T>& ya,
+    const T x) const -> T {
   const auto search = this->search(xa, x);
   if (!search) [[unlikely]] {
     return Fill<T>::value();

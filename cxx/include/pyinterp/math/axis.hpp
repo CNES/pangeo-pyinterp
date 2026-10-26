@@ -9,7 +9,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <deque>
 #include <format>
 #include <limits>
 #include <memory>
@@ -363,6 +362,21 @@ class Axis {
   [[nodiscard]] auto find_indexes(T coordinate, size_t half_window_size,
                                   axis::Boundary boundary) const
       -> std::optional<axis::IndexWindow>;
+
+  /// @brief Same as above, writing the window indexes into a buffer owned by
+  /// the caller, which avoids allocating memory for each coordinate.
+  ///
+  /// @param[in] coordinate Position in this coordinate system
+  /// @param[in] half_window_size Number of indexes to retrieve on each side
+  /// @param[in] boundary Type of boundary handling
+  /// @param[out] indexes Window indexes; its content is unspecified when no
+  /// window is found
+  /// @return The bracketing pair relative to the window, or std::nullopt if
+  /// the boundary constraints cannot be satisfied
+  [[nodiscard]] auto find_indexes(T coordinate, size_t half_window_size,
+                                  axis::Boundary boundary,
+                                  std::vector<int64_t>& indexes) const
+      -> std::optional<std::pair<int64_t, int64_t>>;
 
   /// @brief Get a string representation of a coordinate handled by this axis.
   ///
@@ -821,20 +835,39 @@ template <typename T>
 auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
                            axis::Boundary boundary) const
     -> std::optional<axis::IndexWindow> {
+  auto indexes = std::vector<int64_t>();
+  auto center = find_indexes(coordinate, half_window_size, boundary, indexes);
+  if (!center) {
+    return {};
+  }
+  return std::make_pair(std::move(indexes), *center);
+}
+
+// ============================================================================
+
+template <typename T>
+  requires std::is_arithmetic_v<T>
+auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
+                           axis::Boundary boundary,
+                           std::vector<int64_t>& indexes) const
+    -> std::optional<std::pair<int64_t, int64_t>> {
+  indexes.clear();
   if (half_window_size == 0) {
     return {};
   }
-  auto indexes = find_indexes(coordinate);
-  if (!indexes) {
+  auto bracket = find_indexes(coordinate);
+  if (!bracket) {
     // If the requested coordinate cannot be framed, check if the axis is a
     // singleton. For a singleton axis, the result is valid only if the
     // requested coordinate matches the single value stored in the axis.
     if (this->size() != 1) {
       return {};
     }
-    return std::make_pair(std::vector<int64_t>(half_window_size << 1U, 0),
-                          std::make_pair(0, 0));
+    indexes.assign(half_window_size << 1U, 0);
+    return std::make_pair(0, 0);
   }
+  const auto [i0, i1] = *bracket;
+
   // Length of the axis
   const auto container_size = this->size();
 
@@ -842,47 +875,38 @@ auto Axis<T>::find_indexes(T coordinate, size_t half_window_size,
   const auto handle_boundary =
       Axis<T>::make_boundary_handler(boundary, is_periodic_);
 
-  // Use a deque to efficiently push to the front and back
-  auto result = std::deque<int64_t>();
-  result.push_back(std::get<0>(*indexes));
-  result.push_back(std::get<1>(*indexes));
-
-  // Center indexes in the result window
-  auto center_indexes = std::pair<int64_t, int64_t>(0, 1);
-
-  // Offset in relation to the first indexes found
-  size_t shift = 1;
-
-  // Construction of window indexes based on the initial indexes found
-  while (shift < half_window_size) {
-    int64_t before = std::get<0>(*indexes) - shift;
+  // Indexes before the bracket, nearest first. A violation of the boundary
+  // that cannot be handled yields no window; in shrink mode the index is
+  // dropped.
+  for (size_t shift = 1; shift < half_window_size; ++shift) {
+    int64_t before = i0 - static_cast<int64_t>(shift);
     if (before < 0) {
       before = handle_boundary(before, container_size);
     }
     if (before >= 0) {
-      result.push_front(before);
-      // Shift center indexes to the right
-      center_indexes.first++;
-      center_indexes.second++;
+      indexes.push_back(before);
     } else if (boundary != axis::kShrink) {
-      // Boundary violation cannot be handled. Return an empty result.
       return {};
     }
+  }
+  std::ranges::reverse(indexes);
+  const auto center = static_cast<int64_t>(indexes.size());
+  indexes.push_back(i0);
+  indexes.push_back(i1);
 
-    int64_t after = std::get<1>(*indexes) + shift;
+  // Indexes after the bracket
+  for (size_t shift = 1; shift < half_window_size; ++shift) {
+    int64_t after = i1 + static_cast<int64_t>(shift);
     if (after >= container_size) {
       after = handle_boundary(after, container_size);
     }
     if (after >= 0) {
-      result.push_back(after);
+      indexes.push_back(after);
     } else if (boundary != axis::kShrink) {
-      // Boundary violation cannot be handled. Return an empty result.
       return {};
     }
-    ++shift;
   }
-  return std::make_pair(std::vector<int64_t>(result.begin(), result.end()),
-                        center_indexes);
+  return std::make_pair(center, center + 1);
 }
 
 // ============================================================================
