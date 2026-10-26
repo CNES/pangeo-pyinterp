@@ -8,7 +8,10 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <cstdint>
 #include <limits>
+#include <numbers>
+#include <random>
 
 namespace pyinterp::fill {
 
@@ -78,62 +81,59 @@ TEST(MultiGridDetailTest, ComputeResidualMasked) {
 
 // Test restrict_grid
 TEST(MultiGridDetailTest, RestrictGrid) {
-  RowMajorMatrix<double> fine(4, 4);
-  fine << 1.0, 2.0, 3.0, 4.0,  //
-      5.0, 6.0, 7.0, 8.0,      //
-      9.0, 10.0, 11.0, 12.0,   //
-      13.0, 14.0, 15.0, 16.0;
+  // A constant field is preserved everywhere, borders included.
+  RowMajorMatrix<double> constant = RowMajorMatrix<double>::Constant(5, 5, 7.0);
+  Matrix<double> coarse(3, 3);
+  detail::restrict_grid<double>(coarse, constant, false);
+  EXPECT_TRUE(coarse.isApproxToConstant(7.0));
 
-  Matrix<double> coarse(2, 2);
-
-  detail::restrict_grid<double>(coarse, fine, false);
-
-  // coarse(0,0) = 0.25 * (1+2+5+6) = 3.5
-  EXPECT_DOUBLE_EQ(coarse(0, 0), 3.5);
-
-  // coarse(0,1) = 0.25 * (3+4+7+8) = 5.5
-  EXPECT_DOUBLE_EQ(coarse(0, 1), 5.5);
-
-  // coarse(1,0) = 0.25 * (9+10+13+14) = 11.5
-  EXPECT_DOUBLE_EQ(coarse(1, 0), 11.5);
-
-  // coarse(1,1) = 0.25 * (11+12+15+16) = 13.5
-  EXPECT_DOUBLE_EQ(coarse(1, 1), 13.5);
+  // A linear field is preserved at interior points.
+  RowMajorMatrix<double> linear(5, 5);
+  for (int64_t ix = 0; ix < 5; ++ix) {
+    for (int64_t iy = 0; iy < 5; ++iy) {
+      linear(ix, iy) = 10.0 * static_cast<double>(ix) + static_cast<double>(iy);
+    }
+  }
+  detail::restrict_grid<double>(coarse, linear, false);
+  EXPECT_DOUBLE_EQ(coarse(1, 1), 22.0);
 }
 
-TEST(MultiGridDetailTest, RestrictGridOddSize) {
-  RowMajorMatrix<double> fine(3, 3);
-  fine << 1.0, 2.0, 3.0,  //
-      4.0, 5.0, 6.0,      //
-      7.0, 8.0, 9.0;
+TEST(MultiGridDetailTest, RestrictGridWeights) {
+  // A spike on a fine point spreads with the full-weighting stencil: 4/16 to
+  // the coarse point it coincides with, 2/16 to the coarse points it lies
+  // halfway between.
+  RowMajorMatrix<double> fine = RowMajorMatrix<double>::Zero(7, 7);
+  Matrix<double> coarse(4, 4);
 
-  Matrix<double> coarse(2, 2);
-
+  fine(2, 2) = 16.0;
   detail::restrict_grid<double>(coarse, fine, false);
+  EXPECT_DOUBLE_EQ(coarse(1, 1), 4.0);
+  EXPECT_DOUBLE_EQ(coarse(0, 1), 0.0);
 
-  // With reflective boundary, indices are adjusted
-  // coarse(0,0) = 0.25 * (fine[0,0] + fine[1,0] + fine[0,1] + fine[1,1])
-  EXPECT_DOUBLE_EQ(coarse(0, 0), 0.25 * (1.0 + 4.0 + 2.0 + 5.0));
+  fine.setZero();
+  fine(3, 2) = 16.0;
+  detail::restrict_grid<double>(coarse, fine, false);
+  EXPECT_DOUBLE_EQ(coarse(1, 1), 2.0);
+  EXPECT_DOUBLE_EQ(coarse(2, 1), 2.0);
+  EXPECT_DOUBLE_EQ(coarse(1, 0), 0.0);
 }
 
 // Test restrict_mask
 TEST(MultiGridDetailTest, RestrictMask) {
-  Matrix<bool> fine(4, 4);
+  Matrix<bool> fine(5, 5);
   fine.setConstant(false);
-  fine(0, 0) = true;
-  fine(1, 1) = true;
+  fine(1, 1) = true;  // Between coarse points: not injected
+  fine(2, 2) = true;  // Coincides with coarse (1, 1)
+  fine(4, 0) = true;  // Coincides with coarse (2, 0)
 
-  Matrix<bool> coarse(2, 2);
+  Matrix<bool> coarse(3, 3);
 
-  detail::restrict_mask(coarse, fine, false);
+  detail::restrict_mask(coarse, fine);
 
-  // coarse(0,0) should be true (includes fine(0,0) and fine(1,1))
-  EXPECT_TRUE(coarse(0, 0));
-
-  // Other coarse cells should be false
-  EXPECT_FALSE(coarse(0, 1));
-  EXPECT_FALSE(coarse(1, 0));
-  EXPECT_FALSE(coarse(1, 1));
+  EXPECT_FALSE(coarse(0, 0));
+  EXPECT_TRUE(coarse(1, 1));
+  EXPECT_TRUE(coarse(2, 0));
+  EXPECT_EQ(coarse.count(), 2);
 }
 
 // Test prolong_grid
@@ -408,6 +408,38 @@ TEST(MultiGridTest, LargeGrid) {
     for (int j = 0; j < grid.cols(); ++j) {
       EXPECT_FALSE(std::isnan(grid(i, j)));
     }
+  }
+}
+
+// The number of V-cycles must not grow with the grid size: a few percent of
+// scattered gaps plus a large hole must converge in a handful of cycles.
+TEST(MultiGridTest, ConvergenceIndependentOfSize) {
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  for (const int64_t nx : {128, 256, 512}) {
+    const int64_t ny = nx / 2;
+    RowMajorMatrix<double> grid(nx, ny);
+    auto gen = std::mt19937(42);
+    auto uniform = std::uniform_real_distribution<>(0.0, 1.0);
+    for (int64_t ix = 0; ix < nx; ++ix) {
+      for (int64_t iy = 0; iy < ny; ++iy) {
+        grid(ix, iy) = uniform(gen) < 0.1 ? nan
+                                          : std::sin(2.0 * std::numbers::pi *
+                                                     static_cast<double>(ix) /
+                                                     static_cast<double>(nx));
+      }
+    }
+    grid.block(nx / 3, ny / 3, nx / 10, ny / 10).setConstant(nan);
+
+    config::fill::Multigrid config;
+    config =
+        config.with_max_iterations(100).with_epsilon(1e-4).with_is_periodic(
+            true);
+
+    auto [iterations, max_residual] = multigrid<double>(grid, config);
+
+    EXPECT_LT(max_residual, config.epsilon()) << "nx=" << nx;
+    EXPECT_LE(iterations, 20) << "nx=" << nx;
+    EXPECT_FALSE(grid.hasNaN()) << "nx=" << nx;
   }
 }
 

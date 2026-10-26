@@ -65,8 +65,11 @@ void compute_residual(Matrix<Type>& residual, const GridType& grid,
 
 /// @brief Restricts a grid from fine (N) to coarse (N/2) using full weighting.
 ///
-/// Uses 2x2 box averaging. For odd-sized grids, the boundary helper ensures
-/// proper handling of edge cells via reflection.
+/// The coarse point (i, j) coincides with the fine point (2i, 2j), as in
+/// prolong_grid: it receives the 9-point weighted average centred there
+/// (weights 4 at the centre, 2 on the edges, 1 on the corners, over 16), the
+/// adjoint of the bilinear prolongation. Neighbours outside the grid are
+/// handled by reflection, or by wrapping in x when the grid is periodic.
 ///
 /// @tparam Type Data type (must be floating point).
 /// @tparam GridType Type of the input grid.
@@ -81,62 +84,48 @@ void restrict_grid(Matrix<Type>& coarse_grid, const GridType& fine_grid,
   const auto fine_x = fine_grid.rows();
   const auto fine_y = fine_grid.cols();
 
-  constexpr Type scale = Type(0.25);
+  constexpr Type scale = Type(1) / Type(16);
 
   // Create boundary helper for fine grid indices
   fill::DynamicNeighbors fine_nbr(fine_x, fine_y, is_periodic, false);
 
   for (int64_t ix = 0; ix < coarse_x; ++ix) {
-    // Update x-neighbor once per row (for 2*ix index in fine grid)
-    fine_nbr.update_x(2 * ix);
-    const auto jx0 = 2 * ix;
-    const auto jx1 = fine_nbr.ix1;
+    const auto jx = 2 * ix;
+    fine_nbr.update_x(jx);
 
     for (int64_t iy = 0; iy < coarse_y; ++iy) {
-      // Update y-neighbor for current cell (for 2*iy index in fine grid)
-      fine_nbr.update_y(2 * iy);
-      const auto jy0 = 2 * iy;
-      const auto jy1 = fine_nbr.iy1;
+      const auto jy = 2 * iy;
+      fine_nbr.update_y(jy);
 
-      // 2x2 box average (full weighting)
-      coarse_grid(ix, iy) = scale * (fine_grid(jx0, jy0) + fine_grid(jx1, jy0) +
-                                     fine_grid(jx0, jy1) + fine_grid(jx1, jy1));
+      const auto centre = fine_grid(jx, jy);
+      const auto edges =
+          fine_grid(fine_nbr.ix0, jy) + fine_grid(fine_nbr.ix1, jy) +
+          fine_grid(jx, fine_nbr.iy0) + fine_grid(jx, fine_nbr.iy1);
+      const auto corners = fine_grid(fine_nbr.ix0, fine_nbr.iy0) +
+                           fine_grid(fine_nbr.ix0, fine_nbr.iy1) +
+                           fine_grid(fine_nbr.ix1, fine_nbr.iy0) +
+                           fine_grid(fine_nbr.ix1, fine_nbr.iy1);
+      coarse_grid(ix, iy) =
+          scale * (Type(4) * centre + Type(2) * edges + corners);
     }
   }
 }
 
-/// @brief Restricts the mask from fine to coarse.
+/// @brief Restricts the mask from fine to coarse by injection.
 ///
-/// A coarse pixel is masked if any of its 4 fine children are masked.
+/// A coarse point is unknown if the fine point it coincides with, (2i, 2j),
+/// is unknown. Marking it unknown as soon as any neighbouring fine point is
+/// would leave the coarse levels with almost no known values when the gaps
+/// are scattered, and the coarse-grid correction would no longer match the
+/// fine problem.
 ///
 /// @param[out] coarse_mask Output coarse mask.
 /// @param[in] fine_mask Input fine mask.
-/// @param[in] is_periodic Whether the grid is periodic in the x-direction.
 inline void restrict_mask(Matrix<bool>& coarse_mask,
-                          const Matrix<bool>& fine_mask,
-                          const bool is_periodic) {
-  const auto coarse_x = coarse_mask.rows();
-  const auto coarse_y = coarse_mask.cols();
-  const auto fine_x = fine_mask.rows();
-  const auto fine_y = fine_mask.cols();
-
-  // Create boundary helper once (for fine grid indices)
-  fill::DynamicNeighbors fine_nbr(fine_x, fine_y, is_periodic, false);
-
-  for (int64_t ix = 0; ix < coarse_x; ++ix) {
-    // Update x-neighbor once per row (for 2*ix index in fine grid)
-    fine_nbr.update_x(2 * ix);
-    const auto jx0 = 2 * ix;
-    const auto jx1 = fine_nbr.ix1;
-
-    for (int64_t iy = 0; iy < coarse_y; ++iy) {
-      // Update y-neighbor for current cell (for 2*iy index in fine grid)
-      fine_nbr.update_y(2 * iy);
-      const auto jy0 = 2 * iy;
-      const auto jy1 = fine_nbr.iy1;
-
-      coarse_mask(ix, iy) = fine_mask(jx0, jy0) || fine_mask(jx1, jy0) ||
-                            fine_mask(jx0, jy1) || fine_mask(jx1, jy1);
+                          const Matrix<bool>& fine_mask) {
+  for (int64_t ix = 0; ix < coarse_mask.rows(); ++ix) {
+    for (int64_t iy = 0; iy < coarse_mask.cols(); ++iy) {
+      coarse_mask(ix, iy) = fine_mask(2 * ix, 2 * iy);
     }
   }
 }
@@ -262,7 +251,10 @@ void v_cycle(GridType& grid, const RhsType& rhs, const Matrix<bool>& mask,
   Matrix<Type> coarse_rhs(coarse_x, coarse_y);
   Matrix<bool> coarse_mask(coarse_x, coarse_y);
   restrict_grid<Type>(coarse_rhs, residual, is_periodic);
-  restrict_mask(coarse_mask, mask, is_periodic);
+  // The operator is normalised by the diagonal (h^2 / 4 times the Laplacian):
+  // with a grid step twice as large, the coarse equation is scaled by 4.
+  coarse_rhs *= Type(4);
+  restrict_mask(coarse_mask, mask);
 
   // 4. Solve error equation on coarse grid: A*e = r
   Matrix<Type> coarse_error = Matrix<Type>::Zero(coarse_x, coarse_y);
