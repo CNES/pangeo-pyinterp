@@ -24,6 +24,16 @@ Build an R-tree on geographic coordinates expressed directly in degrees.
 All distance calculations and interpolations are performed on the spheroid;
 no conversion to ECEF is applied.
 
+Note:
+    Searching this tree evaluates geodesic distances to its nodes, which is
+    slow: 20 to 25 times slower than :py:func:`pyinterp.RTree3D` on the same
+    points. Created with a spheroid, ``RTree3D(Spheroid())``, it accepts
+    longitude/latitude too, converts them to ECEF and measures straight-line
+    (chord) distances. Both find the same neighbors, except for near-ties. Use this class only when the reported
+    distances, or the interpolation weights derived from them, must be
+    geodesic: the chord is shorter than the geodesic by about 0.1% at
+    1,000 km and 2.6% at 5,000 km, and the two are equal at short range.
+
 Examples:
 	>>> import numpy as np
 	>>> from pyinterp.core.geometry.geographic import RTree

@@ -117,3 +117,22 @@ Specialized R-Tree implementation for geographic (spherical/ellipsoidal) coordin
    spatial indexing on spherical/ellipsoidal coordinates (longitude/latitude).
    This is the same class alias used throughout the library's high-level API
    as :py:class:`pyinterp.geometry.geographic.RTree`.
+
+Choosing between the two indexes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Both accept longitude/latitude points and find the same neighbors, except
+for near-ties. They differ by the distance they measure:
+
+* :py:func:`RTree3D(spheroid) <pyinterp.RTree3D>`, created with a
+  spheroid (without one, the coordinates are taken as Cartesian), converts
+  the points to ECEF and uses straight-line (chord) distances. It is the
+  faster index, 20 to 25 times faster to query, and also supports
+  altitudes, any spheroid and single precision.
+* :py:class:`geographic.RTree <pyinterp.core.geometry.geographic.RTree>`
+  uses geodesic distances on the WGS84 ellipsoid, for queries and for the
+  weights of the interpolators.
+
+The chord is shorter than the geodesic by about 0.001% at 100 km, 0.1% at
+1,000 km and 2.6% at 5,000 km. Prefer ``RTree3D`` unless the distances, or
+the weights derived from them, must be geodesic over long ranges.
