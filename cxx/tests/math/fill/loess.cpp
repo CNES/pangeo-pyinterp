@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <cstdint>
 #include <limits>
 
 namespace pyinterp::fill {
@@ -254,6 +255,45 @@ TEST(LoessTest, PeriodicBoundary) {
   for (int i = 0; i < result.rows(); ++i) {
     for (int j = 0; j < result.cols(); ++j) {
       EXPECT_FALSE(std::isnan(result(i, j)));
+    }
+  }
+}
+
+// With a periodic x-axis, the neighbours across the seam must weigh as much as
+// the others: filling a grid rolled along x gives the rolled result.
+TEST(LoessTest, PeriodicSeamInvariance) {
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+  constexpr int64_t nx = 16;
+  constexpr int64_t ny = 8;
+  constexpr int64_t shift = nx / 2;
+
+  RowMajorMatrix<double> data(nx, ny);
+  for (int64_t ix = 0; ix < nx; ++ix) {
+    for (int64_t iy = 0; iy < ny; ++iy) {
+      data(ix, iy) = std::cos(static_cast<double>(3 * ix + 5 * iy));
+    }
+  }
+  // Gaps on the seam
+  data(0, 3) = nan;
+  data(nx - 1, 5) = nan;
+
+  RowMajorMatrix<double> rolled(nx, ny);
+  for (int64_t ix = 0; ix < nx; ++ix) {
+    rolled.row((ix + shift) % nx) = data.row(ix);
+  }
+
+  config::fill::Loess config;
+  config =
+      config.with_nx(3).with_ny(2).with_is_periodic(true).with_max_iterations(
+          1);
+
+  const auto result = loess<double>(data, config);
+  const auto result_rolled = loess<double>(rolled, config);
+
+  for (int64_t ix = 0; ix < nx; ++ix) {
+    for (int64_t iy = 0; iy < ny; ++iy) {
+      EXPECT_DOUBLE_EQ(result(ix, iy), result_rolled((ix + shift) % nx, iy))
+          << "ix=" << ix << " iy=" << iy;
     }
   }
 }

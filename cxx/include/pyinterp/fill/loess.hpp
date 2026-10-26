@@ -51,53 +51,60 @@ template <LoessScalar T>
 }
 
 /// Thread-local workspace for LOESS computation.
+template <LoessScalar T>
 struct LoessWorkspace {
   std::vector<std::int64_t> x_frame;
   std::vector<std::int64_t> y_frame;
+  /// Tri-cube weight of each window offset, row-major over (x, y). The
+  /// weights depend on the position in the window, not on the grid indexes
+  /// the window maps to: neighbours across a periodic seam or reflected at
+  /// an edge get the weight of their offset.
+  std::vector<T> weights;
 
   LoessWorkspace(std::uint32_t nx, std::uint32_t ny)
       : x_frame(2 * static_cast<std::size_t>(nx) + 1),
-        y_frame(2 * static_cast<std::size_t>(ny) + 1) {}
+        y_frame(2 * static_cast<std::size_t>(ny) + 1),
+        weights(x_frame.size() * y_frame.size()) {
+    const auto nx_inv = T{1} / static_cast<T>(nx);
+    const auto ny_inv = T{1} / static_cast<T>(ny);
+    auto weight = weights.begin();
+    for (std::int64_t kx = -static_cast<std::int64_t>(nx);
+         kx <= static_cast<std::int64_t>(nx); ++kx) {
+      for (std::int64_t ky = -static_cast<std::int64_t>(ny);
+           ky <= static_cast<std::int64_t>(ny); ++ky) {
+        const auto dx = static_cast<T>(kx) * nx_inv;
+        const auto dy = static_cast<T>(ky) * ny_inv;
+        *weight++ = tricube_weight(std::sqrt(dx * dx + dy * dy));
+      }
+    }
+  }
 };
 
 /// Compute LOESS value for a single point.
 /// @param[in] data_values Matrix containing the values for neighbor
 /// calculation.
-/// @param[in] config LOESS configuration parameters.
-/// @param[in] workspace Thread-local workspace for computations.
-/// @param[in] ix Row index of the target point.
-/// @param[in] iy Column index of the target point.
-/// @param[in] current_value Current value at (ix, iy) to return if no neighbors
-/// found.
-/// @return Computed LOESS value for the point at (ix, iy).
+/// @param[in] workspace Thread-local workspace holding the window indexes of
+/// the point and the weights.
+/// @param[in] current_value Current value of the point to return if no
+/// neighbors found.
+/// @return Computed LOESS value for the point.
 template <LoessScalar T, typename Derived>
 [[nodiscard]] auto loess_point(const Eigen::MatrixBase<Derived>& data_values,
-                               const config::fill::Loess& config,
-                               const LoessWorkspace& workspace,
-                               const int64_t ix, const int64_t iy,
+                               const LoessWorkspace<T>& workspace,
                                const T current_value) -> T {
   T weighted_sum{0};
   T weight_sum{0};
 
-  const auto nx_inv = T{1} / static_cast<T>(config.nx());
-  const auto ny_inv = T{1} / static_cast<T>(config.ny());
-
+  auto weight = workspace.weights.begin();
   for (const auto wx : workspace.x_frame) {
     for (const auto wy : workspace.y_frame) {
       const auto zi = data_values(wx, wy);
 
       if (!std::isnan(zi)) {
-        // Normalize distances
-        const auto dx = static_cast<T>(wx - ix) * nx_inv;
-        const auto dy = static_cast<T>(wy - iy) * ny_inv;
-        const auto distance = std::sqrt(dx * dx + dy * dy);
-
-        // Apply tri-cube weight
-        const auto weight = tricube_weight(distance);
-
-        weighted_sum += weight * zi;
-        weight_sum += weight;
+        weighted_sum += *weight * zi;
+        weight_sum += *weight;
       }
+      ++weight;
     }
   }
 
@@ -115,7 +122,7 @@ template <LoessScalar T, typename Derived1, typename Derived2>
 void process_row(const Eigen::MatrixBase<Derived1>& data_values,
                  const Eigen::MatrixBase<Derived2>& data_validity,
                  RowMajorMatrix<T>& result, const config::fill::Loess& config,
-                 LoessWorkspace& workspace, const int64_t ix) {
+                 LoessWorkspace<T>& workspace, const int64_t ix) {
   const auto num_rows = data_values.rows();
   const auto num_cols = data_values.cols();
 
@@ -131,8 +138,8 @@ void process_row(const Eigen::MatrixBase<Derived1>& data_values,
     }
 
     frame_index(iy, num_cols, /*is_angle=*/false, workspace.y_frame);
-    result(ix, iy) = loess_point<T>(data_values, config, workspace, ix, iy,
-                                    data_values(ix, iy));
+    result(ix, iy) =
+        loess_point<T>(data_values, workspace, data_values(ix, iy));
   }
 }
 
@@ -190,7 +197,7 @@ void loess_single_pass(const Eigen::MatrixBase<Derived1>& data_values,
   parallel_for(
       data_values.rows(),
       [&](std::int64_t start, std::int64_t end) {
-        LoessWorkspace workspace(config.nx(), config.ny());
+        LoessWorkspace<T> workspace(config.nx(), config.ny());
         for (int64_t ix = start; ix < end; ++ix) {
           process_row(data_values, data_validity, result, config, workspace,
                       ix);
