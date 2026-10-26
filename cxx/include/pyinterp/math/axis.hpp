@@ -765,11 +765,16 @@ auto Axis<T>::find_indexes(T coordinate) const
     i1 = ascending ? i0 + 1 : i0 - 1;
   }
 
-  // Handle periodic wrapping
+  // Handle periodic wrapping. The indexes are at most one step outside
+  // [0, size), which avoids two integer divisions per lookup.
   if (is_periodic_) {
-    return std::make_optional(
-        std::make_pair(math::remainder(i0, container_size),
-                       math::remainder(i1, container_size)));
+    const auto wrap = [container_size](const int64_t index) -> int64_t {
+      if (index < 0) {
+        return index + container_size;
+      }
+      return index >= container_size ? index - container_size : index;
+    };
+    return std::make_optional(std::make_pair(wrap(i0), wrap(i1)));
   }
 
   return (i0 >= 0 && i1 >= 0 && i0 < container_size && i1 < container_size)

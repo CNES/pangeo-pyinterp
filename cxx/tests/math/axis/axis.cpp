@@ -264,6 +264,26 @@ TYPED_TEST(AxisTestSuite, PeriodicAxis0To359NegativeWrap) {
   }
 }
 
+// Coordinates on either side of the seam are framed by the last and the first
+// points.
+TYPED_TEST(AxisTestSuite, PeriodicAxisSeam) {
+  if constexpr (std::is_floating_point_v<TypeParam>) {
+    this->CreateRegularAxis(0, 359, 360, true);
+    auto* axis = this->axis();
+
+    expect_index_pair<TypeParam>(
+        axis->find_indexes(static_cast<TypeParam>(359.5)), 359, 0);
+    expect_index_pair<TypeParam>(
+        axis->find_indexes(static_cast<TypeParam>(-0.5)), 359, 0);
+    expect_index_pair<TypeParam>(
+        axis->find_indexes(static_cast<TypeParam>(719.5)), 359, 0);
+    expect_index_pair<TypeParam>(
+        axis->find_indexes(static_cast<TypeParam>(0.5)), 0, 1);
+    expect_index_pair<TypeParam>(
+        axis->find_indexes(static_cast<TypeParam>(358.5)), 358, 359);
+  }
+}
+
 TYPED_TEST(AxisTestSuite, PeriodicAxisFlippedBehavior) {
   this->CreateRegularAxis(0, 359, 360, true);
   auto* axis = this->axis();
