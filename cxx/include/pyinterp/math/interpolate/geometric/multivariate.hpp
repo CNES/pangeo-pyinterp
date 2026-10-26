@@ -3,6 +3,7 @@
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 #pragma once
+#include <array>
 #include <functional>
 #include <type_traits>
 #include <utility>
@@ -137,19 +138,19 @@ template <template <class> class Point, typename T, typename Z = T>
                               const Bivariate<Point, T> &spatial_interpolator,
                               const AxisInterpolator<Z, T> &axis_interpolator)
     -> T {
-  // Step 1: Interpolate spatially at z0 level
-  const auto z0 = spatial_interpolator.evaluate(
-      query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q000,
-      data.q010, data.q100, data.q110);
-
-  // Step 2: Interpolate spatially at z1 level
-  const auto z1 = spatial_interpolator.evaluate(
-      query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q001,
-      data.q011, data.q101, data.q111);
+  // Steps 1 and 2: Interpolate spatially at the z0 and z1 levels, which
+  // share the same cell
+  const std::array<std::array<T, 4>, 2> layers{{
+      {data.q000, data.q010, data.q100, data.q110},
+      {data.q001, data.q011, data.q101, data.q111},
+  }};
+  std::array<T, 2> z{};
+  spatial_interpolator.evaluate_layers(query.spatial, bounds_lower.spatial,
+                                       bounds_upper.spatial, layers, z);
 
   // Step 3: Interpolate along z-axis
   return axis_interpolator(query.third_axis, bounds_lower.third_axis,
-                           bounds_upper.third_axis, z0, z1);
+                           bounds_upper.third_axis, z[0], z[1]);
 }
 
 // ============================================================================
@@ -276,29 +277,24 @@ template <template <class> class Point, typename T, typename Z = T,
     const Bivariate<Point, T> &spatial_interpolator,
     const AxisInterpolator<Z, T> &z_axis_interpolator,
     const AxisInterpolator<U, T> &u_axis_interpolator) -> T {
-  // At u=0: Interpolate in (x, y, z) space
-  const auto z0_u0 = spatial_interpolator.evaluate(
-      query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q0000,
-      data.q0100, data.q1000, data.q1100);
+  // Interpolate spatially the four (z, u) levels, which share the same cell
+  const std::array<std::array<T, 4>, 4> layers{{
+      {data.q0000, data.q0100, data.q1000, data.q1100},  // z0, u0
+      {data.q0010, data.q0110, data.q1010, data.q1110},  // z1, u0
+      {data.q0001, data.q0101, data.q1001, data.q1101},  // z0, u1
+      {data.q0011, data.q0111, data.q1011, data.q1111},  // z1, u1
+  }};
+  std::array<T, 4> levels{};
+  spatial_interpolator.evaluate_layers(query.spatial, bounds_lower.spatial,
+                                       bounds_upper.spatial, layers, levels);
 
-  const auto z1_u0 = spatial_interpolator.evaluate(
-      query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q0010,
-      data.q0110, data.q1010, data.q1110);
-
-  const auto u0 = z_axis_interpolator(query.z_axis, bounds_lower.z_axis,
-                                      bounds_upper.z_axis, z0_u0, z1_u0);
-
-  // At u=1: Interpolate in (x, y, z) space
-  const auto z0_u1 = spatial_interpolator.evaluate(
-      query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q0001,
-      data.q0101, data.q1001, data.q1101);
-
-  const auto z1_u1 = spatial_interpolator.evaluate(
-      query.spatial, bounds_lower.spatial, bounds_upper.spatial, data.q0011,
-      data.q0111, data.q1011, data.q1111);
-
-  const auto u1 = z_axis_interpolator(query.z_axis, bounds_lower.z_axis,
-                                      bounds_upper.z_axis, z0_u1, z1_u1);
+  // At u=0 and u=1: Interpolate along the z-axis
+  const auto u0 =
+      z_axis_interpolator(query.z_axis, bounds_lower.z_axis,
+                          bounds_upper.z_axis, levels[0], levels[1]);
+  const auto u1 =
+      z_axis_interpolator(query.z_axis, bounds_lower.z_axis,
+                          bounds_upper.z_axis, levels[2], levels[3]);
 
   // Final u-axis interpolation
   return u_axis_interpolator(query.u_axis, bounds_lower.u_axis,

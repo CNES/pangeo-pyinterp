@@ -9,8 +9,10 @@
 #include <boost/geometry.hpp>
 #include <cmath>
 #include <concepts>
+#include <cstddef>
 #include <limits>
 #include <memory>
+#include <span>
 #include <type_traits>
 #include <utility>
 
@@ -64,7 +66,45 @@ struct Bivariate {
   [[nodiscard]] constexpr virtual auto evaluate(
       const Point<T> &p, const Point<T> &p0, const Point<T> &p1, const T &q00,
       const T &q01, const T &q10, const T &q11) const -> T = 0;
+
+  /// @brief Interpolates several layers of values sharing the same cell
+  ///
+  /// The 3D and 4D interpolations evaluate the same spatial cell for each
+  /// level of their other axes. Methods whose cost lies in the geometry
+  /// (distances to the corners) override this to compute it once.
+  ///
+  /// @param[in] p Query point
+  /// @param[in] p0 Point of coordinate (x0, y0)
+  /// @param[in] p1 Point of coordinate (x1, y1)
+  /// @param[in] layers Corner values of each layer: {q00, q01, q10, q11}
+  /// @param[out] result Interpolated value of each layer
+  constexpr virtual void evaluate_layers(
+      const Point<T> &p, const Point<T> &p0, const Point<T> &p1,
+      std::span<const std::array<T, 4>> layers, std::span<T> result) const {
+    for (size_t ix = 0; ix < layers.size(); ++ix) {
+      const auto &q = layers[ix];
+      result[ix] = evaluate(p, p0, p1, q[0], q[1], q[2], q[3]);
+    }
+  }
 };
+
+/// @brief Comparable distances from a point to the corners of a cell
+/// @param[in] p Query point
+/// @param[in] p0 Point of coordinate (x0, y0)
+/// @param[in] p1 Point of coordinate (x1, y1)
+/// @return Distances to (x0, y0), (x0, y1), (x1, y0) and (x1, y1)
+template <template <class> class Point, typename T>
+[[nodiscard]] auto corner_distances(const Point<T> &p, const Point<T> &p0,
+                                    const Point<T> &p1) {
+  const auto x0 = boost::geometry::get<0>(p0);
+  const auto y0 = boost::geometry::get<1>(p0);
+  const auto x1 = boost::geometry::get<0>(p1);
+  const auto y1 = boost::geometry::get<1>(p1);
+  return std::array{boost::geometry::comparable_distance(p, Point<T>{x0, y0}),
+                    boost::geometry::comparable_distance(p, Point<T>{x0, y1}),
+                    boost::geometry::comparable_distance(p, Point<T>{x1, y0}),
+                    boost::geometry::comparable_distance(p, Point<T>{x1, y1})};
+}
 
 /// @brief Bilinear interpolation
 ///
@@ -130,6 +170,17 @@ struct Bilinear final : public Bivariate<Point, T> {
     return one_minus_t * (one_minus_u * q00 + u * q01) +
            t * (one_minus_u * q10 + u * q11);
   }
+
+  /// @brief Interpolates several layers without a virtual call per layer
+  constexpr void evaluate_layers(const Point<T> &p, const Point<T> &p0,
+                                 const Point<T> &p1,
+                                 std::span<const std::array<T, 4>> layers,
+                                 std::span<T> result) const override {
+    for (size_t ix = 0; ix < layers.size(); ++ix) {
+      const auto &q = layers[ix];
+      result[ix] = Bilinear::evaluate(p, p0, p1, q[0], q[1], q[2], q[3]);
+    }
+  }
 };
 
 /// @brief Inverse distance weighting interpolation
@@ -189,49 +240,68 @@ struct InverseDistanceWeighting final : public Bivariate<Point, T> {
   [[nodiscard]] auto evaluate(const Point<T> &p, const Point<T> &p0,
                               const Point<T> &p1, const T &q00, const T &q01,
                               const T &q10, const T &q11) const -> T override {
-    const std::array corners = {
-        std::pair{
-            Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)},
-            q00},
-        std::pair{
-            Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p1)},
-            q01},
-        std::pair{
-            Point<T>{boost::geometry::get<0>(p1), boost::geometry::get<1>(p0)},
-            q10},
-        std::pair{
-            Point<T>{boost::geometry::get<0>(p1), boost::geometry::get<1>(p1)},
-            q11}};
+    const auto weights = corner_weights(p, p0, p1);
+    return apply(weights, {q00, q01, q10, q11});
+  }
 
-    constexpr auto epsilon = std::numeric_limits<T>::epsilon();
-    constexpr auto epsilon_squared = epsilon * epsilon;
-    T weight_sum = T(0);
-    T weighted_value_sum = T(0);
-
-    for (const auto &corner : corners) {
-      const auto &corner_point = corner.first;
-      const auto corner_value = corner.second;
-
-      const auto dist_squared =
-          boost::geometry::comparable_distance(p, corner_point);
-
-      // Check for coincident point using squared distance
-      if (dist_squared <= epsilon_squared) {
-        return corner_value;
-      }
-
-      // Compute weight: 1 / distance^exp = 1 / (sqrt(dist_squared))^exp
-      // = 1 / dist_squared^(exp/2)
-      const auto weight =
-          static_cast<T>(1 / std::pow(dist_squared, exp_ * 0.5));
-      weight_sum += weight;
-      weighted_value_sum += corner_value * weight;
+  /// @brief Interpolates several layers, computing the weights once
+  void evaluate_layers(const Point<T> &p, const Point<T> &p0,
+                       const Point<T> &p1,
+                       std::span<const std::array<T, 4>> layers,
+                       std::span<T> result) const override {
+    const auto weights = corner_weights(p, p0, p1);
+    for (size_t ix = 0; ix < layers.size(); ++ix) {
+      result[ix] = apply(weights, layers[ix]);
     }
-
-    return weighted_value_sum / weight_sum;
   }
 
  private:
+  /// Weights of the corners, or the index of the corner the query point
+  /// coincides with
+  struct Weights {
+    std::array<T, 4> values;
+    int coincident;
+  };
+
+  /// @brief Computes the weights of the corners
+  [[nodiscard]] auto corner_weights(const Point<T> &p, const Point<T> &p0,
+                                    const Point<T> &p1) const -> Weights {
+    constexpr auto epsilon = std::numeric_limits<T>::epsilon();
+    constexpr auto epsilon_squared = epsilon * epsilon;
+
+    auto result = Weights{.values = {}, .coincident = -1};
+    const auto distances = corner_distances<Point, T>(p, p0, p1);
+    for (size_t ix = 0; ix < distances.size(); ++ix) {
+      const auto dist_squared = distances[ix];
+      // Check for coincident point using squared distance
+      if (dist_squared <= epsilon_squared) {
+        result.coincident = static_cast<int>(ix);
+        return result;
+      }
+      // Compute weight: 1 / distance^exp = 1 / (sqrt(dist_squared))^exp
+      // = 1 / dist_squared^(exp/2). pow(x, 1) is x, so the common exp = 2
+      // skips the call with the same result.
+      result.values[ix] = static_cast<T>(
+          1 / (exp_ == 2 ? dist_squared : std::pow(dist_squared, exp_ * 0.5)));
+    }
+    return result;
+  }
+
+  /// @brief Applies the weights to the corner values
+  [[nodiscard]] static auto apply(const Weights &weights,
+                                  const std::array<T, 4> &values) -> T {
+    if (weights.coincident != -1) {
+      return values[weights.coincident];
+    }
+    T weight_sum = T(0);
+    T weighted_value_sum = T(0);
+    for (size_t ix = 0; ix < values.size(); ++ix) {
+      weight_sum += weights.values[ix];
+      weighted_value_sum += values[ix] * weights.values[ix];
+    }
+    return weighted_value_sum / weight_sum;
+  }
+
   int exp_{2};  ///< Power parameter for IDW (default: 2)
 };
 
@@ -276,29 +346,33 @@ struct Nearest final : public Bivariate<Point, T> {
   [[nodiscard]] auto evaluate(const Point<T> &p, const Point<T> &p0,
                               const Point<T> &p1, const T &q00, const T &q01,
                               const T &q10, const T &q11) const -> T override {
-    // Define corner points with their values
-    const std::array corners = {
-        std::pair{
-            Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p0)},
-            q00},
-        std::pair{
-            Point<T>{boost::geometry::get<0>(p0), boost::geometry::get<1>(p1)},
-            q01},
-        std::pair{
-            Point<T>{boost::geometry::get<0>(p1), boost::geometry::get<1>(p0)},
-            q10},
-        std::pair{
-            Point<T>{boost::geometry::get<0>(p1), boost::geometry::get<1>(p1)},
-            q11}};
+    return std::array{q00, q01, q10, q11}[nearest_corner(p, p0, p1)];
+  }
 
-    // Use comparable_distance (avoids sqrt) and find minimum
-    auto min_corner =
-        std::ranges::min(corners, [&p](const auto &a, const auto &b) {
-          return boost::geometry::comparable_distance(p, a.first) <
-                 boost::geometry::comparable_distance(p, b.first);
-        });
+  /// @brief Interpolates several layers, searching the nearest corner once
+  void evaluate_layers(const Point<T> &p, const Point<T> &p0,
+                       const Point<T> &p1,
+                       std::span<const std::array<T, 4>> layers,
+                       std::span<T> result) const override {
+    const auto corner = nearest_corner(p, p0, p1);
+    for (size_t ix = 0; ix < layers.size(); ++ix) {
+      result[ix] = layers[ix][corner];
+    }
+  }
 
-    return min_corner.second;
+ private:
+  /// @brief Index of the nearest corner; the first one in case of a tie
+  [[nodiscard]] static auto nearest_corner(const Point<T> &p,
+                                           const Point<T> &p0,
+                                           const Point<T> &p1) -> size_t {
+    const auto distances = corner_distances<Point, T>(p, p0, p1);
+    size_t result = 0;
+    for (size_t ix = 1; ix < distances.size(); ++ix) {
+      if (distances[ix] < distances[result]) {
+        result = ix;
+      }
+    }
+    return result;
   }
 };
 
