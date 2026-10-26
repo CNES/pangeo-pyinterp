@@ -38,15 +38,18 @@ endif()
 
 if(PYINTERP_BUILD_PYTHON_BINDINGS)
   file(GLOB_RECURSE NB_SRC "src/pybind/*.cpp")
+  # NOMINSIZE: in Release, RelWithDebInfo and MinSizeRel builds, nanobind
+  # compiles the module with -Os, which disables the vectorization and inlining
+  # of the Eigen kernels.
   if(PYINTERP_NANOBIND_BACKEND_MODULE)
     # Split mode: no nanobind library is linked in, the backend module supplies
     # it at import time and the extension targets the stable ABI. A
     # free-threaded build needs the abi3t variant of Python 3.15 (nanobind
     # rejects the combination on older interpreters).
-    nanobind_add_module(core FREE_THREADED BACKEND_MODULE
+    nanobind_add_module(core FREE_THREADED NOMINSIZE BACKEND_MODULE
                         ${PYINTERP_NANOBIND_BACKEND_MODULE} ${NB_SRC})
   else()
-    nanobind_add_module(core FREE_THREADED ${NB_SRC})
+    nanobind_add_module(core FREE_THREADED NOMINSIZE ${NB_SRC})
   endif()
   target_link_libraries(
     core
