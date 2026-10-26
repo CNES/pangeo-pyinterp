@@ -12,11 +12,13 @@
 #include <cstdint>
 #include <limits>
 #include <optional>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
 
 #include "pyinterp/config/rtree.hpp"
 #include "pyinterp/eigen.hpp"
+#include "pyinterp/geometry/ecef_geodesic.hpp"
 #include "pyinterp/geometry/geographic/coordinates.hpp"
 #include "pyinterp/geometry/geographic/spheroid.hpp"
 #include "pyinterp/geometry/point.hpp"
@@ -29,6 +31,14 @@
 #include "pyinterp/serialization_buffer.hpp"
 
 namespace pyinterp::pybind {
+
+/// Distance measured between the points of an RTree3D
+enum class DistanceMetric : uint8_t {
+  /// Euclidean distance (between ECEF points for geodetic coordinates)
+  kEuclidean,
+  /// Geodesic distance on the spheroid
+  kGeodesic,
+};
 
 /// RTree spatial index for 3D points
 ///
@@ -77,14 +87,34 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
   /// Construct with specified coordinate system
   /// @param[in] spheroid Optional spheroid used to convert geodetic inputs to
   /// ECEF; if std::nullopt, inputs are assumed already ECEF.
+  /// @param[in] distance Distance between the points: Euclidean (between ECEF
+  /// points), or geodesic on the spheroid, which requires a spheroid and
+  /// points without altitude.
+  /// @throw std::invalid_argument If geodesic distances are requested without
+  /// spheroid
   explicit RTree3D(
-      const std::optional<geometry::geographic::Spheroid>& spheroid)
-      : spheroid_(spheroid) {}
+      const std::optional<geometry::geographic::Spheroid>& spheroid,
+      const DistanceMetric distance = DistanceMetric::kEuclidean)
+      : spheroid_(spheroid) {
+    if (distance == DistanceMetric::kGeodesic) {
+      if (!spheroid) {
+        throw std::invalid_argument(
+            "geodesic distances require a spheroid: the coordinates must be "
+            "longitudes and latitudes");
+      }
+      geodesic_.emplace(*spheroid);
+    }
+  }
 
   /// Get the spheroid
   [[nodiscard]] constexpr auto spheroid() const noexcept
       -> const std::optional<geometry::geographic::Spheroid>& {
     return spheroid_;
+  }
+
+  /// Get the distance between the points
+  [[nodiscard]] constexpr auto distance() const noexcept -> DistanceMetric {
+    return geodesic_ ? DistanceMetric::kGeodesic : DistanceMetric::kEuclidean;
   }
 
   /// Bulk-load points using STR packing algorithm
@@ -213,6 +243,30 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
   /// Spheroid for geodetic calculations
   std::optional<geometry::geographic::Spheroid> spheroid_;
 
+  /// Geodesic distance strategy, set when the distance is geodesic
+  std::optional<geometry::EcefGeodesic<T>> geodesic_;
+
+  /// Call a function with the distance strategy of the tree
+  template <typename Function>
+  [[nodiscard]] auto with_strategy(Function&& function) const {
+    if (geodesic_) {
+      return function(*geodesic_);
+    }
+    return function(boost::geometry::default_strategy{});
+  }
+
+  /// Reject altitudes for geodesic distances: the points must lie on the
+  /// ellipsoid for the geodetic coordinates to be recovered from ECEF.
+  void validate_surface(
+      const Eigen::Ref<const CoordinateMatrix>& coordinates) const {
+    if (geodesic_ && coordinates.cols() == 3 &&
+        (coordinates.col(2).array() != T{0}).any()) {
+      throw std::invalid_argument(
+          "geodesic distances are measured on the surface of the spheroid: "
+          "the altitudes must be zero");
+    }
+  }
+
   /// Convert input coordinates to internal ECEF representation
   /// @param coordinates Input matrix (n, 3) or (n, 2)
   /// @param row Row index
@@ -304,6 +358,7 @@ template <std::floating_point T>
 void RTree3D<T>::packing(const Eigen::Ref<const CoordinateMatrix>& coordinates,
                          const Eigen::Ref<const ValueVector>& values) {
   validate_coordinates(coordinates, values);
+  validate_surface(coordinates);
 
   std::vector<std::pair<point_t, T>> items;
   items.reserve(static_cast<size_t>(coordinates.rows()));
@@ -321,6 +376,7 @@ template <std::floating_point T>
 void RTree3D<T>::insert(const Eigen::Ref<const CoordinateMatrix>& coordinates,
                         const Eigen::Ref<const ValueVector>& values) {
   validate_coordinates(coordinates, values);
+  validate_surface(coordinates);
 
   for (int64_t ix = 0; ix < coordinates.rows(); ++ix) {
     base_t::insert({to_internal_point(coordinates, ix), values[ix]});
@@ -336,6 +392,7 @@ auto RTree3D<T>::batch_query(
     const config::rtree::Query& config, QueryFunc&& query_func) const
     -> std::tuple<Matrix<distance_t>, Matrix<promotion_t>> {
   validate_coordinates(coordinates);
+  validate_surface(coordinates);
 
   const auto n = coordinates.rows();
   Matrix<distance_t> distances(n, config.k());
@@ -381,6 +438,7 @@ auto RTree3D<T>::batch_interpolate(
     InterpolateFunc&& interpolate_func) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
   validate_coordinates(coordinates);
+  validate_surface(coordinates);
 
   const auto n = coordinates.rows();
   ValueVector values(n);
@@ -417,12 +475,14 @@ template <std::floating_point T>
 auto RTree3D<T>::query(const Eigen::Ref<const CoordinateMatrix>& coordinates,
                        const config::rtree::Query& config) const
     -> std::tuple<Matrix<distance_t>, Matrix<promotion_t>> {
-  return batch_query(coordinates, config,
-                     [this, config](const point_t& pt, uint32_t neighbors) {
-                       return base_t::query(pt, neighbors,
-                                            static_cast<T>(config.radius()),
-                                            config.boundary_check());
-                     });
+  return with_strategy([&](const auto& strategy) {
+    return batch_query(
+        coordinates, config,
+        [this, &config, &strategy](const point_t& pt, uint32_t neighbors) {
+          return base_t::query(pt, neighbors, static_cast<T>(config.radius()),
+                               config.boundary_check(), strategy);
+        });
+  });
 }
 
 // ==========================================================================
@@ -432,13 +492,16 @@ auto RTree3D<T>::inverse_distance_weighting(
     const Eigen::Ref<const CoordinateMatrix>& coordinates,
     const config::rtree::InverseDistanceWeighting& config) const
     -> std::tuple<ValueVector, Vector<uint32_t>> {
-  return batch_interpolate(
-      coordinates, config.num_threads(),
-      [this, config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::inverse_distance_weighting(
-            pt, static_cast<T>(config.radius()), config.k(), config.p(),
-            config.boundary_check());
-      });
+  return with_strategy([&](const auto& strategy) {
+    return batch_interpolate(
+        coordinates, config.num_threads(),
+        [this, &config,
+         &strategy](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
+          return base_t::inverse_distance_weighting(
+              pt, static_cast<T>(config.radius()), config.k(), config.p(),
+              config.boundary_check(), strategy);
+        });
+  });
 }
 
 // ==========================================================================
@@ -452,13 +515,15 @@ auto RTree3D<T>::kriging(const Eigen::Ref<const CoordinateMatrix>& coordinates,
       static_cast<promotion_t>(config.lambda()),
       static_cast<promotion_t>(config.nugget()), config.covariance_model(),
       config.drift_function());
-  return batch_interpolate(
-      coordinates, config.num_threads(),
-      [this, &model,
-       &config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::kriging(model, pt, static_cast<T>(config.radius()),
-                               config.k(), config.boundary_check());
-      });
+  return with_strategy([&](const auto& strategy) {
+    return batch_interpolate(
+        coordinates, config.num_threads(),
+        [this, &model, &config,
+         &strategy](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
+          return base_t::kriging(model, pt, static_cast<T>(config.radius()),
+                                 config.k(), config.boundary_check(), strategy);
+        });
+  });
 }
 
 // ==========================================================================
@@ -471,14 +536,16 @@ auto RTree3D<T>::radial_basis_function(
   auto model = math::interpolate::RBF<promotion_t>(
       static_cast<promotion_t>(config.epsilon()),
       static_cast<promotion_t>(config.smooth()), config.rbf());
-  return batch_interpolate(
-      coordinates, config.num_threads(),
-      [this, &model,
-       &config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::radial_basis_function(
-            model, pt, static_cast<T>(config.radius()), config.k(),
-            config.boundary_check());
-      });
+  return with_strategy([&](const auto& strategy) {
+    return batch_interpolate(
+        coordinates, config.num_threads(),
+        [this, &model, &config,
+         &strategy](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
+          return base_t::radial_basis_function(
+              model, pt, static_cast<T>(config.radius()), config.k(),
+              config.boundary_check(), strategy);
+        });
+  });
 }
 
 // ==========================================================================
@@ -490,14 +557,16 @@ auto RTree3D<T>::window_function(
     -> std::tuple<ValueVector, Vector<uint32_t>> {
   auto model = math::interpolate::InterpolationWindow<coordinate_t>(
       config.wf(), static_cast<coordinate_t>(config.arg()));
-  return batch_interpolate(
-      coordinates, config.num_threads(),
-      [this, &model,
-       &config](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
-        return base_t::window_function(model, pt,
-                                       static_cast<T>(config.radius()),
-                                       config.k(), config.boundary_check());
-      });
+  return with_strategy([&](const auto& strategy) {
+    return batch_interpolate(
+        coordinates, config.num_threads(),
+        [this, &model, &config,
+         &strategy](const point_t& pt) -> std::pair<promotion_t, uint32_t> {
+          return base_t::window_function(
+              model, pt, static_cast<T>(config.radius()), config.k(),
+              config.boundary_check(), strategy);
+        });
+  });
 }
 
 // ==========================================================================

@@ -7,8 +7,10 @@
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/string_view.h>
 #include <nanobind/stl/tuple.h>
 
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -330,16 +332,46 @@ void implement_rtree_3d_methods(nb::class_<RTree3D<T>>& rtree3d) {
           nb::arg("state"), "Set the state for unpickling.");
 }
 
+/// @brief Parse the name of the distance of an RTree3D
+auto parse_distance(const std::string_view name) -> DistanceMetric {
+  if (name == "euclidean") {
+    return DistanceMetric::kEuclidean;
+  }
+  if (name == "geodesic") {
+    return DistanceMetric::kGeodesic;
+  }
+  throw std::invalid_argument(
+      "distance must be 'euclidean' or 'geodesic', got: " + std::string(name));
+}
+
+/// @brief Name of the distance of an RTree3D
+auto distance_name(const DistanceMetric distance) -> std::string_view {
+  return distance == DistanceMetric::kGeodesic ? "geodesic" : "euclidean";
+}
+
 template <typename T>
 void init_rtree_3d(nb::module_& m, std::string_view suffix) {
   auto rtree3d = nb::class_<RTree3D<T>>(
       m, std::format("RTree3D{}", suffix).c_str(), kRTree3DDoc);
 
   rtree3d.def(
-      nb::init<const std::optional<geometry::geographic::Spheroid>&>(),
-      nb::arg("spheroid") = std::nullopt,
-      "Initialize the RTree3D with optional spheroid for geodetic conversions.",
-      nb::call_guard<nb::gil_scoped_release>());
+      "__init__",
+      [](RTree3D<T>* self,
+         const std::optional<geometry::geographic::Spheroid>& spheroid,
+         const std::string& distance) -> void {
+        new (self) RTree3D<T>(spheroid, parse_distance(distance));
+      },
+      nb::arg("spheroid") = std::nullopt, nb::arg("distance") = "euclidean",
+      "Initialize the RTree3D with optional spheroid for geodetic conversions "
+      "and the distance measured between the points ('euclidean' or "
+      "'geodesic').");
+
+  rtree3d.def_prop_ro(
+      "distance",
+      [](const RTree3D<T>& self) -> std::string_view {
+        return distance_name(self.distance());
+      },
+      "Distance measured between the points: 'euclidean' or 'geodesic'.");
 
   rtree3d.def_prop_ro(
       "spheroid",
@@ -353,15 +385,16 @@ void init_rtree_3d(nb::module_& m, std::string_view suffix) {
 /// @brief RTree3D factory function that accepts dtype parameter
 auto rtree_3d_factory(
     const std::optional<geometry::geographic::Spheroid>& spheroid,
-    const nb::object& dtype) -> nb::object {
+    const nb::object& dtype, const std::string& distance) -> nb::object {
   auto dtype_str = dtype_to_str(dtype).value_or("float64");
+  const auto metric = parse_distance(distance);
 
   // Create appropriate RTree3D based on dtype string
   if (dtype_str == "float32") {
-    return nb::cast(RTree3D<float>(spheroid), nb::rv_policy::move);
+    return nb::cast(RTree3D<float>(spheroid, metric), nb::rv_policy::move);
   }
   if (dtype_str == "float64") {
-    return nb::cast(RTree3D<double>(spheroid), nb::rv_policy::move);
+    return nb::cast(RTree3D<double>(spheroid, metric), nb::rv_policy::move);
   }
   throw std::invalid_argument("dtype must be 'float32' or 'float64', got: " +
                               dtype_str);
@@ -385,6 +418,18 @@ Parameters:
         Defaults to None.
     dtype: Data type for internal storage, either 'float32' or 'float64'.
         Determines precision and memory usage. Defaults to 'float64'.
+    distance: Distance measured between the points, used to select the
+        neighbors and returned by the queries and interpolators:
+
+        - ``'euclidean'`` (default): straight-line distance; between ECEF
+          points when a spheroid is given (the chord through the Earth).
+        - ``'geodesic'``: geodesic distance on the spheroid (Andoyer's
+          formula), the distance of :py:class:`pyinterp.core.geometry.\
+          geographic.RTree`. Requires a spheroid and points at zero altitude.
+          The search still runs on ECEF coordinates and returns the exact
+          geodesic nearest neighbors, at a moderate cost over
+          ``'euclidean'``. Radial basis functions and kriging keep Euclidean
+          distances between the neighbors in their kernels.
 
 Examples:
     >>> import numpy as np
@@ -430,7 +475,8 @@ void init_rtree_3d(nanobind::module_& m) {
 
   // Register the factory function
   m.def("RTree3D", &rtree_3d_factory, kRTree3DFactoryDoc,
-        nb::arg("spheroid") = std::nullopt, nb::arg("dtype") = nb::none());
+        nb::arg("spheroid") = std::nullopt, nb::arg("dtype") = nb::none(),
+        nb::arg("distance") = "euclidean");
 }
 
 }  // namespace pyinterp::pybind

@@ -363,14 +363,42 @@ auto RTree<Point, Type>::nearest_k(const Point& point, const uint32_t k,
   found.clear();
   sorted.clear();
 
-  tree_.query(boost::geometry::index::nearest(point, k),
-              std::back_inserter(found));
-  for (const auto& item : found) {
-    sorted.emplace_back(static_cast<distance_t>(boost::geometry::distance(
-                            point, item.first, strategy)),
-                        item);
+  if constexpr (requires { typename Strategy::chord_bounded_tag; }) {
+    // The strategy distance is never smaller than the Euclidean distance of
+    // the tree (see EcefGeodesic): walk the tree in increasing Euclidean
+    // distance and stop once it exceeds the k-th smallest strategy distance.
+    if (k == 0 || tree_.empty()) {
+      return sorted;
+    }
+    const auto by_distance = &std::pair<distance_t, value_t>::first;
+    for (auto it = tree_.qbegin(boost::geometry::index::nearest(
+             point, static_cast<unsigned>(tree_.size())));
+         it != tree_.qend(); ++it) {
+      if (sorted.size() == k && boost::geometry::distance(point, it->first) *
+                                        (1 - Strategy::kMargin) >
+                                    sorted.back().first) {
+        break;
+      }
+      const auto distance = static_cast<distance_t>(strategy(point, it->first));
+      if (sorted.size() < k || distance < sorted.back().first) {
+        sorted.insert(
+            std::ranges::upper_bound(sorted, distance, {}, by_distance),
+            {distance, *it});
+        if (sorted.size() > k) {
+          sorted.pop_back();
+        }
+      }
+    }
+  } else {
+    tree_.query(boost::geometry::index::nearest(point, k),
+                std::back_inserter(found));
+    for (const auto& item : found) {
+      sorted.emplace_back(static_cast<distance_t>(boost::geometry::distance(
+                              point, item.first, strategy)),
+                          item);
+    }
+    std::ranges::sort(sorted, {}, &std::pair<distance_t, value_t>::first);
   }
-  std::ranges::sort(sorted, {}, &std::pair<distance_t, value_t>::first);
   return sorted;
 }
 

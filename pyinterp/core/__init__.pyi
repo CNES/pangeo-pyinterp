@@ -610,9 +610,13 @@ class TemporalGrid4D(GridHolder[_DType]):
     @property
     def u(self) -> Axis: ...
 
+RTree3DDistance: TypeAlias = Literal["euclidean", "geodesic"]
+
 class RTree3DHolder(Generic[_FloatDType]):
     def __init__(
-        self, spheroid: geometry.geographic.Spheroid | None = ...
+        self,
+        spheroid: geometry.geographic.Spheroid | None = ...,
+        distance: RTree3DDistance = ...,
     ) -> None: ...
     def bounds(
         self,
@@ -666,36 +670,45 @@ class RTree3DHolder(Generic[_FloatDType]):
     ) -> tuple[np.ndarray[OneDim, np.dtype[_FloatDType]], NDArray1DUInt32]: ...
     @property
     def spheroid(self) -> geometry.geographic.Spheroid | None: ...
+    @property
+    def distance(self) -> RTree3DDistance: ...
+    def __getstate__(self) -> tuple[Any, ...]: ...
+    def __setstate__(self, state: tuple[Any, ...]) -> None: ...
 
 @overload
 def RTree3D(
     spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: None = None,
+    distance: RTree3DDistance = "euclidean",
 ) -> RTree3DHolder[np.float64]: ...
 @overload
 def RTree3D(
     spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: Literal["float32"],
+    distance: RTree3DDistance = "euclidean",
 ) -> RTree3DHolder[np.float32]: ...
 @overload
 def RTree3D(
     spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: Literal["float64"],
+    distance: RTree3DDistance = "euclidean",
 ) -> RTree3DHolder[np.float64]: ...
 @overload
 def RTree3D(
     spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: type[_FloatDType] | np.dtype[_FloatDType],
+    distance: RTree3DDistance = "euclidean",
 ) -> RTree3DHolder[_FloatDType]: ...
 @overload
 def RTree3D(
     spheroid: geometry.geographic.Spheroid | None = None,
     *,
     dtype: str,
+    distance: RTree3DDistance = "euclidean",
 ) -> RTree3DHolder[np.float32] | RTree3DHolder[np.float64]: ...
 
 RTree3DFloat64: TypeAlias = RTree3DHolder[np.float64]
