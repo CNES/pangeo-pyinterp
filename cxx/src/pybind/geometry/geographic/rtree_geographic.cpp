@@ -26,13 +26,16 @@ no conversion to ECEF is applied.
 
 Note:
     Searching this tree evaluates geodesic distances to its nodes, which is
-    slow: 20 to 25 times slower than :py:func:`pyinterp.RTree3D` on the same
-    points. Created with a spheroid, ``RTree3D(Spheroid())``, it accepts
-    longitude/latitude too, converts them to ECEF and measures straight-line
-    (chord) distances. Both find the same neighbors, except for near-ties. Use this class only when the reported
-    distances, or the interpolation weights derived from them, must be
-    geodesic: the chord is shorter than the geodesic by about 0.1% at
-    1,000 km and 2.6% at 5,000 km, and the two are equal at short range.
+    slow. :py:func:`pyinterp.RTree3D` created with a spheroid accepts
+    longitude/latitude too and searches the points in ECEF:
+
+    - ``RTree3D(Spheroid(), distance="geodesic")`` returns the same
+      neighbors and geodesic distances as this class, about 10 times faster,
+      for points without altitude;
+    - ``RTree3D(Spheroid())`` measures straight-line (chord) distances, 20
+      to 25 times faster than this class. The chord is shorter than the
+      geodesic by about 0.1% at 1,000 km and 2.6% at 5,000 km; at short
+      range, both find the same neighbors, except for near-ties.
 
 Examples:
 	>>> import numpy as np
