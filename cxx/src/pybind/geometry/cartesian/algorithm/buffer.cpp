@@ -169,7 +169,7 @@ Args:
         Controls point buffer shape.
 
 Returns:
-    MultiPolygon: The buffered geometry.
+    pyinterp.geometry.cartesian.MultiPolygon: The buffered geometry.
 )doc";
 
 // Type aliases for variant types

@@ -25,6 +25,7 @@ of boundary values into unknown regions.
 
 Args:
     grid: Input 2D array with data to fill. NaN values mark undefined points.
+        The array is modified in place.
     config: Multigrid configuration with:
         - first_guess: Initial guess strategy (zonal_average or zero)
         - is_periodic: Whether the x-axis is periodic (e.g., longitude)

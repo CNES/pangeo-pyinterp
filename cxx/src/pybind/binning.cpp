@@ -30,7 +30,7 @@ Args:
     spheroid: Spheroid of the coordinate system used to manipulate geographic
         coordinates. If this parameter is not set, the handled coordinates will
         be considered as Cartesian coordinates. Otherwise, ``x`` and ``y`` are
-        considered to represents the longitudes and latitudes.
+        considered to represent the longitudes and latitudes.
 )";
 
 constexpr auto kBinning2DPushDoc = R"(
@@ -233,7 +233,7 @@ auto init_binning(nanobind::module_ &m, std::string_view suffix) -> void {
 /// @param[in] spheroid WGS of the coordinate system used to manipulate
 /// geographic coordinates. If this parameter is not set, the handled
 /// coordinates will be considered as Cartesian coordinates. Otherwise, ``x``
-/// and ``y`` are considered to represents the longitudes and latitudes.
+/// and ``y`` are considered to represent the longitudes and latitudes.
 /// @param[in] dtype Data type for internal storage, either 'float32' or
 /// 'float64'. Determines precision and memory usage. Defaults to 'float64'.
 /// @return nanobind::object containing the Binning2D instance.
@@ -293,14 +293,14 @@ Args:
     spheroid: Spheroid of the coordinate system used to manipulate geographic
         coordinates. If this parameter is not set, the handled coordinates will
         be considered as Cartesian coordinates. Otherwise, ``x`` and ``y`` are
-        considered to represents the longitudes and latitudes.
+        considered to represent the longitudes and latitudes.
     dtype: Data type for internal storage, either 'float32' or 'float64'.
         Determines precision and memory usage. Defaults to 'float64'.
 
 Examples:
     >>> import pyinterp
     >>> import numpy as np
-    >>> x = pyinterp.Axis(np.arange(0, 360, 1), is_circle=True)
+    >>> x = pyinterp.Axis(np.arange(0, 360, 1), period=360)
     >>> y = pyinterp.Axis(np.arange(-90, 90, 1))
     >>> binning = pyinterp.Binning2D(x, y)
 

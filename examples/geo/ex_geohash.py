@@ -9,14 +9,14 @@ location.
 
 This library provides two ways to work with geohashes:
 
-*   The :py:class:`pyinterp.GeoHash` class allows for an object-oriented
-    manipulation of a geohash.
+*   The :py:class:`pyinterp.geohash.GeoHash` class allows for an
+    object-oriented manipulation of a geohash.
 *   The :py:mod:`pyinterp.geohash` module provides functions for vectorized
     computation of geohashes.
 
-In general, you should use the `pyinterp.GeoHash` class when you want to
-manipulate a few geohashes, and the `pyinterp.geohash` module when you want to
-process a large number of geohashes stored in `numpy` arrays.
+In general, you should use the `pyinterp.geohash.GeoHash` class when you want
+to manipulate a few geohashes, and the `pyinterp.geohash` module when you want
+to process a large number of geohashes stored in `numpy` arrays.
 
 The following sections will demonstrate how to use both approaches.
 
@@ -152,7 +152,7 @@ plot_geohash_grid(4, polygon=geohash.GeoHash.from_string("dds").bounding_box())
 # Object-Oriented Interface
 # =========================
 #
-# The :py:class:`pyinterp.GeoHash` class allows for an object-oriented
+# The :py:class:`pyinterp.geohash.GeoHash` class allows for an object-oriented
 # manipulation of a geohash. You can create a geohash from a longitude and
 # latitude, and then access its properties.
 code = geohash.GeoHash(-67.5, 22.5, precision=4)
@@ -204,8 +204,9 @@ print(f"Elapsed time: {elapsed:.6f} seconds")
 
 # %%
 # The inverse operation is also possible using the
-# :py:func:`geohash.decode` function.
-lon, lat = geohash.decode(codes)
+# :py:func:`geohash.decode` function, which returns the coordinates of the
+# centers of the cells.
+lon_center, lat_center = geohash.decode(codes)
 
 # %%
 # You can also use the :py:func:`geohash.transform` to transform

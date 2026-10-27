@@ -6,8 +6,7 @@ This example demonstrates how to use
 ground track into meaningful segments.  The function supports two strategies:
 
 - ``"latitude_bands"`` — fixed latitude thresholds producing up to three zones
-  (south polar, mid-latitude, north polar).  Backward-compatible with the
-  original ``create_processing_blocks`` behaviour.
+  (south polar, mid-latitude, north polar).
 - ``"monotonic"`` — splits at every latitude direction change (ascending ↔
   descending), producing tight bounding boxes for near-polar orbits.
 
@@ -236,5 +235,3 @@ for index, seg in enumerate(segments_mono, start=1):
 ax.legend(loc="lower left", fontsize=8, ncol=2)
 
 plt.tight_layout()
-
-# %%

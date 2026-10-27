@@ -303,20 +303,23 @@ inline auto init_track_decomposition(nanobind::module_& m) -> void {
       R"doc(Decompose a satellite track into segments with tight bounding boxes.
 
 Args:
-    lon : Longitude array (degrees), 1-D.
-    lat : Latitude array (degrees), 1-D. Must have the same size as *lon*.
-    strategy : Decomposition strategy.
-        - 'latitude_bands' (default): Decompose the track into latitude bands
-           defined by the south and north limits in *opts*.  This strategy is
-           generally faster and produces more compact segments, but may result
-           in segments that are not strictly monotonic in latitude.
-        - 'monotonic': Decompose the track into segments that are monotonic in
-           latitude, then merge adjacent segments based on the area of the
-           bounding boxes and the *merge_area_ratio* in *opts*.  This strategy
-           produces segments that are strictly monotonic in latitude, which can
-           be beneficial for certain applications, but may result in more
-           segments and longer processing time.
-    opts : DecompositionOptions, optional
+    lon: Longitude array (degrees), 1-D.
+    lat: Latitude array (degrees), 1-D. Must have the same size as *lon*.
+    strategy: Decomposition strategy.
+
+        - ``'latitude_bands'`` (default): Decompose the track into latitude
+          bands defined by the south and north limits in *opts*. This
+          strategy is generally faster and produces more compact segments,
+          but may result in segments that are not strictly monotonic in
+          latitude.
+        - ``'monotonic'``: Decompose the track into segments that are
+          monotonic in latitude, then merge adjacent segments based on the
+          area of the bounding boxes and the *merge_area_ratio* in *opts*.
+          This strategy produces segments that are strictly monotonic in
+          latitude, which can be beneficial for certain applications, but
+          may result in more segments and longer processing time.
+
+    opts: Decomposition options; defaults to ``DecompositionOptions()``.
 
 Returns:
     Ordered, contiguous, non-overlapping segments whose union covers the
@@ -330,8 +333,10 @@ Raises:
   m.def(
       "infer_orbit_direction", &algorithms::infer_orbit_direction, "lon"_a,
       R"doc(Infer the orbital direction (prograde or retrograde) from the longitude array of a track.
+
 Args:
-    lon : Longitude array (degrees), 1-D.
+    lon: Longitude array (degrees), 1-D.
+
 Returns:
     OrbitDirection enum value indicating the inferred orbital direction.
 )doc",
@@ -348,8 +353,8 @@ Returns:
       R"doc(Filter segments by intersection with a data extent.
 
 Args:
-    segments : List of TrackSegment objects to filter.
-    extent : Geographic bounding box to use for filtering.
+    segments: List of TrackSegment objects to filter.
+    extent: Geographic bounding box to use for filtering.
 
 Returns:
     List of TrackSegment objects whose bounding boxes intersect with the given extent.

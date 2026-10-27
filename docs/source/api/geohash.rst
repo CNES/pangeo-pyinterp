@@ -1,6 +1,11 @@
 Geohash
 =======
-Geohash encoding, decoding, and utilities.
+Geohashes encode longitude/latitude positions as short strings identifying
+cells of a hierarchical grid. Use :func:`~pyinterp.geohash.encode` and
+:func:`~pyinterp.geohash.decode` on arrays of points,
+:class:`~pyinterp.geohash.GeoHash` to handle a single cell, and
+:func:`~pyinterp.geohash.to_xarray` to map values indexed by geohash onto a
+longitude/latitude grid.
 
 .. currentmodule:: pyinterp.geohash
 

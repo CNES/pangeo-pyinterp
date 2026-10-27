@@ -405,7 +405,7 @@ class EquatorCoordinates:
 
     #: Longitude
     longitude: float
-    #: Product dataset name
+    #: Time when the satellite crosses the equator
     time: np.datetime64
 
     @classmethod

@@ -70,14 +70,13 @@ class SubsectionSorter:
             "ex_optimal_interpolation_geographic.py": 15,
             "ex_orbit.py": 16,
             "ex_decompose_track.py": 17,
-            "pangeo_unstructured_grid.py": 18,
-            "pangeo_time_series.py": 19,
             "ex_descriptive_statistics.py": 20,
             "ex_binning.py": 21,
             "ex_dateutils.py": 22,
             "ex_fill_undef.py": 23,
         }
-        return order[pathlib.Path(fname).name]
+        # Examples missing from the list come last, in alphabetical order.
+        return order.get(pathlib.Path(fname).name, len(order))
 
 
 def section_sorter(dirname: str) -> int:
@@ -90,9 +89,8 @@ def section_sorter(dirname: str) -> int:
         "geo": 4,
         "utilities": 5,
         "orbit": 6,
-        "pangeo": 7,
     }
-    return order[pathlib.Path(dirname).name]
+    return order.get(pathlib.Path(dirname).name, len(order))
 
 
 def _is_nanobind_func(obj: object) -> bool:

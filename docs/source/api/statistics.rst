@@ -1,6 +1,10 @@
 Statistics & Binning
 ====================
-Statistical tools and binning containers.
+Containers that accumulate statistics incrementally, so that data can be
+pushed in several batches and partial results merged with ``+=``. Use
+:class:`~pyinterp.DescriptiveStatistics` for moments over arrays, the binning
+and histogram classes to compute statistics on a grid, and
+:class:`~pyinterp.TDigest` for approximate quantiles.
 
 .. note::
 

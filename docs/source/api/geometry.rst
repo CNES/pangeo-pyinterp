@@ -85,6 +85,8 @@ Spatial operations and predicates.
    algorithms.distance
    algorithms.envelope
    algorithms.equals
+   algorithms.from_geojson
+   algorithms.from_wkt
    algorithms.intersection
    algorithms.intersects
    algorithms.is_empty
@@ -92,12 +94,18 @@ Spatial operations and predicates.
    algorithms.is_valid
    algorithms.length
    algorithms.line_interpolate
+   algorithms.num_geometries
+   algorithms.num_interior_rings
+   algorithms.num_points
+   algorithms.num_segments
    algorithms.overlaps
    algorithms.perimeter
    algorithms.relate
    algorithms.relation
    algorithms.reverse
    algorithms.simplify
+   algorithms.to_geojson
+   algorithms.to_wkt
    algorithms.touches
    algorithms.transform_to_box
    algorithms.transform_to_linestring
@@ -184,6 +192,8 @@ Spatial operations and predicates in Euclidean space.
    algorithms.distance
    algorithms.envelope
    algorithms.equals
+   algorithms.from_geojson
+   algorithms.from_wkt
    algorithms.intersection
    algorithms.intersects
    algorithms.is_empty
@@ -191,12 +201,18 @@ Spatial operations and predicates in Euclidean space.
    algorithms.is_valid
    algorithms.length
    algorithms.line_interpolate
+   algorithms.num_geometries
+   algorithms.num_interior_rings
+   algorithms.num_points
+   algorithms.num_segments
    algorithms.overlaps
    algorithms.perimeter
    algorithms.relate
    algorithms.relation
    algorithms.reverse
    algorithms.simplify
+   algorithms.to_geojson
+   algorithms.to_wkt
    algorithms.touches
    algorithms.transform_to_box
    algorithms.transform_to_linestring
@@ -242,14 +258,32 @@ Configuration for the buffering algorithm (Cartesian only).
 
 
 Satellite-Specific
-==================
-Satellite-specific geometric operations such as swath calculation and
-crossover finding.
+------------------
+Satellite-specific geometric operations such as swath calculation, crossover
+finding and track decomposition.
 
 .. currentmodule:: pyinterp.geometry.satellite
+
+Functions
+^^^^^^^^^
 
 .. autosummary::
    :toctree: _generated/
 
    calculate_swath
+   decompose_track
+   filter_by_extent
    find_crossovers
+   infer_orbit_direction
+
+Classes
+^^^^^^^
+
+.. autosummary::
+   :toctree: _generated/
+
+   CrossoverResult
+   DecompositionOptions
+   LatitudeZone
+   OrbitDirection
+   TrackSegment

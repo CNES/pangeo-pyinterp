@@ -18,23 +18,19 @@ This example will walk you through the various functions available in the
 #
 # First, let's create a set of random dates that we can use to demonstrate the
 # functionality of the `dateutils` module.
-import datetime
-import random
-
 import numpy
 
 import pyinterp
 
 
 def make_date(samples: int = 10) -> numpy.ndarray:
-    """Generate random dates."""
-    epoch = datetime.datetime(1970, 1, 1)
-    delta = datetime.datetime.now() - datetime.datetime(1970, 1, 1)
+    """Generate random dates between 1970 and 2025."""
+    generator = numpy.random.default_rng(0)
+    epoch = numpy.datetime64("1970-01-01", "ns")
+    delta = numpy.datetime64("2025-01-01", "ns") - epoch
 
-    pydates = [epoch + random.random() * delta for _ in range(samples)]
-    npdates = numpy.array(pydates).astype("datetime64[ns]")
-
-    return npdates
+    offsets = generator.random(samples) * delta.astype("int64")
+    return epoch + offsets.astype("timedelta64[ns]")
 
 
 dates = make_date()
@@ -48,7 +44,8 @@ print(dates)
 # You can extract the date components (year, month, and day) from a NumPy array
 # of dates using the
 # :py:func:`pyinterp.dateutils.date <pyinterp.core.dateutils.date>` function.
-# This returns a structured NumPy array.
+# This returns a tuple of three NumPy arrays: the years, the months and the
+# days.
 date_components = pyinterp.dateutils.date(dates)
 print("Date components:")
 print(date_components)

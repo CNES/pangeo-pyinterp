@@ -6,7 +6,7 @@ unstructured grids, such as data from satellite tracks or other non-uniform
 sources.
 
 The core of unstructured grid interpolation in ``pyinterp`` is the
-:py:class:`pyinterp.RTree` class, which uses an R-tree data structure for
+:py:class:`pyinterp.RTree3D` class, which uses an R-tree data structure for
 efficient spatial queries.
 
 First, we'll create a synthetic dataset to represent our unstructured grid.
@@ -20,11 +20,14 @@ import matplotlib.pyplot
 import numpy
 
 import pyinterp
+from pyinterp.geometry import geographic
 
 # %%
-# The R-tree can be configured to work with different geodetic systems. The
-# default is WGS-84. Here, we'll use the default.
-mesh = pyinterp.RTree3D()
+# The R-tree can be configured to work with different geodetic systems. By
+# default (``spheroid=None``), the coordinates are taken as Cartesian. Since our
+# data are longitudes and latitudes, we pass the WGS-84 spheroid so that they
+# are converted to ECEF coordinates before being indexed.
+mesh = pyinterp.RTree3D(spheroid=geographic.Spheroid())
 
 
 # %%
@@ -42,7 +45,7 @@ def field(lon, lat):
 # %%
 # Now, we generate random longitude and latitude points and populate our R-tree
 # with these points and their corresponding data values. The
-# :py:meth:`~pyinterp.RTree.packing` method is the most efficient way to build
+# :py:meth:`~pyinterp.RTree3D.packing` method is the most efficient way to build
 # the tree from a complete dataset at once.
 N_POINTS = 2000
 X0, X1 = 80, 170
@@ -123,7 +126,7 @@ mx, my = numpy.meshgrid(
 #   computationally intensive, requiring a good understanding of the data's
 #   spatial structure.
 #
-# In this notebook, we will compare the results of these four interpolation
+# In this example, we will compare the results of these four interpolation
 # methods on a synthetic dataset.
 #
 # Inverse Distance Weighting (IDW)
@@ -227,17 +230,15 @@ plot_grid(ax3, wf, "Window Function", "viridis", -1, 1)
 plot_grid(ax4, kriging, "Kriging", "viridis", -1, 1)
 
 # Plotting errors
-error_idw = numpy.where(true != 0, (idw - true) / true, 0)
-error_rbf = numpy.where(true != 0, (rbf - true) / true, 0)
-error_wf = numpy.where(true != 0, (wf - true) / true, 0)
-error_kriging = numpy.where(true != 0, (kriging - true) / true, 0)
+error_idw = idw - true
+error_rbf = rbf - true
+error_wf = wf - true
+error_kriging = kriging - true
 
-plot_grid(ax5, error_idw, "IDW Relative Error", "RdBu_r", -0.5, 0.5)
-plot_grid(ax6, error_rbf, "RBF Relative Error", "RdBu_r", -0.5, 0.5)
-plot_grid(ax7, error_wf, "Window Function Relative Error", "RdBu_r", -0.5, 0.5)
-plot_grid(ax8, error_kriging, "Kriging Relative Error", "RdBu_r", -0.5, 0.5)
+plot_grid(ax5, error_idw, "IDW Error", "RdBu_r", -0.1, 0.1)
+plot_grid(ax6, error_rbf, "RBF Error", "RdBu_r", -0.1, 0.1)
+plot_grid(ax7, error_wf, "Window Function Error", "RdBu_r", -0.1, 0.1)
+plot_grid(ax8, error_kriging, "Kriging Error", "RdBu_r", -0.1, 0.1)
 
 fig.tight_layout()
 matplotlib.pyplot.show()
-
-# %%

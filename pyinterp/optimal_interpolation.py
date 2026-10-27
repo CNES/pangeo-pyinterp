@@ -7,9 +7,10 @@ r"""Optimal Interpolation (OI / BLUE) for scattered 4D observations.
 This module provides an Optimal Interpolation estimator with an anisotropic
 covariance kernel and a per-observation error variance. Decorrelation length
 scales and the field standard deviation may be either scalars or
-:class:`pyinterp.Grid2D` objects sampled (bilinear) at each query point,
-which lets the analysis be tuned regionally — a common requirement in
-operational altimetry products (DUACS / AVISO).
+two-dimensional :class:`pyinterp.Grid` objects (``pyinterp.Grid2D``)
+sampled (bilinear) at each query point, which lets the analysis be tuned
+regionally — a common requirement in operational altimetry products
+(DUACS / AVISO).
 
 Two coordinate-system modes are available:
 
@@ -41,7 +42,7 @@ For each query point the algorithm:
    :math:`e = \sqrt{\max(\sigma^2 - c_{og}^\top w, 0)}`.
 
 Heavy lifting is delegated to the C++ backend exposed by
-:class:`pyinterp.RTree4D.optimal_interpolation` — this module is a thin
+``pyinterp.RTree4D.optimal_interpolation`` — this module is a thin
 shim that handles coordinate conversion and ``Grid2D`` sampling.
 """
 
@@ -212,20 +213,16 @@ def _lla_to_ecef(
 
 @dataclass
 class OIResult:
-    """Result of an Optimal Interpolation analysis at a set of query points.
+    """Result of an Optimal Interpolation analysis at a set of query points."""
 
-    Attributes:
-        value: Analysed field, shape ``(M,)``. ``NaN`` where insufficient
-            neighbours were found.
-        error: Formal error standard deviation, shape ``(M,)``. ``NaN``
-            where insufficient neighbours were found.
-        neighbors: Number of observations actually used at each query
-            point, shape ``(M,)``, ``uint32``.
-
-    """
-
+    #: Analysed field, shape ``(M,)``. ``NaN`` where insufficient neighbours
+    #: were found.
     value: NDArray1DFloat64
+    #: Formal error standard deviation, shape ``(M,)``. ``NaN`` where
+    #: insufficient neighbours were found.
     error: NDArray1DFloat64
+    #: Number of observations actually used at each query point, shape
+    #: ``(M,)``, ``uint32``.
     neighbors: NDArray1DUInt32
 
 
@@ -431,7 +428,7 @@ class OptimalInterpolation:
                 Cartesian mode: ``(x, y, t)``. Geographic mode:
                 ``(lon_deg, lat_deg, t_seconds)``.
             lx: Decorrelation length along the first axis (cartesian mode).
-                Scalar or :class:`pyinterp.Grid2D` sampled at the query
+                Scalar or ``pyinterp.Grid2D`` sampled at the query
                 ``(x, y)`` (cartesian) or ``(lon, lat)`` (geographic).
             ly: Decorrelation length along the second axis (cartesian
                 mode). Same options as ``lx``.

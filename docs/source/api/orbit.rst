@@ -1,6 +1,10 @@
 Orbit Propagation
 =================
-Orbit interpolation and pass calculation.
+Tools to simulate the ground track of a satellite from its ephemeris. Start
+with :func:`~pyinterp.orbit.calculate_orbit`, which interpolates the orbit over
+a cycle, then extract a half-orbit with :func:`~pyinterp.orbit.calculate_pass`
+and, for a swath mission, the across-track grid with
+:func:`~pyinterp.orbit.calculate_swath`.
 
 .. currentmodule:: pyinterp.orbit
 

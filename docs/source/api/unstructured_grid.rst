@@ -1,7 +1,11 @@
 Interpolation on Unstructured Grids
 ===================================
 
-Spatial index trees.
+Interpolation of scattered points. Build a spatial index with
+:py:func:`RTree3D() <pyinterp.RTree3D>`, load the observations with its
+``packing`` or ``insert`` methods, then interpolate with the functions of
+``pyinterp.rtree`` listed below (inverse distance weighting, radial basis
+functions, kriging or window functions).
 
 .. currentmodule:: pyinterp
 
@@ -49,7 +53,7 @@ is returned by the factory functions :py:func:`RTree3D() <pyinterp.RTree3D>`,
    Generic holder for a 3D R-Tree spatial index supporting different floating-point types.
 
    :param spheroid: Optional spheroid for geographic coordinate transformations.
-   :type spheroid: pyinterp.core.geometry.geographic.Spheroid | None
+   :type spheroid: pyinterp.geometry.geographic.Spheroid | None
 
    .. py:method:: bounds() -> tuple[NDArray, NDArray] | None
 
@@ -96,27 +100,16 @@ is returned by the factory functions :py:func:`RTree3D() <pyinterp.RTree3D>`,
       Perform window function interpolation on the R-Tree.
 
    .. py:attribute:: spheroid
-      :type: pyinterp.core.geometry.geographic.Spheroid | None
+      :type: pyinterp.geometry.geographic.Spheroid | None
 
       The spheroid associated with this R-Tree instance.
 
 Geographic R-Tree Implementation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Specialized R-Tree implementation for geographic (spherical/ellipsoidal) coordinates.
-
-.. currentmodule:: pyinterp.core.geometry.geographic
-
-.. autosummary::
-   :toctree: _generated/
-
-   RTree
-
-.. note::
-   The :py:class:`pyinterp.core.geometry.geographic.RTree` class provides geographic-aware
-   spatial indexing on spherical/ellipsoidal coordinates (longitude/latitude).
-   This is the same class alias used throughout the library's high-level API
-   as :py:class:`pyinterp.geometry.geographic.RTree`.
+Specialized R-Tree implementation for geographic (spherical/ellipsoidal)
+coordinates: :py:class:`pyinterp.geometry.geographic.RTree`, documented with
+the :doc:`geometric primitives <geometry>`.
 
 Choosing between the two indexes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -134,7 +127,7 @@ measure and by their speed:
   distances: the same results as the geographic index, about 10 times faster.
   The points must have no altitude. Radial basis functions and kriging keep
   straight-line distances between the neighbors in their kernels.
-* :py:class:`geographic.RTree <pyinterp.core.geometry.geographic.RTree>`
+* :py:class:`geographic.RTree <pyinterp.geometry.geographic.RTree>`
   uses geodesic distances on the WGS84 ellipsoid, and evaluates them to
   search its nodes, which makes it the slowest.
 

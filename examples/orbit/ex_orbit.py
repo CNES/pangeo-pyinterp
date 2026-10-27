@@ -30,8 +30,9 @@ def load_test_ephemeris(
         filename: Name of the file to be loaded.
 
     Returns:
-        A tuple containing the height of the orbit, the ephemeris, and the
-        duration of the cycle.
+        A tuple containing the height of the orbit, the longitudes, the
+        latitudes and the times of the ephemeris, and the duration of the
+        cycle.
 
     """
     with open(filename, encoding="utf-8") as stream:
@@ -82,11 +83,11 @@ ephemeris = load_test_ephemeris(ephemeris_path)
 # Calculating Orbit Properties
 # ============================
 # With the ephemeris loaded, we can compute the orbit properties using the
-# :py:func:`pyinterp.calculate_orbit` function.
+# :py:func:`pyinterp.orbit.calculate_orbit` function.
 orbit = pyinterp.orbit.calculate_orbit(*ephemeris)
 
 # %%
-# The resulting :py:class:`pyinterp.Orbit` object provides methods to access
+# The resulting :py:class:`pyinterp.orbit.Orbit` object provides methods to access
 # various orbit properties. For example, you can get the number of passes per
 # cycle:
 print(f"Passes per cycle: {orbit.passes_per_cycle()}")
@@ -127,7 +128,7 @@ print(f"Cycle: {cycle_number}, Pass: {pass_number}")
 # .. note::
 #
 #     You can iterate over the relative pass numbers for a given time period
-#     using the :py:meth:`pyinterp.Orbit.iterate` method.
+#     using the :py:meth:`pyinterp.orbit.Orbit.iterate` method.
 #
 #     .. code-block:: python
 #
@@ -146,7 +147,7 @@ pd.DataFrame(
 )
 
 # %%
-# The :py:class:`pyinterp.Pass` object contains the satellite's nadir positions
+# The :py:class:`pyinterp.orbit.Pass` object contains the satellite's nadir positions
 # for the given pass, including:
 #
 # *   Nadir longitude (in degrees)
@@ -160,9 +161,9 @@ print(f"Equator coordinates: {pass_.equator_coordinates}")
 # %%
 # .. note::
 #
-#     The ``pass_`` variable will be ``None`` if the pass number is outside the
-#     bounding box defined during the instantiation of the
-#     :py:class:`pyinterp.Orbit` object.
+#     The ``pass_`` variable will be ``None`` if the pass does not cross the
+#     bounding box passed to :py:func:`pyinterp.orbit.calculate_pass` with the
+#     ``bbox`` argument.
 #
 # Calculating the Swath
 # =====================
@@ -171,8 +172,8 @@ print(f"Equator coordinates: {pass_.equator_coordinates}")
 swath = pyinterp.orbit.calculate_swath(pass_)
 
 # %%
-# The :py:class:`pyinterp.Swath` object contains the properties of the pass,
-# similar to the :py:class:`pyinterp.Pass` object. Additionally, it includes
+# The :py:class:`pyinterp.orbit.Swath` object contains the properties of the
+# pass, similar to the :py:class:`pyinterp.orbit.Pass` object. Additionally, it includes
 # the coordinates of the satellite over the swath for each location on the
 # nadir track.
 pd.DataFrame(
@@ -229,5 +230,3 @@ ax2.coastlines()
 ax2.gridlines(draw_labels=True)
 ax1.set_aspect("auto")
 ax2.set_aspect("auto")
-
-# %%

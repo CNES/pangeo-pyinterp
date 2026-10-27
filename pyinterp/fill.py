@@ -12,7 +12,7 @@ For most use cases, you can simply pass keyword arguments:
 >>> iterations, residual = gauss_seidel(grid, max_iterations=100, epsilon=1e-5)
 
 For advanced configuration, pass a config object:
->>> from pyinterp.config import fill
+>>> from pyinterp.core.config import fill
 >>> config = fill.GaussSeidel().with_max_iterations(100).with_epsilon(1e-5)
 >>> iterations, residual = gauss_seidel(grid, config)
 """
@@ -119,6 +119,9 @@ def fft_inpaint(
 ) -> tuple[int, float]:
     """Fill missing values using FFT-based inpainting.
 
+    The grid is modified in place: its undefined values (NaN) are replaced
+    by the filled values.
+
     Args:
         grid: 2D grid with missing values (NaN)
         config: Configuration object (if provided, keyword args are ignored)
@@ -190,6 +193,9 @@ def gauss_seidel(
     num_threads: int | None = None,
 ) -> tuple[int, float]:
     """Fill missing values using Gauss-Seidel relaxation.
+
+    The grid is modified in place: its undefined values (NaN) are replaced
+    by the filled values.
 
     Args:
         grid: 2D grid with missing values (NaN)
@@ -318,6 +324,9 @@ def multigrid(
     num_threads: int | None = None,
 ) -> tuple[int, float]:
     """Fill missing values using multigrid method.
+
+    The grid is modified in place: its undefined values (NaN) are replaced
+    by the filled values.
 
     Args:
         grid: 2D grid with missing values (NaN)

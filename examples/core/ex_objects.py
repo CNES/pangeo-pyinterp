@@ -76,16 +76,14 @@ print(t_axis)
 # Creating a Grid
 # ---------------
 # Once the axes are defined, you can create a grid object that holds the data.
-# The grid object takes the axes and the data array as input. The data must be
-# organized to match the order of the axes: (time, latitude, longitude).
+# The grid object takes the axes and the data array as input. The dimensions
+# of the data array must follow the order of the axes passed to the
+# constructor: here (longitude, latitude, time).
 #
 # Here, we create a :py:class:`pyinterp.Grid3D` object for the total column
-# water vapor (TCW) data.
-# Before constructing the tensor for pyinterp, we must begin to organize the
-# data in a grid with the values of the axes in the first dimensions of the
-# tensor.
-#
-# In our case, the time, latitude, longitude axes must be sorted in this order.
+# water vapor (TCW) data. The TCW values are stored in the dataset as
+# (time, latitude, longitude), so we transpose them to obtain an array ordered
+# as (longitude, latitude, time).
 tcw = tcw.T
 grid = pyinterp.Grid(x_axis, y_axis, t_axis, tcw)
 print("Grid object:")

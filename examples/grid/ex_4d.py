@@ -25,11 +25,11 @@ import pyinterp.tests
 # Quadrivariate interpolation builds upon trivariate interpolation by adding a
 # fourth dimension. It first performs bilinear interpolation on the 2D spatial
 # plane (longitude and latitude), followed by linear interpolation along the
-# third and fourth dimensions. If desired, you can use nearest-neighbor
-# interpolation for the third and fourth dimensions by specifying
-# `third_axis='nearest'` and `fourth_axis='nearest'`. In this example, we will
-# load a 4D dataset and create the interpolator object.
-# First, we load the 4D dataset and create the interpolator object.
+# third and fourth dimensions. With the windowed methods presented below, you
+# can instead use nearest-neighbor interpolation for the third and fourth
+# dimensions by specifying ``third_axis='nearest'`` and
+# ``fourth_axis='nearest'``. First, we load the 4D dataset and create the
+# interpolator object.
 ds = pyinterp.tests.load_grid4d()
 interpolator = pyinterp.backends.xarray.Grid4D(ds.pressure)
 
@@ -60,12 +60,12 @@ quadrivariate = interpolator.quadrivariate(
 #
 # Bicubic and spline interpolation provides smoother results compared to
 # bilinear by using a windowed approach that considers a neighborhood of grid
-# points within a calculation window. You can use it by passing
-# ``method='bicubic'`` to the quadrivariate method.
+# points within a calculation window. You can use it by passing, for example,
+# ``method='steffen'`` (or ``method='bicubic'``) to the quadrivariate method.
 interpolator = pyinterp.backends.xarray.Grid4D(ds.pressure)
 
 # %%
-# We then perform the bicubic interpolation.
+# We then perform the Steffen interpolation.
 bicubic = interpolator.quadrivariate(
     {
         "longitude": mx.ravel(),
@@ -90,13 +90,13 @@ lons = mx[:, 0].squeeze()
 lats = my[0, :].squeeze()
 
 # %%
-# Finally, let's plot the results of both quadrivariate and bicubic
+# Finally, let's plot the results of both quadrivariate and Steffen
 # interpolation.
 #
 # .. note::
 #
 #   The resolution of the example grid is low (one pixel per degree), so the
-#   bicubic interpolation may not find enough pixels at the edges, resulting
+#   Steffen interpolation may not find enough pixels at the edges, resulting
 #   in undefined values.
 fig = matplotlib.pyplot.figure(figsize=(10, 8))
 fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, hspace=0.25)
@@ -133,7 +133,5 @@ pcm = ax2.pcolormesh(
     transform=cartopy.crs.PlateCarree(),
 )
 ax2.coastlines()
-ax2.set_title("Bicubic Interpolation")
+ax2.set_title("Steffen Interpolation")
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
-
-# %%

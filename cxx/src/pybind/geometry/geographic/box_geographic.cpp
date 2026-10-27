@@ -61,7 +61,7 @@ constexpr auto kCentroidDoc = R"doc(
 Get the centroid (center point) of the box.
 
 Returns:
-    Point: The center point of the box.
+    pyinterp.geometry.geographic.Point: The center point of the box.
 )doc";
 
 auto init_box(nb::module_& m) -> void {

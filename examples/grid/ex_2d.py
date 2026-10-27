@@ -28,8 +28,8 @@ import pyinterp.tests
 # First, we load the data and create the interpolator object. The constructor
 # will automatically detect the longitude and latitude axes. If it fails, you
 # can specify them by setting the ``units`` attribute to ``degrees_east`` and
-# ``degrees_north``. If your grid is not geodetic, set the ``geodetic``
-# parameter to ``False``.
+# ``degrees_north``. When a longitude axis is detected, it is handled as a
+# periodic axis (360 degrees).
 ds = pyinterp.tests.load_grid2d()
 interpolator = pyinterp.backends.xarray.Grid2D(ds.mss)
 
@@ -95,7 +95,9 @@ fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 # - **Advanced methods**: bicubic, akima, akima_periodic, c_spline,
 #   c_spline_not_a_knot, c_spline_periodic, linear, polynomial, steffen
 #
-# For geodetic grids, distance calculations use the `Haversine formula
+# The nearest neighbor and inverse distance weighting methods treat the grid
+# coordinates as longitudes and latitudes in degrees and compute distances on
+# the sphere with the `Haversine formula
 # <https://en.wikipedia.org/wiki/Haversine_formula>`_.
 #
 # Windowed Interpolators

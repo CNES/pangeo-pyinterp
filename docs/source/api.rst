@@ -23,6 +23,7 @@ The API is organized by functionality:
    api/optimal_interpolation
    api/fill
    api/statistics
+   api/config
 
 .. toctree::
    :maxdepth: 1
@@ -32,6 +33,12 @@ The API is organized by functionality:
    api/geohash
    api/orbit
    api/cf
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Utilities
+
+   api/utilities
 
 .. toctree::
    :maxdepth: 1

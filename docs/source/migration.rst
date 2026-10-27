@@ -5,9 +5,10 @@ This guide helps users migrate from older versions of pyinterp to the current AP
 
 .. note::
 
-   Version 2026.1.0 is a major architectural rewrite with significant breaking
+   Version 2026.2.0 is a major architectural rewrite with significant breaking
    changes. This guide covers all the API changes you need to know to migrate
-   your code.
+   your code from pyinterp 2025.11.0 and earlier (the pybind11-based releases)
+   to 2026.2.0 and later.
 
 Removed Python Modules
 ======================
@@ -158,13 +159,19 @@ After (New API)::
 
     from pyinterp import regular_grid_interpolator
 
-    result = regular_grid_interpolator.bivariate(grid, x, y, method="bicubic")
+    result = regular_grid_interpolator.bivariate(
+        grid, x, y, method="bicubic", half_window_size_x=3, half_window_size_y=3
+    )
 
-    # Or with configuration object for advanced options:
-    from pyinterp.config.geometric import Bivariate
+    # Or with a configuration object, passed through ``method``:
+    from pyinterp.core.config import windowed
 
-    config = Bivariate().with_window_size(3, 3)
-    result = regular_grid_interpolator.bivariate(grid, x, y, config=config)
+    config = (
+        windowed.Bivariate.bicubic()
+        .with_half_window_size_x(3)
+        .with_half_window_size_y(3)
+    )
+    result = regular_grid_interpolator.bivariate(grid, x, y, method=config)
 
 Binning and Histogram Statistics
 ================================
@@ -274,32 +281,40 @@ A new ``TDigest`` class provides efficient streaming quantile estimation:
 
 ::
 
+    import numpy as np
     from pyinterp import TDigest
 
-    # Create a T-Digest
-    td = TDigest()
+    # Create a T-Digest from a first batch of values
+    td = TDigest(values)
 
-    # Add values (can be done in streaming fashion)
-    td.update(values)
+    # Merge further batches (streaming): build a digest per batch and add it
+    td += TDigest(more_values)
 
     # Query quantiles
     median = td.quantile(0.5)
-    percentile_95 = td.quantile(0.95)
+    percentiles = td.quantile(np.array([0.05, 0.95]))
 
-    # Get CDF value
-    cdf = td.cdf(100.0)
+    # Other statistics: count(), min(), max(), mean(), sum_of_weights()
+    n = td.count()
 
 Satellite Geometry Operations
 =============================
 
 A new ``geometry.satellite`` submodule provides satellite-specific algorithms:
 
-- ``geometry.satellite.rotation`` - Satellite rotation operations
-- ``geometry.satellite.transforms.swath`` - Swath transform algorithms
+- ``geometry.satellite.calculate_swath`` - Swath coordinates from a nadir track
+- ``geometry.satellite.find_crossovers`` - Crossover detection (``CrossoverResult``)
+- ``geometry.satellite.decompose_track`` - Track decomposition into segments
+  (``DecompositionOptions``, ``TrackSegment``, ``LatitudeZone``)
+- ``geometry.satellite.infer_orbit_direction`` - Orbit direction
+  (``OrbitDirection``)
+- ``geometry.satellite.filter_by_extent`` - Track filtering by extent
 
-These replace the removed orbit classes (``EquatorCoordinates``, ``Orbit``,
-``Pass``, ``Swath``) and functions (``calculate_orbit``, ``calculate_pass``,
-``calculate_swath``).
+The orbit classes (``EquatorCoordinates``, ``Orbit``, ``Pass``, ``Swath``) and
+functions (``calculate_orbit``, ``calculate_pass``, ``calculate_swath``) are
+still available, but they are no longer re-exported from the top-level
+``pyinterp`` namespace: import them from ``pyinterp.orbit``
+(``from pyinterp.orbit import calculate_orbit``).
 
 Crossover detection moved from ``geodetic.calculate_crossover`` to
 ``geometry.satellite.find_crossovers``, which returns a list of
@@ -635,32 +650,42 @@ Additionally, geometry algorithms are now in a separate ``algorithms`` submodule
 Fill Functions API
 ------------------
 
-Fill functions now use configuration objects instead of keyword arguments:
+The ``pyinterp.fill`` functions now operate on NumPy arrays instead of ``Grid``
+objects, and take their options as keyword arguments. Alternatively, a
+configuration object from ``pyinterp.core.config.fill`` can be passed as second
+argument (keyword arguments are then ignored):
 
 .. list-table::
    :header-rows: 1
-   :widths: 40 40 20
+   :widths: 25 25 30 20
 
    * - Old Parameter
-     - New Configuration
+     - New Keyword
+     - Configuration Method
      - Notes
    * - ``is_circle=True``
-     - ``config.with_is_periodic(True)``
-     - Renamed and moved to config
+     - ``is_periodic=True``
+     - ``with_is_periodic(True)``
+     - Renamed
    * - ``first_guess=FirstGuess.Zero``
-     - ``config.with_first_guess(FirstGuess.ZERO)``
+     - ``first_guess="zero"``
+     - ``with_first_guess(FirstGuess.ZERO)``
      - Enum values now UPPERCASE
-   * - ``max_iterations=100``
-     - ``config.with_max_iterations(100)``
-     - Moved to config object
+   * - ``max_iteration=100``
+     - ``max_iterations=100``
+     - ``with_max_iterations(100)``
+     - Renamed in ``pyinterp.fill``
    * - ``epsilon=1e-6``
-     - ``config.with_epsilon(1e-6)``
-     - Moved to config object
+     - ``epsilon=1e-6``
+     - ``with_epsilon(1e-6)``
+     - Unchanged
    * - ``num_threads=0``
-     - ``config.with_num_threads(0)``
-     - Moved to config object
+     - ``num_threads=0``
+     - ``with_num_threads(0)``
+     - Unchanged
    * - ``relaxation=1.0``
-     - ``config.with_relaxation(1.0)``
+     - ``relaxation=1.0``
+     - ``with_relaxation(1.0)``
      - Gauss-Seidel specific
 
 **Example Migration:**
@@ -681,7 +706,19 @@ Before (Old API)::
 
 After (New API)::
 
-    from pyinterp.core.fill import gauss_seidel
+    from pyinterp import fill
+
+    iterations, residual = fill.gauss_seidel(
+        grid,
+        first_guess="zonal_average",
+        is_periodic=True,
+        max_iterations=100,
+        epsilon=1e-6,
+        relaxation=1.0,
+        num_threads=4
+    )
+
+    # Or with a configuration object:
     from pyinterp.core.config.fill import GaussSeidel, FirstGuess
 
     config = GaussSeidel() \
@@ -692,32 +729,41 @@ After (New API)::
         .with_relaxation(1.0) \
         .with_num_threads(4)
 
-    iterations, residual = gauss_seidel(grid, config)
+    iterations, residual = fill.gauss_seidel(grid, config)
 
 RTree Interpolation Methods
 ---------------------------
 
-RTree interpolation methods now use configuration objects:
+RTree interpolation is done by the ``pyinterp.rtree`` functions (also exported
+at the top level, e.g. ``pyinterp.radial_basis_function``), which take the tree
+as first argument and their options as keyword arguments. Enumerations are
+replaced by strings; a configuration object from ``pyinterp.core.config.rtree``
+can be passed instead of the keyword arguments:
 
 .. list-table::
    :header-rows: 1
-   :widths: 40 40 20
+   :widths: 25 25 30 20
 
    * - Old Enum/Parameter
-     - New Enum/Configuration
+     - New Keyword
+     - Configuration Method
      - Notes
    * - ``RadialBasisFunction.Gaussian``
-     - ``RBFKernel.GAUSSIAN``
+     - ``rbf="gaussian"``
+     - ``with_rbf(RBFKernel.GAUSSIAN)``
      - Enum renamed, values UPPERCASE
    * - ``WindowFunction.Hamming``
-     - ``WindowKernel.HAMMING``
+     - ``wf="hamming"``
+     - ``with_wf(WindowKernel.HAMMING)``
      - Enum renamed, values UPPERCASE
    * - ``CovarianceFunction.Matern_32``
-     - ``CovarianceFunction.MATERN_32``
+     - ``covariance_model="matern_32"``
+     - ``with_covariance_model(CovarianceFunction.MATERN_32)``
      - Values now UPPERCASE
    * - ``within=True``
-     - ``config.with_boundary_check(BoundaryCheck.WITHIN)``
-     - Renamed parameter
+     - ``boundary_check="envelope"``
+     - ``with_boundary_check(BoundaryCheck.ENVELOPE)``
+     - Also ``"convex_hull"`` and ``"none"``
 
 **Example Migration:**
 
@@ -736,6 +782,21 @@ Before (Old API)::
 
 After (New API)::
 
+    import pyinterp
+
+    values, neighbors = pyinterp.radial_basis_function(
+        tree,
+        coordinates,
+        radius=1000.0,
+        k=10,
+        rbf="gaussian",
+        epsilon=1.0,
+        smooth=0.0,
+        boundary_check="envelope",
+        num_threads=4
+    )
+
+    # Or with a configuration object:
     from pyinterp.core.config.rtree import RadialBasisFunction, RBFKernel, BoundaryCheck
 
     config = RadialBasisFunction() \
@@ -744,32 +805,34 @@ After (New API)::
         .with_rbf(RBFKernel.GAUSSIAN) \
         .with_epsilon(1.0) \
         .with_smooth(0.0) \
-        .with_boundary_check(BoundaryCheck.WITHIN) \
+        .with_boundary_check(BoundaryCheck.ENVELOPE) \
         .with_num_threads(4)
 
-    result = rtree.radial_basis_function(coordinates, config)
+    values, neighbors = pyinterp.radial_basis_function(tree, coordinates, config)
 
 Loess Parameters
 ----------------
 
-The ``loess`` function parameter names have been clarified:
+``pyinterp.fill.loess`` keeps its ``nx``, ``ny`` and ``value_type`` keywords and
+gains ``max_iterations``, ``epsilon``, ``first_guess`` and ``is_periodic``. The
+corresponding configuration object methods are:
 
 .. list-table::
    :header-rows: 1
    :widths: 40 40 20
 
-   * - Old Parameter
-     - New Parameter
+   * - Keyword
+     - Configuration Method
      - Notes
-   * - ``nx``
-     - ``half_window_size_x``
-     - Renamed for clarity
-   * - ``ny``
-     - ``half_window_size_y``
-     - Renamed for clarity
-   * - ``value_type=ValueType.All``
+   * - ``nx=3``
+     - ``config.with_nx(3)``
+     - Half window size along X
+   * - ``ny=3``
+     - ``config.with_ny(3)``
+     - Half window size along Y
+   * - ``value_type="all"``
      - ``config.with_value_type(LoessValueType.ALL)``
-     - Moved to config, values UPPERCASE
+     - Old core enum ``ValueType.All``
 
 Type Hints Module
 -----------------

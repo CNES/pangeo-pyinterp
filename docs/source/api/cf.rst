@@ -1,6 +1,9 @@
 CF Helpers
 ==========
-Helpers for Climate and Forecast (CF) conventions.
+Sets of the units defined by the Climate and Forecast (CF) conventions for
+longitudes, latitudes and times. The xarray backend (see :doc:`grids`) uses
+them to identify the axes of a ``DataArray`` from the ``units`` attribute of
+its coordinates.
 
 .. currentmodule:: pyinterp.cf
 

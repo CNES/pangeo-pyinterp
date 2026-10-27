@@ -24,9 +24,10 @@ import pyinterp.tests
 # Trivariate interpolation builds upon bivariate interpolation by adding a
 # third dimension. It first performs bilinear interpolation on the 2D spatial
 # plane (longitude and latitude), followed by linear interpolation along the
-# time dimension. Alternatively, you can opt for nearest-neighbor interpolation
-# on the time axis by specifying ``third_axis='nearest'``. First, we load the
-# 3D dataset and create the interpolator object.
+# time dimension. With the windowed methods presented below, you can instead
+# opt for nearest-neighbor interpolation on the time axis by specifying
+# ``third_axis='nearest'``. First, we load the 3D dataset and create the
+# interpolator object.
 ds = pyinterp.tests.load_grid3d()
 interpolator = pyinterp.backends.xarray.Grid3D(ds.tcw)
 

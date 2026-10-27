@@ -48,7 +48,7 @@ print(binning)
 # coordinates. We push the data into the bins and then compute the mean of the
 # values in each bin.
 binning.clear()
-binning.push(ds.lon.values, ds.lat.values, norm.values, True)
+binning.push(ds.lon.values, ds.lat.values, norm.values, simple=True)
 simple_mean = binning.mean()
 
 # %%
@@ -83,10 +83,11 @@ simple_mean = binning.mean()
 # --------------
 #
 # Linear binning is a more advanced technique where each data point contributes
-# to the four nearest bins, weighted by its distance to the center of each bin.
-# This generally produces a smoother result.
+# to the four surrounding grid nodes with bilinear weights: the weight of a node
+# is the area of the sub-rectangle opposite to it, so the closer the node, the
+# larger its weight. This generally produces a smoother result.
 binning.clear()
-binning.push(ds.lon.values, ds.lat.values, norm.values, False)
+binning.push(ds.lon.values, ds.lat.values, norm.values, simple=False)
 linear_mean = binning.mean()
 
 # %%
@@ -128,9 +129,11 @@ fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 # Histogram2D
 # -----------
 #
-# The :py:class:`TDigest <pyinterp.TDigest>` class is similar to the
-# :py:class:`Binning2D <pyinterp.Binning2D>` class, but it calculates the
-# histogram of the data in each bin instead of the statistics.
+# The :py:class:`Histogram2D <pyinterp.Histogram2D>` class is similar to the
+# :py:class:`Binning2D <pyinterp.Binning2D>` class, but instead of accumulating
+# statistics, each bin stores the distribution of its values with the
+# :py:class:`TDigest <pyinterp.TDigest>` algorithm, which also allows quantiles
+# to be estimated.
 #
 # Let's calculate the 2D histogram of the drifter data.
 hist = pyinterp.Histogram2D(

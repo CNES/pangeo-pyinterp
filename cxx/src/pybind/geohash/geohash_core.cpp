@@ -78,14 +78,14 @@ constexpr auto kBoundingBoxDoc = R"doc(
 Returns the bounding box of the geohash.
 
 Returns:
-    Box: Geodetic box representing the geohash bounds.
+    pyinterp.geometry.geographic.Box: Geodetic box representing the geohash bounds.
 )doc";
 
 constexpr auto kCenterDoc = R"doc(
 Returns the center point of this geohash.
 
 Returns:
-    Point: Geodetic point at the center of the geohash.
+    pyinterp.geometry.geographic.Point: Geodetic point at the center of the geohash.
 )doc";
 
 constexpr auto kStringValue = R"doc(

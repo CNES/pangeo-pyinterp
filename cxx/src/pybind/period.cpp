@@ -682,6 +682,7 @@ constexpr const char* const kPeriodListCrossAPeriod = R"(
 Identify dates that cross (enter or are within) any managed period.
 
 For each input date, determines whether it either:
+
 - Falls inside one of the periods, OR
 - Has at least one period beginning at or after it (before the last input
   date)
@@ -691,8 +692,8 @@ temporal sequence, excluding only those dates that come after all periods
 have ended.
 
 Args:
- dates: Vector of dates to check (should be sorted for optimal
-  performance).
+  dates: Vector of dates to check (should be sorted for optimal
+    performance).
 
 Returns:
   A vector of booleans where true indicates the date crosses a period.

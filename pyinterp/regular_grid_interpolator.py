@@ -12,7 +12,7 @@ For most use cases, you can simply pass a string method name:
 >>> result = bivariate(grid, x, y, "bilinear")
 
 For advanced configuration, pass a config object:
->>> from pyinterp.config import windowed
+>>> from pyinterp.core.config import windowed
 >>> config = windowed.Bivariate.bicubic().with_half_window_size_x(10)
 >>> result = bivariate(grid, x, y, config)
 """
@@ -295,14 +295,14 @@ def univariate(
         half_window_size: Half window size for the interpolation
         boundary_mode: Boundary handling mode
 
-    Return:
+    Returns:
         Interpolated values
 
     Examples:
         Simple usage:
 
         >>> result = univariate(grid, x, "linear")
-        >>> result = univariate(grid, x, "c_spline", window_size=10)
+        >>> result = univariate(grid, x, "c_spline", half_window_size=10)
 
         Advanced usage with config objects:
 
@@ -350,14 +350,16 @@ def univariate_derivative(
         half_window_size: Half window size for the derivative calculation
         boundary_mode: Boundary handling mode
 
-    Return:
+    Returns:
         Derivative values
 
     Examples:
         Simple usage:
 
         >>> derivative = univariate_derivative(grid, x, "c_spline")
-        >>> derivative = univariate_derivative(grid, x, "akima", window_size=7)
+        >>> derivative = univariate_derivative(
+        ...     grid, x, "akima", half_window_size=7
+        ... )
 
         Advanced usage with config objects:
 
@@ -448,14 +450,14 @@ def bivariate(
         half_window_size_y: Half window size for Y axis (windowed methods only)
         boundary_mode: Boundary handling mode (windowed methods only)
 
-    Return:
+    Returns:
         Interpolated values
 
     Examples:
         Simple usage:
 
         >>> result = bivariate(grid, x, y, "bilinear")
-        >>> result = bivariate(grid, x, y, "bicubic", window_size_x=10)
+        >>> result = bivariate(grid, x, y, "bicubic", half_window_size_x=10)
 
         Advanced usage with config objects:
 
@@ -573,7 +575,7 @@ def trivariate(
         boundary_mode: Boundary handling mode (windowed methods only)
         third_axis: Interpolation method for Z axis (windowed methods only)
 
-    Return:
+    Returns:
         Interpolated values
 
     Raise:
@@ -703,7 +705,7 @@ def quadrivariate(
         third_axis: Interpolation method for Z axis (windowed methods only)
         fourth_axis: Interpolation method for U axis (windowed methods only)
 
-    Return:
+    Returns:
         Interpolated values
 
     Raise:

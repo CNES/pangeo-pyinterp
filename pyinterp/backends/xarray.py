@@ -335,8 +335,10 @@ class _GridHolder:
 class Grid2D(_GridHolder):
     """Build a Grid2D from Xarray data.
 
-    Create a 2D grid interpolation object from the provided Xarray data array,
-    with optional axis ordering and geodetic coordinate support.
+    Create a 2D grid interpolation object from the provided Xarray data array.
+    The longitude and latitude axes are identified from the CF attributes and
+    the data is transposed to the (longitude, latitude) order if needed; a
+    longitude axis is created as periodic (360 degrees).
 
     Args:
         data_array: Provided data

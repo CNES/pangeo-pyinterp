@@ -7,6 +7,9 @@ Unreleased
 Bug Fixes
 ~~~~~~~~~
 
+* **GeoHash to xarray**: ``pyinterp.geohash.to_xarray`` swapped the units of the
+  coordinates: the longitude was labelled ``degrees_north`` and the latitude
+  ``degrees_east``.
 * **Polynomial interpolation**: Fixed the ``polynomial`` univariate method,
   which returned wrong values when its window held more than four points. The
   divided differences were computed in place and read values that had already
@@ -110,6 +113,16 @@ Documentation
 * **RTree3D**: Documented the geodesic mode of ``RTree3D`` and its differences
   with the geographic ``RTree``, which evaluates geodesic distances to its nodes
   and queries 20 to 25 times slower than ``RTree3D`` with a spheroid.
+* **API reference**: Added pages for the configuration objects
+  (``pyinterp.core.config``), ``dateutils`` and ``period``, the missing
+  geometry and satellite functions, and an introduction to each page. Fixed
+  docstring examples that used wrong parameter names, and the Sphinx warnings
+  on ``OIResult`` and on ambiguous return types.
+* **Examples and guides**: The two examples of the "core" section (axes and
+  grids) were missing from the gallery. Fixed the text of the examples that
+  contradicted their code or the current API, made ``ex_dateutils``
+  reproducible, and corrected the migration guide (bicubic, TDigest, fill,
+  Loess and satellite sections) and old changelog entries.
 * **Building from source**: Rewrote the build guide. It now starts with a quick
   start based on the conda environments of the CI, lists the current
   requirements (C++23, Boost 1.90), documents every ``build_ext`` option, CMake
@@ -235,7 +248,7 @@ New Features
 
 * **Satellite Track Decomposition**: Added decomposition algorithms in
   ``geometry.satellite`` that segment a satellite ground track into ascending
-  and descending passes, with new ``DecompositionOption`` and related enums to
+  and descending passes, with new ``DecompositionOptions`` and related enums to
   control the algorithm. An accompanying example
   (``examples/orbit/ex_decompose_track.py``) demonstrates typical usage.
 * **Pairwise Distances**: Added the ``for_each_point_pairwise_distance``
@@ -319,7 +332,9 @@ New Configuration System
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **Type-Safe Configuration Objects**: Introduced a new ``config`` module with
-  builder-pattern configuration objects replacing keyword arguments.
+  builder-pattern configuration objects. The public ``pyinterp.fill`` and
+  ``pyinterp.rtree`` functions accept either a configuration object or the
+  equivalent keyword arguments.
 * **Configuration Submodules**: Added ``config.fill``, ``config.geometric``,
   ``config.rtree``, and ``config.windowed`` for domain-specific configurations.
 * **Fluent API**: Configuration objects support method chaining with
@@ -335,7 +350,7 @@ Geometry Module
 * **Cartesian Coordinates**: Added new ``geometry.cartesian`` submodule for
   Cartesian coordinate system operations.
 * **Satellite Operations**: Added new ``geometry.satellite`` submodule with
-  satellite-specific algorithms (rotation, swath transforms).
+  satellite-specific algorithms (swath calculation, crossover detection).
 * **Algorithm Submodules**: Geometric algorithms are now organized in
   ``algorithms`` submodules for each coordinate system (40+ algorithms available).
 
@@ -395,7 +410,8 @@ The following Python modules have been removed and their functionality relocated
 * ``pyinterp.grid`` → Use ``pyinterp.Grid`` (with aliases ``Grid2D``, ``Grid3D``,
   ``Grid4D``)
 * ``pyinterp.histogram2d`` → Use ``pyinterp.Histogram2D``
-* ``pyinterp.period`` → Use ``pyinterp.period`` (re-exported from core)
+* ``pyinterp.period`` → Moved to the compiled core (``pyinterp.core.period``),
+  still available as ``from pyinterp import period``
 * ``pyinterp.binning`` → Use ``pyinterp.Binning1D``, ``pyinterp.Binning2D``
 * ``pyinterp.interface`` → Removed
 
@@ -406,12 +422,13 @@ Breaking Changes - Removed Classes & Functions
 * ``RadialBasisFunction`` enum → Use ``config.rtree.RBFKernel``
 * ``WindowFunction`` enum → Use ``config.rtree.WindowKernel``
 * ``GeoHash`` (top-level) → Use ``pyinterp.geohash.GeoHash``
-* Orbit classes (``EquatorCoordinates``, ``Orbit``, ``Pass``, ``Swath``) → Removed
-* Orbit functions (``calculate_orbit``, ``calculate_pass``, ``calculate_swath``) →
-  Removed
+* Orbit classes (``EquatorCoordinates``, ``Orbit``, ``Pass``, ``Swath``) and
+  functions (``calculate_orbit``, ``calculate_pass``, ``calculate_swath``) → No
+  longer re-exported from the top-level ``pyinterp`` namespace; import them from
+  ``pyinterp.orbit``
 * ``bicubic()`` function → Use ``regular_grid_interpolator.bivariate()``
 * ``interpolate1d()`` function → Use ``regular_grid_interpolator.univariate()``
-* ``__version__``, ``__date__`` attributes → Removed
+* ``__date__`` attribute → Removed (``__version__`` is kept)
 
 Breaking Changes - API Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -422,8 +439,12 @@ Breaking Changes - API Changes
   ``is_circle`` renamed to ``is_periodic``.
 * **Enum Values**: All enum values now use UPPERCASE (e.g., ``FirstGuess.ZERO``,
   ``RBFKernel.GAUSSIAN``).
-* **Fill Functions**: Now use configuration objects instead of keyword arguments.
-* **RTree Methods**: Now use configuration objects instead of keyword arguments.
+* **Fill Functions**: ``pyinterp.fill`` functions operate on NumPy arrays instead
+  of ``Grid`` objects; options are passed as keyword arguments or as a
+  ``config.fill`` object.
+* **RTree Methods**: Interpolation is done by the ``pyinterp.rtree`` functions
+  (or the ``RTree3D`` methods), with options passed as keyword arguments or as a
+  ``config.rtree`` object.
 
 Build System & Tooling
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -451,7 +472,7 @@ Build System & Tooling
   more precise type hints and annotations.
 * Updated pre-commit hooks to their latest versions in
   ``.pre-commit-config.yaml``.
-* Upgraded the Eigen library to v5.0.0 to gain performance improvements and
+* Upgraded the Eigen library to v5.0.0 to gain performance
   improvements and new features.
 * Added Eigen as a git submodule to ensure consistent builds across
   different environments.
@@ -507,6 +528,7 @@ Build System & Tooling
 2024.3.0
 --------
 * Enhance the performance of the spline/bicubic interpolation:
+
   - The bicubic interpolation is now 40% faster.
   - The cubic spline interpolation is now 30% faster.
 
@@ -577,8 +599,8 @@ Build System & Tooling
 
 2022.10.0
 ---------
-* issues #13: Extract coordinates of the K nearest neighbors of a point.
-* issues #12: Only the X-axis can be circular.
+* `#13 <https://github.com/CNES/pangeo-pyinterp/issues/13>`_: Extract coordinates of the K nearest neighbors of a point.
+* `#12 <https://github.com/CNES/pangeo-pyinterp/issues/12>`_: Only the X-axis can be circular.
 * Pure geodetic RTree.
 * Bug fixes.
 * Documentation fixes.

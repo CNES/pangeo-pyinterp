@@ -227,7 +227,7 @@ print(
 # Multi-grid Method
 # -----------------
 #
-# :py:func:`pyinterp.fill.multi_grid` uses a V-cycle approach that solves the
+# :py:func:`pyinterp.fill.multigrid` uses a V-cycle approach that solves the
 # problem at multiple resolution levels. It's generally the fastest method for
 # large grids.
 #
@@ -240,7 +240,7 @@ print(
 #
 # **Advantages over Gauss-Seidel:**
 #
-# * Typically 2-10× faster for large grids
+# * Usually faster for large grids (compare the timings printed below)
 # * Better convergence properties
 # * More efficient memory access patterns
 filled_mg = numpy.copy(field_with_gaps)
