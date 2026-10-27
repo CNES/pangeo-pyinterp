@@ -40,7 +40,17 @@ from . import core
 
 
 if TYPE_CHECKING:
+    from typing import TypeVar
+
     import dask.array
+
+    #: Statistics containers built from a template by the helpers
+    _Container = TypeVar(
+        "_Container",
+        core.Binning1DHolder,
+        core.Binning2DHolder,
+        core.Histogram2DHolder,
+    )
 
 __all__ = [
     "binning1d",
@@ -86,6 +96,24 @@ def _validate_dask_array(
         msg = f"{name} must be a dask array, got {type(arr).__name__}"
         raise TypeError(msg)
     return arr
+
+
+def _empty_copy(template: _Container) -> _Container:
+    """Return an empty container with the settings of the template.
+
+    The copy keeps the axes, the data type and the other parameters of the
+    template (range, spheroid, compression), but none of its data.
+
+    Args:
+        template: Container defining the settings.
+
+    Returns:
+        The empty container.
+
+    """
+    result = copy.copy(template)
+    result.clear()
+    return result
 
 
 def _validate_shapes_match(
@@ -329,8 +357,9 @@ def binning1d(
     Args:
         x: Dask array of x coordinates.
         z: Dask array of values to bin.
-        binning: A Binning1D instance defining the bins. A copy is made
-            internally, so the original is not modified.
+        binning: A Binning1D instance defining the bins. The result has its
+            axes, data type and range; the values it already holds are
+            ignored, and it is not modified.
         weights: Optional dask array of weights with the same shape as z.
 
     Returns:
@@ -382,21 +411,15 @@ def binning1d(
             )
             raise ValueError(msg)
 
-    # Get axis and range from the binning instance for creating new instances
-    axis = binning.x
-    bin_range = binning.range()
-
     def _process_block(
         x_block: np.ndarray,
         z_block: np.ndarray,
         weights_block: np.ndarray | None,
-        axis: core.Axis,
-        bin_range: tuple[float, float] | None,
+        template: core.Binning1DHolder,
         block_id: tuple[int, ...] | None = None,
     ) -> np.ndarray:
         """Process a single block and return binning as object array."""
-        # Create a fresh binning instance for this block
-        local_binning = core.Binning1D(copy.copy(axis), range=bin_range)
+        local_binning = _empty_copy(template)
         weights = weights_block.ravel() if weights_block is not None else None
         local_binning.push(
             x_block.ravel(),
@@ -413,8 +436,7 @@ def binning1d(
             x,
             z,
             None,
-            axis,
-            bin_range,
+            binning,
             dtype=object,
             drop_axis=list(range(x.ndim)),
             new_axis=0,
@@ -425,8 +447,7 @@ def binning1d(
             x,
             z,
             weights,
-            axis,
-            bin_range,
+            binning,
             dtype=object,
             drop_axis=list(range(x.ndim)),
             new_axis=0,
@@ -459,8 +480,9 @@ def binning2d(
         x: Dask array of x coordinates.
         y: Dask array of y coordinates.
         z: Dask array of values to bin.
-        binning: A Binning2D instance defining the bins. A copy is made
-            internally, so the original is not modified.
+        binning: A Binning2D instance defining the bins. The result has its
+            axes, data type and spheroid; the values it already holds are
+            ignored, and it is not modified.
         simple: If True, use simple binning (nearest neighbor). If False,
             use linear interpolation to distribute values among neighboring
             bins. Default is True.
@@ -512,28 +534,16 @@ def binning2d(
         )
         raise ValueError(msg)
 
-    # Get axes and spheroid from the binning instance
-    x_axis = binning.x
-    y_axis = binning.y
-    spheroid = binning.spheroid
-
     def _process_block(
         x_block: np.ndarray,
         y_block: np.ndarray,
         z_block: np.ndarray,
-        x_axis: core.Axis,
-        y_axis: core.Axis,
-        spheroid: core.geometry.geographic.Spheroid | None,
+        template: core.Binning2DHolder,
         simple: bool,
         block_id: tuple[int, ...] | None = None,
     ) -> np.ndarray:
         """Process a single block and return binning as object array."""
-        # Create a fresh binning instance for this block
-        local_binning = core.Binning2D(
-            copy.copy(x_axis),
-            copy.copy(y_axis),
-            spheroid=spheroid,
-        )
+        local_binning = _empty_copy(template)
         local_binning.push(
             x_block.ravel(),
             y_block.ravel(),
@@ -549,9 +559,7 @@ def binning2d(
         x,
         y,
         z,
-        x_axis,
-        y_axis,
-        spheroid,
+        binning,
         simple,
         dtype=object,
         drop_axis=list(range(x.ndim)),
@@ -584,8 +592,9 @@ def histogram2d(
         x: Dask array of x coordinates.
         y: Dask array of y coordinates.
         z: Dask array of values to accumulate.
-        histogram: A Histogram2D instance defining the grid. A copy is made
-            internally, so the original is not modified.
+        histogram: A Histogram2D instance defining the grid. The result has its
+            axes, data type and compression; the values it already holds are
+            ignored, and it is not modified.
 
     Returns:
         A new Histogram2D instance with accumulated values.
@@ -635,24 +644,15 @@ def histogram2d(
         )
         raise ValueError(msg)
 
-    # Get axes from the histogram instance
-    x_axis = histogram.x
-    y_axis = histogram.y
-
     def _process_block(
         x_block: np.ndarray,
         y_block: np.ndarray,
         z_block: np.ndarray,
-        x_axis: core.Axis,
-        y_axis: core.Axis,
+        template: core.Histogram2DHolder,
         block_id: tuple[int, ...] | None = None,
     ) -> np.ndarray:
         """Process a single block and return histogram as object array."""
-        # Create a fresh histogram instance for this block
-        local_hist = core.Histogram2D(
-            copy.copy(x_axis),
-            copy.copy(y_axis),
-        )
+        local_hist = _empty_copy(template)
         local_hist.push(
             x_block.ravel(),
             y_block.ravel(),
@@ -667,8 +667,7 @@ def histogram2d(
         x,
         y,
         z,
-        x_axis,
-        y_axis,
+        histogram,
         dtype=object,
         drop_axis=list(range(x.ndim)),
         new_axis=0,

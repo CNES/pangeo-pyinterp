@@ -30,10 +30,10 @@ Note:
     longitude/latitude too and searches the points in ECEF:
 
     - ``RTree3D(Spheroid(), distance="geodesic")`` returns the same
-      neighbors and geodesic distances as this class, about 10 times faster,
+      neighbors and geodesic distances as this class, 5 to 10 times faster,
       for points without altitude;
-    - ``RTree3D(Spheroid())`` measures straight-line (chord) distances, 20
-      to 25 times faster than this class. The chord is shorter than the
+    - ``RTree3D(Spheroid())`` measures straight-line (chord) distances, 10
+      to 20 times faster than this class. The chord is shorter than the
       geodesic by about 0.1% at 1,000 km and 2.6% at 5,000 km; at short
       range, both find the same neighbors, except for near-ties.
 

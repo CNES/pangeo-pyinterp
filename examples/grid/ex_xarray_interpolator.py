@@ -40,17 +40,17 @@ print(interpolator.grid)
 # -----------------------------------------
 #
 # The interpolator is called with a dictionary that maps every dimension name
-# to the coordinates of the points to evaluate. Each value must be a
-# one-dimensional ``numpy`` array (plain lists and scalars are rejected), so a
-# 2-D target grid is flattened before the call and reshaped afterwards. The
+# to the coordinates of the points to evaluate. The values can be scalars,
+# lists or arrays of any shape: they are broadcast against each other, and the
+# result has their broadcast shape, here the shape of the 2-D target grid. The
 # MSS is stored with longitudes in [0, 360), but we query it in [-180, 180).
 mx, my = numpy.meshgrid(
     numpy.arange(-180, 180, 1.0) + 1 / 3,
     numpy.arange(-80, 80, 1.0) + 1 / 3,
     indexing="ij",
 )
-coords = {"lon": mx.ravel(), "lat": my.ravel()}
-bilinear = interpolator(coords).reshape(mx.shape)
+coords = {"lon": mx, "lat": my}
+bilinear = interpolator(coords)
 
 # %%
 # Choosing the Method
@@ -71,7 +71,7 @@ bicubic = interpolator(
     half_window_size_x=3,
     half_window_size_y=3,
     boundary_mode="shrink",
-).reshape(mx.shape)
+)
 
 # %%
 # The two methods agree to within a millimeter; the largest differences
@@ -105,9 +105,7 @@ for ax in (ax1, ax2):
 # therefore never out of bounds: the same location written as -0.1, 359.9 or
 # 719.9 degrees gives the same value, and points between the last column
 # (359.75) and 360 are interpolated across the seam of the grid.
-lon = numpy.array([-0.1, 359.9, 719.9])
-lat = numpy.full(lon.shape, -40.1)
-print(interpolator({"lon": lon, "lat": lat}))
+print(interpolator({"lon": [-0.1, 359.9, 719.9], "lat": -40.1}))
 
 # %%
 # Outside the Grid
@@ -115,7 +113,7 @@ print(interpolator({"lon": lon, "lat": lat}))
 #
 # The latitudes cover [-89, 88.75]. A point beyond this range returns NaN by
 # default; set ``bounds_error=True`` to raise a :class:`ValueError` instead.
-outside = {"lon": numpy.array([-30.0]), "lat": numpy.array([89.5])}
+outside = {"lon": -30.0, "lat": 89.5}
 print(interpolator(outside))
 try:
     interpolator(outside, bounds_error=True)
@@ -141,22 +139,23 @@ dates = numpy.arange(
     numpy.timedelta64(3, "h"),
 )
 track = {
-    "longitude": numpy.full(dates.shape, 10.3),
-    "latitude": numpy.full(dates.shape, 45.1),
+    "longitude": 10.3,
+    "latitude": 45.1,
     "time": dates,
 }
 
 # %%
-# The default ``bilinear`` method is linear along the time axis. Windowed
-# methods interpolate in space with their window and along time with the
-# ``third_axis`` option (``"linear"`` or ``"nearest"``); for a 4-D array,
-# ``fourth_axis`` plays the same role for the fourth dimension.
+# The default ``bilinear`` method is linear along the time axis. The
+# ``third_axis`` option (``"linear"`` or ``"nearest"``) selects the
+# interpolation along time; for a 4-D array, ``fourth_axis`` plays the same
+# role for the fourth dimension. These options, like ``half_window_size_x``,
+# select the windowed version of ``bilinear``.
 linear = interpolator(track)
-nearest = interpolator(track, method="bicubic", third_axis="nearest")
+nearest = interpolator(track, method="bilinear", third_axis="nearest")
 
 fig, ax = matplotlib.pyplot.subplots(figsize=(10, 4), layout="constrained")
 ax.plot(dates, linear, label="bilinear (linear in time)")
-ax.plot(dates, nearest, label="bicubic, third_axis='nearest'")
+ax.plot(dates, nearest, label="bilinear, third_axis='nearest'")
 ax.set_ylabel("Total column water vapor (kg m$^{-2}$)")
 ax.set_title("Time series at 10.3E, 45.1N")
 ax.legend()

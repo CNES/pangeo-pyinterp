@@ -222,6 +222,19 @@ def _make_windowed_config(
     return config
 
 
+def _is_geometric(method: str, **options: object) -> bool:
+    """Return whether a method name selects the geometric interpolator.
+
+    ``bilinear`` exists in both families: it selects the geometric
+    interpolator, unless a windowed option is given.
+    """
+    if method not in _GEOMETRIC_METHODS:
+        return False
+    return method not in _WINDOWED_METHODS or all(
+        value is None for value in options.values()
+    )
+
+
 def _validate_no_windowed_options(
     method: str,
     half_window_size: int | None = None,
@@ -443,7 +456,9 @@ def bivariate(
         grid: The 2D grid to interpolate from
         x: X coordinates at which to interpolate
         y: Y coordinates at which to interpolate
-        method: Interpolation method (config object or string)
+        method: Interpolation method (config object or string).
+            ``bilinear`` uses the windowed interpolator when a windowed
+            option is given, and the geometric one otherwise.
         bounds_error: If True, raise error for out-of-bounds coordinates
         num_threads: Number of threads to use (0 = auto)
         half_window_size_x: Half window size for X axis (windowed methods only)
@@ -473,7 +488,12 @@ def bivariate(
         return core.bivariate(grid, x, y, method)
 
     # String-based method - create config
-    if method in _GEOMETRIC_METHODS:
+    if _is_geometric(
+        method,
+        half_window_size_x=half_window_size_x,
+        half_window_size_y=half_window_size_y,
+        boundary_mode=boundary_mode,
+    ):
         # Validate no windowed options for geometric methods
         _validate_no_windowed_options(
             method,
@@ -567,7 +587,9 @@ def trivariate(
         x: X coordinates at which to interpolate
         y: Y coordinates at which to interpolate
         z: Z coordinates at which to interpolate
-        method: Interpolation method (config object or string)
+        method: Interpolation method (config object or string).
+            ``bilinear`` uses the windowed interpolator when a windowed
+            option is given, and the geometric one otherwise.
         bounds_error: If True, raise error for out-of-bounds coordinates
         num_threads: Number of threads to use (0 = auto)
         half_window_size_x: Half window size for X axis (windowed methods only)
@@ -593,7 +615,13 @@ def trivariate(
         return core.trivariate(grid, x, y, z, method)
 
     # String-based method - create config
-    if method in _GEOMETRIC_METHODS:
+    if _is_geometric(
+        method,
+        half_window_size_x=half_window_size_x,
+        half_window_size_y=half_window_size_y,
+        boundary_mode=boundary_mode,
+        third_axis=third_axis,
+    ):
         # Validate no windowed options for geometric methods
         _validate_no_windowed_options(
             method,
@@ -696,7 +724,9 @@ def quadrivariate(
         y: Y coordinates at which to interpolate
         z: Z coordinates at which to interpolate
         u: U coordinates at which to interpolate
-        method: Interpolation method (config object or string)
+        method: Interpolation method (config object or string).
+            ``bilinear`` uses the windowed interpolator when a windowed
+            option is given, and the geometric one otherwise.
         bounds_error: If True, raise error for out-of-bounds coordinates
         num_threads: Number of threads to use (0 = auto)
         half_window_size_x: Half window size for X axis (windowed methods only)
@@ -732,7 +762,14 @@ def quadrivariate(
         return core.quadrivariate(grid, x, y, z, u, method)
 
     # String-based method - create config
-    if method in _GEOMETRIC_METHODS:
+    if _is_geometric(
+        method,
+        half_window_size_x=half_window_size_x,
+        half_window_size_y=half_window_size_y,
+        boundary_mode=boundary_mode,
+        third_axis=third_axis,
+        fourth_axis=fourth_axis,
+    ):
         # Validate no windowed options for geometric methods
         _validate_no_windowed_options(
             method,

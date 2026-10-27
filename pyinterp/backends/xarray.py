@@ -36,7 +36,7 @@ if TYPE_CHECKING:
         NDArray1DNumericWithTime,
     )
 
-__all__ = ["Grid2D", "Grid3D", "Grid4D"]
+__all__ = ["Grid2D", "Grid3D", "Grid4D", "RegularGridInterpolator"]
 
 #: Two dimensional grid.
 TWO_DIMENSIONS = 2
@@ -254,11 +254,20 @@ def _get_canonical_dimensions(
 
 
 def _coords(
-    coords: dict[Hashable, NDArray1D],
+    coords: dict[Hashable, Any],
     dims: tuple[Hashable, ...],
     datetime64: tuple[Hashable, core.TemporalAxis] | None = None,
-) -> tuple[NDArray1D | NDArray1DDateTime64, ...]:
-    """Get the list of arguments to provide to grid interpolation functions."""
+) -> tuple[tuple[NDArray1D | NDArray1DDateTime64, ...], tuple[int, ...]]:
+    """Get the arguments to provide to grid interpolation functions.
+
+    The coordinates can be scalars or array-like of any shape: they are
+    broadcast against each other and flattened.
+
+    Returns:
+        The flattened coordinates, in the order of the grid dimensions, and
+        the shape to give to the interpolated values.
+
+    """
     if not isinstance(coords, dict):
         raise TypeError("coords must be an instance of dict")
     if len(coords) != len(dims):
@@ -273,26 +282,28 @@ def _coords(
             + ", ".join([str(item) for item in unknown])
         )
 
-    # Is it necessary to manage a time axis?
-    if datetime64 is not None:
-        temporal_dim, temporal_axis = datetime64
-        result: list[NDArray1D | NDArray1DDateTime64] = []
-        for dim in dims:
-            coord_value = coords[dim]
-            if dim != temporal_dim:
-                # Regular coordinate
-                result.append(cast("NDArray1D", coord_value))
-            else:
-                # Cast temporal coordinates
-                result.append(
-                    temporal_axis.cast_to_temporal_axis(
-                        cast("NDArray1DDateTime64", coord_value)
-                    )
-                )
-        return tuple(result)
+    values = np.broadcast_arrays(*(np.asarray(coords[dim]) for dim in dims))
+    shape = values[0].shape
+    temporal_dim = datetime64[0] if datetime64 is not None else None
 
-    # No temporal axis - cast all to NDArray1D
-    return tuple(cast("NDArray1D", coords[dim]) for dim in dims)
+    result: list[NDArray1D | NDArray1DDateTime64] = []
+    for dim, value in zip(dims, values, strict=True):
+        flat = value.ravel()
+        if datetime64 is not None and dim == temporal_dim:
+            # Cast temporal coordinates
+            dates = (
+                flat if flat.dtype.kind == "M" else flat.astype("datetime64")
+            )
+            result.append(
+                datetime64[1].cast_to_temporal_axis(
+                    cast("NDArray1DDateTime64", dates)
+                )
+            )
+        else:
+            result.append(
+                cast("NDArray1D", flat.astype(np.float64, copy=False))
+            )
+    return tuple(result), shape
 
 
 class _GridHolder:
@@ -383,27 +394,29 @@ class Grid2D(_GridHolder):
 
         Args:
             coords: Mapping from dimension names to the
-                coordinates to interpolate. Coordinates must be array-like.
+                coordinates to interpolate. Coordinates can be scalars or
+                array-like; they are broadcast against each other.
             method: Interpolation method. See
                 :py:func:`pyinterp.bivariate` for more details.
             **kwargs: Additional keyword arguments provided to the
                 interpolation method.
 
         Returns:
-            The interpolated values.
+            The interpolated values, with the broadcast shape of the
+            coordinates.
 
         Raises:
             IndexError: If coordinate dimensions don't match grid dimensions
 
         """
-        x, y = _coords(coords, self._dims, self._datetime64)
+        (x, y), shape = _coords(coords, self._dims, self._datetime64)
         return bivariate(
             self._instance,
             cast("NDArray1DFloat64", x),
             cast("NDArray1DFloat64", y),
             method=method,
             **kwargs,
-        )
+        ).reshape(shape)
 
 
 class Grid3D(_GridHolder):
@@ -466,7 +479,8 @@ class Grid3D(_GridHolder):
 
         Args:
             coords: Mapping from dimension names to the
-                coordinates to interpolate. Coordinates must be array-like.
+                coordinates to interpolate. Coordinates can be scalars or
+                array-like; they are broadcast against each other.
                 If the third axis is temporal, provide datetime64 array.
             method: Interpolation method. See
                 :py:func:`pyinterp.trivariate` for more details.
@@ -474,13 +488,14 @@ class Grid3D(_GridHolder):
                 interpolation method.
 
         Returns:
-            The interpolated values.
+            The interpolated values, with the broadcast shape of the
+            coordinates.
 
         Raises:
             IndexError: If coordinate dimensions don't match grid dimensions
 
         """
-        x, y, z = _coords(coords, self._dims, self._datetime64)
+        (x, y, z), shape = _coords(coords, self._dims, self._datetime64)
         return trivariate(
             self._instance,
             cast("NDArray1DFloat64", x),
@@ -488,7 +503,7 @@ class Grid3D(_GridHolder):
             cast("NDArray1DFloat64 | NDArray1DDateTime64", z),
             method=method,
             **kwargs,
-        )
+        ).reshape(shape)
 
 
 class Grid4D(_GridHolder):
@@ -555,7 +570,8 @@ class Grid4D(_GridHolder):
 
         Args:
             coords: Mapping from dimension names to the
-                coordinates to interpolate. Coordinates must be array-like.
+                coordinates to interpolate. Coordinates can be scalars or
+                array-like; they are broadcast against each other.
                 If the third axis is temporal, provide datetime64 array.
             method: Interpolation method. See
                 :py:func:`pyinterp.quadrivariate` for more details.
@@ -563,13 +579,14 @@ class Grid4D(_GridHolder):
                 interpolation method.
 
         Returns:
-            The interpolated values.
+            The interpolated values, with the broadcast shape of the
+            coordinates.
 
         Raises:
             IndexError: If coordinate dimensions don't match grid dimensions
 
         """
-        x, y, z, u = _coords(coords, self._dims, self._datetime64)
+        (x, y, z, u), shape = _coords(coords, self._dims, self._datetime64)
         return quadrivariate(
             self._instance,
             cast("NDArray1DFloat64", x),
@@ -578,7 +595,7 @@ class Grid4D(_GridHolder):
             cast("NDArray1DFloat64", u),
             method=method,
             **kwargs,
-        )
+        ).reshape(shape)
 
 
 class RegularGridInterpolator:
@@ -757,8 +774,8 @@ class RegularGridInterpolator:
                   (``"linear"``, ``"nearest"``)
 
         Returns:
-            Interpolated values as numpy array with same shape as input
-            coordinate arrays.
+            Interpolated values, with the broadcast shape of the
+            coordinates.
 
         Raises:
             ValueError: If bounds_error=True and coordinates are out of bounds.

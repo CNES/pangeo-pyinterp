@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import importlib
+import pickle
 import sys
 
 import numpy as np
@@ -501,3 +502,58 @@ class TestDaskNotInstalled:
                 sys.modules["dask.array"] = original_dask_array
             else:
                 sys.modules.pop("dask.array", None)
+
+
+class TestTemplateSettings:
+    """The helpers keep the settings of the container given as template."""
+
+    @pytest.fixture
+    def data(self) -> tuple[core.Axis, da.Array, da.Array, da.Array]:
+        """Set up the axis and the chunked data."""
+        axis = core.Axis(np.linspace(0, 10, 11))
+        rng = np.random.default_rng(seed=42)
+        x = da.from_array(rng.uniform(0, 10, size=10000), chunks=1000)
+        y = da.from_array(rng.uniform(0, 10, size=10000), chunks=1000)
+        z = da.from_array(rng.random(10000), chunks=1000)
+        return axis, x, y, z
+
+    def test_binning1d(
+        self, data: tuple[core.Axis, da.Array, da.Array, da.Array]
+    ) -> None:
+        """Test that the data type and the range are kept."""
+        axis, x, _, z = data
+        template = core.Binning1D(axis, range=(2.0, 5.0), dtype="float32")
+        result = dask_stats.binning1d(x, z, template)
+        assert isinstance(result, core.Binning1DFloat32)
+        assert result.range() == (2.0, 5.0)
+        assert result.mean().dtype == np.float32
+
+    def test_binning2d(
+        self, data: tuple[core.Axis, da.Array, da.Array, da.Array]
+    ) -> None:
+        """Test that the data type is kept and the template's data ignored."""
+        axis, x, y, z = data
+        template = core.Binning2D(axis, axis, dtype="float32")
+        template.push(np.array([1.0]), np.array([1.0]), np.array([1.0]))
+        result = dask_stats.binning2d(x, y, z, template)
+        assert isinstance(result, core.Binning2DFloat32)
+        assert result.count().sum() == 10000
+        assert template.count().sum() == 1
+
+    def test_histogram2d(
+        self, data: tuple[core.Axis, da.Array, da.Array, da.Array]
+    ) -> None:
+        """Test that the data type and the compression are kept."""
+        axis, x, y, z = data
+        coarse = dask_stats.histogram2d(
+            x, y, z, core.Histogram2D(axis, axis, compression=5)
+        )
+        fine = dask_stats.histogram2d(
+            x, y, z, core.Histogram2D(axis, axis, compression=500)
+        )
+        # A digest holds fewer centroids with a lower compression.
+        assert len(pickle.dumps(coarse)) < len(pickle.dumps(fine))
+        result = dask_stats.histogram2d(
+            x, y, z, core.Histogram2D(axis, axis, dtype="float32")
+        )
+        assert isinstance(result, core.Histogram2DFloat32)

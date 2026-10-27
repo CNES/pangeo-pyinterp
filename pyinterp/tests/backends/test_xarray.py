@@ -210,10 +210,22 @@ class TestCoords:
             "lon": np.array([10.0, 20.0]),
             "lat": np.array([45.0, -30.0]),
         }
-        result = _coords(coords_dict, ("lon", "lat"))
+        result, shape = _coords(coords_dict, ("lon", "lat"))
         assert len(result) == 2
+        assert shape == (2,)
         assert np.allclose(result[0], [10.0, 20.0])
         assert np.allclose(result[1], [45.0, -30.0])
+
+    def test_coords_broadcast(self) -> None:
+        """Test that scalars, lists and arrays are broadcast together."""
+        result, shape = _coords(
+            {"lon": [[10.0], [20.0]], "lat": 45.0}, ("lon", "lat")
+        )
+        assert shape == (2, 1)
+        assert all(item.ndim == 1 for item in result)
+        assert all(item.dtype == np.float64 for item in result)
+        assert np.allclose(result[0], [10.0, 20.0])
+        assert np.allclose(result[1], [45.0, 45.0])
 
     def test_coords_wrong_type(self) -> None:
         """Test error when coords is not a dict."""
@@ -441,6 +453,69 @@ class TestRegularGridInterpolator:
         }
         result = interp(coords, method="bilinear")
         assert result.shape == (1,)
+
+    def test_call_scalars_and_lists(
+        self, geodetic_2d_data: xr.DataArray
+    ) -> None:
+        """Test that scalars and lists are accepted, keeping their shape."""
+        interp = RegularGridInterpolator(geodetic_2d_data)
+        expected = interp({"lon": np.array([10.0]), "lat": np.array([45.0])})
+        scalar = interp({"lon": 10.0, "lat": 45.0})
+        assert scalar.shape == ()
+        assert np.allclose(scalar, expected[0])
+        listed = interp({"lon": [10.0, 10.0], "lat": [45.0, 45.0]})
+        assert np.allclose(listed, expected[0])
+        grid = interp({"lon": np.full((2, 3), 10.0), "lat": 45.0})
+        assert grid.shape == (2, 3)
+        assert np.allclose(grid, expected[0])
+
+    def test_call_temporal_list(
+        self, geodetic_3d_temporal_data: xr.DataArray
+    ) -> None:
+        """Test dates given as a list of strings or a datetime64 scalar."""
+        interp = RegularGridInterpolator(geodetic_3d_temporal_data)
+        expected = interp(
+            {
+                "lon": np.array([10.0]),
+                "lat": np.array([45.0]),
+                "time": np.array(["2020-01-01T12"], dtype="datetime64[h]"),
+            }
+        )
+        result = interp(
+            {"lon": [10.0], "lat": [45.0], "time": ["2020-01-01T12"]}
+        )
+        assert np.allclose(result, expected)
+        result = interp(
+            {
+                "lon": 10.0,
+                "lat": 45.0,
+                "time": np.datetime64("2020-01-01T12", "h"),
+            }
+        )
+        assert np.allclose(result, expected[0])
+
+    def test_call_bilinear_third_axis(
+        self, geodetic_3d_temporal_data: xr.DataArray
+    ) -> None:
+        """Test bilinear with a windowed option, here ``third_axis``."""
+        interp = RegularGridInterpolator(geodetic_3d_temporal_data)
+        # A point far from the edges, so that the window fits in the grid.
+        coords = {
+            "lon": np.array([180.0]),
+            "lat": np.array([5.0]),
+            "time": np.array(["2020-01-01T06"], dtype="datetime64[h]"),
+        }
+        nearest = interp(coords, method="bilinear", third_axis="nearest")
+        assert not np.isnan(nearest).any()
+        coords["time"] = np.array(["2020-01-01T00"], dtype="datetime64[h]")
+        first_date = interp(coords)
+        assert np.allclose(nearest, first_date)
+
+    def test_exported(self) -> None:
+        """Test that the class is exported by the module."""
+        from pyinterp.backends import xarray  # noqa: PLC0415
+
+        assert "RegularGridInterpolator" in xarray.__all__
 
     def test_invalid_dimensions(self) -> None:
         """Test error with invalid number of dimensions."""

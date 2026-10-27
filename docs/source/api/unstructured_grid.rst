@@ -120,11 +120,12 @@ measure and by their speed:
 * :py:func:`RTree3D(spheroid) <pyinterp.RTree3D>`, created with a spheroid
   (without one, the coordinates are taken as Cartesian), converts the points
   to ECEF and searches them with straight-line (chord) distances. It is the
-  fastest index, 20 to 25 times faster to query than the geographic one, and
-  also supports altitudes, any spheroid and single precision.
+  fastest index, 10 to 20 times faster to query than the geographic one (the
+  gap grows with the size of the tree), and also supports altitudes, any
+  spheroid and single precision.
 * ``RTree3D(spheroid, distance="geodesic")`` keeps the ECEF search but ranks
   the neighbors by geodesic distance on the spheroid, and returns geodesic
-  distances: the same results as the geographic index, about 10 times faster.
+  distances: the same results as the geographic index, 5 to 10 times faster.
   The points must have no altitude. Radial basis functions and kriging keep
   straight-line distances between the neighbors in their kernels.
 * :py:class:`geographic.RTree <pyinterp.geometry.geographic.RTree>`

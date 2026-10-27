@@ -7,6 +7,24 @@ Unreleased
 Bug Fixes
 ~~~~~~~~~
 
+* **xarray interpolator coordinates**: ``RegularGridInterpolator`` and the
+  ``Grid2D``/``Grid3D``/``Grid4D`` methods of ``pyinterp.backends.xarray``
+  rejected scalars and lists, although their documentation used them; only
+  one-dimensional arrays were accepted. The coordinates can now be scalars,
+  lists or arrays of any shape, broadcast against each other, and the result
+  has their broadcast shape. Dates can also be given as strings.
+  ``RegularGridInterpolator`` is now listed in the ``__all__`` of the module.
+* **Bilinear with windowed options**: ``bilinear`` names both a geometric and a
+  windowed method, and the string always selected the geometric one, so
+  combining it with ``third_axis``, ``fourth_axis``, ``half_window_size_x``,
+  ``half_window_size_y`` or ``boundary_mode`` raised a ``TypeError``. These
+  options now select the windowed bilinear interpolator.
+* **Dask helpers**: ``pyinterp.dask.binning1d``, ``binning2d`` and
+  ``histogram2d`` rebuilt the container of each chunk from the axes of the
+  template, so a ``float32`` template gave a ``float64`` result and the
+  compression of a ``Histogram2D`` was ignored. Each chunk now starts from an
+  empty copy of the template, which keeps its data type, range, spheroid and
+  compression.
 * **GeoHash to xarray**: ``pyinterp.geohash.to_xarray`` swapped the units of the
   coordinates: the longitude was labelled ``degrees_north`` and the latitude
   ``degrees_east``.
@@ -49,7 +67,7 @@ New Features
   ``RTree3D``. With ``distance="geodesic"`` and a spheroid, the tree still
   searches its nodes with straight-line ECEF distances, but ranks the neighbors
   by geodesic distance on the spheroid and returns geodesic distances: it finds
-  the same neighbors as the geographic ``RTree``, at the same distances, about
+  the same neighbors as the geographic ``RTree``, at the same distances, 5 to
   10 times faster. The default, ``"euclidean"``, keeps the previous behavior.
 
 Performance
@@ -112,7 +130,7 @@ Documentation
 
 * **RTree3D**: Documented the geodesic mode of ``RTree3D`` and its differences
   with the geographic ``RTree``, which evaluates geodesic distances to its nodes
-  and queries 20 to 25 times slower than ``RTree3D`` with a spheroid.
+  and queries 10 to 20 times slower than ``RTree3D`` with a spheroid.
 * **API reference**: Added pages for the configuration objects
   (``pyinterp.core.config``), ``dateutils`` and ``period``, the missing
   geometry and satellite functions, and an introduction to each page. Fixed

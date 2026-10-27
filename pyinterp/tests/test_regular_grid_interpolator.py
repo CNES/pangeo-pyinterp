@@ -12,6 +12,7 @@ import pytest
 from pyinterp import core
 from pyinterp.core.config import geometric, windowed
 from pyinterp.regular_grid_interpolator import (
+    _is_geometric,
     _make_geometric_config,
     _make_windowed_config,
     _validate_no_windowed_options,
@@ -193,6 +194,26 @@ class TestMakeWindowedConfig:
             fourth_axis="linear",
         )
         assert isinstance(config, windowed.Quadrivariate)
+
+
+class TestIsGeometric:
+    """Test _is_geometric function."""
+
+    def test_geometric_only(self) -> None:
+        """Test methods that exist only in the geometric family."""
+        assert _is_geometric("nearest")
+        assert _is_geometric("idw", boundary_mode="shrink")
+
+    def test_windowed_only(self) -> None:
+        """Test methods that exist only in the windowed family."""
+        assert not _is_geometric("bicubic")
+
+    def test_bilinear(self) -> None:
+        """Test that windowed options select the windowed bilinear."""
+        assert _is_geometric("bilinear")
+        assert _is_geometric("bilinear", half_window_size_x=None)
+        assert not _is_geometric("bilinear", half_window_size_x=2)
+        assert not _is_geometric("bilinear", third_axis="nearest")
 
 
 class TestValidateNoWindowedOptions:
