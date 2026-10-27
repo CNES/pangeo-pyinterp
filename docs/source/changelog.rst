@@ -1,6 +1,104 @@
 Changelog
 #########
 
+Unreleased
+----------
+
+Bug Fixes
+~~~~~~~~~
+
+* **Polynomial interpolation**: Fixed the ``polynomial`` univariate method,
+  which returned wrong values when its window held more than four points. The
+  divided differences were computed in place and read values that had already
+  been overwritten. This defect was introduced in 2026.2.0.
+* **Multigrid convergence**: Fixed ``fill.multigrid``, whose coarse-grid
+  correction did not match the fine problem: each V-cycle removed only about
+  15 % of the error, and large grids did not converge. The restriction now uses
+  9-point full weighting, and the number of cycles no longer grows with the
+  grid size: a 720 × 360 grid converges in 12 cycles (2.8 s → 182 ms).
+* **Periodic LOESS**: ``fill.loess`` ignored ``is_periodic``: the neighbors
+  across the seam got a zero weight. Results only change at the seam and at the
+  reflected edges.
+* **T-digest**: The size of ``TDigest`` is now bounded by its compression.
+  Below the median, the centroids never merged, so the digest grew with the
+  number of values, and computing it over a whole array was quadratic
+  (470 ms → 6 ms for 81,000 values). The quantiles of weighted data, which were
+  computed from the number of samples instead of the total weight, are fixed,
+  as is the merge of two digests, which dropped the values not yet merged.
+* **Pickled RTree3D**: Pickling ``RTree3D`` now preserves its coordinate system
+  and distance: a Cartesian tree was restored as a geodetic one, with the WGS84
+  spheroid. States saved by earlier versions are still accepted.
+* **EquatorCoordinates**: ``orbit.EquatorCoordinates.undefined`` creates its
+  ``NaT`` with an explicit unit, as the generic unit is deprecated by NumPy.
+
+New Features
+~~~~~~~~~~~~
+
+* **Geodesic distances in RTree3D**: Added the ``distance`` option to
+  ``RTree3D``. With ``distance="geodesic"`` and a spheroid, the tree still
+  searches its nodes with straight-line ECEF distances, but ranks the neighbors
+  by geodesic distance on the spheroid and returns geodesic distances: it finds
+  the same neighbors as the geographic ``RTree``, at the same distances, about
+  10 times faster. The default, ``"euclidean"``, keeps the previous behavior.
+
+Performance
+~~~~~~~~~~~
+
+* **Python extension**: The extension is no longer compiled with ``-Os`` in
+  release builds, which disabled the vectorization and inlining of the Eigen
+  kernels.
+* **Fill methods**: The LOESS window weights are computed once per thread
+  (2.7 to 3.6 times faster), and Gauss-Seidel only sweeps the unknown cells.
+* **Interpolation**: Windowed, bilinear and bicubic interpolations no longer
+  copy the window arrays or allocate memory for each point, nearest and IDW
+  interpolations share the corner distances across layers, and periodic axis
+  lookups avoid integer divisions.
+* **R-tree**: k-NN searches no longer use the incremental query, and the
+  query points of a batch are searched in spatial order.
+* **Statistics**: T-digest quantiles are computed in a single pass,
+  ``Binning1D`` uses a dedicated update when no weights are given, Cartesian
+  linear binning weights are computed in closed form, and strided arrays are
+  iterated with incremental offsets.
+* **Geometry**: Point-in-polygon tests are filtered with the envelope of the
+  container.
+* **Geohash**: ``geohash.encode`` and ``geohash.transform`` are faster.
+  When zooming out, ``transform`` now returns each code once, in ascending
+  order.
+* **Date utilities**: ``datetime64`` values are split with a resolution known
+  at compile time.
+* **Benchmarks**: Added a ``benchmarks`` package, run with
+  ``python -m benchmarks``, covering 180 cases in nine families. Results can be
+  saved and compared with a previous run.
+
+Build System
+~~~~~~~~~~~~
+
+* **Precompiled header**: The Python extension is compiled with a precompiled
+  header holding the Boost.Geometry, Eigen and nanobind headers, which accounted
+  for about half of the compilation time. It can be disabled with the
+  ``PYINTERP_USE_PCH`` CMake option.
+* **Geographic overlay operations**: The bindings of the geographic
+  ``difference``, ``intersection`` and ``union`` are instantiated in one
+  translation unit per strategy, so that the slowest files of the build are
+  compiled in parallel.
+* **Continuous integration**: Compilations are cached with ccache in the
+  coverage, Linux and macOS jobs, and the timeout of the Linux jobs is raised to
+  30 minutes.
+* **Missing include**: Added the nanobind string header missing from
+  the geohash bindings (``cxx/src/pybind/geohash/string.cpp``).
+
+Dependencies
+~~~~~~~~~~~~
+
+* **pocketfft**: Updated the vendored submodule to the latest commit.
+
+Documentation
+~~~~~~~~~~~~~
+
+* **RTree3D**: Documented the geodesic mode of ``RTree3D`` and its differences
+  with the geographic ``RTree``, which evaluates geodesic distances to its nodes
+  and queries 20 to 25 times slower than ``RTree3D`` with a spheroid.
+
 2026.10.0
 ---------
 
