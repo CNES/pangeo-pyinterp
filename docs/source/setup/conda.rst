@@ -2,23 +2,25 @@ Setup with Anaconda / conda-forge
 *********************************
 
 `conda <https://docs.conda.io/>`_ (or the faster drop-in replacement
-`mamba <https://mamba.readthedocs.io/>`_) can install pre-built binaries with
-all compiled dependencies.
+`mamba <https://mamba.readthedocs.io/>`_) installs pre-built binaries together
+with all their compiled dependencies:
 
-Install::
+.. tab:: mamba
 
-    conda install -c conda-forge pyinterp
+   .. code-block:: bash
 
-(Or with mamba)::
+      mamba install -c conda-forge pyinterp
 
-    mamba install -c conda-forge pyinterp
+.. tab:: conda
 
-Optional packages you may want::
+   .. code-block:: bash
 
-    conda install xarray dask cartopy pandas
+      conda install -c conda-forge pyinterp
 
-To keep everything current::
+Optional packages used by the examples:
 
-    conda update --all
+.. code-block:: bash
 
-See :doc:`build` for details if you need to compile from source instead.
+   mamba install -c conda-forge cartopy matplotlib pandas
+
+To compile the library yourself instead, see :doc:`build`.

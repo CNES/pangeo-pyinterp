@@ -1,67 +1,418 @@
-Building
-********
+Building from source
+********************
 
-We will present how to compile the code, install, and run the various scripts
-with `setuptools <https://setuptools.readthedocs.io/en/latest/>`_.
+This page is for contributors and for platforms without a pre-built package.
+The C++ extension is configured and compiled by `CMake <https://cmake.org/>`_,
+driven by ``setup.py``. To simply use the library, install it with :doc:`pip`
+or :doc:`conda` instead.
+
+.. _quick-start:
+
+Quick start
+===========
+
+The simplest way to get every build dependency is a conda environment. The
+files used by the continuous integration are in ``.github/environments``:
+
+.. tab:: Linux
+
+   .. code-block:: bash
+
+      git clone --recursive https://github.com/CNES/pangeo-pyinterp.git
+      cd pangeo-pyinterp
+      mamba env create -n pyinterp-dev -f .github/environments/linux.yml
+      mamba activate pyinterp-dev
+
+.. tab:: macOS
+
+   .. code-block:: bash
+
+      git clone --recursive https://github.com/CNES/pangeo-pyinterp.git
+      cd pangeo-pyinterp
+      mamba env create -n pyinterp-dev -f .github/environments/osx.yml
+      mamba activate pyinterp-dev
+
+.. tab:: Windows
+
+   .. code-block:: bash
+
+      git clone --recursive https://github.com/CNES/pangeo-pyinterp.git
+      cd pangeo-pyinterp
+      mamba env create -n pyinterp-dev -f .github/environments/win.yml
+      mamba activate pyinterp-dev
+
+   Run the build commands from a Visual Studio developer prompt (see
+   :ref:`build-options` for the generator).
+
+Then compile the extension and run the tests:
+
+.. code-block:: bash
+
+   python setup.py build_ext   # configure and compile the C++ extension
+   python setup.py build       # assemble the package in build/lib.*
+   pytest -v -ra               # run the Python tests
 
 .. _requirements:
 
 Requirements
 ============
 
-Because of the programs written in Python, and some parts of the library in
-C++, you must have Python 3, at least Python version 3.6, a C++ compiler and
-`cmake <https://cmake.org/>`_ installed on your system to build the library.
+* Python 3.11 or later.
+* A C++ compiler supporting C++23, for example GCC 12 or later, a recent Clang,
+  or a recent MSVC.
+* CMake 3.19 or later. A ``pip`` build fetches it automatically.
+* `Boost <https://www.boost.org/>`_ 1.90 or later (headers only). Most Linux
+  distributions ship an older version; the conda-forge packages
+  ``libboost-devel`` or ``libboost-headers`` are recent enough.
+* The Python packages ``numpy``, ``xarray`` and ``dask`` at runtime, and
+  ``setuptools`` 64 or later and ``setuptools-scm`` 8 or later to build.
 
-.. note::
-
-   The C++ compiler must support the ISO C++ 2020 standard
-
-The compiling C++ requires the following development library:
-    * `Boost C++ Libraries <https://www.boost.org/>`_
-    * `Eigen3 <http://eigen.tuxfamily.org/>`_
-
-You can install these packages on Ubuntu by typing the following command:
-
-.. code-block:: bash
-
-    sudo apt-get install g++ cmake libeigen3-dev libboost-dev
-
-You need, also, to install Python libraries before configuring and installing
-this software:
-
-* `dask <https://dask.org/>`_
-* `numpy <https://www.numpy.org/>`_
-* `xarray <http://xarray.pydata.org/en/stable/>`_
-
-You can install these packages on Ubuntu by typing the following command:
+`Eigen <https://eigen.tuxfamily.org/>`_, `nanobind
+<https://github.com/wjakob/nanobind>`_ and `pocketfft
+<https://github.com/mreineck/pocketfft>`_ are bundled as git submodules. If the
+repository was cloned without ``--recursive``, fetch them with:
 
 .. code-block:: bash
 
-    sudo apt-get install python3-numpy python3-xarray python3-dask
+   git submodule update --init --recursive
 
-Compilation
-===========
+Optional dependencies:
 
-Once you have satisfied the requirements detailed above, to build the library,
-type the command ``python3 setup.py build_ext`` at the root of the project.
+* `GoogleTest <https://github.com/google/googletest>`_ (``gtest``) to build the
+  C++ unit tests. They are skipped when it is not found.
+* A BLAS library: MKL, Apple Accelerate or OpenBLAS. Without one, Eigen's own
+  implementation is used.
+* `ccache <https://ccache.dev/>`_ and `Ninja <https://ninja-build.org/>`_ to
+  speed up the build (see :ref:`speed-up`).
 
-You can specify, among other things, the following options:
-    * ``--build-unittests`` to build the unit tests of the C++ extension.
-    * ``--c-compiler`` to select the C compiler to use.
-    * ``--cmake-args`` to pass additional arguments to CMake.
-    * ``--code-coverage`` to enable coverage reporting on the C++ extension.
-    * ``--cxx-compiler`` to select the C++ compiler to use.
-    * ``--debug`` to compile the C++ library in Debug mode.
-    * ``--generator`` to specify the generator to use with CMake.
-    * ``--mkl`` to use MKL as BLAS library
-    * ``--reconfigure`` to force CMake to reconfigure the project.
+Building and installing
+=======================
 
-Run the ``python setup.py build_ext --help`` command to view all the options
-available for building the library.
+Compile the extension with:
+
+.. code-block:: bash
+
+   python setup.py build_ext
+
+The CMake build tree is kept in ``build/temp.<platform>-<python>``, and the
+package is assembled in ``build/lib.<platform>-<python>`` by
+``python setup.py build``. The tests are run from there.
+
+To install the library in the active environment, use ``pip``:
+
+.. code-block:: bash
+
+   python -m pip install .
+
+.. _build-options:
+
+Build options
+-------------
+
+The ``build_ext`` command accepts the following options. Some of them can also
+be passed to ``pip`` with ``-C`` (``--config-settings``):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 50
+
+   * - ``build_ext`` option
+     - ``pip -C`` key
+     - Description
+   * - ``--cmake-args=ARGS``
+     - ``cmake-args``
+     - Additional arguments for CMake, for instance ``-DPYINTERP_USE_PCH=OFF``.
+       See :ref:`cmake-options`.
+   * - ``--cxx-compiler=PATH``
+     - ``cxx-compiler``
+     - C++ compiler to use.
+   * - ``--generator=NAME``
+     - ``generator``
+     - CMake generator, for instance ``Ninja``. On Windows, the default is the
+       ``CMAKE_GEN`` environment variable, or ``Visual Studio 17 2022``.
+   * - ``--fft=NAME``
+     - ``fft``
+     - FFT implementation: ``pocketfft`` (default) or ``mkl``. ``mkl`` requires
+       MKL to be found as the BLAS library.
+   * - ``--mkl``
+     - ``mkl=yes``
+     - Use MKL as the BLAS library. Sets ``MKLROOT`` when the MKL headers are
+       found in the active Python prefix (for example the conda package
+       ``mkl-devel``).
+   * - ``--debug``
+     -
+     - Compile in ``Debug`` mode instead of ``Release``.
+   * - ``--enable-coverage``
+     -
+     - Instrument the C++ code for coverage (GCC or Clang, not on Windows).
+   * - ``--export-compile-commands``
+     -
+     - Write ``compile_commands.json`` in the build tree, for clangd and other
+       tools.
+   * - ``--reconfigure``
+     -
+     - Run the CMake configuration again on an existing build tree.
+
+Run ``python setup.py build_ext --help`` to see all the options.
+
+.. important::
+
+   An existing build tree is not configured again: options that change the
+   CMake configuration (``--cmake-args``, ``--fft``, ``--cxx-compiler``, the
+   compiler launcher...) only take effect on a fresh build tree or with
+   ``--reconfigure``.
+
+For example, to install the library with MKL and Ninja:
+
+.. code-block:: bash
+
+   python -m pip install . -Cmkl=yes -Cgenerator=Ninja
+
+.. _cmake-options:
+
+CMake options
+-------------
+
+The following CMake options have no dedicated ``setup.py`` flag. Pass them with
+``--cmake-args`` (``-Ccmake-args`` for ``pip``), or directly to ``cmake`` when
+building the C++ library without ``setup.py``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 15 55
+
+   * - Option
+     - Default
+     - Description
+   * - ``PYINTERP_USE_PCH``
+     - ``ON``
+     - Compile the Python extension with a precompiled header
+       (``cxx/src/pybind/pch.hpp``). It is ignored when ``ENABLE_CLANG_TIDY``
+       is ``ON``.
+   * - ``ENABLE_CLANG_TIDY``
+     - ``OFF``
+     - Run clang-tidy on each compiled file. See :ref:`static-analysis`.
+   * - ``ENABLE_COVERAGE``
+     - ``OFF``
+     - Instrument the code for coverage; set by ``--enable-coverage``.
+   * - ``FFT_IMPLEMENTATION``
+     - ``pocketfft``
+     - FFT implementation; set by ``--fft``.
+   * - ``PYINTERP_BUILD_PYTHON_BINDINGS``
+     - ``ON`` [#top]_
+     - Build the ``pyinterp.core`` Python extension.
+   * - ``PYINTERP_BUILD_TESTS``
+     - ``ON`` [#top]_
+     - Build the C++ unit tests (requires GoogleTest).
+   * - ``CMAKE_BUILD_TYPE``
+     - ``Release`` [#type]_
+     - Besides the standard types, ``ASan`` compiles with the address and
+       undefined behavior sanitizers (GCC or Clang).
+
+.. [#type] Set by ``setup.py`` (``Debug`` with ``--debug``,
+   ``RelWithDebInfo`` with ``--enable-coverage``); a direct CMake invocation
+   defaults to ``RelWithDebInfo``.
+.. [#top] Only when pyinterp is the top-level project; ``OFF`` when it is a
+   sub-project (see :ref:`cmake-subproject`).
+
+The configuration summary printed by CMake shows the value of these options.
+
+Environment variables
+---------------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
+
+   * - Variable
+     - Effect
+   * - ``CMAKE_BUILD_PARALLEL_LEVEL``
+     - Number of parallel compilation jobs. Defaults to the number of CPUs.
+   * - ``CMAKE_CXX_COMPILER_LAUNCHER``
+     - Compiler launcher, for example ``ccache``. Read at configuration time
+       only.
+   * - ``CMAKE_PREFIX_PATH``
+     - Where CMake looks for Boost and the other dependencies. Defaults to the
+       active conda environment (``CONDA_PREFIX``).
+   * - ``CMAKE_ARGS``
+     - Additional CMake arguments, placed before ``--cmake-args``.
+   * - ``CMAKE_GEN``
+     - Default CMake generator on Windows.
+   * - ``MKLROOT``
+     - Use MKL as the BLAS library.
+   * - ``PYINTERP_VERSION``
+     - Version of the build (see :ref:`project-version`).
+
+.. _speed-up:
+
+Speeding up the build
+=====================
+
+The extension is made of many heavily templated translation units, so a full
+build takes a while. The following settings make it faster, especially when the
+same tree is rebuilt often.
+
+Precompiled header
+   The Python extension is compiled with a precompiled header that holds the
+   Boost.Geometry, Eigen, nanobind and standard library headers shared by all
+   its source files. It is enabled by default; disable it with
+   ``--cmake-args=-DPYINTERP_USE_PCH=OFF`` if your compiler has trouble with it.
+
+Ninja
+   The Ninja generator schedules the jobs better than Make and starts a no-op
+   build faster: add ``--generator=Ninja``.
+
+Parallel jobs
+   Every CPU is used by default. Each job can use 1 to 2 GB of memory; if the
+   machine runs out of memory, lower ``CMAKE_BUILD_PARALLEL_LEVEL``.
+
+ccache
+   `ccache <https://ccache.dev/>`_ caches the compiled objects, so a rebuild
+   after switching branches or deleting the build directory only compiles the
+   files that changed. Enable it on a fresh build tree:
+
+   .. code-block:: bash
+
+      export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+      export CCACHE_SLOPPINESS=pch_defines,time_macros,include_file_mtime,include_file_ctime
+      python setup.py build_ext --reconfigure
+
+   ``CCACHE_SLOPPINESS`` is needed for ccache to cache the files compiled with
+   the precompiled header. Check the hit rate with ``ccache --show-stats``.
+
+   .. note::
+
+      For a coverage build, unset ``CCACHE_BASEDIR``: with relative paths, the
+      coverage data cannot be matched to the sources.
+
+When you edit the C++ code, run ``python setup.py build_ext`` and
+``python setup.py build`` again: only the modified files are recompiled. If
+``pyinterp.__version__`` and ``pyinterp.__core_version__`` differ, the compiled
+extension is out of date.
+
+Testing
+=======
+
+.. _python-tests:
+
+Python tests
+------------
+
+The Python tests require `pytest <https://docs.pytest.org/>`_. They are
+collected from the ``build`` directory, so build the package first:
+
+.. code-block:: bash
+
+   python setup.py build_ext
+   python setup.py build
+   pytest -v -ra
+
+.. _cpp-tests:
+
+C++ tests
+---------
+
+The C++ unit tests are configured in the same build tree when GoogleTest is
+found. Build and run them with the ``test_all`` target:
+
+.. code-block:: bash
+
+   cmake --build $(python scripts/show_temp_build_dir.py) --target test_all
+
+Coverage report
+---------------
+
+The script ``scripts/generate_coverage.sh`` builds the extension with coverage
+enabled, runs the Python and C++ tests, and merges both reports into
+``build/htmllcov``. It requires GCC or Clang and `LCOV
+<https://github.com/linux-test-project/lcov>`_ 2.0 or later, and is not
+supported on Windows.
+
+.. code-block:: bash
+
+   ./scripts/generate_coverage.sh
+
+.. _static-analysis:
+
+Static analysis and formatting
+==============================
+
+clang-tidy
+----------
+
+The clang-tidy checks are defined in the ``.clang-tidy`` file at the root of the
+project. The same file is used by clang-tidy, by `clangd
+<https://clangd.llvm.org/>`_ in your editor, and by the ``ENABLE_CLANG_TIDY``
+option. clangd needs a compilation database, written by
+``--export-compile-commands``.
+
+To analyze the whole project, export the compilation database and run
+``run-clang-tidy`` on it:
+
+.. code-block:: bash
+
+   python setup.py build_ext --export-compile-commands --reconfigure
+   run-clang-tidy -p $(python scripts/show_temp_build_dir.py) \
+       "$(pwd)/cxx/(include|src|tests)/"
+
+The ``ENABLE_CLANG_TIDY`` option runs clang-tidy during the compilation
+instead:
+
+.. code-block:: bash
+
+   python setup.py build_ext --reconfigure --cmake-args=-DENABLE_CLANG_TIDY=ON
+
+.. warning::
+
+   ``ENABLE_CLANG_TIDY`` runs clang-tidy with ``-fix``: the fixes are applied to
+   the source files directly. It also disables the precompiled header, so the
+   build is much slower.
+
+Formatting
+----------
+
+The code style is checked by `pre-commit <https://pre-commit.com/>`_: ruff for
+Python, clang-format for C++, cmake-format for CMake, and mypy for the type
+annotations. Install the hooks once:
+
+.. code-block:: bash
+
+   pre-commit install
+
+They then run on each commit; ``pre-commit run --all-files`` checks the whole
+project.
+
+.. _build-docs:
+
+Building the documentation
+==========================
+
+The documentation is generated by `Sphinx <https://www.sphinx-doc.org/>`_ from
+the package built in ``build/lib.*``, so compile the extension first. It
+requires ``sphinx``, ``sphinx-book-theme``, ``sphinx-gallery``,
+``sphinx-inline-tabs``, and ``matplotlib`` and ``cartopy`` for the gallery of
+examples. For example, with a dedicated environment:
+
+.. code-block:: bash
+
+   mamba create -n pyinterp-doc -c conda-forge python=3.13 cxx-compiler cmake \
+       ninja libboost-devel numpy xarray dask pandas numcodecs matplotlib \
+       cartopy setuptools setuptools-scm sphinx sphinx-book-theme \
+       sphinx-gallery sphinx-inline-tabs
+   mamba activate pyinterp-doc
+   python setup.py build_ext --generator=Ninja
+   python setup.py build
+   sphinx-build -b html docs/source docs/build
+
+Open ``docs/build/index.html`` in a browser to read the result.
+
+Reference
+=========
+
+.. _project-version:
 
 Project version
-===============
+---------------
 
 The version is never stored in the sources: it is resolved at build time from
 whichever of the following is available, the first one winning.
@@ -88,18 +439,20 @@ runtime:
 
 .. code-block:: python
 
-    import pyinterp
+   import pyinterp
 
-    pyinterp.__version__        # version of the Python package
-    pyinterp.__core_version__   # version the C++ extension was compiled with
-    pyinterp.core.__version_source__
+   pyinterp.__version__        # version of the Python package
+   pyinterp.__core_version__   # version the C++ extension was compiled with
+   pyinterp.core.__version_source__
 
 A mismatch between the first two means the compiled extension is stale with
 respect to the Python sources, which happens in an editable install that has
 not been rebuilt.
 
+.. _cmake-subproject:
+
 Using the C++ library from CMake
-================================
+--------------------------------
 
 The C++ kernel can be consumed on its own, without the Python bindings. When
 pyinterp is pulled in as a sub-project, the Python extension, nanobind and the
@@ -107,16 +460,16 @@ tests are skipped automatically:
 
 .. code-block:: cmake
 
-    include(FetchContent)
-    FetchContent_Declare(
-      pyinterp
-      GIT_REPOSITORY https://github.com/CNES/pangeo-pyinterp.git
-      GIT_TAG        2026.6.0
-      GIT_SUBMODULES_RECURSE TRUE)
-    FetchContent_MakeAvailable(pyinterp)
+   include(FetchContent)
+   FetchContent_Declare(
+     pyinterp
+     GIT_REPOSITORY https://github.com/CNES/pangeo-pyinterp.git
+     GIT_TAG        2026.6.0
+     GIT_SUBMODULES_RECURSE TRUE)
+   FetchContent_MakeAvailable(pyinterp)
 
-    target_link_libraries(my_target PRIVATE pyinterp::pyinterp)
-    message(STATUS "Using pyinterp ${pyinterp_VERSION}")
+   target_link_libraries(my_target PRIVATE pyinterp::pyinterp)
+   message(STATUS "Using pyinterp ${pyinterp_VERSION}")
 
 ``pyinterp_VERSION`` holds the normalized ``major.minor.patch`` version and
 ``pyinterp_VERSION_FULL`` the full descriptive string. Note that ``project()``
@@ -127,148 +480,10 @@ The same information is available to the compiler through
 
 .. code-block:: cpp
 
-    #include "pyinterp/version.hpp"
+   #include "pyinterp/version.hpp"
 
-    static_assert(pyinterp::version_major >= 2026);
+   static_assert(pyinterp::version_major >= 2026);
 
 The behaviour can be overridden with the ``PYINTERP_BUILD_PYTHON_BINDINGS`` and
 ``PYINTERP_BUILD_TESTS`` options, which default to ``ON`` only when pyinterp is
 the top-level project.
-
-Testing
-=======
-
-Requirements
-------------
-
-Running tests require the following Python libraries:
-    * `pytest <https://docs.pytest.org/en/latest/>`_
-    * `numpy <https://www.numpy.org/>`_
-    * `xarray <http://xarray.pydata.org/en/stable/>`_
-
-
-Running tests
--------------
-
-The distribution contains a set of test cases that can be processed with the
-standard Python test framework. To run the full test suite,
-use the following at the root of the project:
-
-.. code-block:: bash
-
-    pytest -v -ra
-
-Generating the test coverage report
------------------------------------
-
-C++ kernel library
-^^^^^^^^^^^^^^^^^^
-
-To generate the unit test coverage report on the C++ extension, perform the
-following steps:
-
-.. code-block:: bash
-
-    python setup.py build_ext --code-coverage --build-unittests
-    python setup.py gtest
-    genhtml coverage_cpp.lcov --output-directory htmllcov
-
-The first command compiles the extension to generate a coverage mapping to allow
-code coverage analysis. The second command runs the C++ unit tests and generates
-the coverage report. The third command generates the associated HTML report with
-`lcov <http://ltp.sourceforge.net/coverage/lcov.php>`_. The generated report is
-available in the ``htmllcov`` directory located at the root of the project.
-
-.. note::
-
-    It's not possible to generate this report on Windows.
-
-Python library
-^^^^^^^^^^^^^^
-
-To generate the unit test coverage report on the Python code, perform the
-following step:
-
-.. code-block:: bash
-
-      pytest -v -ra --cov=pyinterp --cov-report=html
-
-The HTML report is available in the ``htmlcov`` directory located at the root of
-the project.
-
-Global coverage report
-^^^^^^^^^^^^^^^^^^^^^^
-
-Is it possible to generate a global coverage report by combining the two previous
-reports? To do this, type the following command:
-
-.. code-block:: bash
-
-    python setup.py build_ext --code-coverage --build-unittests
-    python setup.py build
-    python setup.py gtest
-    pytest -v -ra --cov=pyinterp --cov-report=lcov --measure-coverage
-    lcov --add-tracefile coverage_cpp.lcov --add-tracefile coverage.lcov --output-file merged_coverage.lcov
-    lcov -r merged_coverage.lcov "${CONDA_PREFIX}/*" "/usr/*" "*/third_party/*" --output-file filtered_merged_coverage.lcov
-    genhtml filtered_merged_coverage.lcov --output-directory htmllcov
-
-The steps to generate a global coverage report are as follows:
-
-1. Compile the extension to generate a coverage mapping for code coverage
-   analysis.
-2. Compile the Python extension.
-3. Run the C++ unit tests and generate the coverage report.
-4. Run the Python unit tests and generate the coverage report. The option
-   ``--measure-coverage`` is used to reduce the number of data processed during
-   the Python test, speeding up the process as the C++ extension is compiled
-   without optimization.
-5. Merge the two coverage reports.
-6. Filter the coverage report to remove the system and third-party libraries.
-7. Generate the associated HTML report with `lcov
-   <http://ltp.sourceforge.net/coverage/lcov.php>`_.
-
-The generated report is available in the ``htmllcov`` directory located at the root of the project.
-
-Automatic Documentation
-=======================
-
-`Sphinx <http://www.sphinx-doc.org/en/master/>`_ manages the source code of this
-documentation. It is possible to generate it to produce a local mini WEB site to
-read and navigate it.
-To do this, type the following command: ::
-
-    sphinx-build -b html docs/source docs/build
-
-.. note::
-
-    The documentation uses `sphinx-book-theme
-    <https://github.com/executablebooks/sphinx-book-theme>`_ as HTML style. This
-    package must be available before running the above command. You can install
-    it with conda-forge or pip.
-
-Install
-=======
-
-To install this library, type the command ``python3 -m pip install .``.
-
-To pass options to the ``build_ext`` command, use the ``--config-settings`` or
-``-C`` option to pip. For instance, to compile the library with MKL as the BLAS
-library and using the Visual Studio 17 2022 generator, run the following
-command:
-
-.. code-block:: bash
-
-    python3 -m pip install . -Cmkl=yes -Cgenerator="Visual Studio 17 2022"
-
-The available options are a subset of the ``setup.py build_ext`` command options
-for use with pip to install the library:
-
-* ``c-compiler``
-* ``cxx-compiler``
-* ``generator``
-* ``cmake-args``
-* ``mkl``
-
-.. note::
-
-    Only ``mkl`` option is a boolean option. The others are strings.

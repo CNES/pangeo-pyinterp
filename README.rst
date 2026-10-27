@@ -164,7 +164,7 @@ conversions).
 .. |Build Status| image:: https://github.com/CNES/pangeo-pyinterp/actions/workflows/ci.yaml/badge.svg
     :target: https://github.com/CNES/pangeo-pyinterp/actions
 .. |Downloads| image:: https://img.shields.io/conda/dn/conda-forge/pyinterp.svg?service=github
-    :target: image:: https://anaconda.org/conda-forge/pyinterp
+    :target: https://anaconda.org/conda-forge/pyinterp
 .. |Platforms| image:: https://img.shields.io/conda/pn/conda-forge/pyinterp.svg?service=github
     :target: https://anaconda.org/conda-forge/pyinterp
 .. |Latest Release Date| image:: https://anaconda.org/conda-forge/pyinterp/badges/latest_release_date.svg?service=github

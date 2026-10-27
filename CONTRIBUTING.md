@@ -25,10 +25,17 @@ adhere to the following rules to make the process as smooth as possible:
 * Make small and clean pull requests that are easy to review but make sure they
   do add value by themselves.
 * Add tests for any new functionality and run the [test
-  suite](https://pangeo-pyinterp.readthedocs.io/en/latest/setup.html#generating-the-test-coverage-report)
+  suite](https://cnes.github.io/pangeo-pyinterp/setup/build.html#testing)
   to ensure that no existing features break.
-* Please run `yapf` using pep8 style on Python source code
-  and `clang-format` with Google style on C++ source code.
+* Install the [pre-commit](https://pre-commit.com/) hooks with
+  `pre-commit install`: they format and check the Python, C++ and CMake code
+  on each commit. The C++ code is also checked by clang-tidy, with the checks
+  defined in `.clang-tidy`.
+
+The [build
+guide](https://cnes.github.io/pangeo-pyinterp/setup/build.html) explains how to
+set up a development environment, speed up the build, and build the
+documentation.
 
 ## Licensing of contributions
 

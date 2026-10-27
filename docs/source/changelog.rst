@@ -106,6 +106,13 @@ Documentation
 * **RTree3D**: Documented the geodesic mode of ``RTree3D`` and its differences
   with the geographic ``RTree``, which evaluates geodesic distances to its nodes
   and queries 20 to 25 times slower than ``RTree3D`` with a spheroid.
+* **Building from source**: Rewrote the build guide. It now starts with a quick
+  start based on the conda environments of the CI, lists the current
+  requirements (C++23, Boost 1.90), documents every ``build_ext`` option, CMake
+  option and environment variable, and adds sections on speeding up the build
+  (precompiled header, Ninja, ccache), on static analysis with clang-tidy and
+  pre-commit, and on building the documentation. The obsolete coverage
+  commands are replaced by ``scripts/generate_coverage.sh``.
 
 2026.10.0
 ---------

@@ -14,25 +14,25 @@ Pre-built wheels are available for:
 Wheels are built for CPython 3.12, 3.13, 3.14 and the free-threaded
 build 3.14t.
 
-Basic install::
+Install the latest release, or upgrade an existing installation:
 
-    pip install pyinterp
+.. code-block:: bash
 
-Upgrade to the latest release::
-
-    pip install -U pyinterp
+   pip install -U pyinterp
 
 Pre-release builds (``X.Y.ZrcN``, ``X.Y.Z.devN``) are uploaded to TestPyPI; you
-can try them with::
+can try them with:
 
-    pip install --index-url https://test.pypi.org/simple/ \
-        --extra-index-url https://pypi.org/simple/ pyinterp
+.. code-block:: bash
 
-If no wheel matches your interpreter (for example a non-glibc Linux, 32-bit
-Windows or an unsupported Python version), pip falls back to building from
-source. In that case, all build dependencies must be available beforehand —
-see :ref:`requirements` in :doc:`build`. If the build fails, verify CMake,
-a C++20 compiler, Boost and Eigen are present, then retry with increased
-verbosity::
+   pip install --index-url https://test.pypi.org/simple/ \
+       --extra-index-url https://pypi.org/simple/ pyinterp
 
-    pip install -v pyinterp
+If no wheel matches your interpreter (for example Python 3.11, a non-glibc
+Linux or 32-bit Windows), pip builds the library from source. This requires a
+C++23 compiler and Boost 1.90 or later; see :ref:`requirements`. If the build
+fails, retry with increased verbosity to see the compiler output:
+
+.. code-block:: bash
+
+   pip install -v pyinterp
