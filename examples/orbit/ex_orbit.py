@@ -205,9 +205,9 @@ df
 # =====================
 # We can now plot the satellite positions over the swath.
 fig, (ax1, ax2) = plt.subplots(
-    1, 2, figsize=(20, 10), subplot_kw={"projection": ccrs.PlateCarree()}
+    1, 2, figsize=(10, 6), subplot_kw={"projection": ccrs.PlateCarree()}
 )
-fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1)
+fig.subplots_adjust(left=0.07, right=0.93, top=0.93, bottom=0.07, wspace=0.25)
 
 # Zoomed plot
 ax1.set_extent([58, 70, 12, 32], crs=ccrs.PlateCarree())

@@ -404,10 +404,10 @@ for prop_name, prop_func in properties:
 # Visualization: Advanced Features
 # ---------------------------------
 
-fig = matplotlib.pyplot.figure(figsize=(16, 12), layout="constrained")
+fig = matplotlib.pyplot.figure(figsize=(10, 13), layout="constrained")
 
 # Plot 1: Line interpolation waypoints
-ax1 = fig.add_subplot(2, 3, 1, projection=cartopy.crs.PlateCarree())
+ax1 = fig.add_subplot(3, 2, 1, projection=cartopy.crs.PlateCarree())
 ax1.add_feature(cartopy.feature.LAND, alpha=0.3)
 ax1.add_feature(cartopy.feature.OCEAN, alpha=0.3)
 ax1.add_feature(cartopy.feature.COASTLINE)
@@ -467,7 +467,7 @@ ax1.legend(loc="lower left")
 ax1.set_title("Line Interpolation: Paris to New York")
 
 # Plot 2: Curvilinear distance
-ax2 = fig.add_subplot(2, 3, 2)
+ax2 = fig.add_subplot(3, 2, 2)
 ax2.plot(lon_path, lat_path, "bo-", linewidth=2, markersize=8)
 for lon, lat, dist in zip(lon_path, lat_path, curv_distances, strict=False):
     ax2.text(
@@ -483,7 +483,7 @@ ax2.set_title("Curvilinear Distance Along Path")
 
 # Plot 3: Dateline-crossing box
 ax3 = fig.add_subplot(
-    2, 3, 3, projection=cartopy.crs.PlateCarree(central_longitude=180)
+    3, 2, 3, projection=cartopy.crs.PlateCarree(central_longitude=180)
 )
 ax3.add_feature(cartopy.feature.LAND)
 ax3.add_feature(cartopy.feature.OCEAN)
@@ -524,7 +524,7 @@ ax3.legend()
 ax3.set_title("Dateline-Crossing Box")
 
 # Plot 4: RTree spatial index
-ax4 = fig.add_subplot(2, 3, 4)
+ax4 = fig.add_subplot(3, 2, 4)
 scatter = ax4.scatter(
     data_lon, data_lat, c=data_values, s=1, cmap="viridis", alpha=0.5
 )
@@ -549,7 +549,7 @@ ax4.set_xlim(-180, 180)
 ax4.set_ylim(-60, 60)
 
 # Plot 5: Geodesic strategy comparison
-ax5 = fig.add_subplot(2, 3, 5)
+ax5 = fig.add_subplot(3, 2, 5)
 strategy_names = [name for _, name in strategies]
 distances_km = [
     geographic.algorithms.distance(
@@ -581,7 +581,7 @@ for bar, dist in zip(bars, distances_km, strict=False):
     )
 
 # Plot 6: Coordinate transformation accuracy
-ax6 = fig.add_subplot(2, 3, 6)
+ax6 = fig.add_subplot(3, 2, 6)
 
 # Sample a subset for visualization
 rng = numpy.random.default_rng(42)

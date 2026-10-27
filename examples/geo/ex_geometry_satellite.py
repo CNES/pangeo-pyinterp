@@ -337,10 +337,10 @@ if orbit_crossovers:
 # Visualization: Satellite Track Crossovers
 # ------------------------------------------
 
-fig = matplotlib.pyplot.figure(figsize=(16, 12), layout="constrained")
+fig = matplotlib.pyplot.figure(figsize=(10, 13), layout="constrained")
 
 # Plot 1: Basic crossover detection
-ax1 = fig.add_subplot(2, 3, 1, projection=cartopy.crs.PlateCarree())
+ax1 = fig.add_subplot(3, 2, 1, projection=cartopy.crs.PlateCarree())
 ax1.add_feature(cartopy.feature.LAND, alpha=0.3)
 ax1.add_feature(cartopy.feature.OCEAN, alpha=0.3)
 
@@ -402,7 +402,7 @@ ax1.legend(loc="upper right")
 ax1.set_title("Basic Crossover Detection")
 
 # Plot 2: Multiple tracks
-ax2 = fig.add_subplot(2, 3, 2, projection=cartopy.crs.PlateCarree())
+ax2 = fig.add_subplot(3, 2, 2, projection=cartopy.crs.PlateCarree())
 ax2.add_feature(cartopy.feature.LAND, alpha=0.3)
 ax2.add_feature(cartopy.feature.OCEAN, alpha=0.3)
 
@@ -441,7 +441,7 @@ ax2.legend(loc="upper right", fontsize=8)
 ax2.set_title("Multiple Track Crossovers")
 
 # Plot 3: Swath coverage
-ax3 = fig.add_subplot(2, 3, 3, projection=cartopy.crs.PlateCarree())
+ax3 = fig.add_subplot(3, 2, 3, projection=cartopy.crs.PlateCarree())
 ax3.add_feature(cartopy.feature.LAND, alpha=0.3)
 ax3.add_feature(cartopy.feature.OCEAN, alpha=0.3)
 
@@ -484,7 +484,7 @@ ax3.legend()
 ax3.set_title("Satellite Swath Coverage")
 
 # Plot 4: Orbital tracks (simplified view)
-ax4 = fig.add_subplot(2, 3, 4)
+ax4 = fig.add_subplot(3, 2, 4)
 
 for i, (lon_o, lat_o) in enumerate(orbits):
     direction = "Asc" if i % 2 == 0 else "Desc"
@@ -504,7 +504,7 @@ ax4.legend()
 ax4.set_title("Simulated Orbital Tracks")
 
 # Plot 5: Crossover locations map
-ax5 = fig.add_subplot(2, 3, 5, projection=cartopy.crs.PlateCarree())
+ax5 = fig.add_subplot(3, 2, 5, projection=cartopy.crs.PlateCarree())
 ax5.add_feature(cartopy.feature.LAND)
 ax5.add_feature(cartopy.feature.OCEAN)
 ax5.add_feature(cartopy.feature.COASTLINE)
@@ -544,7 +544,7 @@ ax5.legend()
 ax5.set_title("Altimetry Crossover Analysis")
 
 # Plot 6: Crossover density histogram
-ax6 = fig.add_subplot(2, 3, 6)
+ax6 = fig.add_subplot(3, 2, 6)
 
 if orbit_crossovers:
     # Calculate distances between consecutive crossovers
@@ -561,7 +561,7 @@ if orbit_crossovers:
         h.T,
         extent=extent,
         origin="lower",
-        cmap="hot",
+        cmap="magma",
         aspect="auto",
         interpolation="bilinear",
     )

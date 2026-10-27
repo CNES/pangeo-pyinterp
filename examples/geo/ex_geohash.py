@@ -86,7 +86,7 @@ def _plot_box(ax, code, color, caption=True):
         (cx, cy),
         color="w",
         weight="bold",
-        fontsize=16,
+        fontsize=8,
         ha="center",
         va="center",
     )
@@ -97,7 +97,7 @@ def plot_geohash_grid(
 ):
     """Plot geohash bounding boxes."""
     color_list = color_list or matplotlib.colors.CSS4_COLORS
-    fig = matplotlib.pyplot.figure(figsize=(24, 12))
+    fig = matplotlib.pyplot.figure(figsize=(12, 6))
     ax = fig.add_subplot(1, 1, 1, projection=cartopy.crs.PlateCarree())
     if polygon is not None:
         box = (

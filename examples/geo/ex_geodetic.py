@@ -236,10 +236,10 @@ print(f"  Is empty: {is_empty}")
 # Visualization: Common Workflows
 # --------------------------------
 
-fig = matplotlib.pyplot.figure(figsize=(16, 10), layout="constrained")
+fig = matplotlib.pyplot.figure(figsize=(10, 13), layout="constrained")
 
 # Plot 1: Study area and cities
-ax1 = fig.add_subplot(2, 3, 1, projection=cartopy.crs.PlateCarree())
+ax1 = fig.add_subplot(3, 2, 1, projection=cartopy.crs.PlateCarree())
 ax1.add_feature(cartopy.feature.LAND, alpha=0.3)
 ax1.add_feature(cartopy.feature.OCEAN, alpha=0.3)
 ax1.add_feature(cartopy.feature.BORDERS, linestyle=":")
@@ -287,7 +287,7 @@ ax1.legend()
 ax1.set_title("Study Area Analysis")
 
 # Plot 2: Path and waypoints
-ax2 = fig.add_subplot(2, 3, 2, projection=cartopy.crs.PlateCarree())
+ax2 = fig.add_subplot(3, 2, 2, projection=cartopy.crs.PlateCarree())
 ax2.add_feature(cartopy.feature.LAND, alpha=0.3)
 ax2.add_feature(cartopy.feature.OCEAN, alpha=0.3)
 ax2.gridlines(draw_labels=True, dms=True, x_inline=False, y_inline=False)
@@ -338,7 +338,7 @@ ax2.legend()
 ax2.set_title("Path Analysis")
 
 # Plot 3: Vectorized queries
-ax3 = fig.add_subplot(2, 3, 3)
+ax3 = fig.add_subplot(3, 2, 3)
 mask_2d = mask_inside.reshape(mx.shape)
 ax3.scatter(
     mx[mask_2d],
@@ -369,7 +369,7 @@ ax3.set_xlabel("Longitude (°)")
 ax3.set_ylabel("Latitude (°)")
 
 # Plot 4: Distance field
-ax4 = fig.add_subplot(2, 3, 4)
+ax4 = fig.add_subplot(3, 2, 4)
 distances_2d = distances.reshape(mx.shape)
 contour = ax4.contourf(mx, my, distances_2d * 1e-3, levels=15, cmap="viridis")
 ax4.plot(study_area_lon, study_area_lat, "r-", linewidth=2)
@@ -379,7 +379,7 @@ ax4.set_xlabel("Longitude (°)")
 ax4.set_ylabel("Latitude (°)")
 
 # Plot 5: Set operations
-ax5 = fig.add_subplot(2, 3, 5)
+ax5 = fig.add_subplot(3, 2, 5)
 ax5.fill(region1_lon, region1_lat, alpha=0.3, color="blue", label="Region 1")
 ax5.plot(region1_lon, region1_lat, "b-", linewidth=2)
 ax5.fill(region2_lon, region2_lat, alpha=0.3, color="red", label="Region 2")
@@ -407,7 +407,7 @@ ax5.set_xlabel("Longitude (°)")
 ax5.set_ylabel("Latitude (°)")
 
 # Plot 6: Simplification
-ax6 = fig.add_subplot(2, 3, 6)
+ax6 = fig.add_subplot(3, 2, 6)
 ax6.plot(
     [pt.lon for pt in complex_boundary],
     [pt.lat for pt in complex_boundary],

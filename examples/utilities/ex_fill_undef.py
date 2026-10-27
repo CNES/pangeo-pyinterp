@@ -52,11 +52,8 @@ mask = numpy.array(
 ax.scatter(
     lons.ravel(),
     lats.ravel(),
-    c=mask,
-    cmap="bwr_r",
+    c=numpy.where(mask.ravel(), "tab:blue", "tab:red"),
     transform=cartopy.crs.PlateCarree(),
-    vmin=0,
-    vmax=1,
 )
 ax.plot([-3.5], [49], linestyle="", marker=".", color="dimgray", markersize=15)
 ax.plot([-2.5], [50], linestyle="", marker=".", color="green", markersize=15)
@@ -116,13 +113,14 @@ pcm = ax1.pcolormesh(
     lons,
     lats,
     ds.mss.T,
-    cmap="jet",
+    cmap="RdBu_r",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
     vmin=-0.1,
     vmax=0.1,
 )
 ax1.coastlines()
+ax1.add_feature(cartopy.feature.LAND, facecolor="0.85", zorder=0)
 ax1.set_title("Original MSS")
 ax1.set_extent([0, 170, -45, 30], crs=cartopy.crs.PlateCarree())
 ax2 = fig.add_subplot(
@@ -132,13 +130,14 @@ pcm = ax2.pcolormesh(
     lons,
     lats,
     filled,
-    cmap="jet",
+    cmap="RdBu_r",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
     vmin=-0.1,
     vmax=0.1,
 )
 ax2.coastlines()
+ax2.add_feature(cartopy.feature.LAND, facecolor="0.85", zorder=0)
 ax2.set_title("Filled MSS with LOESS (nx=3, ny=3)")
 ax2.set_extent([0, 170, -45, 30], crs=cartopy.crs.PlateCarree())
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)

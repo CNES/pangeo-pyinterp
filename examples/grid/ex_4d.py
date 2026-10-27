@@ -111,7 +111,7 @@ pcm = ax1.pcolormesh(
     lons,
     lats,
     quadrivariate.T,
-    cmap="jet",
+    cmap="viridis",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
 )
@@ -128,7 +128,7 @@ pcm = ax2.pcolormesh(
     lons,
     lats,
     bicubic.T,
-    cmap="jet",
+    cmap="viridis",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
 )

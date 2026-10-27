@@ -433,10 +433,10 @@ print(f"  Expected area (circle): {numpy.pi * 1.0**2:.4f} square units")
 # Visualization: Geometric Operations
 # ------------------------------------
 
-fig = matplotlib.pyplot.figure(figsize=(16, 12))
+fig = matplotlib.pyplot.figure(figsize=(10, 13))
 
 # Plot 1: Set Operations
-ax1 = fig.add_subplot(2, 3, 1)
+ax1 = fig.add_subplot(3, 2, 1)
 ax1.fill(poly1_lon, poly1_lat, alpha=0.3, color="blue", label="Polygon 1")
 ax1.plot(poly1_lon, poly1_lat, "b-", linewidth=2)
 ax1.fill(poly2_lon, poly2_lat, alpha=0.3, color="red", label="Polygon 2")
@@ -456,7 +456,7 @@ ax1.set_xlabel("Longitude")
 ax1.set_ylabel("Latitude")
 
 # Plot 2: Simplification
-ax2 = fig.add_subplot(2, 3, 2)
+ax2 = fig.add_subplot(3, 2, 2)
 ax2.plot(
     *dense_line.to_arrays(),
     "b-",
@@ -485,7 +485,7 @@ ax2.set_xlabel("Longitude")
 ax2.set_ylabel("Latitude")
 
 # Plot 3: Densification
-ax3 = fig.add_subplot(2, 3, 3)
+ax3 = fig.add_subplot(3, 2, 3)
 ax3.plot(
     *sparse_line.to_arrays(),
     "bo-",
@@ -512,7 +512,7 @@ ax3.set_xlabel("Longitude")
 ax3.set_ylabel("Latitude")
 
 # Plot 4: Convex Hull
-ax4 = fig.add_subplot(2, 3, 4)
+ax4 = fig.add_subplot(3, 2, 4)
 ax4.plot(points_lon, points_lat, "ro", markersize=10, label="Input points")
 hull_lons, hull_lats = hull.outer.to_arrays()
 ax4.fill(hull_lons, hull_lats, alpha=0.3, color="blue", label="Convex hull")
@@ -524,7 +524,7 @@ ax4.set_xlabel("Longitude")
 ax4.set_ylabel("Latitude")
 
 # Plot 5: Closest Points
-ax5 = fig.add_subplot(2, 3, 5)
+ax5 = fig.add_subplot(3, 2, 5)
 ax5.plot(
     *line1.to_arrays(),
     "b-",
@@ -555,7 +555,7 @@ ax5.set_xlabel("Longitude")
 ax5.set_ylabel("Latitude")
 
 # Plot 6: Cartesian Buffer
-ax6 = fig.add_subplot(2, 3, 6)
+ax6 = fig.add_subplot(3, 2, 6)
 ax6.plot(cart_pt.x, cart_pt.y, "ro", markersize=10, label="Point")
 for poly in buffer_poly.polygons:
     xs, ys = poly.outer.to_arrays()

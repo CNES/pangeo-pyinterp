@@ -429,10 +429,10 @@ print(f"  Number of points: {cartesian.algorithms.num_points(cart_polygon)}")
 # ---------------------------------
 # Let's visualize some of the primitives we've created
 
-fig = matplotlib.pyplot.figure(figsize=(15, 10), layout="constrained")
+fig = matplotlib.pyplot.figure(figsize=(10, 13), layout="constrained")
 
 # Plot 1: Points and MultiPoint
-ax1 = fig.add_subplot(2, 3, 1, projection=cartopy.crs.PlateCarree())
+ax1 = fig.add_subplot(3, 2, 1, projection=cartopy.crs.PlateCarree())
 ax1.add_feature(cartopy.feature.LAND, alpha=0.3)
 ax1.add_feature(cartopy.feature.OCEAN, alpha=0.3)
 ax1.add_feature(cartopy.feature.COASTLINE)
@@ -462,7 +462,7 @@ for city, name in zip(cities, city_names, strict=False):
 ax1.set_title("Points and MultiPoint")
 
 # Plot 2: Segment and Box
-ax2 = fig.add_subplot(2, 3, 2, projection=cartopy.crs.PlateCarree())
+ax2 = fig.add_subplot(3, 2, 2, projection=cartopy.crs.PlateCarree())
 ax2.add_feature(cartopy.feature.LAND, alpha=0.3)
 ax2.add_feature(cartopy.feature.OCEAN, alpha=0.3)
 ax2.add_feature(cartopy.feature.COASTLINE)
@@ -503,7 +503,7 @@ ax2.legend()
 ax2.set_title("Segment and Box")
 
 # Plot 3: LineString
-ax3 = fig.add_subplot(2, 3, 3)
+ax3 = fig.add_subplot(3, 2, 3)
 ax3.plot(lon_array, lat_array, "bo-", linewidth=2, markersize=8)
 for i, (lon, lat) in enumerate(zip(lon_array, lat_array, strict=False)):
     ax3.text(lon + 0.1, lat + 0.1, f"P{i}", fontsize=10)
@@ -513,7 +513,7 @@ ax3.set_ylabel("Latitude")
 ax3.set_title("LineString")
 
 # Plot 4: Ring
-ax4 = fig.add_subplot(2, 3, 4)
+ax4 = fig.add_subplot(3, 2, 4)
 ax4.plot(ring_lon, ring_lat, "ro-", linewidth=2, markersize=8)
 ax4.fill(ring_lon, ring_lat, alpha=0.3, color="red")
 ax4.grid(True, alpha=0.3)
@@ -522,7 +522,7 @@ ax4.set_ylabel("Latitude")
 ax4.set_title("Ring (Closed Boundary)")
 
 # Plot 5: Polygon with Hole
-ax5 = fig.add_subplot(2, 3, 5)
+ax5 = fig.add_subplot(3, 2, 5)
 ax5.plot(outer_lon, outer_lat, "b-", linewidth=2, label="Outer")
 ax5.fill(outer_lon, outer_lat, alpha=0.3, color="blue")
 ax5.plot(hole_lon, hole_lat, "r-", linewidth=2, label="Hole")
@@ -534,7 +534,7 @@ ax5.set_title("Polygon with Hole")
 ax5.legend()
 
 # Plot 6: MultiLineString
-ax6 = fig.add_subplot(2, 3, 6)
+ax6 = fig.add_subplot(3, 2, 6)
 colors = ["red", "blue", "green"]
 for i, (line, color) in enumerate(zip(multiline, colors, strict=False)):
     lons = [pt.lon for pt in line]

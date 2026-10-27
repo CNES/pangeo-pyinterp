@@ -102,7 +102,7 @@ lon, lat = numpy.meshgrid(binning.x, binning.y, indexing='ij')
 pcm = ax1.pcolormesh(lon,
                      lat,
                      simple_mean,
-                     cmap='jet',
+                     cmap='viridis',
                      shading='auto',
                      vmin=0,
                      vmax=1,
@@ -115,7 +115,7 @@ ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
 pcm = ax2.pcolormesh(lon,
                      lat,
                      linear_mean,
-                     cmap='jet',
+                     cmap='viridis',
                      shading='auto',
                      vmin=0,
                      vmax=1,
@@ -150,7 +150,7 @@ ax1 = fig.add_subplot(111, projection=cartopy.crs.PlateCarree())
 pcm = ax1.pcolormesh(lon,
                      lat,
                      hist.mean(),
-                     cmap='jet',
+                     cmap='viridis',
                      shading='auto',
                      transform=cartopy.crs.PlateCarree())
 ax1.set_extent([27, 42, 40, 47], crs=cartopy.crs.PlateCarree())

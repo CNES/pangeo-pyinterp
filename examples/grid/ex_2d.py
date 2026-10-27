@@ -9,6 +9,7 @@ this guide will walk you through bivariate and bicubic interpolation.
 """
 
 import cartopy.crs
+import cartopy.feature
 import matplotlib
 import matplotlib.pyplot
 import numpy
@@ -63,7 +64,7 @@ pcm = ax1.pcolormesh(
     lons,
     lats,
     ds.mss.T,
-    cmap="jet",
+    cmap="RdBu_r",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
     vmin=-0.1,
@@ -71,13 +72,14 @@ pcm = ax1.pcolormesh(
 )
 ax1.set_global()
 ax1.coastlines()
+ax1.add_feature(cartopy.feature.LAND, facecolor="0.85", zorder=0)
 ax1.set_title("Original MSS")
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
 pcm = ax2.pcolormesh(
     mx,
     my,
     mss,
-    cmap="jet",
+    cmap="RdBu_r",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
     vmin=-0.1,
@@ -85,6 +87,7 @@ pcm = ax2.pcolormesh(
 )
 ax2.set_global()
 ax2.coastlines()
+ax2.add_feature(cartopy.feature.LAND, facecolor="0.85", zorder=0)
 ax2.set_title("Bilinear Interpolated MSS")
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 
@@ -154,7 +157,7 @@ pcm = ax1.pcolormesh(
     lons,
     lats,
     ds.mss.T,
-    cmap="jet",
+    cmap="RdBu_r",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
     vmin=-0.1,
@@ -162,13 +165,14 @@ pcm = ax1.pcolormesh(
 )
 ax1.set_global()
 ax1.coastlines()
+ax1.add_feature(cartopy.feature.LAND, facecolor="0.85", zorder=0)
 ax1.set_title("Original MSS")
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
 pcm = ax2.pcolormesh(
     mx,
     my,
     mss_bicubic,
-    cmap="jet",
+    cmap="RdBu_r",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
     vmin=-0.1,
@@ -176,6 +180,7 @@ pcm = ax2.pcolormesh(
 )
 ax2.set_global()
 ax2.coastlines()
+ax2.add_feature(cartopy.feature.LAND, facecolor="0.85", zorder=0)
 ax2.set_title("Bicubic Interpolated MSS")
 fig.colorbar(pcm, ax=[ax1, ax2], shrink=0.8)
 
@@ -202,7 +207,7 @@ pcm = ax1.pcolormesh(
     lons,
     lats,
     ds.mss.T,
-    cmap="jet",
+    cmap="RdBu_r",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
     vmin=-0.1,
@@ -210,13 +215,14 @@ pcm = ax1.pcolormesh(
 )
 ax1.set_global()
 ax1.coastlines()
+ax1.add_feature(cartopy.feature.LAND, facecolor="0.85", zorder=0)
 ax1.set_title("Original MSS")
 ax2 = fig.add_subplot(212, projection=cartopy.crs.PlateCarree())
 pcm = ax2.pcolormesh(
     mx,
     my,
     mss,
-    cmap="jet",
+    cmap="RdBu_r",
     shading="auto",
     transform=cartopy.crs.PlateCarree(),
     vmin=-0.1,
@@ -224,4 +230,5 @@ pcm = ax2.pcolormesh(
 )
 ax2.set_global()
 ax2.coastlines()
+ax2.add_feature(cartopy.feature.LAND, facecolor="0.85", zorder=0)
 ax2.set_title("Bicubic Interpolated MSS")

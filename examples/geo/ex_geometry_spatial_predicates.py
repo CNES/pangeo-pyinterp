@@ -443,10 +443,10 @@ print(f"  Max distance to Gulf: {distances_to_gulf.max() * 1e-3:.2f} km")
 # Visualization: Spatial Predicates in Action
 # --------------------------------------------
 
-fig = matplotlib.pyplot.figure(figsize=(16, 12), layout="constrained")
+fig = matplotlib.pyplot.figure(figsize=(10, 13), layout="constrained")
 
 # Plot 1: Basic Predicates (Within, Covered By, Intersects)
-ax1 = fig.add_subplot(2, 3, 1)
+ax1 = fig.add_subplot(3, 2, 1)
 box_corners = [
     [box.min_corner.lon, box.min_corner.lat],
     [box.max_corner.lon, box.min_corner.lat],
@@ -487,7 +487,7 @@ ax1.set_xlabel("Longitude")
 ax1.set_ylabel("Latitude")
 
 # Plot 2: Overlaps and Touches
-ax2 = fig.add_subplot(2, 3, 2)
+ax2 = fig.add_subplot(3, 2, 2)
 ax2.fill(poly_lon, poly_lat, alpha=0.3, color="blue", label="Polygon")
 ax2.plot(poly_lon, poly_lat, "b-", linewidth=2)
 ax2.fill(
@@ -509,7 +509,7 @@ ax2.set_xlabel("Longitude")
 ax2.set_ylabel("Latitude")
 
 # Plot 3: Crosses
-ax3 = fig.add_subplot(2, 3, 3)
+ax3 = fig.add_subplot(3, 2, 3)
 ax3.fill(poly_lon, poly_lat, alpha=0.3, color="blue", label="Polygon")
 ax3.plot(poly_lon, poly_lat, "b-", linewidth=2)
 ax3.plot(
@@ -533,7 +533,7 @@ ax3.set_xlabel("Longitude")
 ax3.set_ylabel("Latitude")
 
 # Plot 4: Vectorized Predicates (Grid)
-ax4 = fig.add_subplot(2, 3, 4)
+ax4 = fig.add_subplot(3, 2, 4)
 mask_within_2d = mask_within.reshape(mx.shape)
 mask_covered_2d = mask_covered.reshape(mx.shape)
 ax4.scatter(
@@ -570,7 +570,7 @@ ax4.set_xlabel("Longitude")
 ax4.set_ylabel("Latitude")
 
 # Plot 5: Distance Field
-ax5 = fig.add_subplot(2, 3, 5)
+ax5 = fig.add_subplot(3, 2, 5)
 distances_2d = distances.reshape(mx.shape)
 contour = ax5.contourf(mx, my, distances_2d * 1e-3, levels=20, cmap="viridis")
 ax5.fill(poly_lon, poly_lat, fill=False, edgecolor="red", linewidth=2)
@@ -582,7 +582,7 @@ ax5.set_xlabel("Longitude")
 ax5.set_ylabel("Latitude")
 
 # Plot 6: Gulf of Mexico Example
-ax6 = fig.add_subplot(2, 3, 6, projection=cartopy.crs.PlateCarree())
+ax6 = fig.add_subplot(3, 2, 6, projection=cartopy.crs.PlateCarree())
 ax6.add_feature(cartopy.feature.LAND)
 ax6.add_feature(cartopy.feature.OCEAN)
 ax6.add_feature(cartopy.feature.COASTLINE)
