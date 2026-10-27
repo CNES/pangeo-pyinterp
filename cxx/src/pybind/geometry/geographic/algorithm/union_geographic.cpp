@@ -7,8 +7,8 @@
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/vector.h>
 
-#include "pyinterp/geometry/geographic/algorithms/union.hpp"
 #include "pyinterp/pybind/geometry/algorithm_binding_helpers.hpp"
+#include "pyinterp/pybind/geometry/geographic/overlay.hpp"
 
 namespace nb = nanobind;
 using nb::literals::operator""_a;
@@ -29,33 +29,20 @@ Returns:
     A list of geometry objects representing the union.
 )doc";
 
-// Macro to create geometry pairs for the union algorithm returning Polygons
-#define UNION_POLYGON_PAIRS(NS)                                              \
-  std::pair<NS::Ring, NS::Ring>, std::pair<NS::Ring, NS::Polygon>,           \
-      std::pair<NS::Polygon, NS::Ring>, std::pair<NS::Polygon, NS::Polygon>, \
-      std::pair<NS::MultiPolygon, NS::Ring>,                                 \
-      std::pair<NS::MultiPolygon, NS::Polygon>,                              \
-      std::pair<NS::MultiPolygon, NS::MultiPolygon>,                         \
-      std::pair<NS::Ring, NS::MultiPolygon>,                                 \
-      std::pair<NS::Polygon, NS::MultiPolygon>
-
-// Macro to create geometry pairs for the union algorithm returning LineStrings
-#define UNION_LINESTRING_PAIRS(NS)           \
-  std::pair<NS::LineString, NS::LineString>, \
-      std::pair<NS::MultiLineString, NS::MultiLineString>
-
 auto init_union(nb::module_& m) -> void {
   auto polygon_union_impl = [](const auto& geometry1, const auto& geometry2,
                                const std::optional<Spheroid>& spheroid,
                                StrategyMethod strategy) -> auto {
     nb::gil_scoped_release release;
-    return union_polygon(geometry1, geometry2, spheroid, strategy);
+    return overlay<Overlay::kUnion, Polygon>(geometry1, geometry2, spheroid,
+                                             strategy);
   };
   auto linestring_union_impl = [](const auto& geometry1, const auto& geometry2,
                                   const std::optional<Spheroid>& spheroid,
                                   StrategyMethod strategy) -> auto {
     nb::gil_scoped_release release;
-    return union_linestring(geometry1, geometry2, spheroid, strategy);
+    return overlay<Overlay::kUnion, LineString>(geometry1, geometry2, spheroid,
+                                                strategy);
   };
 
   geometry::pybind::define_binary_predicate_with_strategy<
