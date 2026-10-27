@@ -11,6 +11,17 @@ permissions:
   pages: write
   id-token: write
 
+# ccache settings shared by the jobs that compile through ccache (only those set
+# CMAKE_CXX_COMPILER_LAUNCHER). The cache directory is persisted between runs
+# with actions/cache. The PCH-related sloppiness is required for ccache to reuse
+# objects compiled with the precompiled header (PYINTERP_USE_PCH).
+env:
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_BASEDIR: ${{ github.workspace }}
+  CCACHE_COMPRESS: "true"
+  CCACHE_MAXSIZE: 500M
+  CCACHE_SLOPPINESS: pch_defines,time_macros,include_file_mtime,include_file_ctime
+
 jobs:
   geometry-stubs-sync:
     name: geometry-stubs-sync
@@ -55,14 +66,31 @@ jobs:
         create-args: >-
           python=3.12
           bioconda::perl-json-xs
+          ccache
         environment-name: pyinterp
         environment-file: .github/environments/linux.yml
         init-shell: bash
 
+    - name: Restore ccache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-
+
     - name: Generate coverage data
       shell: bash -l {0}
+      env:
+        # Read by CMake (>= 3.17) when the build tree is configured.
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
       run: |
         ./scripts/generate_coverage.sh
+
+    - name: ccache statistics
+      shell: bash -l {0}
+      run: |
+        ccache --show-stats
 
     - name: Upload HTML report as artifact
       uses: actions/upload-artifact@v4
@@ -74,7 +102,7 @@ jobs:
     name: ${{ matrix.python-version }}-posix
     needs: geometry-stubs-sync
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       max-parallel: 5
@@ -96,17 +124,34 @@ jobs:
         condarc: |
           channels:
             - conda-forge
-        create-args: |
+        create-args: >-
           python=${{ matrix.python-version }}
+          ccache
         environment-name: pyinterp
         environment-file: .github/environments/linux.yml
         init-shell: bash
 
+    - name: Restore ccache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-
+
     - name: Build extension
       shell: bash -l {0}
+      env:
+        # Read by CMake (>= 3.17) when the build tree is configured.
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
       run: |
         python setup.py build_ext
         python setup.py build
+
+    - name: ccache statistics
+      shell: bash -l {0}
+      run: |
+        ccache --show-stats
 
     - name: Run tests
       shell: bash -l {0}
@@ -139,6 +184,7 @@ jobs:
         environment-name: pyinterp
         create-args: >-
           python=${{ matrix.python-version }}
+          ccache
           cmake
           cxx-compiler
           dask
@@ -152,11 +198,25 @@ jobs:
           setuptools
           xarray
         init-shell: bash
+    - name: Restore ccache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-
     - name: Build extension
       shell: bash -l {0}
+      env:
+        # Read by CMake (>= 3.17) when the build tree is configured.
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
       run: |
         python setup.py build_ext
         python setup.py build
+    - name: ccache statistics
+      shell: bash -l {0}
+      run: |
+        ccache --show-stats
     - name: Run tests
       shell: bash -l {0}
       run: |
@@ -191,17 +251,34 @@ jobs:
         condarc: |
           channels:
             - conda-forge
-        create-args: |
+        create-args: >-
           python=3.14
+          ccache
         environment-name: pyinterp
         environment-file: .github/environments/osx.yml
         init-shell: bash
 
+    - name: Restore ccache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-
+
     - name: Build extension
       shell: bash -l {0}
+      env:
+        # Read by CMake (>= 3.17) when the build tree is configured.
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
       run: |
         python setup.py build_ext
         python setup.py build
+
+    - name: ccache statistics
+      shell: bash -l {0}
+      run: |
+        ccache --show-stats
 
     - name: Run tests
       shell: bash -l {0}

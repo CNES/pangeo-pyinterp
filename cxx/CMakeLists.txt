@@ -62,6 +62,14 @@ if(PYINTERP_BUILD_PYTHON_BINDINGS)
   if(PYINTERP_USE_PCH AND NOT ENABLE_CLANG_TIDY)
     target_precompile_headers(core PRIVATE
                               ${CMAKE_CURRENT_SOURCE_DIR}/src/pybind/pch.hpp)
+    # By default, Clang records the modification time of the precompiled headers
+    # and rejects the PCH as soon as one of them is newer, which prevents ccache
+    # from reusing a cached PCH once the dependencies have been reinstalled
+    # (e.g. a fresh conda environment on CI). CMake already rebuilds the PCH
+    # whenever one of these headers changes.
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      target_compile_options(core PRIVATE "SHELL:-Xclang -fno-pch-timestamp")
+    endif()
   endif()
   if(ENABLE_COVERAGE)
     add_coverage(core)
