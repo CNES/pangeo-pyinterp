@@ -123,6 +123,11 @@ Documentation
   contradicted their code or the current API, made ``ex_dateutils``
   reproducible, and corrected the migration guide (bicubic, TDigest, fill,
   Loess and satellite sections) and old changelog entries.
+* **New examples**: Added five examples to the gallery: interpolating an
+  xarray ``DataArray`` with ``RegularGridInterpolator``, the distance modes of
+  ``RTree3D`` (Cartesian, chord and geodesic), binning on the sphere with a
+  spheroid, robust per-bin statistics with ``Histogram2D`` and ``TDigest``, and
+  statistics on chunked arrays with the ``pyinterp.dask`` helpers.
 * **Building from source**: Rewrote the build guide. It now starts with a quick
   start based on the conda environments of the CI, lists the current
   requirements (C++23, Boost 1.90), documents every ``build_ext`` option, CMake
