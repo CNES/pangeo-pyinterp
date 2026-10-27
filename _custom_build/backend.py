@@ -15,7 +15,6 @@ import setuptools.build_meta
 def usage(args: dict[str, str | list[str] | None]) -> argparse.Namespace:
     """Parse the command line arguments."""
     parser = argparse.ArgumentParser("Custom build backend")
-    parser.add_argument("--c-compiler", help="Preferred C compiler")
     parser.add_argument("--cxx-compiler", help="Preferred C++ compiler")
     parser.add_argument(
         "--fft", help="FFT library to use", choices=["mkl", "pocketfft"]
@@ -47,8 +46,6 @@ class _CustomBuildMetaBackend(setuptools.build_meta._BuildMetaBackend):
         config_settings = getattr(self, "config_settings", None)
         args = usage(config_settings or {})  # type: ignore[arg-type]
         setuptools_args = []
-        if args.c_compiler:
-            setuptools_args.append(f"--c-compiler={args.c_compiler}")
         if args.cxx_compiler:
             setuptools_args.append(f"--cxx-compiler={args.cxx_compiler}")
         if args.fft:

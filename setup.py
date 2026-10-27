@@ -166,7 +166,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         (
             "build-unittests",
             None,
-            "Build the unit tests of the C++ extension",
+            "Build the C++ unit tests in addition to the extension",
         ),
         (
             "enable-coverage",
@@ -212,6 +212,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
     boolean_options = setuptools.command.build_ext.build_ext.boolean_options
     boolean_options += [
+        "build_unittests",
         "enable_coverage",
         "export_compile_commands",
         "mkl",
@@ -221,7 +222,7 @@ class BuildExt(setuptools.command.build_ext.build_ext):
     def initialize_options(self) -> None:
         """Set the default values of the options."""
         super().initialize_options()
-        self.c_compiler = None
+        self.build_unittests = None
         self.cmake_args = None
         self.cxx_compiler = None
         self.enable_coverage = None
@@ -461,7 +462,11 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 
         if configure:
             self.spawn(["cmake", str(WORKING_DIRECTORY), *cmake_args])
-        cmake_cmd = ["cmake", "--build", ".", "--target", "core"]
+        # The default target also builds the C++ unit tests, when GoogleTest
+        # is found.
+        cmake_cmd = ["cmake", "--build", "."]
+        if not self.build_unittests:
+            cmake_cmd += ["--target", "core"]
         self.spawn(cmake_cmd + build_args)  # type: ignore[arg-type]
         os.chdir(str(WORKING_DIRECTORY))
 

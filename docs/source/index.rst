@@ -1,7 +1,5 @@
 .. include:: readme.rst
 
-.. only: not latex
-
 .. toctree::
    :maxdepth: 1
    :hidden:

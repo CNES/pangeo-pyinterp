@@ -142,6 +142,9 @@ be passed to ``pip`` with ``-C`` (``--config-settings``):
    * - ``--debug``
      -
      - Compile in ``Debug`` mode instead of ``Release``.
+   * - ``--build-unittests``
+     -
+     - Also build the C++ unit tests (see :ref:`cpp-tests`).
    * - ``--enable-coverage``
      -
      - Instrument the C++ code for coverage (GCC or Clang, not on Windows).
@@ -313,7 +316,16 @@ C++ tests
 ---------
 
 The C++ unit tests are configured in the same build tree when GoogleTest is
-found. Build and run them with the ``test_all`` target:
+found; otherwise they are skipped. Build them together with the extension, then
+run them with ``ctest``:
+
+.. code-block:: bash
+
+   python setup.py build_ext --build-unittests
+   ctest --test-dir $(python scripts/show_temp_build_dir.py)/cxx/tests \
+       --output-on-failure
+
+The ``test_all`` target builds and runs them in one step:
 
 .. code-block:: bash
 

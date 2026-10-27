@@ -94,6 +94,10 @@ Build System
   30 minutes.
 * **Missing include**: Added the nanobind string header missing from
   the geohash bindings (``cxx/src/pybind/geohash/string.cpp``).
+* **build_ext options**: ``--build-unittests`` now builds the C++ unit tests
+  together with the extension; it was accepted but had no effect. The
+  ``c-compiler`` option of ``pip install -C`` is removed: the project compiles
+  no C code, and ``setup.py`` rejected it, so the build failed.
 
 Dependencies
 ~~~~~~~~~~~~
