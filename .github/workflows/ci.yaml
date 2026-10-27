@@ -84,6 +84,12 @@ jobs:
       env:
         # Read by CMake (>= 3.17) when the build tree is configured.
         CMAKE_CXX_COMPILER_LAUNCHER: ccache
+        # ccache identifies GCC from the compiler name, which fails for the
+        # conda c++ driver: as an unknown compiler, it is treated like Clang
+        # and the precompiled header is rebuilt as soon as the mtime of one
+        # of its headers changes, i.e. on every fresh checkout and conda
+        # environment, which also invalidates every object that uses it.
+        CCACHE_COMPILERTYPE: gcc
         # With a base directory, ccache passes relative source paths to the
         # compiler, which records them in the .gcno files. lcov then resolves
         # them against its --base-directory, treats every source as external
@@ -150,6 +156,12 @@ jobs:
       env:
         # Read by CMake (>= 3.17) when the build tree is configured.
         CMAKE_CXX_COMPILER_LAUNCHER: ccache
+        # ccache identifies GCC from the compiler name, which fails for the
+        # conda c++ driver: as an unknown compiler, it is treated like Clang
+        # and the precompiled header is rebuilt as soon as the mtime of one
+        # of its headers changes, i.e. on every fresh checkout and conda
+        # environment, which also invalidates every object that uses it.
+        CCACHE_COMPILERTYPE: gcc
       run: |
         python setup.py build_ext
         python setup.py build
@@ -216,6 +228,12 @@ jobs:
       env:
         # Read by CMake (>= 3.17) when the build tree is configured.
         CMAKE_CXX_COMPILER_LAUNCHER: ccache
+        # ccache identifies GCC from the compiler name, which fails for the
+        # conda c++ driver: as an unknown compiler, it is treated like Clang
+        # and the precompiled header is rebuilt as soon as the mtime of one
+        # of its headers changes, i.e. on every fresh checkout and conda
+        # environment, which also invalidates every object that uses it.
+        CCACHE_COMPILERTYPE: gcc
       run: |
         python setup.py build_ext
         python setup.py build
