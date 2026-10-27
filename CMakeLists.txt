@@ -270,6 +270,8 @@ check_floating_point_is_iec559()
 # ##############################################################################
 option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
+option(PYINTERP_USE_PCH
+       "Compile the Python extension with a precompiled header" ON)
 
 # ##############################################################################
 # FFT implementation selection
@@ -656,6 +658,7 @@ endfunction()
 
 format_enabled(ENABLE_COVERAGE CODE_COVERAGE_LINE)
 format_enabled(ENABLE_CLANG_TIDY CLANG_TIDY_LINE)
+format_enabled(PYINTERP_USE_PCH PCH_LINE)
 
 if(PYINTERP_NANOBIND_BACKEND_MODULE)
   set(NANOBIND_MODE_LINE "split (backend: ${PYINTERP_NANOBIND_BACKEND_MODULE})")
@@ -681,6 +684,7 @@ set(CONFIG_LINES
     "BLAS:                   ${BLA_VENDOR}"
     "Code Coverage:          ${CODE_COVERAGE_LINE}"
     "Clang-Tidy:             ${CLANG_TIDY_LINE}"
+    "Precompiled header:     ${PCH_LINE}"
     "Python:                 ${Python_VERSION}"
     "nanobind mode:          ${NANOBIND_MODE_LINE}"
     "======================================================================")
@@ -691,5 +695,6 @@ endforeach()
 
 unset(CODE_COVERAGE_LINE)
 unset(CLANG_TIDY_LINE)
+unset(PCH_LINE)
 unset(NANOBIND_MODE_LINE)
 unset(CONFIG_LINES)

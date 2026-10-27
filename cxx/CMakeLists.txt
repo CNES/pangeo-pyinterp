@@ -55,6 +55,14 @@ if(PYINTERP_BUILD_PYTHON_BINDINGS)
     core
     PRIVATE BLAS::BLAS pyinterp
     PUBLIC cpp_coverage)
+  # Most translation units parse the same heavy third-party headers (Boost
+  # Geometry, Eigen, nanobind); precompiling them roughly halves the CPU time of
+  # the build. clang-tidy cannot load a precompiled header produced by GCC, so
+  # the header is skipped when the analysis is requested.
+  if(PYINTERP_USE_PCH AND NOT ENABLE_CLANG_TIDY)
+    target_precompile_headers(core PRIVATE
+                              ${CMAKE_CURRENT_SOURCE_DIR}/src/pybind/pch.hpp)
+  endif()
   if(ENABLE_COVERAGE)
     add_coverage(core)
   endif()
