@@ -1,0 +1,180 @@
+/*
+ * pyinterp visual identity, applied on top of pydata-sphinx-theme.
+ *
+ * Every rule goes through the theme's CSS variables or targets a class that
+ * the theme or Sphinx already emits: removing this file restores the theme's
+ * defaults. Tokens and contrast ratios are documented in docs/brand.md.
+ */
+
+/* Fonts (SIL OFL, Latin subsets vendored in _static/fonts) ---------------- */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url("fonts/inter-latin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("fonts/jetbrains-mono-latin.woff2") format("woff2");
+}
+
+/* Tokens --------------------------------------------------------------- */
+
+html[data-theme="light"] {
+  --pyi-ink: #0b2540;
+  --pyi-ink-muted: #4f6680;
+  --pyi-ocean-900: #0b4f7c;
+  --pyi-ocean-700: #0e6ba8;
+  --pyi-ocean-500: #2e9cca;
+  --pyi-ocean-300: #9ed3ec;
+  --pyi-point: #d9700f;
+  --pyi-paper: #ffffff;
+  --pyi-surface: #f3f6f9;
+  --pyi-teal: #10746d;
+  --pyi-ocean-bg: #e4f1f9;
+  --pyi-point-bg: #fef3e8;
+  --pyi-teal-bg: #def2ef;
+}
+
+html[data-theme="dark"] {
+  --pyi-ink: #e6eef5;
+  --pyi-ink-muted: #9db0c3;
+  --pyi-ocean-900: #a3d9f7;
+  --pyi-ocean-700: #5db3e8;
+  --pyi-ocean-500: #2f82b8;
+  --pyi-ocean-300: #1b4b6c;
+  --pyi-point: #ffa54f;
+  --pyi-paper: #0f1720;
+  --pyi-surface: #16212c;
+  --pyi-teal: #5cc8b8;
+  --pyi-ocean-bg: #10304a;
+  --pyi-point-bg: #3d2610;
+  --pyi-teal-bg: #0e3632;
+}
+
+/* Theme mapping --------------------------------------------------------- */
+
+html[data-theme="light"],
+html[data-theme="dark"] {
+  --pst-color-primary: var(--pyi-ocean-700);
+  --pst-color-primary-bg: var(--pyi-ocean-bg);
+  --pst-color-secondary: var(--pyi-ocean-900);
+  --pst-color-secondary-bg: var(--pyi-ocean-bg);
+  --pst-color-accent: var(--pyi-point);
+  --pst-color-link: var(--pyi-ocean-700);
+  --pst-color-link-hover: var(--pyi-ocean-900);
+  --pst-color-link-higher-contrast: var(--pyi-ocean-900);
+  --pst-color-background: var(--pyi-paper);
+  --pst-color-on-background: var(--pyi-paper);
+  --pst-color-surface: var(--pyi-surface);
+  --pst-color-on-surface: var(--pyi-ink);
+  --pst-color-text-base: var(--pyi-ink);
+  --pst-color-text-muted: var(--pyi-ink-muted);
+  --pst-color-heading: var(--pyi-ink);
+  --pst-heading-color: var(--pyi-ink);
+  --pst-color-inline-code: var(--pyi-ocean-900);
+  --pst-color-info: var(--pyi-ocean-700);
+  --pst-color-info-bg: var(--pyi-ocean-bg);
+  --pst-color-warning: var(--pyi-point);
+  --pst-color-warning-bg: var(--pyi-point-bg);
+  --pst-color-success: var(--pyi-teal);
+  --pst-color-success-bg: var(--pyi-teal-bg);
+
+  --pst-font-family-heading: "Inter", var(--pst-font-family-base-system);
+  --pst-font-family-monospace: "JetBrains Mono",
+    var(--pst-font-family-monospace-system);
+}
+
+/* Headings -------------------------------------------------------------- */
+
+.bd-article h1,
+.bd-article h2,
+.bd-article h3 {
+  letter-spacing: -0.01em;
+}
+
+/* The page title sits on a thin rule from the ramp. */
+.bd-article h1 {
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid var(--pyi-ocean-300);
+}
+
+/* Code ------------------------------------------------------------------ */
+
+code,
+kbd,
+pre,
+samp {
+  font-variant-ligatures: none;
+}
+
+/* Sidebar logo: the lockup is drawn for a height of about 40 px. */
+.navbar-brand img.logo__image {
+  height: 2.5rem;
+  width: auto;
+}
+
+/* Home page hero ------------------------------------------------------- */
+
+.pyinterp-hero {
+  margin: 1rem 0 2.5rem;
+}
+
+.pyinterp-hero img {
+  height: 4rem;
+  width: auto;
+  max-width: 100%;
+}
+
+.pyinterp-hero p.pyinterp-tagline {
+  margin: 0.75rem 0 1rem;
+  font-family: var(--pst-font-family-heading);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--pyi-ink-muted);
+}
+
+.pyinterp-hero ul.pyinterp-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pyinterp-hero ul.pyinterp-links li {
+  margin: 0;
+}
+
+.pyinterp-hero ul.pyinterp-links a {
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--pyi-ocean-700);
+  border-radius: 0.25rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pyinterp-hero ul.pyinterp-links li:first-child a {
+  background: var(--pyi-ocean-700);
+  color: var(--pyi-paper);
+}
+
+.pyinterp-hero ul.pyinterp-links a:hover {
+  border-color: var(--pyi-ocean-900);
+  background: var(--pyi-ocean-900);
+  color: var(--pyi-paper);
+}
+
+/* Gallery -------------------------------------------------------------- */
+
+.sphx-glr-thumbcontainer img {
+  border: 1px solid var(--pyi-surface);
+  border-radius: 0.25rem;
+}

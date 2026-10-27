@@ -251,16 +251,22 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = "sphinx_book_theme"
-html_title = "PyInterp"
+html_title = "pyinterp"
 html_static_path = ["_static"]
+html_css_files = ["pyinterp.css"]
+html_favicon = "_static/favicon.svg"
 html_theme_options = {
     "logo": {
         "image_light": "_static/pyinterp-light.svg",
         "image_dark": "_static/pyinterp-dark.svg",
+        "alt_text": "pyinterp",
     },
     "repository_url": "https://github.com/CNES/pangeo-pyinterp",
     "use_repository_button": True,
     "max_navbar_depth": 2,  # Maximum depth of navigation tree
+    # pydata-sphinx-theme adds a search field to its header unless this is set
+    # explicitly; sphinx-book-theme already shows one in the sidebar.
+    "navbar_persistent": [],
 }
 
 # Output file base name for HTML help builder.
@@ -307,6 +313,7 @@ sphinx_gallery_conf = {
     "filename_pattern": r"[\\\/]ex_",
     "pypandoc": False,
     "subsection_order": section_sorter,
+    "default_thumb_file": str(HERE.joinpath("_static", "gallery-thumb.png")),
     "within_subsection_order": SubsectionSorter,
     "binder": {
         "org": "CNES",
