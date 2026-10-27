@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <limits>
 #include <numeric>
 #include <vector>
 
@@ -87,6 +88,25 @@ TEST(OrbitDirection, SinglePoint) {
   EXPECT_EQ(infer_orbit_direction(
                 Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size())),
             OrbitDirection::kRetrograde);
+}
+
+TEST(OrbitDirection, EastwardAcrossTheAntimeridianStaysPrograde) {
+  // The raw difference of a crossing is a -360° step, not westward travel.
+  for (auto lon : {std::vector<double>{359.0, 0.0, 1.0},
+                   std::vector<double>{179.0, -180.0, -179.0}}) {
+    EXPECT_EQ(infer_orbit_direction(
+                  Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size())),
+              OrbitDirection::kPrograde);
+  }
+}
+
+TEST(OrbitDirection, WestwardAcrossTheAntimeridianStaysRetrograde) {
+  for (auto lon : {std::vector<double>{1.0, 0.0, 359.0},
+                   std::vector<double>{-179.0, -180.0, 179.0}}) {
+    EXPECT_EQ(infer_orbit_direction(
+                  Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size())),
+              OrbitDirection::kRetrograde);
+  }
 }
 
 // ===================================================================
@@ -324,7 +344,7 @@ TEST(MonotonicSegments, SimpleAscending) {
 }
 
 TEST(MonotonicSegments, VShape) {
-  // Up then down -> 2 monotonic segments (overlapping by 1 at peak).
+  // Up then down -> 2 monotonic segments, contiguous at the peak.
   auto [lon, lat] = make_v_track(-70.0, 70.0, -70.0, 100, 100);
 
   auto opts =
@@ -337,8 +357,10 @@ TEST(MonotonicSegments, VShape) {
                       DecompositionStrategy::kMonotonicSegments, opts);
 
   ASSERT_EQ(segments.size(), 2u);
-  // The peak point should be shared (last of first = first of second).
-  EXPECT_EQ(segments[0].last_index, segments[1].first_index);
+  // The peak belongs to one segment only.
+  EXPECT_EQ(segments[0].first_index, 0u);
+  EXPECT_EQ(segments[1].first_index, segments[0].last_index + 1);
+  EXPECT_EQ(segments[1].last_index, lat.size() - 1);
 }
 
 TEST(MonotonicSegments, MultipleReversals) {
@@ -368,6 +390,147 @@ TEST(MonotonicSegments, MultipleReversals) {
 
   // 3 monotonic runs: up, down, up.
   EXPECT_EQ(segments.size(), 3u);
+}
+
+// ===================================================================
+// Passes met across a gap in the data
+// ===================================================================
+
+TEST(LatitudeBands, APassMetAfterAGapOverThePoleIsItsOwnSegment) {
+  // Up to 40° then, the polar pass missing, down from 40° half a turn of
+  // longitude away: two passes, not one block spanning 200° of longitude.
+  auto up = make_linear_track(0.0, 40.0, 50, 10.0, 0.4);
+  auto down = make_linear_track(39.0, 0.0, 50, 190.0, 0.4);
+  std::vector<double> lon = up.lon;
+  std::vector<double> lat = up.lat;
+  lon.insert(lon.end(), down.lon.begin(), down.lon.end());
+  lat.insert(lat.end(), down.lat.begin(), down.lat.end());
+
+  auto segments =
+      decompose_track(Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size()),
+                      Eigen::Map<Eigen::VectorXd>(lat.data(), lat.size()),
+                      DecompositionStrategy::kLatitudeBands);
+
+  ASSERT_EQ(segments.size(), 2u);
+  EXPECT_EQ(segments[0].first_index, 0u);
+  EXPECT_EQ(segments[0].last_index, 49u);
+  EXPECT_EQ(segments[1].first_index, 50u);
+  EXPECT_EQ(segments[1].last_index, 99u);
+  for (auto const& segment : segments) {
+    EXPECT_EQ(segment.zone, LatitudeZone::kMid);
+    EXPECT_LT(segment.bbox.max_corner().lon() - segment.bbox.min_corner().lon(),
+              30.0);
+  }
+}
+
+TEST(LatitudeBands, TheTurningSampleGoesWithTheNearerPass) {
+  // The highest sample lies 0.4° from the pass before it and 180° from the
+  // pass after it.
+  std::vector<double> lat = {0, 10, 20, 30, 40, 30, 20, 10, 0};
+  std::vector<double> lon = {0, 0.4, 0.8, 1.2, 1.6, 180, 180.4, 180.8, 181.2};
+
+  auto opts = DecompositionOptions().with_min_edge_size(1);
+  auto segments =
+      decompose_track(Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size()),
+                      Eigen::Map<Eigen::VectorXd>(lat.data(), lat.size()),
+                      DecompositionStrategy::kLatitudeBands, opts);
+  ASSERT_EQ(segments.size(), 2u);
+  EXPECT_EQ(segments[0].last_index, 4u);
+
+  // Mirrored: the highest sample is now near the pass after it.
+  lon = {0, 0.4, 0.8, 1.2, 180, 180.4, 180.8, 181.2, 181.6};
+  segments =
+      decompose_track(Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size()),
+                      Eigen::Map<Eigen::VectorXd>(lat.data(), lat.size()),
+                      DecompositionStrategy::kLatitudeBands, opts);
+  ASSERT_EQ(segments.size(), 2u);
+  EXPECT_EQ(segments[0].last_index, 3u);
+}
+
+TEST(LatitudeBands, AMissingLatitudeDoesNotCutAPass) {
+  auto [lon, lat] = make_linear_track(-40.0, 40.0, 81);
+  lat[20] = std::numeric_limits<double>::quiet_NaN();
+  lat[40] = std::numeric_limits<double>::quiet_NaN();
+
+  auto segments =
+      decompose_track(Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size()),
+                      Eigen::Map<Eigen::VectorXd>(lat.data(), lat.size()),
+                      DecompositionStrategy::kLatitudeBands);
+  ASSERT_EQ(segments.size(), 1u);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.min_corner().lat(), -40.0);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.max_corner().lat(), 40.0);
+}
+
+// ===================================================================
+// Bounding boxes across a meridian
+// ===================================================================
+
+TEST(BoundingBox, TheBoxFollowsTheTrackAcrossTheAntimeridian) {
+  // Longitudes in [-180°, 180°) crossing 180°, and in [0°, 360°) crossing
+  // Greenwich: both boxes hold the 10° the track covers.
+  struct Case {
+    std::vector<double> lon;
+    double west;
+  };
+  for (auto [lon, west] : {Case{{175, 177, 179, -179, -177, -175}, 175.0},
+                           Case{{355, 357, 359, 1, 3, 5}, -5.0},
+                           Case{{-175, -177, -179, 179, 177, 175}, 175.0}}) {
+    std::vector<double> lat(lon.size());
+    // NOLINTNEXTLINE(modernize-use-ranges, boost-use-ranges)
+    std::iota(lat.begin(), lat.end(), 0.0);
+    auto segments =
+        decompose_track(Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size()),
+                        Eigen::Map<Eigen::VectorXd>(lat.data(), lat.size()),
+                        DecompositionStrategy::kLatitudeBands);
+    ASSERT_EQ(segments.size(), 1u);
+    EXPECT_DOUBLE_EQ(segments[0].bbox.min_corner().lon(), west);
+    EXPECT_DOUBLE_EQ(segments[0].bbox.max_corner().lon(), west + 10.0);
+  }
+}
+
+TEST(BoundingBox, UnlocatedMeasurementsAreLeftOut) {
+  constexpr auto kNaN = std::numeric_limits<double>::quiet_NaN();
+  std::vector<double> lon = {10, kNaN, 12, 13, 14};
+  std::vector<double> lat = {0, 1, 2, kNaN, 4};
+  auto segments =
+      decompose_track(Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size()),
+                      Eigen::Map<Eigen::VectorXd>(lat.data(), lat.size()),
+                      DecompositionStrategy::kLatitudeBands);
+  ASSERT_EQ(segments.size(), 1u);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.min_corner().lon(), 10.0);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.max_corner().lon(), 14.0);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.min_corner().lat(), 0.0);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.max_corner().lat(), 4.0);
+}
+
+TEST(BoundingBox, AFullTurnIsTheWholeCircle) {
+  std::vector<double> lon(73);
+  std::vector<double> lat(lon.size(), 60.0);
+  for (size_t i = 0; i < lon.size(); ++i) {
+    lon[i] = std::remainder(static_cast<double>(i) * 5.0, 360.0);
+  }
+  auto segments =
+      decompose_track(Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size()),
+                      Eigen::Map<Eigen::VectorXd>(lat.data(), lat.size()),
+                      DecompositionStrategy::kLatitudeBands);
+  ASSERT_EQ(segments.size(), 1u);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.min_corner().lon(), -180.0);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.max_corner().lon(), 180.0);
+}
+
+TEST(MonotonicSegments, MergedBoxesAcrossTheAntimeridianStayNarrow) {
+  // Two monotonic runs either side of 180°: once merged, the box holds the
+  // few degrees between them, not the complement.
+  std::vector<double> lat = {0, 1, 2, 3, 4, 3, 2, 1, 0};
+  std::vector<double> lon = {176, 177, 178, 179, -180, -179, -178, -177, -176};
+  auto opts = DecompositionOptions().with_min_edge_size(1).with_max_segments(1);
+  auto segments =
+      decompose_track(Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size()),
+                      Eigen::Map<Eigen::VectorXd>(lat.data(), lat.size()),
+                      DecompositionStrategy::kMonotonicSegments, opts);
+  ASSERT_EQ(segments.size(), 1u);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.min_corner().lon(), 176.0);
+  EXPECT_DOUBLE_EQ(segments[0].bbox.max_corner().lon(), 184.0);
 }
 
 // ===================================================================
@@ -453,7 +616,6 @@ TEST(Postconditions, CoverageAndContiguity) {
   //   - first segment starts at 0
   //   - last segment ends at N-1
   //   - consecutive segments are contiguous (next.first = prev.last + 1)
-  //     OR overlap by exactly 1 (monotonic strategy)
   auto [lon, lat] = make_v_track(-90.0, 90.0, -90.0, 181, 181);
 
   for (auto strategy : {DecompositionStrategy::kLatitudeBands,
@@ -470,11 +632,8 @@ TEST(Postconditions, CoverageAndContiguity) {
     EXPECT_EQ(segments.back().last_index, lon.size() - 1);
 
     for (size_t i = 1; i < segments.size(); ++i) {
-      auto gap = static_cast<int64_t>(segments[i].first_index) -
-                 static_cast<int64_t>(segments[i - 1].last_index);
-      // gap should be 0 (overlap of 1, monotonic) or 1 (contiguous, bands).
-      EXPECT_TRUE(gap == 0 || gap == 1)
-          << "Gap between segment " << i - 1 << " and " << i << " is " << gap;
+      EXPECT_EQ(segments[i].first_index, segments[i - 1].last_index + 1)
+          << "Segments " << i - 1 << " and " << i << " are not contiguous";
     }
   }
 }
@@ -515,6 +674,26 @@ TEST(FilterByExtent, DropsNonIntersecting) {
           << "SOUTH segment shouldn't be here if it doesn't overlap";
     }
   }
+}
+
+TEST(FilterByExtent, AnExtentOnAnotherTurnOfTheCircle) {
+  // A segment written in [-180°, 180°) across the antimeridian meets a grid
+  // written in [0°, 360°), and the other way round.
+  std::vector<double> lon = {175, 177, 179, -179, -177, -175};
+  std::vector<double> lat = {0, 1, 2, 3, 4, 5};
+  auto segments =
+      decompose_track(Eigen::Map<Eigen::VectorXd>(lon.data(), lon.size()),
+                      Eigen::Map<Eigen::VectorXd>(lat.data(), lat.size()),
+                      DecompositionStrategy::kLatitudeBands);
+
+  EXPECT_EQ(filter_by_extent(segments, {{182.0, -10.0}, {190.0, 10.0}}).size(),
+            1u);
+  EXPECT_EQ(
+      filter_by_extent(segments, {{-180.0, -10.0}, {-178.0, 10.0}}).size(), 1u);
+  EXPECT_EQ(filter_by_extent(segments, {{0.0, -10.0}, {170.0, 10.0}}).size(),
+            0u);
+  EXPECT_EQ(filter_by_extent(segments, {{-170.0, -10.0}, {0.0, 10.0}}).size(),
+            0u);
 }
 
 // ===================================================================

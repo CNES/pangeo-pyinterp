@@ -7,6 +7,23 @@ Unreleased
 Bug Fixes
 ~~~~~~~~~
 
+* **Track decomposition across the antimeridian**:
+  ``geometry.satellite.decompose_track`` took the plain minimum and maximum of
+  the longitudes of a segment, so a segment crossing 180° (or Greenwich, for
+  longitudes in [0°, 360°)) got the complement of the arc it covers, almost the
+  whole globe. The box now follows the track: its western edge lies in
+  [-180°, 180°) and its eastern edge may exceed 180°. Merged boxes and
+  ``filter_by_extent`` compare longitudes modulo 360°, and measurements without
+  a position are left out of the box. ``infer_orbit_direction`` takes each
+  difference of longitudes as the shortest arc, so a crossing is no longer read
+  as travel in the opposite direction.
+* **Track decomposition across a gap in the data**: when a gap hid the polar
+  pass between two passes, the ``latitude_bands`` strategy joined them into one
+  segment lying half a turn of longitude apart. A segment is now also cut where
+  the latitude turns back between the thresholds. The ``monotonic`` strategy
+  no longer gives the turning sample to both segments around it: as documented,
+  segments do not overlap, and that sample goes with the nearer one in
+  longitude.
 * **xarray interpolator coordinates**: ``RegularGridInterpolator`` and the
   ``Grid2D``/``Grid3D``/``Grid4D`` methods of ``pyinterp.backends.xarray``
   rejected scalars and lists, although their documentation used them; only

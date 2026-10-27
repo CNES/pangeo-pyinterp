@@ -1,8 +1,10 @@
 #include "pyinterp/geometry/satellite/algorithms/track_decomposition.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
+#include <limits>
 #include <span>
 
 #include "pyinterp/geometry/geographic/point.hpp"
@@ -28,12 +30,51 @@ struct RawBlock {
   }
 };
 
+/// Degrees in a full turn of longitude.
+inline constexpr double kCircle = 360.0;
+
+/// Half a turn of longitude, in degrees.
+inline constexpr double kHalfCircle = 180.0;
+
+/// The shortest arc of longitude a difference stands for, in [-180°, 180°):
+/// the ±360° step an antimeridian crossing puts in a raw difference is not
+/// travel in the opposite direction.
+[[nodiscard]] auto shortest_arc(double delta) noexcept -> double {
+  return delta - (kCircle * std::floor((delta + kHalfCircle) / kCircle));
+}
+
+/// The box of a box whose longitudes may lie outside [-180°, 180°): its
+/// western edge is brought into [-180°, 180°) and its eastern one follows,
+/// so the box keeps the arc it covers. A box going round the globe becomes
+/// the whole circle.
+[[nodiscard]] auto make_box(double west, double south, double east,
+                            double north) -> BoundingBox {
+  if (east - west >= kCircle) {
+    return {{-kHalfCircle, south}, {kHalfCircle, north}};
+  }
+  auto const shift = west - shortest_arc(west);
+  return {{west - shift, south}, {east - shift, north}};
+}
+
+/// True if no measurement of a segment had a position: its box is NaN.
+[[nodiscard]] auto is_unlocated(BoundingBox const& box) noexcept -> bool {
+  return std::isnan(box.min_corner().lon());
+}
+
 // ---------------------------------------------------------------------------
 // Swath-aware bounding box computation
 // ---------------------------------------------------------------------------
 
 /// Compute the bounding box of a track segment, optionally expanded for
 /// swath width.
+///
+/// The longitudes are followed along the segment, each measurement placed by
+/// its shortest arc from the one before, so a segment crossing the
+/// antimeridian (or Greenwich, for longitudes in [0°, 360°)) gets the arc it
+/// occupies and not its complement. The western edge lies in [-180°, 180°)
+/// and the eastern one may exceed 180°. A measurement without a position — a
+/// NaN longitude or latitude — is left out of the box; a segment without any
+/// gets a NaN box.
 ///
 /// For swath expansion, we compute the longitude offset at each edge's
 /// latitude independently.  At latitude φ, a cross-track distance d (km)
@@ -44,24 +85,43 @@ struct RawBlock {
 auto compute_bbox(std::span<const double> lon, std::span<const double> lat,
                   size_t first, size_t last, double swath_width_km)
     -> BoundingBox {
-  auto const sub_lon = lon.subspan(first, last - first + 1);
-  auto const sub_lat = lat.subspan(first, last - first + 1);
-
-  auto const [lon_min_it, lon_max_it] = std::ranges::minmax_element(sub_lon);
-  auto const [lat_min_it, lat_max_it] = std::ranges::minmax_element(sub_lat);
-
-  auto bbox = BoundingBox{
-      geometry::geographic::Point{*lon_min_it, *lat_min_it},
-      geometry::geographic::Point{*lon_max_it, *lat_max_it},
-  };
+  bool located = false;
+  double previous = 0.0;
+  double unwrapped = 0.0;
+  double west = 0.0;
+  double east = 0.0;
+  double south = 0.0;
+  double north = 0.0;
+  for (auto ix = first; ix <= last; ++ix) {
+    if (!std::isfinite(lon[ix]) || !std::isfinite(lat[ix])) {
+      continue;
+    }
+    if (!located) {
+      located = true;
+      unwrapped = lon[ix];
+      west = east = unwrapped;
+      south = north = lat[ix];
+    } else {
+      unwrapped += shortest_arc(lon[ix] - previous);
+      west = std::min(west, unwrapped);
+      east = std::max(east, unwrapped);
+      south = std::min(south, lat[ix]);
+      north = std::max(north, lat[ix]);
+    }
+    previous = lon[ix];
+  }
+  if (!located) {
+    constexpr auto kNaN = std::numeric_limits<double>::quiet_NaN();
+    return {{kNaN, kNaN}, {kNaN, kNaN}};
+  }
 
   if (swath_width_km > 0.0) {
     auto const half_width_km = swath_width_km / 2.0;
 
     // Latitude expansion: half-width projected along the meridian.
     auto const dlat = math::degrees(half_width_km / kEarthRadiusKm);
-    bbox.min_corner().lat() -= dlat;
-    bbox.max_corner().lat() += dlat;
+    south -= dlat;
+    north += dlat;
 
     // Longitude expansion at each latitude edge.
     // Guard against cos(φ) → 0 near poles: clamp to a minimum cos value
@@ -79,15 +139,12 @@ auto compute_bbox(std::span<const double> lon, std::span<const double> lat,
     // For the northern edge, same logic.  Since we want the outermost
     // expansion, we pick the larger of the two edge latitudes' expansions
     // for each side.
-    auto const dlon_south = dlon_at(bbox.min_corner().lat());
-    auto const dlon_north = dlon_at(bbox.max_corner().lat());
-    auto const dlon_max = std::max(dlon_south, dlon_north);
-
-    bbox.min_corner().lon() -= dlon_max;
-    bbox.max_corner().lon() += dlon_max;
+    auto const dlon_max = std::max(dlon_at(south), dlon_at(north));
+    west -= dlon_max;
+    east += dlon_max;
   }
 
-  return bbox;
+  return make_box(west, south, east, north);
 }
 
 /// Determine the dominant latitude zone for a segment by majority vote.
@@ -107,83 +164,67 @@ auto dominant_zone(const Eigen::Ref<const Eigen::VectorXd>& lat, size_t first,
 // Raw block segmentation
 // ---------------------------------------------------------------------------
 
-/// Step 2 of the spec: segment by contiguous latitude-zone class.
-auto segment_by_latitude_bands(const Eigen::Ref<const Eigen::VectorXd>& lat,
-                               double south_limit, double north_limit)
-    -> std::vector<RawBlock> {
-  auto const n = static_cast<size_t>(lat.size());
-  assert(n > 0);
-
-  std::vector<RawBlock> raw;
-  auto cur = RawBlock{
-      .first1 = 0,
-      .last1 = 0,
-      .zone = classify_latitude(lat[0], south_limit, north_limit),
-  };
-
-  for (size_t i = 1; i < n; ++i) {
-    auto const zone = classify_latitude(lat[i], south_limit, north_limit);
-    if (zone != cur.zone) {
-      cur.last1 = i - 1;
-      raw.push_back(cur);
-      cur = RawBlock{.first1 = i, .last1 = i, .zone = zone};
-    }
-  }
-  cur.last1 = n - 1;
-  raw.push_back(cur);
-  return raw;
-}
-
-/// Segment by latitude monotonicity: split wherever latitude direction
-/// changes (ascending ↔ descending).
-auto segment_by_monotonicity(std::span<const double> lat)
+/// Cut the track into raw blocks wherever the latitude turns back and, when
+/// @p by_zone is set, wherever the latitude zone changes.
+///
+/// With @p by_zone set, the latitude is only watched turning back inside the
+/// MID zone: between the thresholds a pass goes one way, so a latitude coming
+/// back there is the next pass, met without the polar one that separates them
+/// — a gap in the data. The two passes lie half a turn of longitude apart and
+/// are not one block. Without it, every turn of the latitude opens a block.
+///
+/// The sample the latitude turns back on belongs to either side by its
+/// latitude alone: it goes with the neighbour nearer in longitude. Blocks never
+/// overlap. A measurement without a latitude tells nothing of the trend.
+auto segment_track(std::span<const double> lon, std::span<const double> lat,
+                   bool by_zone, double south_limit, double north_limit)
     -> std::vector<RawBlock> {
   auto const n = lat.size();
   assert(n > 0);
 
-  if (n <= 2) {
-    // A segment of 1-2 points is trivially monotonic.
-    return {{.first1 = 0, .last1 = n - 1, .zone = LatitudeZone::kMid}};
-  }
+  auto const classify = [&](double value) -> LatitudeZone {
+    return by_zone ? classify_latitude(value, south_limit, north_limit)
+                   : LatitudeZone::kMid;
+  };
+  // The arc of longitude between two samples, in degrees.
+  auto const arc = [&lon](size_t from, size_t to) -> double {
+    return std::abs(shortest_arc(lon[to] - lon[from]));
+  };
 
   std::vector<RawBlock> raw;
+  auto zone = classify(lat[0]);
   size_t seg_start = 0;
-
-  // Find initial direction (skip plateaus).
-  enum class Dir : uint8_t { kNone, kAsc, kDesc };
-  auto direction = Dir::kNone;
+  // The last latitude of the current block, and the way its latitudes go:
+  // +1 northwards, -1 southwards, 0 as long as nothing tells.
+  auto previous = lat[0];
+  auto trend = 0;
 
   for (size_t i = 1; i < n; ++i) {
-    auto const diff = lat[i] - lat[i - 1];
-
-    auto new_dir = Dir::kNone;
-    if (diff > 0.0) {
-      new_dir = Dir::kAsc;
-    } else if (diff < 0.0) {
-      new_dir = Dir::kDesc;
-    }
-
-    if (new_dir != Dir::kNone) {
-      if (direction != Dir::kNone && new_dir != direction) {
-        // Direction reversal: close segment at previous point.
-        raw.push_back(RawBlock{
-            .first1 = seg_start,
-            .last1 = i - 1,
-            .zone = LatitudeZone::kMid,  // will be recomputed later
-        });
-        seg_start = i - 1;  // overlap by one point for continuity
+    auto const value = lat[i];
+    auto const classified = classify(value);
+    auto const step =
+        static_cast<int>(value > previous) - static_cast<int>(value < previous);
+    auto const turned_back =
+        zone == LatitudeZone::kMid && step != 0 && step == -trend;
+    if (classified != zone || turned_back) {
+      auto first = i;
+      if (turned_back && i - 1 > seg_start &&
+          arc(i - 2, i - 1) > arc(i - 1, i)) {
+        first = i - 1;
       }
-      direction = new_dir;
+      raw.push_back(
+          RawBlock{.first1 = seg_start, .last1 = first - 1, .zone = zone});
+      seg_start = first;
+      zone = classified;
+      trend = first == i ? 0 : step;
+    } else if (step != 0) {
+      trend = step;
+    }
+    if (!std::isnan(value)) {
+      previous = value;
     }
   }
-
-  // Close final segment.
-  raw.push_back(RawBlock{
-      .first1 = seg_start,
-      .last1 = n - 1,
-      .zone = LatitudeZone::kMid,
-  });
-
+  raw.push_back(RawBlock{.first1 = seg_start, .last1 = n - 1, .zone = zone});
   return raw;
 }
 
@@ -265,15 +306,42 @@ auto apply_edge_merge(std::vector<RawBlock> raw, size_t min_edge_size)
 }
 
 // Merge two bounding boxes into the smallest enclosing box.
-[[nodiscard]] constexpr auto merged_with(BoundingBox const& lhs,
-                                         BoundingBox const& rhs) noexcept
-    -> BoundingBox {
-  return {
-      {std::min(rhs.min_corner().lon(), lhs.min_corner().lon()),
-       std::min(rhs.min_corner().lat(), lhs.min_corner().lat())},
-      {std::max(rhs.max_corner().lon(), lhs.max_corner().lon()),
-       std::max(rhs.max_corner().lat(), lhs.max_corner().lat())},
-  };
+//
+// The longitudes of a box follow its track and may exceed 180°; the second
+// box is brought beside the first before the two are joined, so that two boxes
+// either side of the antimeridian give the arc between them and not its
+// complement. A box without a position is ignored.
+[[nodiscard]] auto merged_with(BoundingBox const& lhs,
+                               BoundingBox const& rhs) noexcept -> BoundingBox {
+  if (is_unlocated(lhs)) {
+    return rhs;
+  }
+  if (is_unlocated(rhs)) {
+    return lhs;
+  }
+  // The whole turns that bring the centre of the second beside the first's.
+  auto const lhs_centre =
+      0.5 * (lhs.min_corner().lon() + lhs.max_corner().lon());
+  auto const rhs_centre =
+      0.5 * (rhs.min_corner().lon() + rhs.max_corner().lon());
+  auto const turn = kCircle * std::round((lhs_centre - rhs_centre) / kCircle);
+  return make_box(
+      std::min(lhs.min_corner().lon(), rhs.min_corner().lon() + turn),
+      std::min(lhs.min_corner().lat(), rhs.min_corner().lat()),
+      std::max(lhs.max_corner().lon(), rhs.max_corner().lon() + turn),
+      std::max(lhs.max_corner().lat(), rhs.max_corner().lat()));
+}
+
+// True if the arcs of longitude [a_min, a_max] and [b_min, b_max] share a
+// meridian, whatever turn of the circle each is written on.
+[[nodiscard]] auto longitudes_overlap(double a_min, double a_max, double b_min,
+                                      double b_max) noexcept -> bool {
+  if (a_max - a_min >= kCircle || b_max - b_min >= kCircle) {
+    return true;
+  }
+  // The western edge of a, on the turn that starts at the western edge of b.
+  auto const west = a_min - (kCircle * std::floor((a_min - b_min) / kCircle));
+  return west <= b_max || west + (a_max - a_min) >= b_min + kCircle;
 }
 
 // ---------------------------------------------------------------------------
@@ -369,7 +437,7 @@ auto infer_orbit_direction(const Eigen::Ref<const Eigen::VectorXd>& lon)
   size_t negative = 0;
 
   for (size_t i = 0; i < n; ++i) {
-    auto const d = lon[i + 1] - lon[i];
+    auto const d = shortest_arc(lon[i + 1] - lon[i]);
     if (d >= 0.0) {
       ++positive;
     }
@@ -402,16 +470,11 @@ auto decompose_track(const Eigen::Ref<const Eigen::VectorXd>& lon,
   auto const orbit = infer_orbit_direction(lon);
 
   // Step 1: Segment into raw blocks.
-  std::vector<RawBlock> raw;
-  switch (strategy) {
-    case DecompositionStrategy::kLatitudeBands:
-      raw = segment_by_latitude_bands(lat, options.south_limit(),
-                                      options.north_limit());
-      break;
-    case DecompositionStrategy::kMonotonicSegments:
-      raw = segment_by_monotonicity(lat);
-      break;
-  }
+  auto const lon_span = std::span<const double>(lon.data(), lon.size());
+  auto const lat_span = std::span<const double>(lat.data(), lat.size());
+  auto raw = segment_track(lon_span, lat_span,
+                           strategy == DecompositionStrategy::kLatitudeBands,
+                           options.south_limit(), options.north_limit());
 
   // Step 2: Apply edge-merge policy.
   raw = apply_edge_merge(std::move(raw), options.min_edge_size());
@@ -421,8 +484,8 @@ auto decompose_track(const Eigen::Ref<const Eigen::VectorXd>& lon,
   segments.reserve(raw.size());
 
   for (auto const& r : raw) {
-    auto bbox =
-        compute_bbox(lon, lat, r.first1, r.last1, options.swath_width_km());
+    auto bbox = compute_bbox(lon_span, lat_span, r.first1, r.last1,
+                             options.swath_width_km());
 
     // For latitude-band strategy, zone comes from segmentation.
     // For monotonic strategy, recompute dominant zone.
@@ -455,9 +518,9 @@ auto filter_by_extent(std::vector<TrackSegment> const& segments,
   std::vector<TrackSegment> result;
   for (auto const& seg : segments) {
     // Two axis-aligned boxes intersect iff they overlap on both axes.
-    auto const lon_overlap =
-        seg.bbox.min_corner().lon() <= extent.max_corner().lon() &&
-        seg.bbox.max_corner().lon() >= extent.min_corner().lon();
+    auto const lon_overlap = longitudes_overlap(
+        seg.bbox.min_corner().lon(), seg.bbox.max_corner().lon(),
+        extent.min_corner().lon(), extent.max_corner().lon());
     auto const lat_overlap =
         seg.bbox.min_corner().lat() <= extent.max_corner().lat() &&
         seg.bbox.max_corner().lat() >= extent.min_corner().lat();

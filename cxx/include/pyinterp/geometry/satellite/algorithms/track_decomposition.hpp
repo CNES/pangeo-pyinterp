@@ -43,7 +43,9 @@ enum class OrbitDirection : uint8_t {
 /// Strategy for splitting a track into segments.
 enum class DecompositionStrategy : uint8_t {
   /// Fixed latitude thresholds producing up to 3 zones (SOUTH/MID/NORTH).
-  /// Backward-compatible with the original create_processing_blocks behavior.
+  /// Inside the MID zone a segment is also cut where the latitude turns
+  /// back: between the thresholds a pass goes one way, so a turn there is
+  /// the next pass, the polar one between them missing from the data.
   kLatitudeBands,
 
   /// Split at every latitude direction change (ascending ↔ descending).
@@ -55,6 +57,12 @@ enum class DecompositionStrategy : uint8_t {
 using BoundingBox = geometry::geographic::Box;
 
 /// A contiguous segment of the original track, with its bounding box.
+///
+/// The box follows the track: a segment crossing the antimeridian gets the
+/// arc it covers, its western edge in [-180°, 180°) and its eastern one
+/// possibly beyond 180°. A segment going round the globe gets [-180°, 180°].
+/// Measurements with a NaN longitude or latitude are left out of the box; a
+/// segment without any position gets a box of NaN.
 struct TrackSegment {
   size_t first_index{};    ///< First index in the input arrays (inclusive).
   size_t last_index{};     ///< Last index in the input arrays (inclusive).
@@ -228,6 +236,10 @@ class DecompositionOptions {
 /// Infer the orbit direction from a longitude sequence using a sign-majority
 /// of first differences over the first `kOrbitDiffSize` samples.
 ///
+/// Each difference is taken as the shortest arc between the two longitudes,
+/// so that the ±360° step of an antimeridian crossing is not read as travel
+/// in the opposite direction.
+///
 /// Tie resolves to kRetrograde (preserving original behavior).
 ///
 /// @param[in] lon Longitude sequence (degrees).
@@ -256,6 +268,9 @@ class DecompositionOptions {
 /// Convenience overload: given pre-computed segments and a data extent,
 /// return only the segments whose bounding box intersects the extent.
 /// Useful for filtering out segments that fall entirely outside a grid.
+/// Longitudes are compared modulo 360°, so a segment and an extent written on
+/// different turns of the circle (e.g. [-180°, 180°) and [0°, 360°)) still
+/// meet; a segment without any position never does.
 /// @param[in] segments Track segments to filter.
 /// @param[in] data_extent Bounding box of the data grid.
 /// @return Subset of input segments that intersect the data extent.

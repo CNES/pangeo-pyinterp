@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from .....core.geometry import satellite
+from .....core.geometry import geographic, satellite
 
 
 class TestDecomposeTrack:
@@ -130,3 +130,29 @@ class TestDecomposeTrack:
         assert segments[0].zone == satellite.LatitudeZone.SOUTH
         assert segments[1].zone == satellite.LatitudeZone.MID
         assert segments[2].zone == satellite.LatitudeZone.NORTH
+
+    def test_decompose_track_across_the_antimeridian(self) -> None:
+        """The box of a track crossing 180° holds the arc it covers."""
+        lon = np.array([175.0, 177.0, 179.0, -179.0, -177.0, -175.0])
+        lat = np.arange(6.0)
+
+        (segment,) = satellite.decompose_track(lon, lat)
+
+        assert segment.orbit == satellite.OrbitDirection.PROGRADE
+        assert segment.bbox.min_corner.lon == pytest.approx(175.0)
+        assert segment.bbox.max_corner.lon == pytest.approx(185.0)
+
+        extent = geographic.Box((182.0, -10.0), (190.0, 10.0))
+        assert len(satellite.filter_by_extent([segment], extent)) == 1
+
+    def test_decompose_track_gap_over_the_pole(self) -> None:
+        """Two passes met across a missing polar pass are two segments."""
+        lat = np.r_[np.linspace(0.0, 40.0, 50), np.linspace(39.0, 0.0, 50)]
+        lon = np.r_[np.linspace(10.0, 30.0, 50), np.linspace(190.0, 210.0, 50)]
+
+        segments = satellite.decompose_track(lon, lat)
+
+        assert [(s.first_index, s.last_index) for s in segments] == [
+            (0, 49),
+            (50, 99),
+        ]
