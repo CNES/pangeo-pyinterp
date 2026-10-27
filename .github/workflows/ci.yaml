@@ -84,6 +84,12 @@ jobs:
       env:
         # Read by CMake (>= 3.17) when the build tree is configured.
         CMAKE_CXX_COMPILER_LAUNCHER: ccache
+        # With a base directory, ccache passes relative source paths to the
+        # compiler, which records them in the .gcno files. lcov then resolves
+        # them against its --base-directory, treats every source as external
+        # and captures nothing. The workspace path is the same from one run to
+        # the next, so the cache is still reused without it.
+        CCACHE_BASEDIR: ""
       run: |
         ./scripts/generate_coverage.sh
 
