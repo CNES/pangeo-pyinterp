@@ -59,7 +59,7 @@ def to_xarray(hashes: NDArray1DStr, data: NDArray1D) -> xr.DataArray:
     if hashes.shape != data.shape:
         raise ValueError(
             "hashes, data could not be broadcast together with shape "
-            f"{hashes.shape}, f{data.shape}"
+            f"{hashes.shape}, {data.shape}"
         )
     if hashes.dtype.kind != "S":
         raise TypeError("hashes must be a string array")
@@ -84,10 +84,10 @@ def to_xarray(hashes: NDArray1DStr, data: NDArray1D) -> xr.DataArray:
         dims=("lat", "lon"),
         coords={
             "lon": xr.DataArray(
-                x_axis, dims=("lon",), attrs={"units": "degrees_north"}
+                x_axis, dims=("lon",), attrs={"units": "degrees_east"}
             ),
             "lat": xr.DataArray(
-                y_axis, dims=("lat",), attrs={"units": "degrees_east"}
+                y_axis, dims=("lat",), attrs={"units": "degrees_north"}
             ),
         },
     )
