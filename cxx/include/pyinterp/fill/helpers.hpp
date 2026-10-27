@@ -9,6 +9,7 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "pyinterp/eigen.hpp"
@@ -42,7 +43,7 @@ void set_zonal_average(Eigen::RefBase<Derived> &grid_ref, Matrix<bool> &mask,
         try {
           // Calculation of longitude band means.
           for (auto iy = static_cast<int64_t>(y_start);
-               iy < static_cast<int64_t>(y_end); ++iy) {
+               std::cmp_less(iy, y_end); ++iy) {
             auto acc = boost::accumulators::accumulator_set<
                 Type,
                 boost::accumulators::stats<boost::accumulators::tag::count,
@@ -82,7 +83,7 @@ inline auto frame_index(const int64_t index, const int64_t size,
   // Index in the center of the window
   auto center = static_cast<int64_t>(frame.size() / 2);
 
-  for (int64_t ix = 0; ix < static_cast<int64_t>(frame.size()); ++ix) {
+  for (int64_t ix = 0; std::cmp_less(ix, frame.size()); ++ix) {
     auto idx = index - center + ix;
 
     // Normalizing longitude?

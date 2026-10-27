@@ -217,8 +217,8 @@ class Histogram2D {
     const auto cols = state.read<size_t>();
 
     // Validate dimensions
-    if (rows != static_cast<size_t>(x_axis.size()) ||
-        cols != static_cast<size_t>(y_axis.size())) {
+    if (std::cmp_not_equal(rows, x_axis.size()) ||
+        std::cmp_not_equal(cols, y_axis.size())) {
       throw std::invalid_argument(
           "Histogram2D dimensions don't match axis sizes");
     }

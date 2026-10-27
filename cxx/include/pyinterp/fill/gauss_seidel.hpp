@@ -56,8 +56,12 @@ struct RedBlackCells {
       for (int64_t iy = 0; iy < y_size; ++iy) {
         if (mask(ix, iy)) {
           nbr.update_y(iy);
-          cells[(ix + iy) % 2].push_back(
-              {ix, iy, nbr.ix0, nbr.ix1, nbr.iy0, nbr.iy1});
+          cells[(ix + iy) % 2].push_back({.ix = ix,
+                                          .iy = iy,
+                                          .ix0 = nbr.ix0,
+                                          .ix1 = nbr.ix1,
+                                          .iy0 = nbr.iy0,
+                                          .iy1 = nbr.iy1});
         }
       }
     }

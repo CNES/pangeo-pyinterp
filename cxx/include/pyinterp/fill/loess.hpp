@@ -7,6 +7,7 @@
 #include <cmath>
 #include <concepts>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "pyinterp/config/fill.hpp"
@@ -69,9 +70,9 @@ struct LoessWorkspace {
     const auto ny_inv = T{1} / static_cast<T>(ny);
     auto weight = weights.begin();
     for (std::int64_t kx = -static_cast<std::int64_t>(nx);
-         kx <= static_cast<std::int64_t>(nx); ++kx) {
+         std::cmp_less_equal(kx, nx); ++kx) {
       for (std::int64_t ky = -static_cast<std::int64_t>(ny);
-           ky <= static_cast<std::int64_t>(ny); ++ky) {
+           std::cmp_less_equal(ky, ny); ++ky) {
         const auto dx = static_cast<T>(kx) * nx_inv;
         const auto dy = static_cast<T>(ky) * ny_inv;
         *weight++ = tricube_weight(std::sqrt(dx * dx + dy * dy));

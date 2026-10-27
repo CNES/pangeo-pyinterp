@@ -346,7 +346,7 @@ auto TDigest<T>::quantile(const Eigen::Ref<const Eigen::VectorX<T>>& quantiles)
   // single pass over its centroids, then scatter them back in the requested
   // order.
   auto order = std::vector<int64_t>(static_cast<size_t>(n_quantiles));
-  std::iota(order.begin(), order.end(), int64_t{0});
+  std::ranges::iota(order, int64_t{0});
   std::ranges::stable_sort(order, [&](const int64_t a, const int64_t b) {
     return quantiles[a] < quantiles[b];
   });

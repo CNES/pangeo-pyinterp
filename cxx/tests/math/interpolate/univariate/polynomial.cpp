@@ -63,7 +63,9 @@ TEST(Polynomial, ReproducesCubic) {
       ya(ix) = cubic(xa(ix));
     }
     auto interpolator = Polynomial<double>();
-    for (auto x = xa(0); x <= xa(size - 1); x += 0.05) {
+    const auto steps = static_cast<int>((xa(size - 1) - xa(0)) / 0.05);
+    for (auto ix = 0; ix <= steps; ++ix) {
+      const auto x = xa(0) + 0.05 * ix;
       EXPECT_NEAR(interpolator(xa, ya, x), cubic(x), 1e-9)
           << "size=" << size << " x=" << x;
     }

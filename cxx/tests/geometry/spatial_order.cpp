@@ -34,7 +34,7 @@ TEST(SpatialOrder, Permutation) {
   auto order = spatial_order(points);
   std::ranges::sort(order);
   auto expected = std::vector<int64_t>(points.size());
-  std::iota(expected.begin(), expected.end(), int64_t{0});
+  std::ranges::iota(expected, int64_t{0});
   EXPECT_EQ(order, expected);
 
   EXPECT_TRUE(spatial_order(std::vector<Point3D>{}).empty());
@@ -59,7 +59,7 @@ TEST(SpatialOrder, Locality) {
     return result;
   };
   auto identity = std::vector<int64_t>(points.size());
-  std::iota(identity.begin(), identity.end(), int64_t{0});
+  std::ranges::iota(identity, int64_t{0});
   EXPECT_LT(path_length(spatial_order(points)), path_length(identity) / 10);
 }
 

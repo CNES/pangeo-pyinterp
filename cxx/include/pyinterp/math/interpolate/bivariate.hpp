@@ -178,7 +178,7 @@ class Bivariate : public BivariateBase<T>, public BracketFinder<T> {
 
   /// @brief Compute coefficients from stored data
   /// @return true if successful, false otherwise.
-  [[nodiscard]] virtual auto compute_coefficients() -> bool { return true; }
+  [[nodiscard]] auto compute_coefficients() -> bool override { return true; }
 };
 
 }  // namespace pyinterp::math::interpolate

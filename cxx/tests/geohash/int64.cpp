@@ -10,6 +10,7 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <cstdint>
+#include <random>
 #include <ranges>
 #include <tuple>
 
@@ -804,13 +805,13 @@ TEST_F(GeoHashInt64Test, StressHighPrecision) {
 
 TEST_F(GeoHashInt64Test, StressRandomPoints) {
   // Test with many random points
-  std::srand(42);  // Fixed seed for reproducibility
+  auto gen = std::mt19937(42);  // Fixed seed for reproducibility
+  auto uniform_lon = std::uniform_real_distribution<>(-180.0, 180.0);
+  auto uniform_lat = std::uniform_real_distribution<>(-90.0, 90.0);
 
   for (int i = 0; i < 100; ++i) {
-    // NOLINTNEXTLINE(concurrency-mt-unsafe)
-    double lon = (std::rand() / static_cast<double>(RAND_MAX)) * 360.0 - 180.0;
-    // NOLINTNEXTLINE(concurrency-mt-unsafe)
-    double lat = (std::rand() / static_cast<double>(RAND_MAX)) * 180.0 - 90.0;
+    double lon = uniform_lon(gen);
+    double lat = uniform_lat(gen);
 
     auto point = make_point(lon, lat);
     auto hash = encode(point, kDefaultPrecision);

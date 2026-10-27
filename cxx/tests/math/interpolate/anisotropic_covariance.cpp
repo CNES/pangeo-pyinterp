@@ -107,8 +107,7 @@ TEST(AnisotropicCovariance, IsotropicDistanceReducesToEuclidean) {
 
   for (const auto& s : kSamples) {
     const double expected = (s.p1 - s.p2).squaredNorm() / (L * L);
-    const double got =
-        anisotropic_distance_squared<double, 3>(s.p1, s.p2, inv_L);
+    const auto got = anisotropic_distance_squared<double, 3>(s.p1, s.p2, inv_L);
     EXPECT_NEAR(expected, got, kTolerance);
   }
 }
@@ -122,7 +121,7 @@ TEST(AnisotropicCovariance, AnisotropicDistanceFormula) {
 
   const double expected = (4.0 / 2.0) * (4.0 / 2.0) +
                           (3.0 / 1.5) * (3.0 / 1.5) + (2.0 / 0.5) * (2.0 / 0.5);
-  const double got = anisotropic_distance_squared<double, 3>(p1, p2, inv_L);
+  const auto got = anisotropic_distance_squared<double, 3>(p1, p2, inv_L);
   EXPECT_NEAR(expected, got, kTolerance);
 }
 
@@ -150,9 +149,9 @@ TEST(AnisotropicCovariance, Float32Specialization) {
   const Eigen::Vector3f p1(0.0F, 0.0F, 0.0F);
   const Eigen::Vector3f p2(1.0F, 0.5F, -0.25F);
   const Eigen::Vector3f inv_L = Eigen::Vector3f::Constant(0.5F);
-  const float r2 = anisotropic_distance_squared<float, 3>(p1, p2, inv_L);
+  const auto r2 = anisotropic_distance_squared<float, 3>(p1, p2, inv_L);
 
-  const float cov = gaussian_covariance_from_r2<float>(r2, 1.0F, 1.0F);
+  const auto cov = gaussian_covariance_from_r2<float>(r2, 1.0F, 1.0F);
   EXPECT_GT(cov, 0.0F);
   EXPECT_LE(cov, 1.0F);
 }

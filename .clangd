@@ -2,15 +2,4 @@ CompileFlags:
     Add:
         - "-std=c++23"
 
-Diagnostics:
-    ClangTidy:
-        Add:
-            - boost-*
-            - concurrency-*
-            - modernize-*
-            - performance-*
-            - clang-analyzer-*
-            - portability-*
-            - google-*
-        Remove:
-            - portability-simd-intrinsics
+# The clang-tidy checks are read from the .clang-tidy file.

@@ -166,7 +166,7 @@ void for_each_offset(const Shape& shape,
       for (size_t k = 0; k < N; ++k) {
         base[k] += (*strides[k])[dim];
       }
-      if (outer[dim] < static_cast<int64_t>(shape[dim])) {
+      if (std::cmp_less(outer[dim], shape[dim])) {
         break;
       }
       for (size_t k = 0; k < N; ++k) {
@@ -188,7 +188,7 @@ constexpr void increment_indices(VectorIndex& indices,
   const auto ndim = static_cast<int64_t>(shape.size());
   for (auto ix = ndim - 1; ix >= 0; --ix) {
     ++indices[ix];
-    if (indices[ix] < static_cast<int64_t>(shape[ix])) {
+    if (std::cmp_less(indices[ix], shape[ix])) {
       return;
     }
     indices[ix] = 0;
@@ -212,7 +212,7 @@ inline auto validate_and_convert_axis(const VectorIndex& axis,
     if (ax < 0) {
       ax += static_cast<int64_t>(ndim);
     }
-    if (ax < 0 || ax >= static_cast<int64_t>(ndim)) {
+    if (ax < 0 || std::cmp_greater_equal(ax, ndim)) {
       throw std::out_of_range(std::format(
           "axis {} is out of bounds for array of dimension {}", ax, ndim));
     }

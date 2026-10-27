@@ -546,6 +546,11 @@ class Regular<T, std::enable_if_t<std::floating_point<T>>>
   Regular(const T start, const T stop, const size_t num)
       : AbstractRegular<T>(start, stop, num), inv_step_(T(1.0) / this->step_) {}
 
+  // Axis<T>::pack() instantiates this class through a static_cast alone,
+  // which does not instantiate its virtual functions. They are instantiated
+  // wherever an Axis<T> is built, since its constructors create a Regular<T>.
+  // NOLINTBEGIN(portability-template-virtual-member-function)
+
   /// @copydoc Abstract::find_index(T, bool) const
   [[nodiscard]] auto find_index(const T coordinate,
                                 const bool bounded) const noexcept
@@ -568,6 +573,8 @@ class Regular<T, std::enable_if_t<std::floating_point<T>>>
     AbstractRegular<T>::flip();
     inv_step_ = -inv_step_;
   }
+
+  // NOLINTEND(portability-template-virtual-member-function)
 
  private:
   /// The inverse of the step (to avoid a division between real numbers).

@@ -1,0 +1,22 @@
+# Checks shared by clang-tidy, clangd and the ENABLE_CLANG_TIDY CMake option.
+Checks: >-
+  -*,
+  boost-*,
+  clang-analyzer-*,
+  concurrency-*,
+  google-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  -portability-avoid-pragma-once,
+  -portability-simd-intrinsics
+# Report the diagnostics of the project headers, not those of the third-party
+# libraries.
+HeaderFilterRegex: '/cxx/(include|src|tests)/'
+CheckOptions:
+  # Writable Eigen::Ref arguments must be passed by value: they are views on
+  # the caller's data, cheap to copy, and a const reference would not bind to
+  # a temporary Ref.
+  performance-unnecessary-value-param.AllowedTypes: 'Eigen::Ref'
+  # Trailing return types are required for functions, not for lambdas.
+  modernize-use-trailing-return-type.TransformLambdas: none

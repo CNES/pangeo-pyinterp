@@ -531,12 +531,8 @@ if(ENABLE_CLANG_TIDY)
         "clang-tidy not found. Please set CLANG_TIDY_EXE to clang-tidy "
         "executable.")
   endif()
-  string(
-    CONCAT
-      CLANG_TIDY_CMD
-      "clang-tidy;-checks=-*,boost-*,concurrency-*,modernize-*,performance-*,"
-      "clang-analyzer-*,portability-*,-portability-simd-intrinsics,google-*,"
-      ";-fix")
+  # The checks are read from the .clang-tidy file at the root of the project.
+  set(CLANG_TIDY_CMD "clang-tidy;-fix")
   set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_CMD}")
 
   unset(THIRD_PARTY)

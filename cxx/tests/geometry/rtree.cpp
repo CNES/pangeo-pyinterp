@@ -557,9 +557,10 @@ TEST(RTree3D, KNNQuerySortedLikeBruteForce) {
 
   RTree3D tree;
   std::vector<RTree3D::value_t> data;
+  data.reserve(kSize);
   for (auto ix = 0; ix < kSize; ++ix) {
-    data.push_back({Point3D(uniform(gen), uniform(gen), uniform(gen)),
-                    static_cast<double>(ix)});
+    data.emplace_back(Point3D(uniform(gen), uniform(gen), uniform(gen)),
+                      static_cast<double>(ix));
   }
   tree.packing(data);
 

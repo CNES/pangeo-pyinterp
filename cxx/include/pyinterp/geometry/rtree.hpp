@@ -468,7 +468,7 @@ auto RTree<Point, Type>::inverse_distance_weighting(
     const Point& point, const coordinate_t& radius, const uint32_t k,
     const uint32_t p, const BoundaryCheck check, const Strategy& strategy) const
     -> std::pair<coordinate_t, uint32_t> {
-  constexpr coordinate_t epsilon = coordinate_t{1e-6};
+  constexpr auto epsilon = coordinate_t{1e-6};
   coordinate_t result{0};
   coordinate_t total_weight{0};
 
