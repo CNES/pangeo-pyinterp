@@ -2,6 +2,8 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+#pragma once
+
 #include <array>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
@@ -10,6 +12,29 @@
 
 namespace pyinterp::math::interpolate {
 namespace detail {
+
+/// @brief Filters the numerical errors of the area of a sub-polygon of a cell.
+///
+/// When the query point lies on a corner of the cell, one sub-polygon covers
+/// the whole cell, and rounding errors can make its area slightly larger than
+/// the area of the cell: it is clamped to the area of the cell. A larger area
+/// is an error (e.g. the complement of the polygon on the spheroid) and is
+/// discarded, as are negligibly small areas.
+///
+/// @tparam T Floating-point type
+/// @param[in] area Area of the sub-polygon
+/// @param[in] total_area Area of the cell
+/// @return The filtered area
+template <std::floating_point T>
+[[nodiscard]] constexpr auto filter_area(const T area, const T total_area)
+    -> T {
+  constexpr T epsilon = T{1e-12};
+  constexpr T relative_tolerance = T{1e-9};
+  if (area > total_area) [[unlikely]] {
+    return area <= total_area * (T{1} + relative_tolerance) ? total_area : T{0};
+  }
+  return area < epsilon ? T{0} : area;
+}
 
 /// @brief Calculates the area of a polygon, ensuring positive orientation
 /// @tparam Point Point type used in the polygon
@@ -33,10 +58,7 @@ template <template <class> class Point, typename Strategy,
   return result;
 }
 
-/// @brief Calculate the area of a polygon.
-///
-/// If the area is less than epsilon or greater than total area, the calculated
-/// area is set to zero.
+/// @brief Calculate the area of a polygon, filtered by filter_area.
 ///
 /// @tparam Point Point type used in the polygon
 /// @tparam Strategy Boost.Geometry strategy for area calculation
@@ -50,15 +72,8 @@ template <template <class> class Point, typename Strategy,
 [[nodiscard]] auto calculate_and_normalize_area(
     boost::geometry::model::polygon<Point<T>>& polygon,
     const Strategy& strategy, const T total_area) -> T {
-  auto result = calculate_area<Point, Strategy, T>(polygon, strategy);
-
-  // Handle numerical errors: area too large or negligibly small
-  constexpr T epsilon = T{1e-12};
-  if (result > total_area || std::abs(result) < epsilon) [[unlikely]] {
-    result = T{0};
-  }
-
-  return result;
+  return filter_area(calculate_area<Point, Strategy, T>(polygon, strategy),
+                     total_area);
 }
 
 }  // namespace detail
@@ -169,9 +184,7 @@ template <std::floating_point T>
 
   // Same filtering of numerical errors as calculate_and_normalize_area
   const auto area = [total_area](const T dx, const T dy) -> T {
-    constexpr T epsilon = T{1e-12};
-    const T result = std::abs(dx * dy);
-    return result > total_area || result < epsilon ? T{0} : result;
+    return detail::filter_area(std::abs(dx * dy), total_area);
   };
 
   const T area_a = area(x - x0, y1 - y);

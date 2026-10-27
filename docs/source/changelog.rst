@@ -11,6 +11,14 @@ Bug Fixes
   which returned wrong values when its window held more than four points. The
   divided differences were computed in place and read values that had already
   been overwritten. This defect was introduced in 2026.2.0.
+* **Linear binning on grid nodes**: ``Binning2D`` with linear binning in a
+  Cartesian plane (no spheroid) could ignore a value located exactly on a grid
+  node. When the node was the upper corner of its cell, which is always the case
+  on the last row and column and also happens inside grids whose step is not
+  exactly representable (e.g. 0.1), the area of the sub-cell covering the whole
+  cell came out slightly larger than the cell because of rounding errors and
+  was discarded, so the value got no weight at all. Such an area is now clamped
+  to the area of the cell.
 * **Multigrid convergence**: Fixed ``fill.multigrid``, whose coarse-grid
   correction did not match the fine problem: each V-cycle removed only about
   15 % of the error, and large grids did not converge. The restriction now uses

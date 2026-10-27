@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <boost/geometry/core/cs.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/srs/spheroid.hpp>
@@ -159,6 +160,38 @@ TEST(LinearBinning, Spheroid) {
   EXPECT_NEAR(std::get<1>(weights), 0, 1e-6);
   EXPECT_NEAR(std::get<2>(weights), 0, 1e-6);
   EXPECT_NEAR(std::get<3>(weights), 0.9999999999, 1e-6);
+}
+
+// A point on a corner of the cell gets all the weight. One sub-polygon then
+// covers the whole cell, and its area, rounded differently from the area of
+// the cell, used to be discarded as too large: the point got no weight at all.
+TEST(LinearBinning, CornerGetsAllTheWeight) {
+  auto strategy = bg::strategy::area::cartesian<>();
+  // Cells whose bounds are not exactly representable, as on a grid with a
+  // step of 0.1
+  for (auto ix = 0; ix < 1000; ++ix) {
+    const auto x0 = -180.0 + 0.1 * ix;
+    const auto y0 = -90.0 + 0.1 * (ix % 1800);
+    const auto x1 = -180.0 + 0.1 * (ix + 1);
+    const auto y1 = -90.0 + 0.1 * (ix % 1800 + 1);
+    // Corners in the order of the weights: p00, p01, p11, p10
+    const auto corners = std::array<std::array<double, 2>, 4>{
+        {{x0, y0}, {x0, y1}, {x1, y1}, {x1, y0}}};
+    for (size_t jx = 0; jx < 4; ++jx) {
+      const auto [x, y] = corners[jx];
+      const auto polygons =
+          bilinear_weights<CartesianPoint, bg::strategy::area::cartesian<>,
+                           double>(CartesianPoint<double>{x, y},
+                                   CartesianPoint<double>{x0, y0},
+                                   CartesianPoint<double>{x1, y1}, strategy);
+      const auto closed_form = cartesian_bilinear_weights(x, y, x0, y0, x1, y1);
+      for (size_t kx = 0; kx < 4; ++kx) {
+        const auto expected = kx == jx ? 1.0 : 0.0;
+        EXPECT_NEAR(polygons[kx], expected, 1e-9) << ix << " " << jx;
+        EXPECT_NEAR(closed_form[kx], expected, 1e-9) << ix << " " << jx;
+      }
+    }
+  }
 }
 
 // The closed form must match the polygon areas of the Cartesian strategy,
