@@ -73,25 +73,15 @@ set(PYINTERP_NANOBIND_BACKEND_MODULE
 # ##############################################################################
 # CMake policies
 # ##############################################################################
-if(POLICY CMP0048)
-  cmake_policy(SET CMP0048 NEW)
-endif()
+# The policies introduced up to CMake 3.19 are already set to NEW by
+# cmake_minimum_required.
 
-if(POLICY CMP0063)
-  cmake_policy(SET CMP0063 NEW)
-endif()
-
-if(POLICY CMP0074)
-  cmake_policy(SET CMP0074 NEW)
-endif()
-
-if(POLICY CMP0077)
-  cmake_policy(SET CMP0077 NEW)
-endif()
-
-if(POLICY_CMP0144)
+# find_package uses the upper-case <PACKAGENAME>_ROOT variables (CMake 3.27).
+if(POLICY CMP0144)
   cmake_policy(SET CMP0144 NEW)
 endif()
+
+# FindBoost is removed: use the BoostConfig.cmake package (CMake 3.30).
 
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
