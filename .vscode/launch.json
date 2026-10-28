@@ -1,0 +1,38 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "test_fill",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/build/cxx/tests/test_fill",
+            "args": [
+                "--gtest_filter=LoessTest.SingleValue"
+            ],
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "name": "test_interpolate",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/build/debug/cxx/tests/test_interpolate",
+            "args": [
+                "--gtest_filter=IndependentCache3D.DomainTracking"
+            ],
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "name": "launch_python",
+            "type": "lldb",
+            "request": "launch",
+            "program": "/home/fbriol/conda/envs/py314/bin/python",
+            "args": [
+                "/data/fbriol/Documents/workspace/pyinterp-1/debu.py"
+            ],
+            "cwd": "${workspaceRoot}"
+        }
+    ]
+}

@@ -30,7 +30,7 @@ You can also apply for a data `binning
 bivariate area by simple or linear binning.
 
 The library core is written in C++ using the `Boost C++ Libraries
-<https://www.boost.org/>`_, `Eigen3 <http://eigen.tuxfamily.org/>`_ and
+<https://www.boost.org/>`_, `Eigen3 <https://eigen.tuxfamily.org/>`_ and
 `nanobind <https://github.com/wjakob/nanobind/>`_ libraries.
 
 This software also uses `CMake <https://cmake.org/>`_ to configure the project
@@ -91,7 +91,7 @@ The `pyinterp.TemporalAxis
 <https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.TemporalAxis.html#pyinterp.TemporalAxis>`_
 class handles temporal axes, i.e., axes defined by 64-bit integer vectors, which
 is the encoding used by `numpy
-<https://docs.scipy.org/doc/numpy/reference/arrays.datetime.html>`_ to control
+<https://numpy.org/doc/stable/reference/arrays.datetime.html>`_ to control
 dates. This class allows you to process dates using integer arithmetic to ensure
 that no information is lost during calculations. These objects are used by
 spatiotemporal grids to perform temporal interpolations.
@@ -104,7 +104,7 @@ have better performance than the *KDTree* generally found in Python library
 implementations.
 
 The tree used here is the implementation provided by the `C++ Boost library
-<https://www.boost.org/doc/libs/1_70_0/libs/geometry/doc/html/geometry/reference/spatial_indexes/boost__geometry__index__rtree.html>`_.
+<https://www.boost.org/doc/libs/release/libs/geometry/doc/html/geometry/reference/spatial_indexes/boost__geometry__index__rtree.html>`_.
 
 An adaptation has been introduced to address spherical equatorial coordinates
 effectively. Although the Boost library allows these coordinates to manipulate
