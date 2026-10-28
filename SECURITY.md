@@ -5,10 +5,13 @@
 We actively support the following versions of pangeo-pyinterp with security
 updates:
 
+<!-- The release workflows run scripts/check_security_policy.py, which fails
+     unless the year of the released version is marked as supported below. -->
+
 | Version | Supported          |
 | ------- | ------------------ |
-| 2025.x  | :white_check_mark: |
-| < 2025  | :x:                |
+| 2026.x  | :white_check_mark: |
+| < 2026  | :x:                |
 
 We typically support the current year's releases. Older versions may not receive
 security updates.

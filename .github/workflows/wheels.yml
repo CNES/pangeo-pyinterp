@@ -9,8 +9,33 @@ on:
 permissions: {}
 
 jobs:
+  # SECURITY.md lists the supported versions by year and is updated by hand:
+  # block the release until it supports the year of the tag (or of today, for
+  # a manual run).
+  security-policy:
+    name: Check the security policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Check that SECURITY.md supports the released version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME}"
+          else
+            version="$(date -u +%Y)."
+          fi
+          python3 scripts/check_security_policy.py "${version}"
+
   build_wheels:
     name: Wheels on ${{ matrix.os }}
+    needs: security-policy
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
