@@ -8,8 +8,13 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+
+# Cancel superseded runs of the same pull request. Every push gets its own
+# group, so all pushed commits are tested and nothing is serialized; the
+# deploy job serializes GitHub Pages deployments on its own.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: true
 
 # ccache settings shared by the jobs that compile through ccache (only those set
 # CMAKE_CXX_COMPILER_LAUNCHER). The cache directory is persisted between runs
@@ -29,10 +34,12 @@ jobs:
     timeout-minutes: 2
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      with:
+        persist-credentials: false
 
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: '3.12'
 
@@ -46,14 +53,15 @@ jobs:
     timeout-minutes: 45
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       with:
+        persist-credentials: false
         submodules: recursive
         fetch-depth: 0
         fetch-tags: true
 
     - name: Setup Miniconda
-      uses: mamba-org/setup-micromamba@v1
+      uses: mamba-org/setup-micromamba@4b9113af4fba0e9e1124b252dd6497a419e7396d # v1.11.0
       with:
         cache-downloads: true
         condarc: |
@@ -72,7 +80,7 @@ jobs:
         init-shell: bash
 
     - name: Restore ccache
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ github.sha }}
@@ -105,7 +113,7 @@ jobs:
         ccache --show-stats
 
     - name: Upload HTML report as artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: coverage-report
         path: build/htmllcov
@@ -123,14 +131,15 @@ jobs:
         python-version: ['3.11', '3.13', '3.14']
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       with:
+        persist-credentials: false
         submodules: recursive
         fetch-depth: 0
         fetch-tags: true
 
     - name: Setup Miniconda
-      uses: mamba-org/setup-micromamba@v1
+      uses: mamba-org/setup-micromamba@4b9113af4fba0e9e1124b252dd6497a419e7396d # v1.11.0
       with:
         cache-downloads: true
         condarc: |
@@ -144,7 +153,7 @@ jobs:
         init-shell: bash
 
     - name: Restore ccache
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ github.sha }}
@@ -187,13 +196,14 @@ jobs:
         python-version: ['3.12']
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       with:
+        persist-credentials: false
         submodules: recursive
         fetch-depth: 0
         fetch-tags: true
     - name: Setup Miniconda
-      uses: mamba-org/setup-micromamba@v1
+      uses: mamba-org/setup-micromamba@4b9113af4fba0e9e1124b252dd6497a419e7396d # v1.11.0
       with:
         cache-downloads: true
         condarc: |
@@ -217,7 +227,7 @@ jobs:
           xarray
         init-shell: bash
     - name: Restore ccache
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ github.sha }}
@@ -251,25 +261,21 @@ jobs:
     needs: geometry-stubs-sync
     runs-on: macos-latest
     timeout-minutes: 45
-    # Serialize only the Pages deploy across runs (deploy steps below are
-    # gated to refs/heads/master); tests still run in parallel on other refs.
-    concurrency:
-      group: pages-${{ github.ref }}
-      cancel-in-progress: false
     strategy:
       fail-fast: false
       max-parallel: 5
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       with:
+        persist-credentials: false
         submodules: recursive
         fetch-depth: 0
         fetch-tags: true
 
     - name: Setup Miniconda
-      uses: mamba-org/setup-micromamba@v1
+      uses: mamba-org/setup-micromamba@4b9113af4fba0e9e1124b252dd6497a419e7396d # v1.11.0
       with:
         cache-downloads: true
         condarc: |
@@ -283,7 +289,7 @@ jobs:
         init-shell: bash
 
     - name: Restore ccache
-      uses: actions/cache@v4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ github.job }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ github.sha }}
@@ -314,20 +320,35 @@ jobs:
       run: |
         sphinx-build -b html docs/source docs/build
 
-    - name: Setup Pages
-      if: github.ref == 'refs/heads/master'
-      uses: actions/configure-pages@v5
-
     - name: Upload artifact
-      if: github.ref == 'refs/heads/master'
-      uses: actions/upload-pages-artifact@v3
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
       with:
         path: docs/build
 
+  # Publish the documentation built by the macos job. Pull requests never reach
+  # this job: fork PRs cannot obtain the Pages/OIDC permissions it requires.
+  deploy:
+    name: deploy-docs
+    needs: macos
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    # Run one deployment at a time and never interrupt one in progress.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+
+    steps:
+    - name: Setup Pages
+      uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+
     - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/master'
       id: deployment
-      uses: actions/deploy-pages@v4
+      uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
 
   win:
     name: win
@@ -337,12 +358,13 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       with:
+        persist-credentials: false
         submodules: recursive
 
     - name: Setup Miniconda
-      uses: mamba-org/setup-micromamba@v1
+      uses: mamba-org/setup-micromamba@4b9113af4fba0e9e1124b252dd6497a419e7396d # v1.11.0
       with:
         cache-downloads: true
         condarc: |
@@ -358,7 +380,7 @@ jobs:
     # Activate the MSVC developer environment (cl.exe + Ninja on PATH) and build
     # with the version-independent Ninja generator instead (see CMAKE_GEN).
     - name: Set up MSVC toolchain
-      uses: ilammy/msvc-dev-cmd@v1
+      uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
       with:
         arch: x64
 

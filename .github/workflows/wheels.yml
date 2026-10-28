@@ -6,10 +6,14 @@ on:
       - '[0-9]*'
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   build_wheels:
     name: Wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -21,8 +25,9 @@ jobs:
           - os: windows-2025        # Windows x86_64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          persist-credentials: false
           submodules: recursive
           fetch-depth: 0
           fetch-tags: true
@@ -34,7 +39,7 @@ jobs:
       #          so the conda prefix is available before cibuildwheel runs.
       - name: Install Boost headers (Windows)
         if: runner.os == 'Windows'
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@4b9113af4fba0e9e1124b252dd6497a419e7396d # v1.11.0
         with:
           cache-downloads: true
           condarc: |
@@ -61,12 +66,12 @@ jobs:
       # build subprocesses, which build with the Ninja generator (CMAKE_GEN).
       - name: Set up MSVC toolchain (Windows)
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
         with:
           arch: x64
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.0
+        uses: pypa/cibuildwheel@95d2f3a92fbf80abe066b09418bbf128a8923df2 # v3.0.1
         env:
           # Windows: point CMake at the conda-forge Boost headers and build with
           # the version-independent Ninja generator (VS 18 broke the VS 17 one).
@@ -79,7 +84,7 @@ jobs:
           CIBW_TEST_COMMAND: >-
             python -c "import pyinterp; print(pyinterp.__version__)"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: cibw-wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
@@ -114,12 +119,12 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: cibw-wheels-*
           path: dist
           merge-multiple: true
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
         with:
           repository-url: https://test.pypi.org/legacy/
 
@@ -134,9 +139,9 @@ jobs:
     permissions:
       id-token: write   # required for OIDC Trusted Publishing
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: cibw-wheels-*
           path: dist
           merge-multiple: true
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
