@@ -14,7 +14,6 @@ dependencies:
   - numpy
   - pandas
   - pip
-  - pypandoc
   - pytest
   - pytest-cov
   - setuptools
