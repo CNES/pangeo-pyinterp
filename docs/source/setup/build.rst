@@ -57,7 +57,7 @@ Then compile the extension and run the tests:
 Requirements
 ============
 
-* Python 3.11 or later.
+* Python 3.12 or later.
 * A C++ compiler supporting C++23, for example GCC 12 or later, a recent Clang,
   or a recent MSVC.
 * CMake 3.19 or later. A ``pip`` build fetches it automatically.

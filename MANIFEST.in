@@ -16,6 +16,7 @@ include README.rst
 include setup.py
 global-exclude *.py[dco]
 global-exclude *.so
+global-exclude .DS_Store
 global-exclude __pycache__
 prune docs/build
 prune build

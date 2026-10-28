@@ -4,7 +4,7 @@ build-backend = "backend"
 backend-path = ["_custom_build"]
 
 [tool.setuptools_scm]
-write_to = "pyinterp/_version.py"
+version_file = "pyinterp/_version.py"
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
 
@@ -21,13 +21,20 @@ exclude = [
 max-line-length = 80
 
 [tool.ruff.lint]
-ignore = ["PLR0913", "D203", "D213"]
+ignore = [
+  "PLR0913",
+  "D203",
+  "D213",
+  # PEP 695 aliases and generics are evaluated lazily and change the runtime
+  # objects of the public type hints: keep the typing module forms.
+  "UP040",
+  "UP046",
+  "UP047",
+]
 select = [
   "ANN",    # flake8-annotations
   "B",      # flake8-bugbear
-  "C",      # flake8-comprehensions
-  "C4",     # comprehensions
-  "C90",    # mccabe
+  "C",      # flake8-comprehensions (C4) and mccabe (C90)
   "D",      # docstring lints
   "E",      # pycodestyle errors
   "F",      # pyflakes
@@ -48,7 +55,8 @@ select = [
   "S",      # flake8-bandit (security)
   "SLOT",   # flake8-slots
   "T10",    # flake8-debugger
-  "TCH",    # type-checking imports
+  "TC",     # type-checking imports
+  "UP",     # pyupgrade
   "W",      # pycodestyle warnings
   "YTT",    # flake8-2020
 ]
@@ -82,35 +90,41 @@ addopts = "--import-mode=importlib"
 # Build CPython 3.12–3.14 (+ 3.14 free-threaded); skip 32-bit and musl builds
 build = "cp312-* cp313-* cp314-* cp314t-*"
 skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
-# Opt into free-threaded (cp*t-*) builds and still-pre-release cp314 matrix.
-enable = ["cpython-freethreading", "cpython-prerelease"]
 build-verbosity = 1
 
 # ------------------------------------------------------------------
 # Linux (manylinux_2_28 — AlmaLinux 8, glibc ≥ 2.28, gcc ≥ 12)
 # Boost headers are installed via miniforge inside the container
-# because the default AlmaLinux repos only ship Boost < 1.90.
+# because the default AlmaLinux repos only ship Boost < 1.90. The
+# installer is pinned to a release and checked against its SHA-256
+# before it runs.
 # ------------------------------------------------------------------
 [tool.cibuildwheel.linux]
 # manylinux2014 ships GCC 10 — too old for C++23. manylinux_2_28 ships GCC 14.
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 before-all = """
+set -eu
+case "$(uname -m)" in
+  x86_64) sha256=571b410272cc434f28bc6c5c49ca8ffd4a4d1bcba9f57f1b6baccdb46446cfcc ;;
+  aarch64) sha256=1f4e2f1898c054dd35133f778b92794116c28af330e5d5936d56d5f765401db4 ;;
+  *) echo "unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+esac
 curl -fsSL \
-  "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-$(uname -m).sh" \
-  -o /tmp/miniforge.sh \
-  && bash /tmp/miniforge.sh -b -p /opt/conda \
-  && /opt/conda/bin/conda install -y -c conda-forge 'libboost-headers>=1.90'
+  "https://github.com/conda-forge/miniforge/releases/download/26.9.4-1/Miniforge3-Linux-$(uname -m).sh" \
+  -o /tmp/miniforge.sh
+echo "${sha256}  /tmp/miniforge.sh" | sha256sum -c -
+bash /tmp/miniforge.sh -b -p /opt/conda
+/opt/conda/bin/conda install -y -c conda-forge 'libboost-headers>=1.90'
 """
 environment = {CMAKE_PREFIX_PATH = "/opt/conda"}
 
 # ------------------------------------------------------------------
-# macOS (Intel macos-13 and ARM macos-latest runners)
+# macOS (arm64 macos-latest runners)
 # std::to_chars for floating-point requires macOS ≥ 13.4.
-# brew --prefix boost resolves to the correct path on both archs.
 # ------------------------------------------------------------------
 [tool.cibuildwheel.macos]
-before-all = "brew install boost || true"
+before-all = "brew install boost"
 environment = {MACOSX_DEPLOYMENT_TARGET = "13.4", CMAKE_PREFIX_PATH = "$(brew --prefix boost)"}
 
 # ------------------------------------------------------------------
