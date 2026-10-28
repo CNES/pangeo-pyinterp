@@ -22,8 +22,8 @@ Fixes #(issue)
 
 ## Checklist
 
-- [ ] My code follows the style guidelines of this project (yapf/pep8 for
-  Python, clang-format/Google style for C++)
+- [ ] My code follows the style guidelines of this project (ruff for Python,
+  clang-format/Google style for C++), checked by the pre-commit hooks
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] I have run the test suite and all tests pass
 - [ ] I have updated the documentation (if applicable)

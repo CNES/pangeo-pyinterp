@@ -28,10 +28,10 @@ can try them with:
    pip install --index-url https://test.pypi.org/simple/ \
        --extra-index-url https://pypi.org/simple/ pyinterp
 
-If no wheel matches your interpreter (for example Python 3.11, a non-glibc
-Linux or 32-bit Windows), pip builds the library from source. This requires a
-C++23 compiler and Boost 1.90 or later; see :ref:`requirements`. If the build
-fails, retry with increased verbosity to see the compiler output:
+If no wheel matches your platform (for example a non-glibc Linux or 32-bit
+Windows), pip builds the library from source. This requires a C++23 compiler
+and Boost 1.90 or later; see :ref:`requirements`. If the build fails, retry
+with increased verbosity to see the compiler output:
 
 .. code-block:: bash
 

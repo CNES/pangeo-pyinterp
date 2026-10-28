@@ -2,7 +2,7 @@ __pycache__/
 .cache
 .claude
 .coverage
-.mypy
+.DS_Store
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
@@ -16,3 +16,6 @@ docs/source/api/_generated
 docs/source/readme.rst
 docs/source/sg_execution_times.rst
 pyinterp/_version.py
+wheelhouse
+# Personal debugging configurations.
+.vscode/launch.json

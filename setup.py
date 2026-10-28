@@ -30,13 +30,6 @@ import resolve_version  # type: ignore[import-not-found]
 sys.path.pop(0)
 
 
-# Type alias for user options
-USER_OPTIONS = list[tuple[str, str, str]] | list[tuple[str, str | None, str]]
-
-# Check Python requirement
-MAJOR = sys.version_info[0]
-MINOR = sys.version_info[1]
-
 # Working directory
 WORKING_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
@@ -57,12 +50,6 @@ FFT_CHOICES = [MKL_FFT, POCKETFFT]
 VERSION, VERSION_SOURCE = resolve_version.resolve_version(WORKING_DIRECTORY)
 
 
-def compare_setuptools_version(required: tuple[int, ...]) -> bool:
-    """Compare the version of setuptools with the required version."""
-    current = tuple(map(int, setuptools.__version__.split(".")[:2]))
-    return current >= required
-
-
 def distutils_dirname(
     prefix: str | None = None,
     extname: str | None = None,
@@ -70,18 +57,10 @@ def distutils_dirname(
     """Return the name of the build directory."""
     prefix = prefix or "lib"
     extname = "" if extname is None else os.sep.join(extname.split(".")[:-1])
-    if compare_setuptools_version((62, 1)):
-        return pathlib.Path(
-            WORKING_DIRECTORY,
-            "build",
-            f"{prefix}.{sysconfig.get_platform()}-"
-            f"{sys.implementation.cache_tag}",
-            extname,
-        )
     return pathlib.Path(
         WORKING_DIRECTORY,
         "build",
-        f"{prefix}.{sysconfig.get_platform()}-{MAJOR}.{MINOR}",
+        f"{prefix}.{sysconfig.get_platform()}-{sys.implementation.cache_tag}",
         extname,
     )
 
@@ -161,8 +140,8 @@ def prepare_cmake_arguments(
 class BuildExt(setuptools.command.build_ext.build_ext):
     """Build everything needed to install."""
 
-    user_options = setuptools.command.build_ext.build_ext.user_options
-    user_options += [
+    user_options: ClassVar[list[tuple[str, str | None, str]]] = [
+        *setuptools.command.build_ext.build_ext.user_options,
         (
             "build-unittests",
             None,
@@ -210,8 +189,8 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         ),
     ]
 
-    boolean_options = setuptools.command.build_ext.build_ext.boolean_options
-    boolean_options += [
+    boolean_options: ClassVar[list[str]] = [
+        *setuptools.command.build_ext.build_ext.boolean_options,
         "build_unittests",
         "enable_coverage",
         "export_compile_commands",
@@ -489,47 +468,6 @@ class BuildPy(setuptools.command.build_py.build_py):
         super().run()
 
 
-class CxxTestRunner(setuptools.Command):
-    """Compile and launch the C++ tests."""
-
-    description: ClassVar[str] = "run the C++ tests"
-    user_options: ClassVar[USER_OPTIONS] = []
-
-    def initialize_options(self) -> None:
-        """Set the default values of the options."""
-        if platform.system() == "Windows":
-            raise RuntimeError("Code coverage is not supported on Windows")
-
-    def finalize_options(self) -> None:
-        """Set final values for all the options that this command supports."""
-
-    def run(self) -> None:
-        """Run tests."""
-        # Directory used during the generating the C++ extension.
-        tempdir = distutils_dirname("temp")
-
-        # Navigate to the directory containing the C++ tests and run them.
-        os.chdir(str(tempdir / "cxx" / "tests"))
-        self.spawn(["ctest", "--output-on-failure"])
-
-        # File containing the coverage report.
-        coverage_lcov = str(
-            pathlib.Path(tempdir.parent.parent, "coverage_cpp.lcov")
-        )
-
-        # Collect coverage data from python/C++ unit tests
-        self.spawn(
-            [
-                "lcov",
-                "--capture",
-                "--directory",
-                str(tempdir),
-                "--output-file",
-                coverage_lcov,
-            ]
-        )
-
-
 def long_description() -> str:
     """Read the README file."""
     with pathlib.Path(WORKING_DIRECTORY, "README.rst").open(
@@ -564,13 +502,17 @@ def version_keywords() -> dict[str, object]:
         )
 
     if resolve_version.has_setuptools_scm():
+        # The sdist ships pyinterp/_version.py (MANIFEST.in), so it has to be
+        # written to the source tree. setuptools_scm >= 10.1 warns that this
+        # default will change; the variable is ignored by older releases.
+        os.environ.setdefault("SETUPTOOLS_SCM_WRITE_TO_SOURCE", "1")
         if VERSION_SOURCE != "git":
             os.environ.setdefault(
                 "SETUPTOOLS_SCM_PRETEND_VERSION_FOR_PYINTERP", VERSION
             )
         return {
             "use_scm_version": {
-                "write_to": "pyinterp/_version.py",
+                "version_file": "pyinterp/_version.py",
                 "version_scheme": "guess-next-dev",
                 "local_scheme": "no-local-version",
             }
@@ -595,7 +537,6 @@ def main() -> None:
             "Operating System :: POSIX",
             "Operating System :: MacOS",
             "Operating System :: Microsoft :: Windows",
-            "Programming Language :: Python :: 3.11",
             "Programming Language :: Python :: 3.12",
             "Programming Language :: Python :: 3.13",
             "Programming Language :: Python :: 3.14",
@@ -603,7 +544,6 @@ def main() -> None:
         cmdclass={
             "build_ext": BuildExt,
             "build_py": BuildPy,
-            "gtest": CxxTestRunner,
         },
         description="Interpolation of geo-referenced data for Python.",
         ext_modules=[CMakeExtension(name="pyinterp.core")],
@@ -626,10 +566,8 @@ def main() -> None:
         packages=setuptools.find_namespace_packages(
             include=["pyinterp", "pyinterp.*"],
         ),
-        platforms=["POSIX", "MacOS", "Windows"],
-        python_requires=">=3.11",
+        python_requires=">=3.12",
         url="https://github.com/CNES/pangeo-pyinterp",
-        zip_safe=False,
         **version_keywords(),  # type: ignore[arg-type]
     )
 

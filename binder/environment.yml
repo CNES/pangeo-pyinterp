@@ -2,15 +2,11 @@ name: pyinterp
 channels:
   - conda-forge
 dependencies:
-  - python>=3.11
+  - python>=3.12
   - cartopy
-  - gcsfs
-  - intake
-  - intake-xarray
   - jupyter
   - numcodecs
   - pandas
   - pyinterp>=2026.2.0
-  - pytest
   - sphinx-gallery
   - sphinx-inline-tabs

@@ -136,6 +136,16 @@ Build System
   together with the extension; it was accepted but had no effect. The
   ``c-compiler`` option of ``pip install -C`` is removed: the project compiles
   no C code, and ``setup.py`` rejected it, so the build failed.
+* **Minimum Python version**: The package metadata requires Python 3.12, the
+  oldest version supported since Python 3.11 was dropped; it still accepted
+  3.11, for which no wheel is built.
+* **Wheels**: The wheels are built with cibuildwheel 4.3, so the CPython 3.14
+  wheels are compiled against the final 3.14 release instead of a pre-release.
+  The installer of Miniforge, which provides Boost to the Linux builds, is
+  pinned to a release and checked against its SHA-256.
+* **CMake policy CMP0144**: A typo kept the policy unset, so ``find_package``
+  ignored the upper-case ``<PACKAGENAME>_ROOT`` variables such as
+  ``BOOST_ROOT``.
 
 Dependencies
 ~~~~~~~~~~~~
