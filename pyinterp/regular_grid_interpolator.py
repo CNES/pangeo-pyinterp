@@ -203,20 +203,22 @@ def _make_windowed_config(
 
     if boundary_mode is not None:
         config = config.with_boundary_mode(_BOUNDARY_MAP[boundary_mode]())
+    # The asserts only narrow the type of config: the overloads ensure that
+    # each option is given only for the classes that support it.
     if half_window_size is not None:
-        assert isinstance(config, windowed.Univariate)
+        assert isinstance(config, windowed.Univariate)  # noqa: S101
         config = config.with_half_window_size(half_window_size)
     if half_window_size_x is not None:
-        assert not isinstance(config, windowed.Univariate)
+        assert not isinstance(config, windowed.Univariate)  # noqa: S101
         config = config.with_half_window_size_x(half_window_size_x)
     if half_window_size_y is not None:
-        assert not isinstance(config, windowed.Univariate)
+        assert not isinstance(config, windowed.Univariate)  # noqa: S101
         config = config.with_half_window_size_y(half_window_size_y)
     if third_axis is not None:
-        assert isinstance(config, windowed.Trivariate | windowed.Quadrivariate)
+        assert isinstance(config, windowed.Trivariate | windowed.Quadrivariate)  # noqa: S101
         config = config.with_third_axis(_AXIS_MAP[third_axis]())
     if fourth_axis is not None:
-        assert isinstance(config, windowed.Quadrivariate)
+        assert isinstance(config, windowed.Quadrivariate)  # noqa: S101
         config = config.with_fourth_axis(_AXIS_MAP[fourth_axis]())
 
     return config

@@ -191,7 +191,8 @@ def _get_canonical_dimensions(
         indicating presence of longitude and temporal axes.
 
     Raises:
-        ValueError: If the number of dimensions doesn't match ndims.
+        ValueError: If the number of dimensions doesn't match ndims, or if an
+            identified axis is not a dimension of the variable.
 
     """
     if data_array.ndim != ndims:
@@ -241,8 +242,16 @@ def _get_canonical_dimensions(
     # Fill remaining slots with whatever is left
     final_dims.extend(remaining_dims)
 
-    # Validate we have the right number of dimensions
-    assert len(final_dims) == ndims
+    # The identified axes must be dimensions of the variable, not auxiliary
+    # coordinates such as the 2D longitudes and latitudes of a curvilinear
+    # grid.
+    if len(final_dims) != ndims:
+        raise ValueError(
+            f"Unable to identify the {ndims} grid axes of the variable: "
+            f"found {tuple(final_dims)} for the dimensions "
+            f"{tuple(current_dims)}. The longitude, latitude and time "
+            "coordinates must be dimension coordinates."
+        )
 
     return _DimInfo(
         data_array,

@@ -200,6 +200,20 @@ class TestDimsFromDataArray:
         with pytest.raises(ValueError, match="number of dimensions"):
             _get_canonical_dimensions(geodetic_2d_data, ndims=3)
 
+    def test_auxiliary_coordinates(self) -> None:
+        """Test error on axes identified on auxiliary coordinates."""
+        lon, lat = np.meshgrid(np.arange(5.0), np.arange(4.0))
+        data_array = xr.DataArray(
+            np.zeros((4, 5)),
+            dims=("y", "x"),
+            coords={
+                "lon": (("y", "x"), lon, {"units": "degrees_east"}),
+                "lat": (("y", "x"), lat, {"units": "degrees_north"}),
+            },
+        )
+        with pytest.raises(ValueError, match="must be dimension coordinates"):
+            _get_canonical_dimensions(data_array)
+
 
 class TestCoords:
     """Test _coords function."""

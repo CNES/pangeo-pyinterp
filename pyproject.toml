@@ -45,6 +45,7 @@ select = [
   "PYI",    # flake8-pyi
   "RSE",    # flake8-raise
   "RUF",    # Ruff-specific rules
+  "S",      # flake8-bandit (security)
   "SLOT",   # flake8-slots
   "T10",    # flake8-debugger
   "TCH",    # type-checking imports
@@ -53,6 +54,9 @@ select = [
 ]
 [tool.ruff.lint.per-file-ignores]
 "**/tests/*.py" = ["PLR", "PT"]
+# pytest relies on assert, and the pickle tests load what they have just
+# dumped.
+"**/tests/**/*.py" = ["S101", "S301"]
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
