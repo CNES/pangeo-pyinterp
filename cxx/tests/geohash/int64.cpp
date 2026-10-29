@@ -10,6 +10,7 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <random>
 #include <ranges>
 #include <tuple>
@@ -838,13 +839,32 @@ TEST(GeoHashInt64ConstexprTest, ErrorWithPrecisionConstexpr) {
 // Performance-oriented tests
 // ============================================================================
 
+TEST_F(GeoHashInt64Test, EncodeRejectsInvalidCoordinates) {
+  constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
+  constexpr double kInf = std::numeric_limits<double>::infinity();
+  for (const double lat : {-90.0000001, 90.0000001, -100.0, kNaN, kInf}) {
+    EXPECT_THROW(static_cast<void>(encode({0.0, lat}, kDefaultPrecision)),
+                 std::invalid_argument)
+        << lat;
+  }
+  for (const double lon : {kNaN, kInf, -kInf}) {
+    EXPECT_THROW(static_cast<void>(encode({lon, 0.0}, kDefaultPrecision)),
+                 std::invalid_argument)
+        << lon;
+  }
+  // The poles and any finite longitude stay valid.
+  EXPECT_NO_THROW(static_cast<void>(encode({0.0, -90.0}, kDefaultPrecision)));
+  EXPECT_NO_THROW(static_cast<void>(encode({0.0, 90.0}, kDefaultPrecision)));
+  EXPECT_EQ(encode({-350.0, 10.0}, kDefaultPrecision),
+            encode({10.0, 10.0}, kDefaultPrecision));
+}
+
 TEST_F(GeoHashInt64Test, PerformanceVectorizedEncode) {
   // Test vectorized performance with large dataset
   constexpr int64_t N = 10000;
-  Eigen::VectorXd lon =
-      (Eigen::VectorXd::Random(N).array() * 360.0 - 180.0).matrix();
-  Eigen::VectorXd lat =
-      (Eigen::VectorXd::Random(N).array() * 180.0 - 90.0).matrix();
+  // Random() draws within [-1, 1].
+  Eigen::VectorXd lon = (Eigen::VectorXd::Random(N).array() * 180.0).matrix();
+  Eigen::VectorXd lat = (Eigen::VectorXd::Random(N).array() * 90.0).matrix();
 
   auto hashes = encode(lon, lat, kDefaultPrecision);
 

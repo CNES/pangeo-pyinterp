@@ -154,3 +154,29 @@ def test_bounding_zoom() -> None:
     assert np.all(
         np.sort(geohash.transform(zoom_in, precision=1)) == np.sort(bboxes)
     )
+
+
+@pytest.mark.parametrize(
+    ("lon", "lat"),
+    [
+        (0.0, -100.0),
+        (0.0, 90.000001),
+        (0.0, np.nan),
+        (np.nan, 0.0),
+        (np.inf, 0.0),
+    ],
+)
+def test_encode_rejects_invalid_coordinates(lon: float, lat: float) -> None:
+    """Out-of-range latitudes and non-finite coordinates are refused."""
+    with pytest.raises(ValueError, match="must be"):
+        geohash.encode(np.array([lon]), np.array([lat]))
+    with pytest.raises(ValueError, match="must be"):
+        geohash.GeoHash(lon, lat, 6)
+
+
+def test_encode_poles_and_wrapped_longitudes() -> None:
+    """The poles stay valid, and longitudes wrap around."""
+    codes = geohash.encode(
+        np.array([0.0, 0.0, -350.0, 10.0]), np.array([-90.0, 90.0, 10.0, 10.0])
+    )
+    assert codes[2] == codes[3]

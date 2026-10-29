@@ -151,6 +151,8 @@ Returns:
 Raises:
     ValueError: If the given precision is not within [1, 12].
     ValueError: If the lon and lat vectors have different sizes.
+    ValueError: If a latitude is outside [-90, 90] or NaN, or a longitude
+        is not finite.
 )__doc__";
 
 constexpr const char* const kDecodeDoc = R"__doc__(

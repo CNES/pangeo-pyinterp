@@ -39,6 +39,8 @@ using NeighborHashes = Eigen::Matrix<uint64_t, 8, 1>;
 /// @param[in] point Geodetic point (longitude, latitude)
 /// @param[in] precision Geohash precision (number of bits)
 /// @return Encoded integer geohash
+/// @throws std::invalid_argument if the latitude is outside [-90, 90] or NaN,
+///         or if the longitude is not finite.
 [[nodiscard]] auto encode(const geometry::geographic::Point &point,
                           uint32_t precision) -> uint64_t;
 

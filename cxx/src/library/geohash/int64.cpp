@@ -2,7 +2,9 @@
 //
 // All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
+#include <cmath>
 #include <cstdint>
+#include <format>
 #include <stdexcept>
 #include <type_traits>
 
@@ -192,12 +194,24 @@ static auto allocate_array(const size_t size) -> Vector<uint64_t> {
 
 auto encode(const geometry::geographic::Point &point, const uint32_t precision)
     -> uint64_t {
+  // The codec scales the coordinates to a 32-bit integer: a latitude outside
+  // [-90, 90], or a NaN, would be out of its range, whose conversion is
+  // undefined (a pole on one platform, an arbitrary code on another).
+  const auto lat = point.lat();
+  if (!(lat >= -90.0 && lat <= 90.0)) {
+    throw std::invalid_argument(
+        std::format("latitude must be within [-90, 90], got {}", lat));
+  }
   auto lon = point.lon();
+  if (!std::isfinite(lon)) {
+    throw std::invalid_argument(
+        std::format("longitude must be finite, got {}", lon));
+  }
   if (lon < -180.0 || lon > 180.0) {
     // GeoHash longitude must be in the interval [-180, 180]
     lon = math::normalize_period(lon, -180.0, 360.0);
   }
-  auto result = encoder(point.lat(), lon);
+  auto result = encoder(lat, lon);
   if (precision != 64) {
     result >>= (64 - precision);
   }

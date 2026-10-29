@@ -57,6 +57,8 @@ Args:
 
 Raises:
     ValueError: If precision > 12.
+    ValueError: If the latitude is outside [-90, 90] or NaN, or the
+        longitude is not finite.
 )doc";
 
 constexpr auto kFromStringDoc = R"doc(

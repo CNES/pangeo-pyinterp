@@ -121,6 +121,12 @@ Performance
 Bug Fixes
 ~~~~~~~~~
 
+* **Geohash of an invalid latitude**: ``geohash.encode``, ``geohash.GeoHash``
+  and the integer encoder took any latitude: outside [-90, 90], or NaN, the
+  conversion to the integer code was undefined behavior, which gave the code
+  of a pole on arm64 and an arbitrary one on x86-64. They now raise a
+  ``ValueError`` for a latitude outside [-90, 90] or NaN, and for a
+  longitude that is not finite; finite longitudes are still wrapped.
 * **Track decomposition across the antimeridian**:
   ``geometry.satellite.decompose_track`` took the plain minimum and maximum of
   the longitudes of a segment, so a segment crossing 180° (or Greenwich, for
