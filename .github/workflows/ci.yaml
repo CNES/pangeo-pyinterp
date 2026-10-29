@@ -437,10 +437,19 @@ jobs:
         condarc: |
           channels:
             - conda-forge
-        create-args: |
+        create-args: >-
           python=3.14
+          ccache
         environment-name: pyinterp
         environment-file: .github/environments/win.yml
+
+    - name: Restore ccache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ github.job }}-${{ runner.arch }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ github.job }}-${{ runner.arch }}-
 
     # The windows-2025 image now ships Visual Studio 18 (2026), so the pinned
     # "Visual Studio 17 2022" CMake generator no longer finds an instance.
@@ -451,13 +460,28 @@ jobs:
       with:
         arch: x64
 
-    - name: Building Testing Python Package
+    - name: Build extension
       shell: bash -l {0}
       env:
         CMAKE_GEN: Ninja
+        # Read by CMake (>= 3.17) when the build tree is configured. With the
+        # Ninja generator, each cl.exe call compiles one source, which ccache
+        # can cache; the Release flags carry no /Zi, whose PDB it cannot.
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
       run: |
         # Convert the backslashes in $CONDA_PREFIX to forward slashes; otherwise
         # they are stripped when the argument is forwarded to CMake.
         python setup.py build_ext --cmake-args="-DBoost_INCLUDE_DIRS=${CONDA_PREFIX//\\//}/Library/include"
         python setup.py build
+
+    # Verbose: the reasons a compilation was not cached (an MSVC option ccache
+    # does not support, such as the precompiled header) are listed there.
+    - name: ccache statistics
+      shell: bash -l {0}
+      run: |
+        ccache --show-stats --verbose
+
+    - name: Run tests
+      shell: bash -l {0}
+      run: |
         pytest -v -ra
