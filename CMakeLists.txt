@@ -613,6 +613,61 @@ if(NOT Boost_FOUND)
   check_boost_version("${Boost_INCLUDE_DIRS}" "1.90.0")
 endif()
 
+# Boost.Geometry 1.92 and earlier compute a wrong longitude for the intersection
+# of a segment with a segment lying on the equator (boostorg/geometry#1482,
+# fixed by boostorg/geometry#1483; CNES/pangeo-pyinterp#36). When the headers
+# found still contain the error, a corrected copy of the header is written to
+# the build tree and searched before them.
+function(patch_boost_sjoberg_intersection out_var)
+  set(${out_var}
+      ""
+      PARENT_SCOPE)
+  set(relative_path "boost/geometry/formulas/sjoberg_intersection.hpp")
+  foreach(include_dir IN LISTS ARGN)
+    if(NOT EXISTS "${include_dir}/${relative_path}")
+      continue()
+    endif()
+    file(READ "${include_dir}/${relative_path}" content)
+    set(wrong "return lonj - asin_tj_t0j + dLj;")
+    string(FIND "${content}" "${wrong}" position)
+    if(position EQUAL -1)
+      return()
+    endif()
+    string(REPLACE "${wrong}"
+                   "return lonj + sign_lon_diff * (-asin_tj_t0j + dLj);"
+                   content "${content}")
+    # The copy is searched with -I, the only option that takes precedence over
+    # the include directories the compiler adds itself (a conda compiler adds
+    # the include directory of its environment, which holds Boost): declare it a
+    # system header so its warnings stay silenced as those of Boost.
+    set(content
+        "#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC system_header
+#endif
+${content}")
+    set(patched_dir "${CMAKE_BINARY_DIR}/boost-patches")
+    # Rewriting an unchanged header would rebuild every translation unit.
+    set(patched_header "${patched_dir}/${relative_path}")
+    set(previous "")
+    if(EXISTS "${patched_header}")
+      file(READ "${patched_header}" previous)
+    endif()
+    if(NOT previous STREQUAL content)
+      file(WRITE "${patched_header}" "${content}")
+    endif()
+    message(STATUS "Boost.Geometry: corrected ${relative_path} "
+                   "(boostorg/geometry#1483)")
+    set(${out_var}
+        "${patched_dir}"
+        PARENT_SCOPE)
+    return()
+  endforeach()
+endfunction()
+
+patch_boost_sjoberg_intersection(BOOST_PATCHES_DIR ${Boost_INCLUDE_DIRS})
+if(BOOST_PATCHES_DIR)
+  include_directories(BEFORE ${BOOST_PATCHES_DIR})
+endif()
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 add_subdirectory(cxx)

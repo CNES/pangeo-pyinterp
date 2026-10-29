@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .......core.geometry.geographic import Polygon, Ring
+from .......core.geometry.geographic import LineString, Polygon, Ring
 from .......core.geometry.geographic.algorithms import (
     difference,
     intersection,
@@ -84,6 +84,40 @@ def test_intersection_ring_polygon() -> None:
 
 
 # Union tests
+def test_intersection_linestring_polygon_on_equator() -> None:
+    """A line leaving a polygon through an edge on the equator stops there.
+
+    Boost.Geometry 1.92 and earlier compute a wrong longitude for the
+    intersection with a segment lying on the equator (boostorg/geometry#1482),
+    so the line was kept whole, beyond the polygon (CNES/pangeo-pyinterp#36).
+    """
+    # A box from 20°W to 20°E and from the equator to 20°N, with a vertex
+    # every half degree.
+    lons = np.linspace(-20.0, 20.0, 80)
+    polygon = Polygon(
+        Ring(
+            np.concatenate((lons[::-1], lons, lons[-1:])),
+            np.concatenate((np.zeros(80), np.full(80, 20.0), [0.0])),
+        )
+    )
+    # A segment going south across the equator.
+    line = LineString(
+        np.array([3.268218994140625, 3.3428595066070557]),
+        np.array([0.01789649948477745, -0.4950112998485565]),
+    )
+
+    result = intersection(line, polygon)
+
+    assert len(result) == 1
+    points = np.array([(point.lon, point.lat) for point in result[0]])
+    np.testing.assert_array_equal(
+        points[0], [3.268218994140625, 0.01789649948477745]
+    )
+    # The line stops on the equator, where it crosses the edge of the box.
+    np.testing.assert_allclose(points[-1], [3.27082, 0.0], atol=1e-5)
+    assert np.all(points[:, 1] >= -1e-12)
+
+
 def test_union_overlapping_polygons() -> None:
     """Test union of overlapping polygons."""
     # First polygon: [0,0] to [5,5]

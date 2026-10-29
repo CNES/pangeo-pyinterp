@@ -123,6 +123,13 @@ Performance
 Bug Fixes
 ~~~~~~~~~
 
+* **Intersections with an edge on the equator**: Boost.Geometry 1.92 and
+  earlier compute a wrong longitude for the intersection of a segment with a
+  segment lying on the equator, so the intersection of a line and a polygon
+  with such an edge could extend beyond the polygon (#36). The conda-forge
+  package patched the Boost headers, the wheels did not: the build now writes
+  a corrected copy of the header when the Boost headers found still contain
+  the error (boostorg/geometry#1483), so every build gets the fix.
 * **conda builds on Windows**: rattler-build defines
   ``CONDA_BUILD_CROSS_COMPILATION`` for native builds too, set to ``0``, and
   CMake took any definition for a cross-compilation: it looked for the Python
