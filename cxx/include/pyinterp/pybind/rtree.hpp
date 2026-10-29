@@ -275,6 +275,14 @@ class RTree3D : public geometry::RTree<geometry::ECEF<T>, T> {
       const Eigen::Ref<const CoordinateMatrix>& coordinates,
       Eigen::Index row) const -> point_t;
 
+  /// Convert input coordinates to internal ECEF representation, in parallel
+  /// @param coordinates Input matrix (n, 3) or (n, 2)
+  /// @param num_threads Number of threads (0 = auto)
+  /// @return 3D points in internal coordinate system
+  [[nodiscard]] auto to_internal_points(
+      const Eigen::Ref<const CoordinateMatrix>& coordinates,
+      size_t num_threads) const -> std::vector<point_t>;
+
   /// Convert geodetic (lon, lat, alt) to ECEF (x, y, z)
   [[nodiscard]] auto geodetic_to_ecef(T lon, T lat, T alt) const -> point_t;
 
@@ -355,6 +363,24 @@ auto RTree3D<T>::to_internal_point(
 // ==========================================================================
 
 template <std::floating_point T>
+auto RTree3D<T>::to_internal_points(
+    const Eigen::Ref<const CoordinateMatrix>& coordinates,
+    const size_t num_threads) const -> std::vector<point_t> {
+  auto points = std::vector<point_t>(static_cast<size_t>(coordinates.rows()));
+  parallel_for(
+      static_cast<int64_t>(points.size()),
+      [&](int64_t start, int64_t end) {
+        for (auto ix = start; ix < end; ++ix) {
+          points[static_cast<size_t>(ix)] = to_internal_point(coordinates, ix);
+        }
+      },
+      static_cast<int64_t>(num_threads));
+  return points;
+}
+
+// ==========================================================================
+
+template <std::floating_point T>
 void RTree3D<T>::packing(const Eigen::Ref<const CoordinateMatrix>& coordinates,
                          const Eigen::Ref<const ValueVector>& values) {
   validate_coordinates(coordinates, values);
@@ -404,11 +430,7 @@ auto RTree3D<T>::batch_query(
 
   // Search the points in spatial order: consecutive searches then visit
   // the same nodes of the tree. Results are written back to their rows.
-  auto points = std::vector<point_t>();
-  points.reserve(static_cast<size_t>(n));
-  for (int64_t ix = 0; ix < static_cast<int64_t>(n); ++ix) {
-    points.push_back(to_internal_point(coordinates, ix));
-  }
+  const auto points = to_internal_points(coordinates, config.num_threads());
   const auto order = geometry::spatial_order(points);
 
   parallel_for(
@@ -416,11 +438,11 @@ auto RTree3D<T>::batch_query(
       [&](size_t start, size_t end) {
         for (size_t idx = start; idx < end; ++idx) {
           const auto ix = order[idx];
-          auto results = query_func(points[ix], config.k());
+          const auto results = query_func(points[ix], config.k());
 
           for (size_t jx = 0; jx < results.size() && jx < config.k(); ++jx) {
-            distances(ix, static_cast<int64_t>(jx)) = std::get<0>(results[jx]);
-            values(ix, static_cast<int64_t>(jx)) = std::get<1>(results[jx]);
+            distances(ix, static_cast<int64_t>(jx)) = results[jx].first;
+            values(ix, static_cast<int64_t>(jx)) = results[jx].second.second;
           }
         }
       },
@@ -449,11 +471,7 @@ auto RTree3D<T>::batch_interpolate(
 
   // Search the points in spatial order: consecutive searches then visit
   // the same nodes of the tree. Results are written back to their rows.
-  auto points = std::vector<point_t>();
-  points.reserve(static_cast<size_t>(n));
-  for (int64_t ix = 0; ix < static_cast<int64_t>(n); ++ix) {
-    points.push_back(to_internal_point(coordinates, ix));
-  }
+  const auto points = to_internal_points(coordinates, num_threads);
   const auto order = geometry::spatial_order(points);
 
   parallel_for(
@@ -479,8 +497,9 @@ auto RTree3D<T>::query(const Eigen::Ref<const CoordinateMatrix>& coordinates,
     return batch_query(
         coordinates, config,
         [this, &config, &strategy](const point_t& pt, uint32_t neighbors) {
-          return base_t::query(pt, neighbors, static_cast<T>(config.radius()),
-                               config.boundary_check(), strategy);
+          return base_t::neighbors(pt, neighbors,
+                                   static_cast<T>(config.radius()),
+                                   config.boundary_check(), strategy);
         });
   });
 }

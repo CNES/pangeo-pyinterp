@@ -237,13 +237,13 @@ of SciPy includes their conversion by NumPy, on one thread:
      - 3.6 M
      - 7.2
    * - pyinterp ``RTree3D``, geodetic, one thread
-     - 1862.2 ms
-     - 0.5 M
-     - 1.1
+     - 896.8 ms
+     - 1.1 M
+     - 2.2
    * - pyinterp ``RTree3D``, geodetic, all cores
-     - 272.5 ms
-     - 3.7 M
-     - 7.4
+     - 104.8 ms
+     - 9.5 M
+     - 19.2
 
 Given the ECEF coordinates of the points, pyinterp works in Cartesian mode
 (``RTree3D()``), exactly as the k-d tree of SciPy:
@@ -265,16 +265,18 @@ Given the ECEF coordinates of the points, pyinterp works in Cartesian mode
      - 4.0 M
      - 8.3
    * - pyinterp ``RTree3D``, Cartesian, one thread
-     - 1835.8 ms
-     - 0.5 M
-     - 1.1
+     - 903.1 ms
+     - 1.1 M
+     - 2.3
    * - pyinterp ``RTree3D``, Cartesian, all cores
-     - 246.1 ms
-     - 4.1 M
-     - 8.5
+     - 96.2 ms
+     - 10.4 M
+     - 21.7
 
-The two libraries are on par, with the same results to :math:`10^{-15}`:
-from one run to another, the timings vary by about 10 %, as much as their
-differences. Working on longitudes and latitudes costs pyinterp less than 2 %
-of the time of the Cartesian mode. pyinterp also offers radial basis
+pyinterp is more than twice as fast as SciPy, on one thread as on all cores,
+with the same results to :math:`10^{-15}`; from one run to another, the
+timings vary by about 10 %. Its R*-tree is searched depth first, closest
+nodes first, and the points are processed along a space-filling curve, so
+that consecutive searches visit the same nodes. Working on longitudes and
+latitudes costs pyinterp less than 10 % of the time of the Cartesian mode. pyinterp also offers radial basis
 functions, kriging and window functions on the same tree.

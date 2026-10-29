@@ -51,6 +51,17 @@ Performance
   window, and ``c_spline_not_a_knot`` and ``polynomial`` no longer allocate
   memory for each spline they fit. On random points, the windowed methods are
   1.2 to 3 times faster; the results are unchanged.
+* **Nearest neighbors of RTree3D and RTree4D**: the Cartesian trees search the
+  k nearest neighbors depth first, closest children first, into buffers
+  reused by each thread, instead of running the best-first query of Boost,
+  which allocates its queues for every point. The nodes hold 8 elements
+  instead of 16, the queries are no longer copied into a new vector per point,
+  the query points are converted in parallel and sorted along the Morton curve
+  by a radix sort. With one million observations and one million points,
+  ``inverse_distance_weighting`` and ``query`` are about 2 times faster on one
+  thread and 2.5 times faster on all cores. The neighbors and distances are
+  unchanged; only observations at exactly the same distance may come in
+  another order, or another of them be kept as the last neighbor.
 
 Bug Fixes
 ~~~~~~~~~

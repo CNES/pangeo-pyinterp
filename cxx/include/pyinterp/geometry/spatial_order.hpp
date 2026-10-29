@@ -5,11 +5,13 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 #include "pyinterp/geometry/point_traits.hpp"
@@ -55,7 +57,19 @@ template <typename Point>
     }
   }
 
-  auto keys = std::vector<uint64_t>(size);
+  // Spreads the bits of a byte kDim positions apart.
+  constexpr auto kSpread = [] {
+    auto table = std::array<uint64_t, 256>{};
+    for (uint64_t byte = 0; byte < 256; ++byte) {
+      for (size_t bit = 0; bit < 8; ++bit) {
+        table[byte] |= ((byte >> bit) & 1U) << (bit * kDim);
+      }
+    }
+    return table;
+  }();
+
+  // (key, index) pairs, sorted by key below
+  auto items = std::vector<std::pair<uint64_t, int64_t>>(size);
   for (size_t ix = 0; ix < size; ++ix) {
     uint64_t key = 0;
     for (size_t dim = 0; dim < kDim; ++dim) {
@@ -67,16 +81,38 @@ template <typename Point>
                               ? (value - lower[dim]) / extent * kCells
                               : 0.0;
       const auto cell = static_cast<uint64_t>(std::clamp(scaled, 0.0, kCells));
-      for (size_t bit = 0; bit < kBits; ++bit) {
-        key |= ((cell >> bit) & 1U) << (bit * kDim + dim);
+      for (size_t byte = 0; byte * 8 < kBits; ++byte) {
+        key |= kSpread[(cell >> (byte * 8)) & 0xFFU] << (byte * 8 * kDim + dim);
       }
     }
-    keys[ix] = key;
+    items[ix] = {key, static_cast<int64_t>(ix)};
   }
 
-  std::ranges::sort(order, [&keys](const int64_t a, const int64_t b) {
-    return keys[a] < keys[b];
-  });
+  // Least significant digit radix sort, one byte of the keys at a time.
+  // Bytes equal for all the keys are skipped.
+  auto histogram = std::vector<std::array<size_t, 256>>(8);
+  for (const auto& item : items) {
+    for (size_t byte = 0; byte < 8; ++byte) {
+      ++histogram[byte][(item.first >> (byte * 8)) & 0xFFU];
+    }
+  }
+  auto buffer = std::vector<std::pair<uint64_t, int64_t>>(size);
+  for (size_t byte = 0; byte < 8; ++byte) {
+    auto& offsets = histogram[byte];
+    if (std::ranges::find(offsets, size) != offsets.end()) {
+      continue;
+    }
+    std::exclusive_scan(offsets.begin(), offsets.end(), offsets.begin(),
+                        size_t{0});
+    for (const auto& item : items) {
+      buffer[offsets[(item.first >> (byte * 8)) & 0xFFU]++] = item;
+    }
+    std::swap(items, buffer);
+  }
+
+  for (size_t ix = 0; ix < size; ++ix) {
+    order[ix] = items[ix].second;
+  }
   return order;
 }
 
