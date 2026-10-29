@@ -253,6 +253,8 @@ pygments_style = None
 html_theme = "sphinx_book_theme"
 html_title = "pyinterp"
 html_static_path = ["_static"]
+# Files copied as they are to the root of the site, such as llms.txt.
+html_extra_path = ["_extra"]
 html_css_files = ["pyinterp.css"]
 html_favicon = "_static/favicon.svg"
 html_theme_options = {
@@ -335,13 +337,11 @@ intersphinx_mapping = {
     "xarray": ("https://docs.xarray.dev/en/stable/", None),
 }
 
-# Ensure the README file is present in the docs/source directory
-if not README.exists():
-    with HERE.joinpath("..", "..", "README.rst").open() as stream:
-        contents = stream.read()
-
-    with README.open("w") as stream:
-        stream.write(contents)
+# Copy the README file into the docs/source directory, unless the copy is
+# already current: a copy written once would go stale as the README changes.
+_contents = HERE.joinpath("..", "..", "README.rst").read_text(encoding="utf-8")
+if not README.exists() or README.read_text(encoding="utf-8") != _contents:
+    README.write_text(_contents, encoding="utf-8")
 
 
 def setup(app: object) -> None:

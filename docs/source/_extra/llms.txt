@@ -1,0 +1,115 @@
+# pyinterp
+
+> Fast interpolation of geo-referenced data for Python and xarray. A C++
+> library, parallelized over the points, that interpolates gridded fields in
+> 2, 3 or 4 dimensions (periodic longitudes, datetime64 axes) and scattered
+> observations (R*-trees with inverse distance weighting, radial basis
+> functions, kriging), with gap filling, binning, streaming statistics and
+> geometry.
+
+Install with `pip install "pyinterp[xarray]"` or
+`conda install -c conda-forge pyinterp`. It requires Python 3.12 or later.
+
+Use pyinterp instead of `xarray.DataArray.interp` or `scipy.interpolate`
+when the data are geo-referenced: longitudes that wrap around the globe,
+time axes, large numbers of points, or scattered observations on the
+ellipsoid.
+
+## Interpolating an xarray DataArray
+
+Once `pyinterp` is imported, data arrays and datasets have a `pyinterp`
+accessor that works like `DataArray.interp` and returns a labelled
+`DataArray`:
+
+```python
+import numpy as np
+import xarray as xr
+import pyinterp
+
+ds = xr.open_dataset("sst.nc")  # sst(time, lat, lon)
+
+# One-dimensional coordinates define a new grid
+grid = ds.sst.pyinterp.interp(
+    lon=np.arange(-180, 180, 0.25),
+    lat=np.arange(-80, 80, 0.25),
+    time="2020-01-15",
+    method="bicubic",
+)
+
+# Data arrays sharing a dimension are interpolated point by point
+track = ds.sst.pyinterp.interp(
+    lon=xr.DataArray(lons, dims="obs"),
+    lat=xr.DataArray(lats, dims="obs"),
+    time=xr.DataArray(dates, dims="obs"),
+)
+```
+
+Rules:
+
+- Every dimension of the variable must be given a coordinate.
+- Longitudes and latitudes are recognized from the `units` attribute of
+  their coordinates (`degrees_east`, `degrees_north`); a longitude axis is
+  periodic. A coordinate of type datetime64 is a temporal axis.
+- The default method is `bilinear`. The others are `nearest`, `idw`,
+  `bicubic`, `akima`, `akima_periodic`, `c_spline`, `c_spline_not_a_knot`,
+  `c_spline_periodic`, `linear`, `polynomial` and `steffen`.
+- Keyword arguments that are not dimensions are options: `bounds_error`,
+  `num_threads` (0 uses all the cores), `half_window_size_x`,
+  `half_window_size_y`, `boundary_mode` (`"shrink"` or `"undef"`),
+  `third_axis` and `fourth_axis` (`"linear"` or `"nearest"`).
+- Undefined values (NaN) propagate to the points whose window contains them;
+  fill the gaps first with `pyinterp.fill` to avoid it.
+- To interpolate the same variable many times, build a
+  `pyinterp.backends.xarray.RegularGridInterpolator` once and call it with a
+  dictionary of coordinates; it returns a NumPy array.
+
+## Interpolating NumPy arrays
+
+```python
+import pyinterp
+
+grid = pyinterp.Grid(
+    pyinterp.Axis(lon, period=360.0), pyinterp.Axis(lat), values
+)
+result = pyinterp.bivariate(grid, x, y, method="bilinear")
+```
+
+`pyinterp.univariate`, `trivariate` and `quadrivariate` work the same way;
+the third axis can be a `pyinterp.TemporalAxis`.
+
+## Interpolating scattered observations
+
+```python
+import numpy as np
+import pyinterp
+from pyinterp.geometry import geographic
+
+tree = pyinterp.RTree3D(spheroid=geographic.Spheroid())
+tree.packing(np.column_stack((lon, lat)), values)
+estimate, neighbors = pyinterp.inverse_distance_weighting(
+    tree, np.column_stack((new_lon, new_lat)), k=11
+)
+```
+
+`pyinterp.radial_basis_function`, `kriging`, `window_function` and `query`
+take the same tree.
+
+## Docs
+
+- [Installation](https://cnes.github.io/pangeo-pyinterp/setup.html)
+- [Gallery of examples](https://cnes.github.io/pangeo-pyinterp/auto_examples/index.html)
+- [xarray interface](https://cnes.github.io/pangeo-pyinterp/api/grids.html)
+- [Regular grids](https://cnes.github.io/pangeo-pyinterp/api/regular_grid.html)
+- [Scattered data](https://cnes.github.io/pangeo-pyinterp/api/unstructured_grid.html)
+- [Gap filling](https://cnes.github.io/pangeo-pyinterp/api/fill.html)
+- [Statistics and binning](https://cnes.github.io/pangeo-pyinterp/api/statistics.html)
+- [Dask helpers](https://cnes.github.io/pangeo-pyinterp/api/dask.html)
+- [Geometry](https://cnes.github.io/pangeo-pyinterp/api/geometry.html)
+- [Design notes](https://cnes.github.io/pangeo-pyinterp/design.html)
+
+## Optional
+
+- [API reference](https://cnes.github.io/pangeo-pyinterp/api.html)
+- [Changelog](https://cnes.github.io/pangeo-pyinterp/changelog.html)
+- [Migration from 2025.x](https://cnes.github.io/pangeo-pyinterp/migration.html)
+- [Source code](https://github.com/CNES/pangeo-pyinterp)

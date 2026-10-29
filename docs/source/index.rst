@@ -29,3 +29,4 @@
    setup
    auto_examples/index.rst
    api
+   design

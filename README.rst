@@ -1,175 +1,157 @@
-###############
-pangeo-pyinterp
-###############
+########
+pyinterp
+########
 
-|Build Status| |Downloads| |Platforms|
-|Latest Release Date| |License| |Binder|
+|PyPI| |Conda| |Build Status| |License| |Binder|
 
-Python library for optimized geo-referenced interpolation.
+**Fast interpolation of geo-referenced data for Python and xarray.**
 
-About
-=====
+pyinterp interpolates gridded fields in 2, 3 or 4 dimensions and scattered
+observations, such as model outputs, satellite tracks or in situ
+measurements. Its core is written in C++ and runs on all the cores of the
+machine; it knows that longitudes wrap around the globe, that a time axis
+holds dates, and that a field may have undefined values, near the coasts for
+instance.
 
-The motivation of this project is to provide tools for interpolating
-geo-referenced data used in the field of geosciences. Other libraries cover this
-problem, but written entirely in Python, the performance of these projects was
-not quite sufficient for our needs. That is why this project started.
+Installation
+============
 
-With this library, you can interpolate `2D
-<https://cnes.github.io/pangeo-pyinterp/api/grids.html#core-grids-aliases>`_,
-`3D
-<https://cnes.github.io/pangeo-pyinterp/api/grids.html#core-grids-aliases>`_,
-or `4D
-<https://cnes.github.io/pangeo-pyinterp/api/grids.html#core-grids-aliases>`_
-fields using ``n-variate`` and ``bicubic`` `interpolators
-<https://cnes.github.io/pangeo-pyinterp/api/regular_grid.html>`_
-and `unstructured grids
-<https://cnes.github.io/pangeo-pyinterp/api/unstructured_grid.html>`_.
-You can also apply for a data `binning
-<https://cnes.github.io/pangeo-pyinterp/api/statistics.html#binning-containers>`_ on the
-bivariate area by simple or linear binning.
+.. code-block:: bash
 
-The library core is written in C++ using the `Boost C++ Libraries
-<https://www.boost.org/>`_, `Eigen3 <https://eigen.tuxfamily.org/>`_ and
-`nanobind <https://github.com/wjakob/nanobind/>`_ libraries.
+   pip install "pyinterp[xarray]"
 
-This software also uses `CMake <https://cmake.org/>`_ to configure the project
-and `Googletest <https://github.com/google/googletest>`_ to perform unit testing
-of the library kernel.
+or, with conda:
 
-Fill undefined values
-=====================
+.. code-block:: bash
 
-The undefined values in the grids do not allow interpolation of values located
-in the neighborhood. This behavior is a concern when you need to interpolate
-values near the mask of some fields. The library provides utilities to fill the
-undefined values:
+   conda install -c conda-forge pyinterp
 
-* `fft_inpaint <https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.fill.fft_inpaint.html#pyinterp.fill.fft_inpaint>`_
-  to fill all undefined values in a grid using the FFT Inpainting method.
-* `loess <https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.fill.loess.html#pyinterp.fill.loess>`_
-  to fill the undefined values on the boundary between the defined/undefined
-  values using local regression.
-* `gauss_seidel <https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.fill.gauss_seidel.html#pyinterp.fill.gauss_seidel>`_
-  to fill all undefined values in a grid using the Gauss-Seidel method by
-  relaxation.
-* `multi_grid <https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.fill.multigrid.html#pyinterp.fill.multigrid>`_
-  to fill all undefined values in a grid using the Multi-Grid method.
+Binary wheels are published for Linux, macOS (Apple Silicon) and Windows, for
+Python 3.12 and later. The ``xarray`` extra is needed only for the xarray
+interface; see the `installation guide
+<https://cnes.github.io/pangeo-pyinterp/setup.html>`_.
 
-Geographic indexers
-===================
+Quick start
+===========
 
-N-Dimensional Grids
--------------------
+Once ``pyinterp`` is imported, xarray data arrays have a ``pyinterp``
+accessor that works like ``DataArray.interp``:
 
-N-dimensional grid is a grid defined by a matrix, in a 2D space, by a cube in a
-3D space, etc. Each dimension of the grid is associated with a vector
-corresponding to its coordinates or axes. Axes used to locate a pixel in the
-grid from the coordinates of a point. These axes are either:
+.. code-block:: python
 
-* *regular*: a vector of 181 latitudes spaced a degree from -90 to 90 degrees;
-* *irregular*: a vector of 109 latitudes irregularly spaced from -90 to
-  89.940374 degrees.
+   import numpy as np
+   import xarray as xr
 
-These objects are manipulated by the class `pyinterp.Axis
-<https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.Axis.html#pyinterp.Axis>`_,
-which will choose, according to Axis definition, the best implementation. This
-object will allow you to find the two indexes framing a given value. This
-operating mode allows better performance when searching for a regular axis (a
-simple calculation will enable you to see the index of a point immediately). In
-contrast, in the case of an irregular axis, the search will be performed using a
-binary search.
+   import pyinterp
+   import pyinterp.tests
 
-Finally, this class can define a circular axis from a vector to correctly
-locate a value on the circle. This type of Axis will is used for handling
-longitudes.
+   # A global mean sea surface, stored as (lat, lon) with longitudes in [0, 360)
+   ds = pyinterp.tests.load_grid2d()
 
-Temporal Axes
--------------
+   # Interpolate on a new grid: the longitude axis is periodic, so the grid can
+   # be queried in [-180, 180)
+   mss = ds.mss.pyinterp.interp(
+       lon=np.arange(-180, 180, 0.1),
+       lat=np.arange(-80, 80, 0.1),
+       method="bicubic",
+   )
 
-The `pyinterp.TemporalAxis
-<https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.TemporalAxis.html#pyinterp.TemporalAxis>`_
-class handles temporal axes, i.e., axes defined by 64-bit integer vectors, which
-is the encoding used by `numpy
-<https://numpy.org/doc/stable/reference/arrays.datetime.html>`_ to control
-dates. This class allows you to process dates using integer arithmetic to ensure
-that no information is lost during calculations. These objects are used by
-spatiotemporal grids to perform temporal interpolations.
+   # Interpolate point by point, along a track
+   track = ds.mss.pyinterp.interp(
+       lon=xr.DataArray(np.linspace(-170, 170, 1000), dims="obs"),
+       lat=xr.DataArray(np.linspace(-60, 60, 1000), dims="obs"),
+   )
 
-Unstructured Grids
-------------------
+Scattered observations are indexed in an R*-tree:
 
-In the case of unstructured grids, the index used is a *R\*Tree*. These trees
-have better performance than the *KDTree* generally found in Python library
-implementations.
+.. code-block:: python
 
-The tree used here is the implementation provided by the `C++ Boost library
-<https://www.boost.org/doc/libs/release/libs/geometry/doc/html/geometry/reference/spatial_indexes/boost__geometry__index__rtree.html>`_.
+   from pyinterp.geometry import geographic
 
-An adaptation has been introduced to address spherical equatorial coordinates
-effectively. Although the Boost library allows these coordinates to manipulate
-natively, the performance is lower than in the case of Cartesian space. Thus, we
-have chosen to implement a conversion of Longitude Latitude Altitude (*LLA*)
-coordinates into Earth-Centered, Earth-Fixed (*ECEF*) coordinates transparently
-for the user to ensure that we can preserve excellent performance. The
-disadvantage of this implementation is that it requires fairly more memory, as
-one more element gets used to index the value of the Cartesian space.
+   rng = np.random.default_rng(0)
+   lon, lat = rng.uniform(-180, 180, 10_000), rng.uniform(-80, 80, 10_000)
+   values = np.cos(np.radians(lat)) * np.sin(np.radians(lon))
 
-The management of the `LLA
-<https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.geometry.geographic.Coordinates.ecef_to_lla.html#pyinterp.geometry.geographic.Coordinates.ecef_to_lla>`_/`ECEF
-<https://cnes.github.io/pangeo-pyinterp/api/_generated/pyinterp.geometry.geographic.Coordinates.lla_to_ecef.html#pyinterp.geometry.geographic.Coordinates.lla_to_ecef>`_
-coordinate conversion is managed to use the `Vermeille, H.
-<https://doi.org/10.1007/s00190-002-0273-6>`_ algorithm. It has an excellent
-performance with the accuracy of 1e-8 meters for altitude.
+   # Index the observations on the WGS-84 ellipsoid
+   tree = pyinterp.RTree3D(spheroid=geographic.Spheroid())
+   tree.packing(np.column_stack((lon, lat)), values)
 
-Geohash
--------
+   # Estimate the field at new positions from the 11 nearest observations
+   estimate, neighbors = pyinterp.inverse_distance_weighting(
+       tree, np.array([[10.0, 45.0], [-70.0, -30.0]]), k=11
+   )
 
-Geohashing is a geocoding method used to encode geographic coordinates
-(latitude and longitude) into a short string of digits and letters delineating
-an area on a map, which is called a cell, with varying resolutions. The more
-characters in the string, the more precise the location.
+The `gallery <https://cnes.github.io/pangeo-pyinterp/auto_examples/index.html>`_
+shows these and the other features on real data.
 
-Geohashes use Base-32 alphabet encoding (characters can be ``0`` to ``9`` and
-``A`` to ``Z``, excl ``A``, ``I``, ``L`` and ``O``).
+Why pyinterp?
+=============
 
-The geohash is a compact way of representing a location, and is useful for
-storing a location in a database, or for indexing a location in a database.
+``xarray.DataArray.interp`` and ``scipy.interpolate`` are general-purpose
+tools. pyinterp is built for geo-referenced data:
 
-Geometry
-========
+* **Periodic longitudes**: a grid stored in [0, 360) is interpolated in
+  [-180, 180), and across the antimeridian, without rolling the data.
+* **Dates**: time axes of type ``datetime64`` are handled with integer
+  arithmetic, at any resolution, without conversion to floats.
+* **Speed**: the interpolators are written in C++ and process the points in
+  parallel; the axes find the cell of a point by a direct computation when
+  they are regular.
+* **Undefined values**: the gaps of a field, such as the land of an ocean
+  grid, can be filled beforehand, so that the windowed methods (bicubic,
+  splines, Akima, Steffen...) do not spread them; at the edges of the grid,
+  their window can shrink to the available data.
+* **Beyond grids**: scattered data, statistics and geometry use the same
+  coordinates and the same conventions.
 
-This library provides Python bindings to `Boost Geometry
-<https://www.boost.org/doc/libs/release/libs/geometry/doc/html/index.html>`_
-concepts and algorithms for both `geographic
-<https://cnes.github.io/pangeo-pyinterp/api/geometry.html#geographic-system>`_
-and `Cartesian
-<https://cnes.github.io/pangeo-pyinterp/api/geometry.html#cartesian-system>`_
-coordinate spaces. The geometry module offers a comprehensive set of geometric
-primitives including points, linestrings, polygons, rings, segments, and
-bounding boxes. For each coordinate space (``cartesian`` and ``geographic``),
-dedicated algorithms are provided for common geometric operations such as:
+What is inside
+==============
 
-* Computing areas and perimeters of geometries
-* Calculating distances and azimuths between points
-* Determining centroids and closest points
-* Performing buffer and envelope operations
-* Converting between coordinate spaces
+* `Regular grids
+  <https://cnes.github.io/pangeo-pyinterp/api/regular_grid.html>`_: 1D to 4D
+  interpolation (nearest, bilinear, inverse distance weighting, bicubic,
+  splines, Akima, Steffen, polynomial), with temporal axes, through
+  `xarray <https://cnes.github.io/pangeo-pyinterp/api/grids.html>`_ or NumPy.
+* `Scattered data
+  <https://cnes.github.io/pangeo-pyinterp/api/unstructured_grid.html>`_:
+  R*-trees in Cartesian or geodetic coordinates, with inverse distance
+  weighting, radial basis functions, kriging and window functions, and
+  `optimal interpolation
+  <https://cnes.github.io/pangeo-pyinterp/api/optimal_interpolation.html>`_.
+* `Gap filling <https://cnes.github.io/pangeo-pyinterp/api/fill.html>`_:
+  LOESS, Gauss-Seidel relaxation, multigrid and FFT inpainting.
+* `Statistics <https://cnes.github.io/pangeo-pyinterp/api/statistics.html>`_:
+  1D and 2D binning, histograms, descriptive statistics and T-Digest
+  quantiles, which can be merged across `Dask
+  <https://cnes.github.io/pangeo-pyinterp/api/dask.html>`_ chunks.
+* `Geometry <https://cnes.github.io/pangeo-pyinterp/api/geometry.html>`_:
+  bindings to Boost.Geometry in Cartesian and geographic coordinates,
+  `geohash <https://cnes.github.io/pangeo-pyinterp/api/geohash.html>`_
+  encoding, and `orbit
+  <https://cnes.github.io/pangeo-pyinterp/api/orbit.html>`_ utilities for
+  satellite tracks.
 
-In the geographic space, additional features include support for multiple
-geodetic strategies (Andoyer, Karney, Thomas, Vincenty) for precise calculations
-on a spheroid, and coordinate transformations (LLA/ECEF, geographic to Cartesian
-conversions).
+The `design notes <https://cnes.github.io/pangeo-pyinterp/design.html>`_
+explain how the axes, the R*-trees and the coordinate conversions work.
 
+Contributing and citing
+=======================
+
+pyinterp is developed by CNES and CLS under the BSD-3-Clause license. Bug
+reports, questions and pull requests are welcome on `GitHub
+<https://github.com/CNES/pangeo-pyinterp/issues>`_; see the `contributing
+guide <https://github.com/CNES/pangeo-pyinterp/blob/master/CONTRIBUTING.md>`_.
+If pyinterp helps your research, please cite it using the metadata of the
+`CITATION.cff <https://github.com/CNES/pangeo-pyinterp/blob/master/CITATION.cff>`_
+file.
+
+.. |PyPI| image:: https://img.shields.io/pypi/v/pyinterp.svg
+    :target: https://pypi.org/project/pyinterp/
+.. |Conda| image:: https://img.shields.io/conda/vn/conda-forge/pyinterp.svg
+    :target: https://anaconda.org/conda-forge/pyinterp
 .. |Build Status| image:: https://github.com/CNES/pangeo-pyinterp/actions/workflows/ci.yaml/badge.svg
     :target: https://github.com/CNES/pangeo-pyinterp/actions
-.. |Downloads| image:: https://img.shields.io/conda/dn/conda-forge/pyinterp.svg?service=github
-    :target: https://anaconda.org/conda-forge/pyinterp
-.. |Platforms| image:: https://img.shields.io/conda/pn/conda-forge/pyinterp.svg?service=github
-    :target: https://anaconda.org/conda-forge/pyinterp
-.. |Latest Release Date| image:: https://anaconda.org/conda-forge/pyinterp/badges/latest_release_date.svg?service=github
-    :target: https://github.com/CNES/pangeo-pyinterp/commits/master
-.. |License| image:: https://anaconda.org/conda-forge/pyinterp/badges/license.svg?service=github
+.. |License| image:: https://img.shields.io/badge/license-BSD--3--Clause-blue.svg
     :target: https://opensource.org/licenses/BSD-3-Clause
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
     :target: https://mybinder.org/v2/gh/CNES/pangeo-pyinterp/master?urlpath=lab/tree/notebooks/auto_examples/

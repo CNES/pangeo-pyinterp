@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use pyinterp, please cite it using the metadata of this file."
+type: software
+title: "pyinterp: fast interpolation of geo-referenced data"
+abstract: >-
+  pyinterp is a Python library, written in C++, for the interpolation of
+  geo-referenced data: gridded fields in 2, 3 or 4 dimensions, with periodic
+  longitudes and temporal axes, and scattered observations indexed in
+  R*-trees. It also provides gap filling, binning and streaming statistics,
+  and geometric algorithms in Cartesian and geographic coordinates.
+authors:
+  - family-names: Briol
+    given-names: Frédéric
+  - name: CNES
+  - name: CLS
+repository-code: "https://github.com/CNES/pangeo-pyinterp"
+url: "https://cnes.github.io/pangeo-pyinterp/"
+license: BSD-3-Clause
+keywords:
+  - interpolation
+  - xarray
+  - geospatial
+  - geodesy
+  - oceanography
+  - climate
+  - satellite
+  - rtree

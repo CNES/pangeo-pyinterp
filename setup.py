@@ -532,11 +532,19 @@ def main() -> None:
         author_email="fbriol@gmail.com",
         classifiers=[
             "Development Status :: 5 - Production/Stable",
+            "Intended Audience :: Science/Research",
+            "Topic :: Scientific/Engineering :: Atmospheric Science",
+            "Topic :: Scientific/Engineering :: GIS",
+            "Topic :: Scientific/Engineering :: Hydrology",
+            "Topic :: Scientific/Engineering :: Oceanography",
             "Topic :: Scientific/Engineering :: Physics",
             "Natural Language :: English",
             "Operating System :: POSIX",
+            "Operating System :: POSIX :: Linux",
             "Operating System :: MacOS",
             "Operating System :: Microsoft :: Windows",
+            "Programming Language :: C++",
+            "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3.12",
             "Programming Language :: Python :: 3.13",
             "Programming Language :: Python :: 3.14",
@@ -545,12 +553,18 @@ def main() -> None:
             "build_ext": BuildExt,
             "build_py": BuildPy,
         },
-        description="Interpolation of geo-referenced data for Python.",
+        description=(
+            "Fast interpolation of geo-referenced data for Python and xarray."
+        ),
         ext_modules=[CMakeExtension(name="pyinterp.core")],
         extras_require={"xarray": ["xarray >= 0.13"]},
         install_requires=install_requires,
         include_package_data=True,
-        keywords="interpolation, geospatial, geohash, geodetic",
+        keywords=(
+            "interpolation, xarray, regridding, geospatial, geodetic, "
+            "bilinear, bicubic, spline, kriging, rtree, oceanography, "
+            "climate, satellite, netcdf, geohash"
+        ),
         license="BSD-3-Clause",
         license_files=("LICENSE",),
         long_description=long_description(),
@@ -567,6 +581,14 @@ def main() -> None:
         packages=setuptools.find_namespace_packages(
             include=["pyinterp", "pyinterp.*"],
         ),
+        project_urls={
+            "Documentation": "https://cnes.github.io/pangeo-pyinterp/",
+            "Changelog": (
+                "https://cnes.github.io/pangeo-pyinterp/changelog.html"
+            ),
+            "Source": "https://github.com/CNES/pangeo-pyinterp",
+            "Issues": "https://github.com/CNES/pangeo-pyinterp/issues",
+        },
         python_requires=">=3.12",
         url="https://github.com/CNES/pangeo-pyinterp",
         **version_keywords(),  # type: ignore[arg-type]
