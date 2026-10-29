@@ -43,6 +43,14 @@ Dependencies
 Performance
 ~~~~~~~~~~~
 
+* **Multi-threading**: The points are no longer split into one fixed block
+  per thread: the threads claim small contiguous chunks (at least 256 points,
+  32 per thread on large inputs) as they finish the previous ones, and the
+  calling thread works too. A thread given expensive points, or running on an
+  efficiency core, no longer finishes alone while the others wait. On all the
+  cores of an Apple M3 Max, the grid interpolations are 1.15 to 1.3 times
+  faster, the R*-tree estimators 1.05 to 1.15 times and LOESS 1.08 times. The
+  results are unchanged.
 * **Windowed bicubic interpolation**: ``bicubic`` computes the partial
   derivatives only at the corners of the cell holding the point, instead of at
   every node of the window, and keeps them while the following points fall in
