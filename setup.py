@@ -526,7 +526,7 @@ def version_keywords() -> dict[str, object]:
 
 def main() -> None:
     """Set up module."""
-    install_requires = ["dask", "numpy"]
+    install_requires = ["numpy"]
     setuptools.setup(
         author="CNES/CLS",
         author_email="fbriol@gmail.com",
@@ -557,7 +557,10 @@ def main() -> None:
             "Fast interpolation of geo-referenced data for Python and xarray."
         ),
         ext_modules=[CMakeExtension(name="pyinterp.core")],
-        extras_require={"xarray": ["xarray >= 0.13"]},
+        extras_require={
+            "dask": ["dask[array]"],
+            "xarray": ["xarray >= 0.13"],
+        },
         install_requires=install_requires,
         include_package_data=True,
         keywords=(

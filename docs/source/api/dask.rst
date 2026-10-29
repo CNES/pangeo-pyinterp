@@ -8,7 +8,8 @@ independently using the same C++ kernels exposed by the in-memory API, then
 merges the per-block results with the ``+=`` operator implemented by the
 underlying holders.
 
-Dask is an optional dependency; install it with ``pip install dask[array]``.
+Dask is an optional dependency; install it with
+``pip install "pyinterp[dask]"``.
 
 .. currentmodule:: pyinterp.dask
 

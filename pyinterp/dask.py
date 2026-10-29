@@ -68,7 +68,7 @@ def _check_dask_available() -> None:
     except ImportError as exc:
         msg = (
             "dask is required for distributed computation. "
-            "Install it with: pip install dask[array]"
+            'Install it with: pip install "pyinterp[dask]"'
         )
         raise ImportError(msg) from exc
 

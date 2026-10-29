@@ -28,6 +28,13 @@ The ``xarray`` extra also installs `xarray <https://xarray.dev/>`_, needed by
 
    pip install -U "pyinterp[xarray]"
 
+The ``dask`` extra installs `Dask <https://docs.dask.org/>`_, needed by the
+:mod:`pyinterp.dask` helpers; the extras can be combined:
+
+.. code-block:: bash
+
+   pip install -U "pyinterp[xarray,dask]"
+
 Pre-release builds (``X.Y.ZrcN``, ``X.Y.Z.devN``) are uploaded to TestPyPI; you
 can try them with:
 

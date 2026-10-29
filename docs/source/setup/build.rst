@@ -64,9 +64,9 @@ Requirements
 * `Boost <https://www.boost.org/>`_ 1.90 or later (headers only). Most Linux
   distributions ship an older version; the conda-forge packages
   ``libboost-devel`` or ``libboost-headers`` are recent enough.
-* The Python packages ``numpy`` and ``dask`` at runtime, ``xarray`` for the
-  xarray backend and to run the tests, and ``setuptools`` 64 or later and
-  ``setuptools-scm`` 8 or later to build.
+* The Python package ``numpy`` at runtime, ``xarray`` for the xarray backend
+  and to run the tests, ``dask`` for the :mod:`pyinterp.dask` helpers, and
+  ``setuptools`` 64 or later and ``setuptools-scm`` 8 or later to build.
 
 `Eigen <https://eigen.tuxfamily.org/>`_, `nanobind
 <https://github.com/wjakob/nanobind>`_ and `pocketfft

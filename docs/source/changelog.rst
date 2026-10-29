@@ -36,6 +36,9 @@ Dependencies
   ``pyinterp[xarray]`` to use ``pyinterp.backends.xarray``, the ``pyinterp``
   accessor and ``pyinterp.geohash.to_xarray``, which now say so when xarray is
   missing.
+* **dask is optional**: it is no longer installed with ``pyinterp`` either.
+  Install ``pyinterp[dask]`` to use the ``pyinterp.dask`` helpers, which say
+  so when dask is missing. NumPy is now the only required dependency.
 
 Performance
 ~~~~~~~~~~~
