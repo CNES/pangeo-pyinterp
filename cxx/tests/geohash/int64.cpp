@@ -841,13 +841,13 @@ TEST(GeoHashInt64ConstexprTest, ErrorWithPrecisionConstexpr) {
 
 TEST_F(GeoHashInt64Test, EncodeRejectsInvalidCoordinates) {
   constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
-  constexpr double kInf = std::numeric_limits<double>::infinity();
-  for (const double lat : {-90.0000001, 90.0000001, -100.0, kNaN, kInf}) {
+  constexpr double kInfinity = std::numeric_limits<double>::infinity();
+  for (const double lat : {-90.0000001, 90.0000001, -100.0, kNaN, kInfinity}) {
     EXPECT_THROW(static_cast<void>(encode({0.0, lat}, kDefaultPrecision)),
                  std::invalid_argument)
         << lat;
   }
-  for (const double lon : {kNaN, kInf, -kInf}) {
+  for (const double lon : {kNaN, kInfinity, -kInfinity}) {
     EXPECT_THROW(static_cast<void>(encode({lon, 0.0}, kDefaultPrecision)),
                  std::invalid_argument)
         << lon;
