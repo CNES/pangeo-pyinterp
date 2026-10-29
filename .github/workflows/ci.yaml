@@ -219,6 +219,7 @@ jobs:
           dask
           libboost-devel
           make
+          numba
           numcodecs
           numpy
           pandas

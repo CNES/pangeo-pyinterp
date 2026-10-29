@@ -6,6 +6,7 @@ dependencies:
   - coverage
   - dask
   - gtest
+  - numba
   - numcodecs
   - numpy
   - pandas

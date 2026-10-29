@@ -9,6 +9,7 @@ dependencies:
   - lcov
   - libboost-devel
   - libcxx
+  - numba
   - numcodecs
   - numpy
   - pandas

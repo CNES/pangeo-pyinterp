@@ -4,6 +4,7 @@ dependencies:
   - cmake
   - ninja
   - dask
+  - numba
   - numcodecs
   - numpy
   - pandas
