@@ -22,6 +22,7 @@ The API is organized by functionality:
    api/unstructured_grid
    api/optimal_interpolation
    api/fill
+   api/regrid
    api/statistics
    api/config
 

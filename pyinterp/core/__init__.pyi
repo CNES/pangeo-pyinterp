@@ -29,7 +29,7 @@ from ..type_hints import (
     ThreeDims,
     TwoDims,
 )
-from . import fill, geometry, period
+from . import fill, geometry, period, regrid
 from .config import geometric, rtree, windowed
 
 __all__ = [
@@ -67,6 +67,7 @@ __all__ = [
     "period",
     "quadrivariate",
     "quadrivariate_outer",
+    "regrid",
     "trivariate",
     "trivariate_outer",
 ]

@@ -28,6 +28,27 @@ New Features
   global 0.25° field onto a 0.1° grid (5.8 million points) with the bilinear
   method takes 14 ms on one core instead of 144 ms (7 ms instead of 29 ms on
   all cores).
+* **Conservative regridding**: ``da.pyinterp.regrid`` and
+  ``ds.pyinterp.regrid`` regrid variables between rectilinear grids, giving
+  each target cell the mean of the source values weighted by the area of
+  their overlap with the cell, which preserves the integral of the field
+  (``conservative_normed`` in xESMF, or ``conservative`` with
+  ``normalize=False``). The target cells are given by their centers or by
+  their bounds, keyword arguments named after the dimensions as for
+  ``interp``; the CF bounds variables of a dataset give the source cells, and
+  the result holds the bounds of the target cells. Longitudes are periodic,
+  so the grids can use different conventions; undefined values are ignored,
+  with an optional minimum fraction of the target cell they must cover; the
+  other dimensions (time, depth) and their coordinates are kept. The areas
+  are computed on a sphere, as in ESMF, or exactly on an ellipsoid with
+  ``spheroid``. ``pyinterp.regrid.conservative`` is the NumPy layer. The
+  overlap of two longitude/latitude boxes factorizes into an overlap along
+  each axis, so the regridding applies two sparse 1D operators and computes
+  no 2D weights: coarsening a global 0.25° grid to 1° takes 1.2 ms on one
+  core (0.7 ms on all cores), where xESMF takes 12 s to compute its weights
+  and 124 ms to apply them. The cells are bounded by parallels, where ESMF
+  draws great circles: the results differ by up to 2·10⁻⁵ of the amplitude of
+  a smooth field at mid-latitudes with 1° cells, 4·10⁻⁴ with 5° cells.
 
 Dependencies
 ~~~~~~~~~~~~

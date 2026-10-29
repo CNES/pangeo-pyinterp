@@ -10,7 +10,7 @@ Build interpolation objects from xarray.DataArray instances
 from __future__ import annotations
 
 import dataclasses
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import numpy as np
 
@@ -23,7 +23,7 @@ except ImportError as exc:
         "`pip install pyinterp[xarray]`"
     ) from exc
 
-from .. import cf, core
+from .. import cf, core, regrid
 from ..core.config import geometric
 from ..regular_grid_interpolator import (
     _GEOMETRIC_METHODS,
@@ -1128,6 +1128,205 @@ def _interp_data_array(
     return result
 
 
+#: Regridding methods of the accessors.
+RegriddingMethods = Literal["conservative"]
+
+#: Options of the conservative regridding.
+_REGRID_OPTIONS = frozenset(
+    {"min_valid_fraction", "normalize", "num_threads", "spheroid"}
+)
+
+#: Name of the dimension of the CF bounds variables written by the accessor.
+_BOUNDS_DIM = "bnds"
+
+
+@dataclasses.dataclass(frozen=True)
+class _RegridAxes:
+    """Dimensions regridded, in the order of the regridding."""
+
+    #: First axis: the longitude, if geodetic.
+    x: Hashable
+    #: Second axis: the latitude, if geodetic.
+    y: Hashable
+    #: Whether the axes are a longitude and a latitude.
+    geodetic: bool
+
+    @property
+    def kinds(self) -> dict[Hashable, regrid.AxisKind]:
+        """Kind of each axis."""
+        if self.geodetic:
+            return {self.x: "longitude", self.y: "latitude"}
+        return {self.x: "cartesian", self.y: "cartesian"}
+
+
+def _regrid_axes(
+    source: xr.DataArray, indexers: Mapping[Hashable, Any]
+) -> _RegridAxes:
+    """Identify the longitude and latitude among the regridded dimensions.
+
+    Raises:
+        ValueError: If the regridded dimensions are not two dimensions of the
+            variable, or if only one of them is a longitude or a latitude.
+
+    """
+    unknown = [name for name in indexers if name not in source.dims]
+    if unknown:
+        raise ValueError(
+            f"the coordinates {tuple(unknown)} are not dimensions of the "
+            f"variable {source.dims}"
+        )
+    if len(indexers) != TWO_DIMENSIONS:
+        raise ValueError(
+            "the regridding needs the cells of two dimensions, got "
+            f"{tuple(indexers)}"
+        )
+    identifier = AxisIdentifier(source)
+    lon = identifier.longitude()
+    lat = identifier.latitude()
+    names = tuple(indexers)
+    for name in (lon, lat):
+        if name is not None and source.coords[name].ndim > 1:
+            raise ValueError(
+                f"the coordinate {name!r} has {source.coords[name].ndim} "
+                "dimensions: the regridding handles rectilinear grids only, "
+                "whose longitudes and latitudes are 1D coordinates"
+            )
+    if {lon, lat} == set(names):
+        return _RegridAxes(lon, lat, geodetic=True)
+    if lon in names or lat in names:
+        raise ValueError(
+            f"the dimensions {names} mix a longitude or a latitude with "
+            "another axis: regrid a longitude with a latitude, identified by "
+            "their units (degrees_east, degrees_north)"
+        )
+    return _RegridAxes(names[0], names[1], geodetic=False)
+
+
+def _source_cells(
+    source: xr.DataArray,
+    dim: Hashable,
+    bounds: Mapping[Hashable, Any],
+) -> Any:  # noqa: ANN401
+    """Return the cells of a source dimension: its bounds or its centers.
+
+    Raises:
+        ValueError: If the dimension has no coordinate.
+
+    """
+    if dim in bounds:
+        return np.asarray(bounds[dim])
+    if dim not in source.coords:
+        raise ValueError(
+            f"the dimension {dim!r} has no coordinate: the centers or the "
+            "bounds of its cells are needed"
+        )
+    return source.coords[dim].values
+
+
+def _target_cells(value: Any, name: Hashable) -> np.ndarray:  # noqa: ANN401
+    """Convert the cells of a target dimension to an array.
+
+    Raises:
+        ValueError: If a data array holding the cells has more than one
+            dimension that is not the bounds dimension.
+
+    """
+    if isinstance(value, xr.DataArray) and value.ndim == TWO_DIMENSIONS:
+        dims = [dim for dim in value.dims if dim != name]
+        value = value.transpose(name, *dims) if name in value.dims else value
+    return np.asarray(value)
+
+
+def _cf_bounds(dataset: xr.Dataset, dim: Hashable) -> np.ndarray | None:
+    """Return the CF bounds variable of a coordinate, if any."""
+    if dim not in dataset.coords:
+        return None
+    name = dataset.coords[dim].attrs.get("bounds")
+    if name is None or name not in dataset.variables:
+        return None
+    bounds = dataset[name]
+    other = [item for item in bounds.dims if item != dim]
+    return np.asarray(bounds.transpose(dim, *other).values)
+
+
+def _regrid_data_array(
+    source: xr.DataArray,
+    axes: _RegridAxes,
+    targets: Mapping[Hashable, tuple[np.ndarray, np.ndarray]],
+    bounds: Mapping[Hashable, Any],
+    options: dict[str, Any],
+) -> xr.DataArray:
+    """Regrid a data array onto the target cells.
+
+    Returns:
+        The regridded values, labelled with the centers of the target cells.
+
+    """
+    unknown = set(options) - _REGRID_OPTIONS
+    if unknown:
+        raise TypeError(
+            f"unexpected options {tuple(sorted(unknown))}: the regridding "
+            f"accepts {tuple(sorted(_REGRID_OPTIONS))}"
+        )
+    values = regrid.conservative(
+        source.values,
+        _source_cells(source, axes.x, bounds),
+        _source_cells(source, axes.y, bounds),
+        targets[axes.x][1],
+        targets[axes.y][1],
+        axes=(source.get_axis_num(axes.x), source.get_axis_num(axes.y)),
+        geodetic=axes.geodetic,
+        **options,
+    )
+    regridded = {axes.x, axes.y}
+    coords: dict[Hashable, Any] = {}
+    for dim in (axes.x, axes.y):
+        attrs = dict(source.coords[dim].attrs) if dim in source.coords else {}
+        # The bounds variable is not part of a data array.
+        attrs.pop("bounds", None)
+        coords[dim] = xr.Variable(dim, targets[dim][0], attrs)
+    # The coordinates of the other dimensions (time, depth) still describe
+    # the result.
+    for name, coord in source.coords.items():
+        if not set(coord.dims) & regridded:
+            coords[name] = coord.variable
+    return xr.DataArray(
+        values,
+        dims=source.dims,
+        coords=coords,
+        name=source.name,
+        attrs=dict(source.attrs),
+    )
+
+
+def _regrid_targets(
+    axes: _RegridAxes, indexers: Mapping[Hashable, Any]
+) -> dict[Hashable, tuple[np.ndarray, np.ndarray]]:
+    """Return the centers and the bounds of the target cells."""
+    return {
+        dim: regrid.cells(
+            _target_cells(indexers[dim], dim),
+            axes.kinds[dim],
+            f"the target dimension {dim!r}",
+        )
+        for dim in (axes.x, axes.y)
+    }
+
+
+def _check_method(method: str) -> None:
+    """Check the regridding method.
+
+    Raises:
+        ValueError: If the method is not supported.
+
+    """
+    if method != "conservative":
+        raise ValueError(
+            f"unknown regridding method {method!r}: the supported method is "
+            "'conservative'"
+        )
+
+
 @xr.register_dataarray_accessor("pyinterp")
 class DataArrayAccessor:
     """Interpolate a data array with ``da.pyinterp``.
@@ -1216,6 +1415,84 @@ class DataArrayAccessor:
         )
         return _interp_data_array(self._data_array, indexers, method, options)
 
+    def regrid(
+        self,
+        coords: Mapping[Hashable, Any] | None = None,
+        method: RegriddingMethods = "conservative",
+        *,
+        source_bounds: Mapping[Hashable, Any] | None = None,
+        **coords_kwargs: Any,  # noqa: ANN401
+    ) -> xr.DataArray:
+        """Regrid the data array onto new cells, conserving its integral.
+
+        Each target cell receives the mean of the source values weighted by
+        the area of their overlap with the cell (first order conservative
+        regridding, ``conservative_normed`` in xESMF by default). Unlike
+        :py:meth:`interp`, which samples the variable at points, the
+        regridding averages it: use it to coarsen a grid, or to regrid fluxes
+        and budgets.
+
+        Two dimensions are regridded: a longitude and a latitude, identified
+        by their units (``degrees_east`` and ``degrees_north``) as in
+        :py:meth:`interp`, or two Cartesian axes. Longitudes are periodic: the
+        source and target grids can use different conventions. The other
+        dimensions (time, depth) and their coordinates are kept. The areas
+        are computed on a sphere; pass ``spheroid=Spheroid()`` for WGS-84
+        (see :py:func:`pyinterp.regrid.conservative`, which also details the
+        differences with xESMF).
+
+        The cells of a dimension are given by their centers, a 1D array, or
+        by their bounds, an array of shape (n, 2) as the CF bounds variables,
+        whose midpoints label the result. The bounds of cells given by their
+        centers are the midpoints between consecutive centers, so a dimension
+        of a single cell must be given by its bounds.
+
+        Args:
+            coords: Mapping from dimension names to the target cells.
+            method: Regridding method, only ``"conservative"`` for now.
+            source_bounds: Mapping from dimension names to the bounds of the
+                source cells, arrays of shape (n, 2). Defaults to the
+                midpoints between the coordinates. A data array does not
+                carry the CF bounds variables of its dataset: regrid the
+                dataset with :py:meth:`DatasetAccessor.regrid` to use them.
+            **coords_kwargs: The target cells, for keyword arguments named
+                after a dimension of the variable, or options of the
+                regridding: ``min_valid_fraction``, ``normalize``,
+                ``spheroid`` and ``num_threads`` (see
+                :py:func:`pyinterp.regrid.conservative`).
+
+        Returns:
+            The regridded values, labelled with the centers of the target
+            cells, with the name and attributes of the variable.
+
+        Raises:
+            ValueError: If the regridded dimensions are not two dimensions of
+                the variable, or if their cells are invalid.
+
+        Examples:
+            Coarsen a variable to 1°
+
+            >>> result = da.pyinterp.regrid(
+            ...     lon=np.arange(-179.5, 180), lat=np.arange(-89.5, 90)
+            ... )
+
+            Mean over a box, given by its bounds
+
+            >>> box = da.pyinterp.regrid(lon=[[-10, 10]], lat=[[40, 50]])
+
+        """
+        _check_method(method)
+        source = self._data_array
+        indexers, options = _merge_indexers(coords, coords_kwargs, source.dims)
+        axes = _regrid_axes(source, indexers)
+        return _regrid_data_array(
+            source,
+            axes,
+            _regrid_targets(axes, indexers),
+            source_bounds or {},
+            options,
+        )
+
 
 @xr.register_dataset_accessor("pyinterp")
 class DatasetAccessor:
@@ -1288,3 +1565,97 @@ class DatasetAccessor:
                 f"{tuple(indexers)}"
             )
         return xr.Dataset(variables, attrs=dict(dataset.attrs))
+
+    def regrid(
+        self,
+        coords: Mapping[Hashable, Any] | None = None,
+        method: RegriddingMethods = "conservative",
+        **coords_kwargs: Any,  # noqa: ANN401
+    ) -> xr.Dataset:
+        """Regrid the variables of the dataset, conserving their integrals.
+
+        The variables defined on both regridded dimensions are regridded as
+        with :py:meth:`DataArrayAccessor.regrid`; their other dimensions are
+        kept. The variables that depend on neither are kept as they are. The
+        others, such as the bounds of the source cells, are dropped.
+
+        The CF bounds variables of the source coordinates, named by their
+        ``bounds`` attribute, give the bounds of the source cells. The result
+        holds the bounds of the target cells, under the same name (or
+        ``<dimension>_bnds``), referenced by the ``bounds`` attribute of the
+        target coordinates.
+
+        Args:
+            coords: Mapping from dimension names to the target cells.
+            method: Regridding method, only ``"conservative"`` for now.
+            **coords_kwargs: The target cells, for keyword arguments named
+                after a dimension of the dataset, or options of the
+                regridding (see :py:meth:`DataArrayAccessor.regrid`).
+
+        Returns:
+            A dataset holding the regridded variables, the variables kept and
+            the bounds of the target cells, with the attributes of the
+            dataset.
+
+        Raises:
+            ValueError: If no variable is defined on the regridded
+                dimensions.
+
+        """
+        _check_method(method)
+        dataset = self._dataset
+        indexers, options = _merge_indexers(
+            coords, coords_kwargs, tuple(dataset.dims)
+        )
+        regridded = set(indexers)
+        template = next(
+            (
+                variable
+                for variable in dataset.data_vars.values()
+                if regridded <= set(variable.dims)
+            ),
+            None,
+        )
+        if template is None:
+            raise ValueError(
+                "no variable of the dataset is defined on the dimensions "
+                f"{tuple(indexers)}"
+            )
+        axes = _regrid_axes(template, indexers)
+        targets = _regrid_targets(axes, indexers)
+        bounds = {
+            dim: value
+            for dim in (axes.x, axes.y)
+            if (value := _cf_bounds(dataset, dim)) is not None
+        }
+
+        variables: dict[Hashable, xr.DataArray] = {}
+        for name, variable in dataset.data_vars.items():
+            dims = set(variable.dims)
+            if regridded <= dims:
+                variables[name] = _regrid_data_array(
+                    variable, axes, targets, bounds, options
+                )
+            elif not dims & regridded:
+                variables[name] = variable
+        result = xr.Dataset(variables, attrs=dict(dataset.attrs))
+
+        # CF bounds of the target cells
+        for dim in (axes.x, axes.y):
+            name = (
+                dataset.coords[dim].attrs.get("bounds")
+                if (dim in dataset.coords)
+                else None
+            )
+            name = name if isinstance(name, str) else f"{dim}_bnds"
+            bounds_dim = _BOUNDS_DIM
+            if name in dataset.variables:
+                bounds_dim = next(
+                    (item for item in dataset[name].dims if item != dim),
+                    _BOUNDS_DIM,
+                )
+            if name in result.variables:
+                name = f"{dim}_bnds"
+            result[name] = ((dim, bounds_dim), targets[dim][1])
+            result.coords[dim].attrs["bounds"] = name
+        return result

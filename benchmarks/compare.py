@@ -282,6 +282,81 @@ def _regrid(ctx: _runner.Context) -> Scenario:
     )
 
 
+def _conservative(ctx: _runner.Context) -> Scenario:
+    """Conservative regridding of a grid onto a coarser grid."""
+    rng = ctx.rng()
+    lon, lat, data = _source(rng)
+    step = ctx.size(1.0, 2.0)
+    new_lon = np.arange(-180, 180, step) + step / 2
+    new_lat = np.arange(-90, 90, step) + step / 2
+    n = data.size
+    cases: list[tuple[str, _runner.Case]] = []
+    notes: list[str] = []
+
+    if _has("xesmf"):
+        import xarray as xr  # noqa: PLC0415
+        import xesmf  # noqa: PLC0415
+
+        source = _data_array(lon, lat, data).to_dataset()
+        source = source.assign_coords(
+            lon_b=("lon_b", np.arange(-STEP / 2, 360, STEP)),
+            lat_b=("lat_b", np.linspace(-90, 90, lat.size + 1)),
+        )
+        target = xr.Dataset(
+            coords={
+                "lon": ("lon", new_lon),
+                "lat": ("lat", new_lat),
+                "lon_b": ("lon_b", np.arange(-180, 180 + step / 2, step)),
+                "lat_b": ("lat_b", np.arange(-90, 90 + step / 2, step)),
+            }
+        )
+        start = time.perf_counter()
+        regridder = xesmf.Regridder(
+            source, target, "conservative", periodic=True
+        )
+        notes.append(
+            "xESMF computed its weights in "
+            f"{(time.perf_counter() - start) * 1e3:.1f} ms"
+        )
+        cases.append(
+            (
+                "xESMF, applying the weights",
+                _case("xesmf", n, lambda: regridder(source.field)),
+            )
+        )
+    if _has("xarray"):
+        from pyinterp.backends import xarray as _  # noqa: F401, PLC0415
+
+        array = _data_array(lon, lat, data)
+        regrid = functools.partial(
+            array.pyinterp.regrid, lon=new_lon, lat=new_lat
+        )
+        label = "da.pyinterp.regrid"
+    else:
+        regrid = functools.partial(
+            pyinterp.regrid.conservative, data, lon, lat, new_lon, new_lat
+        )
+        label = "pyinterp.regrid.conservative"
+    for name, threads in (("one thread", 1), ("all cores", 0)):
+        cases.append(
+            (
+                f"{label}, {name}",
+                _case(
+                    f"pyinterp/{threads}",
+                    n,
+                    functools.partial(regrid, num_threads=threads),
+                ),
+            )
+        )
+    return Scenario(
+        "conservative",
+        f"Conservative regridding of a global 0.25 degree grid onto a {step} "
+        f"degree grid ({n:,} source cells)",
+        cases,
+        notes,
+    )
+
+
 def _cubic(ctx: _runner.Context) -> Scenario:
     """Cubic interpolation at scattered points."""
     rng = ctx.rng()
@@ -421,6 +496,7 @@ def _idw(ctx: _runner.Context, *, cartesian: bool) -> Scenario:
 SCENARIOS: dict[str, Callable[[_runner.Context], Scenario]] = {
     "points": _points,
     "regrid": _regrid,
+    "conservative": _conservative,
     "cubic": _cubic,
     "scattered": functools.partial(_idw, cartesian=False),
     "cartesian": functools.partial(_idw, cartesian=True),

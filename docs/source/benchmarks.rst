@@ -158,10 +158,50 @@ the structure of the target grid: each coordinate is located once on its axis
 instead of once per point. The results of pyinterp and xESMF differ by at
 most :math:`1.2 \times 10^{-5}`.
 
-xESMF does more than this comparison shows: conservative regridding, which
-preserves integrals, and curvilinear or unstructured source grids, which the
-grid interpolators of pyinterp do not handle (its R*-trees can treat their
-nodes as scattered points).
+Conservative Regridding
+=======================
+
+The global grid of 0.25 degree is coarsened to a global grid of 1 degree:
+each target cell receives the mean of the source values weighted by the area
+of their overlap with the cell, which preserves the integral of the field.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 55 15 15 15
+
+   * - Library
+     - Time
+     - Source cells per second
+     - Speed-up
+   * - xESMF, applying the weights
+     - 123.7 ms
+     - 8.4 M
+     - 1.0
+   * - ``da.pyinterp.regrid``, one thread
+     - 1.2 ms
+     - 868.4 M
+     - 103.6
+   * - ``da.pyinterp.regrid``, all cores
+     - 0.7 ms
+     - 1553.2 M
+     - 185.3
+
+xESMF first computes its weights, which took 11.7 s here. pyinterp needs no
+weights to compute: the overlap of two longitude/latitude boxes is the product
+of the overlaps of their sides, so the regridding applies two sparse 1D
+operators along the longitudes and the latitudes.
+
+The two libraries do not draw the cells in the same way. pyinterp bounds them
+by meridians and parallels, while ESMF draws their edges as great circles,
+which bulge towards the poles: the results differ by up to
+:math:`2 \times 10^{-5}` of the amplitude of a smooth field at mid-latitudes
+with the 1 degree grid, and :math:`4 \times 10^{-4}` with a grid of 5 degrees
+(see :doc:`api/regrid`).
+
+xESMF also regrids curvilinear and unstructured source grids, with the
+bilinear and conservative methods, which pyinterp does not handle: its grid
+interpolators and its conservative regridding need rectilinear grids, and its
+R*-trees can only treat the nodes of the other grids as scattered points.
 
 Cubic Interpolation
 ===================

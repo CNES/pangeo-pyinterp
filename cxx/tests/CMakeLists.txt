@@ -84,6 +84,10 @@ add_testcase(fft "${fft_src}" BLAS::BLAS ${FFT_LIBRARIES})
 file(GLOB_RECURSE fill_src "${CMAKE_CURRENT_SOURCE_DIR}/math/fill/*.cpp")
 add_testcase(fill "${fill_src}" BLAS::BLAS ${FFT_LIBRARIES})
 
+# regrid
+file(GLOB_RECURSE regrid_src "${CMAKE_CURRENT_SOURCE_DIR}/regrid/*.cpp")
+add_testcase(regrid "${regrid_src}")
+
 # Add a custom target "test_all" that runs all the test cases with CTest.
 add_custom_target(
   test_all

@@ -17,6 +17,7 @@
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/histogram2d.hpp"
 #include "pyinterp/pybind/period.hpp"
+#include "pyinterp/pybind/regrid.hpp"
 #include "pyinterp/pybind/rtree.hpp"
 #include "pyinterp/pybind/rtree4d.hpp"
 #include "pyinterp/pybind/tdigest.hpp"
@@ -46,4 +47,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_fill(m);
   pyinterp::pybind::init_dateutils(m);
   pyinterp::pybind::init_period(m);
+  pyinterp::pybind::init_regrid(m);
 }
