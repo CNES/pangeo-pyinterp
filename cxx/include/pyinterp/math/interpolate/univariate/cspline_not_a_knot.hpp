@@ -59,6 +59,10 @@ class CSplineNotAKnot : public CSplineBase<T> {
   /// Temporary arrays for tridiagonal solver (Thomas algorithm)
   Vector<T> c_;  // Modified superdiagonal
   Vector<T> d_;  // Modified RHS
+
+  /// Buffers reused between calls, to avoid allocating memory for each fit
+  Vector<T> h_;      // Step sizes
+  Vector<T> delta_;  // Divided differences
 };
 
 // ============================================================================
@@ -123,7 +127,8 @@ constexpr auto CSplineNotAKnot<T>::compute_coefficients(
   constexpr T epsilon = std::numeric_limits<T>::epsilon() * T{10};
 
   // Compute step sizes: h_i = x[i+1] - x[i]
-  const Vector<T> h = xa.tail(size_m1) - xa.head(size_m1);
+  auto& h = h_;
+  h = xa.tail(size_m1) - xa.head(size_m1);
 
   // Check for duplicate x values
   if ((h.array().abs() < epsilon).any()) [[unlikely]] {
@@ -146,8 +151,8 @@ constexpr auto CSplineNotAKnot<T>::compute_coefficients(
   }
 
   // Compute divided differences: delta_i = (y[i+1] - y[i]) / h[i]
-  const Vector<T> delta =
-      (ya.tail(size_m1) - ya.head(size_m1)).array() / h.array();
+  auto& delta = delta_;
+  delta = (ya.tail(size_m1) - ya.head(size_m1)).array() / h.array();
 
   // =========================================================================
   // Build the reduced (n-2)×(n-2) tridiagonal system for M[1] ... M[n-2]

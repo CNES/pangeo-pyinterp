@@ -96,13 +96,12 @@ constexpr auto Polynomial<T>::compute_coefficients(const ConstVectorRef<T>& xa,
 
   // Higher order divided differences
   for (auto ix : std::views::iota(int64_t{2}, size)) {
-    const auto n = size - ix;
-    // The source overlaps the destination shifted by one: evaluate it first,
-    // or the differences would read values already updated.
-    work_.segment(ix, n) =
-        ((work_.segment(ix, n) - work_.segment(ix - 1, n)).array() /
-         (xa.segment(ix, n) - xa.segment(0, n)).array())
-            .eval();
+    // The source overlaps the destination shifted by one: update from the
+    // end, so that each difference reads values not yet updated (an Eigen
+    // expression would need a temporary, allocated for every order).
+    for (auto jx = size - 1; jx >= ix; --jx) {
+      work_(jx) = (work_(jx) - work_(jx - 1)) / (xa(jx) - xa(jx - ix));
+    }
   }
 
   return true;

@@ -8,6 +8,7 @@
 #include <concepts>
 #include <cstdint>
 #include <ranges>
+#include <span>
 #include <stdexcept>
 
 #include "pyinterp/eigen.hpp"
@@ -86,6 +87,23 @@ class Univariate : public BracketFinder<T> {
                           [&](auto i) { y(i) = derivative_(xa, ya, x(i)); });
 
     return y;
+  }
+
+  /// @brief Same as above, writing the derivatives into a buffer owned by the
+  /// caller, which avoids allocating memory.
+  /// @param[in] xa X-coordinates of the data points.
+  /// @param[in] ya Y-coordinates of the data points.
+  /// @param[in] x The points where the derivative must be calculated.
+  /// @param[out] y The derivatives at the points x (same size as x).
+  auto derivative(const ConstVectorRef<T>& xa, const ConstVectorRef<T>& ya,
+                  std::span<const T> x, std::span<T> y) -> void {
+    if (!compute_coefficients(xa, ya)) {
+      std::ranges::fill(y, Fill<T>::value());
+      return;
+    }
+    for (const auto i : std::views::iota(size_t{0}, x.size())) {
+      y[i] = derivative_(xa, ya, x[i]);
+    }
   }
 
  protected:

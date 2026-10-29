@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <Eigen/Core>
+#include <cmath>
 #include <cstdint>
 
 namespace pyinterp::math::interpolate::bivariate {
@@ -84,6 +85,56 @@ TEST(Bicubic, NonSquare) {
   auto z = bicubic(xp, yp);
   for (int64_t i = 0; i < z.size(); ++i) {
     EXPECT_NEAR(z(i), zp(i), 1.0e-12);
+  }
+}
+
+// The derivatives of the last cell are kept between calls: the result must
+// not depend on the cells visited before, nor on the data prepared before.
+TEST(Bicubic, CellCache) {
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> za(6, 5);
+  Eigen::Matrix<double, Eigen::Dynamic, 1> xa(6);
+  Eigen::Matrix<double, Eigen::Dynamic, 1> ya(5);
+  Eigen::Matrix<double, Eigen::Dynamic, 1> xp(6);
+  Eigen::Matrix<double, Eigen::Dynamic, 1> yp(6);
+
+  xa << 0.0, 1.0, 2.5, 3.0, 4.5, 6.0;
+  ya << -2.0, -1.0, 0.5, 1.0, 3.0;
+  for (int64_t i = 0; i < za.rows(); ++i) {
+    for (int64_t j = 0; j < za.cols(); ++j) {
+      za(i, j) = std::sin(xa(i)) * std::cos(0.7 * ya(j)) + 0.1 * xa(i) * ya(j);
+    }
+  }
+  // Successive points in the same cell, then in other cells, then back.
+  xp << 2.6, 2.9, 0.3, 5.2, 2.7, 0.4;
+  yp << 0.6, 0.9, -1.5, 2.0, 0.7, -1.6;
+
+  auto reference = [&](const auto& z) {
+    auto result = Eigen::Matrix<double, Eigen::Dynamic, 1>(xp.size());
+    for (int64_t i = 0; i < xp.size(); ++i) {
+      auto fresh = Bicubic<double>();
+      fresh.prepare(xa, ya, z);
+      result(i) = fresh(xp(i), yp(i));
+    }
+    return result;
+  };
+
+  auto bicubic = Bicubic<double>();
+  bicubic.prepare(xa, ya, za);
+  auto expected = reference(za);
+  for (int64_t i = 0; i < xp.size(); ++i) {
+    EXPECT_EQ(bicubic(xp(i), yp(i)), expected(i));
+  }
+
+  // New data with the same coordinates: the cached derivatives are stale. The
+  // points are reversed, so that the first one falls in the cell kept last.
+  const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> za2 =
+      za.array().square() - za.array();
+  xp.reverseInPlace();
+  yp.reverseInPlace();
+  bicubic.prepare(xa, ya, za2);
+  expected = reference(za2);
+  for (int64_t i = 0; i < xp.size(); ++i) {
+    EXPECT_EQ(bicubic(xp(i), yp(i)), expected(i));
   }
 }
 

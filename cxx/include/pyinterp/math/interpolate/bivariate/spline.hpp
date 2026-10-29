@@ -23,7 +23,8 @@ namespace pyinterp::math::interpolate::bivariate {
 ///
 /// @tparam T type of the data (must be floating point)
 ///
-/// @note Thread safety: Not thread-safe due to internal state (interp_values_).
+/// @note Thread safety: Not thread-safe due to internal state (interp_values_,
+///       row_).
 ///       Use separate Spline instances for concurrent interpolation.
 template <std::floating_point T>
 class Spline : public BivariateBase<T> {
@@ -101,10 +102,11 @@ class Spline : public BivariateBase<T> {
     // Step 1: For each row, interpolate along Y-axis at the given X coordinate.
     // This produces a 1D array of values, one per row.
     for (int64_t ix = 0; ix < n_rows; ++ix) {
-      // Extract row (all Y values at this X coordinate)
-      const auto row = za.row(ix);
+      // Copy the row (all Y values at this X coordinate) into a contiguous
+      // buffer: passing the strided row would allocate a temporary copy.
+      row_ = za.row(ix).transpose();
       // Interpolate along Y at position x
-      interp_values_(ix) = (*interpolator_)(ya, row, y);
+      interp_values_(ix) = (*interpolator_)(ya, row_, y);
     }
 
     // Step 2: Interpolate the intermediate values along X-axis
@@ -138,6 +140,9 @@ class Spline : public BivariateBase<T> {
   /// Stores one value per row, used during interpolation.
   /// Size grows dynamically but never shrinks to amortize allocation costs
   Vector<T> interp_values_;
+
+  /// Contiguous copy of the grid row being interpolated
+  Vector<T> row_;
 
   /// Initial capacity for temporary storage
   static constexpr int64_t initial_capacity_{16};

@@ -26,6 +26,21 @@ Dependencies
   accessor and ``pyinterp.geohash.to_xarray``, which now say so when xarray is
   missing.
 
+Performance
+~~~~~~~~~~~
+
+* **Windowed bicubic interpolation**: ``bicubic`` computes the partial
+  derivatives only at the corners of the cell holding the point, instead of at
+  every node of the window, and keeps them while the following points fall in
+  the same cell: 3.3 times faster on random points with the default window
+  (0.67 → 2.2 million points per second on one thread) and with a 4 × 4 window
+  (1.2 → 4.1). The results are unchanged.
+* **Other windowed interpolations**: Preparing a window no longer copies the
+  data twice, the spline methods no longer allocate memory for each row of the
+  window, and ``c_spline_not_a_knot`` and ``polynomial`` no longer allocate
+  memory for each spline they fit. On random points, the windowed methods are
+  1.2 to 3 times faster; the results are unchanged.
+
 Bug Fixes
 ~~~~~~~~~
 

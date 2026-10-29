@@ -43,10 +43,13 @@ class BivariateBase {
   /// @brief Prepare interpolator with data and compute coefficients
   /// @param[in] xa X-coordinates of the data points.
   /// @param[in] ya Y-coordinates of the data points.
-  /// @param[in] za Z-values of the data points (2D grid).
+  /// @param[in] za Z-values of the data points (2D grid). Any matrix
+  /// expression is accepted, so that a strided or row-major view (such as an
+  /// interpolation window) is copied once, without an intermediate temporary.
+  template <typename Derived>
   auto prepare(const Eigen::Ref<const Vector<T>>& xa,
                const Eigen::Ref<const Vector<T>>& ya,
-               const Eigen::Ref<const Matrix<T>>& za) -> void {
+               const Eigen::MatrixBase<Derived>& za) -> void {
     if (xa.size() != za.rows()) [[unlikely]] {
       throw std::invalid_argument(
           "xa and za must have the same number of rows");
@@ -170,11 +173,14 @@ class Bivariate : public BivariateBase<T>, public BracketFinder<T> {
 
  protected:
   /// @brief Interpolate the value at (x, y) using precomputed coefficients
+  ///
+  /// Not const: an implementation may cache intermediate results between
+  /// calls (an instance is never shared between threads).
+  ///
   /// @param[in] x The x-coordinate where the interpolation must be calculated.
   /// @param[in] y The y-coordinate where the interpolation must be calculated.
   /// @return The interpolated value at point (x, y).
-  [[nodiscard]] virtual auto interpolate_(const T& x, const T& y) const
-      -> T = 0;
+  [[nodiscard]] virtual auto interpolate_(const T& x, const T& y) -> T = 0;
 
   /// @brief Compute coefficients from stored data
   /// @return true if successful, false otherwise.

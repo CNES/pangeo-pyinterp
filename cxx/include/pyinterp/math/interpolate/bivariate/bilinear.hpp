@@ -28,8 +28,7 @@ class Bilinear : public Bivariate<T> {
   /// @param x The x-coordinate where the interpolation must be calculated.
   /// @param y The y-coordinate where the interpolation must be calculated.
   /// @return The interpolated value at point (x, y).
-  [[nodiscard]] constexpr auto interpolate_(const T& x, const T& y) const
-      -> T final;
+  [[nodiscard]] constexpr auto interpolate_(const T& x, const T& y) -> T final;
 };
 
 // ============================================================================
@@ -37,7 +36,7 @@ class Bilinear : public Bivariate<T> {
 // ============================================================================
 
 template <std::floating_point T>
-constexpr auto Bilinear<T>::interpolate_(const T& x, const T& y) const -> T {
+constexpr auto Bilinear<T>::interpolate_(const T& x, const T& y) -> T {
   const auto& xa = this->xa();
   const auto& ya = this->ya();
   const auto& za = this->za();
