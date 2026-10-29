@@ -11,8 +11,8 @@ Pre-built wheels are available for:
 * **macOS** — ``arm64`` (Apple Silicon), deployment target 13.4
 * **Windows** — ``x86_64``
 
-Wheels are built for CPython 3.12, 3.13, 3.14 and the free-threaded
-build 3.14t.
+Wheels are built for CPython 3.12, 3.13, 3.14 and 3.15, and for the
+free-threaded builds 3.14t and 3.15t.
 
 Install the latest release, or upgrade an existing installation:
 

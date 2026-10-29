@@ -87,8 +87,9 @@ addopts = "--import-mode=importlib"
 # Triggered by: .github/workflows/wheels.yml
 # ---------------------------------------------------------------------------
 [tool.cibuildwheel]
-# Build CPython 3.12–3.14 (+ 3.14 free-threaded); skip 32-bit and musl builds
-build = "cp312-* cp313-* cp314-* cp314t-*"
+# Build CPython 3.12–3.15 (+ 3.14 and 3.15 free-threaded); skip 32-bit and musl
+# builds
+build = "cp312-* cp313-* cp314-* cp314t-* cp315-* cp315t-*"
 skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
 build-verbosity = 1
 

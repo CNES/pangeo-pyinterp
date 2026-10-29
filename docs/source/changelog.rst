@@ -74,6 +74,8 @@ New Features
 Dependencies
 ~~~~~~~~~~~~
 
+* **Python 3.15**: wheels are built for CPython 3.15 and its free-threaded
+  build 3.15t, and the CI tests Python 3.15 on Linux and Windows.
 * **xarray is optional**: it is no longer installed with ``pyinterp``. Install
   ``pyinterp[xarray]`` to use ``pyinterp.backends.xarray``, the ``pyinterp``
   accessor and ``pyinterp.geohash.to_xarray``, which now say so when xarray is

@@ -129,7 +129,7 @@ jobs:
       matrix:
         # Python 3.12, the oldest supported version, is tested by the coverage
         # and arm64 jobs.
-        python-version: ['3.13', '3.14']
+        python-version: ['3.13', '3.14', '3.15']
     steps:
     - name: Checkout
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -438,7 +438,7 @@ jobs:
           channels:
             - conda-forge
         create-args: >-
-          python=3.14
+          python=3.15
           ccache
         environment-name: pyinterp
         environment-file: .github/environments/win.yml
