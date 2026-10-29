@@ -106,6 +106,7 @@ take the same tree.
 - [Dask helpers](https://cnes.github.io/pangeo-pyinterp/api/dask.html)
 - [Geometry](https://cnes.github.io/pangeo-pyinterp/api/geometry.html)
 - [Design notes](https://cnes.github.io/pangeo-pyinterp/design.html)
+- [Benchmarks against SciPy, xarray and xESMF](https://cnes.github.io/pangeo-pyinterp/benchmarks.html)
 
 ## Optional
 

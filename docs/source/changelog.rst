@@ -228,6 +228,14 @@ Documentation
   (precompiled header, Ninja, ccache), on static analysis with clang-tidy and
   pre-commit, and on building the documentation. The obsolete coverage
   commands are replaced by ``scripts/generate_coverage.sh``.
+* **Benchmarks**: A new page compares pyinterp with SciPy, xarray and xESMF
+  for bilinear interpolation at scattered points, regridding, cubic
+  interpolation and inverse distance weighting, after describing what the
+  libraries do differently (periodic longitudes, undefined values). The
+  timings are reproduced with ``python -m benchmarks.compare``.
+* **README**: Rewritten for new users, with the installation, a quick start
+  and a comparison with xarray and SciPy. Its notes on the axes, the R*-trees
+  and the coordinate conversions moved to a new Design Notes page.
 
 2026.10.0
 ---------

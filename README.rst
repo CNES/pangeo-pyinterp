@@ -96,7 +96,9 @@ tools. pyinterp is built for geo-referenced data:
   arithmetic, at any resolution, without conversion to floats.
 * **Speed**: the interpolators are written in C++ and process the points in
   parallel; the axes find the cell of a point by a direct computation when
-  they are regular.
+  they are regular. Bilinear interpolation runs 5 times faster than SciPy on
+  one core and 34 times faster on all the cores; see the `benchmarks
+  <https://cnes.github.io/pangeo-pyinterp/benchmarks.html>`_.
 * **Undefined values**: the gaps of a field, such as the land of an ocean
   grid, can be filled beforehand, so that the windowed methods (bicubic,
   splines, Akima, Steffen...) do not spread them; at the edges of the grid,

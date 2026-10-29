@@ -29,4 +29,5 @@
    setup
    auto_examples/index.rst
    api
+   benchmarks
    design
