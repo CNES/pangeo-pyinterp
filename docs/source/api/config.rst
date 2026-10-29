@@ -59,6 +59,18 @@ Configurations of the R-tree interpolators of :doc:`unstructured_grid` and
    RBFKernel
    WindowKernel
 
+Reduced Gaussian Grids
+----------------------
+Configuration of the interpolation of :doc:`reduced_gaussian`; the functions
+of :mod:`pyinterp.reduced_gaussian` build it from their keyword arguments.
+
+.. currentmodule:: pyinterp.core.config.reduced_gaussian
+
+.. autosummary::
+   :toctree: _generated/
+
+   ReducedGaussian
+
 Gap Filling
 -----------
 Configurations of the algorithms of :doc:`fill`.

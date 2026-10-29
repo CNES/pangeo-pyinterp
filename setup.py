@@ -559,6 +559,7 @@ def main() -> None:
         ext_modules=[CMakeExtension(name="pyinterp.core")],
         extras_require={
             "dask": ["dask[array]"],
+            "numba": ["numba"],
             "xarray": ["xarray >= 0.13"],
         },
         install_requires=install_requires,

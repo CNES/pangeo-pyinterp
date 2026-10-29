@@ -7,6 +7,7 @@ dependencies:
   - joblib
   - libboost-devel
   - matplotlib
+  - numba
   - numcodecs
   - numpy
   - pandas

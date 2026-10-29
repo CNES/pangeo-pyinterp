@@ -6,12 +6,17 @@
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/string_view.h>
 
 #include <optional>
+#include <stdexcept>
+#include <string>
+#include <string_view>
 
 #include "pyinterp/config/common.hpp"
 #include "pyinterp/config/fill.hpp"
 #include "pyinterp/config/geometric.hpp"
+#include "pyinterp/config/reduced_gaussian.hpp"
 #include "pyinterp/config/rtree.hpp"
 #include "pyinterp/config/windowed.hpp"
 #include "pyinterp/math/interpolate/rbf.hpp"
@@ -513,6 +518,96 @@ auto bind(nb::module_& m) -> void {
 }
 
 }  // namespace fill::pybind
+
+namespace reduced_gaussian::pybind {
+
+/// @brief Parse the name of an interpolation method along time.
+inline auto parse_time_method(std::string_view name) -> AxisMethod {
+  if (name == "linear") {
+    return AxisMethod::kLinear;
+  }
+  if (name == "nearest") {
+    return AxisMethod::kNearest;
+  }
+  throw std::invalid_argument(
+      "time method must be 'linear' or 'nearest', got '" + std::string(name) +
+      "'");
+}
+
+/// @brief Parse the name of a blend mode.
+inline auto parse_blend(std::string_view name) -> Blend {
+  if (name == "columns") {
+    return Blend::kColumns;
+  }
+  if (name == "results") {
+    return Blend::kResults;
+  }
+  throw std::invalid_argument("blend must be 'columns' or 'results', got '" +
+                              std::string(name) + "'");
+}
+
+inline auto bind(nb::module_& m) -> void {
+  add_common_attributes(
+      nb::class_<ReducedGaussian>(
+          m, "ReducedGaussian",
+          "Parameters controlling the interpolation of reduced Gaussian "
+          "grids.")
+          .def(nb::init<>(), "Default constructor.")
+          .def(
+              "with_time_method",
+              [](const ReducedGaussian& self, std::string_view value) {
+                return self.with_time_method(parse_time_method(value));
+              },
+              nb::arg("value"),
+              "Interpolation between the two steps of a series: 'linear' "
+              "(default) or 'nearest'.")
+          .def("with_interval", &ReducedGaussian::with_interval,
+               nb::arg("value"),
+               "Width of the analysis intervals, in the unit of the dates of "
+               "the series; 0 (default) reads the two steps that bracket a "
+               "date.")
+          .def("with_max_step_gap", &ReducedGaussian::with_max_step_gap,
+               nb::arg("value"),
+               "Largest time between the two steps a date reads, in the unit "
+               "of the dates of the series; 0 (default) for no limit.")
+          .def(
+              "with_blend",
+              [](const ReducedGaussian& self, std::string_view value) {
+                return self.with_blend(parse_blend(value));
+              },
+              nb::arg("value"),
+              "When a column callback meets the time blend: 'columns' "
+              "(default) blends the columns then calls the callback once; "
+              "'results' calls it on each step and blends its results.")
+          .def("with_chunk_size", &ReducedGaussian::with_chunk_size,
+               nb::arg("value"),
+               "Number of points given to a batched Python callback at a "
+               "time.")
+          .def_prop_ro("bounds_error",
+                       [](const ReducedGaussian& self) {
+                         return self.common().bounds_error();
+                       })
+          .def_prop_ro("num_threads",
+                       [](const ReducedGaussian& self) {
+                         return self.common().num_threads();
+                       })
+          .def_prop_ro("time_method",
+                       [](const ReducedGaussian& self) {
+                         return self.time_method() == AxisMethod::kNearest
+                                    ? "nearest"
+                                    : "linear";
+                       })
+          .def_prop_ro("interval", &ReducedGaussian::interval)
+          .def_prop_ro("max_step_gap", &ReducedGaussian::max_step_gap)
+          .def_prop_ro("blend",
+                       [](const ReducedGaussian& self) {
+                         return self.blend() == Blend::kResults ? "results"
+                                                                : "columns";
+                       })
+          .def_prop_ro("chunk_size", &ReducedGaussian::chunk_size));
+}
+
+}  // namespace reduced_gaussian::pybind
 }  // namespace config
 
 namespace pybind {
@@ -526,10 +621,14 @@ auto init_config(nb::module_& m) -> void {
   auto rtree =
       config.def_submodule("rtree", "Configuration for RTree interpolation.");
   auto fill = config.def_submodule("fill", "Configuration for fill methods.");
+  auto reduced_gaussian = config.def_submodule(
+      "reduced_gaussian",
+      "Configuration for the interpolation of reduced Gaussian grids.");
   config::geometric::pybind::bind(geometric);
   config::windowed::pybind::bind(windowed);
   config::rtree::pybind::bind(rtree);
   config::fill::pybind::bind(fill);
+  config::reduced_gaussian::pybind::bind(reduced_gaussian);
 }
 
 }  // namespace pybind

@@ -1,3 +1,3 @@
-from . import fill, geometric, rtree, windowed
+from . import fill, geometric, reduced_gaussian, rtree, windowed
 
-__all__ = ["fill", "geometric", "rtree", "windowed"]
+__all__ = ["fill", "geometric", "reduced_gaussian", "rtree", "windowed"]

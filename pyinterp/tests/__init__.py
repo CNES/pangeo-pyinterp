@@ -121,3 +121,31 @@ def load_aoml() -> xr.Dataset:
         attrs={"long_name": "time"},
     )
     return ds
+
+
+def load_reduced_gaussian() -> xr.Dataset:
+    """Load a regional subset of an ECMWF N640 reduced Gaussian grid.
+
+    The analyses of 2018-02-13 at 12h and 18h in a box across the Greenwich
+    meridian (lon -4..4, lat 42..48): surface pressure ``sp`` (time, values),
+    temperature ``t`` and specific humidity ``q`` (time, values, level) on 9
+    of the 137 hybrid levels. The coordinates hold the mesh (``latitude`` and
+    ``pl`` per parallel), the hybrid coefficients ``a`` and ``b`` of the 138
+    half levels and the ``ranges`` of the flat indices of the mesh the subset
+    holds, in storage order.
+    """
+    path = ROOT.joinpath("reduced_gaussian.json")
+    with path.open("r") as stream:
+        data = json.load(stream)
+    ds = xr.Dataset.from_dict(data)
+    for name in ("sp", "t", "q"):
+        ds.variables[name].values = _mask_and_scale(ds[name])
+    ds["time"] = xr.DataArray(
+        (
+            ds["time"].values.astype("timedelta64[h]")
+            + np.datetime64("2018-02-13T00:00:00")
+        ).astype("M8[ns]"),
+        dims=["time"],
+        attrs={"long_name": "time"},
+    )
+    return ds

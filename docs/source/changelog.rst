@@ -50,6 +50,27 @@ New Features
   draws great circles: the results differ by up to 2·10⁻⁵ of the amplitude of
   a smooth field at mid-latitudes with 1° cells, 4·10⁻⁴ with 5° cells.
 
+* **Reduced Gaussian grids**: ``pyinterp.reduced_gaussian`` interpolates
+  the reduced Gaussian grids of the ECMWF analyses and forecasts in 2D, in 3D
+  (a column of model levels per point) and in time, from numeric inputs only:
+  the latitudes of the parallels, their number of points and the values, so no
+  GRIB library is needed. A ``Mesh`` describes the geometry; a ``Zone``, built
+  from the mesh alone before any value is read, holds the part a box or a set
+  of points reads, as ranges of the flat indices of the mesh (exactly the
+  corners of the points: 3,507 of the 2.1 million points of an N640 mesh for a
+  one-hour pass at 1 Hz); a ``Grid`` reads float32 or float64 fields without
+  copy, and a ``Series`` interpolates between time steps that may each hold
+  their own zone (``time_zones``). Each point is located once on the mesh, and
+  its trapezoidal cell serves every field, level and time step. A date reads
+  the two steps that bracket it, the nearest one, or the two ends of its
+  analysis interval, read off the remaining end when one is missing;
+  ``map_availability`` counts the missing ends. ``apply`` computes values per
+  point from the interpolated columns with a Python function called on blocks
+  of points, or with a numba kernel (``column_kernel``) called for each point
+  from several threads without the GIL: a vertical integration over 137 levels
+  at 3,600 points takes 2 ms, against 0.75 s for a Python loop. See the new
+  example, which includes the reading of GRIB files with ecCodes.
+
 Dependencies
 ~~~~~~~~~~~~
 
@@ -60,6 +81,8 @@ Dependencies
 * **dask is optional**: it is no longer installed with ``pyinterp`` either.
   Install ``pyinterp[dask]`` to use the ``pyinterp.dask`` helpers, which say
   so when dask is missing. NumPy is now the only required dependency.
+* **numba is optional**: install ``pyinterp[numba]`` to compile the column
+  kernels of ``pyinterp.reduced_gaussian.column_kernel``.
 
 Performance
 ~~~~~~~~~~~

@@ -33,7 +33,7 @@ except ImportError:
 
     del PackageNotFoundError, _distribution_version
 
-from . import _xarray_hook, core, fill, geohash, regrid
+from . import _xarray_hook, core, fill, geohash, reduced_gaussian, regrid
 
 
 #: Version the compiled extension was built with. It should match
@@ -179,6 +179,7 @@ __all__ = [
     "quadrivariate",
     "query",
     "radial_basis_function",
+    "reduced_gaussian",
     "regrid",
     "trivariate",
     "univariate",

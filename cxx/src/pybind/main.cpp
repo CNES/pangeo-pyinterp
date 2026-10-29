@@ -17,6 +17,7 @@
 #include "pyinterp/pybind/grid.hpp"
 #include "pyinterp/pybind/histogram2d.hpp"
 #include "pyinterp/pybind/period.hpp"
+#include "pyinterp/pybind/reduced_gaussian.hpp"
 #include "pyinterp/pybind/regrid.hpp"
 #include "pyinterp/pybind/rtree.hpp"
 #include "pyinterp/pybind/rtree4d.hpp"
@@ -48,4 +49,5 @@ NB_MODULE(core, m) {
   pyinterp::pybind::init_dateutils(m);
   pyinterp::pybind::init_period(m);
   pyinterp::pybind::init_regrid(m);
+  pyinterp::pybind::init_reduced_gaussian(m);
 }
