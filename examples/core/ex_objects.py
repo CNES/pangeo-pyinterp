@@ -80,7 +80,7 @@ print(t_axis)
 # of the data array must follow the order of the axes passed to the
 # constructor: here (longitude, latitude, time).
 #
-# Here, we create a :py:class:`pyinterp.Grid3D` object for the total column
+# Here, we create a :py:class:`pyinterp.backends.xarray.Grid3D` object for the total column
 # water vapor (TCW) data. The TCW values are stored in the dataset as
 # (time, latitude, longitude), so we transpose them to obtain an array ordered
 # as (longitude, latitude, time).

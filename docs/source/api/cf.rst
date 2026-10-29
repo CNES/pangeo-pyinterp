@@ -5,7 +5,7 @@ longitudes, latitudes and times. The xarray backend (see :doc:`grids`) uses
 them to identify the axes of a ``DataArray`` from the ``units`` attribute of
 its coordinates.
 
-.. currentmodule:: pyinterp.cf
+.. module:: pyinterp.cf
 
 Classes
 -------

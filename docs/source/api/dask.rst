@@ -11,7 +11,7 @@ underlying holders.
 Dask is an optional dependency; install it with
 ``pip install "pyinterp[dask]"``.
 
-.. currentmodule:: pyinterp.dask
+.. module:: pyinterp.dask
 
 Overview
 --------

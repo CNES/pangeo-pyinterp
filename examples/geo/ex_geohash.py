@@ -204,12 +204,12 @@ print(f"Elapsed time: {elapsed:.6f} seconds")
 
 # %%
 # The inverse operation is also possible using the
-# :py:func:`geohash.decode` function, which returns the coordinates of the
+# :py:func:`~pyinterp.geohash.decode` function, which returns the coordinates of the
 # centers of the cells.
 lon_center, lat_center = geohash.decode(codes)
 
 # %%
-# You can also use the :py:func:`geohash.transform` to transform
+# You can also use the :py:func:`~pyinterp.geohash.transform` to transform
 # geohashes from one precision to another.
 codes = geohash.transform(codes, precision=1)
 print(codes)
@@ -219,7 +219,7 @@ codes = geohash.transform(codes, precision=3)
 print(codes)
 
 # %%
-# The :py:func:`geohash.bounding_boxes` function allows calculating the
+# The :py:func:`~pyinterp.geohash.bounding_boxes` function allows calculating the
 # geohash codes contained in a box or a polygon. This function allows, for
 # example, to obtain all the geohash codes present on the Mediterranean Sea.
 MEDITERRANEAN_SEA = [

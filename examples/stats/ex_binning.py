@@ -73,10 +73,10 @@ simple_mean = binning.mean()
 #       simple_mean = result.mean()
 #
 # You can also compute other statistics with the dedicated methods:
-# :py:meth:`variance <pyinterp.Binning2D.variance>`,
-# :py:meth:`min <pyinterp.Binning2D.min>`,
-# :py:meth:`max <pyinterp.Binning2D.max>`,
-# :py:meth:`count <pyinterp.Binning2D.count>`, and so on.
+# :py:meth:`variance <pyinterp.Binning2DFloat64.variance>`,
+# :py:meth:`min <pyinterp.Binning2DFloat64.min>`,
+# :py:meth:`max <pyinterp.Binning2DFloat64.max>`,
+# :py:meth:`count <pyinterp.Binning2DFloat64.count>`, and so on.
 
 # %%
 # Linear Binning

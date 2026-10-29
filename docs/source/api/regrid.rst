@@ -92,7 +92,7 @@ xarray accessor
 NumPy functions
 ---------------
 
-.. currentmodule:: pyinterp.regrid
+.. module:: pyinterp.regrid
 
 .. autosummary::
    :toctree: _generated/

@@ -1,7 +1,7 @@
 Grid Structures
 ===============
 
-.. currentmodule:: pyinterp.backends.xarray
+.. module:: pyinterp.backends.xarray
 
 Xarray Backends
 ---------------

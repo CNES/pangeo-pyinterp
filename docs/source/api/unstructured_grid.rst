@@ -19,7 +19,7 @@ Spatial Index (R-Tree)
    RTree3DFloat32
    RTree3DFloat64
 
-.. currentmodule:: pyinterp.rtree
+.. module:: pyinterp.rtree
 
 Algorithms
 ----------

@@ -44,61 +44,6 @@ def get_build_dirname() -> pathlib.Path:
     )
 
 
-class SubsectionSorter:
-    """Sorts example files within a subsection based on a predefined order."""
-
-    def __init__(self, *args: Any) -> None:  # noqa: ANN401
-        """Initialize the sorter."""
-
-    def __call__(self, fname: str) -> int:
-        """Return the order index for a given filename."""
-        order = {
-            "ex_objects.py": 0,
-            "ex_axis.py": 1,
-            "ex_geometry_primitives.py": 2,
-            "ex_geometry_spatial_predicates.py": 3,
-            "ex_geometry_operations.py": 4,
-            "ex_geometry_advanced.py": 5,
-            "ex_geometry_satellite.py": 6,
-            "ex_geodetic.py": 7,
-            "ex_geohash.py": 8,
-            "ex_xarray_interpolator.py": 9,
-            "ex_1d.py": 10,
-            "ex_2d.py": 11,
-            "ex_3d.py": 12,
-            "ex_4d.py": 13,
-            "ex_unstructured.py": 14,
-            "ex_rtree3d_geodesic.py": 15,
-            "ex_optimal_interpolation_2d_time.py": 16,
-            "ex_optimal_interpolation_geographic.py": 17,
-            "ex_orbit.py": 18,
-            "ex_decompose_track.py": 19,
-            "ex_descriptive_statistics.py": 20,
-            "ex_binning.py": 21,
-            "ex_binning_geodetic.py": 22,
-            "ex_histogram.py": 23,
-            "ex_dask.py": 24,
-            "ex_dateutils.py": 25,
-            "ex_fill_undef.py": 26,
-        }
-        # Examples missing from the list come last, in alphabetical order.
-        return order.get(pathlib.Path(fname).name, len(order))
-
-
-def section_sorter(dirname: str) -> int:
-    """Sorts sections based on a predefined order."""
-    order = {
-        "core": 0,
-        "grid": 1,
-        "oi": 2,
-        "stats": 3,
-        "geo": 4,
-        "utilities": 5,
-        "orbit": 6,
-    }
-    return order.get(pathlib.Path(dirname).name, len(order))
-
-
 def _is_nanobind_func(obj: object) -> bool:
     """Check if object is a nanobind function or method."""
     type_name = type(obj).__name__
@@ -178,6 +123,9 @@ if _SPHINX_INSPECT_IS_COROUTINEFUNCTION is not None:
 build_dirname = get_build_dirname()
 if build_dirname.exists():
     sys.path.insert(0, str(build_dirname))
+
+# Make _gallery_order importable: sphinx-gallery resolves the sort keys by name.
+sys.path.insert(0, str(HERE))
 
 try:
     import pyinterp  # type: ignore[import-not-found]
@@ -318,9 +266,9 @@ sphinx_gallery_conf = {
     # requires joblib.
     "parallel": importlib.util.find_spec("joblib") is not None,
     "pypandoc": False,
-    "subsection_order": section_sorter,
+    "subsection_order": "_gallery_order.section_key",
     "default_thumb_file": str(HERE.joinpath("_static", "gallery-thumb.png")),
-    "within_subsection_order": SubsectionSorter,
+    "within_subsection_order": "_gallery_order.ExampleKey",
     "binder": {
         "org": "CNES",
         "repo": "pangeo-pyinterp",

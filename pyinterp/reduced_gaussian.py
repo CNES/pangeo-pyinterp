@@ -641,8 +641,8 @@ class ColumnKernel:
     """A native column kernel, called per point without the GIL.
 
     Made by :func:`column_kernel`; ``address`` is that of a C function
-    following the ABI documented in :func:`pyinterp.core.reduced_gaussian.
-    apply`.
+    following the ABI documented in
+    :func:`pyinterp.core.reduced_gaussian.apply`.
     """
 
     #: Tag of the calling convention, checked before the kernel is called.

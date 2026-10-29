@@ -11,7 +11,7 @@ In this mode the wrapper:
 * converts the user's ``(lon, lat)`` coordinates to ECEF internally — the
   R-tree's k-nearest-neighbour search then uses the geodetic chord distance,
   which is the right metric on the globe;
-* keeps the original ``(lon, lat)`` to sample any :class:`pyinterp.Grid2D`
+* keeps the original ``(lon, lat)`` to sample any :class:`pyinterp.Grid2D <pyinterp.Grid>`
   parameter (decorrelation length, field standard deviation) — no
   inverse projection is needed because the geographic coordinates are
   preserved end-to-end;

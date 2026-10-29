@@ -1,5 +1,5 @@
 Geospatial & Geodetic Operations
 --------------------------------
 
-Demonstrates geospatial operations such as geodetic calculations and geohash
-encoding/decoding.
+Starts with an overview of the geometry module, then details its primitives,
+spatial predicates and operations, and ends with geohash encoding.

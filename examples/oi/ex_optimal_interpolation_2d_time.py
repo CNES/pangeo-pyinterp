@@ -18,7 +18,7 @@ for this:
   own noise level.
 
 Both ``Lx``, ``Ly``, ``Lt`` and the field standard deviation ``σ`` may be
-either scalars or :class:`pyinterp.Grid2D` objects, which lets you tune
+either scalars or :class:`pyinterp.Grid2D <pyinterp.Grid>` objects, which lets you tune
 the analysis regionally — for instance, increasing ``Lx``/``Ly`` over the
 open ocean and shrinking them in coastal regions.
 """

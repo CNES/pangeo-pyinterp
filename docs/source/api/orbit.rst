@@ -6,7 +6,7 @@ a cycle, then extract a half-orbit with :func:`~pyinterp.orbit.calculate_pass`
 and, for a swath mission, the across-track grid with
 :func:`~pyinterp.orbit.calculate_swath`.
 
-.. currentmodule:: pyinterp.orbit
+.. module:: pyinterp.orbit
 
 Classes
 -------

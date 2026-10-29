@@ -92,7 +92,7 @@ them.
 NumPy functions
 ---------------
 
-.. currentmodule:: pyinterp.reduced_gaussian
+.. module:: pyinterp.reduced_gaussian
 
 .. autosummary::
    :toctree: _generated/

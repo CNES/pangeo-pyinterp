@@ -63,6 +63,26 @@ Rules:
   `pyinterp.backends.xarray.RegularGridInterpolator` once and call it with a
   dictionary of coordinates; it returns a NumPy array.
 
+## Regridding conservatively
+
+To average a field onto coarser cells, or to regrid fluxes and budgets,
+`regrid` gives each target cell the mean of the source values weighted by
+the area of their overlap, which preserves the integral of the field
+(`conservative_normed` in xESMF), without computing a weight file:
+
+```python
+coarse = ds.sst.pyinterp.regrid(
+    lon=np.arange(-179.5, 180, 1.0),  # cell centers, or (n, 2) bounds
+    lat=np.arange(-89.5, 90, 1.0),
+    min_valid_fraction=0.5,
+)
+```
+
+Longitudes are periodic, NaN values are ignored (`normalize=False` counts
+them as zero), the other dimensions are kept, and `ds.pyinterp.regrid` reads
+the CF bounds of the source coordinates. `pyinterp.regrid.conservative` is
+the NumPy equivalent.
+
 ## Interpolating NumPy arrays
 
 ```python
@@ -100,6 +120,8 @@ take the same tree.
 - [Gallery of examples](https://cnes.github.io/pangeo-pyinterp/auto_examples/index.html)
 - [xarray interface](https://cnes.github.io/pangeo-pyinterp/api/grids.html)
 - [Regular grids](https://cnes.github.io/pangeo-pyinterp/api/regular_grid.html)
+- [Conservative regridding](https://cnes.github.io/pangeo-pyinterp/api/regrid.html)
+- [Reduced Gaussian grids (ECMWF)](https://cnes.github.io/pangeo-pyinterp/api/reduced_gaussian.html)
 - [Scattered data](https://cnes.github.io/pangeo-pyinterp/api/unstructured_grid.html)
 - [Gap filling](https://cnes.github.io/pangeo-pyinterp/api/fill.html)
 - [Statistics and binning](https://cnes.github.io/pangeo-pyinterp/api/statistics.html)

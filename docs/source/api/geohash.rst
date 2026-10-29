@@ -7,7 +7,7 @@ cells of a hierarchical grid. Use :func:`~pyinterp.geohash.encode` and
 :func:`~pyinterp.geohash.to_xarray` to map values indexed by geohash onto a
 longitude/latitude grid.
 
-.. currentmodule:: pyinterp.geohash
+.. module:: pyinterp.geohash
 
 Classes
 -------

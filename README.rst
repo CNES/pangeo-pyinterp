@@ -114,6 +114,14 @@ What is inside
   interpolation (nearest, bilinear, inverse distance weighting, bicubic,
   splines, Akima, Steffen, polynomial), with temporal axes, through
   `xarray <https://cnes.github.io/pangeo-pyinterp/api/grids.html>`_ or NumPy.
+* `Conservative regridding
+  <https://cnes.github.io/pangeo-pyinterp/api/regrid.html>`_: area-weighted
+  averages between rectilinear grids, which preserve the integral of the
+  field, on the sphere or on the ellipsoid.
+* `Reduced Gaussian grids
+  <https://cnes.github.io/pangeo-pyinterp/api/reduced_gaussian.html>`_:
+  interpolation of the ECMWF ``N`` and ``O`` grids in 2D, 3D and time,
+  reading only the part of the field the points need.
 * `Scattered data
   <https://cnes.github.io/pangeo-pyinterp/api/unstructured_grid.html>`_:
   R*-trees in Cartesian or geodetic coordinates, with inverse distance

@@ -1,6 +1,8 @@
 API Documentation
 #################
 
+.. module:: pyinterp
+
 pyinterp is a Python library for processing geo-referenced data. It provides
 tools for interpolating data on regular and unstructured grids, filling missing
 values, and performing statistical analysis.

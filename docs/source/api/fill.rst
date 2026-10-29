@@ -9,7 +9,7 @@ the 2D array in place, :func:`~pyinterp.fill.loess` returns a new array, and
 interpolation. The iterative methods and LOESS accept keyword arguments or a
 configuration object (see :doc:`config`).
 
-.. currentmodule:: pyinterp.fill
+.. module:: pyinterp.fill
 
 Algorithms
 ----------

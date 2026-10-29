@@ -45,7 +45,7 @@ def field(lon, lat):
 # %%
 # Now, we generate random longitude and latitude points and populate our R-tree
 # with these points and their corresponding data values. The
-# :py:meth:`~pyinterp.RTree3D.packing` method is the most efficient way to build
+# :py:meth:`~pyinterp.RTree3DFloat64.packing` method is the most efficient way to build
 # the tree from a complete dataset at once.
 N_POINTS = 2000
 X0, X1 = 80, 170

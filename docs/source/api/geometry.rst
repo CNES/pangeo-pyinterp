@@ -2,7 +2,7 @@ Geometric Primitives
 ====================
 Geometric primitives and spatial algorithms.
 
-.. currentmodule:: pyinterp.geometry
+.. module:: pyinterp.geometry
 
 This module provides a comprehensive set of geometric primitives (points,
 lines, polygons) and spatial algorithms. It is built on the Boost.Geometry
@@ -23,7 +23,7 @@ Geographic System
 -----------------
 Geographic (spherical/ellipsoidal) geometry.
 
-.. currentmodule:: pyinterp.geometry.geographic
+.. module:: pyinterp.geometry.geographic
 
 Primitives
 ^^^^^^^^^^
@@ -149,7 +149,7 @@ Cartesian System
 ----------------
 Cartesian (planar) geometry.
 
-.. currentmodule:: pyinterp.geometry.cartesian
+.. module:: pyinterp.geometry.cartesian
 
 Primitives
 ^^^^^^^^^^
@@ -262,7 +262,7 @@ Satellite-Specific
 Satellite-specific geometric operations such as swath calculation, crossover
 finding and track decomposition.
 
-.. currentmodule:: pyinterp.geometry.satellite
+.. module:: pyinterp.geometry.satellite
 
 Functions
 ^^^^^^^^^

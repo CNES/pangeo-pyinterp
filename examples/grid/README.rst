@@ -1,5 +1,6 @@
-Gridded Interpolation & Multidimensional Examples
--------------------------------------------------
+Interpolation & Regridding
+--------------------------
 
-Explore pyinterp's capabilities for interpolation in 1D, 2D, 3D, and 4D, as well
-as handling unstructured grids.
+Interpolate gridded fields with the xarray accessor or with NumPy, from 1D to
+4D, regrid them conservatively between rectilinear grids, read reduced
+Gaussian grids, and interpolate scattered observations with R*-trees.
