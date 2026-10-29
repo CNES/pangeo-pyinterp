@@ -14,6 +14,7 @@ grid.
 
 import matplotlib.pyplot
 import numpy
+import xarray
 
 import pyinterp
 import pyinterp.backends.xarray
@@ -169,11 +170,45 @@ interpolator = pyinterp.backends.xarray.RegularGridInterpolator(pressure)
 print(interpolator.grid)
 
 # %%
+# Labelled Results with the ``pyinterp`` Accessor
+# -----------------------------------------------
+#
+# Once pyinterp and xarray are imported, data arrays and datasets have a
+# ``pyinterp`` accessor. Its
+# :meth:`~pyinterp.backends.xarray.DataArrayAccessor.interp` method follows
+# :meth:`xarray.DataArray.interp`: the coordinates are passed as keyword
+# arguments, and the result is a ``DataArray`` labelled with them, which keeps
+# the name and the attributes of the variable. One-dimensional coordinates
+# define a new grid, so there is no ``meshgrid`` to build.
+mss = ds.mss.pyinterp.interp(
+    lon=numpy.arange(-180, 180, 0.5),
+    lat=numpy.arange(-80, 80, 0.5),
+    method="bicubic",
+)
+print(mss)
+
+# %%
+# Coordinates given as data arrays sharing a dimension are interpolated point
+# by point, along a track for instance. The keyword arguments that do not
+# name a dimension are the options of the interpolator, and dates can be
+# given as strings.
+track = tcw.pyinterp.interp(
+    longitude=xarray.DataArray(numpy.linspace(-30, 30, 50), dims="obs"),
+    latitude=xarray.DataArray(numpy.linspace(-20, 40, 50), dims="obs"),
+    time="2002-07-05T12:00",
+    bounds_error=True,
+)
+print(track)
+
+# %%
 # When to Use It
 # --------------
 #
-# :class:`~pyinterp.backends.xarray.RegularGridInterpolator` is the shortest
-# path when the data is already an ``xarray.DataArray``: one class for any
+# The ``pyinterp`` accessor is the shortest path when the data is already an
+# ``xarray.DataArray`` and a labelled result is wanted; it builds the grid at
+# each call, so keep a
+# :class:`~pyinterp.backends.xarray.RegularGridInterpolator` to interpolate
+# the same variable many times. The interpolator is one class for any
 # number of dimensions, coordinates passed by name, dates handled for you.
 # It is a thin wrapper around
 # :class:`~pyinterp.backends.xarray.Grid2D`,

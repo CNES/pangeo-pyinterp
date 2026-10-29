@@ -20,6 +20,14 @@ Install the latest release, or upgrade an existing installation:
 
    pip install -U pyinterp
 
+The ``xarray`` extra also installs `xarray <https://xarray.dev/>`_, needed by
+:mod:`pyinterp.backends.xarray`, the ``pyinterp`` accessor of data arrays and
+:func:`pyinterp.geohash.to_xarray`:
+
+.. code-block:: bash
+
+   pip install -U "pyinterp[xarray]"
+
 Pre-release builds (``X.Y.ZrcN``, ``X.Y.Z.devN``) are uploaded to TestPyPI; you
 can try them with:
 

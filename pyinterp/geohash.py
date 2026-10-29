@@ -54,7 +54,13 @@ def to_xarray(hashes: NDArray1DStr, data: NDArray1D) -> xr.DataArray:
     # initialization. xarray has a long import time, and since this module is
     # loaded directly by pyinterp, we delay the import until this function is
     # actually called.
-    import xarray as xr  # noqa: PLC0415
+    try:
+        import xarray as xr  # noqa: PLC0415
+    except ImportError as exc:
+        raise ImportError(
+            "to_xarray requires xarray, install it with "
+            "`pip install pyinterp[xarray]`"
+        ) from exc
 
     if hashes.shape != data.shape:
         raise ValueError(

@@ -4,6 +4,28 @@ Changelog
 Unreleased
 ----------
 
+New Features
+~~~~~~~~~~~~
+
+* **xarray accessor**: data arrays and datasets have a ``pyinterp`` accessor
+  once ``pyinterp`` and xarray are imported, in either order; ``pyinterp``
+  still does not import xarray, the accessor is registered when xarray is
+  imported. ``da.pyinterp.interp`` and ``ds.pyinterp.interp`` follow
+  ``xarray.DataArray.interp``: the coordinates are passed as keyword
+  arguments, one-dimensional coordinates define a grid and data arrays sharing
+  a dimension are interpolated point by point. The result is a ``DataArray``
+  (or a ``Dataset``) labelled with the coordinates, which keeps the name and
+  the attributes of the variables. The other keyword arguments are the options
+  of the interpolator.
+
+Dependencies
+~~~~~~~~~~~~
+
+* **xarray is optional**: it is no longer installed with ``pyinterp``. Install
+  ``pyinterp[xarray]`` to use ``pyinterp.backends.xarray``, the ``pyinterp``
+  accessor and ``pyinterp.geohash.to_xarray``, which now say so when xarray is
+  missing.
+
 Bug Fixes
 ~~~~~~~~~
 

@@ -18,6 +18,26 @@ including temporal axes and geodetic units.
     Grid3D
     Grid4D
 
+Xarray Accessors
+----------------
+Once both ``pyinterp`` and xarray are imported, in either order,
+``xarray.DataArray`` and ``xarray.Dataset`` objects have a ``pyinterp``
+accessor. Importing ``pyinterp`` does not import xarray: the accessor is
+registered when xarray is imported. Its ``interp`` method follows
+:meth:`xarray.DataArray.interp` and returns labelled results:
+
+.. code-block:: python
+
+    import pyinterp
+
+    result = ds.mss.pyinterp.interp(lon=lons, lat=lats, method="bicubic")
+
+.. autosummary::
+    :toctree: _generated
+
+    DataArrayAccessor
+    DatasetAccessor
+
 .. currentmodule:: pyinterp
 
 Core Grids

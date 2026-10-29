@@ -33,7 +33,7 @@ except ImportError:
 
     del PackageNotFoundError, _distribution_version
 
-from . import core, fill, geohash
+from . import _xarray_hook, core, fill, geohash
 
 
 #: Version the compiled extension was built with. It should match
@@ -198,3 +198,7 @@ def _reduce_grid(grid: core.GridHolder) -> tuple[Any, ...]:
 
 # Register the pickle reducer for GridHolder (the actual C++ class)
 copyreg.pickle(core.GridHolder, _reduce_grid)
+
+# Register the xarray accessors, now if xarray is loaded, or else once it is
+# imported: importing it here would slow down the initialization of pyinterp.
+_xarray_hook.install()

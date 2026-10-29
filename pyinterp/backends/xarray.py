@@ -14,6 +14,15 @@ from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 
+
+try:
+    import xarray as xr
+except ImportError as exc:
+    raise ImportError(
+        "pyinterp.backends.xarray requires xarray, install it with "
+        "`pip install pyinterp[xarray]`"
+    ) from exc
+
 from .. import cf, core
 from ..regular_grid_interpolator import (
     InterpolationMethods,
@@ -24,9 +33,7 @@ from ..regular_grid_interpolator import (
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable, Iterable
-
-    import xarray as xr
+    from collections.abc import Callable, Hashable, Iterable, Mapping
 
     from ..type_hints import (
         NDArray1D,
@@ -36,7 +43,14 @@ if TYPE_CHECKING:
         NDArray1DNumericWithTime,
     )
 
-__all__ = ["Grid2D", "Grid3D", "Grid4D", "RegularGridInterpolator"]
+__all__ = [
+    "DataArrayAccessor",
+    "DatasetAccessor",
+    "Grid2D",
+    "Grid3D",
+    "Grid4D",
+    "RegularGridInterpolator",
+]
 
 #: Two dimensional grid.
 TWO_DIMENSIONS = 2
@@ -835,3 +849,307 @@ class RegularGridInterpolator:
 
         """
         return self._interp(coords, method=method, **kwargs)
+
+
+def _merge_indexers(
+    coords: Mapping[Hashable, Any] | None,
+    coords_kwargs: dict[str, Any],
+    dims: tuple[Hashable, ...],
+) -> tuple[dict[Hashable, Any], dict[str, Any]]:
+    """Split the keyword arguments into indexers and interpolation options.
+
+    A keyword argument named after a dimension of the variable is a
+    coordinate to interpolate at; any other is an option of the interpolator.
+
+    Returns:
+        The indexers and the interpolation options.
+
+    """
+    indexers: dict[Hashable, Any] = dict(coords) if coords is not None else {}
+    options: dict[str, Any] = {}
+    for name, value in coords_kwargs.items():
+        if name not in dims:
+            options[name] = value
+        elif name in indexers:
+            raise ValueError(
+                f"the coordinate {name!r} is given both in coords and as a "
+                "keyword argument"
+            )
+        else:
+            indexers[name] = value
+    return indexers, options
+
+
+def _as_indexer(
+    name: Hashable,
+    value: Any,  # noqa: ANN401
+    source: xr.DataArray,
+) -> xr.DataArray:
+    """Convert a coordinate to interpolate at into a data array.
+
+    The conversion follows :py:meth:`xarray.DataArray.interp`: a data array is
+    kept as it is, a scalar gives a scalar coordinate and a one-dimensional
+    array gives a new dimension named after the coordinate.
+
+    Raises:
+        ValueError: If the coordinate is a multidimensional array that is not
+            a data array.
+
+    """
+    if not isinstance(value, xr.DataArray):
+        array = np.asarray(value)
+        if array.ndim > 1:
+            raise ValueError(
+                f"the coordinate {name!r} has {array.ndim} dimensions: give a "
+                "multidimensional coordinate as a DataArray to name its "
+                "dimensions"
+            )
+        value = (
+            xr.DataArray(array)
+            if array.ndim == 0
+            else xr.DataArray(array, dims=(name,), coords={name: array})
+        )
+    # Dates given as strings are converted to the type of the axis, so that
+    # the coordinates of the result are dates.
+    if name in source.coords:
+        dtype = source.coords[name].dtype
+        if dtype.kind in "mM" and value.dtype.kind not in "mM":
+            value = value.astype(dtype)
+    return value
+
+
+def _interp_data_array(
+    source: xr.DataArray,
+    indexers: dict[Hashable, Any],
+    method: InterpolationMethods,
+    options: dict[str, Any],
+) -> xr.DataArray:
+    """Interpolate a data array at the given coordinates.
+
+    Returns:
+        The interpolated values, labelled with the coordinates they were
+        interpolated at.
+
+    Raises:
+        ValueError: If a dimension of the variable has no coordinate to
+            interpolate at, or if a coordinate is not a dimension.
+
+    """
+    unknown = [name for name in indexers if name not in source.dims]
+    if unknown:
+        raise ValueError(
+            f"the coordinates {tuple(unknown)} are not dimensions of the "
+            f"variable {source.dims}"
+        )
+    missing = [dim for dim in source.dims if dim not in indexers]
+    if missing:
+        raise ValueError(
+            f"the dimensions {tuple(missing)} have no coordinate to "
+            "interpolate at: every dimension of the variable must be "
+            "interpolated"
+        )
+    # The indexers are taken in the order of the dimensions of the variable,
+    # which sets the order of the dimensions of the result.
+    converted = {
+        dim: _as_indexer(dim, indexers[dim], source) for dim in source.dims
+    }
+    broadcast = dict(
+        zip(converted, xr.broadcast(*converted.values()), strict=True)
+    )
+    template = next(iter(broadcast.values()))
+
+    values = RegularGridInterpolator(source)(
+        {dim: item.values for dim, item in broadcast.items()},
+        method=method,
+        **options,
+    )
+
+    result = xr.DataArray(
+        values,
+        dims=template.dims,
+        coords={
+            name: coord
+            for item in broadcast.values()
+            for name, coord in item.coords.items()
+        },
+        name=source.name,
+        attrs=dict(source.attrs),
+    )
+    # A coordinate interpolated at points of other dimensions (a scalar or a
+    # data array) is attached to the result as a non-dimension coordinate.
+    for dim, item in converted.items():
+        if dim not in result.dims:
+            result.coords[dim] = item.variable
+    for dim in source.dims:
+        if dim in source.coords:
+            result.coords[dim].attrs = dict(source.coords[dim].attrs)
+    # Coordinates that depend on none of the interpolated dimensions still
+    # describe the result.
+    for name, coord in source.coords.items():
+        if name not in result.coords and not set(coord.dims) & set(
+            source.dims
+        ):
+            result.coords[name] = coord
+    return result
+
+
+@xr.register_dataarray_accessor("pyinterp")
+class DataArrayAccessor:
+    """Interpolate a data array with ``da.pyinterp``.
+
+    The accessor is registered as soon as both :py:mod:`pyinterp` and xarray
+    are imported, in either order.
+
+    Args:
+        data_array: The data array to interpolate.
+
+    """
+
+    def __init__(self, data_array: xr.DataArray) -> None:
+        """Initialize the accessor."""
+        self._data_array = data_array
+
+    def interp(
+        self,
+        coords: Mapping[Hashable, Any] | None = None,
+        method: InterpolationMethods = "bilinear",
+        **coords_kwargs: Any,  # noqa: ANN401
+    ) -> xr.DataArray:
+        """Interpolate the data array at new coordinates.
+
+        This method is a faster replacement of
+        :py:meth:`xarray.DataArray.interp` for variables defined on 2D, 3D or
+        4D regular grids. As there, a coordinate can be:
+
+        - a scalar, which gives a scalar coordinate of the result;
+        - a one-dimensional array, which gives a dimension named after the
+          coordinate: several such coordinates define a grid (outer product);
+        - a :py:class:`xarray.DataArray`, whose dimensions become those of the
+          result: coordinates sharing a dimension are interpolated point by
+          point.
+
+        Unlike :py:meth:`xarray.DataArray.interp`, every dimension of the
+        variable must be interpolated. Longitudes, latitudes and dates are
+        identified as in :py:class:`RegularGridInterpolator`: longitudes are
+        periodic and dates can be given as strings.
+
+        Args:
+            coords: Mapping from dimension names to the coordinates to
+                interpolate at.
+            method: Interpolation method. See
+                :py:meth:`RegularGridInterpolator.__call__` for the supported
+                methods.
+            **coords_kwargs: The coordinates to interpolate at, for keyword
+                arguments named after a dimension of the variable, or options
+                of the interpolation method, such as ``bounds_error``,
+                ``num_threads`` or ``half_window_size_x``. Use ``coords`` for
+                a dimension whose name is that of an option.
+
+        Returns:
+            The interpolated values, labelled with the coordinates they were
+            interpolated at, with the name and attributes of the variable.
+
+        Raises:
+            ValueError: If a dimension of the variable has no coordinate to
+                interpolate at, or if a coordinate is not a dimension.
+
+        Note:
+            The data are loaded into memory and copied into a new grid at each
+            call. To interpolate the same variable many times, build a
+            :py:class:`RegularGridInterpolator` once and reuse it.
+
+        Examples:
+            Interpolate on a new grid
+
+            >>> result = da.pyinterp.interp(
+            ...     lon=np.arange(-180, 180, 0.25),
+            ...     lat=np.arange(-80, 80, 0.25),
+            ...     method="bicubic",
+            ... )
+
+            Interpolate along a track
+
+            >>> track = da.pyinterp.interp(
+            ...     lon=xr.DataArray(lons, dims="obs"),
+            ...     lat=xr.DataArray(lats, dims="obs"),
+            ...     time=xr.DataArray(dates, dims="obs"),
+            ... )
+
+        """
+        indexers, options = _merge_indexers(
+            coords, coords_kwargs, self._data_array.dims
+        )
+        return _interp_data_array(self._data_array, indexers, method, options)
+
+
+@xr.register_dataset_accessor("pyinterp")
+class DatasetAccessor:
+    """Interpolate the variables of a dataset with ``ds.pyinterp``.
+
+    The accessor is registered as soon as both :py:mod:`pyinterp` and xarray
+    are imported, in either order.
+
+    Args:
+        dataset: The dataset to interpolate.
+
+    """
+
+    def __init__(self, dataset: xr.Dataset) -> None:
+        """Initialize the accessor."""
+        self._dataset = dataset
+
+    def interp(
+        self,
+        coords: Mapping[Hashable, Any] | None = None,
+        method: InterpolationMethods = "bilinear",
+        **coords_kwargs: Any,  # noqa: ANN401
+    ) -> xr.Dataset:
+        """Interpolate the variables of the dataset at new coordinates.
+
+        The variables defined on exactly the interpolated dimensions are
+        interpolated as with :py:meth:`DataArrayAccessor.interp`. The
+        variables that depend on none of them are kept as they are. The others,
+        such as the bounds of a longitude axis, are dropped.
+
+        Args:
+            coords: Mapping from dimension names to the coordinates to
+                interpolate at.
+            method: Interpolation method. See
+                :py:meth:`RegularGridInterpolator.__call__` for the supported
+                methods.
+            **coords_kwargs: The coordinates to interpolate at, for keyword
+                arguments named after a dimension of the dataset, or options
+                of the interpolation method.
+
+        Returns:
+            A dataset holding the interpolated variables and the variables
+            kept, with the attributes of the dataset.
+
+        Raises:
+            ValueError: If no variable is defined on exactly the interpolated
+                dimensions.
+
+        """
+        dataset = self._dataset
+        indexers, options = _merge_indexers(
+            coords, coords_kwargs, tuple(dataset.dims)
+        )
+        interpolated = set(indexers)
+
+        variables: dict[Hashable, xr.DataArray] = {}
+        for name, variable in dataset.data_vars.items():
+            dims = set(variable.dims)
+            if dims == interpolated:
+                variables[name] = _interp_data_array(
+                    variable, indexers, method, options
+                )
+            elif not dims & interpolated:
+                variables[name] = variable
+        if not any(
+            set(dataset[name].dims) == interpolated for name in variables
+        ):
+            raise ValueError(
+                "no variable of the dataset is defined on the dimensions "
+                f"{tuple(indexers)}"
+            )
+        return xr.Dataset(variables, attrs=dict(dataset.attrs))
