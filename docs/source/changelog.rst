@@ -71,6 +71,13 @@ New Features
   at 3,600 points takes 2 ms, against 0.75 s for a Python loop. See the new
   example, which includes the reading of GRIB files with ecCodes.
 
+* **Geodesic distances in RTree3D**: Added the ``distance`` option to
+  ``RTree3D``. With ``distance="geodesic"`` and a spheroid, the tree still
+  searches its nodes with straight-line ECEF distances, but ranks the neighbors
+  by geodesic distance on the spheroid and returns geodesic distances: it finds
+  the same neighbors as the geographic ``RTree``, at the same distances, 5 to
+  10 times faster. The default, ``"euclidean"``, keeps the previous behavior.
+
 Dependencies
 ~~~~~~~~~~~~
 
@@ -85,6 +92,8 @@ Dependencies
   so when dask is missing. NumPy is now the only required dependency.
 * **numba is optional**: install ``pyinterp[numba]`` to compile the column
   kernels of ``pyinterp.reduced_gaussian.column_kernel``.
+
+* **pocketfft**: Updated the vendored submodule to the latest commit.
 
 Performance
 ~~~~~~~~~~~
@@ -119,6 +128,32 @@ Performance
   thread and 2.5 times faster on all cores. The neighbors and distances are
   unchanged; only observations at exactly the same distance may come in
   another order, or another of them be kept as the last neighbor.
+
+* **Python extension**: The extension is no longer compiled with ``-Os`` in
+  release builds, which disabled the vectorization and inlining of the Eigen
+  kernels.
+* **Fill methods**: The LOESS window weights are computed once per thread
+  (2.7 to 3.6 times faster), and Gauss-Seidel only sweeps the unknown cells.
+* **Interpolation**: Windowed, bilinear and bicubic interpolations no longer
+  copy the window arrays or allocate memory for each point, nearest and IDW
+  interpolations share the corner distances across layers, and periodic axis
+  lookups avoid integer divisions.
+* **R-tree**: k-NN searches no longer use the incremental query, and the
+  query points of a batch are searched in spatial order.
+* **Statistics**: T-digest quantiles are computed in a single pass,
+  ``Binning1D`` uses a dedicated update when no weights are given, Cartesian
+  linear binning weights are computed in closed form, and strided arrays are
+  iterated with incremental offsets.
+* **Geometry**: Point-in-polygon tests are filtered with the envelope of the
+  container.
+* **Geohash**: ``geohash.encode`` and ``geohash.transform`` are faster.
+  When zooming out, ``transform`` now returns each code once, in ascending
+  order.
+* **Date utilities**: ``datetime64`` values are split with a resolution known
+  at compile time.
+* **Benchmarks**: Added a ``benchmarks`` package, run with
+  ``python -m benchmarks``, covering 180 cases in nine families. Results can be
+  saved and compared with a previous run.
 
 Bug Fixes
 ~~~~~~~~~
@@ -213,45 +248,6 @@ Bug Fixes
 * **EquatorCoordinates**: ``orbit.EquatorCoordinates.undefined`` creates its
   ``NaT`` with an explicit unit, as the generic unit is deprecated by NumPy.
 
-New Features
-~~~~~~~~~~~~
-
-* **Geodesic distances in RTree3D**: Added the ``distance`` option to
-  ``RTree3D``. With ``distance="geodesic"`` and a spheroid, the tree still
-  searches its nodes with straight-line ECEF distances, but ranks the neighbors
-  by geodesic distance on the spheroid and returns geodesic distances: it finds
-  the same neighbors as the geographic ``RTree``, at the same distances, 5 to
-  10 times faster. The default, ``"euclidean"``, keeps the previous behavior.
-
-Performance
-~~~~~~~~~~~
-
-* **Python extension**: The extension is no longer compiled with ``-Os`` in
-  release builds, which disabled the vectorization and inlining of the Eigen
-  kernels.
-* **Fill methods**: The LOESS window weights are computed once per thread
-  (2.7 to 3.6 times faster), and Gauss-Seidel only sweeps the unknown cells.
-* **Interpolation**: Windowed, bilinear and bicubic interpolations no longer
-  copy the window arrays or allocate memory for each point, nearest and IDW
-  interpolations share the corner distances across layers, and periodic axis
-  lookups avoid integer divisions.
-* **R-tree**: k-NN searches no longer use the incremental query, and the
-  query points of a batch are searched in spatial order.
-* **Statistics**: T-digest quantiles are computed in a single pass,
-  ``Binning1D`` uses a dedicated update when no weights are given, Cartesian
-  linear binning weights are computed in closed form, and strided arrays are
-  iterated with incremental offsets.
-* **Geometry**: Point-in-polygon tests are filtered with the envelope of the
-  container.
-* **Geohash**: ``geohash.encode`` and ``geohash.transform`` are faster.
-  When zooming out, ``transform`` now returns each code once, in ascending
-  order.
-* **Date utilities**: ``datetime64`` values are split with a resolution known
-  at compile time.
-* **Benchmarks**: Added a ``benchmarks`` package, run with
-  ``python -m benchmarks``, covering 180 cases in nine families. Results can be
-  saved and compared with a previous run.
-
 Build System
 ~~~~~~~~~~~~
 
@@ -282,11 +278,6 @@ Build System
 * **CMake policy CMP0144**: A typo kept the policy unset, so ``find_package``
   ignored the upper-case ``<PACKAGENAME>_ROOT`` variables such as
   ``BOOST_ROOT``.
-
-Dependencies
-~~~~~~~~~~~~
-
-* **pocketfft**: Updated the vendored submodule to the latest commit.
 
 Documentation
 ~~~~~~~~~~~~~
