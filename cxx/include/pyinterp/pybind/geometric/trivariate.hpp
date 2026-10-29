@@ -19,6 +19,7 @@
 #include "pyinterp/math/interpolate/geometric/multivariate.hpp"
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/parallel_for.hpp"
+#include "pyinterp/pybind/geometric/outer.hpp"
 
 namespace pyinterp::geometric::pybind {
 namespace detail {
@@ -180,6 +181,95 @@ template <template <class> class Point, typename GridType, typename ResultType,
   return result;
 }
 
+/// @brief Trivariate interpolation on the grid defined by 1D coordinates
+/// @tparam Point Point template class.
+/// @tparam GridType Type of the grid.
+/// @tparam ResultType Type of the interpolation result.
+/// @tparam ZType Type of the third axis coordinate.
+/// @param[in] grid The trivariate grid.
+/// @param[in] x X coordinates of the grid to interpolate at.
+/// @param[in] y Y coordinates of the grid to interpolate at.
+/// @param[in] z Z coordinates of the grid to interpolate at.
+/// @param[in] config Configuration for trivariate interpolation.
+/// @return Interpolated values at the points (x[i], y[j], z[k]), stored at
+/// the index i + x.size() * (j + y.size() * k).
+template <template <class> class Point, typename GridType, typename ResultType,
+          typename ZType>
+[[nodiscard]] auto trivariate_outer(const GridType& grid,
+                                    const Eigen::Ref<const Eigen::VectorXd>& x,
+                                    const Eigen::Ref<const Eigen::VectorXd>& y,
+                                    const Eigen::Ref<const Vector<ZType>>& z,
+                                    const config::geometric::Trivariate& config)
+    -> Vector<ResultType> {
+  const auto bounds_error = config.common().bounds_error();
+  if (x.size() == 0 || y.size() == 0 || z.size() == 0) {
+    return Vector<ResultType>(0);
+  }
+  const auto x_cells = locate_axis<0, ResultType>(grid, x, bounds_error);
+  const auto y_cells = locate_axis<1, ResultType>(grid, y, bounds_error);
+  const auto z_cells = locate_axis<2, ZType>(grid, z, bounds_error);
+
+  auto spatial_interpolator_ptr =
+      math::interpolate::geometric::make_interpolator<Point, ResultType>(
+          config.spatial().method(), config.spatial().exponent());
+  const auto& spatial_interpolator = *spatial_interpolator_ptr;
+
+  const auto z_axis_method =
+      config.third_axis().method() == config::AxisMethod::kLinear
+          ? math::interpolate::geometric::AxisMethod::kLinear
+          : math::interpolate::geometric::AxisMethod::kNearest;
+  const auto z_axis_interpolator =
+      math::interpolate::geometric::get_axis_interpolator<ZType, ResultType>(
+          z_axis_method);
+
+  using SpatialPoint3D =
+      math::interpolate::geometric::SpatialPoint3D<Point, ResultType, ZType>;
+  const auto ny = y.size();
+
+  return evaluate_outer<ResultType>(
+      x.size(), ny * z.size(),
+      [&](const int64_t row, const int64_t begin, const int64_t end,
+          ResultType* output) -> void {
+        const auto& y_cell = y_cells[row % ny];
+        const auto& z_cell = z_cells[row / ny];
+        if (!y_cell.is_valid() || !z_cell.is_valid()) {
+          return;
+        }
+        for (auto ix = begin; ix < end; ++ix) {
+          const auto& x_cell = x_cells[ix];
+          if (!x_cell.is_valid()) {
+            continue;
+          }
+          const auto data = math::interpolate::geometric::DataCube<ResultType>(
+              static_cast<ResultType>(
+                  grid.value(x_cell.i0, y_cell.i0, z_cell.i0)),
+              static_cast<ResultType>(
+                  grid.value(x_cell.i0, y_cell.i1, z_cell.i0)),
+              static_cast<ResultType>(
+                  grid.value(x_cell.i1, y_cell.i0, z_cell.i0)),
+              static_cast<ResultType>(
+                  grid.value(x_cell.i1, y_cell.i1, z_cell.i0)),
+              static_cast<ResultType>(
+                  grid.value(x_cell.i0, y_cell.i0, z_cell.i1)),
+              static_cast<ResultType>(
+                  grid.value(x_cell.i0, y_cell.i1, z_cell.i1)),
+              static_cast<ResultType>(
+                  grid.value(x_cell.i1, y_cell.i0, z_cell.i1)),
+              static_cast<ResultType>(
+                  grid.value(x_cell.i1, y_cell.i1, z_cell.i1)));
+          output[ix] = math::interpolate::geometric::trivariate(
+              SpatialPoint3D(Point<ResultType>(x_cell.value, y_cell.value),
+                             z_cell.value),
+              SpatialPoint3D(Point<ResultType>(x_cell.lower, y_cell.lower),
+                             z_cell.lower),
+              SpatialPoint3D(Point<ResultType>(x_cell.upper, y_cell.upper),
+                             z_cell.upper),
+              data, spatial_interpolator, z_axis_interpolator);
+        }
+      },
+      config.common().num_threads());
+}
+
 /// @brief Vectorized trivariate interpolation with Z coordinate as a Python
 /// object.
 /// @tparam Point Point template class.
@@ -235,6 +325,30 @@ Returns:
 
 Raises:
     IndexError: If a point is out of the grid bounds
+      and `config.common.bounds_error` is set to `True`.
+)";
+
+constexpr const char* const kTrivariateOuterDocstring = R"(
+Perform trivariate interpolation on the grid defined by 1D coordinates.
+
+The points to interpolate at are all the combinations of the coordinates
+``x``, ``y`` and ``z`` (outer product). Each coordinate is located once on its
+axis, which is much faster than interpolating the flattened points with
+:py:func:`trivariate`, and gives the same results.
+
+Args:
+    grid: 3D grid containing data to interpolate.
+    x: X coordinates of the grid to interpolate at.
+    y: Y coordinates of the grid to interpolate at.
+    z: Z coordinates (third axis) of the grid to interpolate at.
+    config: Configuration for trivariate interpolation.
+
+Returns:
+    Interpolated values, flattened with ``x`` varying fastest: reshape them
+    to ``(x.size, y.size, z.size)`` in Fortran order.
+
+Raises:
+    IndexError: If a coordinate is out of the grid bounds
       and `config.common.bounds_error` is set to `True`.
 )";
 

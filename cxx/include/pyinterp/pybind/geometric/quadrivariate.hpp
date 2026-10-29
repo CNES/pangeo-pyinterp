@@ -19,6 +19,7 @@
 #include "pyinterp/math/interpolate/geometric/multivariate.hpp"
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/parallel_for.hpp"
+#include "pyinterp/pybind/geometric/outer.hpp"
 
 namespace pyinterp::geometric::pybind {
 namespace detail {
@@ -217,6 +218,114 @@ template <template <class> class Point, typename GridType, typename ResultType,
   return result;
 }
 
+/// @brief Quadrivariate interpolation on the grid defined by 1D coordinates
+/// @tparam Point Point template class.
+/// @tparam GridType Type of the grid.
+/// @tparam ResultType Type of the interpolation result.
+/// @tparam ZType Type of the third axis coordinate.
+/// @param[in] grid The quadrivariate grid.
+/// @param[in] x X coordinates of the grid to interpolate at.
+/// @param[in] y Y coordinates of the grid to interpolate at.
+/// @param[in] z Z coordinates of the grid to interpolate at.
+/// @param[in] u U coordinates of the grid to interpolate at.
+/// @param[in] config Configuration for quadrivariate interpolation.
+/// @return Interpolated values at the points (x[i], y[j], z[k], u[l]), stored
+/// at the index i + x.size() * (j + y.size() * (k + z.size() * l)).
+template <template <class> class Point, typename GridType, typename ResultType,
+          typename ZType>
+[[nodiscard]] auto quadrivariate_outer(
+    const GridType& grid, const Eigen::Ref<const Vector<double>>& x,
+    const Eigen::Ref<const Vector<double>>& y,
+    const Eigen::Ref<const Vector<ZType>>& z,
+    const Eigen::Ref<const Vector<double>>& u,
+    const config::geometric::Quadrivariate& config) -> Vector<ResultType> {
+  const auto bounds_error = config.common().bounds_error();
+  if (x.size() == 0 || y.size() == 0 || z.size() == 0 || u.size() == 0) {
+    return Vector<ResultType>(0);
+  }
+  const auto x_cells = locate_axis<0, ResultType>(grid, x, bounds_error);
+  const auto y_cells = locate_axis<1, ResultType>(grid, y, bounds_error);
+  const auto z_cells = locate_axis<2, ZType>(grid, z, bounds_error);
+  const auto u_cells = locate_axis<3, double>(grid, u, bounds_error);
+
+  auto spatial_interpolator_ptr =
+      math::interpolate::geometric::make_interpolator<Point, ResultType>(
+          config.spatial().method(), config.spatial().exponent());
+  const auto& spatial_interpolator = *spatial_interpolator_ptr;
+
+  const auto z_axis_method =
+      config.third_axis().method() == config::AxisMethod::kLinear
+          ? math::interpolate::geometric::AxisMethod::kLinear
+          : math::interpolate::geometric::AxisMethod::kNearest;
+  const auto z_axis_interpolator =
+      math::interpolate::geometric::get_axis_interpolator<ZType, ResultType>(
+          z_axis_method);
+
+  const auto u_axis_method =
+      config.fourth_axis().method() == config::AxisMethod::kLinear
+          ? math::interpolate::geometric::AxisMethod::kLinear
+          : math::interpolate::geometric::AxisMethod::kNearest;
+  const auto u_axis_interpolator =
+      math::interpolate::geometric::get_axis_interpolator<double, ResultType>(
+          u_axis_method);
+
+  using SpatialPoint4D =
+      math::interpolate::geometric::SpatialPoint4D<Point, ResultType, ZType,
+                                                   double>;
+  const auto ny = y.size();
+  const auto nz = z.size();
+
+  return evaluate_outer<ResultType>(
+      x.size(), ny * nz * u.size(),
+      [&](const int64_t row, const int64_t begin, const int64_t end,
+          ResultType* output) -> void {
+        const auto& y_cell = y_cells[row % ny];
+        const auto& z_cell = z_cells[(row / ny) % nz];
+        const auto& u_cell = u_cells[row / (ny * nz)];
+        if (!y_cell.is_valid() || !z_cell.is_valid() || !u_cell.is_valid()) {
+          return;
+        }
+        const auto iy0 = y_cell.i0;
+        const auto iy1 = y_cell.i1;
+        const auto iz0 = z_cell.i0;
+        const auto iz1 = z_cell.i1;
+        const auto iu0 = u_cell.i0;
+        const auto iu1 = u_cell.i1;
+        for (auto ix = begin; ix < end; ++ix) {
+          const auto& x_cell = x_cells[ix];
+          if (!x_cell.is_valid()) {
+            continue;
+          }
+          const auto ix0 = x_cell.i0;
+          const auto ix1 = x_cell.i1;
+          const auto value = [&](const int64_t i, const int64_t j,
+                                 const int64_t k, const int64_t l) {
+            return static_cast<ResultType>(grid.value(i, j, k, l));
+          };
+          const auto data =
+              math::interpolate::geometric::DataHypercube<ResultType>(
+                  value(ix0, iy0, iz0, iu0), value(ix0, iy1, iz0, iu0),
+                  value(ix1, iy0, iz0, iu0), value(ix1, iy1, iz0, iu0),
+                  value(ix0, iy0, iz1, iu0), value(ix0, iy1, iz1, iu0),
+                  value(ix1, iy0, iz1, iu0), value(ix1, iy1, iz1, iu0),
+                  value(ix0, iy0, iz0, iu1), value(ix0, iy1, iz0, iu1),
+                  value(ix1, iy0, iz0, iu1), value(ix1, iy1, iz0, iu1),
+                  value(ix0, iy0, iz1, iu1), value(ix0, iy1, iz1, iu1),
+                  value(ix1, iy0, iz1, iu1), value(ix1, iy1, iz1, iu1));
+          output[ix] = math::interpolate::geometric::quadrivariate(
+              SpatialPoint4D(Point<ResultType>(x_cell.value, y_cell.value),
+                             z_cell.value, u_cell.value),
+              SpatialPoint4D(Point<ResultType>(x_cell.lower, y_cell.lower),
+                             z_cell.lower, u_cell.lower),
+              SpatialPoint4D(Point<ResultType>(x_cell.upper, y_cell.upper),
+                             z_cell.upper, u_cell.upper),
+              data, spatial_interpolator, z_axis_interpolator,
+              u_axis_interpolator);
+        }
+      },
+      config.common().num_threads());
+}
+
 /// @brief Vectorized quadrivariate interpolation with Z coordinate as a Python
 /// object.
 /// @tparam Point Point template class.
@@ -275,6 +384,31 @@ Returns:
 
 Raises:
     IndexError: If a point is out of the grid bounds
+      and `config.common.bounds_error` is set to `True`.
+)";
+
+constexpr const char* const kQuadrivariateOuterDocstring = R"(
+Perform quadrivariate interpolation on the grid defined by 1D coordinates.
+
+The points to interpolate at are all the combinations of the coordinates
+``x``, ``y``, ``z`` and ``u`` (outer product). Each coordinate is located once
+on its axis, which is much faster than interpolating the flattened points
+with :py:func:`quadrivariate`, and gives the same results.
+
+Args:
+    grid: 4D grid containing data to interpolate.
+    x: X coordinates of the grid to interpolate at.
+    y: Y coordinates of the grid to interpolate at.
+    z: Z coordinates (third axis) of the grid to interpolate at.
+    u: U coordinates (fourth axis) of the grid to interpolate at.
+    config: Configuration for quadrivariate interpolation.
+
+Returns:
+    Interpolated values, flattened with ``x`` varying fastest: reshape them
+    to ``(x.size, y.size, z.size, u.size)`` in Fortran order.
+
+Raises:
+    IndexError: If a coordinate is out of the grid bounds
       and `config.common.bounds_error` is set to `True`.
 )";
 

@@ -24,8 +24,11 @@ except ImportError as exc:
     ) from exc
 
 from .. import cf, core
+from ..core.config import geometric
 from ..regular_grid_interpolator import (
+    _GEOMETRIC_METHODS,
     InterpolationMethods,
+    _make_geometric_config,
     bivariate,
     quadrivariate,
     trivariate,
@@ -66,6 +69,24 @@ LONGITUDE_AXIS_INDEX = 0
 
 #: Index of the temporal axis in a 3D or 4D grid.
 TEMPORAL_AXIS_INDEX = 2
+
+#: Interpolation on the grid defined by 1D coordinates, by number of
+#: dimensions.
+_OUTER_FUNCTIONS: dict[int, Callable[..., np.ndarray]] = {
+    TWO_DIMENSIONS: core.bivariate_outer,
+    THREE_DIMENSIONS: core.trivariate_outer,
+    FOUR_DIMENSIONS: core.quadrivariate_outer,
+}
+
+#: Configuration of the geometric interpolators, by number of dimensions.
+_GEOMETRIC_CONFIGS: dict[int, Any] = {
+    TWO_DIMENSIONS: geometric.Bivariate,
+    THREE_DIMENSIONS: geometric.Trivariate,
+    FOUR_DIMENSIONS: geometric.Quadrivariate,
+}
+
+#: Options of the interpolation on the grid defined by 1D coordinates.
+_OUTER_OPTIONS = frozenset({"bounds_error", "num_threads"})
 
 
 class AxisIdentifier:
@@ -276,19 +297,15 @@ def _get_canonical_dimensions(
     )
 
 
-def _coords(
+def _check_coords(
     coords: dict[Hashable, Any],
     dims: tuple[Hashable, ...],
-    datetime64: tuple[Hashable, core.TemporalAxis] | None = None,
-) -> tuple[tuple[NDArray1D | NDArray1DDateTime64, ...], tuple[int, ...]]:
-    """Get the arguments to provide to grid interpolation functions.
+) -> None:
+    """Check that the coordinates are those of the grid dimensions.
 
-    The coordinates can be scalars or array-like of any shape: they are
-    broadcast against each other and flattened.
-
-    Returns:
-        The flattened coordinates, in the order of the grid dimensions, and
-        the shape to give to the interpolated values.
+    Raises:
+        TypeError: If coords is not a dict.
+        IndexError: If the coordinates are not those of the dimensions.
 
     """
     if not isinstance(coords, dict):
@@ -305,28 +322,46 @@ def _coords(
             + ", ".join([str(item) for item in unknown])
         )
 
+
+def _coords(
+    coords: dict[Hashable, Any],
+    dims: tuple[Hashable, ...],
+    datetime64: tuple[Hashable, core.TemporalAxis] | None = None,
+) -> tuple[tuple[NDArray1D | NDArray1DDateTime64, ...], tuple[int, ...]]:
+    """Get the arguments to provide to grid interpolation functions.
+
+    The coordinates can be scalars or array-like of any shape: they are
+    broadcast against each other and flattened.
+
+    Returns:
+        The flattened coordinates, in the order of the grid dimensions, and
+        the shape to give to the interpolated values.
+
+    """
+    _check_coords(coords, dims)
     values = np.broadcast_arrays(*(np.asarray(coords[dim]) for dim in dims))
     shape = values[0].shape
-    temporal_dim = datetime64[0] if datetime64 is not None else None
+    return tuple(
+        _cast_coordinate(dim, value.ravel(), datetime64)
+        for dim, value in zip(dims, values, strict=True)
+    ), shape
 
-    result: list[NDArray1D | NDArray1DDateTime64] = []
-    for dim, value in zip(dims, values, strict=True):
-        flat = value.ravel()
-        if datetime64 is not None and dim == temporal_dim:
-            # Cast temporal coordinates
-            dates = (
-                flat if flat.dtype.kind == "M" else flat.astype("datetime64")
-            )
-            result.append(
-                datetime64[1].cast_to_temporal_axis(
-                    cast("NDArray1DDateTime64", dates)
-                )
-            )
-        else:
-            result.append(
-                cast("NDArray1D", flat.astype(np.float64, copy=False))
-            )
-    return tuple(result), shape
+
+def _cast_coordinate(
+    dim: Hashable,
+    values: np.ndarray,
+    datetime64: tuple[Hashable, core.TemporalAxis] | None,
+) -> NDArray1D | NDArray1DDateTime64:
+    """Cast 1D coordinates to the type expected by the axis of a grid."""
+    if datetime64 is not None and dim == datetime64[0]:
+        # Cast temporal coordinates
+        dates = (
+            values if values.dtype.kind == "M" else values.astype("datetime64")
+        )
+        return datetime64[1].cast_to_temporal_axis(
+            cast("NDArray1DDateTime64", dates)
+        )
+    return cast("NDArray1D", values.astype(np.float64, copy=False))
 
 
 class _GridHolder:
@@ -346,6 +381,53 @@ class _GridHolder:
                 dims[2],
                 cast("core.TemporalAxis", self._instance.z),
             )
+
+    def _outer(
+        self,
+        coords: dict[Hashable, Any],
+        method: InterpolationMethods = "bilinear",
+        *,
+        bounds_error: bool = False,
+        num_threads: int = 0,
+    ) -> np.ndarray:
+        """Interpolate on the grid defined by 1D coordinates.
+
+        The points to interpolate at are all the combinations of the
+        coordinates (outer product). Each coordinate is located once on its
+        axis, which is much faster than interpolating the broadcast
+        coordinates, and gives the same results.
+
+        Args:
+            coords: Mapping from dimension names to the 1D coordinates of the
+                grid to interpolate at.
+            method: Geometric interpolation method: ``bilinear``, ``idw`` or
+                ``nearest``.
+            bounds_error: If True, raise an error for a coordinate out of the
+                grid.
+            num_threads: Number of threads to use, 0 for all CPUs.
+
+        Returns:
+            The interpolated values, with one dimension per coordinate in the
+            order of the dimensions of the grid.
+
+        """
+        _check_coords(coords, self._dims)
+        ndim = len(self._dims)
+        axes = tuple(
+            _cast_coordinate(
+                dim, np.asarray(coords[dim]).reshape(-1), self._datetime64
+            )
+            for dim in self._dims
+        )
+        config = _make_geometric_config(
+            cast("Any", method),
+            _GEOMETRIC_CONFIGS[ndim],
+            bounds_error=bounds_error,
+            num_threads=num_threads,
+        )
+        return _OUTER_FUNCTIONS[ndim](self._instance, *axes, config).reshape(
+            tuple(item.size for item in axes), order="F"
+        )
 
     def __getattr__(self, name: str) -> Any:  # noqa: ANN401
         """Delegate attribute access to the underlying grid instance."""
@@ -918,6 +1000,53 @@ def _as_indexer(
     return value
 
 
+def _is_outer(
+    indexers: dict[Hashable, xr.DataArray],
+    method: InterpolationMethods,
+    options: dict[str, Any],
+) -> bool:
+    """Return whether the coordinates define a grid to interpolate at.
+
+    This is the case when each coordinate is a scalar or a 1D array along its
+    own dimension, and the interpolation method is geometric.
+    """
+    return (
+        method in _GEOMETRIC_METHODS
+        and set(options) <= _OUTER_OPTIONS
+        and all(
+            item.ndim == 0 or item.dims == (dim,)
+            for dim, item in indexers.items()
+        )
+    )
+
+
+def _interp_outer(
+    grid: Grid2D | Grid3D | Grid4D,
+    indexers: dict[Hashable, xr.DataArray],
+    template: xr.DataArray,
+    method: InterpolationMethods,
+    options: dict[str, Any],
+) -> np.ndarray:
+    """Interpolate on the grid defined by scalar or 1D coordinates.
+
+    Returns:
+        The interpolated values, with the dimensions of the template.
+
+    """
+    dims = grid._dims
+    values = grid._outer(
+        {dim: item.values for dim, item in indexers.items()},
+        method,
+        **options,
+    )
+    # The scalar coordinates give no dimension to the result
+    kept = [dim for dim in dims if indexers[dim].ndim]
+    values = values.squeeze(
+        axis=tuple(ix for ix, dim in enumerate(dims) if not indexers[dim].ndim)
+    )
+    return values.transpose([kept.index(dim) for dim in template.dims])
+
+
 def _interp_data_array(
     source: xr.DataArray,
     indexers: dict[Hashable, Any],
@@ -958,11 +1087,17 @@ def _interp_data_array(
     )
     template = next(iter(broadcast.values()))
 
-    values = RegularGridInterpolator(source)(
-        {dim: item.values for dim, item in broadcast.items()},
-        method=method,
-        **options,
-    )
+    interpolator = RegularGridInterpolator(source)
+    if _is_outer(converted, method, options):
+        values = _interp_outer(
+            interpolator.grid, converted, template, method, options
+        )
+    else:
+        values = interpolator(
+            {dim: item.values for dim, item in broadcast.items()},
+            method=method,
+            **options,
+        )
 
     result = xr.DataArray(
         values,

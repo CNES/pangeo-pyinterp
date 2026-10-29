@@ -19,6 +19,7 @@
 #include "pyinterp/math/interpolate/geometric/bivariate.hpp"
 #include "pyinterp/math/interpolate/interpolation_result.hpp"
 #include "pyinterp/parallel_for.hpp"
+#include "pyinterp/pybind/geometric/outer.hpp"
 #include "pyinterp/pybind/grid.hpp"
 
 namespace pyinterp::geometric::pybind {
@@ -113,7 +114,129 @@ Raises:
       and `config.common.bounds_error` is set to `True`.
 )";
 
+constexpr const char* const kBivariateOuterDocstring = R"(
+Perform bivariate interpolation on the grid defined by 1D coordinates.
+
+The points to interpolate at are all the combinations of the coordinates
+``x`` and ``y`` (outer product). Each coordinate is located once on its axis,
+which is much faster than interpolating the flattened points with
+:py:func:`bivariate`, and gives the same results.
+
+Args:
+    grid: 2D grid containing data to interpolate.
+    x: X coordinates of the grid to interpolate at.
+    y: Y coordinates of the grid to interpolate at.
+    config: Configuration for bivariate interpolation.
+
+Returns:
+    Interpolated values, flattened with ``x`` varying fastest: reshape them
+    to ``(x.size, y.size)`` in Fortran order.
+
+Raises:
+    IndexError: If a coordinate is out of the grid bounds
+      and `config.common.bounds_error` is set to `True`.
+)";
+
 }  // namespace detail
+
+/// @brief Bivariate interpolation on the grid defined by 1D coordinates
+/// @tparam Point Point type (e.g., Point2D)
+/// @tparam DataType Data type stored in the grid
+/// @tparam ResultType Result type of the interpolation
+/// @param[in] grid 2D grid containing data to interpolate
+/// @param[in] x X coordinates of the grid to interpolate at
+/// @param[in] y Y coordinates of the grid to interpolate at
+/// @param[in] config Configuration for bivariate interpolation
+/// @return Interpolated values at the points (x[i], y[j]), stored at the
+/// index i + j * x.size()
+template <template <class> class Point, typename DataType, typename ResultType>
+[[nodiscard]] auto bivariate_outer(const Grid2D<DataType>& grid,
+                                   const Eigen::Ref<const Eigen::VectorXd>& x,
+                                   const Eigen::Ref<const Eigen::VectorXd>& y,
+                                   const config::geometric::Bivariate& config)
+    -> Vector<ResultType> {
+  const auto bounds_error = config.common().bounds_error();
+  const auto num_threads = config.common().num_threads();
+  if (x.size() == 0 || y.size() == 0) {
+    return Vector<ResultType>(0);
+  }
+  const auto x_cells =
+      detail::locate_axis<0, ResultType>(grid, x, bounds_error);
+  const auto y_cells =
+      detail::locate_axis<1, ResultType>(grid, y, bounds_error);
+
+  if (config.spatial().method() ==
+      math::interpolate::geometric::InterpolationMethod::kBilinear) {
+    using Bilinear = math::interpolate::geometric::Bilinear<Point, ResultType>;
+    // The relative positions in the cells only depend on the axes
+    const auto weights = [](const auto& cells) {
+      std::vector<ResultType> result(cells.size());
+      for (size_t ix = 0; ix < cells.size(); ++ix) {
+        const auto& cell = cells[ix];
+        if (cell.is_valid()) {
+          result[ix] = Bilinear::weight(cell.value, cell.lower, cell.upper);
+        }
+      }
+      return result;
+    };
+    const auto t = weights(x_cells);
+    const auto u = weights(y_cells);
+
+    return detail::evaluate_outer<ResultType>(
+        x.size(), y.size(),
+        [&](const int64_t row, const int64_t begin, const int64_t end,
+            ResultType* output) -> void {
+          const auto& y_cell = y_cells[row];
+          if (!y_cell.is_valid()) {
+            return;
+          }
+          const auto u_row = u[row];
+          for (auto ix = begin; ix < end; ++ix) {
+            const auto& x_cell = x_cells[ix];
+            if (!x_cell.is_valid()) {
+              continue;
+            }
+            output[ix] = Bilinear::combine(
+                t[ix], u_row,
+                static_cast<ResultType>(grid.value(x_cell.i0, y_cell.i0)),
+                static_cast<ResultType>(grid.value(x_cell.i0, y_cell.i1)),
+                static_cast<ResultType>(grid.value(x_cell.i1, y_cell.i0)),
+                static_cast<ResultType>(grid.value(x_cell.i1, y_cell.i1)));
+          }
+        },
+        num_threads);
+  }
+
+  auto interpolator_ptr =
+      math::interpolate::geometric::make_interpolator<Point, ResultType>(
+          config.spatial().method(), config.spatial().exponent());
+  const auto& interpolator = *interpolator_ptr;
+
+  return detail::evaluate_outer<ResultType>(
+      x.size(), y.size(),
+      [&](const int64_t row, const int64_t begin, const int64_t end,
+          ResultType* output) -> void {
+        const auto& y_cell = y_cells[row];
+        if (!y_cell.is_valid()) {
+          return;
+        }
+        for (auto ix = begin; ix < end; ++ix) {
+          const auto& x_cell = x_cells[ix];
+          if (!x_cell.is_valid()) {
+            continue;
+          }
+          output[ix] = interpolator.evaluate(
+              Point<ResultType>(x_cell.value, y_cell.value),
+              Point<ResultType>(x_cell.lower, y_cell.lower),
+              Point<ResultType>(x_cell.upper, y_cell.upper),
+              static_cast<ResultType>(grid.value(x_cell.i0, y_cell.i0)),
+              static_cast<ResultType>(grid.value(x_cell.i0, y_cell.i1)),
+              static_cast<ResultType>(grid.value(x_cell.i1, y_cell.i0)),
+              static_cast<ResultType>(grid.value(x_cell.i1, y_cell.i1)));
+        }
+      },
+      num_threads);
+}
 
 /// @brief Vectorized bivariate interpolation
 /// @tparam Point Point type (e.g., Point2D)

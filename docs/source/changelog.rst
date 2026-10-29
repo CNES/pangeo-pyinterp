@@ -17,6 +17,17 @@ New Features
   (or a ``Dataset``) labelled with the coordinates, which keeps the name and
   the attributes of the variables. The other keyword arguments are the options
   of the interpolator.
+* **Interpolation on a grid of points**: ``core.bivariate_outer``,
+  ``core.trivariate_outer`` and ``core.quadrivariate_outer`` interpolate with
+  the geometric methods (``bilinear``, ``idw``, ``nearest``) at all the
+  combinations of 1D coordinates (outer product). Each coordinate is located
+  once on its axis instead of once per point, and the result is that of the
+  point-by-point interpolation, periodic longitudes, undefined values and
+  ``bounds_error`` included. The ``pyinterp`` accessor uses them when every
+  coordinate is a scalar or a 1D array along its own dimension: regridding a
+  global 0.25° field onto a 0.1° grid (5.8 million points) with the bilinear
+  method takes 14 ms on one core instead of 144 ms (7 ms instead of 29 ms on
+  all cores).
 
 Dependencies
 ~~~~~~~~~~~~

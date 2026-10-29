@@ -41,6 +41,23 @@ struct TrivariateInterpolator {
   }
 };
 
+/// @brief Functor for the trivariate interpolation of a grid of points
+struct TrivariateOuterInterpolator {
+  /// @brief Call operator for 3D grids
+  template <typename DataType, typename ResultType, typename ZType,
+            typename GridType>
+  auto operator()(const GridType& grid,
+                  const Eigen::Ref<const Eigen::VectorXd>& x,
+                  const Eigen::Ref<const Eigen::VectorXd>& y,
+                  const Eigen::Ref<const Vector<ZType>>& z,
+                  const config::geometric::Trivariate& config) const
+      -> Vector<ResultType> {
+    nanobind::gil_scoped_release release;
+    return detail::trivariate_outer<Point, GridType, ResultType, ZType>(
+        grid, x, y, z, config);
+  }
+};
+
 }  // namespace
 
 auto init_trivariate(nanobind::module_& m) -> void {
@@ -56,6 +73,17 @@ auto init_trivariate(nanobind::module_& m) -> void {
       },
       nb::arg("grid"), nb::arg("x"), nb::arg("y"), nb::arg("z"),
       nb::arg("config"), detail::kTrivariateDocstring);
+
+  m.def(
+      "trivariate_outer",
+      [](const GridHolder& grid, const Eigen::Ref<const Eigen::VectorXd>& x,
+         const Eigen::Ref<const Eigen::VectorXd>& y, const nb::object& z,
+         const config::geometric::Trivariate& config) -> nb::object {
+        return GridDispatcher<Point>::dispatch_trivariate(
+            grid, x, y, z, config, TrivariateOuterInterpolator{});
+      },
+      nb::arg("grid"), nb::arg("x"), nb::arg("y"), nb::arg("z"),
+      nb::arg("config"), detail::kTrivariateOuterDocstring);
 }
 
 }  // namespace pyinterp::geometric::pybind

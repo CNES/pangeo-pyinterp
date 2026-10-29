@@ -42,6 +42,24 @@ struct QuadrivariateInterpolator {
   }
 };
 
+/// @brief Functor for the quadrivariate interpolation of a grid of points
+struct QuadrivariateOuterInterpolator {
+  /// @brief Call operator for 4D grids
+  template <typename DataType, typename ResultType, typename ZType,
+            typename GridType>
+  auto operator()(const GridType& grid,
+                  const Eigen::Ref<const Vector<double>>& x,
+                  const Eigen::Ref<const Vector<double>>& y,
+                  const Eigen::Ref<const Vector<ZType>>& z,
+                  const Eigen::Ref<const Vector<double>>& u,
+                  const config::geometric::Quadrivariate& config) const
+      -> Vector<ResultType> {
+    nanobind::gil_scoped_release release;
+    return detail::quadrivariate_outer<Point, GridType, ResultType, ZType>(
+        grid, x, y, z, u, config);
+  }
+};
+
 }  // namespace
 
 auto init_quadrivariate(nanobind::module_& m) -> void {
@@ -58,6 +76,18 @@ auto init_quadrivariate(nanobind::module_& m) -> void {
       },
       nb::arg("grid"), nb::arg("x"), nb::arg("y"), nb::arg("z"), nb::arg("u"),
       nb::arg("config"), detail::kQuadrivariateDocstring);
+
+  m.def(
+      "quadrivariate_outer",
+      [](const GridHolder& grid, const Eigen::Ref<const Vector<double>>& x,
+         const Eigen::Ref<const Vector<double>>& y, const nb::object& z,
+         const Eigen::Ref<const Vector<double>>& u,
+         const config::geometric::Quadrivariate& config) -> nb::object {
+        return GridDispatcher<Point>::dispatch_quadrivariate(
+            grid, x, y, z, u, config, QuadrivariateOuterInterpolator{});
+      },
+      nb::arg("grid"), nb::arg("x"), nb::arg("y"), nb::arg("z"), nb::arg("u"),
+      nb::arg("config"), detail::kQuadrivariateOuterDocstring);
 }
 
 }  // namespace pyinterp::geometric::pybind

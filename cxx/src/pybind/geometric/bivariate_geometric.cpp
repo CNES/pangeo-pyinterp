@@ -38,6 +38,20 @@ struct BivariateInterpolator {
   }
 };
 
+/// @brief Functor for the bivariate interpolation of a grid of points
+struct BivariateOuterInterpolator {
+  /// @brief Call operator for 2D grids
+  template <typename DataType, typename ResultType, typename GridType>
+  auto operator()(const GridType& grid,
+                  const Eigen::Ref<const Eigen::VectorXd>& x,
+                  const Eigen::Ref<const Eigen::VectorXd>& y,
+                  const config::geometric::Bivariate& config) const
+      -> Vector<ResultType> {
+    nanobind::gil_scoped_release release;
+    return bivariate_outer<Point, DataType, ResultType>(grid, x, y, config);
+  }
+};
+
 }  // namespace
 
 auto init_bivariate(nanobind::module_& m) -> void {
@@ -53,6 +67,17 @@ auto init_bivariate(nanobind::module_& m) -> void {
       },
       nb::arg("grid"), nb::arg("x"), nb::arg("y"), nb::arg("config"),
       detail::kBivariateDocstring);
+
+  m.def(
+      "bivariate_outer",
+      [](const GridHolder& grid, const Eigen::Ref<const Eigen::VectorXd>& x,
+         const Eigen::Ref<const Eigen::VectorXd>& y,
+         const config::geometric::Bivariate& config) -> nb::object {
+        return GridDispatcher<Point>::dispatch_bivariate(
+            grid, x, y, config, BivariateOuterInterpolator{});
+      },
+      nb::arg("grid"), nb::arg("x"), nb::arg("y"), nb::arg("config"),
+      detail::kBivariateOuterDocstring);
 }
 
 }  // namespace pyinterp::geometric::pybind

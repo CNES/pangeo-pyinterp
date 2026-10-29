@@ -61,11 +61,14 @@ __all__ = [
     "TDigestFloat32",
     "TDigestFloat64",
     "bivariate",
+    "bivariate_outer",
     "fill",
     "geometry",
     "period",
     "quadrivariate",
+    "quadrivariate_outer",
     "trivariate",
+    "trivariate_outer",
 ]
 
 _DType = TypeVar("_DType", bound=np.generic)
@@ -99,6 +102,27 @@ def quadrivariate(
     z: NDArray1DNumericWithTime,
     u: NDArray1DNumeric,
     config: geometric.Quadrivariate | windowed.Quadrivariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
+def bivariate_outer(
+    grid: GridHolder,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    config: geometric.Bivariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
+def trivariate_outer(
+    grid: GridHolder,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
+    config: geometric.Trivariate,
+) -> NDArray1DFloat32 | NDArray1DFloat64: ...
+def quadrivariate_outer(
+    grid: GridHolder,
+    x: NDArray1DNumeric,
+    y: NDArray1DNumeric,
+    z: NDArray1DNumericWithTime,
+    u: NDArray1DNumeric,
+    config: geometric.Quadrivariate,
 ) -> NDArray1DFloat32 | NDArray1DFloat64: ...
 
 class Axis:
