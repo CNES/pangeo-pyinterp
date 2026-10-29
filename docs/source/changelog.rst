@@ -121,6 +121,13 @@ Performance
 Bug Fixes
 ~~~~~~~~~
 
+* **conda builds on Windows**: rattler-build defines
+  ``CONDA_BUILD_CROSS_COMPILATION`` for native builds too, set to ``0``, and
+  CMake took any definition for a cross-compilation: it looked for the Python
+  headers alone, which failed for Python 3.15 on Windows. Only ``1`` now
+  selects the cross-compilation path, as in ``setup.py``. On Windows,
+  ``CMAKE_ARGS`` also lost the backslashes of its paths when split; they are
+  now kept.
 * **Geohash of an invalid latitude**: ``geohash.encode``, ``geohash.GeoHash``
   and the integer encoder took any latitude: outside [-90, 90], or NaN, the
   conversion to the integer code was undefined behavior, which gave the code

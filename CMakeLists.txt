@@ -153,12 +153,20 @@ if(NOT HAS_CPP23_FLAG)
   message(FATAL_ERROR "Unsupported compiler -- requires C++23 support!")
 endif()
 
+# conda-build and rattler-build define CONDA_BUILD_CROSS_COMPILATION for every
+# build, native ones included, and set it to 1 only when cross-compiling.
+if(CMAKE_CROSSCOMPILING OR "$ENV{CONDA_BUILD_CROSS_COMPILATION}" STREQUAL "1")
+  set(PYINTERP_CROSS_COMPILING TRUE)
+else()
+  set(PYINTERP_CROSS_COMPILING FALSE)
+endif()
+
 # Check if the C++ compiler and linker flags are set correctly.
 macro(CHECK_CXX_COMPILER_AND_linker_flags result cxx_flags linker_flags)
   set(CMAKE_REQUIRED_FLAGS ${cxx_flags})
   set(CMAKE_REQUIRED_LIBRARIES ${linker_flags})
   set(CMAKE_REQUIRED_QUIET FALSE)
-  if(CMAKE_CROSSCOMPILING OR DEFINED ENV{CONDA_BUILD_CROSS_COMPILATION})
+  if(PYINTERP_CROSS_COMPILING)
     check_cxx_source_compiles("int main(int argc, char **argv) { return 0; }"
                               ${result})
   else()
@@ -337,7 +345,7 @@ endif()
 # Python
 if(NOT PYINTERP_BUILD_PYTHON_BINDINGS)
   # Nothing to do: the Python extension is not being built.
-elseif(CMAKE_CROSSCOMPILING OR DEFINED ENV{CONDA_BUILD_CROSS_COMPILATION})
+elseif(PYINTERP_CROSS_COMPILING)
   if(NOT DEFINED PYTHON_ROOT_DIR AND DEFINED ENV{PREFIX})
     set(PYTHON_ROOT_DIR "$ENV{PREFIX}")
   endif()

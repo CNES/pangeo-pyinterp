@@ -266,7 +266,12 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         """Split CMake arguments preserving quoted values."""
         if not value:
             return []
-        return shlex.split(value)
+        lexer = shlex.shlex(value, posix=True)
+        lexer.whitespace_split = True
+        if os.name == "nt":
+            # The backslashes of Windows paths are separators, not escapes.
+            lexer.escape = ""
+        return list(lexer)
 
     @staticmethod
     def filter_cmake_definitions(args: list[str], *names: str) -> list[str]:
