@@ -251,6 +251,11 @@ Bug Fixes
 Build System
 ~~~~~~~~~~~~
 
+* **Release workflow**: The source distribution is built and published by the
+  workflow that publishes the wheels, which waits for both before publishing
+  anything. Two workflows used to publish them, so PyPI reported the
+  provenance of the 2026.10.0 files as inconsistent, and the source
+  distribution could be published without the wheels.
 * **Precompiled header**: The Python extension is compiled with a precompiled
   header holding the Boost.Geometry, Eigen and nanobind headers, which accounted
   for about half of the compilation time. It can be disabled with the

@@ -1,4 +1,4 @@
-name: Build and publish wheels
+name: Build and publish to PyPI
 
 on:
   push:
@@ -114,11 +114,42 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
+  # The source distribution is built and published by the same workflow as the
+  # wheels: PyPI flags a release whose files come from different workflows as
+  # having an inconsistent provenance, and a single publish job never releases
+  # the sdist without the wheels.
+  build_sdist:
+    name: Build source distribution
+    needs: security-policy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          submodules: recursive
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.x"
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
+
   # Pre-release tags (e.g. v1.2.3rc1, v1.2.3.dev1, v1.2.3a1, v1.2.3b1) go to
   # TestPyPI; plain stable tags (vX.Y.Z) go to real PyPI.
   detect-target:
     name: Detect publish target
-    needs: build_wheels
+    needs: [build_wheels, build_sdist]
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     outputs:
@@ -134,7 +165,7 @@ jobs:
           fi
 
   publish-testpypi:
-    name: Publish wheels to TestPyPI
+    name: Publish to TestPyPI
     needs: detect-target
     if: needs.detect-target.outputs.prerelease == 'true'
     runs-on: ubuntu-latest
@@ -146,7 +177,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: cibw-wheels-*
+          pattern: cibw-*
           path: dist
           merge-multiple: true
       - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
@@ -154,7 +185,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   publish-pypi:
-    name: Publish wheels to PyPI
+    name: Publish to PyPI
     needs: detect-target
     if: needs.detect-target.outputs.prerelease == 'false'
     runs-on: ubuntu-latest
@@ -166,7 +197,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: cibw-wheels-*
+          pattern: cibw-*
           path: dist
           merge-multiple: true
       - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
