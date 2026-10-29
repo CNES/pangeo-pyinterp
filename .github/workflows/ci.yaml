@@ -316,10 +316,75 @@ jobs:
       run: |
         pytest -v -ra
 
+  # The documentation is built in its own job, in parallel with the tests, on
+  # the runner with the most cores.
+  docs:
+    name: docs
+    needs: geometry-stubs-sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+        submodules: recursive
+        fetch-depth: 0
+        fetch-tags: true
+
+    - name: Setup Miniconda
+      uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39 # v3.2.1
+      with:
+        cache-downloads: true
+        condarc: |
+          channels:
+            - conda-forge
+        create-args: >-
+          python=3.14
+          ccache
+        environment-name: pyinterp
+        environment-file: .github/environments/docs.yml
+        init-shell: bash
+
+    - name: Restore ccache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ env.CCACHE_DIR }}
+        key: ccache-${{ github.job }}-${{ runner.arch }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ github.job }}-${{ runner.arch }}-
+
+    - name: Build extension
+      shell: bash -l {0}
+      env:
+        # Read by CMake (>= 3.17) when the build tree is configured.
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
+        # See the linux job: the conda c++ driver must be identified as GCC.
+        CCACHE_COMPILERTYPE: gcc
+      run: |
+        python setup.py build_ext
+        python setup.py build
+
+    # The font cache of Matplotlib takes about 20 s to build, and the gallery
+    # downloads the Natural Earth data of cartopy: keep both between runs.
+    - name: Restore the Matplotlib and cartopy caches
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cache/matplotlib
+          ~/.local/share/cartopy
+        key: docs-data-${{ runner.os }}-${{ hashFiles('.github/environments/docs.yml') }}
+        restore-keys: |
+          docs-data-${{ runner.os }}-
+
+    # -j auto parallelizes the reading and the writing of the pages, and the
+    # execution of the gallery (sphinx_gallery_conf["parallel"]).
     - name: Generate Documentation
       shell: bash -l {0}
+      env:
+        MPLBACKEND: agg
       run: |
-        sphinx-build -b html docs/source docs/build
+        sphinx-build -j auto -b html docs/source docs/build
 
     - name: Upload artifact
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -327,11 +392,11 @@ jobs:
       with:
         path: docs/build
 
-  # Publish the documentation built by the macos job. Pull requests never reach
+  # Publish the documentation built by the docs job. Pull requests never reach
   # this job: fork PRs cannot obtain the Pages/OIDC permissions it requires.
   deploy:
     name: deploy-docs
-    needs: macos
+    needs: docs
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 10

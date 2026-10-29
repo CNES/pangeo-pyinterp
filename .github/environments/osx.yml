@@ -1,6 +1,5 @@
 name: pyinterp
 dependencies:
-  - cartopy>=0.20.0
   - clang_osx-arm64
   - clangxx_osx-arm64
   - cmake
@@ -18,9 +17,6 @@ dependencies:
   - pytest-cov
   - setuptools
   - setuptools-scm
-  - sphinx-book-theme
-  - sphinx-gallery
-  - sphinx-inline-tabs
   - xarray
 channels:
   - conda-forge

@@ -1,6 +1,7 @@
 """Configuration file for the Sphinx documentation builder."""
 
 import datetime
+import importlib.util
 import inspect
 import pathlib
 import sys
@@ -313,6 +314,9 @@ epub_exclude_files = ["search.html"]
 sphinx_gallery_conf = {
     "examples_dirs": [HERE.parent.parent.joinpath("examples")],
     "filename_pattern": r"[\\\/]ex_",
+    # Run the examples with as many processes as sphinx-build -j, which
+    # requires joblib.
+    "parallel": importlib.util.find_spec("joblib") is not None,
     "pypandoc": False,
     "subsection_order": section_sorter,
     "default_thumb_file": str(HERE.joinpath("_static", "gallery-thumb.png")),

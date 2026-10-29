@@ -1,0 +1,22 @@
+name: pyinterp
+dependencies:
+  - cartopy>=0.20.0
+  - cmake
+  - cxx-compiler
+  - dask
+  - joblib
+  - libboost-devel
+  - matplotlib
+  - numcodecs
+  - numpy
+  - pandas
+  - pip
+  - setuptools
+  - setuptools-scm
+  - sphinx
+  - sphinx-book-theme
+  - sphinx-gallery
+  - sphinx-inline-tabs
+  - xarray
+channels:
+  - conda-forge
