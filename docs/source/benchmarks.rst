@@ -93,25 +93,25 @@ of a satellite track:
      - Points per second
      - Speed-up
    * - ``scipy.interpolate.RegularGridInterpolator``
-     - 108.5 ms
-     - 9.2 M
+     - 99.4 ms
+     - 10.1 M
      - 1.0
    * - ``xarray.DataArray.interp``
-     - 116.2 ms
-     - 8.6 M
+     - 106.9 ms
+     - 9.4 M
      - 0.9
    * - ``scipy.ndimage.map_coordinates``, ``order=1``
-     - 24.5 ms
-     - 40.7 M
-     - 4.4
+     - 22.2 ms
+     - 45.0 M
+     - 4.5
    * - pyinterp, one thread
-     - 21.1 ms
-     - 47.5 M
-     - 5.2
+     - 20.0 ms
+     - 49.9 M
+     - 5.0
    * - pyinterp, all cores
-     - 3.2 ms
-     - 314.0 M
-     - 34.1
+     - 2.6 ms
+     - 386.8 M
+     - 38.4
 
 On one thread, pyinterp is as fast as ``map_coordinates``, which works on
 indexes rather than coordinates, and five times faster than
@@ -132,27 +132,27 @@ The global grid is interpolated onto a grid of 0.1 degree, from 80° S to
      - Points per second
      - Speed-up
    * - xESMF, applying the weights
-     - 1534.3 ms
-     - 3.8 M
+     - 1457.8 ms
+     - 4.0 M
      - 1.0
    * - ``scipy.interpolate.RegularGridInterpolator``
-     - 143.9 ms
-     - 40.0 M
-     - 10.7
+     - 138.1 ms
+     - 41.7 M
+     - 10.6
    * - ``xarray.DataArray.interp``
-     - 34.4 ms
-     - 167.2 M
-     - 44.5
+     - 31.7 ms
+     - 181.8 M
+     - 46.0
    * - ``da.pyinterp.interp``, one thread
      - 9.6 ms
-     - 597.3 M
-     - 159.1
+     - 601.4 M
+     - 152.2
    * - ``da.pyinterp.interp``, all cores
-     - 3.9 ms
-     - 1476.2 M
-     - 393.2
+     - 3.5 ms
+     - 1663.7 M
+     - 421.1
 
-xESMF first computes its weights, which took 49.9 s here; they can be saved
+xESMF first computes its weights, which took 42.2 s here; they can be saved
 and reused for other fields on the same grids. xarray and pyinterp exploit
 the structure of the target grid: each coordinate is located once on its axis
 instead of once per point. The results of pyinterp and xESMF differ by at
@@ -174,19 +174,19 @@ of their overlap with the cell, which preserves the integral of the field.
      - Source cells per second
      - Speed-up
    * - xESMF, applying the weights
-     - 123.7 ms
-     - 8.4 M
+     - 118.3 ms
+     - 8.8 M
      - 1.0
    * - ``da.pyinterp.regrid``, one thread
      - 1.2 ms
-     - 868.4 M
-     - 103.6
+     - 868.3 M
+     - 99.0
    * - ``da.pyinterp.regrid``, all cores
      - 0.7 ms
-     - 1553.2 M
-     - 185.3
+     - 1559.3 M
+     - 177.9
 
-xESMF first computes its weights, which took 11.7 s here. pyinterp needs no
+xESMF first computes its weights, which took 11.2 s here. pyinterp needs no
 weights to compute: the overlap of two longitude/latitude boxes is the product
 of the overlaps of their sides, so the regridding applies two sparse 1D
 operators along the longitudes and the latitudes.
@@ -217,25 +217,25 @@ One million points drawn at random, with a cubic method:
      - Points per second
      - Speed-up
    * - ``scipy.ndimage.map_coordinates``, ``order=3``
-     - 56.6 ms
-     - 17.7 M
+     - 54.4 ms
+     - 18.4 M
      - 1.0
    * - pyinterp bicubic, 4 × 4 window, one thread
-     - 232.4 ms
+     - 231.2 ms
      - 4.3 M
      - 0.2
    * - pyinterp bicubic, 4 × 4 window, all cores
-     - 26.7 ms
-     - 37.5 M
-     - 2.1
+     - 22.9 ms
+     - 43.7 M
+     - 2.4
    * - pyinterp bicubic, 6 × 6 window, one thread
-     - 436.2 ms
+     - 434.2 ms
      - 2.3 M
      - 0.1
    * - pyinterp bicubic, 6 × 6 window, all cores
-     - 45.4 ms
-     - 22.0 M
-     - 1.2
+     - 42.0 ms
+     - 23.8 M
+     - 1.3
 
 On one thread, ``map_coordinates`` is four times faster. The two methods
 differ, though: ``map_coordinates`` evaluates a B-spline whose coefficients
@@ -269,21 +269,21 @@ of SciPy includes their conversion by NumPy, on one thread:
      - Points per second
      - Speed-up
    * - ``scipy.spatial.cKDTree`` and NumPy, one thread
-     - 2016.2 ms
+     - 1849.7 ms
      - 0.5 M
      - 1.0
    * - ``scipy.spatial.cKDTree`` and NumPy, all cores
-     - 278.4 ms
-     - 3.6 M
-     - 7.2
+     - 311.1 ms
+     - 3.2 M
+     - 5.9
    * - pyinterp ``RTree3D``, geodetic, one thread
-     - 896.8 ms
+     - 888.7 ms
      - 1.1 M
-     - 2.2
+     - 2.1
    * - pyinterp ``RTree3D``, geodetic, all cores
-     - 104.8 ms
-     - 9.5 M
-     - 19.2
+     - 91.4 ms
+     - 10.9 M
+     - 20.2
 
 Given the ECEF coordinates of the points, pyinterp works in Cartesian mode
 (``RTree3D()``), exactly as the k-d tree of SciPy:
@@ -297,20 +297,20 @@ Given the ECEF coordinates of the points, pyinterp works in Cartesian mode
      - Points per second
      - Speed-up
    * - ``scipy.spatial.cKDTree`` and NumPy, one thread
-     - 2084.1 ms
+     - 1959.9 ms
      - 0.5 M
      - 1.0
    * - ``scipy.spatial.cKDTree`` and NumPy, all cores
-     - 250.3 ms
+     - 252.9 ms
      - 4.0 M
-     - 8.3
+     - 7.8
    * - pyinterp ``RTree3D``, Cartesian, one thread
-     - 903.1 ms
-     - 1.1 M
+     - 855.6 ms
+     - 1.2 M
      - 2.3
    * - pyinterp ``RTree3D``, Cartesian, all cores
-     - 96.2 ms
-     - 10.4 M
+     - 90.4 ms
+     - 11.1 M
      - 21.7
 
 pyinterp is more than twice as fast as SciPy, on one thread as on all cores,
