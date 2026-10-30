@@ -11,8 +11,12 @@ Pre-built wheels are available for:
 * **macOS** — ``arm64`` (Apple Silicon), deployment target 13.4
 * **Windows** — ``x86_64``
 
-Wheels are built for CPython 3.12, 3.13, 3.14 and 3.15, and for the
-free-threaded builds 3.14t and 3.15t.
+A single wheel per platform serves CPython 3.12 and every later version: it
+targets the Python stable ABI (``abi3``) and gets the core of `nanobind
+<https://nanobind.readthedocs.io/en/latest/split_mode.html>`_, the binding
+library, from the small ``nanobind-backend`` package, which pip installs with
+it. The free-threaded builds have their own wheels: one for 3.15t and later
+(``abi3t``), and one for 3.14t.
 
 Install the latest release, or upgrade an existing installation:
 

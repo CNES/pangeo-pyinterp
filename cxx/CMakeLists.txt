@@ -43,11 +43,23 @@ if(PYINTERP_BUILD_PYTHON_BINDINGS)
   # of the Eigen kernels.
   if(PYINTERP_NANOBIND_BACKEND_MODULE)
     # Split mode: no nanobind library is linked in, the backend module supplies
-    # it at import time and the extension targets the stable ABI. A
-    # free-threaded build needs the abi3t variant of Python 3.15 (nanobind
-    # rejects the combination on older interpreters).
-    nanobind_add_module(core FREE_THREADED NOMINSIZE BACKEND_MODULE
-                        ${PYINTERP_NANOBIND_BACKEND_MODULE} ${NB_SRC})
+    # it at import time and the extension targets the stable ABI. The abi3 floor
+    # is the oldest supported Python, which setup.py writes in the wheel tag
+    # (cp312-abi3). A free-threaded build needs the abi3t variant of Python
+    # 3.15, nanobind's default floor there (it rejects older interpreters).
+    if(NB_ABI MATCHES "[0-9]t")
+      set(PYINTERP_STABLE_ABI_VERSION)
+    else()
+      set(PYINTERP_STABLE_ABI_VERSION STABLE_ABI_VERSION 3.12)
+    endif()
+    nanobind_add_module(
+      core
+      FREE_THREADED
+      NOMINSIZE
+      BACKEND_MODULE
+      ${PYINTERP_NANOBIND_BACKEND_MODULE}
+      ${PYINTERP_STABLE_ABI_VERSION}
+      ${NB_SRC})
   else()
     nanobind_add_module(core FREE_THREADED NOMINSIZE ${NB_SRC})
   endif()

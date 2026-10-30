@@ -6,15 +6,18 @@
 
 from __future__ import annotations
 
+import functools
 import os
 import pathlib
 import platform
+import re
 import shlex
 import sys
 import sysconfig
 from typing import ClassVar
 
 import setuptools
+import setuptools.command.bdist_wheel
 import setuptools.command.build_ext
 import setuptools.command.build_py
 
@@ -48,6 +51,72 @@ FFT_CHOICES = [MKL_FFT, POCKETFFT]
 # Project version and the source it was read from. Resolved once here so that
 # the metadata, the generated _version.py and the CMake configuration all agree.
 VERSION, VERSION_SOURCE = resolve_version.resolve_version(WORKING_DIRECTORY)
+
+# nanobind backend module the extension is built against in "split mode" (see
+# PYINTERP_NANOBIND_BACKEND_MODULE in CMakeLists.txt). Only the binary wheels
+# set it: source builds keep linking their own copy of nanobind.
+NANOBIND_BACKEND_MODULE = os.environ.get(
+    "PYINTERP_NANOBIND_BACKEND_MODULE", ""
+)
+
+# Oldest CPython supported by pyinterp: the floor of the stable ABI targeted by
+# the split-mode wheels (cp312-abi3).
+MIN_PYTHON_VERSION = (3, 12)
+
+# Free-threaded CPython only has a stable ABI ("abi3t", PEP 803) from 3.15.
+MIN_ABI3T_PYTHON_VERSION = (3, 15)
+
+
+def is_free_threaded() -> bool:
+    """Return whether the running interpreter is a free-threaded build."""
+    return bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
+
+
+@functools.cache
+def use_split_mode() -> bool:
+    """Return whether the extension is built in nanobind split mode.
+
+    Split mode always targets a stable ABI, which free-threaded Python lacks
+    before 3.15: these interpreters fall back to the linked mode, and get a
+    wheel tied to their version.
+    """
+    if not NANOBIND_BACKEND_MODULE:
+        return False
+    if is_free_threaded() and sys.version_info < MIN_ABI3T_PYTHON_VERSION:
+        print(
+            "WARNING: nanobind split mode requires the abi3t stable ABI of "
+            "Python 3.15 or newer on free-threaded interpreters; building "
+            f"Python {sys.version_info.major}.{sys.version_info.minor}t in "
+            "linked mode.",
+            file=sys.stderr,
+        )
+        return False
+    return True
+
+
+def nanobind_backend_requirement() -> str | None:
+    """Return the requirement on the backend the extension is built against.
+
+    Only the ``nanobind_backend`` module has a known PyPI package; the floor is
+    the backend ABI version of the vendored nanobind (no upper bound, newer
+    backends serve older extensions).
+    """
+    if NANOBIND_BACKEND_MODULE != "nanobind_backend":
+        return None
+    header = pathlib.Path(
+        WORKING_DIRECTORY,
+        "third_party",
+        "nanobind",
+        "include",
+        "nanobind",
+        "nb_backend.h",
+    ).read_text(encoding="utf-8")
+    version = dict(
+        re.findall(
+            r"^#define NB_BACKEND_ABI_(MAJOR|MINOR) (\d+)", header, re.M
+        )
+    )
+    return f"nanobind-backend>={version['MAJOR']}.{version['MINOR']}"
 
 
 def distutils_dirname(
@@ -391,6 +460,9 @@ class BuildExt(setuptools.command.build_ext.build_ext):
             # its own detection: the extension must report the same version as
             # the Python package that ships it.
             "-DPYINTERP_VERSION=" + VERSION,
+            # Always set, so that reconfiguring a build tree switches the mode.
+            "-DPYINTERP_NANOBIND_BACKEND_MODULE="
+            + (NANOBIND_BACKEND_MODULE if use_split_mode() else ""),
             *self.set_cmake_user_options(),
         ]
         if is_cross:
@@ -455,6 +527,27 @@ class BuildExt(setuptools.command.build_ext.build_ext):
         os.chdir(str(WORKING_DIRECTORY))
 
     # pylint: enable=too-many-instance-attributes
+
+
+class BdistWheel(setuptools.command.bdist_wheel.bdist_wheel):
+    """Tag the split-mode wheels with the stable ABI of their extension.
+
+    The extension is built by CMake, so setuptools cannot tell that it targets
+    the stable ABI. Its own ``py_limited_api`` option is not used either: on a
+    free-threaded interpreter it writes ``abi3.abi3t``, which also matches the
+    GIL-enabled interpreters, whereas the free-threaded frontend needs a
+    free-threaded backend and only loads there.
+    """
+
+    def get_tag(self) -> tuple[str, str, str]:
+        """Return the (python, abi, platform) tag of the wheel."""
+        impl, abi, plat = super().get_tag()
+        if not use_split_mode():
+            return impl, abi, plat
+        # The floors match the Py_LIMITED_API targeted by cxx/CMakeLists.txt.
+        if is_free_threaded():
+            return "cp{}{}".format(*MIN_ABI3T_PYTHON_VERSION), "abi3t", plat
+        return "cp{}{}".format(*MIN_PYTHON_VERSION), "abi3", plat
 
 
 class BuildPy(setuptools.command.build_py.build_py):
@@ -532,6 +625,10 @@ def version_keywords() -> dict[str, object]:
 def main() -> None:
     """Set up module."""
     install_requires = ["numpy"]
+    # Split-mode wheels need the backend at runtime, source builds do not.
+    backend = nanobind_backend_requirement() if use_split_mode() else None
+    if backend is not None:
+        install_requires.append(backend)
     setuptools.setup(
         author="CNES/CLS",
         author_email="fbriol@gmail.com",
@@ -556,6 +653,7 @@ def main() -> None:
             "Programming Language :: Python :: 3.15",
         ],
         cmdclass={
+            "bdist_wheel": BdistWheel,
             "build_ext": BuildExt,
             "build_py": BuildPy,
         },
@@ -599,7 +697,7 @@ def main() -> None:
             "Source": "https://github.com/CNES/pangeo-pyinterp",
             "Issues": "https://github.com/CNES/pangeo-pyinterp/issues",
         },
-        python_requires=">=3.12",
+        python_requires=">={}.{}".format(*MIN_PYTHON_VERSION),
         url="https://github.com/CNES/pangeo-pyinterp",
         **version_keywords(),  # type: ignore[arg-type]
     )

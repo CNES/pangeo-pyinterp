@@ -61,10 +61,12 @@ option(PYINTERP_BUILD_TESTS "Build the C++ unit tests" ${PYINTERP_IS_TOP_LEVEL})
 # nanobind "split mode": when set, pyinterp.core is compiled against the
 # prebuilt nanobind backend named here (``nanobind_backend`` is the module
 # shipped by the nanobind-backend wheel) instead of linking a copy of the
-# nanobind library. The extension then targets the Python 3.10 stable ABI, so a
-# single binary serves every later CPython. Left empty on purpose: source builds
-# (conda-forge, distributions, users compiling from the sdist) have no backend
-# to bind to, and only the wheel jobs should opt in.
+# nanobind library. The extension then targets the Python 3.12 stable ABI (the
+# 3.15 abi3t one on free-threaded Python), so a single binary serves every later
+# CPython. setup.py sets it from the PYINTERP_NANOBIND_BACKEND_MODULE
+# environment variable and tags the wheel to match. Left empty on purpose:
+# source builds (conda-forge, distributions, users compiling from the sdist)
+# have no backend to bind to, and only the wheel jobs should opt in.
 set(PYINTERP_NANOBIND_BACKEND_MODULE
     ""
     CACHE STRING

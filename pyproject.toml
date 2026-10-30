@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=8", "cmake"]
+requires = ["setuptools>=70.1", "setuptools_scm>=8", "cmake"]
 build-backend = "backend"
 backend-path = ["_custom_build"]
 
@@ -87,9 +87,19 @@ addopts = "--import-mode=importlib"
 # Triggered by: .github/workflows/wheels.yml
 # ---------------------------------------------------------------------------
 [tool.cibuildwheel]
-# Build CPython 3.12–3.15 (+ 3.14 and 3.15 free-threaded); skip 32-bit and musl
-# builds
-build = "cp312-* cp313-* cp314-* cp314t-* cp315-* cp315t-*"
+# The wheels are built in nanobind split mode (PYINTERP_NANOBIND_BACKEND_MODULE
+# in the environment tables below and in wheels.yml): the extension targets the
+# stable ABI and gets the nanobind backend from the nanobind-backend package.
+#
+# - cp312 builds the cp312-abi3 wheel, which serves every GIL-enabled CPython
+#   from 3.12. cibuildwheel reuses it for cp315 and only runs the tests there,
+#   so the wheel is tested on the oldest and the newest supported Python.
+# - cp315t builds the cp315-abi3t wheel of free-threaded Python 3.15 and later.
+# - cp314t has no stable ABI: setup.py builds it in linked mode, as a wheel
+#   tied to that version.
+#
+# 32-bit and musl builds are skipped: there are no musllinux backend wheels.
+build = "cp312-* cp314t-* cp315-* cp315t-*"
 skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
 build-verbosity = 1
 
@@ -118,7 +128,7 @@ echo "${sha256}  /tmp/miniforge.sh" | sha256sum -c -
 bash /tmp/miniforge.sh -b -p /opt/conda
 /opt/conda/bin/conda install -y -c conda-forge 'libboost-headers>=1.90'
 """
-environment = {CMAKE_PREFIX_PATH = "/opt/conda"}
+environment = {CMAKE_PREFIX_PATH = "/opt/conda", PYINTERP_NANOBIND_BACKEND_MODULE = "nanobind_backend"}
 
 # ------------------------------------------------------------------
 # macOS (arm64 macos-latest runners)
@@ -126,7 +136,7 @@ environment = {CMAKE_PREFIX_PATH = "/opt/conda"}
 # ------------------------------------------------------------------
 [tool.cibuildwheel.macos]
 before-all = "brew install boost"
-environment = {MACOSX_DEPLOYMENT_TARGET = "13.4", CMAKE_PREFIX_PATH = "$(brew --prefix boost)"}
+environment = {MACOSX_DEPLOYMENT_TARGET = "13.4", CMAKE_PREFIX_PATH = "$(brew --prefix boost)", PYINTERP_NANOBIND_BACKEND_MODULE = "nanobind_backend"}
 
 # ------------------------------------------------------------------
 # Windows
@@ -135,4 +145,4 @@ environment = {MACOSX_DEPLOYMENT_TARGET = "13.4", CMAKE_PREFIX_PATH = "$(brew --
 # via CIBW_ENVIRONMENT_WINDOWS in the workflow env block.
 # ------------------------------------------------------------------
 # No extra [tool.cibuildwheel.windows] table needed here; the workflow
-# injects CMAKE_PREFIX_PATH at runtime.
+# injects CMAKE_PREFIX_PATH and PYINTERP_NANOBIND_BACKEND_MODULE at runtime.
