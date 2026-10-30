@@ -280,6 +280,14 @@ Build System
   wheels are compiled against the final 3.14 release instead of a pre-release.
   The installer of Miniforge, which provides Boost to the Linux builds, is
   pinned to a release and checked against its SHA-256.
+* **Stable ABI wheels**: The wheels are built in nanobind's split mode: the
+  extension targets the Python stable ABI and delegates to the prebuilt
+  ``nanobind-backend`` package, a new dependency of the wheels (source builds
+  still link nanobind). One ``cp312-abi3`` wheel per platform replaces the
+  wheels of CPython 3.12 to 3.15 and will also serve the next versions, and one
+  ``cp315-abi3t`` wheel serves free-threaded Python 3.15 and later; 3.14t keeps
+  a wheel of its own, as it has no stable ABI. Each platform compiles the
+  extension three times instead of six.
 * **CMake policy CMP0144**: A typo kept the policy unset, so ``find_package``
   ignored the upper-case ``<PACKAGENAME>_ROOT`` variables such as
   ``BOOST_ROOT``.

@@ -98,16 +98,26 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@f9b966cfadf4109556cadc5bb39ddb72d0ce664e # v4.3.5
         env:
-          # Windows: point CMake at the conda-forge Boost headers and build with
-          # the version-independent Ninja generator (VS 18 broke the VS 17 one).
+          # Windows: point CMake at the conda-forge Boost headers, build with
+          # the version-independent Ninja generator (VS 18 broke the VS 17 one)
+          # and in nanobind split mode, like the other platforms (pyproject.toml).
           CIBW_ENVIRONMENT_WINDOWS: >-
             CMAKE_PREFIX_PATH="${{ env.BOOST_PREFIX }}"
             CMAKE_GEN="Ninja"
+            PYINTERP_NANOBIND_BACKEND_MODULE="nanobind_backend"
           # macOS: arm64 only (free Intel runners are deprecated).
           CIBW_ARCHS_MACOS: ${{ matrix.cibw_archs_macos }}
-          # Sanity-check every built wheel imports and exposes its version.
+          # Sanity-check every built wheel imports (which loads the nanobind
+          # backend in split mode) and exposes its version.
           CIBW_TEST_COMMAND: >-
-            python -c "import pyinterp; print(pyinterp.__version__)"
+            python -c "import pyinterp, pyinterp.core;
+            print(pyinterp.__version__, pyinterp.core.__file__)"
+
+      # Check that the abi3 wheel only uses the stable ABI of its Python floor
+      # (abi3audit does not handle the abi3t wheels yet).
+      - name: Audit the stable ABI wheels
+        shell: bash
+        run: pipx run abi3audit==0.0.26 --strict --report wheelhouse/*-abi3-*.whl
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
