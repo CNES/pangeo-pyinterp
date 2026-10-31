@@ -44,7 +44,7 @@ can try them with:
 
 .. code-block:: bash
 
-   pip install --index-url https://test.pypi.org/simple/ \
+   pip install --pre --index-url https://test.pypi.org/simple/ \
        --extra-index-url https://pypi.org/simple/ pyinterp
 
 If no wheel matches your platform (for example a non-glibc Linux or 32-bit

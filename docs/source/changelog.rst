@@ -1,8 +1,8 @@
 Changelog
 #########
 
-Unreleased
-----------
+2026.11.0
+---------
 
 New Features
 ~~~~~~~~~~~~
