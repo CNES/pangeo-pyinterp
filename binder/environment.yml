@@ -2,14 +2,14 @@ name: pyinterp
 channels:
   - conda-forge
 dependencies:
-  - python>=3.12
+  # repo2docker only reads an exact version: with a range, it installs its
+  # default Python, which the environment then replaces package by package.
+  - python=3.14
   - cartopy
   - dask
-  - jupyter
-  - matplotlib
+  - matplotlib-base
   - numcodecs
   - pandas
   - pyinterp>=2026.11.0
   - sphinx-gallery
-  - sphinx-inline-tabs
   - xarray
