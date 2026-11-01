@@ -1,0 +1,5 @@
+cartopy
+matplotlib
+pandas
+pyinterp[dask,xarray]>=2026.11.0
+sphinx-gallery

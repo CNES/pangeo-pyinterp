@@ -275,7 +275,8 @@ sphinx_gallery_conf = {
         "branch": "master",
         "binderhub_url": "https://mybinder.org",
         "dependencies": [
-            HERE.joinpath("..", "..", "binder", "environment.yml")
+            HERE.joinpath("..", "..", "binder", "requirements.txt"),
+            HERE.joinpath("..", "..", "binder", "runtime.txt"),
         ],
         "use_jupyter_lab": True,
     },
